@@ -29,16 +29,24 @@ file(GLOB_RECURSE TEST_SOURCES
 # Create a single test executable
 add_executable(all_tests ${TEST_SOURCES})
 
+if(WIN32)
+    # Add the definition for all targets
+    add_compile_definitions(_HAS_STD_BYTE=0)
+endif()
+
 target_include_directories(all_tests
     PRIVATE
         ${CMAKE_SOURCE_DIR}/sdk   # Path to your headers
 		${CMAKE_SOURCE_DIR}/sdk/lang
+		${CMAKE_SOURCE_DIR}/sdk/util
+		${CMAKE_SOURCE_DIR}/sdk/io
+		${CMAKE_SOURCE_DIR}/sdk/net		
 )
 
 # Link GoogleTest and pthread (Linux/Unix)
 target_link_libraries(all_tests
     PRIVATE
-        GTest::gtest_main
+        GTest::gtest GTest::gmock GTest::gtest_main
 )
 
 # Automatically discover tests in the executable

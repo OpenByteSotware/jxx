@@ -9,9 +9,13 @@
 #include "lang/jxx_Throwable.h"
 #include "lang/jxx_Thread.h"
 #include "lang/jxx_ByteType.h"
+#include "lang/jxx_String.h"
 #include "io/jxx_Serializabler.h"
 #include "io/jxx_Flushable.h"
 #include "util/jxx_Vector.h"
 #include "util/jxx_ArrayList.h"
+#include "util/jxx_EventObject.h"
+#include "net/jxx_DatagramSocket.h"
+#include "net/jxx_MulticastSocket.h"
 
 #endif

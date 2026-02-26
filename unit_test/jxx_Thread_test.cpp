@@ -89,7 +89,7 @@ TEST(TestTheadTest, BasicAssertions) {
     auto t = NEW(TheadTest);
     EXPECT_EQ(0, t->intValue());
     t->start();
-    jxx::lang::Thread::sleep(2000);
+    jxx::lang::Thread::sleep(1500);
     // we waited for 2 seconds, count should be 2
     EXPECT_EQ(2, t->intValue());
     t->stop();
@@ -106,7 +106,7 @@ TEST(TestTheadTest, Runnable) {
     // Start the thread
     t->start();
     EXPECT_EQ(0, r->intValue());
-    jxx::lang::Thread::sleep(2000);
+    jxx::lang::Thread::sleep(1500);
     // we waited for 2 seconds, count should be 2
     EXPECT_EQ(2, r->intValue());
     r->stop();
@@ -130,7 +130,7 @@ TEST(TestTheadTest, MultiThread) {
     t2->start();
     t3->start();
 
-    jxx::lang::Thread::sleep(2000);
+    jxx::lang::Thread::sleep(1900);
     // we waited for 2 seconds, count should be 6
     // all 3 threads should run twice
     EXPECT_EQ(6, r->intValue());

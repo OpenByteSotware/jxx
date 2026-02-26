@@ -10,6 +10,13 @@ public:
     } 
 };
 
+class VectorStringTest : public jxx::util::Vector<std::string> {
+public:
+
+    virtual ~VectorStringTest() {
+    }
+};
+
 class TestVectorTest : public testing::Test {
 protected:
     // You can remove any or all of the following functions if their bodies would
@@ -48,6 +55,21 @@ TEST(TestVectorTest, BasicAssertions) {
     EXPECT_EQ(t->firstElement(), 5);
     t->add(15);
     EXPECT_EQ(t->lastElement(), 15);
+    EXPECT_EQ(t->size(), 3);
+
+}
+
+TEST(TestVectorTest, StringData) {
+    auto t = NEW(VectorStringTest);
+    ASSERT_TRUE(t->isEmpty());
+    t->add(std::string("5"));
+    ASSERT_FALSE(t->isEmpty());
+    ASSERT_TRUE(t->firstElement().compare(std::string("5")) == 0);
+    t->add(std::string("10"));
+    ASSERT_TRUE(t->firstElement().compare("5") == 0);
+    t->add(std::string("15"));
+    ASSERT_TRUE(t->firstElement().compare("5") == 0);
+    ASSERT_TRUE(t->lastElement().compare("15") == 0);
     EXPECT_EQ(t->size(), 3);
 
 }
