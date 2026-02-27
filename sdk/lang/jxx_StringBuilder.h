@@ -209,13 +209,13 @@ namespace jxx::lang {
         { 
             return jxx::lang::String{}; 
         }
-        /*
+        
         ++first;
         for (; first != last; ++first) {
             sb.append(sep);
-            sb.append(std::string_view{ *first });
+            //sb.append(std::string_view{ *first });
         }
-        */
+        
         return jxx::lang::String{ sb.str() };
     }
 
