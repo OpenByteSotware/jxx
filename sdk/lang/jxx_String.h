@@ -11,6 +11,8 @@
 #include <algorithm>
 #include <utility>
 #include <type_traits>
+#include <codecvt>
+#include <locale>
 
 using namespace std;
 
@@ -26,10 +28,33 @@ namespace jxx::lang {
         // From UTF-16 (best 1:1 match with Java)
         explicit String(const std::u16string& s) : data_(s) {}
         explicit String(std::u16string&& s) : data_(std::move(s)) {}
+        String(const char* s) { assign_from_cstr(s); }
+        //explicit String(const char* s, const Allocator& a = Allocator());
+
+        String(std::string_view sv) {
+            assign_from_span(sv.data(), sv.size());
+        }
 
         // From UTF-16 view (C++17 has basic_string_view)
         explicit String(std::u16string_view sv) : data_(sv) {}
 
+        // Convert UTF-8 const char* to UTF-16 std::u16string
+        static std::u16string utf8_to_utf16(const char* utf8_str) {
+            if (!utf8_str) {
+                return u""; // Handle null pointer safely
+            }
+
+            // Create a converter (UTF-8 <-> UTF-16)
+            std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
+
+            try {
+                return convert.from_bytes(utf8_str);
+            }
+            catch (const std::range_error& e) {
+                std::cerr << "UTF-8 to UTF-16 conversion error: " << e.what() << "\n";
+                return u"";
+            }
+        }
         // From UTF-8 (convenience)
         static String fromUtf8(const std::string& utf8) {
             return String(utf8ToUtf16(utf8));
@@ -430,6 +455,40 @@ namespace jxx::lang {
                 }
             }
             return out;
+        }
+
+        static std::size_t safe_strlen(const char* s) noexcept {
+            if (!s) return 0;
+            const char* p = s;
+            while (*p) ++p;
+            return static_cast<std::size_t>(p - s);
+        }
+
+
+        void assign_from_span(const char* p, std::size_t n) {
+            char* new_data = new char[n + 1];
+            for (std::size_t i = 0; i < n; ++i) new_data[i] = p[i];
+            new_data[n] = '\0';
+            // now commit
+            //delete[] data_;
+            data_ = utf8ToUtf16(new_data);
+        }
+
+        void assign_from_cstr(const char* s) {
+            // Permit nullptr like many custom strings (std::string is UB for nullptr).
+            const std::size_t n = safe_strlen(s);
+            allocate_and_copy(s, n);
+        }
+
+        void allocate_and_copy(const char* s, std::size_t n) {
+            char* new_data = new char[n + 1];   // +1 for NUL
+            for (std::size_t i = 0; i < n; ++i) {
+                new_data[i] = s[i];
+            }
+            new_data[n] = '\0';
+
+            //delete[] data_;
+            data_ = utf8ToUtf16(new_data);
         }
     };
 }

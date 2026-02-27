@@ -12,6 +12,10 @@ namespace jxx::util {
 template <typename T>
 class Vector {
 public:
+
+    using iterator = typename std::vector<T>::iterator;
+    using const_iterator = typename std::vector<T>::const_iterator;
+      
     // ---- Constructors ----
     // Java default capacity is 10; we mimic that for initial reserve.
     explicit Vector(std::size_t initialCapacity = 10, std::size_t capacityIncrement = 0)
@@ -73,6 +77,16 @@ public:
         std::lock_guard<std::mutex> lk(m_);
         checkIndexLocked(index);
         return data_[index];
+    }
+
+    const_iterator begin() const noexcept {
+        std::lock_guard<std::mutex> lk(m_);
+        return data_.begin();
+    }
+
+    const_iterator end() const noexcept {
+        std::lock_guard<std::mutex> lk(m_);
+        return data_.end();
     }
 
     // set(index, value) returns the old element by value
