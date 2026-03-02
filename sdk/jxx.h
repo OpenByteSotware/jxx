@@ -17,6 +17,7 @@
 #include "util/jxx_Vector.h"
 #include "util/jxx_ArrayList.h"
 #include "util/jxx_EventObject.h"
+#include "util/jxx_TreeMap.h"
 #include "net/jxx_DatagramSocket.h"
 #include "net/jxx_MulticastSocket.h"
 #include "net/jxx_InetSocketAddress.h"
