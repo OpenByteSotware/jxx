@@ -18,6 +18,8 @@
 #include "util/jxx_ArrayList.h"
 #include "util/jxx_EventObject.h"
 #include "util/jxx_TreeMap.h"
+#include "util/jxx_Hashtable.h"
+#include "util/jxx_Properties.h"
 #include "net/jxx_DatagramSocket.h"
 #include "net/jxx_MulticastSocket.h"
 #include "net/jxx_InetSocketAddress.h"

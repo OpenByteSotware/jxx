@@ -10,20 +10,58 @@
 
 namespace jxx::util {
 
+    // ---------------------------
+    // Java 8-like Map<K,V> interface + Entry
+    // ---------------------------
     template <typename Key, typename V>
     class Map {
     public:
         using key_type = Key;
         using value_type = V;
         using value_optional = std::optional<V>;
-        using entry_type = std::pair<Key, value_optional>;
+
+        // ---- Java-like Entry<K,V> snapshot ----
+        // Value type (copyable) that carries key + optional value.
+        // - getKey(), getValue(), setValue() (setter updates the Entry snapshot and returns previous).
+        // - equals() like Java: keys and values compared with == on Key and std::optional<V>.
+        class Entry {
+        public:
+            Entry() = default;
+            Entry(const Key& k, const value_optional& v) : key_(k), val_(v) {}
+            Entry(Key&& k, value_optional&& v) : key_(std::move(k)), val_(std::move(v)) {}
+
+            const Key& getKey() const noexcept { return key_; }
+            const value_optional& getValue() const noexcept { return val_; }
+
+            // Like Java Map.Entry::setValue: returns previous value.
+            value_optional setValue(value_optional newVal) {
+                value_optional prev = std::move(val_);
+                val_ = std::move(newVal);
+                return prev;
+            }
+
+            // Equality like Java: key equality && value equality
+            bool equals(const Entry& other) const {
+                return key_ == other.key_ && val_ == other.val_;
+            }
+
+            // C++ convenience
+            bool operator==(const Entry& other) const { return equals(other); }
+            bool operator!=(const Entry& other) const { return !equals(other); }
+
+        private:
+            Key            key_{};
+            value_optional val_{};
+        };
+
+        using entry_type = Entry;
 
         virtual ~Map() = default;
 
         // ---- Core abstract API (pure virtual) ----
         virtual std::size_t size() const noexcept = 0;
-        virtual bool isEmpty() const noexcept = 0;                // Java's isEmpty()
-        virtual bool empty() const noexcept = 0;                  // C++-style alias (still required)
+        virtual bool isEmpty() const noexcept = 0;        // Java isEmpty()
+        virtual bool empty()  const noexcept = 0;         // C++ alias
         virtual void clear() = 0;
 
         virtual bool containsKey(const Key& key) const = 0;
@@ -32,16 +70,16 @@ namespace jxx::util {
         // get returns nullopt if absent OR present-null (Java ambiguity preserved)
         virtual value_optional get(const Key& key) const = 0;
 
-        // Returns previous value or null (ambiguity preserved)
+        // put returns previous value (or null) — ambiguity preserved
         virtual value_optional put(const Key& key, value_optional val) = 0;
 
-        // Remove by key; returns previous or null (if absent)
+        // remove by key; returns previous (or null if absent)
         virtual value_optional remove(const Key& key) = 0;
 
         // Materialized "views"
         virtual std::vector<Key> keySet() const = 0;
         virtual std::vector<value_optional> values() const = 0;
-        virtual std::vector<entry_type> entrySet() const = 0;
+        virtual std::vector<Entry> entrySet() const = 0;
 
         // ---- Java 8 default-like helpers (virtual with default bodies) ----
 
@@ -55,13 +93,14 @@ namespace jxx::util {
         // putIfAbsent: only put if no mapping exists.
         virtual value_optional putIfAbsent(const Key& key, value_optional value) {
             if (containsKey(key)) return get(key);
-            return put(key, std::move(value)), value_optional{}; // return null (previous)
+            (void)put(key, std::move(value));
+            return value_optional{}; // previous is null
         }
 
         // remove(key, value): remove only if mapped to that value.
         virtual bool remove(const Key& key, const value_optional& value) {
             if (!containsKey(key)) return false;
-            if (get(key) == value) { remove(key); return true; }
+            if (get(key) == value) { (void)remove(key); return true; }
             return false;
         }
 
@@ -74,18 +113,18 @@ namespace jxx::util {
         // replace(key, oldValue, newValue): conditional replace
         virtual bool replace(const Key& key, const value_optional& oldValue, value_optional newValue) {
             if (!containsKey(key)) return false;
-            if (get(key) == oldValue) { put(key, std::move(newValue)); return true; }
+            if (get(key) == oldValue) { (void)put(key, std::move(newValue)); return true; }
             return false;
         }
 
-        // computeIfAbsent: if no mapping, compute; if mapping function returns null → no insert
+        // computeIfAbsent: if no mapping, compute; if function returns null → no insert
         virtual value_optional computeIfAbsent(
             const Key& key,
             const std::function<value_optional(const Key&)>& mappingFunction
         ) {
             if (containsKey(key)) return get(key);
             value_optional nv = mappingFunction(key);
-            if (nv.has_value()) { put(key, nv); }
+            if (nv.has_value()) { (void)put(key, nv); }
             return nv; // nullopt means no insert
         }
 
@@ -98,8 +137,8 @@ namespace jxx::util {
             if (!containsKey(key)) return value_optional{};
             value_optional cur = get(key);
             value_optional nv = remappingFunction(key, cur);
-            if (!nv.has_value()) { remove(key); return value_optional{}; }
-            put(key, nv);
+            if (!nv.has_value()) { (void)remove(key); return value_optional{}; }
+            (void)put(key, nv);
             return nv;
         }
 
@@ -112,10 +151,10 @@ namespace jxx::util {
             value_optional cur = containsKey(key) ? get(key) : value_optional{};
             value_optional nv = remappingFunction(key, cur);
             if (!nv.has_value()) {
-                if (containsKey(key)) remove(key);
+                if (containsKey(key)) (void)remove(key);
                 return value_optional{};
             }
-            put(key, nv);
+            (void)put(key, nv);
             return nv;
         }
 
@@ -128,20 +167,20 @@ namespace jxx::util {
         ) {
             if (!containsKey(key)) {
                 // In Java, 'value' must be non-null; here we allow nullopt but won't insert nullopt.
-                if (value.has_value()) { put(key, value); return value; }
+                if (value.has_value()) { (void)put(key, value); return value; }
                 return value_optional{}; // do nothing on nullopt
             }
             value_optional cur = get(key);
             value_optional nv = remappingFunction(cur, value);
-            if (!nv.has_value()) { remove(key); return value_optional{}; }
-            put(key, nv);
+            if (!nv.has_value()) { (void)remove(key); return value_optional{}; }
+            (void)put(key, nv);
             return nv;
         }
 
-        // putAll: convenience (template to accept any Map-like that exposes entrySet())
+        // putAll: convenience
         template <typename M>
         void putAll(const M& other) {
-            for (const auto& e : other.entrySet()) { put(e.first, e.second); }
+            for (const auto& e : other.entrySet()) { (void)put(e.getKey(), e.getValue()); }
         }
     };
 
@@ -153,12 +192,37 @@ namespace jxx::util {
     class TreeMap : public Map<Key, V> {
     public:
         using typename Map<Key, V>::value_optional;
-        using typename Map<Key, V>::entry_type;
+        using typename Map<Key, V>::Entry; // snapshot Entry
 
         using map_type = std::map<Key, value_optional, Compare>;
         using iterator = typename map_type::iterator;
         using const_iterator = typename map_type::const_iterator;
         using const_reverse_iterator = typename map_type::const_reverse_iterator;
+
+        // ---- Live, mutable entry handle (like Java Entry from views/iterators) ----
+        // Holds an iterator into the map. setValue() mutates the underlying map.
+        class EntryRef {
+        public:
+            EntryRef() = default;
+            explicit EntryRef(iterator it) : it_(it) {}
+
+            bool valid() const noexcept { return it_ != iterator{}; }
+
+            const Key& getKey() const { return it_->first; }
+            const value_optional& getValue() const { return it_->second; }
+
+            value_optional setValue(value_optional newVal) {
+                value_optional prev = std::move(it_->second);
+                it_->second = std::move(newVal);
+                return prev;
+            }
+
+            // Snapshot copy (useful to return by value)
+            Entry snapshot() const { return Entry{ it_->first, it_->second }; }
+
+        private:
+            iterator it_{};
+        };
 
         TreeMap() = default;
         explicit TreeMap(Compare comp) : map_(comp) {}
@@ -221,7 +285,6 @@ namespace jxx::util {
         }
 
         // ----- Navigational keys (null if none) -----
-        // lowerKey: greatest key < k
         std::optional<Key> lowerKey(const Key& k) const {
             auto it = map_.lower_bound(k);
             if (it == map_.begin()) return std::nullopt;
@@ -230,7 +293,6 @@ namespace jxx::util {
             return std::nullopt;
         }
 
-        // floorKey: greatest key <= k
         std::optional<Key> floorKey(const Key& k) const {
             auto it = map_.upper_bound(k);
             if (it == map_.begin()) return std::nullopt;
@@ -238,18 +300,57 @@ namespace jxx::util {
             return it->first;
         }
 
-        // ceilingKey: smallest key >= k
         std::optional<Key> ceilingKey(const Key& k) const {
             auto it = map_.lower_bound(k);
             if (it == map_.end()) return std::nullopt;
             return it->first;
         }
 
-        // higherKey: smallest key > k
         std::optional<Key> higherKey(const Key& k) const {
             auto it = map_.upper_bound(k);
             if (it == map_.end()) return std::nullopt;
             return it->first;
+        }
+
+        // ----- Entry navigation (snapshot Entry) -----
+        std::optional<Entry> firstEntry() const {
+            if (map_.empty()) return std::nullopt;
+            const auto& e = *map_.begin();
+            return Entry{ e.first, e.second };
+        }
+
+        std::optional<Entry> lastEntry() const {
+            if (map_.empty()) return std::nullopt;
+            const auto& e = *std::prev(map_.end());
+            return Entry{ e.first, e.second };
+        }
+
+        std::optional<Entry> lowerEntry(const Key& k) const {
+            auto kOpt = lowerKey(k);
+            if (!kOpt) return std::nullopt;
+            const auto it = map_.find(*kOpt);
+            return Entry{ it->first, it->second };
+        }
+
+        std::optional<Entry> floorEntry(const Key& k) const {
+            auto kOpt = floorKey(k);
+            if (!kOpt) return std::nullopt;
+            const auto it = map_.find(*kOpt);
+            return Entry{ it->first, it->second };
+        }
+
+        std::optional<Entry> ceilingEntry(const Key& k) const {
+            auto kOpt = ceilingKey(k);
+            if (!kOpt) return std::nullopt;
+            const auto it = map_.find(*kOpt);
+            return Entry{ it->first, it->second };
+        }
+
+        std::optional<Entry> higherEntry(const Key& k) const {
+            auto kOpt = higherKey(k);
+            if (!kOpt) return std::nullopt;
+            const auto it = map_.find(*kOpt);
+            return Entry{ it->first, it->second };
         }
 
         // ----- Iteration (ascending and descending) -----
@@ -261,7 +362,7 @@ namespace jxx::util {
         const_reverse_iterator rbegin() const noexcept { return map_.rbegin(); }
         const_reverse_iterator rend()   const noexcept { return map_.rend(); }
 
-        // ----- KeySet / Values / EntrySet (materialized) -----
+        // ----- KeySet / Values / EntrySet (materialized snapshots) -----
         std::vector<Key> keySet() const override {
             std::vector<Key> keys;
             keys.reserve(map_.size());
@@ -276,11 +377,18 @@ namespace jxx::util {
             return vals;
         }
 
-        std::vector<entry_type> entrySet() const override {
-            std::vector<entry_type> entries;
+        std::vector<Entry> entrySet() const override {
+            std::vector<Entry> entries;
             entries.reserve(map_.size());
             for (const auto& kv : map_) entries.emplace_back(kv.first, kv.second);
             return entries;
+        }
+
+        // ---- Live entry reference retrieval (mutates map like Java's Entry::setValue) ----
+        std::optional<EntryRef> findEntryRef(const Key& key) {
+            auto it = map_.find(key);
+            if (it == map_.end()) return std::nullopt;
+            return EntryRef{ it };
         }
 
         // Expose comparator
@@ -291,4 +399,4 @@ namespace jxx::util {
         map_type map_;
     };
 
-} // namespace
+}
