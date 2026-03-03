@@ -38,7 +38,7 @@ static void worker_high_contention(Hashtable<std::string,int>& ht,
 }
 
 int main() {
-    const std::size_t N = 300'000;
+    const std::size_t N = 300000;
     const int threads = std::max(2u, std::thread::hardware_concurrency());
     auto keys = make_random_keys(N);
     auto vals = make_values(N);

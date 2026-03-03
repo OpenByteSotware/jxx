@@ -37,10 +37,10 @@ endif()
 target_include_directories(all_tests
     PRIVATE
         ${CMAKE_SOURCE_DIR}/sdk   # Path to your headers
-		${CMAKE_SOURCE_DIR}/../sdk/lang
-		${CMAKE_SOURCE_DIR}/../sdk/util
-		${CMAKE_SOURCE_DIR}/../sdk/io
-		${CMAKE_SOURCE_DIR}/../sdk/net		
+		${CMAKE_SOURCE_DIR}/sdk/lang
+		${CMAKE_SOURCE_DIR}/sdk/util
+		${CMAKE_SOURCE_DIR}/sdk/io
+		${CMAKE_SOURCE_DIR}/sdk/net		
 )
 
 # Link GoogleTest and pthread (Linux/Unix)

@@ -15,12 +15,12 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(benchmark)
 
 target_include_directories(benchmark
-    PRIVATE
-	${CMAKE_SOURCE_DIR}/../sdk
-	${CMAKE_SOURCE_DIR}/../sdk/lang
-	${CMAKE_SOURCE_DIR}/../sdk/util
-	${CMAKE_SOURCE_DIR}/../sdk/io
-	${CMAKE_SOURCE_DIR}/../sdk/net		
+    PUBLIC
+	${CMAKE_SOURCE_DIR}/sdk
+	${CMAKE_SOURCE_DIR}/sdk/lang
+	${CMAKE_SOURCE_DIR}/sdk/util
+	${CMAKE_SOURCE_DIR}/sdk/io
+	${CMAKE_SOURCE_DIR}/sdk/net		
 )
 
 # Detect if building on Windows with Visual Studio
@@ -48,6 +48,11 @@ if (BENCH_SOURCES STREQUAL "")
     message(WARNING "No benchmark source files found (bench*.cpp)")
 else()
     message(STATUS "Found benchmark files: ${BENCH_SOURCES}")
+endif()
+
+if(WIN32)
+    # Add the definition for all targets
+    add_compile_definitions(_HAS_STD_BYTE=0)
 endif()
 
 # Create one executable per benchmark file
