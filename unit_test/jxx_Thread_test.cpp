@@ -16,7 +16,7 @@ public:
     virtual void run() override {
         while (runThread_) {
             value_++;
-            jxx::lang::Thread::sleep(1000);
+            jxx::lang::Thread::sleep(300);
         }
     }   
  
@@ -37,7 +37,7 @@ public:
     virtual void run() override {
         while (runThread_) {
             value_++;
-            jxx::lang::Thread::sleep(1000);
+            jxx::lang::Thread::sleep(300);
         }
     }
 
@@ -53,7 +53,7 @@ public:
     virtual void run() override {
         while (runThread_) {
             value_++;
-            jxx::lang::Thread::sleep(1000);
+            jxx::lang::Thread::sleep(300);
         }
     }
 };
@@ -89,8 +89,7 @@ TEST(TestTheadTest, BasicAssertions) {
     auto t = NEW(TheadTest);
     EXPECT_EQ(0, t->intValue());
     t->start();
-    jxx::lang::Thread::sleep(1500);
-    // we waited for 2 seconds, count should be 2
+    jxx::lang::Thread::sleep(500);    
     EXPECT_EQ(2, t->intValue());
     t->stop();
     jxx::lang::Thread::sleep(1000);
@@ -106,8 +105,8 @@ TEST(TestTheadTest, Runnable) {
     // Start the thread
     t->start();
     EXPECT_EQ(0, r->intValue());
-    jxx::lang::Thread::sleep(1500);
-    // we waited for 2 seconds, count should be 2
+    jxx::lang::Thread::sleep(500);
+    
     EXPECT_EQ(2, r->intValue());
     r->stop();
     jxx::lang::Thread::sleep(1000);
@@ -130,11 +129,12 @@ TEST(TestTheadTest, MultiThread) {
     t2->start();
     t3->start();
 
-    jxx::lang::Thread::sleep(1900);
+    jxx::lang::Thread::sleep(500);
+    r->stop();
+ 
     // we waited for 2 seconds, count should be 6
     // all 3 threads should run twice
     EXPECT_EQ(6, r->intValue());
-    r->stop();
 
     try {
         // Wait for both threads to finish
@@ -154,8 +154,8 @@ TEST(TestTheadTest, IntValueTestScope) {
     EXPECT_EQ(0, t2->intValue());
     t->start();
     t2->start();
-    jxx::lang::Thread::sleep(2000);
-    // we waited for 2 seconds, count should be 2
+    jxx::lang::Thread::sleep(500);
+   
     EXPECT_EQ(2, t->intValue());
     EXPECT_EQ(2, t2->intValue());
     t->stop();
@@ -166,4 +166,7 @@ TEST(TestTheadTest, IntValueTestScope) {
     jxx::lang::Thread::sleep(1000);
     EXPECT_EQ(2, t->intValue());
     EXPECT_EQ(2, t2->intValue());
+
+    t->join();
+    t2->join();
 }

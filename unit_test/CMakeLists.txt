@@ -23,7 +23,7 @@ FetchContent_MakeAvailable(googletest)
 # Recursively find all test source files (*.cpp) in "tests" folder
 file(GLOB_RECURSE TEST_SOURCES
     CONFIGURE_DEPENDS
-    ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/jxx_*.cpp
 )
 
 # Create a single test executable

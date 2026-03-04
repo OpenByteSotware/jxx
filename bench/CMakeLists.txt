@@ -41,11 +41,11 @@ FetchContent_MakeAvailable(benchmark)
 
 # Find all benchmark source files
 file(GLOB_RECURSE BENCH_SOURCES CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/bench*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/jxx_test_bench_*.cpp"
 )
 
 if (BENCH_SOURCES STREQUAL "")
-    message(WARNING "No benchmark source files found (bench*.cpp)")
+    message(WARNING "No benchmark source files found (jxx_test_bench_*.cpp)")
 else()
     message(STATUS "Found benchmark files: ${BENCH_SOURCES}")
 endif()
