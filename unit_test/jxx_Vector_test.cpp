@@ -52,7 +52,7 @@ protected:
 
 // Demonstrate some basic assertions.
 TEST(TestVectorTest, BasicAssertions) {
-    auto t = NEW(VectorIntTest);
+    auto t = JXX_NEW(VectorIntTest);
     int val = 5;
     ASSERT_TRUE(t->isEmpty());
     t->add(5);
@@ -67,7 +67,7 @@ TEST(TestVectorTest, BasicAssertions) {
 }
 
 TEST(TestVectorTest, StringData) {
-    auto t = NEW(VectorStringTest);
+    auto t = JXX_NEW(VectorStringTest);
     ASSERT_TRUE(t->isEmpty());
     t->add(std::string("5"));
     ASSERT_FALSE(t->isEmpty());

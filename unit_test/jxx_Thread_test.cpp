@@ -86,7 +86,7 @@ protected:
 
 // Demonstrate some basic assertions.
 TEST(TestTheadTest, BasicAssertions) {
-    auto t = NEW(TheadTest);
+    auto t = JXX_NEW(TheadTest);
     EXPECT_EQ(0, t->intValue());
     t->start();
     jxx::lang::Thread::sleep(500);    
@@ -99,8 +99,8 @@ TEST(TestTheadTest, BasicAssertions) {
 }
 
 TEST(TestTheadTest, Runnable) {
-    auto r = NEW(RunnableTest);
-    auto t = NEW(jxx::lang::Thread, r);
+    auto r = JXX_NEW(RunnableTest);
+    auto t = JXX_NEW(jxx::lang::Thread, r);
       
     // Start the thread
     t->start();
@@ -117,10 +117,10 @@ TEST(TestTheadTest, Runnable) {
 }
 TEST(TestTheadTest, MultiThread) {
 
-    auto r = NEW(RunnableTest);
-    auto t1 = NEW(jxx::lang::Thread, r, "Worker1");
-    auto t2 = NEW(jxx::lang::Thread, r, "Worker2");
-    auto t3 = NEW(jxx::lang::Thread, r, "Worker3");
+    auto r = JXX_NEW(RunnableTest);
+    auto t1 = JXX_NEW(jxx::lang::Thread, r, "Worker1");
+    auto t2 = JXX_NEW(jxx::lang::Thread, r, "Worker2");
+    auto t3 = JXX_NEW(jxx::lang::Thread, r, "Worker3");
 
     EXPECT_EQ(0, r->intValue());
 
@@ -148,8 +148,8 @@ TEST(TestTheadTest, MultiThread) {
 
 TEST(TestTheadTest, IntValueTestScope) {
       
-    auto t = NEW(TheadTest);
-    auto t2 = NEW(Thead2Test);
+    auto t = JXX_NEW(TheadTest);
+    auto t2 = JXX_NEW(Thead2Test);
     EXPECT_EQ(0, t->intValue());
     EXPECT_EQ(0, t2->intValue());
     t->start();

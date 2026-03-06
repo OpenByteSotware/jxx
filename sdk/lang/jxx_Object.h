@@ -18,8 +18,8 @@
 namespace jxx {
     namespace lang {
 
-#define NEW(T, ...) std::make_shared<T>(__VA_ARGS__)
-#define SYNCHRONIZE(obj, ...) obj->synchronized(__VA_ARGS__)
+#define JXX_NEW(T, ...) std::make_shared<T>(__VA_ARGS__)
+#define JXX_SYNCHRONIZE(obj, ...) obj->synchronized(__VA_ARGS__)
 //#define SYNCHRONIZED_FUNC()
 
         inline std::string demangle(const char* name) {

@@ -1,4 +1,7 @@
 #pragma once
+#ifndef __JXX_SERIALIZABLE_H__
+#define __JXX_SERIALIZABLE_H__
+
 #include <cstdint>
 #include <cstring>
 #include <functional>
@@ -338,3 +341,4 @@ public:
     ::jxx::Registrar<CLASS> CLASS::s_registrar_{ CLASS::kClassName, CLASS::kSerialVersionUID };
     } // namespace io
 } // namespace jxx
+#endif

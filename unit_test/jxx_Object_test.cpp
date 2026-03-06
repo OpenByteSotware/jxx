@@ -69,7 +69,7 @@ TEST(TestIntegerTest, IntValueTest) {
     //const std::string input_filepath = "this/package/testdata/myinputfile.dat";
     //const std::string output_filepath = "this/package/testdata/myoutputfile.dat";
     int val = 1;
-    auto ixx = NEW(TestInteger, val);
+    auto ixx = JXX_NEW(TestInteger, val);
     EXPECT_EQ(val, ixx->intValue());
     ASSERT_EQ(TestInteger::_destructorCalled, false);
     ixx.reset(); // only one reference counter, should be 0, delete object
@@ -82,7 +82,7 @@ TEST(TestIntegerTest, IntValueTestScope) {
     int val = 5;
     
     {
-        auto ixx = NEW(TestInteger, val);
+        auto ixx = JXX_NEW(TestInteger, val);
         EXPECT_EQ(val, ixx->intValue());
         ASSERT_EQ(TestInteger::_destructorCalled, false);
     }
