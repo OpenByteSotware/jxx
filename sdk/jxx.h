@@ -5,6 +5,7 @@
 #define _JXX_HEADER_
 
 #include "jxx_const.h"
+#include "lang/jxx_ByteArray.h"
 #include "lang/jxx_Object.h"
 #include "lang/jxx_Integer.h"
 #include "lang/jxx_Throwable.h"
