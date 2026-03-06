@@ -15,8 +15,27 @@ Java → C++17 transpiler with:
       * Simple → enum class + companion meta struct with values()/valueOf()
       * Rich   → class-backed enum with inline constants + static values()/valueOf()
   - Nested types: classes/interfaces/enums preserved (helpers nest with them)
-  - Rewrites:
-      * EnumName.values() / EnumName.valueOf(x) → correct static (helper or class)
+  - Rewrites: EnumName.values()/valueOf(x) → correct static (helper/class)
+  - **Header flags**:
+      * --include (repeatable)
+      * --string-include, --bytearray-include, --exceptions-include (repeatable), --sync-include
+      * --no-default-includes to suppress std headers
+
+Usage:
+  python java2cpp17.py Input.java -o Output.cpp \
+    [--bytearray-fields {value,ref,ref-ctor}] \
+    [--checked-exceptions {off,macro,comment}] \
+    [--throws-macro JTHROWS] \
+    [--string-policy {preserve,std}] \
+    [--sync-macro JXX_SYNCHRONZIED] \
+    [--exception-base Exception] \
+    [--enum-valueof-exception IllegalArgumentException] \
+    [--string-include "String.hpp"] \
+    [--bytearray-include "ByteArray.hpp"] \
+    [--exceptions-include "Exception.hpp" --exceptions-include "IOException.hpp"] \
+    [--sync-include "Sync.hpp"] \
+    [--include "More.hpp" --include <optional>] \
+    [--no-default-includes]
 """
 
 import argparse
@@ -77,7 +96,14 @@ class JavaToCppTranspiler:
                  string_policy: str = "preserve",
                  sync_macro: str = "JXX_SYNCHRONZIED",
                  exception_base: str = "Exception",
-                 enum_valueof_exception: str = "IllegalArgumentException"):
+                 enum_valueof_exception: str = "IllegalArgumentException",
+                 # include flags:
+                 string_include: Optional[str] = None,
+                 bytearray_include: Optional[str] = None,
+                 exceptions_includes: Optional[List[str]] = None,
+                 sync_include: Optional[str] = None,
+                 extra_includes: Optional[List[str]] = None,
+                 no_default_includes: bool = False):
         self.field_mode = field_mode
         self.checked_ex_mode = checked_ex_mode
         self.throws_macro = throws_macro
@@ -85,10 +111,17 @@ class JavaToCppTranspiler:
         self.sync_macro = sync_macro
         self.exception_base = exception_base
         self.enum_valueof_exception = enum_valueof_exception
+
+        self.string_include = string_include
+        self.bytearray_include = bytearray_include
+        self.exceptions_includes = exceptions_includes or []
+        self.sync_include = sync_include
+        self.extra_includes = extra_includes or []
+        self.no_default_includes = no_default_includes
+
         self.using_lines: Set[str] = set()
 
-        # Enum registry: map both fully-qualified (dot) and unqualified names
-        # name → {"kind": "simple"|"rich", "java_qual": "...", "cxx_qual": "...", "constants":[names]}
+        # Enum registry: name → info
         self.enums_by_java_qual: Dict[str, dict] = {}
         self.enums_by_unqual: Dict[str, dict] = {}
 
@@ -117,7 +150,31 @@ class JavaToCppTranspiler:
             else:
                 self.using_lines.add(f"using {cxx_path};")
 
-    # ---------- String policy helpers ----------
+    # ---------- String policy ----------
+    def _render_type_arguments(self, args) -> str:
+        if not args:
+            return ""
+        rendered = []
+        for a in args:
+            an = type(a).__name__
+            if an == "TypeArgument":
+                if getattr(a, "wildcard", False):
+                    if a.pattern_type is not None:
+                        bound = self._map_reference_or_basic(a.pattern_type)
+                        if getattr(a, "kind", None) == "super":
+                            rendered.append(f"{bound} /* ? super */")
+                        else:
+                            rendered.append(f"{bound} /* ? extends */")
+                    else:
+                        rendered.append("/* ? */")
+                elif a.type is not None:
+                    rendered.append(self._map_reference_or_basic(a.type))
+                else:
+                    rendered.append("/* ? */")
+            else:
+                rendered.append(str(a))
+        return "<" + ", ".join(rendered) + ">"
+
     def _map_reference_or_basic(self, t) -> str:
         tn = type(t).__name__
         if tn == "BasicType":
@@ -143,40 +200,16 @@ class JavaToCppTranspiler:
             base_cpp = f"std::vector<{base_cpp}>"
         return base_cpp
 
-    def _render_type_arguments(self, args) -> str:
-        if not args:
-            return ""
-        rendered = []
-        for a in args:
-            an = type(a).__name__
-            if an == "TypeArgument":
-                if getattr(a, "wildcard", False):
-                    if a.pattern_type is not None:
-                        bound = self._map_reference_or_basic(a.pattern_type)
-                        if getattr(a, "kind", None) == "super":
-                            rendered.append(f"{bound} /* ? super */")
-                        else:
-                            rendered.append(f"{bound} /* ? extends */")
-                    else:
-                        rendered.append("/* ? */")
-                elif a.type is not None:
-                    rendered.append(self._map_reference_or_basic(a.type))
-                else:
-                    rendered.append("/* ? */")
-            else:
-                rendered.append(str(a))
-        return "<" + ", ".join(rendered) + ">"
-
     def _string_param_t(self) -> str:
         return "const String&" if self.string_policy == "preserve" else "const std::string&"
 
     def _string_literal_ctor(self, s: str) -> str:
-        # For String policy, compare to String("CONST"); for std, "CONST" is fine
+        # For preserve policy, compare to String("CONST"); for std, "CONST" is fine
         if self.string_policy == "preserve":
             return f"String({s})"
-        return s  # e.g., "CONST"
+        return s
 
-    # ---------- Enum pre-scan ----------
+    # ---------- Enum scan ----------
     def _is_simple_enum(self, enum_node) -> bool:
         body = list(getattr(enum_node, "body", []) or [])
         has_members = any(type(x).__name__ in {
@@ -203,27 +236,20 @@ class JavaToCppTranspiler:
                 kind = "simple" if self._is_simple_enum(t) else "rich"
                 info = {"kind": kind, "java_qual": java_qual, "cxx_qual": cxx_qual, "constants": constants}
                 self.enums_by_java_qual[java_qual] = info
-                self.enums_by_unqual.setdefault(name, info)  # if collision, last wins
-                # Recurse nested types inside enum
-                inner_java = java_scope + [name]
-                inner_cxx = cxx_scope + [name]
-                self._scan_types_for_enums(getattr(t, "body", None), inner_java, inner_cxx)
+                self.enums_by_unqual.setdefault(name, info)
+                # Recurse nested types
+                self._scan_types_for_enums(getattr(t, "body", None), java_scope + [name], cxx_scope + [name])
             elif tname in ("ClassDeclaration", "InterfaceDeclaration"):
                 name = t.name
-                inner_java = java_scope + [name]
-                inner_cxx = cxx_scope + [name]
-                self._scan_types_for_enums(getattr(t, "body", None), inner_java, inner_cxx)
-            # else skip other top-levels
+                self._scan_types_for_enums(getattr(t, "body", None), java_scope + [name], cxx_scope + [name])
 
     def _lookup_enum_info(self, java_qual_or_unqual: str) -> Optional[dict]:
-        # Try exact java-qualified name
         if java_qual_or_unqual in self.enums_by_java_qual:
             return self.enums_by_java_qual[java_qual_or_unqual]
-        # Try unqualified last segment
         last = java_qual_or_unqual.split(".")[-1]
         return self.enums_by_unqual.get(last)
 
-    # ---------- Expressions (with enum .values/.valueOf rewrite) ----------
+    # ---------- Expressions (includes enum call rewrites) ----------
     def emit_expression(self, e) -> str:
         if e is None:
             return ""
@@ -278,16 +304,15 @@ class JavaToCppTranspiler:
             args = [self.emit_expression(a) for a in (e.arguments or [])]
             qual_str = qual if isinstance(qual, str) else (self.emit_expression(qual) if qual is not None else "")
 
-            # Map EnumName.values()/valueOf(...) to helper or class static
+            # Enum .values() / .valueOf() rewrite
             if qual_str and member in {"values", "valueOf"}:
                 info = self._lookup_enum_info(qual_str)
                 if info:
                     cxx_qual = qual_str.replace(".", "::")
-                    is_simple = (info["kind"] == "simple")
-                    target = f"{cxx_qual}__meta::{member}" if is_simple else f"{cxx_qual}::{member}"
+                    target = f"{cxx_qual}__meta::{member}" if info["kind"] == "simple" else f"{cxx_qual}::{member}"
                     return f"{target}({', '.join(args)})"
 
-            # System.out.print/println → std::cout
+            # System.out mapping
             if ((qual_str == "System.out" or qual_str.endswith("System.out"))
                 and member in {"print", "println"}):
                 if not args:
@@ -626,7 +651,7 @@ class JavaToCppTranspiler:
             out.write("}")
 
     # ---------- Enums ----------
-    def _emit_simple_enum_with_helpers(self, t, out: Emit, cxx_qual_prefix: str = ""):
+    def _emit_simple_enum_with_helpers(self, t, out: Emit):
         enum_name = t.name
         consts = [c.name for c in (t.constants or [])]
         # 1) enum class
@@ -648,7 +673,6 @@ class JavaToCppTranspiler:
         for c in consts:
             lit = self._string_literal_ctor(f'\"{c}\"')
             out.write(f"if (s == {lit}) return {enum_name}::{c};")
-        # Throw
         out.write(f"throw {self.enum_valueof_exception}(\"No enum const {enum_name}.\" /* + s */);")
         out.exit()
         out.write("}")
@@ -657,7 +681,6 @@ class JavaToCppTranspiler:
 
     def _emit_rich_enum_class(self, t, out: Emit):
         enum_name = t.name
-        # Interfaces implemented by enum
         bases = []
         if getattr(t, "implements", None):
             for iface in t.implements:
@@ -666,7 +689,7 @@ class JavaToCppTranspiler:
         out.write(f"class {enum_name}{bases_clause} {{")
         out.enter()
 
-        # Public constants
+        # public: constants
         out.write("public:")
         out.enter()
         for c in (t.constants or []):
@@ -678,7 +701,7 @@ class JavaToCppTranspiler:
             out.write(f"inline static const {enum_name} {c.name} = {init};")
             if getattr(c, "class_body", None):
                 out.write(f"// NOTE: per-constant class body for {c.name} not translated; consider manual specialization")
-        # values() / valueOf()
+        # values/valueOf
         consts = [c.name for c in (t.constants or [])]
         out.write(f"static inline std::array<{enum_name}, {len(consts)}> values() {{")
         out.enter()
@@ -697,7 +720,7 @@ class JavaToCppTranspiler:
         out.write("}")
         out.exit()
 
-        # Other members (fields/methods/ctors/nested types)
+        # other members with access control
         def access_of(mods: set) -> str:
             if "public" in mods:
                 return "public"
@@ -709,20 +732,17 @@ class JavaToCppTranspiler:
         ref_fields_accum: List[Tuple[str, str]] = []
         for m in (t.body or []):
             mtype = type(m).__name__
-            # Enum constructors must be private
             if mtype == "ConstructorDeclaration":
                 desired_access = "private"
             else:
                 mods = set(getattr(m, "modifiers", []) or [])
                 desired_access = access_of(mods)
-
             if desired_access != current_access:
                 if current_access is not None:
                     out.exit()
                 out.write(f"{desired_access}:")
                 out.enter()
                 current_access = desired_access
-
             if mtype == "FieldDeclaration":
                 self.emit_field(m, out, ref_fields_accum)
             elif mtype in ("MethodDeclaration", "ConstructorDeclaration"):
@@ -731,7 +751,6 @@ class JavaToCppTranspiler:
                 self.emit_type(m, out)
             else:
                 out.write(f"/* TODO: Unhandled enum member type: {mtype} */")
-
         if current_access is not None:
             out.exit()
         out.exit()
@@ -739,20 +758,18 @@ class JavaToCppTranspiler:
         out.write(";")
 
     def emit_enum(self, t, out: Emit):
-        # Decide simple vs rich by our pre-scan
-        info = self._lookup_enum_info(t.name)  # unqualified sufficient in this scope
+        info = self._lookup_enum_info(t.name)
         if info and info["kind"] == "simple":
             self._emit_simple_enum_with_helpers(t, out)
         else:
             self._emit_rich_enum_class(t, out)
 
-    # ---------- Types (Class / Interface / Enum, with nesting) ----------
+    # ---------- Types (Class / Interface / Enum) ----------
     def emit_type(self, t, out: Emit):
         tname = type(t).__name__
         if tname == "EnumDeclaration":
             self.emit_enum(t, out)
             return
-
         if tname not in ("ClassDeclaration", "InterfaceDeclaration"):
             out.write(f"/* TODO: Unhandled type: {tname} */")
             return
@@ -792,14 +809,12 @@ class JavaToCppTranspiler:
             mtype = type(m).__name__
             mods = set(getattr(m, "modifiers", []) or [])
             desired_access = access_of(mods)
-
             if desired_access != current_access:
                 if current_access is not None:
                     out.exit()
                 out.write(f"{desired_access}:")
                 out.enter()
                 current_access = desired_access
-
             if mtype == "FieldDeclaration":
                 self.emit_field(m, out, ref_fields_accum)
             elif mtype in ("MethodDeclaration", "ConstructorDeclaration"):
@@ -812,7 +827,6 @@ class JavaToCppTranspiler:
         if current_access is not None:
             out.exit()
 
-        # Synthetic ctor for ref-ctor mode
         if not is_interface and self.field_mode == "ref-ctor" and ref_fields_accum:
             out.write("public:")
             out.enter()
@@ -825,27 +839,70 @@ class JavaToCppTranspiler:
         out.write("}")
         out.write(";")
 
+    # ---------- Includes ----------
+    @staticmethod
+    def _normalize_include_operand(s: str) -> str:
+        s = s.strip()
+        if not s:
+            return s
+        if s.startswith("<") or s.startswith("\""):
+            return s
+        # default to quoted header
+        return f"\"{s}\""
+
+    def _emit_includes(self, out: Emit):
+        ordered: List[str] = []
+
+        # Feature-specific includes first (if provided)
+        if self.string_include:
+            ordered.append(self.string_include)
+        if self.bytearray_include:
+            ordered.append(self.bytearray_include)
+        for exc in self.exceptions_includes:
+            ordered.append(exc)
+        if self.sync_include:
+            ordered.append(self.sync_include)
+        # Generic extras
+        for inc in self.extra_includes:
+            ordered.append(inc)
+
+        # Default library includes (unless suppressed)
+        if not self.no_default_includes:
+            # Always needed by our emitter
+            ordered.append("<iostream>")
+            ordered.append("<vector>")
+            ordered.append("<array>")
+            if self.string_policy == "std":
+                ordered.append("<string>")
+
+        # Deduplicate while preserving order
+        seen = set()
+        normalized: List[str] = []
+        for inc in ordered:
+            op = self._normalize_include_operand(inc)
+            if op and op not in seen:
+                seen.add(op)
+                normalized.append(op)
+
+        for op in normalized:
+            out.write(f"#include {op}")
+
     # ---------- Translation entry ----------
     def transpile(self, java_source: str) -> str:
         tree = javalang.parse.parse(java_source)
 
-        # Pre-scan enums (including nested) to know simple/rich and constants
-        pkg = tree.package.name if tree.package else ""
-        java_scope = [pkg] if pkg else []
-        cxx_scope = [pkg.replace(".", "::")] if pkg else []
-        self._scan_types_for_enums(tree.types, [], [])  # types are top-level; nested scanning recurses
+        # Pre-scan enums (including nested) so we can rewrite .values/.valueOf
+        self._scan_types_for_enums(tree.types, [], [])
 
         # Imports & usings
         self._gather_import_usings(tree)
 
         out = Emit()
         out.write("// Generated by java2cpp17 (AST-based)")
-        out.write("#include <iostream>")
-        out.write("#include <vector>")
-        out.write("#include <array>")
-        if self.string_policy == "std":
-            out.write("#include <string>")
-        out.write("// NOTE: Provide your ByteArray, String, Exception hierarchy, and synchronization macro.")
+
+        # Includes
+        self._emit_includes(out)
+        out.write("// NOTE: Provide your ByteArray, String, Exception hierarchy, and synchronization macro if not in PCH.")
         out.write("")
 
         for line in sorted(self.using_lines):
@@ -860,6 +917,7 @@ class JavaToCppTranspiler:
             out.write("")
             out.enter()
 
+        # Types
         for t in (tree.types or []):
             self.emit_type(t, out)
             out.write("")
@@ -872,10 +930,12 @@ class JavaToCppTranspiler:
 
 def main():
     ap = argparse.ArgumentParser(
-        description="Java → C++17 AST transpiler with enums (values/valueOf), generics, exceptions, nested types, String preserve, byte arrays."
+        description="Java → C++17 AST transpiler (includes, enums with values/valueOf, generics, exceptions, nested types, String preserve, byte arrays, synchronized→macro)"
     )
     ap.add_argument("input", help="Input Java source file")
     ap.add_argument("-o", "--output", help="Output C++ file (default: stdout)")
+
+    # Existing behavior controls
     ap.add_argument("--bytearray-fields",
                     choices=["value", "ref", "ref-ctor"],
                     default="value",
@@ -896,18 +956,42 @@ def main():
                     help="Base exception type for untyped/multi-catch.")
     ap.add_argument("--enum-valueof-exception", default="IllegalArgumentException",
                     help="Exception type thrown by valueOf when no match.")
-    args = ap.parse_args()
 
-    transpiler = JavaToCppTranspiler(field_mode=args.bytearray_fields,
-                                     checked_ex_mode=args.checked_exceptions,
-                                     throws_macro=args.throws_macro,
-                                     string_policy=args.string_policy,
-                                     sync_macro=args.sync_macro,
-                                     exception_base=args.exception_base,
-                                     enum_valueof_exception=args.enum_valueof_exception)
+    # NEW: include flags
+    ap.add_argument("--string-include", default=None,
+                    help="Header to include for your String type, e.g., \"String.hpp\"")
+    ap.add_argument("--bytearray-include", default=None,
+                    help="Header to include for your ByteArray type, e.g., \"ByteArray.hpp\"")
+    ap.add_argument("--exceptions-include", action="append", default=[],
+                    help="Header(s) for your Exception hierarchy/macros; can repeat.")
+    ap.add_argument("--sync-include", default=None,
+                    help="Header that defines your synchronization macro, e.g., \"Sync.hpp\"")
+    ap.add_argument("--include", action="append", default=[],
+                    help="Additional #include operand(s); can repeat. Use <...> or \"...\"; "
+                         "if omitted, we wrap in quotes.")
+    ap.add_argument("--no-default-includes", action="store_true",
+                    help="Do not emit standard library includes (<iostream>, <vector>, <array>, and <string> if needed).")
+
+    args = ap.parse_args()
 
     with open(args.input, "r", encoding="utf-8") as f:
         src = f.read()
+
+    transpiler = JavaToCppTranspiler(
+        field_mode=args.bytearray_fields,
+        checked_ex_mode=args.checked_exceptions,
+        throws_macro=args.throws_macro,
+        string_policy=args.string_policy,
+        sync_macro=args.sync_macro,
+        exception_base=args.exception_base,
+        enum_valueof_exception=args.enum_valueof_exception,
+        string_include=args.string_include,
+        bytearray_include=args.bytearray_include,
+        exceptions_includes=args.exceptions_include,
+        sync_include=args.sync_include,
+        extra_includes=args.include,
+        no_default_includes=args.no_default_includes
+    )
 
     cpp = transpiler.transpile(src)
     if args.output:
@@ -918,3 +1002,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
