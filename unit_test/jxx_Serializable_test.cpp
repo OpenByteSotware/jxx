@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include "jxx.h"
 
+using namespace jxx::lang;
+
 class Person: public jxx::lang::Cloneable<Person>, public jxx::io::Serializable 
 {
     // --- Fields you want to serialize ---
@@ -31,7 +33,7 @@ public:
     }
 
     virtual std::shared_ptr<Object> clone() const override {
-        return JXX_NEW(Person, this->name_, this->age_);
+        return JXX_NEW<Person>(this->name_, this->age_);
     }
 
     std::size_t hashCode() const noexcept override {
@@ -78,6 +80,6 @@ TEST(PersonTest, IntValueTest) {
     //const std::string output_filepath = "this/package/testdata/myoutputfile.dat";
     int age = 10;
     std::string name = "Sue";
-    auto ixx = JXX_NEW(Person, name, age);
+    auto ixx = JXX_NEW<Person>(name, age);
     EXPECT_EQ(age, ixx->age());
 }

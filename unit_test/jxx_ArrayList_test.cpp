@@ -1,10 +1,13 @@
 #include <gtest/gtest.h>
 #include "jxx.h"
 
+using namespace jxx::lang;
+
 class ArrayListIntTest : public jxx::util::ArrayList<int> {
     int value_{ 0 };
     bool runThread_{ true };
 public:
+    ArrayListIntTest() {}
     
     virtual ~ArrayListIntTest() {
     } 
@@ -38,7 +41,7 @@ protected:
 
 // Demonstrate some basic assertions.
 TEST(TestArrayListTest, BasicAssertions) {
-    auto t = JXX_NEW(ArrayListIntTest);
+    auto t = JXX_NEW<ArrayListIntTest>();
     int val = 5;
     ASSERT_TRUE(t->isEmpty());
     t->add(5);
