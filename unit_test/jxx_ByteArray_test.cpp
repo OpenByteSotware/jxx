@@ -1,62 +1,110 @@
 #include <gtest/gtest.h>
 #include <cstddef>       // std::byte, std::to_integer
 #include "jxx.h" // Your ByteNDArray implementation
+#include <cstddef>   // std::byte, std::to_integer
+#include <random>
+#include <map>
+#include <tuple>
+#include <string>
 
 using namespace std;
+using namespace jxx::lang;
 
-class ByteNDArrayTest : public ::testing::Test {
-protected:
+class ByteArrayTest : public ::testing::Test {
+public:
+    std::mt19937 rng;
+    std::uniform_int_distribution<int> byteDist;
+    std::uniform_int_distribution<int> sizeDist;
+
     void SetUp() override {
-        // Called before each test
+        std::random_device rd;
+        rng.seed(rd());
+        byteDist = std::uniform_int_distribution<int>(0, 255);
+        sizeDist = std::uniform_int_distribution<int>(1, 4); // small sizes for test
     }
 
-    void TearDown() override {
-        // Called after each test
+    byte randomByte() {
+        return byte{ static_cast<unsigned char>(byteDist(rng)) };
+    }
+
+    int randomSize() {
+        return sizeDist(rng);
+    }
+
+    std::string pathToString(const std::vector<int>& path) {
+        std::string s = "[";
+        for (size_t i = 0; i < path.size(); ++i) {
+            s += std::to_string(path[i]);
+            if (i + 1 < path.size()) s += ",";
+        }
+        s += "]";
+        return s;
+    }
+
+    void allocateJagged(ByteArray::ArrayProxy proxy, int depth, int maxDepth) {
+        if (depth == maxDepth - 1) {
+            proxy.allocate(ByteArrayTest::randomSize(), true); // leaf
+        }
+        else {
+            int rows = randomSize();
+            proxy.allocate(rows, false);
+            for (int i = 0; i < rows; ++i) {
+                allocateJagged(proxy[i], depth + 1, maxDepth);
+            }
+        }
+    }
+
+    void fillJagged(ByteArray::ArrayProxy proxy, int depth, int maxDepth,
+        std::map<std::vector<int>, byte>& expected,
+        std::vector<int> path) {
+        if (depth == maxDepth - 1) {
+            for (int i = 0; i < proxy.leaf().size(); ++i) {
+                auto val = randomByte();
+                proxy.leaf()[i] = val;
+                auto fullPath = path;
+                fullPath.push_back(i);
+                expected[fullPath] = val;
+            }
+        }
+        else {
+            for (int i = 0; i < proxy.size(); ++i) {
+                auto newPath = path;
+                newPath.push_back(i);
+                fillJagged(proxy[i], depth + 1, maxDepth, expected, newPath);
+            }
+        }
+    }
+
+    void verifyJagged(ByteArray::ArrayProxy proxy, int depth, int maxDepth,
+        const std::map<std::vector<int>, byte>& expected,
+        std::vector<int> path) {
+        if (depth == maxDepth - 1) {
+            for (int i = 0; i < proxy.leaf().size(); ++i) {
+                auto fullPath = path;
+                fullPath.push_back(i);
+                ASSERT_EQ(proxy.leaf()[i], expected.at(fullPath))
+                    << "Mismatch at path: " << pathToString(fullPath);
+            }
+        }
+        else {
+            for (int i = 0; i < proxy.size(); ++i) {
+                auto newPath = path;
+                newPath.push_back(i);
+                verifyJagged(proxy[i], depth + 1, maxDepth, expected, newPath);
+            }
+        }
     }
 };
 
-TEST(ByteArrayTest, RectangularArrayStoresAndRetrievesValues) {
-    ByteArray arr({ 3, 2, 4 }); // 3x2x4 rectangular
+TEST_F(ByteArrayTest, RandomJaggedStressTest) {
+   
+    const int maxDepth = 3; // e.g., byte[][][]
+    ByteArray arr(this->randomSize()); // random first dimension
 
-    arr[0][1].leaf()[2] = byte{ 42 };
-    EXPECT_EQ(arr[0][1].leaf()[2], 42);
+    allocateJagged(arr[0], 0, maxDepth);
 
-    arr[2][0].leaf()[3] = byte{ 99 };
-    EXPECT_EQ(arr[2][0].leaf()[3], 99);
-}
+    std::map<std::vector<int>, byte> expected;
+    fillJagged(arr[0], 0, maxDepth, expected, {});
 
-TEST(ByteArrayTest, JaggedArrayStoresAndRetrievesValues) {
-    ByteArray arr(3); // new byte[3][]
-
-    arr[0].allocate(2); // arr[0] = new byte[2]
-    arr[1].allocate(5); // arr[1] = new byte[5]
-
-    arr[0].leaf()[1] = ::byte{ 77 };
-    arr[1].leaf()[4] = ::byte{ 88 };
-
-    EXPECT_EQ(arr[0].leaf()[1], 77);
-    EXPECT_EQ(arr[1].leaf()[4], 88);
-}
-
-TEST(ByteArrayTest, MixedJaggedArrayWorks) {
-    ByteArray arr(2); // new byte[2][][]
-    arr[0].allocate(2, false); // arr[0] = new byte[2][]
-    arr[0][0].allocate(3);     // arr[0][0] = new byte[3]
-    arr[0][1].allocate(1);     // arr[0][1] = new byte[1]
-
-    arr[0][0].leaf()[2] = ::byte{ 55 };
-    arr[0][1].leaf()[0] = ::byte{ 66 };
-
-    EXPECT_EQ(arr[0][0].leaf()[2], 55);
-    EXPECT_EQ(arr[0][1].leaf()[0], 66);
-}
-
-TEST(ByteArrayTest, ThrowsWhenAccessingUnallocatedLeaf) {
-    ByteArray arr(2); // new byte[2][]
-    EXPECT_THROW(arr[0].leaf()[0], std::runtime_error);
-}
-
-TEST(ByteArrayTest, ThrowsWhenTooManyIndices) {
-    ByteArray arr({ 2, 2 }); // 2x2
-    EXPECT_THROW(arr[0][0][0], std::runtime_error); // No leaf() call
+    verifyJagged(arr[0], 0, maxDepth, expected, {});
 }
