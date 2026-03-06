@@ -4,26 +4,25 @@
 java2cpp17.py
 
 Java → C++17 transpiler (AST-based via `javalang`) with:
-  • Imports: java.* → jxx::* (using / using namespace)
-  • String policy: preserve Java `String` as C++ `String` (or std::string via flag)
-  • byte[] handling: params & initialized locals by ref; multi-dim → std::vector<ByteArray>; field modes
+  • Imports: java.* → jxx::* (using / using namespace), and **import-derived header includes**
+      - import java.io.*      →  #include "jxx.io.h"
+      - import java.util.Map  →  #include "jxx.util.Map.h"
+  • Package → C++ namespace
+  • String policy: preserve Java `String` (or std::string via flag)
+  • byte[]: params & initialized locals by ref; multi-dim → nested std::vector<ByteArray>
   • Generics: class/interface/method templates; type args; wildcards annotated
   • Exceptions: throw new X → throw X(...); try/catch; 'throws' via macro/comment/off; untyped/multi-catch → catch(Exception&)
-  • synchronized(expr) → JXX_SYNCHRONZIED(expr) { ... } (macro configurable)
-  • Enums: simple → enum class + companion meta(values/valueOf); rich → class-backed with static values/valueOf
-  • Nested types supported; out-of-class defs emitted in .cpp with fully-qualified names
+  • synchronized(expr) → SYNC_MACRO(expr) { ... } (default macro: JXX_SYNCHRONZIED)
+  • Enums: simple → enum class + companion meta(values/valueOf); rich → class-backed + static values/valueOf
+    and call-site rewrite for Enum.values()/valueOf()
+  • Nested types supported; non-template out-of-class defs emitted in .cpp
   • Directory mode: per .java file emit **.h** (declarations) and **.cpp** (definitions)
-  • Includes: feature-specific and generic flags; default std headers toggle
-  • CMake: generate top-level CMakeLists.txt with sources
-  • Header guards option (instead of #pragma once)
-  • **NEW**: `new` replacement macro style: `--new-macro-style template|curried` (default **template**) and `--new-macro NAME`
-      - template → `JXX_NEW<Foo>(args)`
-      - curried  → `JXX_NEW(Foo)(args)`
+  • Includes: feature-specific flags + default std headers
+  • Header guards (or pragma once)
+  • CMake generator
+  • `new` replacement macro styles: `--new-macro-style template|curried`, `--new-macro NAME`
 
-Usage examples:
-  python java2cpp17.py --dir ./src_java --out ./cpp_out --cmake \
-    --header-guards --string-include "String.hpp" --bytearray-include "ByteArray.hpp" \
-    --new-macro-style template --new-macro JXX_NEW
+Requires: pip install javalang
 """
 
 from __future__ import annotations
@@ -123,6 +122,8 @@ class Transpiler:
         self.using_lines: Set[str] = set()
         self.enums_by_java_qual: Dict[str,dict] = {}
         self.enums_by_unqual: Dict[str,dict] = {}
+        self.import_header_includes: List[str] = []
+        self.include_written: Set[str] = set()
 
     # ---------- includes ----------
     @staticmethod
@@ -131,6 +132,12 @@ class Transpiler:
         if not s: return s
         if s.startswith('<') or s.startswith('"'): return s
         return f'"{s}"'
+
+    def _emit_include_operand(self, out: Emit, operand: str):
+        op = self._norm_inc(operand)
+        if op and op not in self.include_written:
+            self.include_written.add(op)
+            out.write(f"#include {op}")
 
     def emit_includes(self, out: Emit) -> None:
         ordered: List[str] = []
@@ -147,7 +154,7 @@ class Transpiler:
             op = self._norm_inc(inc)
             if op and op not in seen:
                 seen.add(op)
-                out.write(f"#include {op}")
+                self._emit_include_operand(out, op)
 
     # ---------- imports ----------
     @staticmethod
@@ -157,6 +164,7 @@ class Transpiler:
 
     def gather_usings(self, tree) -> None:
         self.using_lines.clear()
+        self.import_header_includes = []
         for imp in (tree.imports or []):
             path = imp.path
             if not path or not path.startswith("java."): continue
@@ -165,12 +173,28 @@ class Transpiler:
             if imp.wildcard:
                 ns = "::".join(["jxx"] + segs)
                 self.using_lines.add(f"using namespace {ns};")
+                # import-derived include: jxx.<segs>.h
+                if segs:
+                    inc = f"jxx.{'.'.join(segs)}.h"
+                else:
+                    inc = "jxx.h"
+                self.import_header_includes.append(inc)
             else:
                 cxx = "::".join(["jxx"] + segs) if segs else "jxx"
                 if self._looks_pkg(segs, False):
                     self.using_lines.add(f"using namespace {cxx};")
+                    if segs:
+                        inc = f"jxx.{'.'.join(segs)}.h"
+                        self.import_header_includes.append(inc)
                 else:
                     self.using_lines.add(f"using {cxx};")
+                    if segs:
+                        *pkg, typ = segs
+                        if pkg:
+                            inc = f"jxx.{'.'.join(pkg)}.{typ}.h"
+                        else:
+                            inc = f"jxx.{typ}.h"
+                        self.import_header_includes.append(inc)
 
     # ---------- types/generics ----------
     def _render_type_args(self, args) -> str:
@@ -290,7 +314,6 @@ class Transpiler:
             call = f"{qstr}.{member}" if qstr else member
             return f"{call}({', '.join(args)})" if args else f"{call}()"
         if tn == "ClassCreator":
-            # new Type(args)  →  new-macro styles
             name = self._map_ref_or_basic(e.type)
             args = [self.emit_expression(a) for a in (e.arguments or [])]
             if self.new_macro_style == 'template':
@@ -305,7 +328,6 @@ class Transpiler:
                 return f"std::vector<{base}>({n})"
             return f"/* TODO: array creation for {base} with {dims} dims */"
         if tn == "ThrowStatement":
-            # Do NOT wrap with JXX_NEW inside throws; throw object by value
             ex = e.expression
             if type(ex).__name__ == "ClassCreator":
                 name = self._map_ref_or_basic(ex.type)
@@ -676,6 +698,8 @@ class Transpiler:
         ns = tree.package.name.replace('.', '::') if tree.package else ''
         out = Emit()
         out.write('// Generated by java2cpp17 (AST-based)')
+        # reset include tracking per unit
+        self.include_written = set()
         # Header preamble: pragma once or guards
         guard_to_use = None
         if mode == 'header':
@@ -687,11 +711,15 @@ class Transpiler:
                 out.write('#pragma once')
         # Includes
         if mode != 'source':
+            # import-derived includes first
+            for inc in sorted(set(self.import_header_includes)):
+                self._emit_include_operand(out, inc)
+            # then user/default includes
             self.emit_includes(out)
             out.write('// NOTE: Provide ByteArray/String/Exception/macro headers if not in PCH.')
         else:
             if not header_rel_include: raise ValueError('header_rel_include required for source mode')
-            out.write(f"#include {self._norm_inc(header_rel_include)}")
+            self._emit_include_operand(out, header_rel_include)
             if self.extra_includes or self.exceptions_includes or self.sync_include or self.bytearray_include or self.string_include:
                 self.emit_includes(out)
         out.write('')
@@ -769,7 +797,7 @@ def generate_cmake(out_root: str,
 # ---------- CLI ----------
 
 def build_arg_parser() -> argparse.ArgumentParser:
-    ap = argparse.ArgumentParser(description="Java → C++17 AST transpiler (dir mode, header/source split, guards/pragma, CMake, new→macro styles)")
+    ap = argparse.ArgumentParser(description="Java → C++17 AST transpiler (dir mode, header/source split, guards/pragma, CMake, import includes, new→macro styles)")
     ap.add_argument('input', nargs='?', default=None, help='Input Java file (omit when using --dir)')
     ap.add_argument('-o','--output', default=None, help='Output C++ file (monolith) OR output root when --pair/--dir')
     ap.add_argument('--pair', action='store_true', help='For single input, emit header+source pair under --out root')
@@ -905,7 +933,6 @@ def main():
         if args.cmake:
             cmk = generate_cmake(args.out, project=args.cmake_project, target=args.cmake_target,
                                  kind=args.cmake_kind, cxx_standard=args.cmake_cxx_standard, cmake_min=args.cmake_min)
-        
             cmake_path = os.path.join(args.out, 'CMakeLists.txt')
             with open(cmake_path, 'w', encoding='utf-8') as f:
                 f.write(cmk)
