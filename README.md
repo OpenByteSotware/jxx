@@ -54,7 +54,7 @@ python java_to_cpp.py --dir ./src_java --out ./cpp_out --cmake \
   --bytearray-include "ByteArray.h" \
   --exceptions-include "Exception.h" \
   --sync-include "Sync.h" \
-  --checked-exceptions macro --throws-macro JTHROWS
+  --checked-exceptions macro --throws-macro JXX_THROWS
 
 
 
@@ -73,4 +73,4 @@ python java_to_cpp.py \
   --exceptions-include "Exception.hpp" \
   --exceptions-include "IOException.hpp" \
   --sync-include "Sync.hpp" \
-  --checked-exceptions macro --throws-macro JTHROWS
+  --checked-exceptions macro --throws-macro JXX_THROWS

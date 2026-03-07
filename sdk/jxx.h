@@ -4,7 +4,8 @@
 #ifndef _JXX_HEADER_
 #define _JXX_HEADER_
 
-#include "jxx_const.h"
+#include "defines/jxx_const.h"
+#include "defines/jxx_Throws.h"
 #include "lang/jxx_ByteArray.h"
 #include "lang/jxx_Object.h"
 #include "lang/jxx_Integer.h"
