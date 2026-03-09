@@ -9,7 +9,7 @@
 #include <string>
 #include <sstream>
 #include <algorithm>
-#include "lang/jxx_Object.h"
+#include "lang/jxx.lang.Object.h"
 
 namespace jxx::util {
 

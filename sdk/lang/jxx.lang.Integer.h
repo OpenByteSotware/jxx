@@ -1,6 +1,6 @@
 // integer.hpp
 #pragma once
-#include "jxx_object.h"
+#include "jxx.lang.Object.h"
 
 namespace jxx {
     namespace lang {

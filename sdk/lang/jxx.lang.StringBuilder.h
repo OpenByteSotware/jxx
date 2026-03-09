@@ -8,7 +8,7 @@
 #include <limits>
 #include <cstdio>       // for std::snprintf
 #include <cassert>
-#include "jxx_Object.h"
+#include "jxx.lang.Object.h"
 
 namespace jxx::lang {
 

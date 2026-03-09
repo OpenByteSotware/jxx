@@ -7,7 +7,7 @@
 #include <sstream>
 #include <typeinfo>
 #include <utility>
-#include "jxx_Object.h"
+#include "jxx.lang.Object.h"
 
 #if defined(__GNUG__) || defined(__clang__)
   #include <cxxabi.h>

@@ -1,5 +1,5 @@
 #pragma once
-#include "jxx_DatagramSocket.h"
+#include "jxx.net.DatagramSocket.h"
 #ifndef _WIN32
 #include <net/if.h> // if_nametoindex helper used in examples
 #endif

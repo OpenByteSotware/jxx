@@ -12,7 +12,7 @@
 #include <optional>
 #include <vector>
 #include <iterator>
-#include "jxx_Serializable.h"
+#include "jxx.io.Serializable.h"
 
 // ====================== Java-like exceptions ======================
 struct index_out_of_bounds_error : std::out_of_range {
