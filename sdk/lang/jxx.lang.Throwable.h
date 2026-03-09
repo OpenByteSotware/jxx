@@ -141,27 +141,9 @@ public:
     ~Exception() override = default;
 };
 
-class RuntimeException : public Exception {
-public:
-    using Exception::Exception;
-    ~RuntimeException() override = default;
-};
-
 // A few illustrative specific types (mirror Java names)
 class IOException : public Exception {
 public: using Exception::Exception; ~IOException() override = default;
-};
-
-class IllegalArgumentException : public RuntimeException {
-public: using RuntimeException::RuntimeException; ~IllegalArgumentException() override = default;
-};
-
-class NullPointerException : public RuntimeException {
-public: using RuntimeException::RuntimeException; ~NullPointerException() override = default;
-};
-
-class IndexOutOfBoundsException : public RuntimeException {
-public: using RuntimeException::RuntimeException; ~IndexOutOfBoundsException() override = default;
 };
 
 // -------------------- Macros for source loc --------------------

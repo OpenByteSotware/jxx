@@ -13,6 +13,7 @@
 #include <type_traits>
 #include <codecvt>
 #include <locale>
+#include "jxx.lang.Object.h"
 
 using namespace std;
 
@@ -55,6 +56,7 @@ namespace jxx::lang {
                 return u"";
             }
         }
+
         // From UTF-8 (convenience)
         static String fromUtf8(const std::string& utf8) {
             return String(utf8ToUtf16(utf8));
@@ -62,7 +64,22 @@ namespace jxx::lang {
 
         // ---- Encoding interop ----
         std::string toUtf8() const {
-            return utf16ToUtf8(data_);
+            return String::utf16ToUtf8(data_);
+        }
+
+        std::string toStdString() const {
+            return std::string((const char*)this->data_.c_str());
+        }
+
+        // Semantically similar to String.format(Locale, String, Object...)
+        static String formatLocale(const std::locale& loc, const std::string& format, const std::vector<std::string>& args) {
+            // Simple implementation using printf-style for C++17
+            // For true Java locale handling, this would require complex ICU usage
+            int size_s = std::snprintf(nullptr, 0, format.c_str(), args[0].c_str()) + 1; // Simplified example
+            auto size = static_cast<size_t>(size_s);
+            auto buf = std::make_unique<char[]>(size);
+            std::snprintf(buf.get(), size, format.c_str(), args[0].c_str());
+            return String(std::string(buf.get(), buf.get() + size - 1));
         }
 
         // ---- Core Java-like API ----
@@ -250,8 +267,8 @@ namespace jxx::lang {
         std::vector<String> split(const String& regex, int limit = 0) const {
             // Convert to UTF-8 for std::regex (ECMAScript).
             // NOTE: Java regex != std::regex (ECMAScript). For Java-compatible regex, use a proper library.
-            const std::string s8 = toUtf8();
-            const std::string p8 = regex.toUtf8();
+            const std::string s8 = String::utf16_to_utf8(data_.c_str());
+            const std::string p8 = regex.toUtf8().c_str();
             std::regex re(p8, std::regex::ECMAScript);
 
             std::vector<String> parts;
@@ -349,6 +366,12 @@ namespace jxx::lang {
         static char16_t asciiUpper(char16_t c) {
             return (c >= u'a' && c <= u'z') ? static_cast<char16_t>(c - 32) : c;
         }
+
+        static std::string utf16_to_utf8(const std::u16string& u16) {
+            std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> conv;
+            return conv.to_bytes(u16);
+        }
+        std::u16string get_data() { return data_.c_str(); }
 
         // ---- UTF-8 <-> UTF-16 conversion (no locales; replaces invalid with U+FFFD) ----
         static std::u16string utf8ToUtf16(const std::string& s) {

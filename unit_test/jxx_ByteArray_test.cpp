@@ -41,60 +41,6 @@ public:
         s += "]";
         return s;
     }
-
-    void allocateJagged(ByteArray::ArrayProxy proxy, int depth, int maxDepth) {
-        if (depth == maxDepth - 1) {
-            proxy.allocate(ByteArrayTest::randomSize(), true); // leaf
-        }
-        else {
-            int rows = randomSize();
-            proxy.allocate(rows, false);
-            for (int i = 0; i < rows; ++i) {
-                allocateJagged(proxy[i], depth + 1, maxDepth);
-            }
-        }
-    }
-
-    void fillJagged(ByteArray::ArrayProxy proxy, int depth, int maxDepth,
-        std::map<std::vector<int>, byte>& expected,
-        std::vector<int> path) {
-        if (depth == maxDepth - 1) {
-            for (int i = 0; i < proxy.leaf().size(); ++i) {
-                auto val = randomByte();
-                proxy.leaf()[i] = val;
-                auto fullPath = path;
-                fullPath.push_back(i);
-                expected[fullPath] = val;
-            }
-        }
-        else {
-            for (int i = 0; i < proxy.size(); ++i) {
-                auto newPath = path;
-                newPath.push_back(i);
-                fillJagged(proxy[i], depth + 1, maxDepth, expected, newPath);
-            }
-        }
-    }
-
-    void verifyJagged(ByteArray::ArrayProxy proxy, int depth, int maxDepth,
-        const std::map<std::vector<int>, byte>& expected,
-        std::vector<int> path) {
-        if (depth == maxDepth - 1) {
-            for (int i = 0; i < proxy.leaf().size(); ++i) {
-                auto fullPath = path;
-                fullPath.push_back(i);
-                ASSERT_EQ(proxy.leaf()[i], expected.at(fullPath))
-                    << "Mismatch at path: " << pathToString(fullPath);
-            }
-        }
-        else {
-            for (int i = 0; i < proxy.size(); ++i) {
-                auto newPath = path;
-                newPath.push_back(i);
-                verifyJagged(proxy[i], depth + 1, maxDepth, expected, newPath);
-            }
-        }
-    }
 };
 
 /*
