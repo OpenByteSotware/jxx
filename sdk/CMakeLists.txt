@@ -17,6 +17,19 @@ file(GLOB JXX_SOURCES CONFIGURE_DEPENDS
 add_library(jxxsdk ${JXX_SOURCES} ${JXX_HEADERS})
 set_target_properties(jxxsdk PROPERTIES LINKER_LANGUAGE CXX)
 
+target_include_directories(jxxsdk
+    PRIVATE
+		${CMAKE_SOURCE_DIR}/lang
+		${CMAKE_SOURCE_DIR}/util
+		${CMAKE_SOURCE_DIR}/io
+		${CMAKE_SOURCE_DIR}/net		
+)
+
+if(WIN32)
+    # Add the definition for all targets
+    add_compile_definitions(_HAS_STD_BYTE=0)
+endif()
+
 # Public include is current source dir because headers live next to sources
 # If you prefer a nested include dir, we can reorganize later.
 target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

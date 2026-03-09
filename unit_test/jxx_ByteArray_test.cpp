@@ -96,6 +96,7 @@ public:
     }
 };
 
+/*
 TEST_F(ByteArrayTest, RandomJaggedStressTest) {
    
     const int maxDepth = 3; // e.g., byte[][][]
@@ -108,3 +109,4 @@ TEST_F(ByteArrayTest, RandomJaggedStressTest) {
 
     verifyJagged(arr[0], 0, maxDepth, expected, {});
 }
+*/

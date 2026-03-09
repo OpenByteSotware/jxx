@@ -74,7 +74,8 @@ endforeach()
 
 target_include_directories(benchmark
     PRIVATE
-        ${CMAKE_SOURCE_DIR}/sdk   # Path to your headers
+		${CMAKE_SOURCE_DIR}/sdk
+		${CMAKE_SOURCE_DIR}/sdk/defines
 		${CMAKE_SOURCE_DIR}/sdk/lang
 		${CMAKE_SOURCE_DIR}/sdk/util
 		${CMAKE_SOURCE_DIR}/sdk/io

@@ -2,8 +2,9 @@
 #include "jxx.h"
 
 using namespace jxx::lang;
+using namespace jxx::io;
 
-class Person: public jxx::lang::Cloneable<Person>, public jxx::io::Serializable 
+class Person: public Object, Cloneable, Serializable 
 {
     // --- Fields you want to serialize ---
     std::string name_;
@@ -24,11 +25,11 @@ public:
     }
 
     // Java-like custom serialization hooks
-    void writeObject(class jxx::io::ObjectOutputStream& out) const override {
+    virtual void writeObject(class jxx::io::ObjectOutputStream& out) const override {
     
     }
     
-    void readObject(class jxx::io::ObjectInputStream& in, std::uint64_t storedUid) override {
+    virtual void readObject(class jxx::io::ObjectInputStream& in, std::uint64_t storedUid) override {
     
     }
 
@@ -44,6 +45,12 @@ public:
 
     std::string toString() const override {
         return "Person{name=" + name_ + ", age=" + std::to_string(age_) + "}";
+    }
+
+protected:
+    // Implement cloneImpl for deep copy, Ojbect uses this for C++ to mimic java like clone
+    virtual std::shared_ptr<Object> cloneImpl() const override {
+        return JXX_NEW<Person>(this->name_, this->age_);
     }
     /*
     // Serializable API
@@ -82,4 +89,20 @@ TEST(PersonTest, IntValueTest) {
     std::string name = "Sue";
     auto ixx = JXX_NEW<Person>(name, age);
     EXPECT_EQ(age, ixx->age());
+}
+
+TEST(PersonTest, Clone) {
+    //const std::string input_filepath = "this/package/testdata/myinputfile.dat";
+    //const std::string output_filepath = "this/package/testdata/myoutputfile.dat";
+    int age = 10;
+    std::string name = "Sue";
+    auto p1 = JXX_NEW<Person>(name, age);
+    EXPECT_EQ(age, p1->age());
+
+    auto p2 = p1->clone();
+
+    EXPECT_NE(p1.get(), p2.get());
+    auto p2_sub = std::dynamic_pointer_cast<Person>(p2);
+    EXPECT_EQ(p1->age(), p2_sub->age());
+    EXPECT_EQ(p1->name().compare(p2_sub->name()), 0);
 }

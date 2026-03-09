@@ -3,7 +3,7 @@
 
 using namespace jxx::lang;
 
-class TestInteger : public jxx::lang::Cloneable<TestInteger> {
+class TestInteger : public Object, Cloneable {
     int value_{ 0 };
 public:
     static bool _destructorCalled;
@@ -27,6 +27,11 @@ public:
     }
     std::string toString() const override {
         return std::to_string(value_);
+    }
+protected:
+    // Implement cloneImpl for deep copy, Ojbect uses this for C++ to mimic java like clone
+    virtual std::shared_ptr<Object> cloneImpl() const override {
+        return JXX_NEW<TestInteger>(this->value_);    
     }
 };
 

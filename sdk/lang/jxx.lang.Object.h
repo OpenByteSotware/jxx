@@ -18,6 +18,12 @@
 #include <cstddef>
 #include <stdexcept>
 #include <cstdio>
+#include <string>
+#include <mutex>
+#include <condition_variable>
+#include <chrono>
+#include <iostream>
+#include "jxx.lang.Cloneable.h"
 
 // ---------- Optional: demangle for GCC/Clang ----------
 #if defined(__GNUG__) || defined(__clang__)
@@ -28,8 +34,6 @@
 
 namespace jxx {
     namespace lang {
-
-//#define NEW(T)(...) JXX_NEW<T>(...)
 
 
 // =====================================================
@@ -146,7 +150,16 @@ return std::make_shared<T>(std::forward<Args>(args)...);
             return "Object";
 #endif
         }
+        
+        class Object;
 
+        class Cloneable {
+        public:
+            virtual ~Cloneable() = default;
+
+            // Implement cloneImpl for deep copy, Ojbect uses this for C++ to mimic java like clone
+            virtual std::shared_ptr<Object> cloneImpl() const = 0;
+        };
         // =============== Object (root) ===============
         class Object {
         public:
@@ -179,24 +192,51 @@ return std::make_shared<T>(std::forward<Args>(args)...);
             }
 
             // Identity check (reference equality)
-            bool same(const Object& other) const noexcept {
+            virtual bool same(const Object& other) const noexcept {
                 return this == &other;
             }
-
-            // Polymorphic clone (force derived to decide copy semantics)
-            virtual std::shared_ptr<Object> clone() const = 0;
-        };
-
-        // =============== Cloneable mixin (CRTP) ===============
-        template <typename Derived>
-        class Cloneable : public virtual Object {
-        public:
-            virtual ~Cloneable() {};
-            virtual std::shared_ptr<Object> clone() const override {
-                return std::make_shared<Derived>(static_cast<const Derived&>(*this));
+            
+            template <typename Rep, typename Period>
+            bool wait_for(const std::chrono::duration<Rep, Period>& d) {
+                std::unique_lock<std::mutex> lk(mtx_);
+                return cv_.wait_for(lk, d) == std::cv_status::no_timeout;
             }
+            void wait() {
+                std::unique_lock<std::mutex> lk(mtx_);
+                cv_.wait(lk);
+            }
+
+            void notify() {
+                std::lock_guard<std::mutex> lg(mtx_);
+                cv_.notify_one();
+            }
+
+            void notifyAll() {
+                std::lock_guard<std::mutex> lg(mtx_);
+                cv_.notify_all();
+            }
+
+            // Virtual clone method
+            virtual std::shared_ptr<Object> clone() const {
+                // Check if this object is Cloneable
+                if (dynamic_cast<const Cloneable*>(this) == nullptr) {
+                    throw std::runtime_error("CloneNotSupportedException");
+                }
+                // If Cloneable, delegate to derived class's cloneImpl
+                return cloneImpl();
+            }
+
+        protected:
+
+            virtual std::shared_ptr<Object> cloneImpl() const {
+                throw std::runtime_error("cloneImpl not implemented");
+            }
+
+            mutable std::mutex mtx_;
+            std::condition_variable cv_;
         };
 
+       
         // =============== Comparable mixin (like java.lang.Comparable) ===============
         template <typename Derived>
         class Comparable : public virtual Object {

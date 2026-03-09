@@ -1,9 +1,9 @@
 #pragma once
 
-#include "util/jxx.util.Vector.h"
-#include "util/jxx.util.ArrayList.h"
-#include "util/jxx.util.EventObject.h"
-#include "util/jxx.util.TreeMap.h"
-#include "util/jxx.util.Hashtable.h"
-#include "util/jxx.util.Properties.h"
-#include "util/jxx.util.LinkedList.h"
+#include "jxx.util.Vector.h"
+#include "jxx.util.ArrayList.h"
+#include "jxx.util.EventObject.h"
+#include "jxx.util.TreeMap.h"
+#include "jxx.util.Hashtable.h"
+#include "jxx.util.Properties.h"
+#include "jxx.util.LinkedList.h"

@@ -1,4 +1,4 @@
 #pragma once
-#include "net/jxx.net.DatagramSocket.h"
-#include "net/jxx.net.MulticastSocket.h"
-#include "net/jxx.net.InetSocketAddress.h"
+#include "jxx.net.DatagramSocket.h"
+#include "jxx.net.MulticastSocket.h"
+#include "jxx.net.InetSocketAddress.h"
