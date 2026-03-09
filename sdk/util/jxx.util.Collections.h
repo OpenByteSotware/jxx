@@ -12,7 +12,7 @@
 
 namespace jxx { namespace util {
 
-struct Collections {
+class Collections {
     // ----- std::vector<T> variants -----
     template <typename T>
     static void reverse(std::vector<T>& a) {
@@ -90,7 +90,6 @@ struct Collections {
 
     template <typename T>
     static bool disjoint(const std::vector<T>& a, const std::vector<T>& b) {
-        // naive O(n*m) to avoid hash requirements on T
         for (const auto& x : a) for (const auto& y : b) if (x==y) return false; return true;
     }
 
@@ -116,7 +115,22 @@ struct Collections {
         std::rotate(a.rbegin(), a.rbegin()+k, a.rend());
     }
 
-    // ----- ArrayList<T> variants (operate via get/set/size only; no private access) -----
+    // NEW: nCopies for vector (returns a new list with n copies of the element)
+    template <typename T>
+    static std::vector<T> nCopies(int n, const T& o) {
+        if (n < 0) throw std::out_of_range("Collections::nCopies negative n");
+        return std::vector<T>((size_t)n, o);
+    }
+
+    // NEW: replaceAll for vector (returns true if any replacement occurred)
+    template <typename T>
+    static bool replaceAll(std::vector<T>& a, const T& oldVal, const T& newVal) {
+        bool modified = false;
+        for (auto& x : a) if (x == oldVal) { x = newVal; modified = true; }
+        return modified;
+    }
+
+    // ----- ArrayList<T> variants -----
     template <typename T>
     static void reverse(ArrayList<T>& list) {
         int i=0, j=list.size()-1; while (i<j) { T tmp=list.get(i); list.set(i, list.get(j)); list.set(j, tmp); ++i; --j; }
@@ -124,7 +138,6 @@ struct Collections {
 
     template <typename T, typename Cmp = std::less<T>>
     static void sort(ArrayList<T>& list, Cmp cmp = Cmp{}) {
-        // copy out, sort, and write back to preserve semantics without internal access
         std::vector<T> tmp; tmp.reserve((size_t)list.size());
         for (int i=0;i<list.size();++i) tmp.push_back(list.get(i));
         std::sort(tmp.begin(), tmp.end(), cmp);
@@ -214,9 +227,21 @@ struct Collections {
     template <typename T>
     static void rotate(ArrayList<T>& list, int distance) {
         int n=list.size(); if (n==0) return; int k = distance % n; if (k<0) k += n;
-        // rotate right by k: reverse all, reverse first k, reverse rest
         auto rev=[&](int l,int r){ while (l<r){ T tmp=list.get(l); list.set(l, list.get(r)); list.set(r, tmp); ++l; --r; } };
         rev(0,n-1); rev(0,k-1); rev(k,n-1);
+    }
+
+    // NEW: nCopies for ArrayList (returns vector<T> to mirror Collections API producing a List)
+    template <typename T>
+    static std::vector<T> nCopiesList(int n, const T& o) {
+        if (n < 0) throw std::out_of_range("Collections::nCopies negative n");
+        return std::vector<T>((size_t)n, o);
+    }
+
+    // NEW: replaceAll for ArrayList (returns true if modification occurred)
+    template <typename T>
+    static bool replaceAll(ArrayList<T>& list, const T& oldVal, const T& newVal) {
+        bool modified=false; for (int i=0;i<list.size();++i) { if (list.get(i)==oldVal) { list.set(i, newVal); modified=true; } } return modified;
     }
 
     // Convenience creators matching Java names
