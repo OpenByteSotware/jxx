@@ -9,3 +9,4 @@
 #include "jxx.lang.ByteType.h"
 #include "jxx.lang.String.h"
 #include "jxx.lang.StringBuilder.h"
+#include "jxx.lang.System.h"

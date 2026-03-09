@@ -7,7 +7,11 @@
 #include <utility>
 #include <system_error>
 
-#ifndef _WIN32
+#if defined(_WIN32)
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "Ws2_32.lib")
+#else
 #include <net/if.h>   // if_nametoindex (IPv6 multicast interface lookup)
 #endif
 
@@ -15,9 +19,7 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#pragma comment(lib, "Ws2_32.lib")
+
 using socklen_t = int;
 using socket_t = SOCKET;
 static inline int last_sock_error() { return WSAGetLastError(); }

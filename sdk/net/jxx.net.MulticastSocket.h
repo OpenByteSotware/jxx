@@ -1,8 +1,14 @@
 #pragma once
 #include "jxx.net.DatagramSocket.h"
-#ifndef _WIN32
+
+#if defined(_WIN32)
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "Ws2_32.lib")
+#else
 #include <net/if.h> // if_nametoindex helper used in examples
 #endif
+
 #include <string>
 #include <stdexcept>
 #include <utility>

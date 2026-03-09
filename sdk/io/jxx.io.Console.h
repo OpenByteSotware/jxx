@@ -12,6 +12,7 @@
 #include <termios.h>
 #include <unistd.h>
 #endif
+#include "jxx.security.SecureString.h"
 
 namespace jxx { namespace io {
 
@@ -28,7 +29,6 @@ public:
         int n = vsnprintf(buf.data(), buf.size(), fmt, ap);
         if (n < 0) return;
         if (static_cast<size_t>(n) >= buf.size()) {
-            // best-effort reallocation; some platforms require a fresh va_list to recompute
             buf.resize(static_cast<size_t>(n)+1);
         }
         std::cout.write(buf.data(), n);
@@ -39,7 +39,7 @@ public:
         std::string line; std::getline(std::cin, line); return line;
     }
 
-    // Reads a password without echo. Returns the line read. Newline is consumed.
+    // Reads a password without echo. Returns the line read.
     std::string readPassword(const std::string& prompt = std::string()) {
         if (!prompt.empty()) std::cout << prompt;
 #if defined(_WIN32)
@@ -61,6 +61,14 @@ public:
         std::cout << std::endl;
         return line;
 #endif
+    }
+
+    // Secure variant returning SecureString, wipes temporary std::string buffer.
+    jxx::security::SecureString readPasswordSecure(const std::string& prompt = std::string()) {
+        std::string tmp = readPassword(prompt);
+        jxx::security::SecureString sec(tmp);
+        std::fill(tmp.begin(), tmp.end(), '\0');
+        return sec;
     }
 };
 

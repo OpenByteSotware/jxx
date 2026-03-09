@@ -7,6 +7,7 @@
 
 using jxx::util::Map;
 using jxx::util::TreeMap;
+using namespace std;
 
 // A small helper for readability
 template <typename T>
@@ -260,7 +261,7 @@ TEST(Map_ComputeFamily, ComputeIfAbsentPresentComputeMerge) {
 
 struct CaseInsensitiveLess {
     bool operator()(const std::string& a, const std::string& b) const {
-        const auto n = std::min(a.size(), b.size());
+        const auto n = min(a.size(), b.size());
         for (std::size_t i = 0; i < n; ++i) {
             unsigned char ca = static_cast<unsigned char>(std::tolower(a[i]));
             unsigned char cb = static_cast<unsigned char>(std::tolower(b[i]));

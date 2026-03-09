@@ -44,6 +44,8 @@ endif()
 if(WIN32)
     # Add the definition for all targets
     add_compile_definitions(_HAS_STD_BYTE=0)
+        add_compile_definitions(WIN32_LEAN_AND_MEAN)
+
 endif()
 
 
@@ -74,9 +76,8 @@ foreach(bench_file ${BENCH_SOURCES})
     set_target_properties(${target_name} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
     )
-endforeach()
 
-target_include_directories(benchmark
+target_include_directories(${target_name}
     PRIVATE
 		${CMAKE_SOURCE_DIR}/sdk
 		${CMAKE_SOURCE_DIR}/sdk/defines
@@ -84,4 +85,8 @@ target_include_directories(benchmark
 		${CMAKE_SOURCE_DIR}/sdk/util
 		${CMAKE_SOURCE_DIR}/sdk/io
 		${CMAKE_SOURCE_DIR}/sdk/net		
+		${CMAKE_SOURCE_DIR}/sdk/security	
+
 )
+
+endforeach()

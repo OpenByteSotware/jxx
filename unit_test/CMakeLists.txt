@@ -32,15 +32,21 @@ add_executable(all_tests ${TEST_SOURCES})
 if(WIN32)
     # Add the definition for all targets
     add_compile_definitions(_HAS_STD_BYTE=0)
+        add_compile_definitions(WIN32_LEAN_AND_MEAN)
+
 endif()
 
 target_include_directories(all_tests
     PRIVATE
+
         ${CMAKE_SOURCE_DIR}/sdk   # Path to your headers
+		${CMAKE_SOURCE_DIR}/sdk/defines
 		${CMAKE_SOURCE_DIR}/sdk/lang
 		${CMAKE_SOURCE_DIR}/sdk/util
 		${CMAKE_SOURCE_DIR}/sdk/io
-		${CMAKE_SOURCE_DIR}/sdk/net		
+		${CMAKE_SOURCE_DIR}/sdk/net	
+		${CMAKE_SOURCE_DIR}/sdk/security	
+        
 )
 
 # Link GoogleTest and pthread (Linux/Unix)

@@ -6,6 +6,7 @@
 #include <map>
 #include <tuple>
 #include <string>
+#include "jxx.h"
 
 using namespace std;
 using namespace jxx::lang;
@@ -24,7 +25,7 @@ public:
     }
 
     byte randomByte() {
-        return byte{ static_cast<unsigned char>(byteDist(rng)) };
+        return byte{ static_cast<char>(byteDist(rng)) };
     }
 
     int randomSize() {

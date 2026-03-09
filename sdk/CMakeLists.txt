@@ -1,4 +1,3 @@
-
 cmake_minimum_required(VERSION 3.16)
 project(jxxsdk LANGUAGES CXX)
 
@@ -19,15 +18,18 @@ set_target_properties(jxxsdk PROPERTIES LINKER_LANGUAGE CXX)
 
 target_include_directories(jxxsdk
     PRIVATE
+		${CMAKE_SOURCE_DIR}/defines
 		${CMAKE_SOURCE_DIR}/lang
 		${CMAKE_SOURCE_DIR}/util
 		${CMAKE_SOURCE_DIR}/io
 		${CMAKE_SOURCE_DIR}/net		
+		${CMAKE_SOURCE_DIR}/security	
 )
 
 if(WIN32)
     # Add the definition for all targets
     add_compile_definitions(_HAS_STD_BYTE=0)
+    add_compile_definitions(WIN32_LEAN_AND_MEAN)
 endif()
 
 
