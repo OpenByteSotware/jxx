@@ -49,6 +49,12 @@ target_link_libraries(all_tests
         GTest::gtest GTest::gmock GTest::gtest_main
 )
 
+if(UNIX AND NOT APPLE)
+    target_link_libraries(all_tests PRIVATE dl)
+endif()
+
+
+
 # Automatically discover tests in the executable
 include(GoogleTest)
 gtest_discover_tests(all_tests)

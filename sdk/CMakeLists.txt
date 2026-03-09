@@ -30,6 +30,7 @@ if(WIN32)
     add_compile_definitions(_HAS_STD_BYTE=0)
 endif()
 
+
 # Public include is current source dir because headers live next to sources
 # If you prefer a nested include dir, we can reorganize later.
 target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

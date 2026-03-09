@@ -60,6 +60,10 @@ foreach(bench_file ${BENCH_SOURCES})
             benchmark::benchmark_main
     )
 
+    if(UNIX AND NOT APPLE)
+    target_link_libraries(${target_name} PRIVATE dl)
+    endif()
+
     # Always link pthread on Linux
     if (UNIX)
         find_package(Threads REQUIRED)
