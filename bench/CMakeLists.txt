@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.16)
 project(jxx_benchmarks LANGUAGES CXX)
 
 # Require C++17 or later
@@ -14,15 +14,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(benchmark)
 
-target_include_directories(benchmark
-    PUBLIC
-	${CMAKE_SOURCE_DIR}/sdk
-	${CMAKE_SOURCE_DIR}/sdk/lang
-	${CMAKE_SOURCE_DIR}/sdk/util
-	${CMAKE_SOURCE_DIR}/sdk/io
-	${CMAKE_SOURCE_DIR}/sdk/net		
-)
-
 # Detect if building on Windows with Visual Studio
 if (WIN32 AND MSVC)
     message(STATUS "Building on Windows with Visual Studio")
@@ -31,13 +22,13 @@ if (WIN32 AND MSVC)
 endif()
 
 # Fetch Google Benchmark
-include(FetchContent)
-FetchContent_Declare(
-    benchmark
-    GIT_REPOSITORY https://github.com/google/benchmark.git
-    GIT_TAG v1.8.3
-)
-FetchContent_MakeAvailable(benchmark)
+#include(FetchContent)
+#FetchContent_Declare(
+#    benchmark
+#    GIT_REPOSITORY https://github.com/google/benchmark.git
+#    GIT_TAG v1.8.3
+#)
+#FetchContent_MakeAvailable(benchmark)
 
 # Find all benchmark source files
 file(GLOB_RECURSE BENCH_SOURCES CONFIGURE_DEPENDS
@@ -54,6 +45,7 @@ if(WIN32)
     # Add the definition for all targets
     add_compile_definitions(_HAS_STD_BYTE=0)
 endif()
+
 
 # Create one executable per benchmark file
 foreach(bench_file ${BENCH_SOURCES})
@@ -79,3 +71,12 @@ foreach(bench_file ${BENCH_SOURCES})
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
     )
 endforeach()
+
+target_include_directories(benchmark
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/sdk   # Path to your headers
+		${CMAKE_SOURCE_DIR}/sdk/lang
+		${CMAKE_SOURCE_DIR}/sdk/util
+		${CMAKE_SOURCE_DIR}/sdk/io
+		${CMAKE_SOURCE_DIR}/sdk/net		
+)
