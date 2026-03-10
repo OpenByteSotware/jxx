@@ -39,6 +39,13 @@ Options
 
 
 
+# Note on pull request requirements:
+1) Must include one class update / new with interfaces (if applicable)
+2) Must include a googletest unit test for all methods and code coverage for the method/function
+3) If an algorithm class, must include bench mark test
+
+This will help with proving semantics.  If possible find the java 8 SDK unit test in java and use python converter to convert.  This really helps tests semantics
+
 
 
 Other options are
