@@ -1,11 +1,11 @@
 #pragma once
-#include "jxx.lang.Object.h"
 #include <vector>
 #include <string>
 #include <cstring>
 #include <cstddef>
 #include <algorithm>
 #include <utility>
+#include "lang/jxx.lang.internal.h"
 
 namespace jxx { namespace security {
 

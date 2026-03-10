@@ -12,3 +12,4 @@
 #include "jxx.lang.System.h"
 #include "jxx.lang.FormatArg.h"
 #include "jxx.lang.Formatter.h"
+#include "jxx.lang.UnsupportedOperationException.h"

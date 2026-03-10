@@ -17,3 +17,6 @@
 #include "jxx.util.Random.h"
 #include "jxx.util.Iterator.h"
 #include "jxx.util.Synchronized.h"
+#include "jxx.util.LinkedHashMap.h"
+#include "jxx.util.TreeSet.h"
+#include "jxx.util.UnmodifiableMap.h"

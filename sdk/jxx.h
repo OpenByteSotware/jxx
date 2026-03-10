@@ -10,5 +10,6 @@
 #include "io/jxx.io.h"
 #include "util/jxx.util.h"
 #include "net/jxx.net.h"
+#include "security/jxx.security.SecureString.h"
 
 #endif

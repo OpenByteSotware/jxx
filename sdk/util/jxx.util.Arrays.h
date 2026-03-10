@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <cstring>
 #include <stdexcept>
-#include "jxx.lang.ByteArray.h"
+#include "lang/jxx.lang.h"
 
 namespace jxx { namespace util {
 

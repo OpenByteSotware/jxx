@@ -1,4 +1,3 @@
-
 #pragma once
 #include <vector>
 #include <algorithm>
@@ -13,7 +12,8 @@
 namespace jxx { namespace util {
 
 class Collections {
-    // ----- std::vector<T> variants -----
+public:
+    
     template <typename T>
     static void reverse(std::vector<T>& a) {
         std::reverse(a.begin(), a.end());
@@ -61,25 +61,25 @@ class Collections {
 
     template <typename T>
     static T min(const std::vector<T>& a) {
-        if (a.empty()) throw NoSuchElementException("Collections::min on empty");
+        if (a.empty()) JXX_THROW(NoSuchElementException, "Collections::min on empty");
         return *std::min_element(a.begin(), a.end());
     }
 
     template <typename T, typename Cmp>
     static T min(const std::vector<T>& a, Cmp cmp) {
-        if (a.empty()) throw NoSuchElementException("Collections::min on empty");
+        if (a.empty()) JXX_THROW(NoSuchElementException, "Collections::min on empty");
         return *std::min_element(a.begin(), a.end(), cmp);
     }
 
     template <typename T>
     static T max(const std::vector<T>& a) {
-        if (a.empty()) throw NoSuchElementException("Collections::max on empty");
+        if (a.empty()) JXX_THROW(NoSuchElementException, "Collections::max on empty");
         return *std::max_element(a.begin(), a.end());
     }
 
     template <typename T, typename Cmp>
     static T max(const std::vector<T>& a, Cmp cmp) {
-        if (a.empty()) throw NoSuchElementException("Collections::max on empty");
+        if (a.empty()) JXX_THROW(NoSuchElementException, "Collections::max on empty");
         return *std::max_element(a.begin(), a.end(), cmp);
     }
 
@@ -115,19 +115,58 @@ class Collections {
         std::rotate(a.rbegin(), a.rbegin()+k, a.rend());
     }
 
-    // NEW: nCopies for vector (returns a new list with n copies of the element)
     template <typename T>
     static std::vector<T> nCopies(int n, const T& o) {
         if (n < 0) throw std::out_of_range("Collections::nCopies negative n");
         return std::vector<T>((size_t)n, o);
     }
 
-    // NEW: replaceAll for vector (returns true if any replacement occurred)
     template <typename T>
     static bool replaceAll(std::vector<T>& a, const T& oldVal, const T& newVal) {
         bool modified = false;
         for (auto& x : a) if (x == oldVal) { x = newVal; modified = true; }
         return modified;
+    }
+
+    template <typename T>
+    static int indexOfSubList(const std::vector<T>& source, const std::vector<T>& target) {
+        if (target.empty()) return 0;
+        if (source.size() < target.size()) return -1;
+        const size_t end = source.size() - target.size();
+        for (size_t i=0; i<=end; ++i) {
+            bool match = true;
+            for (size_t j=0; j<target.size(); ++j) {
+                if (!(source[i+j] == target[j])) { match = false; break; }
+            }
+            if (match) return (int)i;
+        }
+        return -1;
+    }
+
+    template <typename T>
+    static int lastIndexOfSubList(const std::vector<T>& source, const std::vector<T>& target) {
+        if (target.empty()) return (int)source.size();
+        if (source.size() < target.size()) return -1;
+        for (size_t i = source.size() - target.size() + 1; i-- > 0; ) {
+            bool match = true;
+            for (size_t j=0; j<target.size(); ++j) {
+                if (!(source[i+j] == target[j])) { match = false; break; }
+            }
+            if (match) return (int)i;
+            if (i==0) break;
+        }
+        return -1;
+    }
+
+    // NEW: reverseOrder comparators
+    template <typename T>
+    static auto reverseOrder() {
+        return [](const T& a, const T& b){ return b < a; };
+    }
+
+    template <typename Cmp>
+    static auto reverseOrder(Cmp cmp) {
+        return [cmp](const auto& a, const auto& b){ return cmp(b, a); };
     }
 
     // ----- ArrayList<T> variants -----
@@ -231,25 +270,47 @@ class Collections {
         rev(0,n-1); rev(0,k-1); rev(k,n-1);
     }
 
-    // NEW: nCopies for ArrayList (returns vector<T> to mirror Collections API producing a List)
+    // indexOfSubList / lastIndexOfSubList for ArrayList
     template <typename T>
-    static std::vector<T> nCopiesList(int n, const T& o) {
-        if (n < 0) throw std::out_of_range("Collections::nCopies negative n");
-        return std::vector<T>((size_t)n, o);
+    static int indexOfSubList(const ArrayList<T>& source, const ArrayList<T>& target) {
+        if (target.size()==0) return 0;
+        if (source.size() < target.size()) return -1;
+        int end = source.size() - target.size();
+        for (int i=0; i<=end; ++i) {
+            bool match = true;
+            for (int j=0; j<target.size(); ++j) {
+                if (!(source.get(i+j) == target.get(j))) { match = false; break; }
+            }
+            if (match) return i;
+        }
+        return -1;
     }
 
-    // NEW: replaceAll for ArrayList (returns true if modification occurred)
     template <typename T>
-    static bool replaceAll(ArrayList<T>& list, const T& oldVal, const T& newVal) {
-        bool modified=false; for (int i=0;i<list.size();++i) { if (list.get(i)==oldVal) { list.set(i, newVal); modified=true; } } return modified;
+    static int lastIndexOfSubList(const ArrayList<T>& source, const ArrayList<T>& target) {
+        if (target.size()==0) return source.size();
+        if (source.size() < target.size()) return -1;
+        for (int i = source.size() - target.size(); i >= 0; --i) {
+            bool match = true;
+            for (int j=0; j<target.size(); ++j) {
+                if (!(source.get(i+j) == target.get(j))) { match = false; break; }
+            }
+            if (match) return i;
+        }
+        return -1;
     }
 
-    // Convenience creators matching Java names
+    // reverseOrder comparator helpers for ArrayList sorts
+    template <typename T>
+    static auto reverseOrderList() { return [](const T& a, const T& b){ return b < a; }; }
+    template <typename Cmp>
+    static auto reverseOrderList(Cmp cmp) { return [cmp](const auto& a, const auto& b){ return cmp(b, a); }; }
+
+    // Convenience creators
     template <typename T>
     static std::vector<T> emptyList() { return {}; }
-
     template <typename T>
     static std::vector<T> singletonList(const T& v) { return {v}; }
 };
 
-}} // namespace jxx::util
+}} 

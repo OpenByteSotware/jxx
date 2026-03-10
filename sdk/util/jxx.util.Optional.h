@@ -2,7 +2,7 @@
 #pragma once
 #include <optional>
 #include <functional>
-#include "jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.h"
 
 namespace jxx { namespace util {
 

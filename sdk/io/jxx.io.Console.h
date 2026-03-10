@@ -1,5 +1,4 @@
 #pragma once
-#include "jxx.lang.Object.h"
 #include <string>
 #include <cstdarg>
 #include <iostream>
@@ -12,7 +11,9 @@
 #include <termios.h>
 #include <unistd.h>
 #endif
-#include "jxx.security.SecureString.h"
+#include "lang/jxx.lang.internal.h"
+
+using namespace jxx::security;
 
 namespace jxx { namespace io {
 
@@ -64,7 +65,7 @@ public:
     }
 
     // Secure variant returning SecureString, wipes temporary std::string buffer.
-    jxx::security::SecureString readPasswordSecure(const std::string& prompt = std::string()) {
+    jxx::security::SecureString readPasswordSecure(const std::string& prompt) {
         std::string tmp = readPassword(prompt);
         jxx::security::SecureString sec(tmp);
         std::fill(tmp.begin(), tmp.end(), '\0');

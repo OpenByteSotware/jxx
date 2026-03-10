@@ -30,6 +30,9 @@ if(WIN32)
     # Add the definition for all targets
     add_compile_definitions(_HAS_STD_BYTE=0)
     add_compile_definitions(WIN32_LEAN_AND_MEAN)
+          add_compile_definitions(_HAS_STD_BYTE=0)
+        add_definitions(-DNOMINMAX)   # Avoid min/max macro conflicts
+        add_compile_options(/MP)      # Enable multi-core compilation
 endif()
 
 

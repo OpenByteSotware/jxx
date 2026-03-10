@@ -44,6 +44,13 @@ public:
         trace_.push_back(where);
     }
 
+    explicit Throwable(const char *msg,
+        std::exception_ptr cause,
+        SourceLoc where)
+        : message_(std::move(msg)), cause_(std::move(cause)) {
+        trace_.push_back(where);
+    }
+
     // what()
     const char* what() const noexcept override { return message_.c_str(); }
 
