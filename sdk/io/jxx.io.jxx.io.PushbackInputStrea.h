@@ -1,7 +1,8 @@
 
 #pragma once
 #include <memory>
-#include "jxx/io/jxx.io.FilterInputStream.h"
+#include "lang/jxx.lang.internal.h"
+#include "io/jxx.io.FilterInputStream.h"
 
 namespace jxx { namespace io {
 
@@ -12,9 +13,9 @@ public:
     explicit PushbackInputStream(std::shared_ptr<InputStream> in, int size = 1);
 
     int read() override;
-    jxx::lang::jint read(ByteArray& b, jxx::lang::jint off, jxx::lang::jint len) override;
+    int read(ByteArray& b, int off, int len) override;
     void unread(int b);
-    void unread(const ByteArray& b, jxx::lang::jint off, jxx::lang::jint len);
+    void unread(const ByteArray& b, int off, int len);
     void unread(const ByteArray& b);
     int available() override;
 };

@@ -160,6 +160,7 @@ return std::make_shared<T>(std::forward<Args>(args)...);
             // Implement cloneImpl for deep copy, Ojbect uses this for C++ to mimic java like clone
             virtual std::shared_ptr<Object> cloneImpl() const = 0;
         };
+
         // =============== Object (root) ===============
         class Object {
         public:

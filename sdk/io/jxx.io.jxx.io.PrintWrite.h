@@ -2,9 +2,10 @@
 #pragma once
 #include <memory>
 #include <string>
-#include "jxx/io/jxx.io.Writer.h"
-#include "jxx/io/jxx.io.OutputStream.h"
-#include "jxx/io/jxx.io.OutputStreamWriter.h"
+#include "lang/jxx.lang.internal.h"
+#include "io/jxx.io.Writer.h"
+#include "io/jxx.io.OutputStream.h"
+#include "io/jxx.io.OutputStreamWriter.h"
 
 namespace jxx { namespace io {
 
@@ -12,8 +13,7 @@ class PrintWriter : public jxx::lang::Object, public Flushable, public Closeable
     std::shared_ptr<Writer> out;
     bool autoFlush = false;
     bool error_ = false;
-    std::string lineSep = "
-";
+    std::string lineSep = "\n";
 
     void setError() { error_ = true; }
     void doWrite(const std::u16string& s);

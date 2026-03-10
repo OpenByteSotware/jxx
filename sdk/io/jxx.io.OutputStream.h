@@ -6,12 +6,11 @@
 #include <stdexcept>
 #include <memory>
 #include <algorithm>
+#include "lang/jxx.lang.internal.h"
+#include "io/jxx.io.IOException.h"
+using namespace std;
 
 namespace jxx::io {
-
-struct IOException : public std::ios_base::failure {
-    explicit IOException(const std::string& msg) : std::ios_base::failure(msg) {}
-};
 
 class OutputStream {
 public:
@@ -23,17 +22,15 @@ public:
     OutputStream(OutputStream&&) = default;
     OutputStream& operator=(OutputStream&&) = default;
 
-    // --- Java-like API ---
-
-    // write(int b) — writes the low 8 bits of the int
     virtual void write(int b) {
         std::uint8_t one = static_cast<std::uint8_t>(b & 0xFF);
         write(&one, 0, 1);
     }
 
-    // write(byte[] b)
-    virtual void write(const std::vector<std::uint8_t>& b) {
-        if (!b.empty()) write(b.data(), 0, b.size());
+    virtual void write(const ByteArray& b, int off, int len) {
+        if (b.size() != 0) {
+            write(b.data(), 0, b.size());
+        }
     }
 
     // write(byte[] b, int off, int len)
@@ -67,4 +64,4 @@ protected:
     }
 };
 
-} // namespace jxx::io
+}

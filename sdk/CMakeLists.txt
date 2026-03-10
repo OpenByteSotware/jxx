@@ -5,15 +5,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# Collect sources (.cpp) and headers (.h)
-file(GLOB JXX_HEADERS CONFIGURE_DEPENDS
-    "*.h"
-)
-file(GLOB JXX_SOURCES CONFIGURE_DEPENDS
-    "*.cpp"
+file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.h"
+
 )
 
-add_library(jxxsdk ${JXX_SOURCES} ${JXX_HEADERS})
+add_library(jxxsdk ${SRC_FILES})
 set_target_properties(jxxsdk PROPERTIES LINKER_LANGUAGE CXX)
 
 target_include_directories(jxxsdk
@@ -26,9 +24,10 @@ target_include_directories(jxxsdk
 		${CMAKE_SOURCE_DIR}/security	
 )
 
+ add_compile_definitions(_HAS_STD_BYTE=0)
+ 
 if(WIN32)
     # Add the definition for all targets
-    add_compile_definitions(_HAS_STD_BYTE=0)
     add_compile_definitions(WIN32_LEAN_AND_MEAN)
           add_compile_definitions(_HAS_STD_BYTE=0)
         add_definitions(-DNOMINMAX)   # Avoid min/max macro conflicts

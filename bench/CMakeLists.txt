@@ -41,9 +41,10 @@ else()
     message(STATUS "Found benchmark files: ${BENCH_SOURCES}")
 endif()
 
+ add_compile_definitions(_HAS_STD_BYTE=0)
+ 
 if(WIN32)
     # Add the definition for all targets
-    add_compile_definitions(_HAS_STD_BYTE=0)
         add_compile_definitions(WIN32_LEAN_AND_MEAN)
 
 endif()

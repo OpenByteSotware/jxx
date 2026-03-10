@@ -6,6 +6,7 @@
 #include <vector>
 #include <cstddef> // std::byte, std::to_integer
 #include <stdexcept>
+#include "jxx.lang.ByteType.h"
 
 // ---------- Optional: demangle for GCC/Clang ----------
 #if defined(__GNUG__) || defined(__clang__)
@@ -27,9 +28,11 @@ namespace compat {
 typedef char byte;
 #endif
 
+/*
 namespace jxx::lang {
 
     using ByteArray = std::vector<byte>; 
 }
+*/
 #endif
 

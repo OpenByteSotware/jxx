@@ -2,7 +2,8 @@
 #pragma once
 #include <memory>
 #include <vector>
-#include "jxx/io/jxx.io.InputStream.h"
+#include "lang/jxx.lang.internal.h"
+#include "io/jxx.io.InputStream.h"
 
 namespace jxx { namespace io {
 
@@ -14,7 +15,7 @@ public:
     explicit SequenceInputStream(std::vector<std::shared_ptr<InputStream>> streams);
 
     int read() override;
-    jxx::lang::jint read(ByteArray& b, jxx::lang::jint off, jxx::lang::jint len) override;
+    int read(ByteArray& b, int off, int len) override;
     int available() override;
     void close() override;
 };
