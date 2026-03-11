@@ -14,7 +14,7 @@ namespace jxx { namespace io {
         virtual ~InputStream() = default;
         virtual int read() = 0;
         virtual int read(ByteArray& b, int off, int len) {
-            if (b.size() < (size_t)off + (size_t)len) throw IOException("IndexOutOfBounds in InputStream.read");
+            if (b.length < (size_t)off + (size_t)len) throw IOException("IndexOutOfBounds in InputStream.read");
             if (len == 0) return 0;
             int c = read();
             if (c == -1) return -1;
@@ -23,10 +23,10 @@ namespace jxx { namespace io {
             for (; i < len; ++i) { c = read(); if (c == -1) break; b[(size_t)(off+i)] = (std::uint8_t)c; }
             return i;
         }
-        virtual int read(ByteArray& b) { return read(b, 0, (int)b.size()); }
+        virtual int read(ByteArray& b) { return read(b, 0, (int)b.length); }
         virtual int skip(int n) {
             int rem = n; ByteArray tmp(2048);
-            while (rem > 0) { auto r = read(tmp, 0, (int)std::min<int>(rem, (int)tmp.size())); if (r < 0) break; rem -= r; if (r == 0) break; }
+            while (rem > 0) { auto r = read(tmp, 0, (int)std::min<int>(rem, (int)tmp.length)); if (r < 0) break; rem -= r; if (r == 0) break; }
             return n - rem;
         }
 
