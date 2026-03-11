@@ -4,6 +4,7 @@
 #include "io/jxx.io.FilterOutputStream.h"
 #include "io/jxx.io.DataOutput.h"
 #include "io/jxx.io.ModifiedUTF.h"
+#include "io/jxx.io.UTFDataFormatException.h"
 
 namespace jxx { namespace io {
 class DataOutputStream : public FilterOutputStream, public DataOutput
@@ -16,7 +17,7 @@ public:
     void write(const ByteArray& b, int off, int len) override { out->write(b,off,len); written_+=len; }
     void writeBoolean(bool v) override { write(v?1:0); }
     void writeByte(int v) override { write(v); }
-    void writeShort(int v) override { ByteArray t{ (uint8_t)((v>>8)&0xFF), (uint8_t)(v&0xFF)}; write(t); }
+    void writeShort(int v) override { ByteArray t{ (jbyte)((v>>8)&0xFF), (jbyte)(v&0xFF)}; write(t); }
     void writeChar(int v) override { writeShort(v); }
     void writeInt(int v) override { ByteArray t(4); t[0]=(uint8_t)((v>>24)&0xFF); t[1]=(uint8_t)((v>>16)&0xFF); t[2]=(uint8_t)((v>>8)&0xFF); t[3]=(uint8_t)(v&0xFF); write(t); }
     void writeLong(long v) override { ByteArray t(8); for(int i=7;i>=0;--i){ t[7-i]=(uint8_t)((v>>(i*8))&0xFF);} write(t); }

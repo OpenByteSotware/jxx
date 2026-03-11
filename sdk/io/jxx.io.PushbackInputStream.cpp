@@ -1,7 +1,7 @@
 
-#include "jxx/io/jxx.io.PushbackInputStream.h"
-#include "jxx/io/jxx.io.IOException.h"
 #include <cstring>
+#include "io/jxx.io.PushbackInputStream.h"
+#include "io/jxx.io.IOException.h"
 namespace jxx { namespace io {
 PushbackInputStream::PushbackInputStream(std::shared_ptr<InputStream> in_, int size) : FilterInputStream(std::move(in_)), buf((size_t)size), pos(size) { if(size<=0) throw IOException("PushbackInputStream: size <= 0"); }
 int PushbackInputStream::read(){ if(pos< (int)buf.size()) return buf[pos++]; return in->read(); }

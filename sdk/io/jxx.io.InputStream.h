@@ -18,7 +18,7 @@ namespace jxx { namespace io {
             if (len == 0) return 0;
             int c = read();
             if (c == -1) return -1;
-            b[(size_t)off] = (std::uint8_t)c;
+            b[off] = (std::uint8_t)c;
             int i = 1;
             for (; i < len; ++i) { c = read(); if (c == -1) break; b[(size_t)(off+i)] = (std::uint8_t)c; }
             return i;

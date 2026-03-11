@@ -16,6 +16,7 @@ int readAheadLimit=0;
 public:
     explicit BufferedReader(std::shared_ptr<Reader> in_, int size=8192);
     virtual int read() override; 
+    virtual int read(jxx::lang::jchar* cbuf, int off, int len);
     virtual int read(CharArray& cbuf, int off, int len) override;
     virtual std::u16string readLine(); bool ready() override; void close() override; 
     virtual void mark(int readAheadLimit_) override; void reset() override; 

@@ -1,5 +1,5 @@
 
-#include "jxx/io/jxx.io.SequenceInputStream.h"
+#include "io/jxx.io.SequenceInputStream.h"
 namespace jxx { namespace io {
 SequenceInputStream::SequenceInputStream(std::shared_ptr<InputStream> s1, std::shared_ptr<InputStream> s2) : seq{std::move(s1),std::move(s2)}, idx(0){}
 SequenceInputStream::SequenceInputStream(std::vector<std::shared_ptr<InputStream>> streams) : seq(std::move(streams)), idx(0){}

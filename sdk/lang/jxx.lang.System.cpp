@@ -1,14 +1,9 @@
-#include "jxx.lang.System.h"
-#include "jxx.io.PrintStream.h"
-#include "jxx.io.StdInputStream.h"
-#include "jxx.io.InputStream.h"
-#include "jxx.util.Properties.h"
-#include "jxx.io.Console.h"
 #include <iostream>
 #include <cstdlib>
 #include <unordered_map>
 #include <cstring>
 #include <chrono>
+
 #if defined(_WIN32)
 #include <windows.h>
 #include <io.h>
@@ -19,6 +14,12 @@
 #include <unistd.h>
 extern char **environ;
 #endif
+
+#include "lang/jxx.lang.System.h"
+#include "io/jxx.io.PrintStream.h"
+#include "io/jxx.io.InputStream.h"
+#include "util/jxx.util.Properties.h"
+#include "io/jxx.io.Console.h"
 
 namespace jxx { namespace lang {
 

@@ -1,6 +1,6 @@
 
-#include "jxx/io/jxx.io.PrintWriter.h"
-#include "jxx/io/jxx.io.UTF8.h"
+#include "io/jxx.io.PrintWriter.h"
+#include "io/jxx.io.UTF8.h"
 #include <sstream>
 namespace jxx { namespace io {
 PrintWriter::PrintWriter(std::shared_ptr<Writer> w, bool autoFlush_) : out(std::move(w)), autoFlush(autoFlush_) {}

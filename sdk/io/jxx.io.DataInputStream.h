@@ -4,6 +4,7 @@
 #include "io/jxx.io.FilterInputStream.h"
 #include "io/jxx.io.DataInput.h"
 #include "io/jxx.io.ModifiedUTF.h"
+#include "io/jxx.io.EOFException.h"
 
 using namespace jxx::lang;
 
@@ -25,6 +26,8 @@ public:
     long readLong() override { ByteArray b(8); readFully(b); long v=0; for(int i=0;i<8;++i) v=(v<<8)|b[i]; return v; }
     float readFloat() override { uint32_t bits=(uint32_t)readInt(); float f; std::memcpy(&f,&bits,4); return f; }
     double readDouble() override { uint64_t bits=(uint64_t)readLong(); double d; std::memcpy(&d,&bits,8); return d; }
-    std::u16string readUTF() override { unsigned short utflen=readUnsignedShort(); ByteArray bytes(utflen); readFully(bytes); return ModifiedUTF::decode(bytes); }
+    std::u16string readUTF() override {
+        unsigned short utflen=readUnsignedShort(); ByteArray bytes(utflen); readFully(bytes);
+        return ModifiedUTF::decode(bytes); }
 };
 }}

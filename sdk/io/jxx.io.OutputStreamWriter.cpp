@@ -1,6 +1,6 @@
 
-#include "jxx/io/jxx.io.OutputStreamWriter.h"
-#include "jxx/io/jxx.io.IOException.h"
+#include "io/jxx.io.OutputStreamWriter.h"
+#include "io/jxx.io.IOException.h"
 namespace jxx { namespace io {
 OutputStreamWriter::OutputStreamWriter(std::shared_ptr<OutputStream> out_, const std::string& cs): out(std::move(out_)), charset(cs){}
 void OutputStreamWriter::write(int c){ jxx::lang::jchar ch=(jxx::lang::jchar)c; std::u16string s(1,ch); ByteArray enc=UTF8::encode(s); out->write(enc);} 

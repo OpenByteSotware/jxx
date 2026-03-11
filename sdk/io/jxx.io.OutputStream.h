@@ -9,6 +9,7 @@
 #include "lang/jxx.lang.internal.h"
 #include "io/jxx.io.IOException.h"
 using namespace std;
+using namespace jxx::lang;
 
 namespace jxx::io {
 
@@ -23,7 +24,7 @@ public:
     OutputStream& operator=(OutputStream&&) = default;
 
     virtual void write(int b) {
-        std::uint8_t one = static_cast<std::uint8_t>(b & 0xFF);
+        jbyte one = static_cast<jbyte>(b & 0xFF);
         write(&one, 0, 1);
     }
 
@@ -34,7 +35,7 @@ public:
     }
 
     // write(byte[] b, int off, int len)
-    virtual void write(const std::uint8_t* b, std::size_t off, std::size_t len) = 0;
+    virtual void write(const jbyte* b, std::size_t off, std::size_t len) = 0;
 
     // flush()
     virtual void flush() {}
@@ -45,18 +46,15 @@ public:
     // Convenience overloads (C++ only)
     void write(const std::string& s) {
         if (!s.empty()) {
-            const auto* p = reinterpret_cast<const std::uint8_t*>(s.data());
+            const auto* p = reinterpret_cast<const jbyte*>(s.data());
             write(p, 0, s.size());
         }
     }
 
-    void write(const std::uint8_t* data, std::size_t len) {
+    void write(jbyte* data, std::size_t len) {
         if (len) write(data, 0, len);
     }
-
-    // NullOutputStream (like Java 11’s OutputStream.nullOutputStream())
-    static OutputStream& nullStream();
-
+    
 protected:
     // Protected helper to throw I/O failures
     [[noreturn]] static void fail(const std::string& msg) {
