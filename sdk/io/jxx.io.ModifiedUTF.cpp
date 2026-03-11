@@ -1,4 +1,5 @@
 #include <vector>
+#include "lang/jxx.lang.internal.h"
 #include "io/jxx.io.ModifiedUTF.h"
 #include "io/jxx.io.UTFDataFormatException.h"
 

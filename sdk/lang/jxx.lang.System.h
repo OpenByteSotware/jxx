@@ -1,78 +1,50 @@
-#pragma once
-#include "jxx.lang.Object.h"
-#include <string>
-#include <vector>
-#include <optional>
-#include <unordered_map>
-#include <cstring>
-#include <cstdint>
 
-namespace jxx { namespace io { class PrintStream; class InputStream; class Console; }}
-namespace jxx { namespace util { class Properties; }}
+#pragma once
+#include <memory>
+#include <vector>
+#include <cstring>
+#include <chrono>
+#include "lang/jxx.lang.internal.h"
+#include "io/jxx.io.InputStream.h"
+#include "io/jxx.io.PrintStream.h"
+#include "io/jxx.io.FileDescriptor.h"
+#include "io/jxx.io.FileInputStream.h"
+#include "io/jxx.io.FileOutputStream.h"
 
 namespace jxx { namespace lang {
+struct System {
+    static std::shared_ptr<jxx::io::InputStream> in;
+    static std::shared_ptr<jxx::io::PrintStream> out;
+    static std::shared_ptr<jxx::io::PrintStream> err;
 
-class System final : public Object {
-public:
-    // Streams (setters to match Java System.setOut/Err/In)
-    static jxx::io::PrintStream& out();
-    static void setOut(jxx::io::PrintStream* ps);
+    static void init();
+    static void setIn(std::shared_ptr<jxx::io::InputStream> s) { in = std::move(s); }
+    static void setOut(std::shared_ptr<jxx::io::PrintStream> s) { out = std::move(s); }
+    static void setErr(std::shared_ptr<jxx::io::PrintStream> s) { err = std::move(s); }
 
-    static jxx::io::PrintStream& err();
-    static void setErr(jxx::io::PrintStream* ps);
+    // Java-like utilities
+    static jxx::lang::jlong currentTimeMillis();
 
-    static jxx::io::InputStream& in();
-    static void setIn(jxx::io::InputStream* is);
-
-    // Time
-    static std::int64_t currentTimeMillis();
-    static std::int64_t nanoTime();
-
-    // Properties
-    static jxx::util::Properties& getProperties();
-    static void setProperties(const jxx::util::Properties& p);
-    static std::string getProperty(const std::string& key);
-    static std::string getProperty(const std::string& key, const std::string& def);
-    static std::string setProperty(const std::string& key, const std::string& value);
-    static std::string clearProperty(const std::string& key);
-
-    // Environment
-    static const char* getenv(const std::string& key);
-    static std::unordered_map<std::string, std::string> getenvMap();
-
-    // Identity hash
-    static std::size_t identityHashCode(const Object& obj) { return reinterpret_cast<std::size_t>(&obj); }
-
-    // Library loading
-    static void load(const std::string& filename);
-    static void loadLibrary(const std::string& libname);
-    static std::string mapLibraryName(const std::string& libname);
-
-    // Console
-    static jxx::io::Console* console(); // returns nullptr if not available
-
-    // GC/Finalization/Exit
-    static void gc();
-    static void runFinalization();
-    static void exit(int status);
-
-    // arraycopy: raw pointers and vectors
-    template <typename T>
-    static void arraycopy(const T* src, int srcPos, T* dest, int destPos, int length) {
-        if (!src || !dest || srcPos < 0 || destPos < 0 || length < 0) throw std::out_of_range("arraycopy: invalid");
-        std::memmove(dest + destPos, src + srcPos, sizeof(T) * static_cast<std::size_t>(length));
+    template<typename T>
+    static void arraycopy(const std::vector<T>& src, jxx::lang::jint srcPos,
+                          std::vector<T>& dest, jxx::lang::jint destPos,
+                          jxx::lang::jint length) {
+        if (srcPos < 0 || destPos < 0 || length < 0 ||
+            (size_t)srcPos + (size_t)length > src.size() ||
+            (size_t)destPos + (size_t)length > dest.size()) {
+            throw std::out_of_range("System.arraycopy: index out of bounds");
+        }
+        if (length == 0) return;
+        std::memmove(&dest[(size_t)destPos],
+                     &src[(size_t)srcPos],
+                     (size_t)length * sizeof(T));
     }
 
-    template <typename T>
-    static void arraycopy(const std::vector<T>& src, int srcPos, std::vector<T>& dest, int destPos, int length) {
-        if (srcPos < 0 || destPos < 0 || length < 0) throw std::out_of_range("arraycopy: negative index");
-        if (static_cast<std::size_t>(srcPos + length) > src.size()) throw std::out_of_range("arraycopy: src range");
-        if (static_cast<std::size_t>(destPos + length) > dest.size()) dest.resize(destPos + length);
-        std::memmove(&dest[destPos], &src[srcPos], sizeof(T) * static_cast<std::size_t>(length));
+    static void arraycopy(const jxx::lang::jchar* src, jxx::lang::jint srcPos,
+                          jxx::lang::jchar* dest, jxx::lang::jint destPos,
+                          jxx::lang::jint length) {
+        if (length <= 0) return;
+        std::memmove(dest + destPos, src + srcPos, (size_t)length * sizeof(jxx::lang::jchar));
     }
-
-    static std::string lineSeparator();
-    static std::string fileSeparator();
 };
-
-}} // namespace jxx::lang
+}}
