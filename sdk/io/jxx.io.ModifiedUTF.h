@@ -6,6 +6,6 @@
 namespace jxx { namespace io {
 class ModifiedUTF {
 public:
-	static ByteArray encode(const std::u16string& s);
+	static shared_ptr<ByteArray> encode(const std::u16string& s);
 	static std::u16string decode(const ByteArray& bytes); };
 }}

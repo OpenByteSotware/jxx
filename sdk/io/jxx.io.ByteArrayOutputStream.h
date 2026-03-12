@@ -10,9 +10,11 @@ class ByteArrayOutputStream : public OutputStream { ByteArray buf; size_t count=
     explicit ByteArrayOutputStream(size_t size=32);
     void write(int b) override;
     void write(const ByteArray& b, int off, int len) override; 
-    void reset(); size_t size() const { return count; } 
+    void reset(); 
+    jint size() const { return count; } 
     ByteArray toByteArray() const; 
     void writeTo(OutputStream& out);
-private: void ensureCapacity(size_t minCap);
+private: 
+    void ensureCapacity(jint minCap);
 };
 }}

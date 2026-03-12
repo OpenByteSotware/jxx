@@ -2,6 +2,10 @@
 #include "io/jxx.io.BufferedInputStream.h"
 #include <cstring>
 #include <algorithm>
+#include "lang/jxx.lang.internal.h"
+
+using namespace jxx::lang;
+
 namespace jxx { namespace io {
 
 BufferedInputStream::BufferedInputStream(std::shared_ptr<InputStream> in_, size_t size): FilterInputStream(std::move(in_)), buffer(size) {}

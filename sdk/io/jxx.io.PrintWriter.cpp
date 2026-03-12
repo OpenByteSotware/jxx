@@ -18,8 +18,7 @@ void PrintWriter::print(int v){ std::ostringstream oss; oss<<v; print(oss.str())
 void PrintWriter::print(long long v){ std::ostringstream oss; oss<<v; print(oss.str()); }
 void PrintWriter::print(float v){ std::ostringstream oss; oss<<v; print(oss.str()); }
 void PrintWriter::print(double v){ std::ostringstream oss; oss<<v; print(oss.str()); }
-void PrintWriter::println(){ print("
-"); if(autoFlush) flush(); }
+void PrintWriter::println(){ print(""); if(autoFlush) flush(); }
 void PrintWriter::println(const std::string& s){ print(s); println(); }
 void PrintWriter::println(const char* s){ print(s); println(); }
 void PrintWriter::println(const std::u16string& s){ print(s); println(); }

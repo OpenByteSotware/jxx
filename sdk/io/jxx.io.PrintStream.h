@@ -5,13 +5,23 @@
 #include "lang/jxx.lang.internal.h"
 #include "io/jxx.io.OutputStream.h"
 #include "io/jxx.io.OutputStreamWriter.h"
+#include "lang/jxx.lang.String.h"
+
+using namespace jxx::lang;
+
 namespace jxx { namespace io {
 class PrintStream : public jxx::lang::Object, public Flushable, public Closeable { 
     std::shared_ptr<OutputStream> out; std::shared_ptr<OutputStreamWriter> writer; 
     bool autoFlush=false; 
     bool error_=false; 
-    std::string lineSep="\n"; 
-    void writeString(const std::string& s);
+
+    // windows and others are different for line seperator
+#if defined(_WIN32)
+    String lineSep="\n\r"; 
+#else
+    String lineSep = "\n";
+#endif
+    void writeString(const String& s);
     void writeU16(const std::u16string& s); 
     void newline(); 
     void handleError();

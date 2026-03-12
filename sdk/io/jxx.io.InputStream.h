@@ -7,6 +7,8 @@
 #include "io/jxx.io.IOException.h"
 #include "io/jxx.io.Closeable.h"
 
+using namespace jxx::lang;
+
 namespace jxx { namespace io {
 
     class InputStream : public jxx::lang::Object, public jxx::io::Closeable {
@@ -20,7 +22,7 @@ namespace jxx { namespace io {
             if (c == -1) return -1;
             b[off] = (std::uint8_t)c;
             int i = 1;
-            for (; i < len; ++i) { c = read(); if (c == -1) break; b[(size_t)(off+i)] = (std::uint8_t)c; }
+            for (; i < len; ++i) { c = read(); if (c == -1) break; b[(jbyte)(off+i)] = (jbyte)c; }
             return i;
         }
         virtual int read(ByteArray& b) { return read(b, 0, (int)b.length); }

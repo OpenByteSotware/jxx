@@ -21,7 +21,7 @@ public:
     char readUnsignedByte() override { int v=in->read(); if(v<0) throw EOFException("readUnsignedByte"); return (char)(v&0xFF); }
     short readShort() override { ByteArray b(2); readFully(b); return (short)((b[0]<<8)|b[1]); }
     unsigned short readUnsignedShort() override { ByteArray b(2); readFully(b); return (unsigned short)((b[0]<<8)|b[1]); }
-    char readChar() override { return (char)readUnsignedShort(); }
+    jchar readChar() override { return (char)readUnsignedShort(); }
     int readInt() override { ByteArray b(4); readFully(b); return ((int)b[0]<<24)|((int)b[1]<<16)|((int)b[2]<<8)|((int)b[3]); }
     long readLong() override { ByteArray b(8); readFully(b); long v=0; for(int i=0;i<8;++i) v=(v<<8)|b[i]; return v; }
     float readFloat() override { uint32_t bits=(uint32_t)readInt(); float f; std::memcpy(&f,&bits,4); return f; }
