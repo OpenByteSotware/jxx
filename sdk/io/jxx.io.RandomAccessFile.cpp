@@ -36,7 +36,9 @@ char* dst=(char*)(b.data()+off); fs.read(dst,len); if(fs.gcount()!=len) throw EO
 fs.seekg(n,std::ios::cur); return (int)(fs.tellg()-cur);} bool RandomAccessFile::readBoolean(){ int b=readUnsignedByte(); return b!=0;} 
 jxx::lang::jbyte RandomAccessFile::readByte(){ char c; fs.read(&c,1); if(!fs) throw EOFException("readByte: EOF"); return (jxx::lang::jbyte)(unsigned char)c;} 
 char RandomAccessFile::readUnsignedByte(){ int v=readByte(); return (char)(v&0xFF);} jxx::lang::jshort RandomAccessFile::readShort(){ ByteArray b(2); readFully(b);
-return (jxx::lang::jshort)((b[0]<<8)|b[1]); } unsigned short RandomAccessFile::readUnsignedShort(){ ByteArray b(2); readFully(b); return (unsigned short)((b[0]<<8)|b[1]); }
+return (jxx::lang::jshort)((b[0]<<8)|b[1]); } 
+unsigned short RandomAccessFile::readUnsignedShort(){ ByteArray b(2); readFully(b); return (unsigned short)((b[0]<<8)|b[1]); }
+
 jxx::lang::jchar RandomAccessFile::readChar(){ return (jxx::lang::jchar)readUnsignedShort(); } int RandomAccessFile::readInt(){ ByteArray b(4);
 readFully(b); return ((int)b[0]<<24)|((int)b[1]<<16)|((int)b[2]<<8)|((int)b[3]); } jxx::lang::jlong RandomAccessFile::readLong(){ ByteArray b(8); 
 readFully(b); jxx::lang::jlong v=0; for(int i=0;i<8;++i) v=(v<<8)|b[i]; return v;} float RandomAccessFile::readFloat(){ uint32_t bits=(uint32_t)readInt(); float f;

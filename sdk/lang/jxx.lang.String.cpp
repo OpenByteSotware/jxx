@@ -1,31 +1,6 @@
 #pragma once
+#include "jxx.lang.String.h"
 
-#include <string>
-#include <string_view>
-#include <vector>
-#include <stdexcept>
-#include <limits>
-#include <regex>
-#include <ostream>
-#include <cstdint>
-#include <algorithm>
-#include <utility>
-#include <type_traits>
-#include <codecvt>
-#include <locale>
-#include "jxx.lang.internal.h"
-#include "jxx.lang.Comparable.h"
-
-using namespace std;
-
-namespace jxx::lang {
-
-    class String : public Object, Comparable<String> {
-    public:
-        // ---- Construction (immutable) ----
-        String() = default;
-
-        ~String() = default;
 
         // From UTF-16 (best 1:1 match with Java)
         explicit String(const std::u16string& s) : data_(s) {}

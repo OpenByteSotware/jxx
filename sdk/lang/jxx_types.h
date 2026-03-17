@@ -39,7 +39,7 @@ namespace jxx::lang {
 	using jlong = std::int64_t;    // Java long:  64-bit signed
 	using jfloat = float;           // Java float: IEEE-754 binary32 on typical targets
 	using jdouble = double;          // Java double: IEEE-754 binary64 on typical targets
-	using jboolean = bool;            // Java boolean: logical true/false
+	using jbool = bool;            // Java boolean: logical true/false
 }
 
 // =====================================================

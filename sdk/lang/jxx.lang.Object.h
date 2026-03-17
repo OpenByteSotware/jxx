@@ -139,21 +139,6 @@ namespace jxx {
         };
 
        
-        // =============== Comparable mixin (like java.lang.Comparable) ===============
-        template <typename Derived>
-        class Comparable : public virtual Object {
-        public:
-            // Return negative/zero/positive like Java's compareTo
-            virtual int compareTo(const Derived& other) const = 0;
-            virtual ~Comparable() {};
-
-            // Convenience operators
-            bool operator<(const Derived& other)  const { return compareTo(other) < 0; }
-            bool operator>(const Derived& other)  const { return compareTo(other) > 0; }
-            bool operator<=(const Derived& other) const { return compareTo(other) <= 0; }
-            bool operator>=(const Derived& other) const { return compareTo(other) >= 0; }
-        };
-
         // =============== Synchronized mixin (Java-like monitor) ===============
         // Uses reentrant mutex (like Java's monitors).
         class Synchronized : public virtual Object {

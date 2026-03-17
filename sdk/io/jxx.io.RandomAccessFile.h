@@ -27,11 +27,10 @@ std::fstream fs; public:
     void writeUTF(const std::u16string& s) override; 
     void readFully(ByteArray& b) override; 
     void readFully(ByteArray& b, int off, int len) override; 
-    int skipBytes(int n) override; 
-    bool readBoolean() override; jxx::lang::jbyte readByte() override; 
-    char readUnsignedByte() override; 
-    jxx::lang::jshort readShort() override; unsigned short readUnsignedShort() override;
-    jxx::lang::jchar readChar() override;
+    jint skipBytes(jint n) override; 
+    jbool readBoolean() override; jxx::lang::jbyte readByte() override; 
+    jshort readShort() override; 
+    jchar readChar() override;
     int readInt() override; 
     jxx::lang::jlong readLong() override; 
     float readFloat() override; double readDouble() override; 

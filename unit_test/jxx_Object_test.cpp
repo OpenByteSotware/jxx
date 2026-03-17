@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "jxx.h"
+#include "jxx_memory_detect.h"
 
 using namespace jxx::lang;
 
