@@ -65,7 +65,7 @@ namespace jxx {
         // =============== Object (root) ===============
         class Object {
         public:
-            virtual ~Object() {};
+            virtual ~Object() = default;
 
             // Java-like: logical equality (default identity)
             virtual bool equals(const Object& other) const noexcept {

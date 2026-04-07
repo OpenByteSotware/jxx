@@ -26,7 +26,7 @@
 namespace jxx::lang {
     template <typename Derived>
     class Comparable {
-        virtual ~Comparable() = default;
+        //virtual ~Comparable() = default;
 
         // Pure virtual: must be implemented by Derived
         virtual jint compareTo(const Derived& other) const = 0;

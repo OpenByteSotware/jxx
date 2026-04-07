@@ -14,6 +14,7 @@
 #include <codecvt>
 #include <locale>
 #include "jxx.lang.internal.h"
+#include "jxx.lang.Object.h"
 #include "jxx.lang.Comparable.h"
 
 using namespace std;
