@@ -331,7 +331,7 @@ namespace jxx::lang {
         friend bool operator!=(const String& a, const String& b) { return !a.equals(b); }
 
         // hashCode(): Java-compatible 32-bit signed
-        int hashCode() const {
+        jint hashCode() const {
             if (!hash_cached_) {
                 uint32_t h = 0;
                 for (char16_t c : data_) {
