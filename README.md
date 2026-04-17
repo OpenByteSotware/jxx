@@ -81,3 +81,12 @@ python java_to_cpp.py \
   --exceptions-include "IOException.hpp" \
   --sync-include "Sync.hpp" \
   --checked-exceptions macro --throws-macro JXX_THROWS
+  
+  
+  
+  
+  python java2cpp17.py --dir ./src_java --out ./cpp_out \
+  --primitive-map int=jint \
+  --primitive-map boolean=jbool \
+  --primitive-map short=jshort
+
