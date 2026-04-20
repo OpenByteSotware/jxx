@@ -73,7 +73,7 @@ namespace jxx {
             }
 
             // Java-like: hashCode (default identity-based)
-            virtual std::size_t hashCode() const noexcept {
+            virtual jint hashCode() const noexcept {
                 return std::hash<const void*>{}(this);
             }
 
