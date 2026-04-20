@@ -207,6 +207,8 @@ namespace jxx {
 
         template <typename TValue, typename TKeyPtr = std::shared_ptr<Object>>
         using PolyMap = std::unordered_map<TKeyPtr, TValue, PolyHash, PolyEqual>;
+
+        using ObjectPtr = std::shared_ptr<Object>;
 } // namespace lang
 } // namespace jxx
 
