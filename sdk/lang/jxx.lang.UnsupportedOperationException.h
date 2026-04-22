@@ -1,11 +1,16 @@
 #pragma once
-#include <exception>
-#include <string>
+
 #include <memory>
 #include "jxx.lang.RuntimeException.h"
 
 namespace jxx::lang {
-	class UnsupportedOperationException : public jxx::lang::RuntimeException {
-	public: using RuntimeException::RuntimeException; ~UnsupportedOperationException() override = default;
-	};
-}
+
+class UnsupportedOperationException : public RuntimeException {
+public:
+    using RuntimeException::RuntimeException;
+    JXX_THROWABLE_CLONE(UnsupportedOperationException)
+protected:
+    const char* typeName() const noexcept override { return "UnsupportedOperationException"; }
+};
+
+} // namespace jxx::lang

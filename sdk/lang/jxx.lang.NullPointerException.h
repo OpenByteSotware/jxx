@@ -1,11 +1,16 @@
-#include <stdexcept>
-#include <string>
+#pragma once
+
+#include <memory>
 #include "jxx.lang.RuntimeException.h"
 
 namespace jxx::lang {
-    // Semantically equivalent to java.lang.NullPointerException
+
     class NullPointerException : public RuntimeException {
     public:
-    public: using RuntimeException::RuntimeException; ~NullPointerException() override = default;
+        using RuntimeException::RuntimeException;
+        JXX_THROWABLE_CLONE(NullPointerException)
+    protected:
+        const char* typeName() const noexcept override { return "NullPointerException"; }
     };
-}
+
+} // namespace jxx::lang

@@ -110,6 +110,18 @@ namespace jxx::lang {
         // crucial: avoids slicing when wrapping as shared_ptr<Throwable>
         virtual Ptr clone() const = 0;
 
+        inline void addSuppressed(const Ptr& ex) {
+            if (!enableSuppression_) return;
+
+            if (!ex) {
+                throw NullPointerException(String("Cannot suppress null exception"));
+            }
+            if (ex.get() == this) {
+                throw IllegalArgumentException(String("Self-suppression not permitted"));
+            }
+            suppressed_.push_back(ex);
+        }
+
     protected:
         // Override in derived exceptions to match Java class names if desired
         virtual const char* typeName() const noexcept { return "Throwable"; }

@@ -1,10 +1,16 @@
-
 #pragma once
-#include "lang/jxx.lang.h"
 
-namespace jxx { namespace util {
+#include <memory>
+#include "jxx.lang.RuntimeException.h"
+
+namespace jxx::util {
+
 class NoSuchElementException : public jxx::lang::RuntimeException {
-public: 
-	using RuntimeException::RuntimeException;
-	  ~NoSuchElementException() override = default; };
-}} // namespace jxx::util
+public:
+    using jxx::lang::RuntimeException::RuntimeException;
+    JXX_THROWABLE_CLONE(NoSuchElementException)
+protected:
+    const char* typeName() const noexcept override { return "NoSuchElementException"; }
+};
+
+} // namespace jxx::util

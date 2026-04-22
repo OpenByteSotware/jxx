@@ -1,10 +1,16 @@
-#include <stdexcept>
-#include <string>
+#pragma once
+
+#include <memory>
 #include "jxx.lang.RuntimeException.h"
 
 namespace jxx::lang {
+
     class IllegalStateException : public RuntimeException {
     public:
-    public: using RuntimeException::RuntimeException; ~IllegalStateException() override = default;
+        using RuntimeException::RuntimeException;
+        JXX_THROWABLE_CLONE(IllegalStateException)
+    protected:
+        const char* typeName() const noexcept override { return "IllegalStateException"; }
     };
-}
+
+} // namespace jxx::lang
