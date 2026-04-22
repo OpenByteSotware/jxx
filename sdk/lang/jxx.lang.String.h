@@ -58,6 +58,27 @@ namespace jxx::lang {
                 return u"";
             }
         }
+             
+        // Copy constructor
+        String(const String& other)
+            : data_(other.data_),
+            hash_cached_(other.hash_cached_),
+            hash_cache_(other.hash_cache_) {}
+
+        // Copy assignment operator
+        String& operator=(const String& other) {
+            if (this != &other) {
+                data_ = other.data_;
+                hash_cached_ = other.hash_cached_;
+                hash_cache_ = other.hash_cache_;
+            }
+            return *this;
+        }
+
+        // From UTF-16 (best 1:1 match with Java)
+        explicit String(const std::u16string& s) : data_(s) {}
+        explicit String(std::u16string&& s) : data_(std::move(s)) {}
+        String(const char* s) { assign_from_cstr(s); }
 
         // From UTF-8 (convenience)
         static String fromUtf8(const std::string& utf8) {
