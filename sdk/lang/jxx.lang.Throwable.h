@@ -1,171 +1,136 @@
+// jxx/lang/Throwable.h
 #pragma once
+
 #include <exception>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 #include <ostream>
-#include <sstream>
-#include <typeinfo>
-#include <utility>
-#include "jxx.lang.Object.h"
 
-#if defined(__GNUG__) || defined(__clang__)
-  #include <cxxabi.h>
-  #include <cstdlib>
-#endif
+#include "jxx.lang.Object.h"
+#include "jxx.lang.String.h"
+#include "jxx.lang.StackTrace.h"  // StackTraceElement + captureStackTrace()
 
 namespace jxx::lang {
 
-// -------------------- Source location --------------------
-struct SourceLoc {
-    const char* file{""};
-    int         line{0};
-    const char* func{""};
-};
+    class IllegalArgumentException;  // you already have this
+    // (later you can swap to NullPointerException for exact Java parity)
 
-inline SourceLoc make_source_loc(const char* file, int line, const char* func) {
-    return SourceLoc{file, line, func};
-}
+    class Throwable : public Object, public std::exception {
+    public:
+        using Ptr = std::shared_ptr<Throwable>;
 
-
-// -------------------- Throwable (base) --------------------
-class Throwable : public Object, std::exception {
-    std::string message_;
-    std::exception_ptr cause_;
-    std::vector<std::exception_ptr> suppressed_;
-    std::vector<SourceLoc> trace_; // most-recent frame last
-
-public:
-    // Constructors mimic Java's combinations (message + cause). SourceLoc is required to capture frame.
-    explicit Throwable(std::string msg,
-                       std::exception_ptr cause,
-                       SourceLoc where)
-        : message_(std::move(msg)), cause_(std::move(cause)) {
-        trace_.push_back(where);
-    }
-
-    explicit Throwable(const char *msg,
-        std::exception_ptr cause,
-        SourceLoc where)
-        : message_(std::move(msg)), cause_(std::move(cause)) {
-        trace_.push_back(where);
-    }
-
-    // what()
-    const char* what() const noexcept override { return message_.c_str(); }
-
-    // Human name of dynamic type
-    virtual std::string name() const {
-        return demangle(typeid(*this).name());
-    }
-
-    // Message access
-    const std::string& getMessage() const noexcept { return message_; }
-
-    // Cause (nested exception)
-    std::exception_ptr getCause() const noexcept { return cause_; }
-
-    // Suppressed exceptions (like Java)
-    void addSuppressed(std::exception_ptr e) { if (e) suppressed_.push_back(std::move(e)); }
-    void addSuppressedCurrent() { addSuppressed(std::current_exception()); }
-    const std::vector<std::exception_ptr>& getSuppressed() const noexcept { return suppressed_; }
-
-    // Trace
-    void appendTrace(SourceLoc where) { trace_.push_back(where); }
-    const std::vector<SourceLoc>& trace() const noexcept { return trace_; }
-
-    // toString()
-    virtual std::string toString() const {
-        if (message_.empty()) return name();
-        return name() + ": " + message_;
-    }
-
-    // printStackTrace()
-    virtual void printStackTrace(std::ostream& os) const {
-        os << toString() << '\n';
-        for (const auto& fr : trace_) {
-            os << "  at " << fr.func << " (" << fr.file << ":" << fr.line << ")\n";
-        }
-
-        // Suppressed
-        for (const auto& s : suppressed_) {
-            os << "Suppressed: ";
-            printExceptionPtr(s, os, 1);
-        }
-
-        // Cause
-        if (cause_) {
-            os << "Caused by: ";
-            printExceptionPtr(cause_, os, 1);
-        }
-    }
-
-    virtual ~Throwable() = default;
-
-    // --------- Helpers to print std::exception_ptr chains ---------
-    static void printStdException(const std::exception& e, std::ostream& os, int indent = 0) {
-        const auto* t = dynamic_cast<const Throwable*>(&e);
-        std::string pad(static_cast<size_t>(indent) * 2, ' ');
-        if (t) {
-            std::ostringstream sub;
-            t->printStackTrace(sub);
-            // Indent all lines
-            std::istringstream in(sub.str());
-            for (std::string line; std::getline(in, line); ) {
-                os << pad << line << '\n';
+        Throwable(String message = String(""),
+            Ptr cause = nullptr,
+            bool enableSuppression = true,
+            bool writableStackTrace = true)
+            : message_(std::move(message)),
+            cause_(std::move(cause)),
+            enableSuppression_(enableSuppression),
+            writableStackTrace_(writableStackTrace) {
+            if (writableStackTrace_) {
+                stack_ = captureStackTrace(/*skipFrames=*/1);
             }
-            return;
         }
-        // Fallback for non-Throwable exceptions
-        os << pad << demangle(typeid(e).name()) << ": " << e.what() << '\n';
-        // Try to detect nested std::nested_exception (if used elsewhere)
-        try {
-            std::rethrow_if_nested(e);
-        } catch (const std::exception& nested) {
-            os << pad << "Caused by: ";
-            printStdException(nested, os, indent + 1);
-        } catch (...) {
-            os << pad << "Caused by: <non-std::exception>\n";
+
+        virtual ~Throwable() = default;
+
+        // Java-like API
+        const String& getMessage() const { return message_; }
+        Ptr getCause() const { return cause_; }
+
+        // Optional Java-ish initCause (Java has constraints; implement if you want strict parity)
+        void initCause(Ptr cause) { cause_ = std::move(cause); }
+
+        // ---- Suppressed exceptions (Java 7+, present in Java 8) ----
+        void addSuppressed(const Ptr& ex) {
+            if (!enableSuppression_) return;
+
+            if (!ex) {
+                // Java would throw NullPointerException; you don't have it yet.
+                throw IllegalArgumentException(String("Cannot suppress null exception"));
+            }
+            if (ex.get() == this) {
+                // Java: IllegalArgumentException for self-suppression
+                throw IllegalArgumentException(String("Self-suppression not permitted"));
+            }
+            suppressed_.push_back(ex);
         }
-    }
 
-    static void printExceptionPtr(const std::exception_ptr& ep, std::ostream& os, int indent = 0) {
-        try {
-            if (ep) std::rethrow_exception(ep);
-        } catch (const std::exception& e) {
-            printStdException(e, os, indent);
-        } catch (...) {
-            std::string pad(static_cast<size_t>(indent) * 2, ' ');
-            os << pad << "<non-std::exception>\n";
+        std::vector<Ptr> getSuppressed() const {
+            // Java returns a copy of the array; vector copy matches semantics well
+            return suppressed_;
         }
-    }
-};
 
-// -------------------- Exception hierarchy --------------------
-class Exception : public Throwable {
-public:
-    using Throwable::Throwable; // inherit ctors (message, cause, loc)
-    ~Exception() override = default;
-};
+        // ---- Stack trace (Java-style) ----
+        // Java: fillInStackTrace returns this
+        Throwable& fillInStackTrace() {
+            if (writableStackTrace_) {
+                stack_ = captureStackTrace(/*skipFrames=*/1);
+            }
+            return *this;
+        }
 
-// A few illustrative specific types (mirror Java names)
-class IOException : public Exception {
-public: using Exception::Exception; ~IOException() override = default;
-};
+        const std::vector<StackTraceElement>& getStackTrace() const {
+            return stack_;
+        }
 
-// -------------------- Macros for source loc --------------------
-#define JXX_SOURCE_LOC ::jxx::lang::make_source_loc(__FILE__, __LINE__, __func__)
+        // Java-like pretty printing
+        void printStackTrace(std::ostream& os) const {
+            os << typeName() << ": " << message_.toStdString() << "\n";
 
-// Throw new exception with message
-#define JXX_THROW(EXC_TYPE, MESSAGE) \
-    throw EXC_TYPE{ (MESSAGE), std::exception_ptr{}, JXX_SOURCE_LOC }
+            for (const auto& e : stack_) {
+                os << "\tat " << e.methodName;
+                if (!e.fileName.empty()) {
+                    os << "(" << e.fileName;
+                    if (e.lineNumber >= 0) os << ":" << e.lineNumber;
+                    os << ")";
+                }
+                os << " [0x" << std::hex << e.address << std::dec << "]\n";
+            }
 
-// Throw with cause (must be an exception_ptr, often std::current_exception())
-#define JXX_THROW_CAUSE(EXC_TYPE, MESSAGE, CAUSE_EP) \
-    throw EXC_TYPE{ (MESSAGE), (CAUSE_EP), JXX_SOURCE_LOC }
+            for (const auto& s : suppressed_) {
+                os << "Suppressed: ";
+                if (s) s->printStackTrace(os);
+            }
 
-// Rethrow an existing Throwable e, appending current context
-#define JXX_RETHROW_APPEND(e) \
-    do { (e).appendTrace(JXX_SOURCE_LOC); throw; } while(false)
+            if (cause_) {
+                os << "Caused by: ";
+                cause_->printStackTrace(os);
+            }
+        }
+
+        // std::exception bridge
+        const char* what() const noexcept override {
+            // Cache is required because toStdString() returns a temporary
+            cached_ = message_.toStdString();
+            return cached_.c_str();
+        }
+
+        // crucial: avoids slicing when wrapping as shared_ptr<Throwable>
+        virtual Ptr clone() const = 0;
+
+    protected:
+        // Override in derived exceptions to match Java class names if desired
+        virtual const char* typeName() const noexcept { return "Throwable"; }
+
+    private:
+        String message_{ "" };
+        Ptr cause_{ nullptr };
+
+        bool enableSuppression_{ true };
+        bool writableStackTrace_{ true };
+
+        std::vector<Ptr> suppressed_;
+        std::vector<StackTraceElement> stack_;
+
+        mutable std::string cached_;
+    };
 
 } // namespace jxx::lang
+
+
+#define JXX_THROWABLE_CLONE(Derived) \
+    ::jxx::lang::Throwable::Ptr clone() const override { \
+        return std::make_shared<Derived>(*this); \
+    }

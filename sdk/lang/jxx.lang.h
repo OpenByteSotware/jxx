@@ -17,4 +17,5 @@
 #include "jxx.lang.Comparable.h"
 #include "jxx.lang.FormatArg.h"
 #include "jxx.lang.Formatter.h"
+#include "jxx.lang.Exception.h"
 #include "jxx.lang.UnsupportedOperationException.h"
