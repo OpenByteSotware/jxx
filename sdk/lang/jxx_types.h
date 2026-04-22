@@ -47,12 +47,12 @@ namespace jxx::lang {
 // =====================================================
 
 template <typename T, std::size_t N>
-class NDArray {
+class JxxArray {
 public:
 template <typename... Dims,
 	typename = std::enable_if_t<sizeof...(Dims) == N &&
 	std::conjunction_v<std::is_integral<Dims>...>>>
-	explicit NDArray(Dims... dims) : shape_{ static_cast<std::size_t>(dims)... } {
+	explicit JxxArray(Dims... dims) : shape_{ static_cast<std::size_t>(dims)... } {
 	total_size_ = 1;
 	for (auto d : shape_) {
 		if (d == 0) throw std::invalid_argument("Dimension size must be > 0");
@@ -128,7 +128,7 @@ template <typename T, typename... Dims,
 	std::conjunction_v<std::is_integral<Dims>...>>>
 	auto JXX_NEW(Dims... dims) {
 	constexpr std::size_t N = sizeof...(Dims);
-	return NDArray<T, N>(dims...);
+	return JxxArray<T, N>(dims...);
 }
 
 // Case 4: Single object (default or with args)
@@ -142,3 +142,5 @@ template <typename T, typename... Args,
 	return std::make_shared<T>(std::forward<Args>(args)...);
 }
 
+#define JXX_CAST(T, Obj) std::dynamic_pointer_cast<T>(Obj) 
+#define JXX_PTR(T) std::shared_ptr<T>

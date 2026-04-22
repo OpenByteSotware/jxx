@@ -25,6 +25,7 @@
 #include <iostream>
 #include "jxx_types.h"
 #include "jxx.lang.Cloneable.h"
+#include "jxx.lang.ClassRegistration.h"
 
 // ---------- Optional: demangle for GCC/Clang ----------
 #if defined(__GNUG__) || defined(__clang__)
@@ -35,6 +36,8 @@
 
 namespace jxx {
     namespace lang {
+
+        class String;
 
 #define JXX_SYNCHRONIZE(obj, ...) obj->synchronized(__VA_ARGS__)
 //#define SYNCHRONIZED_FUNC()
@@ -68,7 +71,7 @@ namespace jxx {
             virtual ~Object() = default;
 
             // Java-like: logical equality (default identity)
-            virtual bool equals(const Object& other) const noexcept {
+            virtual jbool equals(const Object& other) const noexcept {
                 return this == &other;
             }
 
@@ -78,7 +81,7 @@ namespace jxx {
             }
 
             // Class name (demangled where supported); override if you prefer custom names
-            virtual std::string getClassName() const {
+            virtual jxx_ptr(String) getClassName() const {
 #if defined(__GNUG__) || defined(__clang__) || defined(_MSC_VER)
                 return demangle(typeid(*this).name());
 #else
@@ -208,8 +211,9 @@ namespace jxx {
         template <typename TValue, typename TKeyPtr = std::shared_ptr<Object>>
         using PolyMap = std::unordered_map<TKeyPtr, TValue, PolyHash, PolyEqual>;
 
-        using ObjectPtr = std::shared_ptr<Object>;
 } // namespace lang
 } // namespace jxx
+
+JXX_REGISTER_CLASS(jxx::lang::Object, "java.lang.Object", "Object");
 
 #endif

@@ -388,3 +388,5 @@ namespace jxx::lang {
 using ByteArray = jxx::lang::JArray<jxx::lang::jbyte, 1>;
 using CharArray = jxx::lang::JArray<jxx::lang::jchar, 1>;
 using IntArray = jxx::lang::JArray<jxx::lang::jint, 1>;
+
+

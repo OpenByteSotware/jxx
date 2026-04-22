@@ -1,6 +1,7 @@
 #pragma once
 
 #include "jxx.lang.buildin_array.h"
+#include "jxx.lang.StackTrace.h"
 #include "jxx.lang.Object.h"
 #include "jxx.lang.Class.h"
 #include "jxx.lang.ClassRegistration.h"
