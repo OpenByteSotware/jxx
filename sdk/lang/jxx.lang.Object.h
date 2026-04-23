@@ -62,7 +62,7 @@ namespace jxx {
             virtual ~Cloneable() = default;
 
             // Implement cloneImpl for deep copy, Ojbect uses this for C++ to mimic java like clone
-            virtual std::shared_ptr<Object> cloneImpl() const = 0;
+            virtual JXX_PTR(Object) cloneImpl() const = 0;
         };
 
         // =============== Object (root) ===============
@@ -71,8 +71,8 @@ namespace jxx {
             virtual ~Object() = default;
 
             // Java-like: logical equality (default identity)
-            virtual jbool equals(const Object& other) const noexcept {
-                return this == &other;
+            virtual jbool equals(const JXX_PTR(Object) other) const noexcept {
+                return this == other.get();
             }
 
             // Java-like: hashCode (default identity-based)
@@ -81,9 +81,9 @@ namespace jxx {
             }
 
             // Class name (demangled where supported); override if you prefer custom names
-            virtual jxx_ptr(String) getClassName() const {
+            virtual JXX_PTR(String) getClassName() const {
 #if defined(__GNUG__) || defined(__clang__) || defined(_MSC_VER)
-                return demangle(typeid(*this).name());
+                return JXX_NEW<String>(demangle(typeid(*this).name()));
 #else
                 return "Object";
 #endif
@@ -213,6 +213,12 @@ namespace jxx {
 
 } // namespace lang
 } // namespace jxx
+
+
+#define JXX_OBJECT_CLONE(Derived) \
+    JXX_PTR(Object) clone() const override { \
+        return std::make_shared<Derived>(*this); \
+    }
 
 JXX_REGISTER_CLASS(jxx::lang::Object, "java.lang.Object", "Object");
 

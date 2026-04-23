@@ -1,7 +1,25 @@
 #pragma once
+#include <string>
+#include <unordered_map>
 #include "jxx.lang.Class.h"
 
-namespace jxx::lang::detail {
+namespace jxx::lang {
+    struct ClassInfo {
+        std::string javaName;
+        std::string simpleName;
+    };
+
+    // Registry to store class information
+    inline std::unordered_map<std::string, ClassInfo>& GetClassRegistry() {
+        static std::unordered_map<std::string, ClassInfo> registry;
+        return registry;
+    }
+
+    // Helper function to register a class
+    inline bool RegisterClass(const std::string& cppName, const std::string& javaName, const std::string& simpleName) {
+        GetClassRegistry()[cppName] = { javaName, simpleName };
+        return true;
+    }
 
 template <typename T>
 inline TypeInfo makeTypeInfo(const char* canonical, const char* simple) {
@@ -29,7 +47,7 @@ inline TypeInfo makeTypeInfo(const char* canonical, const char* simple) {
 // Register concrete class type
 #define JXX_REGISTER_CLASS(T, CANONICAL, SIMPLE)                                \
     namespace {                                                                 \
-        ::jxx::lang::TypeInfo T##_typeinfo = ::jxx::lang::detail::makeTypeInfo<T>(CANONICAL, SIMPLE); \
+        ::jxx::lang::TypeInfo T##_typeinfo = ::jxx::lang::makeTypeInfo<T>(CANONICAL, SIMPLE); \
         struct T##_registrar {                                                  \
             T##_registrar() {                                                   \
                 T##_typeinfo.isInterface = false;                               \
@@ -42,7 +60,7 @@ inline TypeInfo makeTypeInfo(const char* canonical, const char* simple) {
 // Register interface type (does NOT derive Object)
 #define JXX_REGISTER_INTERFACE(T, CANONICAL, SIMPLE)                            \
     namespace {                                                                 \
-        ::jxx::lang::TypeInfo T##_typeinfo = ::jxx::lang::detail::makeTypeInfo<T>(CANONICAL, SIMPLE); \
+        ::jxx::lang::TypeInfo T##_typeinfo = ::jxx::lang::makeTypeInfo<T>(CANONICAL, SIMPLE); \
         struct T##_registrar {                                                  \
             T##_registrar() {                                                   \
                 T##_typeinfo.isInterface = true;                                \

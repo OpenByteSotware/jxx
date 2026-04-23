@@ -22,7 +22,7 @@ public:
         return std::to_string(value_);
     }
 
-    std::shared_ptr<jxx::lang::Object> clone() const override {
+    JXX_PTR(Object) clone() const override {
         return std::shared_ptr<jxx::lang::Object>(nullptr);
     }
 };

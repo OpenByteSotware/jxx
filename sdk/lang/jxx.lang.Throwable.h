@@ -100,7 +100,7 @@ namespace jxx::lang {
         }
 
         // Required for InvocationTargetException(String, shared_ptr<Throwable>) without slicing
-        virtual Ptr clone() const = 0;
+        virtual JXX_PTR(Object) clone() const = 0;
 
     protected:
         // Override in derived exceptions if you want exact class names
@@ -121,7 +121,7 @@ namespace jxx::lang {
 
     // Helper macro for clone() when exceptions are copy-constructible (you confirmed they are)
 #define JXX_THROWABLE_CLONE(Derived) \
-    ::jxx::lang::Throwable::Ptr clone() const override { \
+    JXX_PTR(Object)clone() const override { \
         return std::make_shared<Derived>(*this); \
     }
 

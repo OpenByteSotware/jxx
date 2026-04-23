@@ -1,6 +1,6 @@
 #include <stdexcept>
 #include <string>
-#include "lang/jxx_types.h"
+#include "jxx.lang.Throwable.h"
 
 namespace jxx::lang {
     class Exception : public Throwable {
