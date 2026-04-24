@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(jxx_object INTERFACE)
 target_include_directories(jxx_object INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../sdk/lang/)
-
+target_compile_features(jxxsdk PRIVATE cxx_std_17)
 add_executable(demo
     main.cpp
     Person.h

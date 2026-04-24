@@ -21,7 +21,7 @@ namespace jxx::lang {
 
     // Forward declaration
     template <typename T, std::uint32_t Rank>
-    class JArray;
+    class JxxArray;
 
     // ---------- Init-list metatype to nest initializer_list like Java literals ----------
     template <typename T, std::uint32_t Rank>
@@ -37,7 +37,7 @@ namespace jxx::lang {
 // Rank-1 specialization: T[]
 // ======================================================================
     template <typename T>
-    class JArray<T, 1> {
+    class JxxArray<T, 1> {
     public:
         using value_type = T;
         using size_type = std::uint32_t;
@@ -52,37 +52,37 @@ namespace jxx::lang {
         size_type length = 0;
 
         // ---- ctors ----
-        JArray() = default;
+        JxxArray() = default;
 
-        explicit JArray(size_type n) : length(n), capacity_(n), data_(n ? std::make_unique<T[]>(n) : std::unique_ptr<T[]>{}) {}
+        explicit JxxArray(size_type n) : length(n), capacity_(n), data_(n ? std::make_unique<T[]>(n) : std::unique_ptr<T[]>{}) {}
 
 
-            // From initializer-list: JArray<int,1> a{1,2,3};
-            JArray(std::initializer_list<T> init) : JArray(init.size()) {
+            // From initializer-list: JxxArray<int,1> a{1,2,3};
+        JxxArray(std::initializer_list<T> init) : JxxArray(init.size()) {
                 std::copy(init.begin(), init.end(), data_.get());
             }
 
             // Copy
-            JArray(const JArray & other) : length(other.length), capacity_(other.length) {
+        JxxArray(const JxxArray& other) : length(other.length), capacity_(other.length) {
                 if (capacity_) {
                     data_.reset(new T[capacity_]);
                     std::copy_n(other.data_.get(), length, data_.get());
                 }
             }
-            JArray& operator=(const JArray & other) {
+        JxxArray& operator=(const JxxArray& other) {
                 if (this == &other) return *this;
-                JArray tmp(other);
+                JxxArray tmp(other);
                 swap(tmp);
                 return *this;
             }
 
             // Move
-            JArray(JArray && other) noexcept
+        JxxArray(JxxArray&& other) noexcept
                 : length(other.length), capacity_(other.capacity_), data_(std::move(other.data_)) {
                 other.length = 0;
                 other.capacity_ = 0;
             }
-            JArray& operator=(JArray && other) noexcept {
+        JxxArray& operator=(JxxArray&& other) noexcept {
                 if (this == &other) return *this;
                 length = other.length;
                 capacity_ = other.capacity_;
@@ -97,11 +97,11 @@ namespace jxx::lang {
             const_reference operator[](size_type i) const noexcept { return data_[i]; }
 
             reference at(size_type i) {
-                if (i >= length) throw std::out_of_range("JArray<T,1>::at index out of range");
+                if (i >= length) throw std::out_of_range("JxxArray<T,1>::at index out of range");
                 return data_[i];
             }
             const_reference at(size_type i) const {
-                if (i >= length) throw std::out_of_range("JArray<T,1>::at index out of range");
+                if (i >= length) throw std::out_of_range("JxxArray<T,1>::at index out of range");
                 return data_[i];
             }
 
@@ -167,16 +167,16 @@ namespace jxx::lang {
             capacity_ = length;
         }
 
-        friend bool operator==(const JArray & a, const JArray & b) {
+        friend bool operator==(const JxxArray & a, const JxxArray & b) {
             if (a.length != b.length) return false;
             for (size_type i = 0; i < a.length; ++i) {
                 if (!(a[i] == b[i])) return false;
             }
             return true;
         }
-        friend bool operator!=(const JArray & a, const JArray & b) { return !(a == b); }
+        friend bool operator!=(const JxxArray & a, const JxxArray & b) { return !(a == b); }
 
-        void swap(JArray & other) noexcept {
+        void swap(JxxArray & other) noexcept {
             using std::swap;
             swap(length, other.length);
             swap(capacity_, other.capacity_);
@@ -234,11 +234,11 @@ namespace jxx::lang {
         // Rank-N (N>=2): T[][]...
         // ======================================================================
     template <typename T, std::uint32_t Rank>
-    class JArray {
-        static_assert(Rank >= 2, "Use JArray<T,1> for rank-1 arrays");
+    class JxxArray {
+        static_assert(Rank >= 2, "Use JxxArray<T,1> for rank-1 arrays");
 
     public:
-        using SubArray = JArray<T, Rank - 1>;
+        using SubArray = JxxArray<T, Rank - 1>;
         using size_type = std::uint32_t;
         using InitList = typename JInitList<T, Rank>::type;
 
@@ -246,13 +246,13 @@ namespace jxx::lang {
         size_type length = 0;
 
         // ---- ctors ----
-        JArray() = default;
+        JxxArray() = default;
 
         // Create outer dimension with 'n' subarrays (default-constructed subarrays)
-        explicit JArray(size_type n) : length(n), elems_(n) {}
+        explicit JxxArray(size_type n) : length(n), elems_(n) {}
 
         // Rectangular constructor: provide sizes for each dimension
-        explicit JArray(const std::array<size_type, Rank>& dims) : length(dims[0]) {
+        explicit JxxArray(const std::array<size_type, Rank>& dims) : length(dims[0]) {
             elems_.reserve(length);
             auto tail = tail_dims_(dims);
             for (size_type i = 0; i < length; ++i) {
@@ -261,7 +261,7 @@ namespace jxx::lang {
         }
 
         // From nested initializer-lists (Java-like literals)
-        JArray(InitList init) : length(init.size()) {
+        JxxArray(InitList init) : length(init.size()) {
             elems_.reserve(length);
             for (const auto& sub : init) {
                 elems_.emplace_back(SubArray(sub));
@@ -269,21 +269,21 @@ namespace jxx::lang {
         }
 
         // Copy/move
-        JArray(const JArray&) = default;
-        JArray& operator=(const JArray&) = default;
-        JArray(JArray&&) noexcept = default;
-        JArray& operator=(JArray&&) noexcept = default;
+        JxxArray(const JxxArray&) = default;
+        JxxArray& operator=(const JxxArray&) = default;
+        JxxArray(JxxArray&&) noexcept = default;
+        JxxArray& operator=(JxxArray&&) noexcept = default;
 
         // ---- element access (first dimension) ----
         SubArray& operator[](size_type i) noexcept { return elems_[i]; }
         const SubArray& operator[](size_type i) const noexcept { return elems_[i]; }
 
         SubArray& at(size_type i) {
-            if (i >= length) throw std::out_of_range("JArray<T,N>::at index out of range");
+            if (i >= length) throw std::out_of_range("JxxArray<T,N>::at index out of range");
             return elems_[i];
         }
         const SubArray& at(size_type i) const {
-            if (i >= length) throw std::out_of_range("JArray<T,N>::at index out of range");
+            if (i >= length) throw std::out_of_range("JxxArray<T,N>::at index out of range");
             return elems_[i];
         }
 
@@ -339,16 +339,16 @@ namespace jxx::lang {
         }
 
         // Deep structural equality
-        friend bool operator==(const JArray& a, const JArray& b) {
+        friend bool operator==(const JxxArray& a, const JxxArray& b) {
             if (a.length != b.length) return false;
             for (size_type i = 0; i < a.length; ++i) {
                 if (!(a.elems_[i] == b.elems_[i])) return false;
             }
             return true;
         }
-        friend bool operator!=(const JArray& a, const JArray& b) { return !(a == b); }
+        friend bool operator!=(const JxxArray& a, const JxxArray& b) { return !(a == b); }
 
-        void swap(JArray& other) noexcept {
+        void swap(JxxArray& other) noexcept {
             using std::swap;
             swap(length, other.length);
             elems_.swap(other.elems_);
@@ -385,8 +385,8 @@ namespace jxx::lang {
     };
 }
 
-using ByteArray = jxx::lang::JArray<jxx::lang::jbyte, 1>;
-using CharArray = jxx::lang::JArray<jxx::lang::jchar, 1>;
-using IntArray = jxx::lang::JArray<jxx::lang::jint, 1>;
+using ByteArray = jxx::lang::JxxArray<jxx::lang::jbyte, 1>;
+using CharArray = jxx::lang::JxxArray<jxx::lang::jchar, 1>;
+using IntArray = jxx::lang::JxxArray<jxx::lang::jint, 1>;
 
 

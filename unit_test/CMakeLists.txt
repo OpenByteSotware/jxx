@@ -30,7 +30,7 @@ file(GLOB_RECURSE TEST_SOURCES
 add_executable(all_tests ${TEST_SOURCES})
 
 add_compile_definitions(_HAS_STD_BYTE=0)
-
+target_compile_features(jxxsdk PRIVATE cxx_std_17)
 if(WIN32 AND MSVC)
     # Add the definition for all targets
         add_compile_definitions(WIN32_LEAN_AND_MEAN)

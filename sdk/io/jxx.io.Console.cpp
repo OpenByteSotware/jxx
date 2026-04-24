@@ -1,25 +1,25 @@
 #include <cstdio>
-#include "io/jxx.io.Console.h"
+#include "jxx.io.Console.h"
+#include "jxx.io.BufferedReader.h"
 
+using namespace jxx::io;
 
-namespace jxx { 
-    namespace io {
-static std::shared_ptr<Console> __console_instance;
+static std::shared_ptr<jxx::io::Console> __console_instance;
 
-std::shared_ptr<Console> Console::console(){
-    if(!__console_instance) __console_instance = std::shared_ptr<Console>(new Console());
+std::shared_ptr<jxx::io::Console> jxx::io::Console::console(){
+    if(!__console_instance) __console_instance = JXX_NEW<jxx::io::Console>();
     return __console_instance;
 }
 
-std::shared_ptr<Reader> Console::reader(){
+std::shared_ptr<Reader> jxx::io::Console::reader(){
     return std::make_shared<InputStreamReader>(jxx::lang::System::in);
 }
 
-std::shared_ptr<PrintStream> Console::out(){
+std::shared_ptr<PrintStream> jxx::io::Console::out(){
     return jxx::lang::System::out;
 }
 
-void Console::printf(const char* fmt, ...){
+void jxx::io::Console::printf(const char* fmt, ...){
     if(!fmt) return;
     char tmp[1024];
     va_list ap; va_start(ap, fmt);
@@ -30,7 +30,6 @@ void Console::printf(const char* fmt, ...){
         jxx::lang::System::out->print(std::string(tmp, (size_t)n));
         return;
     }
-    // allocate dynamically if needed
     std::vector<char> buf((int)n + 1);
     va_start(ap, fmt);
     vsnprintf(buf.data(), buf.size(), fmt, ap);
@@ -38,10 +37,10 @@ void Console::printf(const char* fmt, ...){
     jxx::lang::System::out->print(std::string(buf.data(), (size_t)n));
 }
 
-std::u16string Console::readLine(){
+std::u16string jxx::io::Console::readLine(){
     auto isr = std::make_shared<InputStreamReader>(jxx::lang::System::in);
     BufferedReader br(isr);
     return br.readLine();
 }
 
-}} // ns
+

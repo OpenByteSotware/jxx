@@ -182,7 +182,7 @@ namespace jxx::lang {
          * IMPORTANT: shared_ptr is not covariant, so this must match Object::clone().
          * All Throwable-derived exceptions should implement this using the macro below.
          */
-        std::shared_ptr<Object> clone() const override = 0;
+        JXX_PTR(Object) cloneImpl() const override = 0;
 
         /**
          * Typed helper for exception cause wrapping:

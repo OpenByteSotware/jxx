@@ -1,4 +1,10 @@
-#include "jxx.lang.Object.h"
 #include "jxx.lang.ClassRegistration.h"
+#include "jxx.lang.Class.h"
+#include "jxx.lang.Object.h"
 
-JXX_REGISTER_CLASS(jxx::lang::Object, "java.lang.Object", "Object");
+using namespace jxx::lang;
+
+JXX_PTR(ClassAny) Object::getClass() const {
+    const TypeInfo* ti = TypeRegistry::instance().findByType(std::type_index(typeid(*this)));
+    return std::make_shared<ClassAny>(ti);
+}

@@ -2,8 +2,8 @@
 #pragma once
 #include <memory>
 #include <vector>
-#include "lang/jxx.lang.h"
-#include "io/jxx.io.Reader.h"
+#include "jxx.io.Reader.h"
+
 namespace jxx { namespace io {
 class BufferedReader : public Reader 
 { 

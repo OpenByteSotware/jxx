@@ -55,7 +55,13 @@ namespace jxx::lang {
     public:
         using ClassAny::ClassAny;
 
-        ClassAny forName(const char* canonicalName);
+        ClassAny Class<T>forName(const char* canonicalName) {
+            const TypeInfo* ti = TypeRegistry::instance().findByName(canonicalName);
+            if (!ti) {
+                throw ClassNotFoundException(String("Class not found: ") + canonicalName);
+            }
+            return ClassAny(ti);
+        }
 
         static Class<T> get() {
             // T may be an interface; do NOT require it derives Object.

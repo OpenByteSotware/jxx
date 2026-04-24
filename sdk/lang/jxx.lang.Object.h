@@ -37,9 +37,12 @@ namespace jxx {
     namespace lang {
 
         class String;
+		class ClassAny;
 
+#ifndef JXX_SYNCHRONIZE
 #define JXX_SYNCHRONIZE(obj, ...) obj->synchronized(__VA_ARGS__)
-//#define SYNCHRONIZED_FUNC()
+#endif
+
 
         inline std::string demangle(const char* name) {
 #if defined(__GNUG__) || defined(__clang__)
@@ -67,21 +70,35 @@ namespace jxx {
         };
 
         // =============== Object (root) ===============
-        class Object {
+		// Java-like root of the class hierarchy:
+		// - Polymorphic for RTTI and dynamic_cast
+		//  - Provides Java-like equals(), hashCode(), toString(), getClass(), and cloning semantics
+		//  - Provides Java-like monitor methods: wait(), notify(), notifyAll() using condition_variable
+		//  - Note: Java's Object is not thread-safe by default, but these methods allow you to use it as a monitor if desired. 
+		//  - For Java-like synchronized blocks, use JXX_SYNCHRONIZE(obj, [&] { ... });
+		//  - For Java-like synchronized methods, inherit from Synchronized below.
+		//  - For Java-like polymorphic collections, use PolySet/PolyMap below.
+		//  - For Java-like cloning, derive from Cloneable and implement cloneImpl() for deep copy. Object::clone() checks for Cloneable and delegates to cloneImpl().
+		//  Note: we do NOT make Object copyable or assignable by default, since Java's Object is not. If you want copy semantics, derive from Cloneable and implement cloneImpl() for deep copy.
+		//  - Because this pointer may be used as return need to inherit from enable_shared_from_this for safe shared_ptr creation in clone() and getClass()
+        class Object : public std::enable_shared_from_this<Object> {
         public:
 
 			// make Object polymorphic for RTTI and dynamic_cast (destructor default)
             virtual ~Object() = default;
 
             // Java-like: logical equality (default identity)
-            virtual jbool equals(const JXX_PTR(Object) other) const noexcept {
+            virtual jbool equals(const JXX_PTR(Object) other) const {
                 return this == other.get();
             }
 
             // Java-like: hashCode (default identity-based)
-            virtual jint hashCode() const noexcept {
+            virtual jint hashCode() const {
                 return std::hash<const void*>{}(this);
             }
+
+            JXX_PTR(ClassAny) getClass() const;
+
 
             // Class name (demangled where supported); override if you prefer custom names
             virtual JXX_PTR(String) getClassName() const {
@@ -96,7 +113,7 @@ namespace jxx {
             }
 
             // Identity check (reference equality)
-            virtual bool same(const Object& other) const noexcept {
+            virtual bool same(const Object& other) const {
                 return this == &other;
             }
             
@@ -123,7 +140,7 @@ namespace jxx {
             // Virtual clone method
             virtual JXX_PTR(Object) clone() const {
                 // Check if this object is Cloneable
-                if (JXX_CAST_PTR(Cloneable, this) == nullptr) {
+                if (JXX_CAST_PTR(Cloneable, shared_from_this()) == nullptr) {
                     throw std::runtime_error("CloneNotSupportedException");
                 }
                 // If Cloneable, delegate to derived class's cloneImpl
@@ -131,6 +148,10 @@ namespace jxx {
             }
 
         protected:
+
+            virtual void finalize() {
+                // Default implementation does nothing; override for cleanup if desired.
+			}
 
             virtual JXX_PTR(Object) cloneImpl() const {
                 throw std::runtime_error("cloneImpl not implemented");
@@ -184,10 +205,10 @@ namespace jxx {
         // =============== Polymorphic hashing/equality for smart pointers ===============
         struct PolyHash {
             using is_transparent = void;
-            std::size_t operator()(const std::shared_ptr<Object>& p) const noexcept {
+            std::size_t operator()(const std::shared_ptr<Object>& p) const {
                 return p ? p->hashCode() : 0u;
             }
-            std::size_t operator()(const Object* p) const noexcept {
+            std::size_t operator()(const Object* p) const {
                 return p ? p->hashCode() : 0u;
             }
         };
@@ -195,18 +216,18 @@ namespace jxx {
         struct PolyEqual {
             using is_transparent = void;
             bool operator()(const std::shared_ptr<Object>& a,
-                const std::shared_ptr<Object>& b) const noexcept {
+                const std::shared_ptr<Object>& b) const {
                 if (a == b) return true;
                 if (!a || !b) return false;
                 return a->equals(*b);
             }
             bool operator()(const std::shared_ptr<Object>& a,
-                const Object* b) const noexcept {
+                const Object* b) const {
                 if (!a || !b) return false;
                 return a->equals(*b);
             }
             bool operator()(const Object* a,
-                const std::shared_ptr<Object>& b) const noexcept {
+                const std::shared_ptr<Object>& b) const {
                 if (!a || !b) return false;
                 return b->equals(*a);
             }
@@ -222,6 +243,7 @@ namespace jxx {
 } // namespace lang
 } // namespace jxx
 
+JXX_REGISTER_CLASS(jxx::lang::Object, "java.lang.Object", "Object");
 
 #define JXX_OBJECT_CLONE(Derived) \
     JXX_PTR(Object) cloneImpl() const override { \

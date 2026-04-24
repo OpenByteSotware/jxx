@@ -143,7 +143,7 @@ template <typename T, typename... Args,
 }
 
 #ifndef JXX_CAST_PTR
-#define JXX_CAST_PTR(Type, ptr) dynamic_cast<const Type*>(ptr)
+#define JXX_CAST_PTR(Type, ptr) std::dynamic_pointer_cast<const Type>(ptr)
 #endif
 
 #ifndef JXX_PTR
