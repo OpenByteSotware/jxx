@@ -85,18 +85,14 @@ namespace jxx {
 
             // Class name (demangled where supported); override if you prefer custom names
             virtual JXX_PTR(String) getClassName() const {
-#if defined(__GNUG__) || defined(__clang__) || defined(_MSC_VER)
-                return JXX_NEW<String>(demangle(typeid(*this).name()));
-#else
-                return "Object";
-#endif
+                return JXX_NEW<String>(this->getClassName_());
             }
 
             // Java-like: "Class@hexHash"
-            virtual std::string toString() const {
+            virtual JXX_PTR(String)  toString() const {
                 std::ostringstream oss;
-                oss << getClassName() << "@0x" << std::hex << hashCode();
-                return oss.str();
+                oss << getClassName_() << "@0x" << std::hex << hashCode();
+                return JXX_NEW<String>(oss.str());
             }
 
             // Identity check (reference equality)
@@ -136,12 +132,21 @@ namespace jxx {
 
         protected:
 
-            virtual std::shared_ptr<Object> cloneImpl() const {
+            virtual JXX_PTR(Object) cloneImpl() const {
                 throw std::runtime_error("cloneImpl not implemented");
             }
 
             mutable std::mutex mtx_;
             std::condition_variable cv_;
+
+        private:
+            std::string getClassName_() const {
+#if defined(__GNUG__) || defined(__clang__) || defined(_MSC_VER)
+                return std::string(demangle(typeid(*this).name()));
+#else
+                return std::string("Object");
+#endif
+            }
         };
 
        

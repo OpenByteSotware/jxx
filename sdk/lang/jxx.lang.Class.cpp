@@ -6,8 +6,6 @@
 #include "jxx.lang.IllegalStateException.h"
 #include "jxx.lang.Class.h"
 
-using namepace jxx::lang;
-
 namespace jxx::lang {
     // Java parity: throws ClassNotFoundException if not found
     ClassAny Class::forName(const char* canonicalName) {

@@ -10,6 +10,6 @@ namespace jxx::lang {
         using Exception::Exception;
         JXX_THROWABLE_CLONE(ReflectiveOperationException)
     protected:
-        const char* typeName() const noexcept override { return "ReflectiveOperationException"; }";
-    }
+        const char* typeName() const noexcept override { return "ReflectiveOperationException"; }
+    };
 }

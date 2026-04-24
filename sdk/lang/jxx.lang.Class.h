@@ -55,6 +55,8 @@ namespace jxx::lang {
     public:
         using ClassAny::ClassAny;
 
+        ClassAny forName(const char* canonicalName);
+
         static Class<T> get() {
             // T may be an interface; do NOT require it derives Object.
             // But it must be polymorphic for RTTI and casts to work reliably.
@@ -125,9 +127,7 @@ namespace jxx::lang {
         mutable std::mutex mu_;
         std::unordered_map<std::string, const TypeInfo*> byName_;
         std::unordered_map<std::type_index, const TypeInfo*> byType_;
-    };
-
-    ClassAny forName(const char* canonicalName);    
+    };    
 
     // ---- internal: full transitive closure through super + interfaces ----
     inline bool _reachable_type(const TypeInfo* start,
