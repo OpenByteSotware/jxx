@@ -121,7 +121,7 @@ namespace jxx::lang {
 
     // Helper macro for clone() when exceptions are copy-constructible (you confirmed they are)
 #define JXX_THROWABLE_CLONE(Derived) \
-    JXX_PTR(Object)clone() const override { \
+    JXX_PTR(Object)cloneImpl() const override { \
         return std::make_shared<Derived>(*this); \
     }
 

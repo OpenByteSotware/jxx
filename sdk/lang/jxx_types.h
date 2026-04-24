@@ -142,5 +142,10 @@ template <typename T, typename... Args,
 	return std::make_shared<T>(std::forward<Args>(args)...);
 }
 
-#define JXX_CAST(T, Obj) std::dynamic_pointer_cast<T>(Obj) 
-#define JXX_PTR(T) std::shared_ptr<T>
+#ifndef JXX_CAST_PTR
+#define JXX_CAST_PTR(Type, ptr) dynamic_cast<const Type*>(ptr)
+#endif
+
+#ifndef JXX_PTR
+#define JXX_PTR(Type) std::shared_ptr<Type>
+#endif

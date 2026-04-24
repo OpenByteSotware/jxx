@@ -25,7 +25,6 @@
 #include <iostream>
 #include "jxx_types.h"
 #include "jxx.lang.Cloneable.h"
-#include "jxx.lang.ClassRegistration.h"
 
 // ---------- Optional: demangle for GCC/Clang ----------
 #if defined(__GNUG__) || defined(__clang__)
@@ -59,6 +58,8 @@ namespace jxx {
 
         class Cloneable {
         public:
+
+            // make it polymorhpic
             virtual ~Cloneable() = default;
 
             // Implement cloneImpl for deep copy, Ojbect uses this for C++ to mimic java like clone
@@ -68,6 +69,8 @@ namespace jxx {
         // =============== Object (root) ===============
         class Object {
         public:
+
+			// make Object polymorphic for RTTI and dynamic_cast (destructor default)
             virtual ~Object() = default;
 
             // Java-like: logical equality (default identity)
@@ -122,9 +125,9 @@ namespace jxx {
             }
 
             // Virtual clone method
-            virtual std::shared_ptr<Object> clone() const {
+            virtual JXX_PTR(Object) clone() const {
                 // Check if this object is Cloneable
-                if (dynamic_cast<const Cloneable*>(this) == nullptr) {
+                if (JXX_CAST_PTR(Cloneable, this) == nullptr) {
                     throw std::runtime_error("CloneNotSupportedException");
                 }
                 // If Cloneable, delegate to derived class's cloneImpl
@@ -216,10 +219,8 @@ namespace jxx {
 
 
 #define JXX_OBJECT_CLONE(Derived) \
-    JXX_PTR(Object) clone() const override { \
+    JXX_PTR(Object) cloneImpl() const override { \
         return std::make_shared<Derived>(*this); \
     }
-
-JXX_REGISTER_CLASS(jxx::lang::Object, "java.lang.Object", "Object");
 
 #endif

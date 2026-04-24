@@ -1,8 +1,9 @@
-
-#include "io/jxx.io.Console.h"
 #include <cstdio>
+#include "io/jxx.io.Console.h"
 
-namespace jxx { namespace io {
+
+namespace jxx { 
+    namespace io {
 static std::shared_ptr<Console> __console_instance;
 
 std::shared_ptr<Console> Console::console(){
@@ -30,7 +31,7 @@ void Console::printf(const char* fmt, ...){
         return;
     }
     // allocate dynamically if needed
-    std::vector<char> buf((size_t)n + 1);
+    std::vector<char> buf((int)n + 1);
     va_start(ap, fmt);
     vsnprintf(buf.data(), buf.size(), fmt, ap);
     va_end(ap);

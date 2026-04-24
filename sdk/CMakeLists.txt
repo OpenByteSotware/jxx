@@ -39,6 +39,8 @@ endif()
 # If you prefer a nested include dir, we can reorganize later.
 target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
+target_compile_features(jxxsdk PRIVATE cxx_std_17)
+
 # On MSVC, silence some warnings for interface-heavy code
 if(MSVC)
     target_compile_options(jxxsdk PRIVATE /permissive- /W4)

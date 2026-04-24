@@ -9,17 +9,19 @@
 #include "io/jxx.io.InputStreamReader.h"
 #include "io/jxx.io.BufferedReader.h"
 
-namespace jxx { namespace io {
-class Console {
-public:
-    static std::shared_ptr<Console> console();
+namespace jxx { 
+    namespace io {
+        class Console {
+        public:
+            static std::shared_ptr<Console> console();
 
-    std::u16string readLine();
-    void printf(const char* fmt, ...);
+            std::u16string readLine();
+            void printf(const char* fmt, ...);
 
-    std::shared_ptr<Reader> reader();
-    std::shared_ptr<PrintStream> out();
-private:
-    Console() = default;
-};
-}}
+            std::shared_ptr<Reader> reader();
+            std::shared_ptr<PrintStream> out();
+        private:
+            Console() = default;
+        };
+    }
+}

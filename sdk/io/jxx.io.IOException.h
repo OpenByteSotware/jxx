@@ -8,6 +8,7 @@ namespace jxx::io {
 
     class IOException : public jxx::lang::Exception {
     public:
+        using Exception::Exception;
         using CausePtr = std::shared_ptr<jxx::lang::Throwable>;
 
         // Java: public IOException()
@@ -41,14 +42,9 @@ namespace jxx::io {
                 return String(""); // Java message would be null; we represent as empty String
             }
 
-            // BEST parity: if your Throwable exposes toString(), use it.
-            // Uncomment this if you add it:
-            //
-            // return cause->toString();
+            return cause->toString();
 
-            // Fallback: closest you can get without Throwable::toString():
-            // Java toString() includes class name + ": " + message, but we at least preserve message.
-            return cause->getMessage();
+            
         }
     };
 

@@ -1,4 +1,6 @@
 
+#pragma once
+/*
 #include "io/jxx.io.BufferedReader.h"
 #include "io/jxx.io.IOException.h"
 
@@ -20,3 +22,4 @@ void BufferedReader::close(){ if(in) in->close(); }
 void BufferedReader::mark(int readAheadLimit_){ readAheadLimit=readAheadLimit_; markPos=pos; }
 void BufferedReader::reset(){ if(markPos<0) throw IOException("BufferedReader.reset without mark"); pos=markPos; }
 }}
+*/

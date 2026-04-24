@@ -11,11 +11,11 @@ public:
     explicit Integer(int v) : v_(v) {}
     int intValue() const noexcept { return v_; }
 
-    virtual bool equals(const Object& other) const noexcept override {
-        auto* o = dynamic_cast<const Integer*>(&other);
+    virtual jbool equals(const JXX_PTR(Object) other) const noexcept override {
+        auto o = JXX_CAST(Integer, other);
         return o && v_ == o->v_;
     }
-    virtual std::size_t hashCode() const noexcept override {
+    virtual jint hashCode() const noexcept override {
         return std::hash<int>{}(v_);
     }
     virtual std::string toString() const override {

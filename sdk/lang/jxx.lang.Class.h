@@ -1,6 +1,6 @@
 #pragma once
 
-#include <typeindex>
+#include <typeinfo>
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
@@ -8,21 +8,22 @@
 #include <memory>
 #include <mutex>
 #include <functional>
+#include <string>
+#include <typeindex>
 
-#include "jxx.lang.String.h"
-#include "jxx.lang.Object.h"
+using namespace std;
 
 namespace jxx::lang {
+
+    class Object;
+    class String;
     class Exception;
     class ClassNotFoundException;
     class InstantiationException;
     class IllegalAccessException;
     class InvocationTargetException;
-} // namespace jxx::lang
-
-namespace jxx::lang {
-
     struct TypeInfo;
+    class TypeRegistry;
 
     class ClassAny {
     public:
@@ -31,11 +32,11 @@ namespace jxx::lang {
 
         bool isNull() const { return ti_ == nullptr; }
 
-        const String& getName() const;       // canonical, e.g. "com.acme.Foo"
+        const String& getName() const;
         String getSimpleName() const;
 
         bool isAssignableFrom(const ClassAny& other) const;
-        bool isInstance(const std::shared_ptr<Object>& obj) const;
+        bool isInstance(const JXX_PTR(Object) obj) const;
 
         ClassAny getSuperclass() const;
         std::vector<ClassAny> getInterfaces() const;
@@ -71,8 +72,8 @@ namespace jxx::lang {
     };
 
     struct TypeInfo {
-        String canonicalName;                     // "com.acme.Foo"
-        String simpleName;                        // "Foo"
+        std::string canonicalName;                     // "com.acme.Foo"
+        std::string simpleName;                        // "Foo"
         std::type_index type;
 
         bool isInterface = false;
@@ -106,7 +107,7 @@ namespace jxx::lang {
             byType_[ti->type] = ti;
         }
 
-        const TypeInfo* findByName(const String& name) const {
+        const TypeInfo* findByName(const char* name) const {
             std::lock_guard<std::mutex> lock(mu_);
             auto it = byName_.find(name);
             return it == byName_.end() ? nullptr : it->second;
@@ -122,18 +123,11 @@ namespace jxx::lang {
         TypeRegistry() = default;
 
         mutable std::mutex mu_;
-        std::unordered_map<String, const TypeInfo*> byName_;
+        std::unordered_map<std::string, const TypeInfo*> byName_;
         std::unordered_map<std::type_index, const TypeInfo*> byType_;
     };
 
-    // Java parity: throws ClassNotFoundException if not found
-    inline ClassAny forName(const String& canonicalName) {
-        const TypeInfo* ti = TypeRegistry::instance().findByName(canonicalName);
-        if (!ti) {
-            throw ClassNotFoundException(String("Class not found: ") + canonicalName);
-        }
-        return ClassAny(ti);
-    }
+    ClassAny forName(const char* canonicalName);    
 
     // ---- internal: full transitive closure through super + interfaces ----
     inline bool _reachable_type(const TypeInfo* start,

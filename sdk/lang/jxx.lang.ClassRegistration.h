@@ -4,9 +4,12 @@
 #include "jxx.lang.Class.h"
 
 namespace jxx::lang {
-    struct ClassInfo {
-        std::string javaName;
-        std::string simpleName;
+    class ClassInfo {
+    public:
+        std::string cpp_name;
+        std::string java_name;
+        std::string simple_name;
+        const std::type_info* type_info;
     };
 
     // Registry to store class information
