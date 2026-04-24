@@ -13,13 +13,13 @@ namespace jxx {
     namespace io {
         class Console {
         public:
-            static JXX_PTR(Console) console();
+            static jxx::Ptr<Console> console();
 
             std::u16string readLine();
             void printf(const char* fmt, ...);
 
-            JXX_PTR(Reader) reader();
-            JXX_PTR(PrintStream) out();
+            jxx::Ptr<Reader> reader();
+            jxx::Ptr<PrintStream> out();
         private:
             Console() = default;
         };

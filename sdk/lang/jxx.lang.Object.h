@@ -66,7 +66,7 @@ namespace jxx {
             virtual ~Cloneable() = default;
 
             // Implement cloneImpl for deep copy, Ojbect uses this for C++ to mimic java like clone
-            virtual JXX_PTR(Object) cloneImpl() const = 0;
+            virtual jxx::Ptr<Object> cloneImpl() const = 0;
         };
 
         // =============== Object (root) ===============
@@ -88,7 +88,7 @@ namespace jxx {
             virtual ~Object() = default;
 
             // Java-like: logical equality (default identity)
-            virtual jbool equals(const JXX_PTR(Object) other) const {
+            virtual jbool equals(const jxx::Ptr<Object> other) const {
                 return this == other.get();
             }
 
@@ -97,16 +97,16 @@ namespace jxx {
                 return std::hash<const void*>{}(this);
             }
 
-            JXX_PTR(ClassAny) getClass() const;
+            jxx::Ptr<ClassAny> getClass() const;
 
 
             // Class name (demangled where supported); override if you prefer custom names
-            virtual JXX_PTR(String) getClassName() const {
+            virtual jxx::Ptr<String> getClassName() const {
                 return JXX_NEW<String>(this->getClassName_());
             }
 
             // Java-like: "Class@hexHash"
-            virtual JXX_PTR(String)  toString() const {
+            virtual jxx::Ptr<String>  toString() const {
                 std::ostringstream oss;
                 oss << getClassName_() << "@0x" << std::hex << hashCode();
                 return JXX_NEW<String>(oss.str());
@@ -138,7 +138,7 @@ namespace jxx {
             }
 
             // Virtual clone method
-            virtual JXX_PTR(Object) clone() const {
+            virtual jxx::Ptr<Object> clone() const {
                 // Check if this object is Cloneable
                 if (JXX_CAST_PTR(Cloneable, shared_from_this()) == nullptr) {
                     throw std::runtime_error("CloneNotSupportedException");
@@ -153,7 +153,7 @@ namespace jxx {
                 // Default implementation does nothing; override for cleanup if desired.
 			}
 
-            virtual JXX_PTR(Object) cloneImpl() const {
+            virtual jxx::Ptr<Object> cloneImpl() const {
                 throw std::runtime_error("cloneImpl not implemented");
             }
 
@@ -219,17 +219,17 @@ namespace jxx {
                 const std::shared_ptr<Object>& b) const {
                 if (a == b) return true;
                 if (!a || !b) return false;
-                return a->equals(*b);
+                return a->equals(b);
             }
             bool operator()(const std::shared_ptr<Object>& a,
-                const Object* b) const {
-                if (!a || !b) return false;
-                return a->equals(*b);
-            }
-            bool operator()(const Object* a,
                 const std::shared_ptr<Object>& b) const {
                 if (!a || !b) return false;
-                return b->equals(*a);
+                return a->equals(b);
+            }
+            bool operator()(const std::shared_ptr<Object>& a,
+                const std::shared_ptr<Object>& b) const {
+                if (!a || !b) return false;
+                return b->equals(a);
             }
         };
 

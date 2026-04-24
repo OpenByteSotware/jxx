@@ -36,7 +36,7 @@ namespace jxx::lang {
         String getSimpleName() const;
 
         bool isAssignableFrom(const ClassAny& other) const;
-        bool isInstance(const JXX_PTR(Object) obj) const;
+        bool isInstance(const jxx::Ptr<Object> obj) const;
 
         ClassAny getSuperclass() const;
         std::vector<ClassAny> getInterfaces() const;
@@ -203,7 +203,7 @@ namespace jxx::lang {
         return _reachable_type(other.ti_, ti_->type, visited);
     }
 
-    inline std::shared_ptr<Object> ClassAny::newInstance() const {
+    inline jxx::Ptr<Object> ClassAny::newInstance() const {
         if (!ti_) {
             throw IllegalAccessException(String("Cannot instantiate: null Class"));
         }

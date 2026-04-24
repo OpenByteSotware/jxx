@@ -12,20 +12,20 @@ public:
     explicit Integer(int v) : v_(v) {}
     jint intValue() const noexcept { return v_; }
 
-    virtual jbool equals(const JXX_PTR(Object) other) const noexcept override {
+    virtual jbool equals(const jxx::Ptr<Object> other) const override {
         auto o = JXX_CAST_PTR(Integer, other);
         return o && v_ == o->v_;
     }
-    virtual jint hashCode() const noexcept override {
+    virtual jint hashCode() const override {
         return std::hash<int>{}(v_);
     }
-    virtual JXX_PTR(String) toString() const override {
+    virtual jxx::Ptr<String> toString() const override {
         return JXX_NEW<String>(std::to_string(v_));
     }
 
 protected:
     // Implement cloneImpl for deep copy, Ojbect uses this for C++ to mimic java like clone
-    virtual JXX_PTR(Object ) cloneImpl() const override {
+    virtual jxx::Ptr<Object> cloneImpl() const override {
         return JXX_NEW<Integer>(this->v_);
     };
 };

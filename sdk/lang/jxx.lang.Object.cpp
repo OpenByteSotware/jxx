@@ -4,7 +4,7 @@
 
 using namespace jxx::lang;
 
-JXX_PTR(ClassAny) Object::getClass() const {
+jxx::Ptr<ClassAny> Object::getClass() const {
     const TypeInfo* ti = TypeRegistry::instance().findByType(std::type_index(typeid(*this)));
     return std::make_shared<ClassAny>(ti);
 }

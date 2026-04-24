@@ -146,6 +146,7 @@ template <typename T, typename... Args,
 #define JXX_CAST_PTR(Type, ptr) std::dynamic_pointer_cast<const Type>(ptr)
 #endif
 
-#ifndef JXX_PTR
-#define JXX_PTR(Type) std::shared_ptr<Type>
-#endif
+namespace jxx {
+	template <typename T>
+	using Ptr = std::shared_ptr<T>;
+}

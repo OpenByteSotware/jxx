@@ -19,7 +19,7 @@ public:
 
     int intValue() const noexcept { return value_; }
 
-    jbool equals(const JXX_PTR(Object) other) const override {
+    jbool equals(const jxx::Ptr<Object> other) const override {
         auto* o = dynamic_cast<const TestInteger*>(other.get());
         return o && value_ == o->value_;
     }
@@ -27,14 +27,14 @@ public:
     jint hashCode() const override {
         return std::hash<int>{}(value_);
     }
-    JXX_PTR(String) toString() const override {
+    jxx::Ptr<String> toString() const override {
         return JXX_NEW<String>(std::to_string(value_));
     }
 
 protected:
 
     // Implement cloneImpl for deep copy, Ojbect uses this for C++ to mimic java like clone
-    virtual JXX_PTR(Object) cloneImpl() const override {
+    virtual jxx::Ptr<Object> cloneImpl() const override {
         return JXX_NEW<TestInteger>(this->value_);    
     }
 };

@@ -12,8 +12,8 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include "lang/jxx_types.h"
-#include "lang/jxx.lang.ByteType.h"
+#include "jxx_types.h"
+#include "jxx.lang.ByteType.h"
 
 using namespace std;
 
