@@ -28,7 +28,6 @@
 #include <cstdlib>
 
 #endif
-using namespace std;
 
 namespace jxx::lang {
 	// -------------------- Primitive types --------------------
@@ -150,3 +149,7 @@ namespace jxx {
 	template <typename T>
 	using Ptr = std::shared_ptr<T>;
 }
+
+#ifndef JXX_SYNCHRONIZE
+#define JXX_SYNCHRONIZE(obj, ...) obj->synchronized(__VA_ARGS__)
+#endif

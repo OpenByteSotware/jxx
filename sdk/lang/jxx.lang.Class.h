@@ -11,8 +11,6 @@
 #include <string>
 #include <typeindex>
 
-using namespace std;
-
 namespace jxx::lang {
 
     class Object;
@@ -35,7 +33,7 @@ namespace jxx::lang {
         const String& getName() const;
         String getSimpleName() const;
 
-        bool isAssignableFrom(const ClassAny& other) const;
+        bool isAssignableFrom(const jxx::Ptr<ClassAny> other) const;
         bool isInstance(const jxx::Ptr<Object> obj) const;
 
         ClassAny getSuperclass() const;
@@ -66,8 +64,9 @@ namespace jxx::lang {
         static Class<T> get() {
             // T may be an interface; do NOT require it derives Object.
             // But it must be polymorphic for RTTI and casts to work reliably.
-            static_assert(std::has_virtual_destructor_v<T>,
-                "Class<T>::get requires T to be polymorphic (virtual destructor).");
+            static_assert(std::is_polymorphic_v<T>,
+                "Class<T>::get requires T to be polymorphic for RTTI/dynamic casts.");
+
 
             const TypeInfo* ti = TypeRegistry::instance().findByType(std::type_index(typeid(T)));
             return Class<T>(ti);
@@ -111,6 +110,21 @@ namespace jxx::lang {
 
         void registerType(const TypeInfo* ti) {
             std::lock_guard<std::mutex> lock(mu_);
+
+            // Check byType consistency
+            auto itT = byType_.find(ti->type);
+            if (itT != byType_.end() && itT->second != ti) {
+                // same C++ type registered with different TypeInfo instance -> bug
+                throw std::logic_error("TypeRegistry: duplicate registration for same C++ type");
+            }
+
+            // Check byName consistency
+            auto itN = byName_.find(ti->canonicalName);
+            if (itN != byName_.end() && itN->second != ti) {
+                // same canonical registered with different TypeInfo -> bug
+                throw std::logic_error("TypeRegistry: duplicate registration for same canonical name");
+            }
+
             byName_[ti->canonicalName] = ti;
             byType_[ti->type] = ti;
         }
@@ -186,12 +200,11 @@ namespace jxx::lang {
         return isAssignableFrom(ClassAny(dyn));
     }
 
-    inline bool ClassAny::isAssignableFrom(const ClassAny& other) const {
-        if (!ti_ || !other.ti_) return false;
+    inline bool ClassAny::isAssignableFrom(const jxx::Ptr <ClassAny> other) const {
+        if (!ti_ || !other->ti_) return false;
 
         // Exact type match
-        if (ti_->type == other.ti_->type) return true;
-
+        if (ti_->type == other->ti_->type) return true;
         // Java parity: Object is assignable from ANY non-primitive reference type,
         // including interfaces.
         const TypeInfo* objectTi = TypeRegistry::instance().findByName(String("java.lang.Object"));

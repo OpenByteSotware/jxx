@@ -9,5 +9,9 @@ class IndexOutOfBoundsException : public RuntimeException {
 public:
     using RuntimeException::RuntimeException;
     JXX_THROWABLE_CLONE(IndexOutOfBoundsException)
+
 protected:
-    const char* typeName() const noexcept override { return "IndexOutOfBoundsException
+    const char* typeName() const noexcept override { return "IndexOutOfBoundsException"; }
+};
+
+} // namespace jxx::lang

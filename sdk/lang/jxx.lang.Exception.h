@@ -21,7 +21,7 @@ namespace jxx::lang {
 
     class InvocationTargetException : public Exception {
     public:
-        InvocationTargetException(String message, std::shared_ptr<Throwable> cause)
+        InvocationTargetException(jxx::Ptr<String> message, jxx::Ptr<Throwable> cause)
             : Exception(std::move(message), std::move(cause)) {}
         JXX_THROWABLE_CLONE(InvocationTargetException)
     protected:

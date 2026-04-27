@@ -9,7 +9,7 @@
 
 #include "jxx.lang.Object.h"
 #include "jxx.lang.String.h"
-#include "jxx.lang.StackTrace.h" // StackTraceElement + captureStackTrace(...)
+#include "jxx.lang.StackTrace.h"
 
 namespace jxx::lang {
 
@@ -44,18 +44,32 @@ namespace jxx::lang {
      */
     class Throwable : public Object, public std::exception {
     public:
-        using Ptr = std::shared_ptr<Throwable>;
+        //using Ptr = std::shared_ptr<Throwable>;
 
         /**
          * Java parity knobs (Throwable has a protected constructor in Java that can disable these):
          *   - enableSuppression: if false, addSuppressed is a no-op
          *   - writableStackTrace: if false, stack trace is empty and fillInStackTrace is a no-op
          */
-        explicit Throwable(String message = String(""),
-            Ptr cause = nullptr,
+        explicit Throwable(jxx::Ptr<String> message = JXX_NEW<String>(""),
+            jxx::Ptr<Throwable> cause = nullptr,
             bool enableSuppression = true,
             bool writableStackTrace = true)
-            : message_(std::move(message)),
+            : message_(message != nullptr ? message : JXX_NEW<String>("")),
+            cause_(std::move(cause)),
+            enableSuppression_(enableSuppression),
+            writableStackTrace_(writableStackTrace) {
+            if (writableStackTrace_) {
+                // Java-like: capture stack at construction (best-effort)
+                stack_ = captureStackTrace(/*skipFrames=*/1);
+            }
+        }
+
+        explicit Throwable(const char *message,
+            jxx::Ptr<Throwable> cause = nullptr,
+            bool enableSuppression = true,
+            bool writableStackTrace = true)
+            : message_(JXX_NEW<String>(message)),
             cause_(std::move(cause)),
             enableSuppression_(enableSuppression),
             writableStackTrace_(writableStackTrace) {
@@ -68,14 +82,14 @@ namespace jxx::lang {
         virtual ~Throwable() = default;
 
         // ---- Java-like message/cause API ----
-        const String& getMessage() const { return message_; }
-        Ptr getCause() const { return cause_; }
+        const jxx::Ptr<String>& getMessage() const { return message_; }
+        jxx::Ptr<Throwable> getCause() const { return cause_; }
 
         /**
          * Java's initCause has constraints (can only be set once, cannot set self, etc.).
          * This is a permissive version; tighten if you want exact rules.
          */
-        void initCause(Ptr cause) { cause_ = std::move(cause); }
+        void initCause(jxx::Ptr<Throwable> cause) { cause_ = std::move(cause); }
 
         // ---- Suppressed exceptions (Java 7+, present in Java 8) ----
         /**
@@ -84,7 +98,7 @@ namespace jxx::lang {
          *   - addSuppressed(this) => IllegalArgumentException
          *   - if suppression disabled => no-op
          */
-        void addSuppressed(const Ptr& ex) {
+        void addSuppressed(const jxx::Ptr<Throwable> ex) {
             if (!enableSuppression_) return;
 
             if (!ex) {
@@ -100,7 +114,7 @@ namespace jxx::lang {
          * Java returns a copy of the internal array.
          * Returning by value matches that semantic well.
          */
-        std::vector<Ptr> getSuppressed() const { return suppressed_; }
+        std::vector<jxx::Ptr<Throwable>> getSuppressed() const { return suppressed_; }
 
         // ---- Stack trace (symbol-only, Windows+Linux) ----
         /**
@@ -127,7 +141,7 @@ namespace jxx::lang {
          * (dotted, template compression, operator() prettify, etc.).
          */
         void printStackTrace(std::ostream& os) const {
-            os << typeName() << ": " << message_.toStdString() << "\n";
+            os << typeName() << ": " << message_->toStdString() << "\n";
 
             for (const auto& e : stack_) {
                 os << "\tat " << e.symbol
@@ -154,8 +168,8 @@ namespace jxx::lang {
          * Returns a stable const char* valid until the next toString() call
          * (or object destruction).
          */
-        virtual JXX_PTR(String)  toString() const {
-            const std::string msg = message_.toStdString();
+        virtual jxx::Ptr<String>  toString() const {
+            const std::string msg = message_->toStdString();
 
             cachedToString_.clear();
             // Reserve reduces reallocations (optional)
@@ -173,7 +187,7 @@ namespace jxx::lang {
          * std::exception bridge. Same caching rationale as toString().
          */
         const char* what() const noexcept override {
-            cachedWhat_ = message_.toStdString();
+            cachedWhat_ = message_->toStdString();
             return cachedWhat_.c_str();
         }
 
@@ -182,13 +196,13 @@ namespace jxx::lang {
          * IMPORTANT: shared_ptr is not covariant, so this must match Object::clone().
          * All Throwable-derived exceptions should implement this using the macro below.
          */
-        JXX_PTR(Object) cloneImpl() const override = 0;
+        jxx::Ptr<Object> cloneImpl() const override = 0;
 
         /**
          * Typed helper for exception cause wrapping:
          * returns shared_ptr<Throwable> while preserving dynamic type.
          */
-        Ptr cloneThrowable() const {
+        jxx::Ptr<Throwable> cloneThrowable() const {
             return std::static_pointer_cast<Throwable>(clone());
         }
 
@@ -202,13 +216,13 @@ namespace jxx::lang {
         virtual const char* typeName() const noexcept { return "Throwable"; }
 
     private:
-        String message_;
-        Ptr cause_;
+        jxx::Ptr<String> message_;
+        jxx::Ptr<Throwable> cause_;
 
         bool enableSuppression_;
         bool writableStackTrace_;
 
-        std::vector<Ptr> suppressed_;
+        std::vector<jxx::Ptr<Throwable>> suppressed_;
         std::vector<StackTraceElement> stack_;
 
         // Separate caches so what() and toString() don't trample each other
@@ -221,7 +235,7 @@ namespace jxx::lang {
      * Must return shared_ptr<Object> to match Object::clone() signature.
      */
 #define JXX_THROWABLE_CLONE(Derived) \
-    JXX_PTR(Object)cloneImpl() const override { \
+    jxx::Ptr<Object> cloneImpl() const override { \
         return std::make_shared<Derived>(*this); \
     }
 

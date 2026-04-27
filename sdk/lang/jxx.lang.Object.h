@@ -25,6 +25,7 @@
 #include <iostream>
 #include "jxx_types.h"
 #include "jxx.lang.Cloneable.h"
+#include "jxx.lang.Cast.h"
 
 // ---------- Optional: demangle for GCC/Clang ----------
 #if defined(__GNUG__) || defined(__clang__)
@@ -38,10 +39,6 @@ namespace jxx {
 
         class String;
 		class ClassAny;
-
-#ifndef JXX_SYNCHRONIZE
-#define JXX_SYNCHRONIZE(obj, ...) obj->synchronized(__VA_ARGS__)
-#endif
 
 
         inline std::string demangle(const char* name) {
@@ -221,23 +218,23 @@ namespace jxx {
                 if (!a || !b) return false;
                 return a->equals(b);
             }
-            bool operator()(const std::shared_ptr<Object>& a,
-                const std::shared_ptr<Object>& b) const {
+            bool operator()(const jxx::Ptr<Object> a,
+                const jxx::Ptr<Object> b) const {
                 if (!a || !b) return false;
                 return a->equals(b);
             }
-            bool operator()(const std::shared_ptr<Object>& a,
-                const std::shared_ptr<Object>& b) const {
+            bool operator()(const jxx::Ptr<Object> a,
+                const jxx::Ptr<Object> b) const {
                 if (!a || !b) return false;
-                return b->equals(a);
+                return a->equals(b);
             }
         };
 
         // Convenience aliases for polymorphic containers
-        template <typename TPtr = std::shared_ptr<Object>>
+        template <typename TPtr = jxx::Ptr<Object>>
         using PolySet = std::unordered_set<TPtr, PolyHash, PolyEqual>;
 
-        template <typename TValue, typename TKeyPtr = std::shared_ptr<Object>>
+        template <typename TValue, typename TKeyPtr = jxx::Ptr<Object>>
         using PolyMap = std::unordered_map<TKeyPtr, TValue, PolyHash, PolyEqual>;
 
 } // namespace lang

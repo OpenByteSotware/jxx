@@ -1,10 +1,11 @@
 #pragma once
 
+#include "jxx.lang.Cast.h"
 #include "jxx.lang.buildin_array.h"
 #include "jxx.lang.StackTrace.h"
 #include "jxx.lang.Object.h"
-#include "jxx.lang.Class.h"
 #include "jxx.lang.ClassRegistration.h"
+#include "jxx.lang.Class.h"
 #include "jxx.lang.ByteArray.h"
 #include "jxx.lang.Cloneable.h"
 #include "jxx.lang.Integer.h"

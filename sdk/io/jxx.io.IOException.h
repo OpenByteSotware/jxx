@@ -1,8 +1,8 @@
 #pragma once
 
 #include <memory>
-#include "../lang/jxx.lang.Exception.h"
 #include "../lang/jxx.lang.Throwable.h"
+#include "../lang/jxx.lang.Exception.h"
 
 namespace jxx::io {
 
@@ -29,7 +29,7 @@ namespace jxx::io {
         // In C++ we represent null as nullptr. If you add Throwable::toString(),
         // this matches Java closely.
         explicit IOException(CausePtr cause)
-            : jxx::lang::Exception(causeMessageForJavaParity(cause), std::move(cause)) {}
+            : jxx::lang::Exception(cause(cause), std::move(cause)) {}
 
         JXX_THROWABLE_CLONE(IOException)
 
@@ -37,7 +37,7 @@ namespace jxx::io {
         const char* typeName() const noexcept override { return "IOException"; }
 
     private:
-        static String causeMessageForJavaParity(const CausePtr& cause) {
+        static String cause(const CausePtr& cause) {
             if (!cause) {
                 return String(""); // Java message would be null; we represent as empty String
             }
