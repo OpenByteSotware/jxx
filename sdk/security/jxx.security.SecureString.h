@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <algorithm>
 #include <utility>
-#include "lang/jxx.lang.internal.h"
+#include "../lang/jxx.lang.Object.h"
 
 namespace jxx { namespace security {
 

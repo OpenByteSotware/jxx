@@ -1,8 +1,7 @@
 #pragma once
 
 #include <memory>
-#include "jxx_types.h"
-#include "jxx.lang.ClassCastException.h"
+#include "lang/jxx_types.h"
 
 namespace jxx::lang {
 
@@ -44,8 +43,7 @@ namespace jxx::lang {
 
         // Java: ClassCastException. Message text is not specified strictly; keep simple and stable.
         // If you want richer messages, you can use a registry or typeName() from Throwable/Object metadata.
-        throw jxx::lang::ClassCastException("ClassCastException: incompatible cast")
-        );
+        throw std::runtime_error("ClassCastException: incompatible cast");
     }
 
     // ---------------------------

@@ -6,15 +6,16 @@
 #include <vector>
 #include <ostream>
 #include <utility>
+#include <exception>
 
-#include "jxx.lang.Object.h"
-#include "jxx.lang.String.h"
-#include "jxx.lang.StackTrace.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.StackTrace.h"
 
 namespace jxx::lang {
 
     // Forward declarations for exact Java addSuppressed() semantics.
     // We do NOT include these headers here to avoid circular includes.
+    class String;
     class NullPointerException;
     class IllegalArgumentException;
 
@@ -27,8 +28,8 @@ namespace jxx::lang {
      *
      * This avoids header include cycles while still throwing the correct types.
      */
-     void throwNullSuppressed();
-     void throwSelfSuppressed();
+    void throwNullSuppressed();
+    void throwSelfSuppressed();
 
     /**
      * Java-parity Throwable for C++17:
@@ -65,7 +66,21 @@ namespace jxx::lang {
             }
         }
 
-        explicit Throwable(const char *message,
+        explicit Throwable(const char* message,
+            jxx::Ptr<Throwable> cause = nullptr,
+            bool enableSuppression = true,
+            bool writableStackTrace = true)
+            : message_(JXX_NEW<String>(message)),
+            cause_(std::move(cause)),
+            enableSuppression_(enableSuppression),
+            writableStackTrace_(writableStackTrace) {
+            if (writableStackTrace_) {
+                // Java-like: capture stack at construction (best-effort)
+                stack_ = captureStackTrace(/*skipFrames=*/1);
+            }
+        }
+
+        explicit Throwable(std::string message,
             jxx::Ptr<Throwable> cause = nullptr,
             bool enableSuppression = true,
             bool writableStackTrace = true)
@@ -229,14 +244,4 @@ namespace jxx::lang {
         mutable std::string cachedWhat_;
         mutable std::string cachedToString_;
     };
-
-    /**
-     * Clone macro for Throwable-derived types.
-     * Must return shared_ptr<Object> to match Object::clone() signature.
-     */
-#define JXX_THROWABLE_CLONE(Derived) \
-    jxx::Ptr<Object> cloneImpl() const override { \
-        return std::make_shared<Derived>(*this); \
-    }
-
-} // namespace jxx::lang
+}

@@ -24,28 +24,6 @@ namespace jxx::lang {
         GetClassRegistry()[cppName] = { javaName, simpleName };
         return true;
     }
-
-template <typename T>
-inline TypeInfo makeTypeInfo(const char* canonical, const char* simple) {
-    TypeInfo ti{
-        String(canonical),
-        String(simple),
-        std::type_index(typeid(T)),
-        false,   // isInterface
-        false,   // isAbstract
-        false,   // isPrimitive
-        nullptr, // super
-        {},      // interfaces edges
-        false,   // defaultCtorAccessible
-        nullptr, // defaultCtor
-        // isInstanceFn: cross-cast works if implementing objects inherit both Object and interface T
-        const std::shared_ptr<Object>& o -> bool {
-            return (bool)std::dynamic_pointer_cast<T>(o);
-        }
-    };
-    return ti;
-}
-
 } // namespace jxx::lang::detail
 
 // Register concrete class type

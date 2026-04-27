@@ -23,9 +23,8 @@
 #include <condition_variable>
 #include <chrono>
 #include <iostream>
-#include "jxx_types.h"
-#include "jxx.lang.Cloneable.h"
-#include "jxx.lang.Cast.h"
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.Cloneable.h"
 
 // ---------- Optional: demangle for GCC/Clang ----------
 #if defined(__GNUG__) || defined(__clang__)
@@ -39,7 +38,6 @@ namespace jxx {
 
         class String;
 		class ClassAny;
-
 
         inline std::string demangle(const char* name) {
 #if defined(__GNUG__) || defined(__clang__)
@@ -62,8 +60,8 @@ namespace jxx {
             // make it polymorhpic
             virtual ~Cloneable() = default;
 
-            // Implement cloneImpl for deep copy, Ojbect uses this for C++ to mimic java like clone
-            virtual jxx::Ptr<Object> cloneImpl() const = 0;
+            // Implement cloneImpl for deep copy, Object uses this for C++ to mimic java like clone
+            virtual jxx::Ptr<jxx::lang::Object> cloneImpl() const = 0;
         };
 
         // =============== Object (root) ===============
@@ -95,7 +93,6 @@ namespace jxx {
             }
 
             jxx::Ptr<ClassAny> getClass() const;
-
 
             // Class name (demangled where supported); override if you prefer custom names
             virtual jxx::Ptr<String> getClassName() const {
@@ -135,22 +132,15 @@ namespace jxx {
             }
 
             // Virtual clone method
-            virtual jxx::Ptr<Object> clone() const {
-                // Check if this object is Cloneable
-                if (JXX_CAST_PTR(Cloneable, shared_from_this()) == nullptr) {
-                    throw std::runtime_error("CloneNotSupportedException");
-                }
-                // If Cloneable, delegate to derived class's cloneImpl
-                return cloneImpl();
-            }
-
+            virtual jxx::Ptr<jxx::lang::Object> clone() const;
+            
         protected:
 
             virtual void finalize() {
                 // Default implementation does nothing; override for cleanup if desired.
 			}
 
-            virtual jxx::Ptr<Object> cloneImpl() const {
+            virtual jxx::Ptr<jxx::lang::Object> cloneImpl() const {
                 throw std::runtime_error("cloneImpl not implemented");
             }
 
@@ -223,28 +213,29 @@ namespace jxx {
                 if (!a || !b) return false;
                 return a->equals(b);
             }
-            bool operator()(const jxx::Ptr<Object> a,
-                const jxx::Ptr<Object> b) const {
-                if (!a || !b) return false;
-                return a->equals(b);
-            }
         };
 
         // Convenience aliases for polymorphic containers
-        template <typename TPtr = jxx::Ptr<Object>>
+        template <typename TPtr = jxx::Ptr<jxx::lang::Object>>
         using PolySet = std::unordered_set<TPtr, PolyHash, PolyEqual>;
 
-        template <typename TValue, typename TKeyPtr = jxx::Ptr<Object>>
+        template <typename TValue, typename TKeyPtr = jxx::Ptr<jxx::lang::Object>>
         using PolyMap = std::unordered_map<TKeyPtr, TValue, PolyHash, PolyEqual>;
 
 } // namespace lang
 } // namespace jxx
 
-JXX_REGISTER_CLASS(jxx::lang::Object, "java.lang.Object", "Object");
+//JXX_REGISTER_CLASS(jxx::lang::Object, "jxx.lang.Object", "Object");
+
+//JXX_REGISTER_INTERFACE(myns::IFoo, "myns.IFoo", "IFoo");
+//JXX_REGISTER_CLASS(myns::Foo, "myns.Foo", "Foo");
+
+//JXX_SET_SUPER(myns::Foo, jxx::lang::Object);
+//JXX_ADD_INTERFACE_EDGE(myns::Foo, myns::IFoo);
+
+//JXX_ENABLE_DEFAULT_CTOR(jxx::lang::Object);
+
 
 #define JXX_OBJECT_CLONE(Derived) \
-    JXX_PTR(Object) cloneImpl() const override { \
-        return std::make_shared<Derived>(*this); \
-    }
-
+    JXX_PTR(jxx::lang::Object) cloneImpl() const override { return JXX_NEW<Derived>(*this); }
 #endif

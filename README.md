@@ -90,3 +90,8 @@ python java_to_cpp.py \
   --primitive-map boolean=jbool \
   --primitive-map short=jshort
 
+python java_to_cpp.py MyFile.java --instanceof-style macro --downcast-style macro
+
+python java_to_cpp.py --dir src_java --out outcpp --cmake
+
+

@@ -1,14 +1,14 @@
 #pragma once
 
 #include <memory>
-#include "jxx.lang.ReflectiveOperationException.h"
+#include "lang/jxx.lang.ReflectiveOperationException.h"
 
 namespace jxx::lang {
 
-    class ClassNotFoundException : public ReflectiveOperationException {
+    class ClassNotFoundException : public jxx::lang::ReflectiveOperationException {
     public:
         using ReflectiveOperationException::ReflectiveOperationException;
-        JXX_THROWABLE_CLONE(ClassNotFoundException)
+        JXX_OBJECT_CLONE(jxx::lang::ClassNotFoundException)
     protected:
         const char* typeName() const noexcept override { return "ClassNotFoundException"; }
     };

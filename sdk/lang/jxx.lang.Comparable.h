@@ -1,6 +1,5 @@
 #pragma once
 #include <type_traits>
-#include "jxx.lang.internal.h"
 //
 // A C++17 pure abstract interface similar to Java 8's java.lang.Comparable<T>.
 //

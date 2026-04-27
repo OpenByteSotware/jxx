@@ -1,5 +1,6 @@
 #pragma once
 
+#include <typeindex>
 #include <typeinfo>
 #include <type_traits>
 #include <unordered_map>
@@ -9,98 +10,39 @@
 #include <mutex>
 #include <functional>
 #include <string>
-#include <typeindex>
+#include <stdexcept>
 
 namespace jxx::lang {
 
+    // ---- Forward declarations (you provide definitions elsewhere) ----
     class Object;
-    class String;
-    class Exception;
-    class ClassNotFoundException;
-    class InstantiationException;
-    class IllegalAccessException;
-    class InvocationTargetException;
-    struct TypeInfo;
-    class TypeRegistry;
 
-    class ClassAny {
-    public:
-        ClassAny() = default;
-        explicit ClassAny(const TypeInfo* ti) : ti_(ti) {}
-
-        bool isNull() const { return ti_ == nullptr; }
-
-        const String& getName() const;
-        String getSimpleName() const;
-
-        bool isAssignableFrom(const jxx::Ptr<ClassAny> other) const;
-        bool isInstance(const jxx::Ptr<Object> obj) const;
-
-        ClassAny getSuperclass() const;
-        std::vector<ClassAny> getInterfaces() const;
-
-        // Java 8-like: throws InstantiationException / IllegalAccessException / InvocationTargetException
-        std::shared_ptr<Object> newInstance() const;
-
-        const TypeInfo* raw() const { return ti_; }
-
-    protected:
-        const TypeInfo* ti_ = nullptr;
-    };
-
-    template <typename T>
-    class Class : public ClassAny {
-    public:
-        using ClassAny::ClassAny;
-
-        ClassAny Class<T>forName(const char* canonicalName) {
-            const TypeInfo* ti = TypeRegistry::instance().findByName(canonicalName);
-            if (!ti) {
-                throw ClassNotFoundException(String("Class not found: ") + canonicalName);
-            }
-            return ClassAny(ti);
-        }
-
-        static Class<T> get() {
-            // T may be an interface; do NOT require it derives Object.
-            // But it must be polymorphic for RTTI and casts to work reliably.
-            static_assert(std::is_polymorphic_v<T>,
-                "Class<T>::get requires T to be polymorphic for RTTI/dynamic casts.");
-
-
-            const TypeInfo* ti = TypeRegistry::instance().findByType(std::type_index(typeid(T)));
-            return Class<T>(ti);
-        }
-
-        std::shared_ptr<T> newInstanceTyped() const {
-            // Returns nullptr if wrong type; newInstance() already throws on construction failures.
-            return std::dynamic_pointer_cast<T>(ClassAny::newInstance());
-        }
-    };
-
-    struct TypeInfo {
-        std::string canonicalName;                     // "com.acme.Foo"
-        std::string simpleName;                        // "Foo"
+    // ---- Type metadata ----
+    struct TypeInfo{
+   
+        std::string canonicalName;                     // e.g. "com.acme.Foo" / "java.lang.Object"
+        std::string simpleName;                        // e.g. "Foo"
         std::type_index type;
 
         bool isInterface = false;
-        bool isAbstract = false;                  // for Java parity
-        bool isPrimitive = false;                 // optional
+        bool isAbstract = false;
+        bool isPrimitive = false;
 
-        const TypeInfo* super = nullptr;          // class superclass; for interfaces keep null
+        const TypeInfo* super = nullptr;               // superclass (null for interfaces)
 
         // For classes: implements edges
         // For interfaces: extends edges
         std::vector<const TypeInfo*> interfaces;
 
         // Default ctor factory (optional)
-        bool defaultCtorAccessible = false;       // if false and factory exists → IllegalAccessException
-        std::function<std::shared_ptr<Object>()> defaultCtor;
+        bool defaultCtorAccessible = false;            // false => IllegalAccessException if factory exists
+        std::function<std::shared_ptr<jxx::lang::Object>()> defaultCtor;
 
-        // Instance check: uses dynamic_pointer_cast to interface or class
-        std::function<bool(const std::shared_ptr<Object>&)> isInstanceFn;
+        // Instance check (optional, fast path)
+        std::function<bool(const std::shared_ptr<jxx::lang::Object>&)> isInstanceFn;
     };
 
+    // ---- Registry ----
     class TypeRegistry {
     public:
         static TypeRegistry& instance() {
@@ -111,17 +53,14 @@ namespace jxx::lang {
         void registerType(const TypeInfo* ti) {
             std::lock_guard<std::mutex> lock(mu_);
 
-            // Check byType consistency
+            // Reject duplicates with different pointers (preserves "one Class object per type" semantics)
             auto itT = byType_.find(ti->type);
             if (itT != byType_.end() && itT->second != ti) {
-                // same C++ type registered with different TypeInfo instance -> bug
                 throw std::logic_error("TypeRegistry: duplicate registration for same C++ type");
             }
 
-            // Check byName consistency
             auto itN = byName_.find(ti->canonicalName);
             if (itN != byName_.end() && itN->second != ti) {
-                // same canonical registered with different TypeInfo -> bug
                 throw std::logic_error("TypeRegistry: duplicate registration for same canonical name");
             }
 
@@ -147,7 +86,30 @@ namespace jxx::lang {
         mutable std::mutex mu_;
         std::unordered_map<std::string, const TypeInfo*> byName_;
         std::unordered_map<std::type_index, const TypeInfo*> byType_;
-    };    
+    };
+
+    // ---- Helper: build a TypeInfo for T ----
+    // NOTE: This assumes your object model uses std::shared_ptr<Object> and RTTI is enabled.
+    template <typename T>
+    inline TypeInfo makeTypeInfo(const char* canonical, const char* simple) {
+        TypeInfo ti{
+            std::string(canonical),
+            std::string(simple),
+            std::type_index(typeid(T)),
+            false,   // isInterface
+            false,   // isAbstract
+            false,   // isPrimitive
+            nullptr, // super
+            {},      // interfaces
+            false,   // defaultCtorAccessible
+            nullptr, // defaultCtor
+            // isInstanceFn: cross-cast works if implementing objects inherit both Object and interface T
+            [](const std::shared_ptr<Object>& o) -> bool {
+                return static_cast<bool>(std::dynamic_pointer_cast<T>(o));
+            }
+        };
+        return ti;
+    }
 
     // ---- internal: full transitive closure through super + interfaces ----
     inline bool _reachable_type(const TypeInfo* start,
@@ -168,87 +130,59 @@ namespace jxx::lang {
         return false;
     }
 
-    // ---- ClassAny impl ----
-    inline const String& ClassAny::getName() const {
-        static const String empty = String("");
-        return ti_ ? ti_->canonicalName : empty;
-    }
+    // =========================================================================
+    // ClassAny: Java-like Class<?> handle
+    // =========================================================================
+    class ClassAny {
+    public:
+        ClassAny() = default;
+        explicit ClassAny(const TypeInfo* ti);
 
-    inline String ClassAny::getSimpleName() const {
-        return ti_ ? ti_->simpleName : String("");
-    }
+        bool isNull() const;
+        const TypeInfo* raw() const;
+        
+        // Java-like identity (same "Class object" if same TypeInfo pointer)
+        bool operator==(const ClassAny& rhs) const noexcept;
+        bool operator!=(const ClassAny& rhs) const noexcept;
 
-    inline ClassAny ClassAny::getSuperclass() const {
-        return ClassAny(ti_ ? ti_->super : nullptr);
-    }
+        // Java-like names
+        const std::string& getName() const;
+        
+        std::string getSimpleName() const;
 
-    inline std::vector<ClassAny> ClassAny::getInterfaces() const {
-        std::vector<ClassAny> out;
-        if (!ti_) return out;
-        out.reserve(ti_->interfaces.size());
-        for (auto* it : ti_->interfaces) out.emplace_back(it);
-        return out;
-    }
+        // Java-like factory: Class.forName(...)
+        static ClassAny forName(const char* canonicalName);
 
-    inline bool ClassAny::isInstance(const std::shared_ptr<Object>& obj) const {
-        if (!ti_ || !obj) return false;
-        if (ti_->isInstanceFn) return ti_->isInstanceFn(obj);
+        bool isAssignableFrom(const ClassAny& other) const;
 
-        // fallback: runtime type -> assignability
-        const TypeInfo* dyn = TypeRegistry::instance().findByType(std::type_index(typeid(*obj)));
-        if (!dyn) return false;
-        return isAssignableFrom(ClassAny(dyn));
-    }
+        bool isInstance(const std::shared_ptr<jxx::lang::Object> obj) const;
 
-    inline bool ClassAny::isAssignableFrom(const jxx::Ptr <ClassAny> other) const {
-        if (!ti_ || !other->ti_) return false;
+        ClassAny getSuperclass() const;
+        std::vector<ClassAny> getInterfaces() const;        
+        std::shared_ptr<jxx::lang::Object> newInstance();
+    protected:
+        const TypeInfo* ti_ = nullptr;
+    };
 
-        // Exact type match
-        if (ti_->type == other->ti_->type) return true;
-        // Java parity: Object is assignable from ANY non-primitive reference type,
-        // including interfaces.
-        const TypeInfo* objectTi = TypeRegistry::instance().findByName(String("java.lang.Object"));
-        if (objectTi && ti_->type == objectTi->type) {
-            return !other.ti_->isPrimitive;
+    // =========================================================================
+    // Class<T>: typed wrapper
+    // =========================================================================
+    template <typename T>
+    class Class : public ClassAny {
+    public:
+        using ClassAny::ClassAny;
+
+        static Class<T> get() {
+            static_assert(std::is_polymorphic_v<T>,
+                "Class<T>::get requires T to be polymorphic (for RTTI/dynamic casts).");
+
+            const TypeInfo* ti = TypeRegistry::instance().findByType(std::type_index(typeid(T)));
+            return Class<T>(ti);
         }
 
-        std::unordered_set<std::type_index> visited;
-        return _reachable_type(other.ti_, ti_->type, visited);
-    }
-
-    inline jxx::Ptr<Object> ClassAny::newInstance() const {
-        if (!ti_) {
-            throw IllegalAccessException(String("Cannot instantiate: null Class"));
+        std::shared_ptr<T> newInstanceTyped() const {
+            return std::dynamic_pointer_cast<T>(ClassAny::newInstance());
         }
-
-        // Java 8 parity:
-        // - interfaces and abstract classes cannot be instantiated
-        if (ti_->isInterface || ti_->isAbstract) {
-            throw InstantiationException(String("Cannot instantiate: ") + ti_->canonicalName);
-        }
-
-        // If no registered default ctor
-        if (!ti_->defaultCtor) {
-            throw InstantiationException(String("No default constructor for: ") + ti_->canonicalName);
-        }
-
-        // If ctor exists but not accessible (like private)
-        if (!ti_->defaultCtorAccessible) {
-            throw IllegalAccessException(String("Default constructor not accessible for: ") + ti_->canonicalName);
-        }
-
-        try {
-            return ti_->defaultCtor();
-        }
-        catch (const Exception& e) {
-            // Constructor threw a Java-like exception → wrap like reflection
-            throw InvocationTargetException(String("Constructor threw for: ") + ti_->canonicalName, e);
-        }
-        catch (const std::exception& e) {
-            // Wrap non-Java exception too
-            throw InvocationTargetException(String("Constructor threw for: ") + ti_->canonicalName,
-                IllegalStateException(String(e.what())));
-        }
-    }
+    };
 
 } // namespace jxx::lang

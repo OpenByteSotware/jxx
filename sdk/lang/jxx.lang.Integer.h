@@ -24,11 +24,11 @@ public:
     }
 
 protected:
-    // Implement cloneImpl for deep copy, Ojbect uses this for C++ to mimic java like clone
-    virtual jxx::Ptr<Object> cloneImpl() const override {
+    // Implement cloneImpl for deep copy, Object uses this for C++ to mimic java like clone
+    virtual jxx::Ptr<jxx::lang::Object> cloneImpl() const override {
         return JXX_NEW<Integer>(this->v_);
-    };
+    }
 };
-
+    
     } // namespace lang
 } // namespace jxx

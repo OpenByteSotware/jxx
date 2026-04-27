@@ -1,12 +1,12 @@
 #include <stdexcept>
 #include <string>
-#include "jxx.lang.Throwable.h"
+#include "lang/jxx.lang.Throwable.h"
 
 namespace jxx::lang {
-    class Exception : public Throwable {
+    class Exception : public jxx::lang::Throwable {
     public:
-        using Throwable::Throwable;
-        JXX_THROWABLE_CLONE(Exception)
+        using jxx::lang::Throwable::Throwable;
+        JXX_THROWABLE_CLONE(jxx::lang::Exception)
     protected:
         const char* typeName() const noexcept override { return "Exception"; }
     };

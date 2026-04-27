@@ -1,14 +1,14 @@
 #pragma once
 
 #include <memory>
-#include "jxx.lang.RuntimeException.h"
+#include "lang/jxx.lang.RuntimeException.h"
 
 namespace jxx::lang {
 
-class ClassCastException : public RuntimeException {
+class ClassCastException : public jxx::lang::RuntimeException {
 public:
-    using RuntimeException::RuntimeException;
-    JXX_THROWABLE_CLONE(ClassCastException)
+    using jxx::lang::RuntimeException::RuntimeException;
+    JXX_OBJECT_CLONE(jxx::lang::ClassCastException)
 protected:
     const char* typeName() const noexcept override { return "ClassCastException"; }
 };
