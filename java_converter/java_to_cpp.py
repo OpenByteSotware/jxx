@@ -286,7 +286,7 @@ class Transpiler:
         )
 
         # IMPORTANT: correct lambda syntax
-        out.write(f"JXX_SYNCHRONIZE({tmp}, [&{{")
+        out.write(f"JXX_SYNCHRONIZE({tmp}, [& {{")
         out.enter()
         self._sym_push()
 
