@@ -605,7 +605,7 @@ class Transpiler:
             # Last resort: introspect to avoid crashing
             out.write("/* TODO: Empty/unknown wrapper Statement */")
             return
-        
+
         if tn == 'AssertStatement':
             self._emit_assert_statement(s, out)
             return
@@ -907,25 +907,92 @@ class Transpiler:
 
         sig, is_ctor = self._method_signature(m, cls_name)
 
+        # Constructors cannot be synchronized in Java; just emit normally.
         if is_ctor:
             params = sig[len(cls_name):]
             head = f"{cls_name}::{cls_name}{params}"
-        else:
-            ret, rest = sig.split(' ', 1)
-            name = m.name
-            params = rest[len(name):]
-            head = f"{ret} {cls_name}::{name}{params}"
+            body = getattr(m, 'body', None)
+            out.write(f"{head} {{")
+            out.enter();
+            self._sym_push()
+            for p in (m.parameters or []):
+                self._sym_set(p.name, self._map_type(p.type))
+            if body:
+                for st in body:
+                    self.emit_statement(st, out)
+            self._sym_pop();
+            out.exit()
+            out.write("}")
+            out.write("")
+            return
+
+        # Normal method: compute head and return type
+        ret_cpp, rest = sig.split(' ', 1)
+        name = m.name
+        params = rest[len(name):]
+        head = f"{ret_cpp} {cls_name}::{name}{params}"
+
+        mods = set(getattr(m, 'modifiers', []) or [])
+        is_sync = ('synchronized' in mods)
+        is_static = ('static' in mods)
 
         body = getattr(m, 'body', None)
+
+        # If not synchronized, emit method normally (current behavior)
+        if not is_sync:
+            out.write(f"{head} {{")
+            out.enter();
+            self._sym_push()
+            for p in (m.parameters or []):
+                self._sym_set(p.name, self._map_type(p.type))
+            if body:
+                for st in body:
+                    self.emit_statement(st, out)
+            self._sym_pop();
+            out.exit()
+            out.write("}")
+            out.write("")
+            return
+
+        # synchronized method: wrap body in a call to Object::synchronized()
+        # Instance synchronized => lock on this
+        # Static synchronized   => lock on ClassName::__jxx_class_lock (must be emitted in class)
+        lock_expr = f"{cls_name}::__jxx_class_lock" if is_static else "this"
+
         out.write(f"{head} {{")
-        out.enter(); self._sym_push()
-        # Seed symbol table with parameters
+        out.enter();
+        self._sym_push()
+
+        # Seed symbol table with parameters (for throw/cast heuristics etc.)
         for p in (m.parameters or []):
             self._sym_set(p.name, self._map_type(p.type))
-        if body:
-            for st in body:
-                self.emit_statement(st, out)
-        self._sym_pop(); out.exit()
+
+        if ret_cpp == 'void':
+            # Run synchronized block, then return.
+            out.write(f"{lock_expr}->synchronized([&{{")
+            out.enter();
+            self._sym_push()
+            if body:
+                for st in body:
+                    self.emit_statement(st, out)
+            self._sym_pop();
+            out.exit()
+            out.write("});")
+            out.write("return;")
+        else:
+            # Return the result of synchronized lambda.
+            out.write(f"return {lock_expr}->synchronized(& -> {ret_cpp} {{")
+            out.enter();
+            self._sym_push()
+            if body:
+                for st in body:
+                    self.emit_statement(st, out)
+            self._sym_pop();
+            out.exit()
+            out.write("});")
+
+        self._sym_pop();
+        out.exit()
         out.write("}")
         out.write("")
 
@@ -985,6 +1052,7 @@ class Transpiler:
             out.enter()
 
         if mode in ('monolith', 'header'):
+
             for t in (tree.types or []):
                 tt = type(t).__name__
                 if tt not in ('ClassDeclaration', 'InterfaceDeclaration'):
@@ -994,6 +1062,13 @@ class Transpiler:
                 out.write(f'{kw} {t.name} {{')
                 out.enter()
 
+                needs_class_lock = False
+                for member in (t.body or []):
+                    mods = set(getattr(member, 'modifiers', []) or [])
+                    if 'synchronized' in mods and 'static' in mods:
+                        needs_class_lock = True
+                        break
+
                 buckets = {'public': [], 'protected': [], 'private': []}
                 for member in (t.body or []):
                     mods = set(getattr(member, 'modifiers', []) or [])
@@ -1001,6 +1076,13 @@ class Transpiler:
                     buckets[vis].append(member)
 
                 for vis in ('public', 'protected', 'private'):
+
+                    if vis == 'private' and needs_class_lock:
+                        init = (f"{self.new_macro}<jxx::lang::Object>()"
+                                if self.new_macro_style == 'template'
+                                else f"{self.new_macro}(jxx::lang::Object)()")
+                        out.write(f"inline static jxx::Ptr<jxx::lang::Object> __jxx_class_lock = {init};")
+
                     members = buckets[vis]
                     if not members:
                         continue
