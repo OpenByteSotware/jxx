@@ -146,6 +146,7 @@ class Transpiler:
         self.downcast_macro = downcast_macro
         self.instanceof_func = instanceof_func
         self.downcast_func = downcast_func
+        self._tmp_counter = 0
 
         self.primitive_map: Dict[str, str] = dict(JAVA_TO_CPP_TYPES)
         for item in (primitive_map or []):
@@ -215,6 +216,41 @@ class Transpiler:
                 self._emit_include_operand(out, op)
 
     # ---------- imports → usings + import-derived includes ----------
+    def _emit_synchronized_statement(self, s, out: Emit) -> None:
+        # javalang node naming differs by version:
+        # some use `.lock`, others use `.expression`
+        lock_expr = getattr(s, 'lock', None)
+        if lock_expr is None:
+            lock_expr = getattr(s, 'expression', None)
+
+        block = getattr(s, 'block', None) or []  # typically a list of statements
+
+        tmp = self._fresh_tmp("__sync_lock_")
+
+        # Java semantics: evaluate lock once; NPE if null; execute body under monitor.
+        out.write("{")
+        out.enter()
+
+        out.write(f"auto {tmp} = {self.emit_expression(lock_expr)};")
+        out.write(
+            f"if (!{tmp}) throw jxx::lang::NullPointerException("
+            f"jxx::lang::String(\"synchronized on null\"));"
+        )
+
+        # Your macro expands to: obj->synchronized(__VA_ARGS__);
+        # We pass a lambda that returns void (Java synchronized statement is void).
+        out.write(f"JXX_SYNCHRONIZE({tmp}, [&{{")
+        out.enter()
+        self._sym_push()
+        for st in block:
+            self.emit_statement(st, out)
+        self._sym_pop()
+        out.exit()
+        out.write("});")  # harmless even though macro ends with ';' (double ;; is ok)
+
+        out.exit()
+        out.write("}")
+
     @staticmethod
     def _looks_pkg(parts: List[str], wildcard: bool) -> bool:
         if wildcard:
@@ -488,11 +524,19 @@ class Transpiler:
             cur = cur + op
         return cur
 
+    def _fresh_tmp(self, prefix: str = "__tmp") -> str:
+        self._tmp_counter += 1
+        return f"{prefix}{self._tmp_counter}"
+
     # ---------- statements ----------
     def emit_statement(self, s, out: Emit) -> None:
         if s is None:
             return
         tn = type(s).__name__
+
+        if tn == 'SynchronizedStatement':
+            self._emit_synchronized_statement(s, out)
+            return
 
         if tn == 'BlockStatement':
             inner = getattr(s, 'statements', None)
@@ -614,14 +658,39 @@ class Transpiler:
 
         if ct == 'EnhancedForControl':
             var = control.var
-            tcpp = self._map_type(var.type)
-            name = var.name
+
+            # javalang versions differ:
+            #  - FormalParameter: var.name, var.type
+            #  - VariableDeclaration: var.type, var.declarators[0].name
+            vtype = getattr(var, 'type', None)
+            name = getattr(var, 'name', None)
+
+            if name is None:
+                decls = getattr(var, 'declarators', None) or []
+                if decls:
+                    name = getattr(decls[0], 'name', None)
+
+            if vtype is None or name is None:
+                out.write("/* TODO: Unhandled enhanced-for variable shape */")
+                out.write("for (/*?*/; /*?*/; /*?*/) {")
+                out.enter()
+                self.emit_statement(s.body, out)
+                out.exit()
+                out.write("}")
+                return
+
+            tcpp = self._map_type(vtype)
             self._sym_set(name, tcpp)
+
             iterable = self.emit_expression(control.iterable)
-            out.write(f"for (auto {name} : *({iterable})) {{")
-            out.enter(); self._sym_push()
+
+            # Use the real mapped type (better than auto for parity):
+            out.write(f"for ({tcpp} {name} : *({iterable})) {{")
+            out.enter();
+            self._sym_push()
             self.emit_statement(s.body, out)
-            self._sym_pop(); out.exit()
+            self._sym_pop();
+            out.exit()
             out.write("}")
             return
 
