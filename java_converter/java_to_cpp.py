@@ -241,20 +241,20 @@ class Transpiler:
                 self._emit_include_operand(out, op)
 
     # ---------- imports → usings + import-derived includes ----------
+    # javalang node naming differs by version: some use .lock, others .expression
+
     def _emit_synchronized_statement(self, s, out: Emit) -> None:
-        # javalang node naming differs by version:
-        # some use `.lock`, others use `.expression`
         lock_expr = getattr(s, 'lock', None)
         if lock_expr is None:
             lock_expr = getattr(s, 'expression', None)
 
-        block = getattr(s, 'block', None) or []  # typically a list of statements
+        block = getattr(s, 'block', None) or []  # list of statements
 
         tmp = self._fresh_tmp("__sync_lock_")
 
-        # Java semantics: evaluate lock once; NPE if null; execute body under monitor.
         out.write("{")
         out.enter()
+        self._sym_push()
 
         out.write(f"auto {tmp} = {self.emit_expression(lock_expr)};")
         out.write(
@@ -262,19 +262,22 @@ class Transpiler:
             f"jxx::lang::String(\"synchronized on null\"));"
         )
 
-        # Your macro expands to: obj->synchronized(__VA_ARGS__);
-        # We pass a lambda that returns void (Java synchronized statement is void).
+        # IMPORTANT: correct lambda syntax
         out.write(f"JXX_SYNCHRONIZE({tmp}, [&{{")
         out.enter()
         self._sym_push()
+
         for st in block:
             self.emit_statement(st, out)
+
         self._sym_pop()
         out.exit()
-        out.write("});")  # harmless even though macro ends with ';' (double ;; is ok)
+        out.write("});")
 
+        self._sym_pop()
         out.exit()
         out.write("}")
+        lock_expr = getattr(s, 'lock', None)
 
     @staticmethod
     def _looks_pkg(parts: List[str], wildcard: bool) -> bool:
@@ -571,7 +574,7 @@ class Transpiler:
             return
 
         out.write(f"assert({cond_cpp}); /* Java assert message expr omitted (non-literal) */")
-        
+
     # ---------- statements ----------
     def emit_statement(self, s, out: Emit) -> None:
         if s is None:
