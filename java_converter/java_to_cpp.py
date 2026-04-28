@@ -147,6 +147,7 @@ class Transpiler:
         self.instanceof_func = instanceof_func
         self.downcast_func = downcast_func
         self._tmp_counter = 0
+        self._needs_cassert = False
 
         self.primitive_map: Dict[str, str] = dict(JAVA_TO_CPP_TYPES)
         for item in (primitive_map or []):
@@ -201,9 +202,14 @@ class Transpiler:
 
     def _scan_needs(self, tree) -> None:
         self._needs_functional = False
+        self._needs_cassert = False
         for _, node in tree:
-            if type(node).__name__ == 'TryStatement' and getattr(node, 'finally_block', None) is not None:
+            nn = type(node).__name__
+            if nn == 'TryStatement' and getattr(node, 'finally_block', None) is not None:
                 self._needs_functional = True
+            if nn == 'AssertStatement':
+                self._needs_cassert = True
+            if self._needs_functional and self._needs_cassert:
                 return
 
     def emit_includes(self, out: Emit) -> None:
@@ -224,6 +230,8 @@ class Transpiler:
                 ordered.append("<functional>")
             if self.string_policy == 'std':
                 ordered.append('<string>')
+            if self._needs_cassert:
+                ordered.append("<cassert>")
 
         seen = set()
         for inc in ordered:
@@ -545,11 +553,34 @@ class Transpiler:
         self._tmp_counter += 1
         return f"{prefix}{self._tmp_counter}"
 
+    def _emit_assert_statement(self, s, out: Emit) -> None:
+        # Java: assert cond;  OR  assert cond : msg;
+        cond_cpp = self.emit_expression(getattr(s, 'condition', None))
+        msg_node = getattr(s, 'value', None)
+        if msg_node is None:
+            msg_node = getattr(s, 'message', None)  # defensive
+
+        if msg_node is None:
+            out.write(f"assert({cond_cpp});")
+            return
+
+        # Preserve msg only if it's a string literal
+        if type(msg_node).__name__ == 'Literal' and isinstance(getattr(msg_node, 'value', None), str):
+            msg_cpp = self.emit_expression(msg_node)  # includes quotes
+            out.write(f"assert(({cond_cpp}) && {msg_cpp});")
+            return
+
+        out.write(f"assert({cond_cpp}); /* Java assert message expr omitted (non-literal) */")
+        
     # ---------- statements ----------
     def emit_statement(self, s, out: Emit) -> None:
         if s is None:
             return
         tn = type(s).__name__
+
+        if tn == 'AssertStatement':
+            self._emit_assert_statement(s, out)
+            return
 
         if tn == 'SynchronizedStatement':
             self._emit_synchronized_statement(s, out)
