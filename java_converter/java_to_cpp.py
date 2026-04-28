@@ -150,6 +150,7 @@ class Transpiler:
         self._needs_cassert = False
         self.object_include = "lang/jxx.lang.Object.h"
         self._needs_object_include = False
+        self._dotstack: List[Set[str]] = []
 
         # In-unit type info for override detection
         self._type_table: Dict[str, Dict[str, Any]] = {}
@@ -195,7 +196,7 @@ class Transpiler:
         # In javalang, the body is commonly `s.body`
         self.emit_statement(s.body, out)
 
-        self._sym_pop();
+        self._sym_pop()
         out.exit()
         out.write(f"}} while ({cond});")
 
@@ -342,10 +343,13 @@ class Transpiler:
     # ---------- symbol table helpers ----------
     def _sym_push(self) -> None:
         self._symstack.append({})
+        self._dotstack.append(set())
 
     def _sym_pop(self) -> None:
         if self._symstack:
             self._symstack.pop()
+        if self._dotstack:
+            self._dotstack.pop()
 
     def _sym_set(self, name: str, ctype: str) -> None:
         if self._symstack:
@@ -356,6 +360,16 @@ class Transpiler:
             if name in scope:
                 return scope[name]
         return None
+
+    def _dot_add(self, name: str) -> None:
+        if self._dotstack:
+            self._dotstack[-1].add(name)
+
+    def _dot_has(self, name: str) -> bool:
+        for scope in reversed(self._dotstack):
+            if name in scope:
+                return True
+        return False
 
     # ---------- type mapping ----------
     @staticmethod
@@ -459,18 +473,41 @@ class Transpiler:
     def _qual_is_static(self, q: str) -> bool:
         if not q:
             return False
+
         head = q.split('.')[0].split('::')[0].split('->')[0]
+
+        if head in ('this', 'super'):
+            return False
+
+        # If this is a known local/param/catch variable, it is not a type => not static
+        if self._sym_get(head) is not None or self._dot_has(head):
+            return False
+
         return bool(head) and head[0].isupper()
 
     def _format_qual(self, q: str) -> Tuple[str, str]:
         if not q:
             return ("", "")
+
+        # Preserve already-formed C++ qualifiers
         if '::' in q:
             return (q, '::')
         if '->' in q:
             return (q, '->')
+        if '.' in q and q.startswith('std::'):
+            return (q, '::')
+
+        head = q.split('.')[0].split('::')[0].split('->')[0]
+
+        # Catch/reference variables => dot access
+        if self._dot_has(head):
+            return (q, '.')
+
+        # Static/type access
         if self._qual_is_static(q):
             return (q.replace('.', '::'), '::')
+
+        # Default: instance pointer access
         return (q.replace('.', '->'), '->')
 
     # ---------- expressions ----------
@@ -683,12 +720,14 @@ class Transpiler:
             out.write(f"if ({cond}) {{")
             out.enter(); self._sym_push()
             self.emit_statement(s.then_statement, out)
-            self._sym_pop(); out.exit()
+            self._sym_pop()
+            out.exit()
             if s.else_statement is not None:
                 out.write("} else {")
                 out.enter(); self._sym_push()
                 self.emit_statement(s.else_statement, out)
-                self._sym_pop(); out.exit()
+                self._sym_pop()
+                out.exit()
             out.write("}")
             return
 
@@ -859,9 +898,15 @@ class Transpiler:
                     self.emit_statement(st, out)
             else:
                 # e.g., BlockStatement node
-                self.emit_statement(blk, out)
+                blk = getattr(s, 'block', None)
+                if isinstance(blk, list):
+                    for st in blk:
+                        self.emit_statement(st, out)
+                else:
+                    # blk is a node (often BlockStatement)
+                    self.emit_statement(blk, out)
 
-        self._sym_pop();
+                self._sym_pop()
         out.exit()
         out.write("}")
 
@@ -875,7 +920,7 @@ class Transpiler:
                 out.enter();
                 self._sym_push()
                 self._sym_set(name, raw)  # mark catch var as a local symbol
-
+                self._dot_add(name)
                 cblk = getattr(cc, 'block', None)
                 if cblk is not None:
                     if isinstance(cblk, list):
@@ -884,7 +929,7 @@ class Transpiler:
                     else:
                         self.emit_statement(cblk, out)
 
-                self._sym_pop();
+                self._sym_pop()
                 out.exit()
                 out.write("}")
 
@@ -1153,16 +1198,16 @@ class Transpiler:
         else:
             # Return the result of synchronized lambda.
             out.write(f"return {lock_expr}->synchronized(& -> {ret_cpp} {{")
-            out.enter();
+            out.enter()
             self._sym_push()
             if body:
                 for st in body:
                     self.emit_statement(st, out)
-            self._sym_pop();
+            self._sym_pop()
             out.exit()
             out.write("});")
 
-        self._sym_pop();
+        self._sym_pop()
         out.exit()
         out.write("}")
         out.write("")
