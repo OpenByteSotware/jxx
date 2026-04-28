@@ -148,6 +148,8 @@ class Transpiler:
         self.downcast_func = downcast_func
         self._tmp_counter = 0
         self._needs_cassert = False
+        self.object_include = "lang/jxx.lang.Object.h"
+        self._needs_object_include = False
 
         self.primitive_map: Dict[str, str] = dict(JAVA_TO_CPP_TYPES)
         for item in (primitive_map or []):
@@ -203,17 +205,38 @@ class Transpiler:
     def _scan_needs(self, tree) -> None:
         self._needs_functional = False
         self._needs_cassert = False
+        self._needs_object_include = False
+
         for _, node in tree:
             nn = type(node).__name__
+
             if nn == 'TryStatement' and getattr(node, 'finally_block', None) is not None:
                 self._needs_functional = True
+
             if nn == 'AssertStatement':
                 self._needs_cassert = True
-            if self._needs_functional and self._needs_cassert:
+
+            if nn == 'ClassDeclaration':
+                # If no explicit extends -> must inherit Object -> need Object header
+                ext = getattr(node, 'extends', None)
+                if ext is None:
+                    self._needs_object_include = True
+                else:
+                    # If explicitly extends Object, also needs Object header
+                    ext_name = ".".join(ext.name) if isinstance(getattr(ext, 'name', None), (list, tuple)) else getattr(
+                        ext, 'name', '')
+                    if (ext_name.split('.')[-1] == 'Object'):
+                        self._needs_object_include = True
+
+            if self._needs_functional and self._needs_cassert and self._needs_object_include:
                 return
 
     def emit_includes(self, out: Emit) -> None:
         ordered: List[str] = []
+
+        if self._needs_object_include:
+            ordered.insert(0, self.object_include)
+
         if self.string_include:
             ordered.append(self.string_include)
         if self.bytearray_include:
@@ -1057,10 +1080,25 @@ class Transpiler:
                 tt = type(t).__name__
                 if tt not in ('ClassDeclaration', 'InterfaceDeclaration'):
                     continue
+                tt = type(t).__name__
                 is_iface = (tt == 'InterfaceDeclaration')
                 kw = 'struct' if is_iface else 'class'
-                out.write(f'{kw} {t.name} {{')
-                out.enter()
+
+                if is_iface:
+                    out.write(f'{kw} {t.name} {{')
+                else:
+                    ext = getattr(t, 'extends', None)
+
+                    if ext is None:
+                        base_cpp = 'jxx::lang::Object'
+                    else:
+                        # IMPORTANT: base class must be RAW type, not jxx::Ptr<...>
+                        # ext is a ReferenceType; use your raw naming rule
+                        # If you have _raw_reference_name(ext), use it:
+                        base_cpp = self._raw_reference_name(ext)  # returns e.g. Foo or String (raw)
+                        # If your _raw_reference_name maps String specially, that's OK; String as a base is unlikely anyway.
+
+                    out.write(f'{kw} {t.name} : public {base_cpp} {{')
 
                 needs_class_lock = False
                 for member in (t.body or []):
