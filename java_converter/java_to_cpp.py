@@ -581,6 +581,31 @@ class Transpiler:
             return
         tn = type(s).__name__
 
+        # Some javalang versions wrap real nodes inside a generic `Statement`
+        if tn == 'Statement':
+            # Most common: s.statement contains the real statement node
+            inner = getattr(s, 'statement', None)
+            if inner is not None:
+                self.emit_statement(inner, out)
+                return
+
+            # Sometimes it’s an expression wrapper
+            inner_expr = getattr(s, 'expression', None)
+            if inner_expr is not None:
+                out.write(f"{self.emit_expression(inner_expr)};")
+                return
+
+            # Sometimes it’s a list of statements
+            inner_stmts = getattr(s, 'statements', None)
+            if inner_stmts:
+                for st in inner_stmts:
+                    self.emit_statement(st, out)
+                return
+
+            # Last resort: introspect to avoid crashing
+            out.write("/* TODO: Empty/unknown wrapper Statement */")
+            return
+        
         if tn == 'AssertStatement':
             self._emit_assert_statement(s, out)
             return

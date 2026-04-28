@@ -151,5 +151,5 @@ namespace jxx {
 }
 
 #ifndef JXX_SYNCHRONIZE
-#define JXX_SYNCHRONIZE(obj, ...) obj->synchronized(__VA_ARGS__)
+#define JXX_SYNCHRONIZE(obj, ...) ((obj)->synchronized(__VA_ARGS__))
 #endif
