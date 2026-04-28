@@ -151,6 +151,10 @@ class Transpiler:
         self.object_include = "lang/jxx.lang.Object.h"
         self._needs_object_include = False
 
+        # In-unit type info for override detection
+        self._type_table: Dict[str, Dict[str, Any]] = {}
+        self._override_keys: Dict[str, Set[Tuple[str, Tuple[str, ...]]]] = {}
+
         self.primitive_map: Dict[str, str] = dict(JAVA_TO_CPP_TYPES)
         for item in (primitive_map or []):
             if item and '=' in item:
@@ -923,6 +927,125 @@ class Transpiler:
         sig = f"{ret} {name}({', '.join(params)})" if not is_ctor else f"{name}({', '.join(params)})"
         return sig, is_ctor
 
+    def _method_key(self, m) -> Optional[Tuple[str, Tuple[str, ...]]]:
+        """
+        Override-matching key: (method_name, (param_types...)).
+        (Return type excluded because C++ override matching ignores return type.)
+        """
+        if type(m).__name__ != 'MethodDeclaration':
+            return None
+        name = m.name
+        params = tuple(self._map_type(p.type) for p in (m.parameters or []))
+        return (name, params)
+
+    def _has_override_annotation(self, m) -> bool:
+        ann = getattr(m, 'annotations', None) or []
+        for a in ann:
+            n = a.name[-1] if isinstance(a.name, (list, tuple)) else a.name
+            if n == 'Override':
+                return True
+        return False
+
+    def _is_abstract_method(self, m) -> bool:
+        mods = set(getattr(m, 'modifiers', []) or [])
+        return ('abstract' in mods) or (getattr(m, 'body', None) is None)
+
+    def _raw_inherit_name(self, ref_type) -> str:
+        """
+        Raw name for inheritance lists (MUST NOT be jxx::Ptr<...>).
+        """
+        raw = ref_type.name.replace('.', '::') if isinstance(ref_type.name, str) else str(ref_type.name)
+        return raw
+
+    def _build_type_table(self, tree) -> None:
+        """
+        Build a compilation-unit-only type table for reliable override marking
+        (interfaces/classes declared in the same Java file).
+        """
+        self._type_table = {}
+        self._override_keys = {}
+
+        # 1) Collect raw type data
+        for t in (tree.types or []):
+            tt = type(t).__name__
+            if tt not in ('ClassDeclaration', 'InterfaceDeclaration'):
+                continue
+
+            kind = 'interface' if tt == 'InterfaceDeclaration' else 'class'
+            name = t.name
+
+            # extends
+            ext = getattr(t, 'extends', None)
+            if kind == 'interface':
+                # interface may extend multiple interfaces (list)
+                if isinstance(ext, list):
+                    extends = [self._raw_inherit_name(x) for x in ext]
+                elif ext is None:
+                    extends = []
+                else:
+                    extends = [self._raw_inherit_name(ext)]
+            else:
+                extends = self._raw_inherit_name(ext) if ext is not None else None
+
+            # implements
+            implements = []
+            if kind == 'class':
+                implements = [self._raw_inherit_name(x) for x in (getattr(t, 'implements', None) or [])]
+
+            # methods
+            methods = set()
+            for member in (t.body or []):
+                if type(member).__name__ == 'MethodDeclaration':
+                    k = self._method_key(member)
+                    if k:
+                        methods.add(k)
+
+            self._type_table[name] = {
+                'kind': kind,
+                'extends': extends,
+                'implements': implements,
+                'methods': methods,
+            }
+
+        # 2) Gather inherited method keys (in-file only)
+        def gather_inherited(type_name: str, seen: Set[str]) -> Set[Tuple[str, Tuple[str, ...]]]:
+            if type_name in seen:
+                return set()
+            seen.add(type_name)
+
+            info = self._type_table.get(type_name)
+            if not info:
+                return set()
+
+            inherited = set()
+
+            if info['kind'] == 'class':
+                base = info['extends']
+                if isinstance(base, str) and base in self._type_table:
+                    inherited |= self._type_table[base]['methods']
+                    inherited |= gather_inherited(base, seen)
+
+                for iface in info.get('implements', []):
+                    if iface in self._type_table:
+                        inherited |= self._type_table[iface]['methods']
+                        inherited |= gather_inherited(iface, seen)
+
+            else:
+                # interface extends other interfaces
+                for parent in (info.get('extends', []) or []):
+                    if parent in self._type_table:
+                        inherited |= self._type_table[parent]['methods']
+                        inherited |= gather_inherited(parent, seen)
+
+            return inherited
+
+        # 3) Compute override set per class
+        for name, info in self._type_table.items():
+            if info['kind'] != 'class':
+                continue
+            inherited = gather_inherited(name, set())
+            self._override_keys[name] = info['methods'] & inherited
+
     def _emit_method_definition(self, out: Emit, cls_name: str, m) -> None:
         mt = type(m).__name__
         if mt not in ('MethodDeclaration', 'ConstructorDeclaration'):
@@ -1035,6 +1158,7 @@ class Transpiler:
         tree = javalang.parse.parse(java_src)
         self._scan_needs(tree)
         self.gather_usings(tree)
+        self._build_type_table(tree)
 
         ns = tree.package.name.replace('.', '::') if tree.package else ''
 
@@ -1085,20 +1209,44 @@ class Transpiler:
                 kw = 'struct' if is_iface else 'class'
 
                 if is_iface:
-                    out.write(f'{kw} {t.name} {{')
+                    # Interface: pure virtual, DOES NOT derive from Object
+                    out.write(f'struct {t.name} {{')
+                    out.enter()
+                    out.write('public:')
+                    out.enter()
+
+                    out.write(f'virtual ~{t.name}() = default;')
+
+                    for member in (t.body or []):
+                        if type(member).__name__ == 'MethodDeclaration':
+                            sig, _ = self._method_signature(member, t.name)
+                            out.write(f'virtual {sig} = 0;')
+
+                    out.exit()
+                    out.exit()
+                    out.write('};')
+                    out.write('')
+                    continue
+
                 else:
                     ext = getattr(t, 'extends', None)
+                    impls = getattr(t, 'implements', None) or []
 
+                    bases = []
+
+                    # Java default: extends Object if no explicit base
                     if ext is None:
-                        base_cpp = 'jxx::lang::Object'
+                        bases.append('jxx::lang::Object')
                     else:
-                        # IMPORTANT: base class must be RAW type, not jxx::Ptr<...>
-                        # ext is a ReferenceType; use your raw naming rule
-                        # If you have _raw_reference_name(ext), use it:
-                        base_cpp = self._raw_reference_name(ext)  # returns e.g. Foo or String (raw)
-                        # If your _raw_reference_name maps String specially, that's OK; String as a base is unlikely anyway.
+                        bases.append(self._raw_inherit_name(ext))
 
-                    out.write(f'{kw} {t.name} : public {base_cpp} {{')
+                    # Implements => additional bases
+                    for iface in impls:
+                        bases.append(self._raw_inherit_name(iface))
+
+                    base_clause = ' : ' + ', '.join(f'public {b}' for b in bases) if bases else ''
+                    out.write(f'class {t.name}{base_clause} {{')
+                    #out.write(f'{kw} {t.name} : public {bases} {{')
 
                 needs_class_lock = False
                 for member in (t.body or []):
@@ -1131,8 +1279,33 @@ class Transpiler:
                         if mt == 'FieldDeclaration':
                             self._emit_field_decls(out, t.name, member)
                         elif mt in ('MethodDeclaration', 'ConstructorDeclaration'):
-                            sig, _ = self._method_signature(member, t.name)
-                            out.write(sig + ';')
+                            sig, is_ctor = self._method_signature(member, t.name)
+
+                            if type(member).__name__ == 'ConstructorDeclaration':
+                                out.write(sig + ';')
+                                continue
+
+                            mk = self._method_key(member)
+
+                            # SAFE heuristic enabled:
+                            # - override if proven by in-file base/interface method match OR
+                            # - override if @Override annotation present
+                            overrides = (mk in self._override_keys.get(t.name, set())) or self._has_override_annotation(
+                                member)
+
+                            is_abs = self._is_abstract_method(member)
+
+                            if is_abs:
+                                if overrides:
+                                    out.write(f'virtual {sig} override = 0;')
+                                else:
+                                    out.write(f'virtual {sig} = 0;')
+                            else:
+                                if overrides:
+                                    out.write(f'virtual {sig} override;')
+                                else:
+                                    out.write(sig + ';')
+
                     out.exit()
 
                 out.exit()
