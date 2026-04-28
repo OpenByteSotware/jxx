@@ -36,7 +36,10 @@ Options
 --cmake-cxx-standard 17 (string value)
 --cmake-min 3.20 (CMake minimum version)
 
-
+When developing additional SDK class / interfaces and methods please do the following:
+Make one class per pull request
+Make sure a unit test exists in the pull request for new classes
+Make sure a benchmark exist and class is same overall time as java or better (if its poor performance, please fix before submitting)
 
 
 # Note on pull request requirements:
@@ -54,7 +57,7 @@ Other options are
 # convert a folder and subfolder to c++ output mimic folder
 # use NEW instead of JXX_NEW for similar to java new / c++ new
 # include header guards (#ifndef)
-python java_to_cpp.py --dir ./src_java --out ./cpp_out --cmake \
+python3 java_to_cpp.py --dir ./src_java --out ./cpp_out --cmake \
   --new-macro-style template --new-macro NEW \
   --header-guards \
   --string-include "String.h" \
@@ -67,7 +70,7 @@ python java_to_cpp.py --dir ./src_java --out ./cpp_out --cmake \
 
 
 
-python java_to_cpp.py \
+python3 java_to_cpp.py \
   --dir ./src_java \
   --out ./cpp_out \
   --cmake \
@@ -85,13 +88,12 @@ python java_to_cpp.py \
   
   
   
-  python java2cpp17.py --dir ./src_java --out ./cpp_out \
+  python3 java2cpp17.py --dir ./src_java --out ./cpp_out \
   --primitive-map int=jint \
   --primitive-map boolean=jbool \
   --primitive-map short=jshort
 
-python java_to_cpp.py MyFile.java --instanceof-style macro --downcast-style macro
+python3 java_to_cpp.py MyFile.java --instanceof-style macro --downcast-style macro
 
-python java_to_cpp.py --dir src_java --out outcpp --cmake
-
+python3 java_to_cpp.py --dir src_java --out outcpp --cmake
 

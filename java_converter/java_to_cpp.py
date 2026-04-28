@@ -151,6 +151,7 @@ class Transpiler:
         self.object_include = "lang/jxx.lang.Object.h"
         self._needs_object_include = False
         self._dotstack: List[Set[str]] = []
+        self._retstack: List[str] = []
 
         # In-unit type info for override detection
         self._type_table: Dict[str, Dict[str, Any]] = {}
@@ -341,6 +342,17 @@ class Transpiler:
                         self.import_header_includes.append(inc)
 
     # ---------- symbol table helpers ----------
+    def _ret_push(self, ret: str) -> None:
+        self._retstack.append(ret)
+
+    def _ret_pop(self) -> None:
+        if self._retstack:
+            self._retstack.pop()
+
+    def _ret_current(self) -> str:
+        # Default to void if we aren't inside a method emission
+        return self._retstack[-1] if self._retstack else "void"
+
     def _sym_push(self) -> None:
         self._symstack.append({})
         self._dotstack.append(set())
@@ -510,11 +522,36 @@ class Transpiler:
         # Default: instance pointer access
         return (q.replace('.', '->'), '->')
 
+    def _contains_return(self, node) -> bool:
+        if node is None:
+            return False
+        tn = type(node).__name__
+        if tn == 'ReturnStatement':
+            return True
+
+        # common containers
+        for attr in ('statements', 'block', 'then_statement', 'else_statement', 'body'):
+            v = getattr(node, attr, None)
+            if isinstance(v, list):
+                for x in v:
+                    if self._contains_return(x):
+                        return True
+            elif v is not None:
+                if self._contains_return(v):
+                    return True
+        return False
+
     # ---------- expressions ----------
     def emit_expression(self, e) -> str:
         if e is None:
             return ''
         tn = type(e).__name__
+
+        if tn == 'TernaryExpression':
+            cond = self.emit_expression(e.condition)
+            tval = self.emit_expression(e.if_true)
+            fval = self.emit_expression(e.if_false)
+            return f"(({cond}) ? ({tval}) : ({fval}))"
 
         if tn == 'Literal':
             return 'nullptr' if e.value is None else e.value
@@ -1123,26 +1160,36 @@ class Transpiler:
 
         sig, is_ctor = self._method_signature(m, cls_name)
 
-        # Constructors cannot be synchronized in Java; just emit normally.
+        # ---------------------------
+        # Constructors (never synchronized in Java)
+        # ---------------------------
         if is_ctor:
             params = sig[len(cls_name):]
             head = f"{cls_name}::{cls_name}{params}"
             body = getattr(m, 'body', None)
+
             out.write(f"{head} {{")
-            out.enter();
+            out.enter()
             self._sym_push()
+            self._ret_push("void")  # constructor treated as void for nested emits
+
             for p in (m.parameters or []):
                 self._sym_set(p.name, self._map_type(p.type))
+
             if body:
                 for st in body:
                     self.emit_statement(st, out)
-            self._sym_pop();
+
+            self._ret_pop()
+            self._sym_pop()
             out.exit()
             out.write("}")
             out.write("")
             return
 
-        # Normal method: compute head and return type
+        # ---------------------------
+        # Normal methods
+        # ---------------------------
         ret_cpp, rest = sig.split(' ', 1)
         name = m.name
         params = rest[len(name):]
@@ -1154,59 +1201,73 @@ class Transpiler:
 
         body = getattr(m, 'body', None)
 
-        # If not synchronized, emit method normally (current behavior)
+        # ---------------------------
+        # Non-synchronized: emit normally
+        # ---------------------------
         if not is_sync:
             out.write(f"{head} {{")
-            out.enter();
+            out.enter()
             self._sym_push()
+            self._ret_push(ret_cpp)
+
             for p in (m.parameters or []):
                 self._sym_set(p.name, self._map_type(p.type))
+
             if body:
                 for st in body:
                     self.emit_statement(st, out)
-            self._sym_pop();
+
+            self._ret_pop()
+            self._sym_pop()
             out.exit()
             out.write("}")
             out.write("")
             return
 
-        # synchronized method: wrap body in a call to Object::synchronized()
+        # ---------------------------
+        # Synchronized method wrapper
         # Instance synchronized => lock on this
-        # Static synchronized   => lock on ClassName::__jxx_class_lock (must be emitted in class)
+        # Static synchronized   => lock on ClassName::__jxx_class_lock
+        # ---------------------------
         lock_expr = f"{cls_name}::__jxx_class_lock" if is_static else "this"
 
         out.write(f"{head} {{")
-        out.enter();
+        out.enter()
         self._sym_push()
+        self._ret_push(ret_cpp)
 
-        # Seed symbol table with parameters (for throw/cast heuristics etc.)
         for p in (m.parameters or []):
             self._sym_set(p.name, self._map_type(p.type))
 
         if ret_cpp == 'void':
-            # Run synchronized block, then return.
+            # NOTE: correct lambda syntax
             out.write(f"{lock_expr}->synchronized([&{{")
-            out.enter();
+            out.enter()
             self._sym_push()
+
             if body:
                 for st in body:
                     self.emit_statement(st, out)
-            self._sym_pop();
+
+            self._sym_pop()
             out.exit()
             out.write("});")
             out.write("return;")
         else:
-            # Return the result of synchronized lambda.
-            out.write(f"return {lock_expr}->synchronized(& -> {ret_cpp} {{")
+            # Return the result of synchronized lambda
+            out.write(f"return {lock_expr}->synchronized([&-> {ret_cpp} {{")
             out.enter()
             self._sym_push()
+
             if body:
                 for st in body:
                     self.emit_statement(st, out)
+
             self._sym_pop()
             out.exit()
             out.write("});")
 
+        self._ret_pop()
         self._sym_pop()
         out.exit()
         out.write("}")
