@@ -176,6 +176,23 @@ class Transpiler:
             return s
         return f'"{s}"'
 
+    def _emit_do_statement(self, s, out: Emit) -> None:
+        # Java: do { body } while (condition);
+        # Semantics: body executes at least once; condition evaluated after body.
+        cond = self.emit_expression(s.condition)
+
+        out.write("do {")
+        out.enter();
+        self._sym_push()
+
+        # In javalang, the body is commonly `s.body`
+        self.emit_statement(s.body, out)
+
+        self._sym_pop();
+        out.exit()
+        out.write(f"}} while ({cond});")
+
+
     def _emit_include_operand(self, out: Emit, operand: str) -> None:
         op = self._norm_inc(operand)
         if op and op not in self.include_written:
@@ -536,6 +553,10 @@ class Transpiler:
 
         if tn == 'SynchronizedStatement':
             self._emit_synchronized_statement(s, out)
+            return
+
+        if tn == 'DoStatement':
+            self._emit_do_statement(s, out)
             return
 
         if tn == 'BlockStatement':
