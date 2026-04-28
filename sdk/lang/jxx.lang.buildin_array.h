@@ -10,14 +10,11 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <stdexcept>
 
 #include "jxx_types.h"
 #include "jxx.lang.ByteType.h"
-
-// Per your project naming:
 #include "jxx.lang.String.h"
-#include "jxx.lang.ArrayIndexOutOfBoundsException.h"
-#include "jxx.lang.NullPointerException.h"
 
 namespace jxx::lang {
 
@@ -234,7 +231,9 @@ namespace jxx::lang {
             (void)idx;
             (void)len;
             // Message content doesn't affect semantics; customize if you want.
-            throw ArrayIndexOutOfBoundsException(String("Index out of bounds"));
+            throw std::out_of_range("Index " + std::to_string(index) +
+                " is out of range. Valid range: 0 to " +
+                std::to_string(data.size() - 1));
         }
 
         void grow_to_(size_type need) {
@@ -282,14 +281,13 @@ namespace jxx::lang {
     private:
         std::vector<jxx::Ptr<SubArray>> elems_{};
 
-        static void throw_aioobe_(jint idx, size_type len) {
-            (void)idx;
-            (void)len;
-            throw ArrayIndexOutOfBoundsException(String("Index out of bounds"));
+        static void throw_aioobe_(jint idx, size_type len) {            
+            throw std::out_of_range("JxxArray Index " + std::to_string(idx) +
+                " is out of range. Valid range: 0 to " + std::to_string(len));
         }
 
         static void throw_npe_row_() {
-            throw NullPointerException(String("JxxArray row is null"));
+            throw std::invalid_argument("JxxArray row is null");
         }
 
         static std::array<size_type, Rank - 1>

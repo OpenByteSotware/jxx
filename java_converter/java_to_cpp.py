@@ -602,6 +602,42 @@ class Transpiler:
             op = e.type if e.type else '='
             return f"({l} {op} {r})"
 
+        if tn == 'ArrayCreator':
+            # Java: new T[dim0][dim1]...
+            # javalang: e.type is the base element type; e.dimensions is a list of dimension expressions
+            dims = getattr(e, 'dimensions', None) or []
+            rank = len(dims)
+
+            # Determine element type used inside JxxArray<Elem,Rank>
+            # Use your existing helper that wraps reference elements as jxx::Ptr<Raw>
+            elem_cpp = self._array_elem_type(e.type)
+
+            # Special case: byte[] rank==1 maps to Ptr<ByteArray>
+            base_name = self._simple_name(str(getattr(e.type, 'name', '')))
+            if type(e.type).__name__ == 'BasicType':
+                base_name = e.type.name
+
+            if base_name == 'byte' and rank == 1:
+                # Adjust this constructor to match your ByteArray API (length ctor assumed)
+                return f"{self.new_macro}<ByteArray>({self.emit_expression(dims[0])})" if self.new_macro_style == 'template' else \
+                    f"{self.new_macro}(ByteArray)({self.emit_expression(dims[0])})"
+
+            # Normal arrays: JxxArray allocation
+            arr_cpp = f"jxx::lang::JxxArray<{elem_cpp}, {rank}>"
+
+            # Rank==1 convenience: pass size directly (best readability)
+            if rank == 1:
+                n0 = self.emit_expression(dims[0])
+                if self.new_macro_style == 'template':
+                    return f"{self.new_macro}<{arr_cpp}>({n0})"
+                return f"{self.new_macro}({arr_cpp})({n0})"
+
+            # Rank>1: pass a std::array of dimensions (requires a matching ctor/factory)
+            dim_list = ", ".join(self.emit_expression(d) for d in dims)
+            if self.new_macro_style == 'template':
+                return f"{self.new_macro}<{arr_cpp}>(std::array<jint, {rank}>{{{dim_list}}})"
+            return f"{self.new_macro}({arr_cpp})(std::array<jint, {rank}>{{{dim_list}}})"
+
         return str(e)
 
     def _emit_primary(self, p) -> str:
