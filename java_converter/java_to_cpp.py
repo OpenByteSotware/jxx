@@ -833,19 +833,36 @@ class Transpiler:
         finally_block = getattr(s, 'finally_block', None)
         if finally_block is not None:
             self._needs_functional = True
-            out.write("struct __JxxFinallyGuard { std::function<void()> f; ~__JxxFinallyGuard(){ if(f) f(); } };\n")
-            out.write("__JxxFinallyGuard __finally{[&](){")
-            out.enter(); self._sym_push()
-            for st in (finally_block or []):
-                self.emit_statement(st, out)
-            self._sym_pop(); out.exit()
-            out.write("}};\n")
+            out.write("struct __JxxFinallyGuard { std::function<void()> f; ~__JxxFinallyGuard(){ if(f) f(); } };")
+            out.write("__JxxFinallyGuard __finally{[&")
+            out.enter();
+            self._sym_push()
+            # finally_block is usually a list; if it’s a node, emit it directly
+            if isinstance(finally_block, list):
+                for st in finally_block:
+                    self.emit_statement(st, out)
+            else:
+                self.emit_statement(finally_block, out)
+            self._sym_pop();
+            out.exit()
+            out.write("}};")
+            out.write("")
 
         out.write("try {")
-        out.enter(); self._sym_push()
-        for st in (s.block or []):
-            self.emit_statement(st, out)
-        self._sym_pop(); out.exit()
+        out.enter();
+        self._sym_push()
+
+        blk = getattr(s, 'block', None)
+        if blk is not None:
+            if isinstance(blk, list):
+                for st in blk:
+                    self.emit_statement(st, out)
+            else:
+                # e.g., BlockStatement node
+                self.emit_statement(blk, out)
+
+        self._sym_pop();
+        out.exit()
         out.write("}")
 
         for cc in (s.catches or []):
@@ -855,12 +872,20 @@ class Transpiler:
             for ty in types:
                 raw = self._raw_reference_name(ty) if type(ty).__name__ == 'ReferenceType' else str(ty)
                 out.write(f"catch (const {raw}& {name}) {{")
-                out.enter(); self._sym_push()
-                # bind catch variable as value ref type name (not Ptr)
-                self._sym_set(name, raw)
-                for st in (cc.block or []):
-                    self.emit_statement(st, out)
-                self._sym_pop(); out.exit()
+                out.enter();
+                self._sym_push()
+                self._sym_set(name, raw)  # mark catch var as a local symbol
+
+                cblk = getattr(cc, 'block', None)
+                if cblk is not None:
+                    if isinstance(cblk, list):
+                        for st in cblk:
+                            self.emit_statement(st, out)
+                    else:
+                        self.emit_statement(cblk, out)
+
+                self._sym_pop();
+                out.exit()
                 out.write("}")
 
     def _emit_switch_statement(self, s, out: Emit) -> None:
