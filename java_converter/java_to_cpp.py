@@ -1,46 +1,25 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""java_to_cpp.py
+## -*- coding: utf-8 -*-
+"""
+Assumptions / goals:
+  • C++ exceptions are thrown by VALUE (catch by const ref).
+  • All Java classes implicitly extend Object; in C++ we emit explicit inheritance.
+  • Interfaces map to pure-virtual C++ types that DO NOT derive from Object.
+  • Objects use pointer semantics: non-array references => jxx::Ptr<RawType>
+  • Arrays use jxx::lang::JxxArray<T, Rank> wrapped in jxx::Ptr<...>
 
-Java → C++17 AST-based transpiler (javalang) with project-specific rules.
-
-This version assumes C++ exceptions are thrown by VALUE (as you confirmed).
-
-Features:
-  • Emits field declarations (grouped by visibility) in class bodies.
-  • Emits method bodies in source mode for methods with bodies.
-
-Statement support:
-  - BlockStatement
-  - ReturnStatement
-  - StatementExpression
-  - LocalVariableDeclaration
-  - IfStatement
-  - WhileStatement
-  - ForStatement (classic + enhanced-for)
-  - TryStatement (try/catch/finally) with RAII finally-guard
-  - SwitchStatement / SwitchStatementCase
-  - BreakStatement / ContinueStatement
-  - ThrowStatement (improved for value-throw model)
-
-ThrowStatement policy (value model):
-  • `throw new X(args)` (ClassCreator) => emits `throw X(args);` (no heap, no slicing)
-  • `throw e` where e has static type jxx::Ptr<X> and X is a concrete exception type => emits `throw *e;`
-  • If e is a pointer to a base exception type (e.g., Ptr<Throwable>/Ptr<Exception>/Ptr<RuntimeException>),
-    exact Java parity isn't achievable in C++ value-throw without extra runtime support.
-    In that case we emit `throw *e; /* WARNING: potential slicing */`.
-
-Core semantic rules:
-  • Non-array reference types map to jxx::Ptr<RawType>
-  • Arrays map to jxx::Ptr<jxx::lang::JxxArray<Elem, Rank>>
-    - primitive elements by value
-    - reference elements as jxx::Ptr<Raw>
-  • byte[] rank==1 -> jxx::Ptr<ByteArray>
-  • Class<?> -> jxx::Ptr<jxx::lang::ClassAny>; Class arrays -> JxxArray<ClassAny,Rank>
-  • Member/method access uses '->' for instances and '::' for static/type (heuristic uppercase)
-  • instanceof + downcast emission options:
-      --instanceof-style {macro,func,dynamic}
-      --downcast-style   {macro,func,dynamic}
+New in this version:
+  • Array initializers use JxxArray constructors:
+      - Rank-1: JxxArray(std::initializer_list<T>)
+      - Rank>=2: JxxArray(std::initializer_list<jxx::Ptr<SubArray>>) to support null rows
+  • Array field initialization moved out of headers:
+      - instance array fields initialized in constructors in .cpp
+      - static array fields initialized only in .cpp
+  • Synchronized blocks that contain `return` in non-void methods are emitted as:
+      return lock->synchronized([&-> Ret { ... });
+  • Safe override heuristic: add `override` if:
+      - proven in-file by base/interface methods, OR
+      - Java method has @Override annotation
 
 Requires: pip install javalang
 """
@@ -99,13 +78,13 @@ def _base_type_name_and_dims(t) -> Tuple[str, int]:
 
 
 def _java_visibility(mods: Set[str]) -> str:
-    if 'private' in mods:
-        return 'private'
-    if 'protected' in mods:
-        return 'protected'
-    if 'public' in mods:
-        return 'public'
-    return 'public'
+    if "private" in mods:
+        return "private"
+    if "protected" in mods:
+        return "protected"
+    if "public" in mods:
+        return "public"
+    return "public"
 
 
 class Transpiler:
@@ -146,22 +125,38 @@ class Transpiler:
         self.downcast_macro = downcast_macro
         self.instanceof_func = instanceof_func
         self.downcast_func = downcast_func
+
         self._tmp_counter = 0
+
+        # conditional include flags
+        self._needs_functional = False
         self._needs_cassert = False
-        self.object_include = "lang/jxx.lang.Object.h"
         self._needs_object_include = False
+        self._needs_initializer_list = False
+
+        # object include path in your tree
+        self.object_include = "lang/jxx.lang.Object.h"
+
+        # catch var / reference var tracking for '.' member access
         self._dotstack: List[Set[str]] = []
+
+        # current method return type tracking (for synchronized-return parity)
         self._retstack: List[str] = []
 
-        # In-unit type info for override detection
+        # override detection (in-file + @Override)
         self._type_table: Dict[str, Dict[str, Any]] = {}
         self._override_keys: Dict[str, Set[Tuple[str, Tuple[str, ...]]]] = {}
 
+        # deferred instance array field initializations: class -> [(field, expr)]
+        self._deferred_instance_inits: Dict[str, List[Tuple[str, str]]] = {}
+
+        # primitive map
         self.primitive_map: Dict[str, str] = dict(JAVA_TO_CPP_TYPES)
         for item in (primitive_map or []):
-            if item and '=' in item:
-                k, v = item.split('=', 1)
-                k = k.strip(); v = v.strip()
+            if item and "=" in item:
+                k, v = item.split("=", 1)
+                k = k.strip()
+                v = v.strip()
                 if k and v:
                     self.primitive_map[k] = v
 
@@ -170,37 +165,19 @@ class Transpiler:
         self.include_written: Set[str] = set()
 
         self._static_field_defs: List[Tuple[str, str, str, str]] = []
-        self._needs_functional: bool = False
 
-        # Per-method symbol stack: maps variable names to mapped C++ type strings.
+        # per-method symbol stack for instance/static heuristics
         self._symstack: List[Dict[str, str]] = []
 
-    # ---------- includes ----------
+    # ---------------- includes ----------------
     @staticmethod
     def _norm_inc(s: str) -> str:
         s = (s or "").strip()
         if not s:
             return s
-        if s.startswith('<') or s.startswith('"'):
+        if s.startswith("<") or s.startswith('"'):
             return s
         return f'"{s}"'
-
-    def _emit_do_statement(self, s, out: Emit) -> None:
-        # Java: do { body } while (condition);
-        # Semantics: body executes at least once; condition evaluated after body.
-        cond = self.emit_expression(s.condition)
-
-        out.write("do {")
-        out.enter();
-        self._sym_push()
-
-        # In javalang, the body is commonly `s.body`
-        self.emit_statement(s.body, out)
-
-        self._sym_pop()
-        out.exit()
-        out.write(f"}} while ({cond});")
-
 
     def _emit_include_operand(self, out: Emit, operand: str) -> None:
         op = self._norm_inc(operand)
@@ -212,36 +189,40 @@ class Transpiler:
         self._needs_functional = False
         self._needs_cassert = False
         self._needs_object_include = False
+        self._needs_initializer_list = False
 
         for _, node in tree:
             nn = type(node).__name__
 
-            if nn == 'TryStatement' and getattr(node, 'finally_block', None) is not None:
+            if nn == "TryStatement" and getattr(node, "finally_block", None) is not None:
                 self._needs_functional = True
 
-            if nn == 'AssertStatement':
+            if nn == "AssertStatement":
                 self._needs_cassert = True
 
-            if nn == 'ClassDeclaration':
-                # If no explicit extends -> must inherit Object -> need Object header
-                ext = getattr(node, 'extends', None)
+            if nn == "ArrayInitializer":
+                self._needs_initializer_list = True
+
+            if nn == "ArrayCreator" and getattr(node, "initializer", None) is not None:
+                self._needs_initializer_list = True
+
+            if nn == "ClassDeclaration":
+                ext = getattr(node, "extends", None)
                 if ext is None:
                     self._needs_object_include = True
                 else:
-                    # If explicitly extends Object, also needs Object header
-                    ext_name = ".".join(ext.name) if isinstance(getattr(ext, 'name', None), (list, tuple)) else getattr(
-                        ext, 'name', '')
-                    if (ext_name.split('.')[-1] == 'Object'):
+                    ext_name = ".".join(ext.name) if isinstance(getattr(ext, "name", None), (list, tuple)) else getattr(ext, "name", "")
+                    if ext_name.split(".")[-1] == "Object":
                         self._needs_object_include = True
 
-            if self._needs_functional and self._needs_cassert and self._needs_object_include:
+            if self._needs_functional and self._needs_cassert and self._needs_object_include and self._needs_initializer_list:
                 return
 
     def emit_includes(self, out: Emit) -> None:
         ordered: List[str] = []
 
         if self._needs_object_include:
-            ordered.insert(0, self.object_include)
+            ordered.append(self.object_include)
 
         if self.string_include:
             ordered.append(self.string_include)
@@ -249,7 +230,7 @@ class Transpiler:
             ordered.append(self.bytearray_include)
         ordered.extend(self.extra_includes)
 
-        need_memory = (self.instanceof_style == 'dynamic' or self.downcast_style == 'dynamic')
+        need_memory = (self.instanceof_style == "dynamic" or self.downcast_style == "dynamic")
 
         if not self.no_default_includes:
             ordered.extend(["<vector>", "<array>"])
@@ -257,8 +238,10 @@ class Transpiler:
                 ordered.append("<memory>")
             if self._needs_functional:
                 ordered.append("<functional>")
-            if self.string_policy == 'std':
-                ordered.append('<string>')
+            if self._needs_initializer_list:
+                ordered.append("<initializer_list>")
+            if self.string_policy == "std":
+                ordered.append("<string>")
             if self._needs_cassert:
                 ordered.append("<cassert>")
 
@@ -269,45 +252,7 @@ class Transpiler:
                 seen.add(op)
                 self._emit_include_operand(out, op)
 
-    # ---------- imports → usings + import-derived includes ----------
-    # javalang node naming differs by version: some use .lock, others .expression
-
-    def _emit_synchronized_statement(self, s, out: Emit) -> None:
-        lock_expr = getattr(s, 'lock', None)
-        if lock_expr is None:
-            lock_expr = getattr(s, 'expression', None)
-
-        block = getattr(s, 'block', None) or []  # list of statements
-
-        tmp = self._fresh_tmp("__sync_lock_")
-
-        out.write("{")
-        out.enter()
-        self._sym_push()
-
-        out.write(f"auto {tmp} = {self.emit_expression(lock_expr)};")
-        out.write(
-            f"if (!{tmp}) throw jxx::lang::NullPointerException("
-            f"jxx::lang::String(\"synchronized on null\"));"
-        )
-
-        # IMPORTANT: correct lambda syntax
-        out.write(f"JXX_SYNCHRONIZE({tmp}, [& {{")
-        out.enter()
-        self._sym_push()
-
-        for st in block:
-            self.emit_statement(st, out)
-
-        self._sym_pop()
-        out.exit()
-        out.write("});")
-
-        self._sym_pop()
-        out.exit()
-        out.write("}")
-        lock_expr = getattr(s, 'lock', None)
-
+    # ---------------- imports -> usings + include hints ----------------
     @staticmethod
     def _looks_pkg(parts: List[str], wildcard: bool) -> bool:
         if wildcard:
@@ -319,17 +264,17 @@ class Transpiler:
         self.import_header_includes = []
         for imp in (tree.imports or []):
             path = imp.path
-            if not path or not path.startswith('java.'):
+            if not path or not path.startswith("java."):
                 continue
-            rest = path[len('java.'):]
-            segs = rest.split('.') if rest else []
+            rest = path[len("java.") :]
+            segs = rest.split(".") if rest else []
 
             if imp.wildcard:
-                ns = '::'.join(['jxx'] + segs)
+                ns = "::".join(["jxx"] + segs)
                 self.using_lines.add(f"using namespace {ns};")
-                self.import_header_includes.append(f"jxx.{'.'.join(segs)}.h" if segs else 'jxx.h')
+                self.import_header_includes.append(f"jxx.{'.'.join(segs)}.h" if segs else "jxx.h")
             else:
-                cxx = '::'.join(['jxx'] + segs) if segs else 'jxx'
+                cxx = "::".join(["jxx"] + segs) if segs else "jxx"
                 if self._looks_pkg(segs, False):
                     self.using_lines.add(f"using namespace {cxx};")
                     if segs:
@@ -341,7 +286,7 @@ class Transpiler:
                         inc = f"jxx.{'.'.join(pkg)}.{typ}.h" if pkg else f"jxx.{typ}.h"
                         self.import_header_includes.append(inc)
 
-    # ---------- symbol table helpers ----------
+    # ---------------- symbol / dot / return stacks ----------------
     def _ret_push(self, ret: str) -> None:
         self._retstack.append(ret)
 
@@ -350,7 +295,6 @@ class Transpiler:
             self._retstack.pop()
 
     def _ret_current(self) -> str:
-        # Default to void if we aren't inside a method emission
         return self._retstack[-1] if self._retstack else "void"
 
     def _sym_push(self) -> None:
@@ -383,154 +327,18 @@ class Transpiler:
                 return True
         return False
 
-    # ---------- type mapping ----------
-    @staticmethod
-    def _simple_name(name: str) -> str:
-        return name.split('.')[-1]
-
-    def _is_java_class_ref(self, t) -> bool:
-        return type(t).__name__ == 'ReferenceType' and self._simple_name(str(t.name)) == 'Class'
-
-    def _raw_reference_name(self, t) -> str:
-        raw = t.name.replace('.', '::') if isinstance(t.name, str) else str(t.name)
-        if raw == 'String':
-            return 'String' if self.string_policy == 'preserve' else 'std::string'
-        return raw
-
-    def _map_ref_or_basic(self, t) -> str:
-        tn = type(t).__name__
-        if tn == 'BasicType':
-            return self.primitive_map.get(t.name, t.name)
-        if tn == 'ReferenceType':
-            if self._is_java_class_ref(t):
-                return 'jxx::Ptr<jxx::lang::ClassAny>'
-            raw = self._raw_reference_name(t)
-            return f'jxx::Ptr<{raw}>'
-        if isinstance(t, str):
-            if t == 'String':
-                raw = 'String' if self.string_policy == 'preserve' else 'std::string'
-                return f'jxx::Ptr<{raw}>'
-            return self.primitive_map.get(t, t)
-        return str(t)
-
-    def _array_type(self, elem_cpp: str, rank: int) -> str:
-        return f'jxx::Ptr<jxx::lang::JxxArray<{elem_cpp}, {rank}>>'
-
-    def _array_elem_type(self, t) -> str:
-        tn = type(t).__name__
-        if tn == 'BasicType':
-            return self.primitive_map.get(t.name, t.name)
-        if tn == 'ReferenceType':
-            if self._is_java_class_ref(t):
-                return 'jxx::lang::ClassAny'
-            raw = self._raw_reference_name(t)
-            return f'jxx::Ptr<{raw}>'
-        return f'jxx::Ptr<{self._simple_name(str(getattr(t, "name", t)))}>'
-
-    def _map_type(self, t, extra_dims: int = 0) -> str:
-        base_name, d0 = _base_type_name_and_dims(t)
-        rank = d0 + (extra_dims or 0)
-
-        if self._simple_name(base_name) == 'byte' and rank == 1:
-            return 'jxx::Ptr<ByteArray>'
-
-        if type(t).__name__ == 'ReferenceType' and self._simple_name(base_name) == 'Class':
-            if rank == 0:
-                return 'jxx::Ptr<jxx::lang::ClassAny>'
-            return f'jxx::Ptr<jxx::lang::JxxArray<jxx::lang::ClassAny, {rank}>>'
-
-        if rank > 0:
-            elem = self._array_elem_type(t)
-            return self._array_type(elem, rank)
-
-        return self._map_ref_or_basic(t)
-
-    # ---------- instanceof / downcast helpers ----------
-    def _raw_type_for_cast(self, t) -> str:
-        tn = type(t).__name__
-        if tn == 'BasicType':
-            return self.primitive_map.get(t.name, t.name)
-        if tn == 'ReferenceType':
-            base = self._simple_name(str(t.name))
-            if base == 'Class':
-                return 'jxx::lang::ClassAny'
-            return self._raw_reference_name(t)
-        return str(t)
-
-    def _emit_instanceof(self, expr_cpp: str, type_raw: str) -> str:
-        if self.instanceof_style == 'macro':
-            return f"{self.instanceof_macro}({type_raw}, {expr_cpp})"
-        if self.instanceof_style == 'func':
-            return f"{self.instanceof_func}<{type_raw}>({expr_cpp})"
-        return f"static_cast<bool>(std::dynamic_pointer_cast<{type_raw}>({expr_cpp}))"
-
-    def _emit_downcast(self, expr_cpp: str, type_raw: str, is_primitive_target: bool) -> str:
-        if is_primitive_target:
-            return f"(({type_raw}){expr_cpp})"
-        if self.downcast_style == 'macro':
-            return f"{self.downcast_macro}({type_raw}, {expr_cpp})"
-        if self.downcast_style == 'func':
-            return f"{self.downcast_func}<{type_raw}>({expr_cpp})"
-        return (
-            f"([&]() -> jxx::Ptr<{type_raw}> {{ "
-            f"auto __o = {expr_cpp}; "
-            f"if (!__o) return jxx::Ptr<{type_raw}>{{}}; "
-            f"auto __t = std::dynamic_pointer_cast<{type_raw}>(__o); "
-            f"if (__t) return __t; "
-            f"throw jxx::lang::ClassCastException(jxx::lang::String(\"ClassCastException: incompatible cast\")); "
-            f"}})()"
-        )
-
-    # ---------- pointer-aware member access helpers ----------
-    def _qual_is_static(self, q: str) -> bool:
-        if not q:
-            return False
-
-        head = q.split('.')[0].split('::')[0].split('->')[0]
-
-        if head in ('this', 'super'):
-            return False
-
-        # If this is a known local/param/catch variable, it is not a type => not static
-        if self._sym_get(head) is not None or self._dot_has(head):
-            return False
-
-        return bool(head) and head[0].isupper()
-
-    def _format_qual(self, q: str) -> Tuple[str, str]:
-        if not q:
-            return ("", "")
-
-        # Preserve already-formed C++ qualifiers
-        if '::' in q:
-            return (q, '::')
-        if '->' in q:
-            return (q, '->')
-        if '.' in q and q.startswith('std::'):
-            return (q, '::')
-
-        head = q.split('.')[0].split('::')[0].split('->')[0]
-
-        # Catch/reference variables => dot access
-        if self._dot_has(head):
-            return (q, '.')
-
-        # Static/type access
-        if self._qual_is_static(q):
-            return (q.replace('.', '::'), '::')
-
-        # Default: instance pointer access
-        return (q.replace('.', '->'), '->')
+    # ---------------- utility helpers ----------------
+    def _fresh_tmp(self, prefix: str = "__tmp") -> str:
+        self._tmp_counter += 1
+        return f"{prefix}{self._tmp_counter}"
 
     def _contains_return(self, node) -> bool:
         if node is None:
             return False
         tn = type(node).__name__
-        if tn == 'ReturnStatement':
+        if tn == "ReturnStatement":
             return True
-
-        # common containers
-        for attr in ('statements', 'block', 'then_statement', 'else_statement', 'body'):
+        for attr in ("statements", "block", "then_statement", "else_statement", "body"):
             v = getattr(node, attr, None)
             if isinstance(v, list):
                 for x in v:
@@ -541,243 +349,442 @@ class Transpiler:
                     return True
         return False
 
-    # ---------- expressions ----------
+    # ---------------- type mapping ----------------
+    @staticmethod
+    def _simple_name(name: str) -> str:
+        return name.split(".")[-1]
+
+    def _is_java_class_ref(self, t) -> bool:
+        return type(t).__name__ == "ReferenceType" and self._simple_name(str(t.name)) == "Class"
+
+    def _raw_reference_name(self, t) -> str:
+        raw = t.name.replace(".", "::") if isinstance(t.name, str) else str(t.name)
+        if raw == "String":
+            return "String" if self.string_policy == "preserve" else "std::string"
+        return raw
+
+    def _map_ref_or_basic(self, t) -> str:
+        tn = type(t).__name__
+        if tn == "BasicType":
+            return self.primitive_map.get(t.name, t.name)
+        if tn == "ReferenceType":
+            if self._is_java_class_ref(t):
+                return "jxx::Ptr<jxx::lang::ClassAny>"
+            raw = self._raw_reference_name(t)
+            return f"jxx::Ptr<{raw}>"
+        if isinstance(t, str):
+            if t == "String":
+                raw = "String" if self.string_policy == "preserve" else "std::string"
+                return f"jxx::Ptr<{raw}>"
+            return self.primitive_map.get(t, t)
+        return str(t)
+
+    def _array_type(self, elem_cpp: str, rank: int) -> str:
+        return f"jxx::Ptr<jxx::lang::JxxArray<{elem_cpp}, {rank}>>"
+
+    def _array_elem_type(self, t) -> str:
+        tn = type(t).__name__
+        if tn == "BasicType":
+            return self.primitive_map.get(t.name, t.name)
+        if tn == "ReferenceType":
+            if self._is_java_class_ref(t):
+                return "jxx::lang::ClassAny"
+            raw = self._raw_reference_name(t)
+            return f"jxx::Ptr<{raw}>"
+        return f"jxx::Ptr<{self._simple_name(str(getattr(t, 'name', t)))}>"
+
+    def _map_type(self, t, extra_dims: int = 0) -> str:
+        base_name, d0 = _base_type_name_and_dims(t)
+        rank = d0 + (extra_dims or 0)
+
+        if self._simple_name(base_name) == "byte" and rank == 1:
+            return "jxx::Ptr<ByteArray>"
+
+        if type(t).__name__ == "ReferenceType" and self._simple_name(base_name) == "Class":
+            if rank == 0:
+                return "jxx::Ptr<jxx::lang::ClassAny>"
+            return f"jxx::Ptr<jxx::lang::JxxArray<jxx::lang::ClassAny, {rank}>>"
+
+        if rank > 0:
+            elem = self._array_elem_type(t)
+            return self._array_type(elem, rank)
+
+        return self._map_ref_or_basic(t)
+
+    # ---------------- instanceof / downcast ----------------
+    def _raw_type_for_cast(self, t) -> str:
+        tn = type(t).__name__
+        if tn == "BasicType":
+            return self.primitive_map.get(t.name, t.name)
+        if tn == "ReferenceType":
+            base = self._simple_name(str(t.name))
+            if base == "Class":
+                return "jxx::lang::ClassAny"
+            return self._raw_reference_name(t)
+        return str(t)
+
+    def _emit_instanceof(self, expr_cpp: str, type_raw: str) -> str:
+        if self.instanceof_style == "macro":
+            return f"{self.instanceof_macro}({type_raw}, {expr_cpp})"
+        if self.instanceof_style == "func":
+            return f"{self.instanceof_func}<{type_raw}>({expr_cpp})"
+        return f"static_cast<bool>(std::dynamic_pointer_cast<{type_raw}>({expr_cpp}))"
+
+    def _emit_downcast(self, expr_cpp: str, type_raw: str, is_primitive_target: bool) -> str:
+        if is_primitive_target:
+            return f"(({type_raw}){expr_cpp})"
+        if self.downcast_style == "macro":
+            return f"{self.downcast_macro}({type_raw}, {expr_cpp})"
+        if self.downcast_style == "func":
+            return f"{self.downcast_func}<{type_raw}>({expr_cpp})"
+        return (
+            #f"([&]() -> jxx::Ptr<{type_raw}> {{ "
+            f"([&]{pe_raw}> {{ "
+            f"auto __o = {expr_cpp}; "
+            f"if (!__o) return jxx::Ptr<{type_raw}>{{}}; "
+            f"auto __t = std::dynamic_pointer_cast<{type_raw}>(__o); "
+            f"if (__t) return __t; "
+            f"throw jxx::lang::ClassCastException(jxx::lang::String(\"ClassCastException: incompatible cast\")); "
+            f"}})()"
+        )
+
+    # ---------------- member access heuristic (static vs instance vs dot-vars) ----------------
+    def _qual_is_static(self, q: str) -> bool:
+        if not q:
+            return False
+        head = q.split(".")[0].split("::")[0].split("->")[0]
+        if head in ("this", "super"):
+            return False
+        if self._sym_get(head) is not None or self._dot_has(head):
+            return False
+        return bool(head) and head[0].isupper()
+
+    def _format_qual(self, q: str) -> Tuple[str, str]:
+        if not q:
+            return ("", "")
+        if "::" in q:
+            return (q, "::")
+        if "->" in q:
+            return (q, "->")
+
+        head = q.split(".")[0].split("::")[0].split("->")[0]
+        if self._dot_has(head):
+            return (q, ".")
+
+        if self._qual_is_static(q):
+            return (q.replace(".", "::"), "::")
+
+        return (q.replace(".", "->"), "->")
+
+    # ---------------- new-expression helpers (allocation style 1) ----------------
+    def _emit_new(self, raw_cpp: str, args: List[str]) -> str:
+        if self.new_macro_style == "template":
+            return f"{self.new_macro}<{raw_cpp}>({', '.join(args)})" if args else f"{self.new_macro}<{raw_cpp}>()"
+        return f"{self.new_macro}({raw_cpp})({', '.join(args)})" if args else f"{self.new_macro}({raw_cpp})()"
+
+    def _emit_array_init_expr(self, elem_cpp: str, rank: int, init_node) -> str:
+        """
+        Build JxxArray initializer expression using your JxxArray constructors.
+        - Rank-1: JxxArray(std::initializer_list<T>)
+        - Rank>=2: JxxArray(std::initializer_list<jxx::Ptr<SubArray>>) so null rows are supported.
+        """
+        arr_raw = f"jxx::lang::JxxArray<{elem_cpp}, {rank}>"
+        vals = getattr(init_node, "initializers", None) or []
+
+        if rank == 1:
+            inner = ", ".join(self.emit_expression(v) for v in vals)
+            return self._emit_new(arr_raw, [f"std::initializer_list<{elem_cpp}>{{{inner}}}"])
+
+        sub_raw = f"jxx::lang::JxxArray<{elem_cpp}, {rank-1}>"
+        row_exprs: List[str] = []
+        for v in vals:
+            vn = type(v).__name__
+            if vn == "Literal" and getattr(v, "value", None) == "null":
+                row_exprs.append("nullptr")
+                continue
+            if vn == "ArrayInitializer":
+                row_exprs.append(self._emit_array_init_expr(elem_cpp, rank - 1, v))
+                continue
+            row_exprs.append("nullptr /* TODO: non-initializer row */")
+
+        inner = ", ".join(row_exprs)
+        return self._emit_new(arr_raw, [f"std::initializer_list<jxx::Ptr<{sub_raw}>>{{{inner}}}"])
+
+    # ---------------- expressions ----------------
     def emit_expression(self, e) -> str:
         if e is None:
-            return ''
+            return ""
         tn = type(e).__name__
 
-        if tn == 'TernaryExpression':
+        if tn == "TernaryExpression":
             cond = self.emit_expression(e.condition)
             tval = self.emit_expression(e.if_true)
             fval = self.emit_expression(e.if_false)
             return f"(({cond}) ? ({tval}) : ({fval}))"
 
-        if tn == 'Literal':
-            return 'nullptr' if e.value is None else e.value
+        if tn == "Literal":
+            return "nullptr" if e.value is None else e.value
 
-        if tn == 'This':
-            return 'this'
+        if tn == "This":
+            return "this"
 
-        if tn == 'MemberReference':
+        if tn == "MemberReference":
             q = e.qualifier
-            qstr = q if isinstance(q, str) else (self.emit_expression(q) if q is not None else '')
+            qstr = q if isinstance(q, str) else (self.emit_expression(q) if q is not None else "")
             fq, sep = self._format_qual(qstr)
             return f"{fq}{sep}{e.member}" if fq else e.member
 
-        if tn == 'MethodInvocation':
+        if tn == "MethodInvocation":
             qual = e.qualifier
-            qstr = qual if isinstance(qual, str) else (self.emit_expression(qual) if qual is not None else '')
+            qstr = qual if isinstance(qual, str) else (self.emit_expression(qual) if qual is not None else "")
             fq, sep = self._format_qual(qstr)
             args = [self.emit_expression(a) for a in (e.arguments or [])]
             head = f"{fq}{sep}{e.member}" if fq else e.member
             return f"{head}({', '.join(args)})" if args else f"{head}()"
 
-        if tn == 'Primary':
+        if tn == "Primary":
             return self._emit_primary(e)
 
-        if tn == 'Cast':
+        if tn == "Cast":
             type_raw = self._raw_type_for_cast(e.type)
-            is_prim = (type(e.type).__name__ == 'BasicType')
+            is_prim = (type(e.type).__name__ == "BasicType")
             return self._emit_downcast(self.emit_expression(e.expression), type_raw, is_prim)
 
-        if tn == 'BinaryOperation':
-            if getattr(e, 'operator', None) == 'instanceof':
+        if tn == "BinaryOperation":
+            if getattr(e, "operator", None) == "instanceof":
                 left = self.emit_expression(e.operandl)
                 type_raw = self._raw_type_for_cast(e.operandr)
                 return self._emit_instanceof(left, type_raw)
             return f"({self.emit_expression(e.operandl)} {e.operator} {self.emit_expression(e.operandr)})"
 
-        if tn == 'ClassCreator':
-            # regular new-expression
-            name = self._raw_reference_name(e.type) if type(e.type).__name__ == 'ReferenceType' else str(e.type)
+        if tn == "ClassCreator":
+            name = self._raw_reference_name(e.type) if type(e.type).__name__ == "ReferenceType" else str(e.type)
             args = [self.emit_expression(a) for a in (e.arguments or [])]
-            if self.new_macro_style == 'template':
-                return f"{self.new_macro}<{name}>({', '.join(args)})" if args else f"{self.new_macro}<{name}>()"
-            return f"{self.new_macro}({name})({', '.join(args)})" if args else f"{self.new_macro}({name})()"
+            return self._emit_new(name, args)
 
-        if tn == 'Assignment':
+        if tn == "Assignment":
             l = self.emit_expression(e.expressionl)
             r = self.emit_expression(e.value)
-            op = e.type if e.type else '='
+            op = e.type if e.type else "="
             return f"({l} {op} {r})"
 
-        if tn == 'ArrayCreator':
-            # Java: new T[dim0][dim1]...
-            # javalang: e.type is the base element type; e.dimensions is a list of dimension expressions
-            dims = getattr(e, 'dimensions', None) or []
-            rank = len(dims)
+        if tn == "ArrayCreator":
+            dims = getattr(e, "dimensions", None) or []
+            init = getattr(e, "initializer", None)
 
-            # Determine element type used inside JxxArray<Elem,Rank>
-            # Use your existing helper that wraps reference elements as jxx::Ptr<Raw>
+            # Rank detection: dims list or (type.dimensions) or init implies rank 1
+            rank = len(dims)
+            t_dims = getattr(e.type, "dimensions", None) or []
+            rank = max(rank, len(t_dims))
+            if init is not None and rank == 0:
+                rank = 1
+
             elem_cpp = self._array_elem_type(e.type)
 
-            # Special case: byte[] rank==1 maps to Ptr<ByteArray>
-            base_name = self._simple_name(str(getattr(e.type, 'name', '')))
-            if type(e.type).__name__ == 'BasicType':
+            # Special case byte[] -> Ptr<ByteArray>
+            base_name = self._simple_name(str(getattr(e.type, "name", "")))
+            if type(e.type).__name__ == "BasicType":
                 base_name = e.type.name
+            if base_name == "byte" and rank == 1:
+                if init is not None:
+                    # ByteArray initializer_list not defined in your aliases; fall back to length + assigns not supported here
+                    return "nullptr /* TODO: ByteArray initializer */"
+                n0 = self.emit_expression(dims[0]) if dims else "0"
+                return self._emit_new("ByteArray", [n0])
 
-            if base_name == 'byte' and rank == 1:
-                # Adjust this constructor to match your ByteArray API (length ctor assumed)
-                return f"{self.new_macro}<ByteArray>({self.emit_expression(dims[0])})" if self.new_macro_style == 'template' else \
-                    f"{self.new_macro}(ByteArray)({self.emit_expression(dims[0])})"
+            # initializer present: new T[]{...}
+            if init is not None:
+                return self._emit_array_init_expr(elem_cpp, rank, init)
 
-            # Normal arrays: JxxArray allocation
-            arr_cpp = f"jxx::lang::JxxArray<{elem_cpp}, {rank}>"
-
-            # Rank==1 convenience: pass size directly (best readability)
+            # allocate by dimensions
+            arr_raw = f"jxx::lang::JxxArray<{elem_cpp}, {rank}>"
             if rank == 1:
                 n0 = self.emit_expression(dims[0])
-                if self.new_macro_style == 'template':
-                    return f"{self.new_macro}<{arr_cpp}>({n0})"
-                return f"{self.new_macro}({arr_cpp})({n0})"
+                return self._emit_new(arr_raw, [n0])
 
-            # Rank>1: pass a std::array of dimensions (requires a matching ctor/factory)
             dim_list = ", ".join(self.emit_expression(d) for d in dims)
-            if self.new_macro_style == 'template':
-                return f"{self.new_macro}<{arr_cpp}>(std::array<jint, {rank}>{{{dim_list}}})"
-            return f"{self.new_macro}({arr_cpp})(std::array<jint, {rank}>{{{dim_list}}})"
+            return self._emit_new(arr_raw, [f"std::array<std::uint32_t, {rank}>{{{dim_list}}}"])
+
+        # ArrayInitializer should be handled where declared type is known (fields/locals). Fallback:
+        if tn == "ArrayInitializer":
+            return "nullptr /* TODO: ArrayInitializer needs declared type */"
 
         return str(e)
 
     def _emit_primary(self, p) -> str:
-        base = ''
-        if getattr(p, 'qualifier', None):
+        base = ""
+        if getattr(p, "qualifier", None):
             base = p.qualifier
-        elif getattr(p, 'member', None):
+        elif getattr(p, "member", None):
             base = p.member
-        elif getattr(p, 'value', None):
+        elif getattr(p, "value", None):
             base = p.value
-        elif getattr(p, 'expression', None) is not None:
+        elif getattr(p, "expression", None) is not None:
             base = self.emit_expression(p.expression)
-        base = base or ''
+        base = base or ""
 
-        for op in (getattr(p, 'prefix_operators', None) or []):
+        for op in (getattr(p, "prefix_operators", None) or []):
             base = op + base
 
-        selectors = list(getattr(p, 'selectors', None) or [])
+        selectors = list(getattr(p, "selectors", None) or [])
         if not selectors:
-            for op in (getattr(p, 'postfix_operators', None) or []):
+            for op in (getattr(p, "postfix_operators", None) or []):
                 base = base + op
             return base
 
-        first_sep = '::' if self._qual_is_static(base) else '->'
-        instance_chain = (first_sep == '->')
-        cur = base.replace('.', '::') if first_sep == '::' else base.replace('.', '->')
+        first_sep = "::" if self._qual_is_static(base) else "->"
+        instance_chain = (first_sep == "->")
+        cur = base.replace(".", "::") if first_sep == "::" else base.replace(".", "->")
 
         for sel in selectors:
             st = type(sel).__name__
-            if st == 'MethodInvocation':
+            if st == "MethodInvocation":
                 args = [self.emit_expression(a) for a in (sel.arguments or [])]
-                sep = '->' if instance_chain else first_sep
+                sep = "->" if instance_chain else first_sep
                 cur = f"{cur}{sep}{sel.member}({', '.join(args)})" if args else f"{cur}{sep}{sel.member}()"
                 instance_chain = True
-            elif st == 'MemberReference':
-                sep = '->' if instance_chain else first_sep
+            elif st == "MemberReference":
+                sep = "->" if instance_chain else first_sep
                 cur = f"{cur}{sep}{sel.member}"
                 instance_chain = True
-            elif st == 'ArraySelector':
+            elif st == "ArraySelector":
                 idx = self.emit_expression(sel.index)
                 cur = f"(*({cur}))[{idx}]"
                 instance_chain = True
             else:
-                sep = '->' if instance_chain else first_sep
+                sep = "->" if instance_chain else first_sep
                 cur = f"{cur}{sep}{str(sel)}"
                 instance_chain = True
 
-        for op in (getattr(p, 'postfix_operators', None) or []):
+        for op in (getattr(p, "postfix_operators", None) or []):
             cur = cur + op
         return cur
 
-    def _fresh_tmp(self, prefix: str = "__tmp") -> str:
-        self._tmp_counter += 1
-        return f"{prefix}{self._tmp_counter}"
-
+    # ---------------- assert statement ----------------
     def _emit_assert_statement(self, s, out: Emit) -> None:
-        # Java: assert cond;  OR  assert cond : msg;
-        cond_cpp = self.emit_expression(getattr(s, 'condition', None))
-        msg_node = getattr(s, 'value', None)
-        if msg_node is None:
-            msg_node = getattr(s, 'message', None)  # defensive
+        cond_cpp = self.emit_expression(getattr(s, "condition", None))
+        msg_node = getattr(s, "value", None) or getattr(s, "message", None)
 
         if msg_node is None:
             out.write(f"assert({cond_cpp});")
             return
 
-        # Preserve msg only if it's a string literal
-        if type(msg_node).__name__ == 'Literal' and isinstance(getattr(msg_node, 'value', None), str):
-            msg_cpp = self.emit_expression(msg_node)  # includes quotes
+        if type(msg_node).__name__ == "Literal" and isinstance(getattr(msg_node, "value", None), str):
+            msg_cpp = self.emit_expression(msg_node)
             out.write(f"assert(({cond_cpp}) && {msg_cpp});")
             return
 
         out.write(f"assert({cond_cpp}); /* Java assert message expr omitted (non-literal) */")
 
-    # ---------- statements ----------
+    # ---------------- synchronized statement ----------------
+    def _emit_synchronized_statement(self, s, out: Emit) -> None:
+        lock_expr = getattr(s, "lock", None) or getattr(s, "expression", None)
+        block = getattr(s, "block", None) or []
+        tmp = self._fresh_tmp("__sync_lock_")
+
+        out.write("{")
+        out.enter()
+        self._sym_push()
+
+        out.write(f"auto {tmp} = {self.emit_expression(lock_expr)};")
+        out.write(f"if (!{tmp}) throw jxx::lang::NullPointerException(jxx::lang::String(\"synchronized on null\"));")
+
+        method_ret = self._ret_current()
+        block_has_return = any(self._contains_return(st) for st in block)
+
+        # If synchronized block contains return inside non-void method, return synchronized() result (Java parity)
+        if method_ret != "void" and block_has_return:
+            out.write(f"return {tmp}->synchronized([&-> {method_ret} {{")
+            out.enter()
+            self._sym_push()
+            for st in block:
+                self.emit_statement(st, out)
+            self._sym_pop()
+            out.exit()
+            out.write("});")
+        else:
+            out.write(f"{tmp}->synchronized([&{{")
+            out.enter()
+            self._sym_push()
+            for st in block:
+                self.emit_statement(st, out)
+            self._sym_pop()
+            out.exit()
+            out.write("});")
+
+        self._sym_pop()
+        out.exit()
+        out.write("}")
+
+    # ---------------- statements ----------------
+    def _emit_do_statement(self, s, out: Emit) -> None:
+        cond = self.emit_expression(getattr(s, "condition", None))
+        body = getattr(s, "body", None) or getattr(s, "statement", None)
+        out.write("do {")
+        out.enter(); self._sym_push()
+        if body is not None:
+            self.emit_statement(body, out)
+        self._sym_pop(); out.exit()
+        out.write(f"}} while ({cond});")
+
     def emit_statement(self, s, out: Emit) -> None:
         if s is None:
             return
         tn = type(s).__name__
 
-        # Some javalang versions wrap real nodes inside a generic `Statement`
-        if tn == 'Statement':
-            # Most common: s.statement contains the real statement node
-            inner = getattr(s, 'statement', None)
+        # wrapper Statement nodes (some javalang versions)
+        if tn == "Statement":
+            inner = getattr(s, "statement", None)
             if inner is not None:
                 self.emit_statement(inner, out)
                 return
-
-            # Sometimes it’s an expression wrapper
-            inner_expr = getattr(s, 'expression', None)
+            inner_expr = getattr(s, "expression", None)
             if inner_expr is not None:
                 out.write(f"{self.emit_expression(inner_expr)};")
                 return
-
-            # Sometimes it’s a list of statements
-            inner_stmts = getattr(s, 'statements', None)
+            inner_stmts = getattr(s, "statements", None)
             if inner_stmts:
                 for st in inner_stmts:
                     self.emit_statement(st, out)
                 return
-
-            # Last resort: introspect to avoid crashing
             out.write("/* TODO: Empty/unknown wrapper Statement */")
             return
 
-        if tn == 'AssertStatement':
+        if tn == "AssertStatement":
             self._emit_assert_statement(s, out)
             return
 
-        if tn == 'SynchronizedStatement':
+        if tn == "SynchronizedStatement":
             self._emit_synchronized_statement(s, out)
             return
 
-        if tn == 'DoStatement':
+        if tn == "DoStatement":
             self._emit_do_statement(s, out)
             return
 
-        if tn == 'BlockStatement':
-            inner = getattr(s, 'statements', None)
+        if tn == "BlockStatement":
+            inner = getattr(s, "statements", None)
             if inner:
                 for st in inner:
                     self.emit_statement(st, out)
             else:
-                decl = getattr(s, 'declaration', None)
+                decl = getattr(s, "declaration", None)
                 if decl is not None:
                     self.emit_statement(decl, out)
             return
 
-        if tn == 'ReturnStatement':
+        if tn == "ReturnStatement":
             if s.expression is None:
-                out.write('return;')
+                out.write("return;")
             else:
                 out.write(f"return {self.emit_expression(s.expression)};")
             return
 
-        if tn == 'StatementExpression':
+        if tn == "StatementExpression":
             out.write(f"{self.emit_expression(s.expression)};")
             return
 
-        if tn == 'LocalVariableDeclaration':
+        if tn == "LocalVariableDeclaration":
             tcpp = self._map_type(s.type)
             for decl in s.declarators:
                 self._sym_set(decl.name, tcpp)
@@ -785,26 +792,30 @@ class Transpiler:
                 if init is None:
                     out.write(f"{tcpp} {decl.name};")
                 else:
-                    out.write(f"{tcpp} {decl.name} = {self.emit_expression(init)};")
+                    if type(init).__name__ == "ArrayInitializer":
+                        rank = len(getattr(s.type, "dimensions", None) or [])
+                        elem_cpp = self._array_elem_type(s.type)
+                        expr_cpp = self._emit_array_init_expr(elem_cpp, rank, init)
+                        out.write(f"{tcpp} {decl.name} = {expr_cpp};")
+                    else:
+                        out.write(f"{tcpp} {decl.name} = {self.emit_expression(init)};")
             return
 
-        if tn == 'IfStatement':
+        if tn == "IfStatement":
             cond = self.emit_expression(s.condition)
             out.write(f"if ({cond}) {{")
             out.enter(); self._sym_push()
             self.emit_statement(s.then_statement, out)
-            self._sym_pop()
-            out.exit()
+            self._sym_pop(); out.exit()
             if s.else_statement is not None:
                 out.write("} else {")
                 out.enter(); self._sym_push()
                 self.emit_statement(s.else_statement, out)
-                self._sym_pop()
-                out.exit()
+                self._sym_pop(); out.exit()
             out.write("}")
             return
 
-        if tn == 'WhileStatement':
+        if tn == "WhileStatement":
             cond = self.emit_expression(s.condition)
             out.write(f"while ({cond}) {{")
             out.enter(); self._sym_push()
@@ -813,27 +824,27 @@ class Transpiler:
             out.write("}")
             return
 
-        if tn == 'ForStatement':
+        if tn == "ForStatement":
             self._emit_for_statement(s, out)
             return
 
-        if tn == 'TryStatement':
+        if tn == "TryStatement":
             self._emit_try_statement(s, out)
             return
 
-        if tn == 'SwitchStatement':
+        if tn == "SwitchStatement":
             self._emit_switch_statement(s, out)
             return
 
-        if tn == 'BreakStatement':
-            out.write('break;')
+        if tn == "BreakStatement":
+            out.write("break;")
             return
 
-        if tn == 'ContinueStatement':
-            out.write('continue;')
+        if tn == "ContinueStatement":
+            out.write("continue;")
             return
 
-        if tn == 'ThrowStatement':
+        if tn == "ThrowStatement":
             self._emit_throw_statement(s, out)
             return
 
@@ -843,28 +854,23 @@ class Transpiler:
         expr = s.expression
         et = type(expr).__name__
 
-        # Java: throw new X(args) => throw X(args);
-        if et == 'ClassCreator':
-            raw = self._raw_reference_name(expr.type) if type(expr.type).__name__ == 'ReferenceType' else str(expr.type)
+        if et == "ClassCreator":
+            raw = self._raw_reference_name(expr.type) if type(expr.type).__name__ == "ReferenceType" else str(expr.type)
             args = [self.emit_expression(a) for a in (expr.arguments or [])]
             ctor = f"{raw}({', '.join(args)})" if args else f"{raw}()"
             out.write(f"throw {ctor};")
             return
 
-        # Otherwise, throw expression directly, but attempt best-effort deref if it's Ptr<...>
         e_cpp = self.emit_expression(expr)
 
-        # If expression is a simple variable, check its known type
-        if et in ('MemberReference', 'Identifier'):
-            name = getattr(expr, 'member', None) or getattr(expr, 'name', None) or ''
+        if et in ("MemberReference", "Identifier"):
+            name = getattr(expr, "member", None) or getattr(expr, "name", None) or ""
             ctype = self._sym_get(name) if name else None
-            if ctype and ctype.startswith('jxx::Ptr<'):
-                # Determine if pointer target is a known base exception type where slicing is likely
-                base_targets = ('jxx::lang::Throwable', 'jxx::lang::Exception', 'jxx::lang::RuntimeException')
-                warn = ''
-                for bt in base_targets:
+            if ctype and ctype.startswith("jxx::Ptr<"):
+                warn = ""
+                for bt in ("jxx::lang::Throwable", "jxx::lang::Exception", "jxx::lang::RuntimeException"):
                     if bt in ctype:
-                        warn = ' /* WARNING: potential slicing (Ptr to base exception) */'
+                        warn = " /* WARNING: potential slicing (Ptr to base exception) */"
                         break
                 out.write(f"throw *({e_cpp});{warn}")
                 return
@@ -875,49 +881,40 @@ class Transpiler:
         control = s.control
         ct = type(control).__name__
 
-        if ct == 'EnhancedForControl':
+        if ct == "EnhancedForControl":
             var = control.var
-
-            # javalang versions differ:
-            #  - FormalParameter: var.name, var.type
-            #  - VariableDeclaration: var.type, var.declarators[0].name
-            vtype = getattr(var, 'type', None)
-            name = getattr(var, 'name', None)
-
+            vtype = getattr(var, "type", None)
+            name = getattr(var, "name", None)
             if name is None:
-                decls = getattr(var, 'declarators', None) or []
+                decls = getattr(var, "declarators", None) or []
                 if decls:
-                    name = getattr(decls[0], 'name', None)
+                    name = getattr(decls[0], "name", None)
 
             if vtype is None or name is None:
                 out.write("/* TODO: Unhandled enhanced-for variable shape */")
                 out.write("for (/*?*/; /*?*/; /*?*/) {")
-                out.enter()
+                out.enter(); self._sym_push()
                 self.emit_statement(s.body, out)
-                out.exit()
+                self._sym_pop(); out.exit()
                 out.write("}")
                 return
 
             tcpp = self._map_type(vtype)
             self._sym_set(name, tcpp)
-
             iterable = self.emit_expression(control.iterable)
 
-            # Use the real mapped type (better than auto for parity):
             out.write(f"for ({tcpp} {name} : *({iterable})) {{")
-            out.enter();
-            self._sym_push()
+            out.enter(); self._sym_push()
             self.emit_statement(s.body, out)
-            self._sym_pop();
-            out.exit()
+            self._sym_pop(); out.exit()
             out.write("}")
             return
 
-        if ct == 'ForControl':
+        if ct == "ForControl":
             init_parts: List[str] = []
             for init in (control.init or []):
                 it = type(init).__name__
-                if it == 'LocalVariableDeclaration':
+                if it == "LocalVariableDeclaration":
                     tcpp = self._map_type(init.type)
                     for decl in init.declarators:
                         self._sym_set(decl.name, tcpp)
@@ -928,9 +925,9 @@ class Transpiler:
                 else:
                     init_parts.append(self.emit_expression(init))
 
-            init_str = ', '.join(init_parts)
-            cond_str = self.emit_expression(control.condition) if control.condition is not None else ''
-            upd_str = ', '.join(self.emit_expression(u) for u in (control.update or []))
+            init_str = ", ".join(init_parts)
+            cond_str = self.emit_expression(control.condition) if control.condition is not None else ""
+            upd_str = ", ".join(self.emit_expression(u) for u in (control.update or []))
 
             out.write(f"for ({init_str}; {cond_str}; {upd_str}) {{")
             out.enter(); self._sym_push()
@@ -942,59 +939,47 @@ class Transpiler:
         out.write(f"/* TODO: Unhandled for-control: {ct} */")
 
     def _emit_try_statement(self, s, out: Emit) -> None:
-        finally_block = getattr(s, 'finally_block', None)
+        finally_block = getattr(s, "finally_block", None)
         if finally_block is not None:
             self._needs_functional = True
             out.write("struct __JxxFinallyGuard { std::function<void()> f; ~__JxxFinallyGuard(){ if(f) f(); } };")
             out.write("__JxxFinallyGuard __finally{[&")
-            out.enter();
-            self._sym_push()
-            # finally_block is usually a list; if it’s a node, emit it directly
+            out.enter(); self._sym_push()
             if isinstance(finally_block, list):
                 for st in finally_block:
                     self.emit_statement(st, out)
             else:
                 self.emit_statement(finally_block, out)
-            self._sym_pop();
-            out.exit()
+            self._sym_pop(); out.exit()
             out.write("}};")
             out.write("")
 
         out.write("try {")
-        out.enter();
-        self._sym_push()
+        out.enter(); self._sym_push()
 
-        blk = getattr(s, 'block', None)
+        blk = getattr(s, "block", None)
         if blk is not None:
             if isinstance(blk, list):
                 for st in blk:
                     self.emit_statement(st, out)
             else:
-                # e.g., BlockStatement node
-                blk = getattr(s, 'block', None)
-                if isinstance(blk, list):
-                    for st in blk:
-                        self.emit_statement(st, out)
-                else:
-                    # blk is a node (often BlockStatement)
-                    self.emit_statement(blk, out)
+                self.emit_statement(blk, out)
 
-                self._sym_pop()
-        out.exit()
+        self._sym_pop(); out.exit()
         out.write("}")
 
         for cc in (s.catches or []):
             param = cc.parameter
             name = param.name
-            types = getattr(param, 'types', None) or [param.type]
+            types = getattr(param, "types", None) or [param.type]
             for ty in types:
-                raw = self._raw_reference_name(ty) if type(ty).__name__ == 'ReferenceType' else str(ty)
+                raw = self._raw_reference_name(ty) if type(ty).__name__ == "ReferenceType" else str(ty)
                 out.write(f"catch (const {raw}& {name}) {{")
-                out.enter();
-                self._sym_push()
-                self._sym_set(name, raw)  # mark catch var as a local symbol
-                self._dot_add(name)
-                cblk = getattr(cc, 'block', None)
+                out.enter(); self._sym_push()
+                self._sym_set(name, raw)
+                self._dot_add(name)  # dot-access for catch refs
+
+                cblk = getattr(cc, "block", None)
                 if cblk is not None:
                     if isinstance(cblk, list):
                         for st in cblk:
@@ -1002,8 +987,7 @@ class Transpiler:
                     else:
                         self.emit_statement(cblk, out)
 
-                self._sym_pop()
-                out.exit()
+                self._sym_pop(); out.exit()
                 out.write("}")
 
     def _emit_switch_statement(self, s, out: Emit) -> None:
@@ -1024,11 +1008,11 @@ class Transpiler:
         self._sym_pop(); out.exit()
         out.write("}")
 
-    # ---------- fields ----------
+    # ---------------- fields (with deferral for array initializers) ----------------
     def _emit_field_decls(self, out: Emit, cls_name: str, field_node) -> None:
         mods = set(field_node.modifiers or [])
-        is_static = 'static' in mods
-        is_final = 'final' in mods
+        is_static = "static" in mods
+        is_final = "final" in mods
 
         tcpp = self._map_type(field_node.type)
         if is_final:
@@ -1046,20 +1030,32 @@ class Transpiler:
                 if init is None:
                     out.write(f"{tcpp} {name};")
                 else:
-                    out.write(f"{tcpp} {name} = {self.emit_expression(init)};")
+                    itn = type(init).__name__
+                    if itn in ("ArrayCreator", "ArrayInitializer"):
+                        # Defer array init to constructor in .cpp
+                        out.write(f"{tcpp} {name};")
+                        if itn == "ArrayInitializer":
+                            rank = len(getattr(field_node.type, "dimensions", None) or [])
+                            elem_cpp = self._array_elem_type(field_node.type)
+                            expr_cpp = self._emit_array_init_expr(elem_cpp, rank, init)
+                        else:
+                            expr_cpp = self.emit_expression(init)
+                        self._deferred_instance_inits.setdefault(cls_name, []).append((name, expr_cpp))
+                    else:
+                        out.write(f"{tcpp} {name} = {self.emit_expression(init)};")
 
-    # ---------- signatures ----------
+    # ---------------- method signatures + override detection ----------------
     def _method_signature(self, m, class_name: str) -> Tuple[str, bool]:
-        is_ctor = (type(m).__name__ == 'ConstructorDeclaration')
+        is_ctor = (type(m).__name__ == "ConstructorDeclaration")
 
         if not is_ctor:
             if m.return_type is not None:
-                md = len(getattr(m, 'dimensions', []) or [])
+                md = len(getattr(m, "dimensions", []) or [])
                 ret = self._map_type(m.return_type, extra_dims=md)
             else:
-                ret = 'void'
+                ret = "void"
         else:
-            ret = ''
+            ret = ""
 
         name = m.name if not is_ctor else class_name
         params: List[str] = []
@@ -1071,56 +1067,42 @@ class Transpiler:
         return sig, is_ctor
 
     def _method_key(self, m) -> Optional[Tuple[str, Tuple[str, ...]]]:
-        """
-        Override-matching key: (method_name, (param_types...)).
-        (Return type excluded because C++ override matching ignores return type.)
-        """
-        if type(m).__name__ != 'MethodDeclaration':
+        if type(m).__name__ != "MethodDeclaration":
             return None
         name = m.name
         params = tuple(self._map_type(p.type) for p in (m.parameters or []))
         return (name, params)
 
     def _has_override_annotation(self, m) -> bool:
-        ann = getattr(m, 'annotations', None) or []
+        ann = getattr(m, "annotations", None) or []
         for a in ann:
             n = a.name[-1] if isinstance(a.name, (list, tuple)) else a.name
-            if n == 'Override':
+            if n == "Override":
                 return True
         return False
 
     def _is_abstract_method(self, m) -> bool:
-        mods = set(getattr(m, 'modifiers', []) or [])
-        return ('abstract' in mods) or (getattr(m, 'body', None) is None)
+        mods = set(getattr(m, "modifiers", []) or [])
+        return ("abstract" in mods) or (getattr(m, "body", None) is None)
 
     def _raw_inherit_name(self, ref_type) -> str:
-        """
-        Raw name for inheritance lists (MUST NOT be jxx::Ptr<...>).
-        """
-        raw = ref_type.name.replace('.', '::') if isinstance(ref_type.name, str) else str(ref_type.name)
+        raw = ref_type.name.replace(".", "::") if isinstance(ref_type.name, str) else str(ref_type.name)
         return raw
 
     def _build_type_table(self, tree) -> None:
-        """
-        Build a compilation-unit-only type table for reliable override marking
-        (interfaces/classes declared in the same Java file).
-        """
         self._type_table = {}
         self._override_keys = {}
 
-        # 1) Collect raw type data
         for t in (tree.types or []):
             tt = type(t).__name__
-            if tt not in ('ClassDeclaration', 'InterfaceDeclaration'):
+            if tt not in ("ClassDeclaration", "InterfaceDeclaration"):
                 continue
 
-            kind = 'interface' if tt == 'InterfaceDeclaration' else 'class'
+            kind = "interface" if tt == "InterfaceDeclaration" else "class"
             name = t.name
 
-            # extends
-            ext = getattr(t, 'extends', None)
-            if kind == 'interface':
-                # interface may extend multiple interfaces (list)
+            ext = getattr(t, "extends", None)
+            if kind == "interface":
                 if isinstance(ext, list):
                     extends = [self._raw_inherit_name(x) for x in ext]
                 elif ext is None:
@@ -1130,27 +1112,19 @@ class Transpiler:
             else:
                 extends = self._raw_inherit_name(ext) if ext is not None else None
 
-            # implements
             implements = []
-            if kind == 'class':
-                implements = [self._raw_inherit_name(x) for x in (getattr(t, 'implements', None) or [])]
+            if kind == "class":
+                implements = [self._raw_inherit_name(x) for x in (getattr(t, "implements", None) or [])]
 
-            # methods
             methods = set()
             for member in (t.body or []):
-                if type(member).__name__ == 'MethodDeclaration':
+                if type(member).__name__ == "MethodDeclaration":
                     k = self._method_key(member)
                     if k:
                         methods.add(k)
 
-            self._type_table[name] = {
-                'kind': kind,
-                'extends': extends,
-                'implements': implements,
-                'methods': methods,
-            }
+            self._type_table[name] = {"kind": kind, "extends": extends, "implements": implements, "methods": methods}
 
-        # 2) Gather inherited method keys (in-file only)
         def gather_inherited(type_name: str, seen: Set[str]) -> Set[Tuple[str, Tuple[str, ...]]]:
             if type_name in seen:
                 return set()
@@ -1162,55 +1136,54 @@ class Transpiler:
 
             inherited = set()
 
-            if info['kind'] == 'class':
-                base = info['extends']
+            if info["kind"] == "class":
+                base = info["extends"]
                 if isinstance(base, str) and base in self._type_table:
-                    inherited |= self._type_table[base]['methods']
+                    inherited |= self._type_table[base]["methods"]
                     inherited |= gather_inherited(base, seen)
 
-                for iface in info.get('implements', []):
+                for iface in info.get("implements", []):
                     if iface in self._type_table:
-                        inherited |= self._type_table[iface]['methods']
+                        inherited |= self._type_table[iface]["methods"]
                         inherited |= gather_inherited(iface, seen)
-
             else:
-                # interface extends other interfaces
-                for parent in (info.get('extends', []) or []):
+                for parent in (info.get("extends", []) or []):
                     if parent in self._type_table:
-                        inherited |= self._type_table[parent]['methods']
+                        inherited |= self._type_table[parent]["methods"]
                         inherited |= gather_inherited(parent, seen)
 
             return inherited
 
-        # 3) Compute override set per class
         for name, info in self._type_table.items():
-            if info['kind'] != 'class':
+            if info["kind"] != "class":
                 continue
             inherited = gather_inherited(name, set())
-            self._override_keys[name] = info['methods'] & inherited
+            self._override_keys[name] = info["methods"] & inherited
 
+    # ---------------- method definitions (with synchronized method support + ctor array init injection) ----------------
     def _emit_method_definition(self, out: Emit, cls_name: str, m) -> None:
         mt = type(m).__name__
-        if mt not in ('MethodDeclaration', 'ConstructorDeclaration'):
+        if mt not in ("MethodDeclaration", "ConstructorDeclaration"):
             return
 
         sig, is_ctor = self._method_signature(m, cls_name)
 
-        # ---------------------------
-        # Constructors (never synchronized in Java)
-        # ---------------------------
         if is_ctor:
-            params = sig[len(cls_name):]
+            params = sig[len(cls_name) :]
             head = f"{cls_name}::{cls_name}{params}"
-            body = getattr(m, 'body', None)
+            body = getattr(m, "body", None)
 
             out.write(f"{head} {{")
             out.enter()
             self._sym_push()
-            self._ret_push("void")  # constructor treated as void for nested emits
+            self._ret_push("void")
 
             for p in (m.parameters or []):
                 self._sym_set(p.name, self._map_type(p.type))
+
+            # Inject deferred instance array inits at start of every ctor
+            for fname, fexpr in self._deferred_instance_inits.get(cls_name, []):
+                out.write(f"this->{fname} = {fexpr};")
 
             if body:
                 for st in body:
@@ -1223,23 +1196,18 @@ class Transpiler:
             out.write("")
             return
 
-        # ---------------------------
-        # Normal methods
-        # ---------------------------
-        ret_cpp, rest = sig.split(' ', 1)
+        # Normal method
+        ret_cpp, rest = sig.split(" ", 1)
         name = m.name
-        params = rest[len(name):]
+        params = rest[len(name) :]
         head = f"{ret_cpp} {cls_name}::{name}{params}"
 
-        mods = set(getattr(m, 'modifiers', []) or [])
-        is_sync = ('synchronized' in mods)
-        is_static = ('static' in mods)
+        mods = set(getattr(m, "modifiers", []) or [])
+        is_sync = ("synchronized" in mods)
+        is_static = ("static" in mods)
 
-        body = getattr(m, 'body', None)
+        body = getattr(m, "body", None)
 
-        # ---------------------------
-        # Non-synchronized: emit normally
-        # ---------------------------
         if not is_sync:
             out.write(f"{head} {{")
             out.enter()
@@ -1260,11 +1228,7 @@ class Transpiler:
             out.write("")
             return
 
-        # ---------------------------
-        # Synchronized method wrapper
-        # Instance synchronized => lock on this
-        # Static synchronized   => lock on ClassName::__jxx_class_lock
-        # ---------------------------
+        # synchronized method wrapper
         lock_expr = f"{cls_name}::__jxx_class_lock" if is_static else "this"
 
         out.write(f"{head} {{")
@@ -1275,32 +1239,22 @@ class Transpiler:
         for p in (m.parameters or []):
             self._sym_set(p.name, self._map_type(p.type))
 
-        if ret_cpp == 'void':
-            # NOTE: correct lambda syntax
-            out.write(f"{lock_expr}->synchronized([&{{")
-            out.enter()
-            self._sym_push()
-
+        if ret_cpp == "void":
+            out.write(f"{lock_expr}->synchronized(& {{")
+            out.enter(); self._sym_push()
             if body:
                 for st in body:
                     self.emit_statement(st, out)
-
-            self._sym_pop()
-            out.exit()
+            self._sym_pop(); out.exit()
             out.write("});")
             out.write("return;")
         else:
-            # Return the result of synchronized lambda
             out.write(f"return {lock_expr}->synchronized([&-> {ret_cpp} {{")
-            out.enter()
-            self._sym_push()
-
+            out.enter(); self._sym_push()
             if body:
                 for st in body:
                     self.emit_statement(st, out)
-
-            self._sym_pop()
-            out.exit()
+            self._sym_pop(); out.exit()
             out.write("});")
 
         self._ret_pop()
@@ -1309,203 +1263,232 @@ class Transpiler:
         out.write("}")
         out.write("")
 
-    # ---------- unit emission ----------
+    # ---------------- unit emission ----------------
     def _compute_guard_from_path(self, header_path: str) -> str:
-        up = header_path.replace('\\', '/').upper()
-        macro = ''.join(ch if ch.isalnum() else '_' for ch in up)
-        if not macro.endswith('_H') and not macro.endswith('_HPP'):
-            macro += '_H'
+        up = header_path.replace("\\", "/").upper()
+        macro = "".join(ch if ch.isalnum() else "_" for ch in up)
+        if not macro.endswith("_H") and not macro.endswith("_HPP"):
+            macro += "_H"
         return macro
 
-    def transpile_unit(self, java_src: str, mode: str = 'monolith', header_rel_include: Optional[str] = None,
-                      header_guard_name: Optional[str] = None) -> str:
+    def transpile_unit(
+        self,
+        java_src: str,
+        mode: str = "monolith",
+        header_rel_include: Optional[str] = None,
+        header_guard_name: Optional[str] = None,
+    ) -> str:
         if javalang is None:
-            raise RuntimeError('javalang is required. pip install javalang')
+            raise RuntimeError("javalang is required. pip install javalang")
 
         tree = javalang.parse.parse(java_src)
+
+        # Reset per-unit collections (important because header/source are separate passes)
+        self._static_field_defs = []
+        self._deferred_instance_inits = {}
+
         self._scan_needs(tree)
         self.gather_usings(tree)
         self._build_type_table(tree)
 
-        ns = tree.package.name.replace('.', '::') if tree.package else ''
+        ns = tree.package.name.replace(".", "::") if tree.package else ""
 
         out = Emit()
-        out.write('// Generated by java_to_cpp (AST-based)')
+        out.write("// Generated by java_to_cpp (AST-based)")
         self.include_written = set()
-        self._static_field_defs = []
 
         guard_to_use = None
-        if mode == 'header':
+        if mode == "header":
             if self.header_guards:
-                guard_to_use = header_guard_name or self.guard_name or 'GENERATED_HEADER_GUARD_H'
-                out.write(f'#ifndef {guard_to_use}')
-                out.write(f'#define {guard_to_use}')
+                guard_to_use = header_guard_name or self.guard_name or "GENERATED_HEADER_GUARD_H"
+                out.write(f"#ifndef {guard_to_use}")
+                out.write(f"#define {guard_to_use}")
             elif self.pragma_once:
-                out.write('#pragma once')
+                out.write("#pragma once")
 
-        if mode != 'source':
+        if mode != "source":
             for inc in sorted(set(self.import_header_includes)):
                 self._emit_include_operand(out, inc)
             self.emit_includes(out)
-            out.write('// NOTE: For instanceof/cast macro/func styles, include your jxx.lang.Cast.h.')
+            out.write("// NOTE: For instanceof/cast macro/func styles, include your jxx.lang.Cast.h.")
         else:
             if not header_rel_include:
-                raise ValueError('header_rel_include required for source mode')
+                raise ValueError("header_rel_include required for source mode")
             self._emit_include_operand(out, header_rel_include)
             self.emit_includes(out)
 
-        out.write('')
+        out.write("")
         for line in sorted(self.using_lines):
             out.write(line)
         if self.using_lines:
-            out.write('')
+            out.write("")
 
         if ns:
-            out.write(f'namespace {ns} {{')
-            out.write('')
+            out.write(f"namespace {ns} {{")
+            out.write("")
             out.enter()
 
-        if mode in ('monolith', 'header'):
-
+        # ---------- HEADER ----------
+        if mode in ("monolith", "header"):
             for t in (tree.types or []):
                 tt = type(t).__name__
-                if tt not in ('ClassDeclaration', 'InterfaceDeclaration'):
+                if tt not in ("ClassDeclaration", "InterfaceDeclaration"):
                     continue
-                tt = type(t).__name__
-                is_iface = (tt == 'InterfaceDeclaration')
-                kw = 'struct' if is_iface else 'class'
+
+                is_iface = (tt == "InterfaceDeclaration")
 
                 if is_iface:
-                    # Interface: pure virtual, DOES NOT derive from Object
-                    out.write(f'struct {t.name} {{')
+                    # Interface: pure virtual, no Object base
+                    out.write(f"struct {t.name} {{")
                     out.enter()
-                    out.write('public:')
+                    out.write("public:")
                     out.enter()
-
-                    out.write(f'virtual ~{t.name}() = default;')
-
+                    out.write(f"virtual ~{t.name}() = default;")
                     for member in (t.body or []):
-                        if type(member).__name__ == 'MethodDeclaration':
+                        if type(member).__name__ == "MethodDeclaration":
                             sig, _ = self._method_signature(member, t.name)
-                            out.write(f'virtual {sig} = 0;')
-
+                            out.write(f"virtual {sig} = 0;")
                     out.exit()
                     out.exit()
-                    out.write('};')
-                    out.write('')
+                    out.write("};")
+                    out.write("")
                     continue
 
+                # Class: extends + implements (multiple inheritance). Default extends Object.
+                ext = getattr(t, "extends", None)
+                impls = getattr(t, "implements", None) or []
+                bases: List[str] = []
+                if ext is None:
+                    bases.append("jxx::lang::Object")
                 else:
-                    ext = getattr(t, 'extends', None)
-                    impls = getattr(t, 'implements', None) or []
+                    bases.append(self._raw_inherit_name(ext))
+                for iface in impls:
+                    bases.append(self._raw_inherit_name(iface))
 
-                    bases = []
+                base_clause = " : " + ", ".join(f"public {b}" for b in bases) if bases else ""
+                out.write(f"class {t.name}{base_clause} {{")
+                out.enter()
 
-                    # Java default: extends Object if no explicit base
-                    if ext is None:
-                        bases.append('jxx::lang::Object')
-                    else:
-                        bases.append(self._raw_inherit_name(ext))
-
-                    # Implements => additional bases
-                    for iface in impls:
-                        bases.append(self._raw_inherit_name(iface))
-
-                    base_clause = ' : ' + ', '.join(f'public {b}' for b in bases) if bases else ''
-                    out.write(f'class {t.name}{base_clause} {{')
-                    #out.write(f'{kw} {t.name} : public {bases} {{')
-
+                # Determine if this class needs a class-level lock for static synchronized methods
                 needs_class_lock = False
                 for member in (t.body or []):
-                    mods = set(getattr(member, 'modifiers', []) or [])
-                    if 'synchronized' in mods and 'static' in mods:
-                        needs_class_lock = True
-                        break
+                    if type(member).__name__ == "MethodDeclaration":
+                        mods = set(getattr(member, "modifiers", []) or [])
+                        if "synchronized" in mods and "static" in mods:
+                            needs_class_lock = True
+                            break
 
-                buckets = {'public': [], 'protected': [], 'private': []}
+                # Collect fields during header pass to populate deferred array inits too
+                # (so we can synthesize default ctor declaration if needed)
                 for member in (t.body or []):
-                    mods = set(getattr(member, 'modifiers', []) or [])
+                    if type(member).__name__ == "FieldDeclaration":
+                        self._emit_field_decls(Emit(), t.name, member)  # dummy to populate deferred inits
+
+                has_ctor = any(type(member).__name__ == "ConstructorDeclaration" for member in (t.body or []))
+                needs_default_ctor = (not has_ctor) and bool(self._deferred_instance_inits.get(t.name))
+
+                # Group members by visibility
+                buckets = {"public": [], "protected": [], "private": []}
+                for member in (t.body or []):
+                    mods = set(getattr(member, "modifiers", []) or [])
                     vis = _java_visibility(mods)
                     buckets[vis].append(member)
 
-                for vis in ('public', 'protected', 'private'):
+                for vis in ("public", "protected", "private"):
+                    members = buckets[vis]
 
-                    if vis == 'private' and needs_class_lock:
-                        init = (f"{self.new_macro}<jxx::lang::Object>()"
-                                if self.new_macro_style == 'template'
-                                else f"{self.new_macro}(jxx::lang::Object)()")
+                    if vis == "private" and needs_class_lock:
+                        init = self._emit_new("jxx::lang::Object", [])
                         out.write(f"inline static jxx::Ptr<jxx::lang::Object> __jxx_class_lock = {init};")
 
-                    members = buckets[vis]
-                    if not members:
+                    if not members and not (vis == "public" and needs_default_ctor):
                         continue
-                    out.write(f'{vis}:')
+
+                    out.write(f"{vis}:")
                     out.enter()
+
+                    if vis == "public" and needs_default_ctor:
+                        out.write(f"{t.name}();")
+
                     for member in members:
                         mt = type(member).__name__
-                        if mt == 'FieldDeclaration':
+                        if mt == "FieldDeclaration":
                             self._emit_field_decls(out, t.name, member)
-                        elif mt in ('MethodDeclaration', 'ConstructorDeclaration'):
-                            sig, is_ctor = self._method_signature(member, t.name)
-
-                            if type(member).__name__ == 'ConstructorDeclaration':
-                                out.write(sig + ';')
+                        elif mt in ("MethodDeclaration", "ConstructorDeclaration"):
+                            sig, is_ctor2 = self._method_signature(member, t.name)
+                            if type(member).__name__ == "ConstructorDeclaration":
+                                out.write(sig + ";")
                                 continue
 
                             mk = self._method_key(member)
-
-                            # SAFE heuristic enabled:
-                            # - override if proven by in-file base/interface method match OR
-                            # - override if @Override annotation present
-                            overrides = (mk in self._override_keys.get(t.name, set())) or self._has_override_annotation(
-                                member)
-
+                            overrides = (mk in self._override_keys.get(t.name, set())) or self._has_override_annotation(member)
                             is_abs = self._is_abstract_method(member)
 
                             if is_abs:
                                 if overrides:
-                                    out.write(f'virtual {sig} override = 0;')
+                                    out.write(f"virtual {sig} override = 0;")
                                 else:
-                                    out.write(f'virtual {sig} = 0;')
+                                    out.write(f"virtual {sig} = 0;")
                             else:
                                 if overrides:
-                                    out.write(f'virtual {sig} override;')
+                                    out.write(f"virtual {sig} override;")
                                 else:
-                                    out.write(sig + ';')
+                                    out.write(sig + ";")
 
                     out.exit()
 
                 out.exit()
-                out.write('};')
-                out.write('')
+                out.write("};")
+                out.write("")
 
-        if mode == 'source':
-            # Collect and emit static defs
+        # ---------- SOURCE ----------
+        if mode == "source":
+            # Re-collect static field defs and deferred array inits in source pass
             self._static_field_defs = []
+            self._deferred_instance_inits = {}
+
             for t in (tree.types or []):
-                if type(t).__name__ not in ('ClassDeclaration', 'InterfaceDeclaration'):
+                if type(t).__name__ not in ("ClassDeclaration", "InterfaceDeclaration"):
                     continue
                 for member in (t.body or []):
-                    if type(member).__name__ == 'FieldDeclaration':
+                    if type(member).__name__ == "FieldDeclaration":
                         self._emit_field_decls(Emit(), t.name, member)
 
+            # Emit static field definitions
             for cls_name, tcpp, name, init_expr in self._static_field_defs:
-                out.write(f'{tcpp} {cls_name}::{name} = {init_expr};')
+                out.write(f"{tcpp} {cls_name}::{name} = {init_expr};")
             if self._static_field_defs:
-                out.write('')
+                out.write("")
 
+            # Synthesize default ctor definitions if needed (deferred array inits exist but no ctors)
             for t in (tree.types or []):
-                if type(t).__name__ != 'ClassDeclaration':
+                if type(t).__name__ != "ClassDeclaration":
+                    continue
+                cname = t.name
+                has_ctor = any(type(m).__name__ == "ConstructorDeclaration" for m in (t.body or []))
+                if (not has_ctor) and self._deferred_instance_inits.get(cname):
+                    out.write(f"{cname}::{cname}() {{")
+                    out.enter(); self._sym_push(); self._ret_push("void")
+                    for fname, fexpr in self._deferred_instance_inits.get(cname, []):
+                        out.write(f"this->{fname} = {fexpr};")
+                    self._ret_pop(); self._sym_pop(); out.exit()
+                    out.write("}")
+                    out.write("")
+
+            # Emit method/ctor bodies
+            for t in (tree.types or []):
+                if type(t).__name__ != "ClassDeclaration":
                     continue
                 for member in (t.body or []):
-                    if type(member).__name__ in ('MethodDeclaration', 'ConstructorDeclaration'):
+                    if type(member).__name__ in ("MethodDeclaration", "ConstructorDeclaration"):
                         self._emit_method_definition(out, t.name, member)
 
         if ns:
-            out.exit(); out.write(f'}} // namespace {ns}')
+            out.exit()
+            out.write(f"}} // namespace {ns}")
 
-        if mode == 'header' and guard_to_use:
-            out.write(f'#endif // {guard_to_use}')
+        if mode == "header" and guard_to_use:
+            out.write(f"#endif // {guard_to_use}")
 
         return out.text()
 
@@ -1516,101 +1499,103 @@ def java_package_of(src: str) -> str:
     try:
         tree = javalang.parse.parse(src)
     except Exception:
-        return ''
-    return tree.package.name if tree.package else ''
+        return ""
+    return tree.package.name if tree.package else ""
 
 
 def path_for_file(out_root: str, subdir: str, pkg: str, stem: str, ext: str) -> str:
-    pkg_path = pkg.replace('.', os.sep) if pkg else ''
+    pkg_path = pkg.replace(".", os.sep) if pkg else ""
     full_dir = os.path.join(out_root, subdir, pkg_path)
     os.makedirs(full_dir, exist_ok=True)
-    return os.path.join(full_dir, f'{stem}{ext}')
+    return os.path.join(full_dir, f"{stem}{ext}")
 
 
 def rel_include(from_file: str, header_file: str) -> str:
-    return os.path.relpath(header_file, start=os.path.dirname(from_file)).replace(os.sep, '/')
+    return os.path.relpath(header_file, start=os.path.dirname(from_file)).replace(os.sep, "/")
 
 
-def generate_cmake(out_root: str,
-                   project: str = 'TranspiledProject',
-                   target: str = 'transpiled',
-                   kind: str = 'static',
-                   cxx_standard: str = '17',
-                   cmake_min: str = '3.20') -> str:
-    kind_map = {'static': 'STATIC', 'shared': 'SHARED', 'object': 'OBJECT', 'interface': 'INTERFACE'}
-    kind_kw = kind_map.get(kind.lower(), 'STATIC')
+def generate_cmake(
+    out_root: str,
+    project: str = "TranspiledProject",
+    target: str = "transpiled",
+    kind: str = "static",
+    cxx_standard: str = "17",
+    cmake_min: str = "3.20",
+) -> str:
+    kind_map = {"static": "STATIC", "shared": "SHARED", "object": "OBJECT", "interface": "INTERFACE"}
+    kind_kw = kind_map.get(kind.lower(), "STATIC")
 
     cpp_files: List[str] = []
-    for root, _, files in os.walk(os.path.join(out_root, 'src')):
+    for root, _, files in os.walk(os.path.join(out_root, "src")):
         for fn in files:
-            if fn.lower().endswith('.cpp'):
-                cpp_files.append(os.path.join(root, fn).replace('\\', '/'))
-    rel_cpp = [os.path.relpath(p, start=out_root).replace('\\', '/') for p in cpp_files]
+            if fn.lower().endswith(".cpp"):
+                cpp_files.append(os.path.join(root, fn).replace("\\", "/"))
+    rel_cpp = [os.path.relpath(p, start=out_root).replace("\\", "/") for p in cpp_files]
 
     L: List[str] = []
-    L.append(f'cmake_minimum_required(VERSION {cmake_min})')
-    L.append(f'project({project} LANGUAGES CXX)')
-    L.append('')
-    L.append(f'set(CMAKE_CXX_STANDARD {cxx_standard})')
-    L.append('set(CMAKE_CXX_STANDARD_REQUIRED ON)')
-    L.append('set(CMAKE_CXX_EXTENSIONS OFF)')
-    L.append('')
+    L.append(f"cmake_minimum_required(VERSION {cmake_min})")
+    L.append(f"project({project} LANGUAGES CXX)")
+    L.append("")
+    L.append(f"set(CMAKE_CXX_STANDARD {cxx_standard})")
+    L.append("set(CMAKE_CXX_STANDARD_REQUIRED ON)")
+    L.append("set(CMAKE_CXX_EXTENSIONS OFF)")
+    L.append("")
 
-    if kind_kw == 'INTERFACE':
-        L.append(f'add_library({target} INTERFACE)')
-        L.append(f'target_include_directories({target} INTERFACE ${{CMAKE_CURRENT_SOURCE_DIR}}/include)')
+    if kind_kw == "INTERFACE":
+        L.append(f"add_library({target} INTERFACE)")
+        L.append(f"target_include_directories({target} INTERFACE ${{CMAKE_CURRENT_SOURCE_DIR}}/include)")
     else:
         if rel_cpp:
-            L.append(f'add_library({target} {kind_kw}\n    ' + '\n    '.join(rel_cpp) + '\n)')
+            L.append(f"add_library({target} {kind_kw}\n    " + "\n    ".join(rel_cpp) + "\n)")
         else:
-            L.append(f'file(GLOB_RECURSE {target}_SRCS CONFIGURE_DEPENDS src/*.cpp)')
-            L.append(f'add_library({target} {kind_kw} ${{{target}_SRCS}})')
-        L.append(f'target_include_directories({target} PUBLIC ${{CMAKE_CURRENT_SOURCE_DIR}}/include)')
+            L.append(f"file(GLOB_RECURSE {target}_SRCS CONFIGURE_DEPENDS src/*.cpp)")
+            L.append(f"add_library({target} {kind_kw} ${{{target}_SRCS}})")
+        L.append(f"target_include_directories({target} PUBLIC ${{CMAKE_CURRENT_SOURCE_DIR}}/include)")
 
-    L.append('')
-    L.append('# add_executable(app src/main.cpp)')
-    L.append(f'# target_link_libraries(app PRIVATE {target})')
-    L.append('')
-    return '\n'.join(L)
+    L.append("")
+    L.append("# add_executable(app src/main.cpp)")
+    L.append(f"# target_link_libraries(app PRIVATE {target})")
+    L.append("")
+    return "\n".join(L)
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
-    ap = argparse.ArgumentParser(description='Java → C++17 transpiler (value exceptions + for/try/switch)')
+    ap = argparse.ArgumentParser(description="Java → C++17 transpiler (value exceptions + arrays + interfaces + override)")
 
-    ap.add_argument('input', nargs='?', default=None, help='Input Java file (omit when using --dir)')
-    ap.add_argument('-o', '--output', default=None, help='Output C++ file (monolith) OR output root when --pair/--dir')
-    ap.add_argument('--pair', action='store_true', help='For single input, emit header+source pair under --out root')
-    ap.add_argument('--dir', default=None, help='Directory to recursively search for .java files')
-    ap.add_argument('--out', default=None, help='Output root for --pair/--dir')
+    ap.add_argument("input", nargs="?", default=None, help="Input Java file (omit when using --dir)")
+    ap.add_argument("-o", "--output", default=None, help="Output C++ file (monolith) OR output root when --pair/--dir")
+    ap.add_argument("--pair", action="store_true", help="For single input, emit header+source pair under --out root")
+    ap.add_argument("--dir", default=None, help="Directory to recursively search for .java files")
+    ap.add_argument("--out", default=None, help="Output root for --pair/--dir")
 
-    ap.add_argument('--primitive-map', action='append', default=[], help='Override primitive mapping, e.g. int=jint')
+    ap.add_argument("--primitive-map", action="append", default=[], help="Override primitive mapping, e.g. int=jint")
 
-    ap.add_argument('--string-policy', choices=['preserve', 'std'], default='preserve')
-    ap.add_argument('--string-include', default=None)
-    ap.add_argument('--bytearray-include', default=None)
-    ap.add_argument('--include', action='append', default=[])
-    ap.add_argument('--no-default-includes', action='store_true')
+    ap.add_argument("--string-policy", choices=["preserve", "std"], default="preserve")
+    ap.add_argument("--string-include", default=None)
+    ap.add_argument("--bytearray-include", default=None)
+    ap.add_argument("--include", action="append", default=[])
+    ap.add_argument("--no-default-includes", action="store_true")
 
-    ap.add_argument('--header-guards', action='store_true')
-    ap.add_argument('--guard-name', default=None)
-    ap.add_argument('--no-pragma-once', action='store_true')
+    ap.add_argument("--header-guards", action="store_true")
+    ap.add_argument("--guard-name", default=None)
+    ap.add_argument("--no-pragma-once", action="store_true")
 
-    ap.add_argument('--new-macro-style', choices=['template', 'curried'], default='template')
-    ap.add_argument('--new-macro', default='JXX_NEW')
+    ap.add_argument("--new-macro-style", choices=["template", "curried"], default="template")
+    ap.add_argument("--new-macro", default="JXX_NEW")
 
-    ap.add_argument('--instanceof-style', choices=['macro', 'func', 'dynamic'], default='macro')
-    ap.add_argument('--downcast-style', choices=['macro', 'func', 'dynamic'], default='macro')
-    ap.add_argument('--instanceof-macro', default='JXX_INSTANCEOF')
-    ap.add_argument('--downcast-macro', default='JXX_CAST')
-    ap.add_argument('--instanceof-func', default='::jxx::lang::instanceof_as')
-    ap.add_argument('--downcast-func', default='::jxx::lang::cast_as')
+    ap.add_argument("--instanceof-style", choices=["macro", "func", "dynamic"], default="macro")
+    ap.add_argument("--downcast-style", choices=["macro", "func", "dynamic"], default="macro")
+    ap.add_argument("--instanceof-macro", default="JXX_INSTANCEOF")
+    ap.add_argument("--downcast-macro", default="JXX_CAST")
+    ap.add_argument("--instanceof-func", default="::jxx::lang::instanceof_as")
+    ap.add_argument("--downcast-func", default="::jxx::lang::cast_as")
 
-    ap.add_argument('--cmake', action='store_true')
-    ap.add_argument('--cmake-project', default='TranspiledProject')
-    ap.add_argument('--cmake-target', default='transpiled')
-    ap.add_argument('--cmake-kind', choices=['static', 'shared', 'object', 'interface'], default='static')
-    ap.add_argument('--cmake-cxx-standard', default='17')
-    ap.add_argument('--cmake-min', default='3.20')
+    ap.add_argument("--cmake", action="store_true")
+    ap.add_argument("--cmake-project", default="TranspiledProject")
+    ap.add_argument("--cmake-target", default="transpiled")
+    ap.add_argument("--cmake-kind", choices=["static", "shared", "object", "interface"], default="static")
+    ap.add_argument("--cmake-cxx-standard", default="17")
+    ap.add_argument("--cmake-min", default="3.20")
 
     return ap
 
@@ -1638,45 +1623,45 @@ def make_transpiler(args) -> Transpiler:
 
 
 def handle_single_file_monolith(tp: Transpiler, in_path: str, out_path: Optional[str]) -> None:
-    with open(in_path, 'r', encoding='utf-8') as f:
+    with open(in_path, "r", encoding="utf-8") as f:
         src = f.read()
-    text = tp.transpile_unit(src, mode='monolith')
+    text = tp.transpile_unit(src, mode="monolith")
     if out_path:
-        with open(out_path, 'w', encoding='utf-8') as f:
+        with open(out_path, "w", encoding="utf-8") as f:
             f.write(text)
-        print(f'Wrote {out_path}')
+        print(f"Wrote {out_path}")
     else:
         sys.stdout.write(text)
 
 
 def handle_single_file_pair(tp: Transpiler, in_path: str, out_root: str) -> Tuple[str, str]:
-    with open(in_path, 'r', encoding='utf-8') as f:
+    with open(in_path, "r", encoding="utf-8") as f:
         src = f.read()
     pkg = java_package_of(src)
     stem = os.path.splitext(os.path.basename(in_path))[0]
 
-    header_path = path_for_file(out_root, 'include', pkg, stem, '.h')
-    source_path = path_for_file(out_root, 'src', pkg, stem, '.cpp')
+    header_path = path_for_file(out_root, "include", pkg, stem, ".h")
+    source_path = path_for_file(out_root, "src", pkg, stem, ".cpp")
 
     guard = tp.guard_name or (tp._compute_guard_from_path(header_path) if tp.header_guards else None)
 
-    text_h = tp.transpile_unit(src, mode='header', header_guard_name=guard)
-    with open(header_path, 'w', encoding='utf-8') as f:
+    text_h = tp.transpile_unit(src, mode="header", header_guard_name=guard)
+    with open(header_path, "w", encoding="utf-8") as f:
         f.write(text_h)
 
     rel = rel_include(source_path, header_path)
-    text_cc = tp.transpile_unit(src, mode='source', header_rel_include=rel)
-    with open(source_path, 'w', encoding='utf-8') as f:
+    text_cc = tp.transpile_unit(src, mode="source", header_rel_include=rel)
+    with open(source_path, "w", encoding="utf-8") as f:
         f.write(text_cc)
 
-    print(f'Wrote {header_path}\nWrote {source_path}')
+    print(f"Wrote {header_path}\nWrote {source_path}")
     return header_path, source_path
 
 
 def handle_directory(tp: Transpiler, src_dir: str, out_root: str) -> None:
     for root, _, files in os.walk(src_dir):
         for fn in files:
-            if fn.lower().endswith('.java'):
+            if fn.lower().endswith(".java"):
                 handle_single_file_pair(tp, os.path.join(root, fn), out_root)
 
 
@@ -1685,7 +1670,7 @@ def main() -> None:
     args = ap.parse_args()
 
     if (args.dir or args.pair) and not args.out:
-        ap.error('--out is required when using --dir or --pair')
+        ap.error("--out is required when using --dir or --pair")
 
     if javalang is None:
         print("ERROR: This script requires 'javalang'. Install with: pip install javalang", file=sys.stderr)
@@ -1696,16 +1681,22 @@ def main() -> None:
     if args.dir:
         handle_directory(tp, args.dir, args.out)
         if args.cmake:
-            cmk = generate_cmake(args.out, project=args.cmake_project, target=args.cmake_target,
-                                 kind=args.cmake_kind, cxx_standard=args.cmake_cxx_standard, cmake_min=args.cmake_min)
-            cmake_path = os.path.join(args.out, 'CMakeLists.txt')
-            with open(cmake_path, 'w', encoding='utf-8') as f:
+            cmk = generate_cmake(
+                args.out,
+                project=args.cmake_project,
+                target=args.cmake_target,
+                kind=args.cmake_kind,
+                cxx_standard=args.cmake_cxx_standard,
+                cmake_min=args.cmake_min,
+            )
+            cmake_path = os.path.join(args.out, "CMakeLists.txt")
+            with open(cmake_path, "w", encoding="utf-8") as f:
                 f.write(cmk)
-            print(f'Wrote {cmake_path}')
+            print(f"Wrote {cmake_path}")
         return
 
     if not args.input:
-        ap.error('Please provide an input Java file or use --dir.')
+        ap.error("Please provide an input Java file or use --dir.")
 
     if args.pair:
         handle_single_file_pair(tp, args.input, args.out)
@@ -1714,5 +1705,7 @@ def main() -> None:
     handle_single_file_monolith(tp, args.input, args.output)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
+
+

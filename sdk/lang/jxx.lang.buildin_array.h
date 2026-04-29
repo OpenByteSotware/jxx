@@ -231,9 +231,9 @@ namespace jxx::lang {
             (void)idx;
             (void)len;
             // Message content doesn't affect semantics; customize if you want.
-            throw std::out_of_range("Index " + std::to_string(index) +
+            throw std::out_of_range("Index " + std::to_string(idx) +
                 " is out of range. Valid range: 0 to " +
-                std::to_string(data.size() - 1));
+                std::to_string(len);
         }
 
         void grow_to_(size_type need) {
@@ -496,3 +496,4 @@ namespace jxx::lang {
 using ByteArray = jxx::lang::JxxArray<jxx::lang::jbyte, 1>;
 using CharArray = jxx::lang::JxxArray<jxx::lang::jchar, 1>;
 using IntArray = jxx::lang::JxxArray<jxx::lang::jint, 1>;
+using StringArray = jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 1>;
