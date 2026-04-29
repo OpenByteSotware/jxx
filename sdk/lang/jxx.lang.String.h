@@ -30,10 +30,10 @@ namespace jxx::lang {
         // From UTF-16 (best 1:1 match with Java)
         explicit String(const std::u16string& s);
         explicit String(std::u16string&& s);
-        String(const char* s);
+        explicit String(const char* s);
         //explicit String(const char* s, const Allocator& a = Allocator());
 
-        String(std::string_view sv);
+        explicit String(std::string_view sv);
 
         // From UTF-16 view (C++17 has basic_string_view)
         explicit String(std::u16string_view sv);
@@ -46,10 +46,6 @@ namespace jxx::lang {
         // Copy assignment operator
         String& operator=(const String& other);
 
-        // From UTF-16 (best 1:1 match with Java)
-        explicit String(const std::u16string& s);
-        explicit String(std::u16string&& s);
-        String(const char* s);
 
         // From UTF-8 (convenience)
         static String fromUtf8(const std::string& utf8);
@@ -130,12 +126,12 @@ namespace jxx::lang {
         // concat and operators
         String concat(const String& other) const;
 
-        friend String operator+(const String& a, const String& b);
+        //friend jxx::lang::String operator+(const jxx::lang::String& a, const jxx::lang::String& b);
 
         // equals/!= operators map to equals()
-        friend bool operator==(const String& a, const String& b);
+        //friend bool operator==(const String& a, const String& b);
      
-        friend bool operator!=(const String& a, const String& b);
+        //friend bool operator!=(const String& a, const String& b);
 
         // hashCode(): Java-compatible 32-bit signed
         jint hashCode() const;
@@ -144,7 +140,7 @@ namespace jxx::lang {
         const std::u16string& utf16() const;
 
         // Stream as UTF-8
-        friend std::ostream& operator<<(std::ostream& os, const String& s);
+        //friend std::ostream& operator<<(std::ostream& os, const String& s);
 
     private:
         std::u16string data_{};

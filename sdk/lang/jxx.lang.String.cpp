@@ -49,11 +49,6 @@ jxx::lang::String& jxx::lang::String::operator=(const String& other) {
     return *this;
 }
 
-// From UTF-16 (best 1:1 match with Java)
-jxx::lang::String::String(const std::u16string& s) : data_(s) {}
-jxx::lang::String::String(std::u16string&& s) : data_(std::move(s)) {}
-jxx::lang::String::String(const char* s) { assign_from_cstr(s); }
-
 // From UTF-8 (convenience)
 jxx::lang::String jxx::lang::String::fromUtf8(const std::string& utf8) {
     return jxx::lang::String(utf8ToUtf16(utf8));
@@ -316,17 +311,8 @@ jxx::lang::String jxx::lang::String::concat(const jxx::lang::String& other) cons
     return String(std::move(out));
 }
 
-jxx::lang::String jxx::lang::String::operator+(const jxx::lang::String& a, const jxx::lang::String& b) {
-    return a.concat(b);
-}
-
-// equals/!= operators map to equals()
-bool jxx::lang::String::operator==(const jxx::lang::String& a, const jxx::lang::String& b) { return a.equals(b); }
-
-bool jxx::lang::String::operator!=(const jxx::lang::String& a, const jxx::lang::String& b) { return !a.equals(b); }
-
 // hashCode(): Java-compatible 32-bit signed
-jint jxx::lang::String::hashCode() const {
+jxx::lang::jint jxx::lang::String::hashCode() const {
     if (!hash_cached_) {
         uint32_t h = 0;
         for (char16_t c : data_) {
@@ -339,31 +325,26 @@ jint jxx::lang::String::hashCode() const {
 }
 
 // For interop and utilities
-const std::u16string& String::utf16() const { return data_; }
+const std::u16string& jxx::lang::String::utf16() const { return data_; }
 
-// Stream as UTF-8
-std::ostream& operator<<(std::ostream& os, const String& s) {
-    return os << s.toUtf8();
-}
-
-static void String::checkIndexInclusive(int idx, int lo, int hi, const char* msg) {
+void jxx::lang::String::checkIndexInclusive(int idx, int lo, int hi, const char* msg) {
     if (idx < lo || idx > hi) throw std::out_of_range(msg);
 }
 
-static char16_t String::asciiLower(char16_t c) {
+char16_t jxx::lang::String::asciiLower(char16_t c) {
     return (c >= u'A' && c <= u'Z') ? static_cast<char16_t>(c + 32) : c;
 }
-static char16_t String::asciiUpper(char16_t c) {
+char16_t jxx::lang::String::asciiUpper(char16_t c) {
     return (c >= u'a' && c <= u'z') ? static_cast<char16_t>(c - 32) : c;
 }
 
-static std::string String::utf16_to_utf8(const std::u16string& u16) {
+std::string jxx::lang::String::utf16_to_utf8(const std::u16string& u16) {
     std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> conv;
     return conv.to_bytes(u16);
 }
-std::u16string String::get_data() { return data_.c_str(); }
+std::u16string jxx::lang::String::get_data() { return data_.c_str(); }
 // ---- UTF-8 <-> UTF-16 conversion (no locales; replaces invalid with U+FFFD) ----
-static std::u16string String::utf8ToUtf16(const std::string& s) {
+std::u16string jxx::lang::String::utf8ToUtf16(const std::string& s) {
     std::u16string out;
     out.reserve(s.size()); // rough
     size_t i = 0;
@@ -419,7 +400,7 @@ static std::u16string String::utf8ToUtf16(const std::string& s) {
     return out;
 }
 
-static std::string String::utf16ToUtf8(const std::u16string& s) {
+std::string jxx::lang::String::utf16ToUtf8(const std::u16string& s) {
     std::string out;
     out.reserve(s.size()); // rough
     for (size_t i = 0; i < s.size(); ++i) {
@@ -469,7 +450,7 @@ static std::string String::utf16ToUtf8(const std::u16string& s) {
     return out;
 }
 
-static std::size_t String::safe_strlen(const char* s) noexcept {
+std::size_t jxx::lang::String::safe_strlen(const char* s) noexcept {
     if (!s) return 0;
     const char* p = s;
     while (*p) ++p;
@@ -477,7 +458,7 @@ static std::size_t String::safe_strlen(const char* s) noexcept {
 }
 
 
-void String::assign_from_span(const char* p, std::size_t n) {
+void jxx::lang::String::assign_from_span(const char* p, std::size_t n) {
     char* new_data = new char[n + 1];
     for (std::size_t i = 0; i < n; ++i) new_data[i] = p[i];
     new_data[n] = '\0';
@@ -486,13 +467,13 @@ void String::assign_from_span(const char* p, std::size_t n) {
     data_ = utf8ToUtf16(new_data);
 }
 
-void String::assign_from_cstr(const char* s) {
+void jxx::lang::String::assign_from_cstr(const char* s) {
     // Permit nullptr like many custom strings (std::string is UB for nullptr).
     const std::size_t n = safe_strlen(s);
     allocate_and_copy(s, n);
 }
 
-void String::allocate_and_copy(const char* s, std::size_t n) {
+void jxx::lang::String::allocate_and_copy(const char* s, std::size_t n) {
     char* new_data = new char[n + 1];   // +1 for NUL
     for (std::size_t i = 0; i < n; ++i) {
         new_data[i] = s[i];
