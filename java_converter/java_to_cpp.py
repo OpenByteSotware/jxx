@@ -134,6 +134,9 @@ class Transpiler:
         self._needs_object_include = False
         self._needs_initializer_list = False
 
+        self._deferred_instance_inits: Dict[str, List[Tuple[str, str]]] = {}
+        self._deferred_ctor_initlist: Dict[str, List[Tuple[str, str]]] = {}
+
         # object include path in your tree
         self.object_include = "lang/jxx.lang.Object.h"
 
@@ -1037,6 +1040,11 @@ class Transpiler:
         is_final = "final" in mods
 
         tcpp = self._map_type(field_node.type)
+
+        # IMPORTANT:
+        # For fields, Java `final` on pointer should ideally be modeled as const member,
+        # but const members MUST be initialized in ctor init-list.
+        # We'll support that via _deferred_ctor_initlist (see below).
         if is_final:
             tcpp = f"const {tcpp}"
 
@@ -1044,27 +1052,47 @@ class Transpiler:
             name = decl.name
             init = decl.initializer
 
+            # ---- static fields: header declares, cpp defines ----
             if is_static:
                 out.write(f"static {tcpp} {name};")
                 if init is not None:
                     self._static_field_defs.append((cls_name, tcpp, name, self.emit_expression(init)))
-            else:
-                if init is None:
-                    out.write(f"{tcpp} {name};")
+                continue
+
+            # ---- instance fields ----
+            is_ptr = tcpp.startswith("jxx::Ptr<") or tcpp.startswith("const jxx::Ptr<")
+
+            if init is None:
+                # Your policy: all object fields set to nullptr in header
+                if is_ptr:
+                    out.write(f"{tcpp} {name} = nullptr;")
                 else:
-                    itn = type(init).__name__
-                    if itn in ("ArrayCreator", "ArrayInitializer"):
-                        # Defer array init to constructor in .cpp
-                        out.write(f"{tcpp} {name};")
-                        if itn == "ArrayInitializer":
-                            rank = len(getattr(field_node.type, "dimensions", None) or [])
-                            elem_cpp = self._array_elem_type(field_node.type)
-                            expr_cpp = self._emit_array_init_expr(elem_cpp, rank, init)
-                        else:
-                            expr_cpp = self.emit_expression(init)
-                        self._deferred_instance_inits.setdefault(cls_name, []).append((name, expr_cpp))
-                    else:
-                        out.write(f"{tcpp} {name} = {self.emit_expression(init)};")
+                    out.write(f"{tcpp} {name};")
+                continue
+
+            init_cpp = self.emit_expression(init)
+
+            # Java null => keep nullptr, no deferred init
+            if init_cpp == "nullptr":
+                if is_ptr:
+                    out.write(f"{tcpp} {name} = nullptr;")
+                else:
+                    out.write(f"{tcpp} {name} = nullptr;")  # rare but consistent
+                continue
+
+            # Defer ALL pointer initializers to .cpp (your rule)
+            if is_ptr:
+                out.write(f"{tcpp} {name} = nullptr;")
+
+                if is_final:
+                    # const member: MUST be initialized in ctor init-list
+                    self._deferred_ctor_initlist.setdefault(cls_name, []).append((name, init_cpp))
+                else:
+                    # non-const: assign in ctor body
+                    self._deferred_instance_inits.setdefault(cls_name, []).append((name, init_cpp))
+            else:
+                # Non-pointer fields can stay inline
+                out.write(f"{tcpp} {name} = {init_cpp};")
 
     # ---------------- method signatures + override detection ----------------
     def _method_signature(self, m, class_name: str) -> Tuple[str, bool]:
@@ -1191,11 +1219,19 @@ class Transpiler:
         sig, is_ctor = self._method_signature(m, cls_name)
 
         if is_ctor:
+            for fname, fexpr in self._deferred_instance_inits.get(cls_name, []):
+                out.write(f"this->{fname} = {fexpr};")
+
+            initlist_items = self._deferred_ctor_initlist.get(cls_name, [])
+            initlist = ""
+            if initlist_items:
+                initlist = " : " + ", ".join(f"{fname}({fexpr})" for fname, fexpr in initlist_items)
+
             params = sig[len(cls_name) :]
             head = f"{cls_name}::{cls_name}{params}"
             body = getattr(m, "body", None)
 
-            out.write(f"{head} {{")
+            out.write(f"{head}{initlist} {{")
             out.enter()
             self._sym_push()
             self._ret_push("void")
