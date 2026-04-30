@@ -522,8 +522,11 @@ class Transpiler:
             fval = self.emit_expression(e.if_false)
             return f"(({cond}) ? ({tval}) : ({fval}))"
 
-        if tn == "Literal":
-            return "nullptr" if e.value is None else e.value
+        if tn == 'Literal':
+            # javalang represents Java null as the string "null"
+            if e.value is None or e.value == 'null':
+                return 'nullptr'
+            return e.value
 
         if tn == "This":
             return "this"
@@ -786,19 +789,38 @@ class Transpiler:
 
         if tn == "LocalVariableDeclaration":
             tcpp = self._map_type(s.type)
+            mods = set(getattr(s, 'modifiers', []) or [])
+            is_final = ('final' in mods)
+
+            # Raw name for object construction (only used when we auto-init a final ref)
+            raw = None
+            if type(s.type).__name__ == 'ReferenceType':
+                # Use raw type name, NOT Ptr<...>
+                raw = self._raw_reference_name(s.type)
+
             for decl in s.declarators:
                 self._sym_set(decl.name, tcpp)
                 init = decl.initializer
+
                 if init is None:
-                    out.write(f"{tcpp} {decl.name};")
+                    # If it's "final <RefType> x;" with no initializer, synthesize default new
+                    # => const Ptr<RefType> x = JXX_NEW<RefType>();
+                    if is_final and raw is not None:
+                        expr = self._emit_new(raw, []) if hasattr(self, '_emit_new') else (
+                            f"{self.new_macro}<{raw}>()" if self.new_macro_style == 'template'
+                            else f"{self.new_macro}({raw})()"
+                        )
+                        out.write(f"const {tcpp} {decl.name} = {expr};")
+                    else:
+                        # Not final (or not a reference type): keep uninitialized declaration
+                        out.write(f"{tcpp} {decl.name};")
                 else:
-                    if type(init).__name__ == "ArrayInitializer":
-                        rank = len(getattr(s.type, "dimensions", None) or [])
-                        elem_cpp = self._array_elem_type(s.type)
-                        expr_cpp = self._emit_array_init_expr(elem_cpp, rank, init)
-                        out.write(f"{tcpp} {decl.name} = {expr_cpp};")
+                    # If final and there is an initializer, make it const (Java final == immutable binding)
+                    if is_final:
+                        out.write(f"const {tcpp} {decl.name} = {self.emit_expression(init)};")
                     else:
                         out.write(f"{tcpp} {decl.name} = {self.emit_expression(init)};")
+
             return
 
         if tn == "IfStatement":
