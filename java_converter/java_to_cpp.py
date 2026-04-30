@@ -173,6 +173,14 @@ class Transpiler:
         self._symstack: List[Dict[str, str]] = []
 
     # ---------------- includes ----------------
+    def _unwrap_node(self, n):
+        # javalang occasionally wraps nodes in tuples (e.g., (pos, node))
+        if isinstance(n, tuple) and len(n) >= 2:
+            cand = n[1]
+            # best-effort: accept the second element as the node
+            return cand
+        return n
+
     @staticmethod
     def _norm_inc(s: str) -> str:
         s = (s or "").strip()
@@ -534,11 +542,18 @@ class Transpiler:
         if tn == "This":
             return "this"
 
-        if tn == "MemberReference":
+        if tn == 'MemberReference':
             q = e.qualifier
-            qstr = q if isinstance(q, str) else (self.emit_expression(q) if q is not None else "")
+            qstr = q if isinstance(q, str) else (self.emit_expression(q) if q is not None else '')
             fq, sep = self._format_qual(qstr)
-            return f"{fq}{sep}{e.member}" if fq else e.member
+            base = f"{fq}{sep}{e.member}" if fq else e.member
+
+            for op in (getattr(e, 'prefix_operators', None) or []):
+                base = op + base
+            for op in (getattr(e, 'postfix_operators', None) or []):
+                base = base + op
+
+            return base
 
         if tn == "MethodInvocation":
             qual = e.qualifier
@@ -551,9 +566,31 @@ class Transpiler:
         if tn == "Primary":
             return self._emit_primary(e)
 
-        if tn == "Cast":
+        if tn == 'Cast':
+            # Handle casts with array dimensions (e.g. byte[]), not just primitive/basic.
+            dims = len(getattr(e.type, 'dimensions', None) or [])
+            if dims > 0:
+                # Special case: byte[] -> ByteArray
+                base = None
+                if type(e.type).__name__ == 'BasicType':
+                    base = e.type.name
+                else:
+                    base = self._simple_name(str(getattr(e.type, 'name', '')))
+
+                expr_cpp = self.emit_expression(e.expression)
+
+                if base == 'byte' and dims == 1:
+                    # Cast to Ptr<ByteArray> => raw type is ByteArray for your JXX_CAST macro/helper
+                    return self._emit_downcast(expr_cpp, "ByteArray", is_primitive_target=False)
+
+                # Generic array cast: cast to raw JxxArray<Elem,Rank>
+                elem_cpp = self._array_elem_type(e.type)
+                raw_arr = f"jxx::lang::JxxArray<{elem_cpp}, {dims}>"
+                return self._emit_downcast(expr_cpp, raw_arr, is_primitive_target=False)
+
+            # Non-array cast (primitive or object)
             type_raw = self._raw_type_for_cast(e.type)
-            is_prim = (type(e.type).__name__ == "BasicType")
+            is_prim = (type(e.type).__name__ == 'BasicType')
             return self._emit_downcast(self.emit_expression(e.expression), type_raw, is_prim)
 
         if tn == "BinaryOperation":
@@ -906,58 +943,92 @@ class Transpiler:
         control = s.control
         ct = type(control).__name__
 
-        if ct == "EnhancedForControl":
+        # Enhanced for: for (T x : iterable)
+        if ct == 'EnhancedForControl':
             var = control.var
-            vtype = getattr(var, "type", None)
-            name = getattr(var, "name", None)
+            vtype = getattr(var, 'type', None)
+            name = getattr(var, 'name', None)
+
             if name is None:
-                decls = getattr(var, "declarators", None) or []
+                decls = getattr(var, 'declarators', None) or []
                 if decls:
-                    name = getattr(decls[0], "name", None)
+                    name = getattr(decls[0], 'name', None)
 
             if vtype is None or name is None:
                 out.write("/* TODO: Unhandled enhanced-for variable shape */")
                 out.write("for (/*?*/; /*?*/; /*?*/) {")
-                out.enter(); self._sym_push()
+                out.enter();
+                self._sym_push()
                 self.emit_statement(s.body, out)
-                self._sym_pop(); out.exit()
+                self._sym_pop();
+                out.exit()
                 out.write("}")
                 return
 
             tcpp = self._map_type(vtype)
             self._sym_set(name, tcpp)
+
             iterable = self.emit_expression(control.iterable)
 
             out.write(f"for ({tcpp} {name} : *({iterable})) {{")
-            out.enter(); self._sym_push()
+            out.enter();
+            self._sym_push()
             self.emit_statement(s.body, out)
-            self._sym_pop(); out.exit()
+            self._sym_pop();
+            out.exit()
             out.write("}")
             return
 
-        if ct == "ForControl":
+        if ct == 'ForControl':
+            # Normalize init/update: javalang may return a single node, not a list
+            init_nodes = getattr(control, 'init', None)
+            if init_nodes is None:
+                init_nodes = []
+            elif not isinstance(init_nodes, list):
+                init_nodes = [init_nodes]
+
+            update_nodes = getattr(control, 'update', None)
+            if update_nodes is None:
+                update_nodes = []
+            elif not isinstance(update_nodes, list):
+                update_nodes = [update_nodes]
+
+            # --- init ---
             init_parts: List[str] = []
-            for init in (control.init or []):
+            for init in init_nodes:
+                init = self._unwrap_node(init)
                 it = type(init).__name__
-                if it == "LocalVariableDeclaration":
+
+                if it in ('LocalVariableDeclaration', 'VariableDeclaration'):
                     tcpp = self._map_type(init.type)
-                    for decl in init.declarators:
-                        self._sym_set(decl.name, tcpp)
-                        if decl.initializer is None:
-                            init_parts.append(f"{tcpp} {decl.name}")
+                    for d in (init.declarators or []):
+                        self._sym_set(d.name, tcpp)
+                        if d.initializer is None:
+                            init_parts.append(f"{tcpp} {d.name}")
                         else:
-                            init_parts.append(f"{tcpp} {decl.name} = {self.emit_expression(decl.initializer)}")
+                            init_parts.append(f"{tcpp} {d.name} = {self.emit_expression(d.initializer)}")
                 else:
                     init_parts.append(self.emit_expression(init))
 
             init_str = ", ".join(init_parts)
-            cond_str = self.emit_expression(control.condition) if control.condition is not None else ""
-            upd_str = ", ".join(self.emit_expression(u) for u in (control.update or []))
+
+            # --- condition ---
+            cond = getattr(control, 'condition', None)
+            cond_str = self.emit_expression(cond) if cond is not None else ""
+
+            # --- update ---
+            upd_parts: List[str] = []
+            for u in update_nodes:
+                u = self._unwrap_node(u)
+                upd_parts.append(self.emit_expression(u))
+            upd_str = ", ".join(upd_parts)
 
             out.write(f"for ({init_str}; {cond_str}; {upd_str}) {{")
-            out.enter(); self._sym_push()
+            out.enter();
+            self._sym_push()
             self.emit_statement(s.body, out)
-            self._sym_pop(); out.exit()
+            self._sym_pop();
+            out.exit()
             out.write("}")
             return
 
