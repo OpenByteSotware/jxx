@@ -237,5 +237,5 @@ namespace jxx {
 
 
 #define JXX_OBJECT_CLONE(Derived) \
-    JXX_PTR(jxx::lang::Object) cloneImpl() const override { return JXX_NEW<Derived>(*this); }
+    JXX_PTR<jxx::lang::Object> cloneImpl() const override { return JXX_NEW<Derived>(*this); }
 #endif

@@ -14,4 +14,3 @@ protected:
 };
 
 } // namespace jxx::lang
-``

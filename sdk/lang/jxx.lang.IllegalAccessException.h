@@ -8,10 +8,9 @@ namespace jxx::lang {
 class IllegalAccessException : public ReflectiveOperationException {
 public:
     using ReflectiveOperationException::ReflectiveOperationException;
-    JXX_THROWABLE_CLONE(IllegalAccessException)
+    JXX_OBJECT_CLONE(IllegalAccessException)
 protected:
     const char* typeName() const noexcept override { return "IllegalAccessException"; }
 };
 
 } // namespace jxx::lang
-``

@@ -232,8 +232,7 @@ namespace jxx::lang {
             (void)len;
             // Message content doesn't affect semantics; customize if you want.
             throw std::out_of_range("Index " + std::to_string(idx) +
-                " is out of range. Valid range: 0 to " +
-                std::to_string(len);
+                " is out of range. Valid range: 0 to " + std::to_string(len));
         }
 
         void grow_to_(size_type need) {

@@ -47,7 +47,7 @@ namespace jxx::lang::detail {
             ensure_registered<Super>();
             typeinfo<T>().super = &typeinfo<Super>();
             return true;
-        }();
+        }]();
         (void)once;
     }
 
@@ -58,7 +58,7 @@ namespace jxx::lang::detail {
             ensure_registered<IFace>();
             typeinfo<T>().interfaces.push_back(&typeinfo<IFace>());
             return true;
-        }();
+        }]();
         (void)once;
     }
 
@@ -73,20 +73,20 @@ namespace jxx::lang::detail {
             // Use your allocator if you have one (JXX_NEW<T>()), otherwise std::make_shared<T>()
             ti.defaultCtor = [->std::shared_ptr<::jxx::lang::Object> {
                 return std::static_pointer_cast<::jxx::lang::Object>(std::make_shared<T>());
-            };
+            }];
 
             return true;
-        }();
+        }]();
         (void)once;
     }
 
     template <class T>
     inline void ensure_default_ctor_disabled() {
-        static const bool once = [{
+        static const bool once = ([-> bool {
             ensure_registered<T>();
             typeinfo<T>().defaultCtorAccessible = false;
             return true;
-        }();
+        }])();
         (void)once;
     }
 

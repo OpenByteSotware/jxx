@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "jxx.h"
+#include "jxx.lang.Object.h"
 
 class ThrowableTest : public jxx::lang::Exception {
     int value_{ 0 };
@@ -22,7 +22,7 @@ public:
         return std::to_string(value_);
     }
 
-    JXX_PTR(Object) clone() const override {
+    JXX_PTR<jxx::lang::Object> cloneImpl() const override {
         return std::shared_ptr<jxx::lang::Object>(nullptr);
     }
 };
