@@ -1,0 +1,31 @@
+#pragma once
+
+#include "jxx_types.h"
+#include "jxx.lang.Object.h"
+#include "jxx.lang.String.h"
+
+namespace jxx::lang {
+
+// Minimal Charset with Java-8-like surface.
+// Supports UTF-8 (default), US-ASCII, ISO-8859-1.
+class Charset final : public Object {
+public:
+    enum class Kind { UTF8, ASCII, ISO_8859_1 };
+
+    static jxx::Ptr<Charset> defaultCharset();
+    static jxx::Ptr<Charset> forName(jxx::Ptr<String> name);
+
+    jxx::Ptr<String> name() const;
+
+    jxx::Ptr<ByteArray> encode(jxx::Ptr<String> s) const;
+    jxx::Ptr<String> decode(jxx::Ptr<ByteArray> bytes) const;
+
+    jbool equals(jxx::Ptr<Object> o) const override;
+    jint hashCode() const override;
+
+private:
+    explicit Charset(Kind k);
+    Kind kind_;
+};
+
+} // namespace jxx::lang

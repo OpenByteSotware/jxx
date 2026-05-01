@@ -1,17 +1,20 @@
-
 #pragma once
-#include <functional>
-#include "lang/jxx.lang.h"
 
-namespace jxx { namespace util {
+#include "jxx_types.h"
+#include <stdexcept>
 
-template <typename T>
-class Iterator {
-public:
+namespace jxx::util {
+
+template <class E>
+struct Iterator {
     virtual ~Iterator() = default;
-    virtual bool hasNext() = 0;
-    virtual T next() = 0;
-    virtual void remove() { JXX_THROW(jxx::lang::UnsupportedOperationException, "remove"); }
+
+    virtual jbool hasNext() = 0;
+    virtual E next() = 0;
+
+    virtual void remove() {
+        throw std::logic_error("UnsupportedOperationException: Iterator.remove()");
+    }
 };
 
-}} // namespace jxx::util
+} // namespace jxx::util

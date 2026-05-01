@@ -8,7 +8,7 @@ namespace jxx::lang {
 class UnsupportedOperationException : public RuntimeException {
 public:
     using RuntimeException::RuntimeException;
-    JXX_THROWABLE_CLONE(UnsupportedOperationException)
+    JXX_OBJECT_CLONE(UnsupportedOperationException)
 protected:
     const char* typeName() const noexcept override { return "UnsupportedOperationException"; }
 };

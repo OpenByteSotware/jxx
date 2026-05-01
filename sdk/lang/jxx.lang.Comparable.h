@@ -1,84 +1,46 @@
 #pragma once
-#include <type_traits>
-//
-// A C++17 pure abstract interface similar to Java 8's java.lang.Comparable<T>.
-//
-// Usage:
-//   class MyType : public Comparable<MyType> {
-//       int compareTo(const MyType& other) const override {
-//           // return negative / zero / positive
-//       }
-//   };
-//
-// Contract (mirrors Java Comparable):
-//   - Antisymmetry: sign(a.compareTo(b)) == -sign(b.compareTo(a))
-//   - Transitivity: if a<b and b<c then a<c
-//   - Consistency with equality (recommended):
-//       a.compareTo(b) == 0  <=>  a == b (logical equality for your domain)
-//   - Total order: For any a,b, compareTo yields consistent ordering
-//
-// Note: The operators below use compareTo for all comparisons, including ==/!=.
-// If your equivalence notion differs from compareTo==0, do not rely on the
-// provided ==/!=; define your own equality explicitly.
-//
+
+#include "jxx_types.h"
+#include <stdexcept>
 
 namespace jxx::lang {
-    template <typename Derived>
-    class Comparable {
-        //virtual ~Comparable() = default;
 
-        // Pure virtual: must be implemented by Derived
-        virtual jint compareTo(const Derived& other) const = 0;
+    /**
+     * Java 8: java.lang.Comparable<T>
+     *
+     * Contract:
+     *   - compareTo(o) returns:
+     *        < 0  if *this <  o
+     *          0  if *this == o
+     *        > 0  if *this >  o
+     *   - compareTo(null) throws NullPointerException in Java
+     *
+     * jxx constraints:
+     *   - Interfaces are pure virtual and DO NOT inherit from Object.
+     *   - Java references are jxx::Ptr<T> (std::shared_ptr<T>).
+     */
+    template <class T>
+    struct Comparable {
+        virtual ~Comparable() = default;
+
+        /**
+         * Compare this object with another object.
+         * Must throw on nullptr to match Java semantics.
+         */
+        virtual jint compareTo(jxx::Ptr<T> other) const = 0;
+
+    protected:
+        /**
+         * Helper for Java parity: compareTo(nullptr) => NPE
+         * Replace the throw type with your jxx::lang::NullPointerException when available.
+         */
+        static inline void throw_npe_if_null(const jxx::Ptr<T>& p) {
+            if (!p) {
+                // If you already have jxx::lang::NullPointerException thrown by value, use that instead:
+                // throw jxx::lang::NullPointerException(jxx::lang::String("..."));
+                throw std::invalid_argument("NullPointerException: Comparable.compareTo(null)");
+            }
+        }
     };
-}
 
-    // ----- Relational operators derived from compareTo -----
-    // These are enabled only for types Derived that inherit Comparable<Derived>.
-
-    namespace detail {
-        template <typename T>
-        using is_valid_comparable_t =
-            std::is_base_of<jxx::lang::Comparable<T>, T>;
-    }
-
-    // operator<
-    template <typename T,
-        typename = std::enable_if_t<detail::is_valid_comparable_t<T>::value>>
-        constexpr bool operator<(const T& lhs, const T& rhs) {
-        return lhs.compareTo(rhs) < 0;
-    }
-
-    // operator>
-    template <typename T,
-        typename = std::enable_if_t<detail::is_valid_comparable_t<T>::value>>
-        constexpr bool operator>(const T& lhs, const T& rhs) {
-        return lhs.compareTo(rhs) > 0;
-    }
-
-    // operator<=
-    template <typename T,
-        typename = std::enable_if_t<detail::is_valid_comparable_t<T>::value>>
-        constexpr bool operator<=(const T& lhs, const T& rhs) {
-        return lhs.compareTo(rhs) <= 0;
-    }
-
-    // operator>=
-    template <typename T,
-        typename = std::enable_if_t<detail::is_valid_comparable_t<T>::value>>
-        constexpr bool operator>=(const T& lhs, const T& rhs) {
-        return lhs.compareTo(rhs) >= 0;
-    }
-
-    // operator==
-    template <typename T,
-        typename = std::enable_if_t<detail::is_valid_comparable_t<T>::value>>
-        constexpr bool operator==(const T& lhs, const T& rhs) {
-        return lhs.compareTo(rhs) == 0;
-    }
-
-    // operator!=
-    template <typename T,
-        typename = std::enable_if_t<detail::is_valid_comparable_t<T>::value>>
-        constexpr bool operator!=(const T& lhs, const T& rhs) {
-        return lhs.compareTo(rhs) != 0;
-    }
+} // namespace jxx::lang

@@ -1,258 +1,166 @@
 #pragma once
+
+#include "jxx_types.h"
+#include "jxx.lang.Object.h"
+#include "jxx.util.AbstractCollection.h"
+#include "jxx.util.Iterator.h"
+#include "jxx.util.ElementEquals.h"
+
 #include <vector>
-#include <mutex>
 #include <stdexcept>
-#include <cstddef>
-#include <initializer_list>
-#include <algorithm>
-#include <utility>
 
 namespace jxx::util {
 
-template <typename T>
-class Vector {
+// Java 8-like Vector<E> (synchronized). Minimal but semantically aligned.
+// - Uses Object::synchronized() for monitor semantics (recursive, re-entrant).
+// - Provides common methods used by transpiled code: size, isEmpty, add/addElement,
+//   elementAt, get, set, remove, removeElementAt, clear, contains, indexOf, lastIndexOf,
+//   iterator.
+//
+// Note: Java Vector iterators are fail-fast; we provide snapshot iteration for simplicity.
+
+template <class E>
+class Vector final : public jxx::lang::Object, public AbstractCollection<E> {
 public:
-
-    using iterator = typename std::vector<T>::iterator;
-    using const_iterator = typename std::vector<T>::const_iterator;
-      
-    // ---- Constructors ----
-    // Java default capacity is 10; we mimic that for initial reserve.
-    explicit Vector(std::size_t initialCapacity = 10, std::size_t capacityIncrement = 0)
-        : capacityIncrement_(capacityIncrement)
-    {
-        if (initialCapacity > 0) data_.reserve(initialCapacity);
+    Vector() = default;
+    explicit Vector(jint initialCapacity) {
+        if (initialCapacity < 0) throw std::invalid_argument("IllegalArgumentException: negative capacity");
+        data_.reserve((std::size_t)initialCapacity);
     }
 
-    Vector(std::initializer_list<T> init, std::size_t capacityIncrement = 0)
-        : capacityIncrement_(capacityIncrement)
-        , data_(init)
-    {}
-
-    // ---- Size / capacity ----
-    std::size_t size() const noexcept {
-        std::lock_guard<std::mutex> lk(m_);
-        return data_.size();
+    // ----- Collection interface -----
+    jint size() const override {
+        return this->synchronized([&]() -> jint { return (jint)data_.size(); });
     }
 
-    bool isEmpty() const noexcept { return size() == 0; }
-
-    // Capacity in terms of underlying storage
-    std::size_t capacity() const noexcept {
-        std::lock_guard<std::mutex> lk(m_);
-        return data_.capacity();
+    jxx::Ptr<Iterator<E>> iterator() override {
+        return this->synchronized([&]() -> jxx::Ptr<Iterator<E>> {
+            std::vector<E> snap = data_;
+            return std::make_shared<SnapshotIt>(std::move(snap));
+        });
     }
 
-    // Ensure capacity (does not change size)
-    void ensureCapacity(std::size_t minCapacity) {
-        std::lock_guard<std::mutex> lk(m_);
-        if (data_.capacity() < minCapacity) {
-            growLocked(minCapacity);
-        }
+    // Override add/remove/clear for efficiency and to be synchronized
+    jbool add(const E& e) override {
+        return this->synchronized([&]() -> jbool {
+            data_.push_back(e);
+            return true;
+        });
     }
 
-    // Trim capacity to current size (like Java's trimToSize)
-    void trimToSize() {
-        std::lock_guard<std::mutex> lk(m_);
-        data_.shrink_to_fit();
-    }
-
-    // Set logical size; grow with default-inserted elements or shrink by erasing
-    void setSize(std::size_t newSize) {
-        std::lock_guard<std::mutex> lk(m_);
-        if (newSize > data_.size()) {
-            if (newSize > data_.capacity()) {
-                growLocked(newSize);
+    jbool remove(const E& e) override {
+        return this->synchronized([&]() -> jbool {
+            for (std::size_t i = 0; i < data_.size(); ++i) {
+                if (ElementEquals<E>::eq(data_[i], e)) {
+                    data_.erase(data_.begin() + (std::ptrdiff_t)i);
+                    return true;
+                }
             }
-            data_.resize(newSize); // value-initialized T()
-        } else if (newSize < data_.size()) {
-            data_.erase(data_.begin() + static_cast<long>(newSize), data_.end());
-        }
-        ++modCount_;
+            return false;
+        });
     }
 
-    // ---- Access (by value for thread-safety) ----
-    // get(index) returns a copy of element (Java returns reference to object; copying is safest in C++).
-    T get(std::size_t index) const {
-        std::lock_guard<std::mutex> lk(m_);
-        checkIndexLocked(index);
-        return data_[index];
+    void clear() override {
+        this->synchronized([&]() {
+            data_.clear();
+        });
     }
 
-    const_iterator begin() const noexcept {
-        std::lock_guard<std::mutex> lk(m_);
-        return data_.begin();
+    jbool contains(const E& e) const override {
+        return this->synchronized([&]() -> jbool {
+            for (const auto& x : data_) {
+                if (ElementEquals<E>::eq(x, e)) return true;
+            }
+            return false;
+        });
     }
 
-    const_iterator end() const noexcept {
-        std::lock_guard<std::mutex> lk(m_);
-        return data_.end();
+    // ----- Vector-specific Java APIs -----
+
+    void addElement(const E& e) { (void)add(e); }
+
+    E elementAt(jint index) const {
+        return this->synchronized([&]() -> E {
+            if (index < 0 || (std::size_t)index >= data_.size()) throw std::out_of_range("ArrayIndexOutOfBoundsException");
+            return data_[(std::size_t)index];
+        });
     }
 
-    // set(index, value) returns the old element by value
-    T set(std::size_t index, const T& value) {
-        std::lock_guard<std::mutex> lk(m_);
-        checkIndexLocked(index);
-        T old = data_[index];
-        data_[index] = value;
-        ++modCount_;
-        return old;
+    E get(jint index) const { return elementAt(index); }
+
+    E set(jint index, const E& element) {
+        return this->synchronized([&]() -> E {
+            if (index < 0 || (std::size_t)index >= data_.size()) throw std::out_of_range("ArrayIndexOutOfBoundsException");
+            E old = data_[(std::size_t)index];
+            data_[(std::size_t)index] = element;
+            return old;
+        });
     }
 
-    T set(std::size_t index, T&& value) {
-        std::lock_guard<std::mutex> lk(m_);
-        checkIndexLocked(index);
-        T old = std::move(data_[index]);
-        data_[index] = std::move(value);
-        ++modCount_;
-        return old;
+    void setElementAt(const E& element, jint index) { (void)set(index, element); }
+
+    void removeElementAt(jint index) {
+        this->synchronized([&]() {
+            if (index < 0 || (std::size_t)index >= data_.size()) throw std::out_of_range("ArrayIndexOutOfBoundsException");
+            data_.erase(data_.begin() + (std::ptrdiff_t)index);
+        });
     }
 
-    // firstElement / lastElement (throw if empty)
-    T firstElement() const {
-        std::lock_guard<std::mutex> lk(m_);
-        if (data_.empty()) throw std::out_of_range("Vector.firstElement: empty");
-        return data_.front();
+    jbool removeElement(const E& obj) { return remove(obj); }
+
+    jint indexOf(const E& obj) const { return indexOf(obj, 0); }
+
+    jint indexOf(const E& obj, jint fromIndex) const {
+        return this->synchronized([&]() -> jint {
+            if (fromIndex < 0) fromIndex = 0;
+            for (std::size_t i = (std::size_t)fromIndex; i < data_.size(); ++i) {
+                if (ElementEquals<E>::eq(data_[i], obj)) return (jint)i;
+            }
+            return -1;
+        });
     }
 
-    T lastElement() const {
-        std::lock_guard<std::mutex> lk(m_);
-        if (data_.empty()) throw std::out_of_range("Vector.lastElement: empty");
-        return data_.back();
+    jint lastIndexOf(const E& obj) const { return lastIndexOf(obj, (jint)data_.size() - 1); }
+
+    jint lastIndexOf(const E& obj, jint fromIndex) const {
+        return this->synchronized([&]() -> jint {
+            if (data_.empty()) return -1;
+            if (fromIndex >= (jint)data_.size()) fromIndex = (jint)data_.size() - 1;
+            for (jint i = fromIndex; i >= 0; --i) {
+                if (ElementEquals<E>::eq(data_[(std::size_t)i], obj)) return i;
+            }
+            return -1;
+        });
     }
 
-    // ---- Add / Insert ----
-    // add(element) -> push_back
-    void add(const T& value) {
-        std::lock_guard<std::mutex> lk(m_);
-        ensureCapacityForPushLocked();
-        data_.push_back(value);
-        ++modCount_;
+    void ensureCapacity(jint minCapacity) {
+        this->synchronized([&]() {
+            if (minCapacity > 0) data_.reserve((std::size_t)minCapacity);
+        });
     }
 
-    void add(T&& value) {
-        std::lock_guard<std::mutex> lk(m_);
-        ensureCapacityForPushLocked();
-        data_.push_back(std::move(value));
-        ++modCount_;
-    }
-
-    // add(index, element)
-    void add(std::size_t index, const T& value) {
-        std::lock_guard<std::mutex> lk(m_);
-        checkIndexForInsertLocked(index);
-        ensureCapacityForPushLocked();
-        data_.insert(data_.begin() + static_cast<long>(index), value);
-        ++modCount_;
-    }
-
-    void add(std::size_t index, T&& value) {
-        std::lock_guard<std::mutex> lk(m_);
-        checkIndexForInsertLocked(index);
-        ensureCapacityForPushLocked();
-        data_.insert(data_.begin() + static_cast<long>(index), std::move(value));
-        ++modCount_;
-    }
-
-    // ---- Remove ----
-    // removeAt(index) -> returns removed element
-    T removeAt(std::size_t index) {
-        std::lock_guard<std::mutex> lk(m_);
-        checkIndexLocked(index);
-        auto it = data_.begin() + static_cast<long>(index);
-        T removed = std::move(*it);
-        data_.erase(it);
-        ++modCount_;
-        return removed;
-    }
-
-    // remove(element) -> remove first occurrence, return true if removed
-    bool remove(const T& value) {
-        std::lock_guard<std::mutex> lk(m_);
-        auto it = std::find(data_.begin(), data_.end(), value);
-        if (it == data_.end()) return false;
-        data_.erase(it);
-        ++modCount_;
-        return true;
-    }
-
-    void clear() {
-        std::lock_guard<std::mutex> lk(m_);
-        data_.clear();
-        ++modCount_;
-    }
-
-    // ---- Search ----
-    // indexOf(value, fromIndex=0), returns size_t(-1) if not found (Java returns -1)
-    std::size_t indexOf(const T& value, std::size_t fromIndex = 0) const {
-        std::lock_guard<std::mutex> lk(m_);
-        if (fromIndex > data_.size()) return static_cast<std::size_t>(-1);
-        auto it = std::find(data_.begin() + static_cast<long>(fromIndex), data_.end(), value);
-        return (it == data_.end()) ? static_cast<std::size_t>(-1)
-                                   : static_cast<std::size_t>(std::distance(data_.begin(), it));
-    }
-
-    std::size_t lastIndexOf(const T& value) const {
-        std::lock_guard<std::mutex> lk(m_);
-        auto rit = std::find(data_.rbegin(), data_.rend(), value);
-        return (rit == data_.rend()) ? static_cast<std::size_t>(-1)
-                                     : static_cast<std::size_t>(std::distance(data_.begin(), rit.base() - 1));
-    }
-
-    // ---- Snapshot iteration ----
-    // Returns a copy of the current contents; iterate without holding locks.
-    std::vector<T> snapshot() const {
-        std::lock_guard<std::mutex> lk(m_);
-        return data_;
-    }
-
-    // Expose a copy for interop with APIs expecting std::vector<T>
-    std::vector<T> toStdVector() const { return snapshot(); }
-
-private:
-    // ---- Growth / checks (must be called with m_ held) ----
-    void ensureCapacityForPushLocked() {
-        const std::size_t minCap = data_.size() + 1;
-        if (data_.capacity() < minCap) {
-            growLocked(minCap);
-        }
-    }
-
-    void growLocked(std::size_t minCapacity) {
-        std::size_t oldCap = data_.capacity();
-        std::size_t newCap = oldCap;
-
-        if (oldCap == 0) {
-            newCap = (minCapacity > 0) ? minCapacity : std::size_t(1);
-        } else if (capacityIncrement_ > 0) {
-            // Increase by fixed capacityIncrement until >= minCapacity
-            do { newCap += capacityIncrement_; } while (newCap < minCapacity);
-        } else {
-            // Double until >= minCapacity
-            do {
-                newCap = (newCap == 0) ? 1 : newCap * 2;
-            } while (newCap < minCapacity);
-        }
-        data_.reserve(newCap);
-    }
-
-    void checkIndexLocked(std::size_t index) const {
-        if (index >= data_.size()) {
-            throw std::out_of_range("Vector index out of range");
-        }
-    }
-
-    void checkIndexForInsertLocked(std::size_t index) const {
-        if (index > data_.size()) {
-            throw std::out_of_range("Vector insert index out of range");
-        }
+    jint capacity() const {
+        return this->synchronized([&]() -> jint { return (jint)data_.capacity(); });
     }
 
 private:
-    std::vector<T> data_;
-    std::size_t capacityIncrement_{0}; // 0 => doubling strategy
-    mutable std::mutex m_;
-    std::size_t modCount_{0}; // reserved for potential fail-fast iterators
+    std::vector<E> data_{};
+
+    class SnapshotIt final : public Iterator<E> {
+    public:
+        explicit SnapshotIt(std::vector<E> items) : items_(std::move(items)) {}
+        jbool hasNext() override { return idx_ < items_.size(); }
+        E next() override {
+            if (!hasNext()) throw std::out_of_range("NoSuchElementException");
+            return items_[idx_++];
+        }
+        void remove() override {
+            throw std::logic_error("UnsupportedOperationException: Iterator.remove()");
+        }
+    private:
+        std::vector<E> items_;
+        std::size_t idx_ = 0;
+    };
 };
 
-} // namespace jxx
+} // namespace jxx::util

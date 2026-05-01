@@ -4,7 +4,7 @@
 #include "lang/jxx.lang.internal.h"
 #include "io/jxx.io.FilterInputStream.h"
 
-using namespace jxx:: lang;
+using namespace jxx::lang;
 
 namespace jxx { namespace io {
 class BufferedInputStream : public FilterInputStream 
