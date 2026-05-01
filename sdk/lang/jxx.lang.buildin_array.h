@@ -496,3 +496,8 @@ using ByteArray = jxx::lang::JxxArray<jxx::lang::jbyte, 1>;
 using CharArray = jxx::lang::JxxArray<jxx::lang::jchar, 1>;
 using IntArray = jxx::lang::JxxArray<jxx::lang::jint, 1>;
 using StringArray = jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 1>;
+using ShortArray = jxx::lang::JxxArray<jxx::lang::jshort, 1>;
+using LongArray = jxx::lang::JxxArray<jxx::lang::jlong, 1>;
+using FloatArray = jxx::lang::JxxArray<jxx::lang::jfloat, 1>;
+using DoubleArray = jxx::lang::JxxArray<jxx::lang::jdouble, 1>;
+
