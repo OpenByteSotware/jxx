@@ -501,3 +501,20 @@ using LongArray = jxx::lang::JxxArray<jxx::lang::jlong, 1>;
 using FloatArray = jxx::lang::JxxArray<jxx::lang::jfloat, 1>;
 using DoubleArray = jxx::lang::JxxArray<jxx::lang::jdouble, 1>;
 
+using ByteArray2D = jxx::lang::JxxArray<jxx::lang::jbyte, 2>;
+using CharArray2D = jxx::lang::JxxArray<jxx::lang::jchar, 2>;
+using IntArray2D = jxx::lang::JxxArray<jxx::lang::jint, 2>;
+using StringArray2D = jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 2>;
+using ShortArray2D = jxx::lang::JxxArray<jxx::lang::jshort, 2>;
+using LongArray2D = jxx::lang::JxxArray<jxx::lang::jlong, 2>;
+using FloatArray2D = jxx::lang::JxxArray<jxx::lang::jfloat, 2>;
+using DoubleArray2D = jxx::lang::JxxArray<jxx::lang::jdouble, 2>;
+
+using ByteArray3D = jxx::lang::JxxArray<jxx::lang::jbyte, 3>;
+using CharArray3D = jxx::lang::JxxArray<jxx::lang::jchar, 3>;
+using IntArray3D = jxx::lang::JxxArray<jxx::lang::jint, 3>;
+using StringArray3D = jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 3>;
+using ShortArray3D = jxx::lang::JxxArray<jxx::lang::jshort, 3>;
+using LongArray3D = jxx::lang::JxxArray<jxx::lang::jlong, 3>;
+using FloatArray3D = jxx::lang::JxxArray<jxx::lang::jfloat, 3>;
+using DoubleArray3D = jxx::lang::JxxArray<jxx::lang::jdouble, 3>;
