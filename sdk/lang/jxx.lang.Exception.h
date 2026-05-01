@@ -14,6 +14,7 @@ namespace jxx::lang {
     class IllegalStateException : public Exception {
     public:
         using Exception::Exception;
+        virtual ~IllegalStateException() = default;
         JXX_OBJECT_CLONE(IllegalStateException)
     protected:
         const char* typeName() const noexcept override { return "IllegalStateException"; }
