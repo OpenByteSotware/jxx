@@ -13,6 +13,19 @@ Prereq:
 pip install javalang - used for Abstract tree anaylsis of java source
 C++17 compiler with all the C++17 abilities
 
+No open source libraries used under the hood to keep from dependecies across platforms.
+So if adding new capabilites to jxx, you will need to implement from ground up.  Cannot include boost
+libraries.  Only stl, clib can be used.  You can reimplement a behavior required using those.
+The dependecy tree can become large and changes can have a ripple effect.  That is the reason to
+implement from group up.  
+
+For windows:
+Need to create an environment variable:   JXX_TIME_ZONE_DATA
+Then use provided zoneinfo.tar.gz (from ubuntu linux timezone /usr/shared/zoneinfo)
+This provides windows with timezone data.
+Also create a file in JXX_TIME_ZONE_DATA/timezone
+Set inside file the correct timezone.  Default is GMT
+
 
 There are two parts to this project:
 
