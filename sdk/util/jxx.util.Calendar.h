@@ -1,20 +1,30 @@
 #pragma once
-#include "jxx_types.h"
-#include "jxx.lang.Object.h"
-#include "jxx.lang.String.h"
+
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.Object.h"
 #include "jxx.util.Date.h"
 #include "jxx.util.TimeZone.h"
+
 namespace jxx::util {
+
 class Calendar : public jxx::lang::Object {
 public:
-    static constexpr jint YEAR=1, MONTH=2, DAY_OF_MONTH=5, DAY_OF_WEEK=7;
-    static constexpr jint HOUR_OF_DAY=11, MINUTE=12, SECOND=13, MILLISECOND=14;
+    // Java 8 field constants (subset)
+    static constexpr jxx::lang::jint YEAR = 1;
+    static constexpr jxx::lang::jint MONTH = 2;          // 0-based
+    static constexpr jxx::lang::jint DAY_OF_MONTH = 5;
+    static constexpr jxx::lang::jint DAY_OF_WEEK = 7;    // 1=Sunday..7=Saturday
+    static constexpr jxx::lang::jint HOUR_OF_DAY = 11;
+    static constexpr jxx::lang::jint MINUTE = 12;
+    static constexpr jxx::lang::jint SECOND = 13;
+    static constexpr jxx::lang::jint MILLISECOND = 14;
 
     Calendar();
+
     static jxx::Ptr<Calendar> getInstance();
 
-    jlong getTimeInMillis() const;
-    void setTimeInMillis(jlong millis);
+    jxx::lang::jlong getTimeInMillis() const;
+    void setTimeInMillis(jxx::lang::jlong millis);
 
     jxx::Ptr<Date> getTime() const;
     void setTime(jxx::Ptr<Date> date);
@@ -22,15 +32,19 @@ public:
     jxx::Ptr<TimeZone> getTimeZone() const;
     void setTimeZone(jxx::Ptr<TimeZone> tz);
 
-    jint get(jint field) const;
-    void add(jint field, jint amount);
+    jxx::lang::jint get(jxx::lang::jint field) const;
+
+    void add(jxx::lang::jint field, jxx::lang::jint amount);
+
 
 private:
-    jlong millis_ = 0;
+    jxx::lang::jlong millis_ = 0;
     jxx::Ptr<TimeZone> tz_;
 
     static int days_from_civil(int y, unsigned m, unsigned d);
     static void civil_from_days(int z, int& y, unsigned& m, unsigned& d);
 };
+
 using Calender = Calendar;
-}
+
+} // namespace jxx::util

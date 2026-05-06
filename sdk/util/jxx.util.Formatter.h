@@ -1,4 +1,5 @@
 #pragma once
+
 #include "jxx_types.h"
 #include "jxx.lang.String.h"
 #include "jxx.lang.Object.h"
@@ -9,6 +10,7 @@ namespace jxx::util {
 struct FormatSpec {
     jint argIndex = -1;
     jbool reuseLast = false;
+
     jbool leftJustify = false;
     jbool alt = false;
     jbool plus = false;
@@ -16,8 +18,10 @@ struct FormatSpec {
     jbool zeroPad = false;
     jbool group = false;
     jbool parens = false;
+
     jint width = -1;
     jint precision = -1;
+
     jbool dateTime = false;
     jbool upper = false;
     char conv = 0;
@@ -35,4 +39,4 @@ private:
     jxx::Ptr<jxx::lang::Locale> locale_;
 };
 
-}
+} // namespace jxx::util
