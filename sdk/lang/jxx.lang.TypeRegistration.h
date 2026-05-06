@@ -1,7 +1,7 @@
 #pragma once
 
 #include "jxx.lang.Class.h"
-
+/*
 namespace jxx::lang::detail {
 
     // Per-type metadata (specialized by macros)
@@ -164,3 +164,4 @@ namespace {                                                                     
     JXX_DETAIL_CAT(jxx_ctor_dis_, __COUNTER__) =                                  \
         (::jxx::lang::detail::ensure_default_ctor_disabled<T>(), true);           \
 }
+*/

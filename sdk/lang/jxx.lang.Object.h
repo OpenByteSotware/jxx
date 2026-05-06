@@ -23,15 +23,21 @@
 #include <condition_variable>
 #include <chrono>
 #include <iostream>
-#include "lang/jxx_types.h"
-#include "lang/jxx.lang.Cloneable.h"
 
+#include "lang/jxx.lang.Cloneable.h"
 // ---------- Optional: demangle for GCC/Clang ----------
 #if defined(__GNUG__) || defined(__clang__)
 #include <cxxabi.h>
 #include <cstdlib>
-
 #endif
+
+#include "jxx.lang.ByteType.h"
+#include "jxx_types.h"
+
+namespace jxx {
+    template <typename T>
+    using Ptr = std::shared_ptr<T>;
+}
 
 namespace jxx {
     namespace lang {
@@ -51,7 +57,7 @@ namespace jxx {
             return "Object";
 #endif
         }
-        
+
         class Object;
 
         class Cloneable {
@@ -78,87 +84,66 @@ namespace jxx {
 		//  - Because this pointer may be used as return need to inherit from enable_shared_from_this for safe shared_ptr creation in clone() and getClass()
         class Object : public std::enable_shared_from_this<Object> {
         public:
+            std::shared_ptr<Object> thisPtr;
 
-			// make Object polymorphic for RTTI and dynamic_cast (destructor default)
-            virtual ~Object() = default;
+            // make Object polymorphic for RTTI and dynamic_cast (destructor default)
+            virtual ~Object();
 
             // Java-like: logical equality (default identity)
-            virtual jbool equals(const jxx::Ptr<Object> other) const {
-                return this == other.get();
-            }
+            virtual jbool equals(const jxx::Ptr<Object> other) const;
 
             // Java-like: hashCode (default identity-based)
-            virtual jint hashCode() const {
-                return std::hash<const void*>{}(this);
-            }
+            virtual jxx::lang::jint hashCode() const;
 
             jxx::Ptr<ClassAny> getClass() const;
 
             // Class name (demangled where supported); override if you prefer custom names
-            virtual jxx::Ptr<String> getClassName() const {
-                return JXX_NEW<String>(this->getClassName_());
-            }
+            virtual jxx::Ptr<String> getClassName() const;
 
             // Java-like: "Class@hexHash"
-            virtual jxx::Ptr<String>  toString() const {
-                std::ostringstream oss;
-                oss << getClassName_() << "@0x" << std::hex << hashCode();
-                return JXX_NEW<String>(oss.str());
-            }
+            virtual jxx::Ptr<String>  toString() const;
 
             // Identity check (reference equality)
-            virtual bool same(const Object& other) const {
-                return this == &other;
-            }
-            
+            virtual bool same(const Object& other) const;
+
             template <typename Rep, typename Period>
             bool wait_for(const std::chrono::duration<Rep, Period>& d) {
                 std::unique_lock<std::mutex> lk(mtx_);
                 return cv_.wait_for(lk, d) == std::cv_status::no_timeout;
             }
-            void wait() {
-                std::unique_lock<std::mutex> lk(mtx_);
-                cv_.wait(lk);
-            }
 
-            void notify() {
-                std::lock_guard<std::mutex> lg(mtx_);
-                cv_.notify_one();
-            }
+            void wait();
 
-            void notifyAll() {
-                std::lock_guard<std::mutex> lg(mtx_);
-                cv_.notify_all();
-            }
+            void notify();
+
+            void notifyAll();
 
             // Virtual clone method
             virtual jxx::Ptr<jxx::lang::Object> clone() const;
-            
+
         protected:
 
-            virtual void finalize() {
-                // Default implementation does nothing; override for cleanup if desired.
-			}
+            virtual jxx::Ptr<jxx::lang::Object> cloneImpl() const;
 
-            virtual jxx::Ptr<jxx::lang::Object> cloneImpl() const {
-                throw std::runtime_error("cloneImpl not implemented");
+            template <typename T>
+            std::shared_ptr<T> getThis() {
+                static_assert(std::is_base_of<jxx::lang::Object, T>::value,
+                    "T must derive from Object");
+                return std::dynamic_pointer_cast<T>(thisPtr);
             }
 
             mutable std::mutex mtx_;
             std::condition_variable cv_;
 
         private:
-            std::string getClassName_() const {
-#if defined(__GNUG__) || defined(__clang__) || defined(_MSC_VER)
-                return std::string(demangle(typeid(*this).name()));
-#else
-                return std::string("Object");
-#endif
-            }
-        };
+            // release thisPtr as it was a reference to this object and we are being destroyed, so break the cycle
+            void releaseSelf();
 
-       
-        // =============== Synchronized mixin (Java-like monitor) ===============
+            std::string getClassName_() const;
+
+		};
+
+               // =============== Synchronized mixin (Java-like monitor) ===============
         // Uses reentrant mutex (like Java's monitors).
         class Synchronized : public virtual Object {
         protected:
@@ -239,3 +224,115 @@ namespace jxx {
 #define JXX_OBJECT_CLONE(Derived) \
     jxx::Ptr<jxx::lang::Object> cloneImpl() const override { return JXX_NEW<Derived>(*this); }
 #endif
+
+
+// =====================================================
+// N-Dimensional Array Wrapper
+// =====================================================
+
+template <typename T, std::size_t N>
+class JxxArray {
+public:
+    template <typename... Dims,
+        typename = std::enable_if_t<sizeof...(Dims) == N &&
+        std::conjunction_v<std::is_integral<Dims>...>>>
+        explicit JxxArray(Dims... dims) : shape_{ static_cast<std::size_t>(dims)... } {
+        total_size_ = 1;
+        for (auto d : shape_) {
+            if (d == 0) throw std::invalid_argument("Dimension size must be > 0");
+            total_size_ *= d;
+        }
+        data_ = std::shared_ptr<T>(new T[total_size_](), std::default_delete<T[]>());
+    }
+
+    template <typename... Indices>
+    T& operator()(Indices... idxs) {
+        static_assert(sizeof...(Indices) == N, "Invalid number of indices");
+        std::array<std::size_t, N> indices{ static_cast<std::size_t>(idxs)... };
+        return data_.get()[flat_index(indices)];
+    }
+
+    template <typename... Indices>
+    const T& operator()(Indices... idxs) const {
+        static_assert(sizeof...(Indices) == N, "Invalid number of indices");
+        std::array<std::size_t, N> indices{ static_cast<std::size_t>(idxs)... };
+        return data_.get()[flat_index(indices)];
+    }
+
+    const std::array<std::size_t, N>& shape() const { return shape_; }
+    std::size_t size() const { return total_size_; }
+    std::shared_ptr<T> data() const { return data_; }
+
+private:
+    std::size_t flat_index(const std::array<std::size_t, N>& indices) const {
+        std::size_t idx = 0;
+        std::size_t stride = 1;
+        for (std::size_t dim = N; dim-- > 0;) {
+            if (indices[dim] >= shape_[dim])
+                throw std::out_of_range("Index out of bounds");
+            idx += indices[dim] * stride;
+            stride *= shape_[dim];
+        }
+        return idx;
+    }
+
+    std::array<std::size_t, N> shape_;
+    std::size_t total_size_;
+    std::shared_ptr<T> data_;
+};
+
+// =====================================================
+// Auto-detect JXX_NEW
+// =====================================================
+
+
+
+// Case 1: Fixed-size arrays (T[N])
+template <typename T,
+    typename = std::enable_if_t<std::is_array_v<T>&& std::extent_v<T> != 0>>
+    auto JXX_NEW() {
+    using ElementType = std::remove_extent_t<T>;
+    constexpr std::size_t N = std::extent_v<T>;
+    return std::make_shared<std::array<ElementType, N>>();
+}
+
+// Case 2: Dynamic arrays (T[])
+template <typename T,
+    typename = std::enable_if_t<std::is_array_v<T>&& std::extent_v<T> == 0>>
+    auto JXX_NEW(std::size_t size) {
+    return std::make_shared<std::remove_extent_t<T>[]>(size);
+}
+
+// Case 3: Fully dynamic N-D arrays
+// Enabled if: more than 1 integer arg OR (1 integer arg and T is not a class)
+template <typename T, typename... Dims,
+    typename = std::enable_if_t<!std::is_array_v<T> &&
+    (sizeof...(Dims) > 1 ||
+        (!std::is_class_v<T> && sizeof...(Dims) == 1)) &&
+    std::conjunction_v<std::is_integral<Dims>...>>>
+    auto JXX_NEW(Dims... dims) {
+    constexpr std::size_t N = sizeof...(Dims);
+    return JxxArray<T, N>(dims...);
+}
+
+// Case 4: Single object (default or with args)
+// Enabled if: no args OR args not all integers OR T is a class
+template <typename T, typename... Args,
+    typename = std::enable_if_t<!std::is_array_v<T> &&
+    (sizeof...(Args) == 0 ||
+        !std::conjunction_v<std::is_integral<Args>...> ||
+        std::is_class_v<T>)>>
+    std::shared_ptr<T> JXX_NEW(Args&&... args) {
+    auto obj = std::make_shared<T>(std::forward<Args>(args)...);
+    obj->thisPtr = obj; // Set thisPtr to the shared_ptr of the new object
+    return obj;
+}
+
+#ifndef JXX_CAST_PTR
+#define JXX_CAST_PTR(Type, ptr) std::dynamic_pointer_cast<const Type>(ptr)
+#endif
+
+#ifndef JXX_SYNCHRONIZE
+#define JXX_SYNCHRONIZE(obj, ...) ((obj)->synchronized(__VA_ARGS__))
+#endif
+

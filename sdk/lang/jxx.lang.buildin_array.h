@@ -11,9 +11,8 @@
 #include <utility>
 #include <vector>
 #include <stdexcept>
-
-#include "jxx_types.h"
 #include "jxx.lang.ByteType.h"
+#include "jxx_types.h"
 
 namespace jxx::lang {
 
