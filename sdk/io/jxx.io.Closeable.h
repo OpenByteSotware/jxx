@@ -1,10 +1,3 @@
 #pragma once
-
-namespace jxx::io {
-    class Closeable {
-    public:
-        virtual ~Closeable() = default;
-
-        virtual void close() = 0;
-    };
-}
+#include "jxx.io.AutoCloseable.h"
+namespace jxx::io { struct Closeable : public AutoCloseable { virtual ~Closeable() = default; }; }

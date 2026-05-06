@@ -37,3 +37,8 @@
 #include "jxx.io.UTF8.h"
 #include "jxx.io.UTFDataFormatException.h"
 #include "jxx.io.Writer.h"
+#include "jxx.io.AutoCloseable.h"
+#include "jxx.io.Closeable.h"
+#include "jxx.io.Externalizable.h"
+#include "jxx.io.Flushable.h"
+#include "jxx.io.Serializable.h"
