@@ -12,7 +12,6 @@ Date::Date() {
 Date::Date(jlong epochMillis) : time_(epochMillis) {}
 
 jlong Date::getTime() const { return time_; }
-
 void Date::setTime(jlong epochMillis) { time_ = epochMillis; }
 
 } // namespace jxx::util

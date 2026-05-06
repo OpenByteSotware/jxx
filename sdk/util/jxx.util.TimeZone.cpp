@@ -138,7 +138,7 @@ jxx::Ptr<TimeZone> TimeZone::getDefault() {
     std::lock_guard<std::mutex> lk(g_lock);
 
 #ifdef _WIN32
-    // Windows option 2: load ${JXX_TIME_ZONE_INFO}/localtime if present
+    // Windows option 2: load %JXX_TIME_ZONE_INFO%/localtime if present
     {
         std::filesystem::path p = std::filesystem::path(base) / "localtime";
         std::error_code ec;
@@ -146,6 +146,7 @@ jxx::Ptr<TimeZone> TimeZone::getDefault() {
             const std::string key = "@localtime";
             auto it = g_zoneCache.find(key);
             if (it != g_zoneCache.end()) return std::make_shared<TzdbTimeZone>(it->second);
+
             Zone z;
             if (load_zone_file(p.string(), "localtime", z)) {
                 g_zoneCache.emplace(key, z);
@@ -159,6 +160,7 @@ jxx::Ptr<TimeZone> TimeZone::getDefault() {
     std::error_code ec;
 
     if (std::filesystem::exists(etcLocal, ec) && !ec) {
+        // If symlink into zoneinfo base, derive IANA id
         if (std::filesystem::is_symlink(etcLocal, ec) && !ec) {
             auto target = std::filesystem::read_symlink(etcLocal, ec);
             if (!ec) {
@@ -173,6 +175,7 @@ jxx::Ptr<TimeZone> TimeZone::getDefault() {
                             std::string zoneId = absStr.substr(baseStr.size() + 1);
                             auto it2 = g_zoneCache.find(zoneId);
                             if (it2 != g_zoneCache.end()) return std::make_shared<TzdbTimeZone>(it2->second);
+
                             Zone z;
                             std::string p = base + "/" + zoneId;
                             if (load_zone_file(p, zoneId, z)) {
@@ -185,11 +188,12 @@ jxx::Ptr<TimeZone> TimeZone::getDefault() {
             }
         }
 
-        // Load /etc/localtime as TZif
+        // Otherwise load /etc/localtime directly as TZif
         {
             const std::string key = "@etc_localtime";
             auto it = g_zoneCache.find(key);
             if (it != g_zoneCache.end()) return std::make_shared<TzdbTimeZone>(it->second);
+
             Zone z;
             if (load_zone_file(etcLocal.string(), "localtime", z)) {
                 g_zoneCache.emplace(key, z);

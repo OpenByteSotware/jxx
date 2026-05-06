@@ -1,22 +1,10 @@
-#include "jxx.util.Calendar.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
 #include "lang/jxx.lang.String.h"
+#include "jxx.util.Calendar.h"
 
-#include <ctime>
-
-using namespace jxx::lang;
 
 namespace jxx::util {
-
-int Calendar::days_from_civil(int y, unsigned m, unsigned d) {
-    y -= m <= 2;
-    const int era = (y >= 0 ? y : y - 399) / 400;
-    const unsigned yoe = (unsigned)(y - era * 400);
-    const unsigned doy = (153 * (m + (m > 2 ? -3 : 9)) + 2) / 5 + d - 1;
-    const unsigned doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
-    return era * 146097 + (int)doe - 719468;
-}
 
 void Calendar::civil_from_days(int z, int& y, unsigned& m, unsigned& d) {
     z += 719468;
@@ -31,7 +19,7 @@ void Calendar::civil_from_days(int z, int& y, unsigned& m, unsigned& d) {
     y += (m <= 2);
 }
 
-static inline void epoch_to_local_parts(jlong epochMillis, jint tzOffsetMillis,
+void Calendar::epoch_to_local_parts(jxx::lang::jlong epochMillis, jxx::lang::jint tzOffsetMillis,
                                        int& y, unsigned& mo, unsigned& da,
                                        int& hh, int& mm, int& ss, int& ms,
                                        int& dow_java) {
@@ -62,7 +50,7 @@ static inline void epoch_to_local_parts(jlong epochMillis, jint tzOffsetMillis,
 
 Calendar::Calendar() {
     std::time_t now = std::time(nullptr);
-    millis_ = (jlong)now * 1000;
+    millis_ = (jxx::lang::jlong)now * 1000;
     tz_ = TimeZone::getDefault();
 }
 
@@ -70,8 +58,8 @@ jxx::Ptr<Calendar> Calendar::getInstance() {
     return std::make_shared<Calendar>();
 }
 
-jlong Calendar::getTimeInMillis() const { return millis_; }
-void Calendar::setTimeInMillis(jlong millis) { millis_ = millis; }
+jxx::lang::jlong Calendar::getTimeInMillis() const { return millis_; }
+void Calendar::setTimeInMillis(jxx::lang::jlong millis) { millis_ = millis; }
 
 jxx::Ptr<Date> Calendar::getTime() const { return std::make_shared<Date>(millis_); }
 
@@ -89,62 +77,26 @@ void Calendar::setTimeZone(jxx::Ptr<TimeZone> tz) {
     tz_ = std::move(tz);
 }
 
-jint Calendar::get(jint field) const {
+jxx::lang::jint Calendar::get(jxx::lang::jint field) const {
     auto tz = getTimeZone();
-    jint off = tz ? tz->getOffset(millis_) : 0;
+    jxx::lang::jint off = tz ? tz->getOffset(millis_) : 0;
 
     int y, hh, mm, ss, ms, dow;
     unsigned mo, da;
     epoch_to_local_parts(millis_, off, y, mo, da, hh, mm, ss, ms, dow);
 
     switch (field) {
-        case YEAR: return (jint)y;
-        case MONTH: return (jint)(mo - 1);
-        case DAY_OF_MONTH: return (jint)da;
-        case HOUR_OF_DAY: return (jint)hh;
-        case MINUTE: return (jint)mm;
-        case SECOND: return (jint)ss;
-        case MILLISECOND: return (jint)ms;
-        case DAY_OF_WEEK: return (jint)dow;
+        case YEAR: return (jxx::lang::jint)y;
+        case MONTH: return (jxx::lang::jint)(mo - 1);
+        case DAY_OF_MONTH: return (jxx::lang::jint)da;
+        case HOUR_OF_DAY: return (jxx::lang::jint)hh;
+        case MINUTE: return (jxx::lang::jint)mm;
+        case SECOND: return (jxx::lang::jint)ss;
+        case MILLISECOND: return (jxx::lang::jint)ms;
+        case DAY_OF_WEEK: return (jxx::lang::jint)dow;
         default:
             throw jxx::lang::IndexOutOfBoundsException(std::make_shared<jxx::lang::String>("Unsupported Calendar field"));
     }
-}
-
-void Calendar::add(jint field, jint amount) {
-    if (amount == 0) return;
-    switch (field) {
-    case MILLISECOND: millis_ += (jlong)amount; return;
-    case SECOND: millis_ += (jlong)amount * 1000; return;
-    case MINUTE: millis_ += (jlong)amount * 60000; return;
-    case HOUR_OF_DAY: millis_ += (jlong)amount * 3600000; return;
-    case DAY_OF_MONTH: millis_ += (jlong)amount * 86400000; return;
-    default: break;
-    }
-    jlong epoch = millis_;
-    jint off = getTimeZone()->getOffset(epoch);
-    int y, hh, mm, ss, ms, dow; unsigned mo, da;
-    epoch_to_parts(epoch, off, y, mo, da, hh, mm, ss, ms, dow);
-    if (field == YEAR) y += amount;
-    else if (field == MONTH) {
-        int newMonth = (int)mo + amount;
-        while (newMonth <= 0) { newMonth += 12; --y; }
-        while (newMonth > 12) { newMonth -= 12; ++y; }
-        mo = (unsigned)newMonth;
-    }
-    else {
-        throw jxx::lang::IndexOutOfBoundsException(std::make_shared<jxx::lang::String>("Unsupported Calendar add field"));
-    }
-    auto is_leap = [](int yy) { return (yy % 4 == 0 && yy % 100 != 0) || (yy % 400 == 0); };
-    static const int mdays[] = { 31,28,31,30,31,30,31,31,30,31,30,31 };
-    int dim = mdays[mo - 1] + ((mo == 2 && is_leap(y)) ? 1 : 0);
-    if ((int)da > dim) da = (unsigned)dim;
-    int days = days_from_civil(y, mo, da);
-    long long localSeconds = (long long)days * 86400 + hh * 3600 + mm * 60 + ss;
-    long long newMillisLocal = localSeconds * 1000 + ms;
-    jlong candidateEpoch = (jlong)(newMillisLocal - off);
-    jint off2 = getTimeZone()->getOffset(candidateEpoch);
-    millis_ = (jlong)(newMillisLocal - off2);
 }
 
 } // namespace jxx::util

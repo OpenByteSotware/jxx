@@ -1,5 +1,7 @@
 #pragma once
-
+#include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.IndexOutOfBoundsException.h"
+#include "lang/jxx.lang.String.h"
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.Object.h"
 #include "jxx.util.Date.h"
@@ -20,7 +22,6 @@ public:
     static constexpr jxx::lang::jint MILLISECOND = 14;
 
     Calendar();
-
     static jxx::Ptr<Calendar> getInstance();
 
     jxx::lang::jlong getTimeInMillis() const;
@@ -34,15 +35,15 @@ public:
 
     jxx::lang::jint get(jxx::lang::jint field) const;
 
-    void add(jxx::lang::jint field, jxx::lang::jint amount);
-
-
 private:
     jxx::lang::jlong millis_ = 0;
     jxx::Ptr<TimeZone> tz_;
 
-    static int days_from_civil(int y, unsigned m, unsigned d);
     static void civil_from_days(int z, int& y, unsigned& m, unsigned& d);
+    static void epoch_to_local_parts(jxx::lang::jlong epochMillis, jxx::lang::jint tzOffsetMillis,
+        int& y, unsigned& mo, unsigned& da,
+        int& hh, int& mm, int& ss, int& ms,
+        int& dow_java);
 };
 
 using Calender = Calendar;

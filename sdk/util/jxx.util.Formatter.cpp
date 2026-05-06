@@ -11,6 +11,7 @@
 #include "jxx.lang.String.h"
 #include "jxx.lang.Object.h"
 
+// Wrapper types (adjust include paths if needed)
 #include "jxx.lang.Integer.h"
 #include "jxx.lang.Long.h"
 #include "jxx.lang.Short.h"
@@ -33,11 +34,9 @@ namespace jxx::util {
 static inline void throw_fmt(const char* msg) {
     throw jxx::util::format::IllegalFormatException(std::make_shared<jxx::lang::String>(msg));
 }
-
 static inline void throw_missing(const char* msg) {
     throw jxx::util::format::MissingFormatArgumentException(std::make_shared<jxx::lang::String>(msg));
 }
-
 static inline void throw_unknown(const std::string& msg) {
     throw jxx::util::format::UnknownFormatConversionException(std::make_shared<jxx::lang::String>(msg.c_str()));
 }
@@ -48,7 +47,6 @@ static inline std::string to_upper_ascii(std::string s) {
     for (auto& ch : s) ch = (char)std::toupper((unsigned char)ch);
     return s;
 }
-
 static inline std::string to_lower_ascii(std::string s) {
     for (auto& ch : s) ch = (char)std::tolower((unsigned char)ch);
     return s;
@@ -61,14 +59,12 @@ static inline bool has_long(jxx::Ptr<jxx::lang::Object> o, long long& out) {
     if (auto b = std::dynamic_pointer_cast<jxx::lang::Byte>(o)) { out = (long long)b->byteValue(); return true; }
     return false;
 }
-
 static inline bool has_double(jxx::Ptr<jxx::lang::Object> o, double& out) {
     if (auto f = std::dynamic_pointer_cast<jxx::lang::Float>(o)) { out = (double)f->floatValue(); return true; }
     if (auto d = std::dynamic_pointer_cast<jxx::lang::Double>(o)) { out = (double)d->doubleValue(); return true; }
     long long li=0; if (has_long(o, li)) { out = (double)li; return true; }
     return false;
 }
-
 static inline bool has_bool(jxx::Ptr<jxx::lang::Object> o, bool& out) {
     if (auto b = std::dynamic_pointer_cast<jxx::lang::Boolean>(o)) { out = b->booleanValue(); return true; }
     return false;
@@ -100,7 +96,8 @@ static inline LocalParts epoch_to_local_parts(long long epochMillis, int offsetM
     p.second = (int)(secOfDay % 60);
     long long days = totalSec / 86400; if (totalSec < 0 && (totalSec % 86400)) --days;
     civil_from_days((int)days, p.year, p.mon, p.day);
-    int sun0 = (int)((days + 4) % 7); if (sun0 < 0) sun0 += 7; p.wday_java = sun0 + 1;
+    int sun0 = (int)((days + 4) % 7); if (sun0 < 0) sun0 += 7;
+    p.wday_java = sun0 + 1;
     return p;
 }
 
@@ -122,9 +119,12 @@ static inline std::string locale_time_name(const std::locale& loc, const LocalPa
 static inline void apply_width(std::string& out, const FormatSpec& s) {
     if (s.precision >= 0 && (s.conv=='s' || s.conv=='S') && (int)out.size() > s.precision)
         out.resize((std::size_t)s.precision);
+
     if (s.width <= 0 || (int)out.size() >= s.width) return;
+
     int pad = s.width - (int)out.size();
     char padChar = (s.zeroPad && !s.leftJustify) ? '0' : ' ';
+
     if (s.leftJustify) out.append((std::size_t)pad, ' ');
     else out = std::string((std::size_t)pad, padChar) + out;
 }
@@ -138,7 +138,7 @@ static void parse_one(const std::string& f, std::size_t& i, FormatSpec& s) {
         if (i<f.size() && f[i]=='$' && i>start) { s.argIndex=std::stoi(f.substr(start,i-start)); ++i; }
         else i=start;
     }
-    // flags
+    // flags (minimal set needed for common Java usage)
     while (i<f.size()) {
         switch (f[i]) {
             case '-': s.leftJustify=true; ++i; break;
@@ -206,9 +206,13 @@ jxx::Ptr<jxx::lang::String> Formatter::format(jxx::Ptr<jxx::lang::String> fmt,
         auto a = (*args)[argIndex-1];
 
         std::string chunk;
+
         if (spec.dateTime) {
+            if (!a) throw_fmt("NullPointerException");
+
             long long epoch=0;
             jxx::Ptr<jxx::util::TimeZone> tz;
+
             if (auto cal = std::dynamic_pointer_cast<jxx::util::Calender>(a)) {
                 epoch = (long long)cal->getTimeInMillis();
                 tz = cal->getTimeZone();
@@ -221,6 +225,7 @@ jxx::Ptr<jxx::lang::String> Formatter::format(jxx::Ptr<jxx::lang::String> fmt,
                 if (!has_long(a, v)) throw_fmt("IllegalFormatConversionException: t/T");
                 epoch=v; tz=jxx::util::TimeZone::getDefault();
             }
+
             jint off = tz ? tz->getOffset((jlong)epoch) : 0;
             LocalParts lp = epoch_to_local_parts(epoch, (int)off);
 
@@ -249,22 +254,33 @@ jxx::Ptr<jxx::lang::String> Formatter::format(jxx::Ptr<jxx::lang::String> fmt,
                 case 'A': chunk = locale_time_name(loc, lp, "%A"); break;
                 case 'b': chunk = locale_time_name(loc, lp, "%b"); break;
                 case 'B': chunk = locale_time_name(loc, lp, "%B"); break;
-                case 'p': chunk = locale_time_name(loc, lp, "%p"); chunk = to_lower_ascii(chunk); break;
+                case 'p': chunk = to_lower_ascii(locale_time_name(loc, lp, "%p")); break;
                 default: throw_unknown(std::string("UnknownFormatConversionException: t") + spec.conv);
             }
             if (spec.upper) chunk = to_upper_ascii(chunk);
+
         } else if (spec.conv=='s' || spec.conv=='S') {
             chunk = a ? a->toString()->utf8() : std::string("null");
             if (spec.upper) chunk = to_upper_ascii(chunk);
+
+        } else if (spec.conv=='b' || spec.conv=='B') {
+            bool bv=false;
+            if (!a) bv=false;
+            else if (!has_bool(a, bv)) bv=true;
+            chunk = bv ? "true" : "false";
+            if (spec.upper) chunk = to_upper_ascii(chunk);
+
         } else if (spec.conv=='d') {
             long long v=0; if (!has_long(a, v)) throw_fmt("IllegalFormatConversionException: d");
             chunk = std::to_string(v);
+
         } else if (spec.conv=='f') {
             double v=0; if (!has_double(a, v)) throw_fmt("IllegalFormatConversionException: f");
             std::ostringstream o; o.imbue(std::locale::classic());
             int prec = (spec.precision>=0) ? spec.precision : 6;
             o<<std::fixed<<std::setprecision(prec)<<v;
             chunk=o.str();
+
         } else {
             throw_unknown(std::string("UnknownFormatConversionException: ") + spec.conv);
         }
