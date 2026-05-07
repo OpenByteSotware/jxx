@@ -11,8 +11,10 @@
 #include <utility>
 #include <vector>
 #include <stdexcept>
+#include <new>
 #include "jxx.lang.ByteType.h"
 #include "jxx_types.h"
+#include "jxx.lang.Object.h"
 
 namespace jxx::lang {
 
@@ -264,7 +266,7 @@ namespace jxx::lang {
     //       int[][] a = { null, {1,2}, null }
     // ======================================================================
     template <typename T, std::uint32_t Rank>
-    class JxxArray {
+    class JxxArray : public Object {
         static_assert(Rank >= 2, "Use JxxArray<T,1> for rank-1 arrays");
 
     public:

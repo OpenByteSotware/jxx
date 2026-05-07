@@ -15,11 +15,8 @@
 #include <type_traits>
 #include <numeric>
 #include <array>
-#include <cstddef>
 #include <stdexcept>
 #include <cstdio>
-#include <string>
-#include <mutex>
 #include <condition_variable>
 #include <chrono>
 #include <iostream>
@@ -35,15 +32,9 @@
 #include "jxx_types.h"
 
 namespace jxx {
-    template <typename T>
-    using Ptr = std::shared_ptr<T>;
-}
-
-namespace jxx {
     namespace lang {
 
-        class String;
-		class ClassAny;
+        class ClassAny;
 
         inline std::string demangle(const char* name) {
 #if defined(__GNUG__) || defined(__clang__)
@@ -98,10 +89,10 @@ namespace jxx {
             jxx::Ptr<ClassAny> getClass() const;
 
             // Class name (demangled where supported); override if you prefer custom names
-            virtual jxx::Ptr<String> getClassName() const;
+            virtual jxx::Ptr<std::string> getClassName() const;
 
             // Java-like: "Class@hexHash"
-            virtual jxx::Ptr<String>  toString() const;
+            virtual jxx::Ptr<std::string>  toString() const;
 
             // Identity check (reference equality)
             virtual bool same(const Object& other) const;
@@ -324,7 +315,13 @@ template <typename T, typename... Args,
         std::is_class_v<T>)>>
     std::shared_ptr<T> JXX_NEW(Args&&... args) {
     auto obj = std::make_shared<T>(std::forward<Args>(args)...);
-    obj->thisPtr = obj; // Set thisPtr to the shared_ptr of the new object
+
+	// if its an Object, set thisPtr for safe shared_from_this in clone() and getClass()
+	// set the thisPtr member if T derives from Object, so that clone() and getClass() can safely use shared_from_this()
+    if constexpr (std::is_base_of_v<jxx::lang::Object, T>) {
+        obj->thisPtr = obj;
+    }
+
     return obj;
 }
 

@@ -40,3 +40,8 @@ namespace jxx::lang {
 	using jdouble = double;          // Java double: IEEE-754 binary64 on typical targets
 	using jbool = bool;            // Java boolean: logical true/false
 }
+
+namespace jxx {
+	template <typename T>
+	using Ptr = std::shared_ptr<T>;
+}

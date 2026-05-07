@@ -45,15 +45,15 @@ return std::hash<const void*>{}(thisPtr.get());
 }
 
 // Class name (demangled where supported); override if you prefer custom names
-jxx::Ptr<String> Object::getClassName() const {
-    return JXX_NEW<String>(this->getClassName_());
+jxx::Ptr<std::string> Object::getClassName() const {
+    return std::make_shared<std::string>(this->getClassName_());
 }
 
 // Java-like: "Class@hexHash"
-jxx::Ptr<String>  Object::toString() const {
+jxx::Ptr<std::string>  Object::toString() const {
     std::ostringstream oss;
     oss << getClassName_() << "@0x" << std::hex << hashCode();
-    return JXX_NEW<String>(oss.str());
+    return std::make_shared<std::string>(oss.str());
 }
 
 // Identity check (reference equality)

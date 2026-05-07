@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "jxx.h"
+#include "lang/jxx.lang.Object.h"
 #include "jxx_memory_detect.h"
 
 using namespace jxx::lang;
@@ -27,8 +27,8 @@ public:
     jint hashCode() const override {
         return std::hash<int>{}(value_);
     }
-    jxx::Ptr<String> toString() const override {
-        return JXX_NEW<String>(std::to_string(value_));
+    jxx::Ptr<std::string> toString() const override {
+        return JXX_NEW<std::string>(std::to_string(value_));
     }
 
 protected:
