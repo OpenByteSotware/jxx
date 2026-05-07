@@ -1,5 +1,4 @@
 #include "jxx.lang.String.h"
-
 #include "jxx.lang.Charset.h"
 #include "jxx.lang.Locale.h"
 

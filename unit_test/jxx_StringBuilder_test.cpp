@@ -5,16 +5,17 @@
 #include <limits>
 #include <string>
 #include <cstring>
-#include "jxx.h"
+#include "lang/jxx.lang.StringBuilder.h"
+#include "util/jxx.util.Vector.h"
 
 using jxx::lang::StringBuilder;
 using jxx::util::Vector;
 using jxx::lang::String;
 
 TEST(StringBuilderTest, ConstructReserveAndEmpty) {
-    StringBuilder b(128);
-    EXPECT_TRUE(b.empty());
-    EXPECT_EQ(b.size(), 0u);
+    auto b = JXX_NEW<StringBuilder>(128);
+    EXPECT_TRUE(b->empty());
+    EXPECT_EQ(b->size(), 0u);
     // Capacity is allowed to exceed request, but must be >= requested.
     EXPECT_GE(b.capacity(), 128u);
 

@@ -4,6 +4,8 @@
 #include "jxx.lang.buildin_array.h"
 #include "jxx.lang.Object.h"
 #include "jxx.lang.CharSequence.h"
+#include "jxx.lang.Comparable.h"
+#include "io/jxx.io.Serializable.h"
 
 #include <string>
 #include <vector>
@@ -23,10 +25,7 @@ namespace jxx::lang {
     using StringArray3D = jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 3>;
 
 
-    class String final
-        : public Object
-        , public CharSequence
-        , public std::enable_shared_from_this<String>
+    class String final : public Object, public Serializable, public Comparable<String>, public CharSequence
     {
     public:
         // ===== Constructors (Java 8) =====
