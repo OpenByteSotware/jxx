@@ -8,7 +8,7 @@ namespace jxx::util {
 class NoSuchElementException : public jxx::lang::RuntimeException {
 public:
     using jxx::lang::RuntimeException::RuntimeException;
-    JXX_THROWABLE_CLONE(NoSuchElementException)
+    JXX_OBJECT_CLONE(NoSuchElementException)
 protected:
     const char* typeName() const noexcept override { return "NoSuchElementException"; }
 };

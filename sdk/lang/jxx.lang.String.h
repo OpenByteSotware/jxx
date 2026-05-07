@@ -40,7 +40,7 @@ namespace jxx::lang {
         jint length() const override;
         jchar charAt(jint index) const override;
         jxx::Ptr<CharSequence> subSequence(jint beginIndex, jint endIndex) const override;
-        jxx::Ptr<String> toString() const override;
+        //jxx::Ptr<std::string> toString() const override;
 
         // ===== Unicode / code points =====
         jint codePointAt(jint index) const;

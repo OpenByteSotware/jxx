@@ -8,7 +8,7 @@ namespace jxx::lang {
 class NoSuchFieldException : public ReflectiveOperationException {
 public:
     using ReflectiveOperationException::ReflectiveOperationException;
-    JXX_THROWABLE_CLONE(NoSuchFieldException)
+    JXX_OBJECT_CLONE(NoSuchFieldException)
 protected:
     const char* typeName() const noexcept override { return "NoSuchFieldException"; }
 };

@@ -8,7 +8,7 @@ namespace jxx::lang {
 class InterruptedException : public Exception {
 public:
     using Exception::Exception;
-    JXX_THROWABLE_CLONE(InterruptedException)
+    JXX_OBJECT_CLONE(InterruptedException)
 protected:
     const char* typeName() const noexcept override { return "InterruptedException"; }
 };

@@ -8,7 +8,7 @@ namespace jxx::nio {
 class BufferUnderflowException : public jxx::lang::RuntimeException {
 public:
     using jxx::lang::RuntimeException::RuntimeException;
-    JXX_THROWABLE_CLONE(BufferUnderflowException)
+    JXX_OBJECT_CLONE(BufferUnderflowException)
 protected:
     const char* typeName() const noexcept override { return "BufferUnderflowException"; }
 };

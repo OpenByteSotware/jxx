@@ -8,7 +8,7 @@ namespace jxx::net {
 class UnknownHostException : public jxx::io::IOException {
 public:
     using jxx::io::IOException::IOException;
-    JXX_THROWABLE_CLONE(UnknownHostException)
+    JXX_OBJECT_CLONE(UnknownHostException)
 protected:
     const char* typeName() const noexcept override { return "UnknownHostException"; }
 };

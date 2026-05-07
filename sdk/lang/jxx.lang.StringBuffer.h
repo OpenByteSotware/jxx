@@ -29,7 +29,7 @@ public:
     StringBuffer& append(jxx::Ptr<CharArray> chars);
     StringBuffer& append(jxx::Ptr<CharArray> chars, jint off, jint len);
 
-    jxx::Ptr<String> toString() const override;
+    jxx::Ptr<std::string> toString() const override;
 
 private:
     StringBuilder sb_;

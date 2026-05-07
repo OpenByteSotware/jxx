@@ -64,6 +64,10 @@ namespace jxx::lang {
             capacity_(n),
             data_(n ? std::make_unique<T[]>(n) : std::unique_ptr<T[]>{}) {}
 
+
+        explicit JxxArray(const std::array<size_type, 1>& dims)
+            : JxxArray(dims[0]) {}
+
         // From initializer-list: JxxArray<int,1> a{1,2,3};
         JxxArray(std::initializer_list<T> init)
             : JxxArray(static_cast<size_type>(init.size())) {
@@ -180,7 +184,8 @@ namespace jxx::lang {
         template <class... Args>
         reference emplace_back(Args&&... args) {
             ensure_capacity_for_push_();
-            new (data_.get() + length) T(std::forward<Args>(args)...);
+            T tmp(std::forward<Args>(args)...);
+            data_[length] = std::move(tmp);
             return data_[length++];
         }
 

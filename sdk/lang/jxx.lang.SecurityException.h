@@ -8,7 +8,7 @@ namespace jxx::lang {
 class SecurityException : public RuntimeException {
 public:
     using RuntimeException::RuntimeException;
-    JXX_THROWABLE_CLONE(SecurityException)
+    JXX_OBJECT_CLONE(SecurityException)
 protected:
     const char* typeName() const noexcept override { return "SecurityException"; }
 };

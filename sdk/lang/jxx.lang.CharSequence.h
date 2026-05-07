@@ -1,5 +1,5 @@
 #pragma once
-
+#include <string>
 #include "jxx_types.h"
 
 namespace jxx::lang {
@@ -15,7 +15,7 @@ struct CharSequence {
     virtual jxx::Ptr<CharSequence> subSequence(jint beginIndex, jint endIndex) const = 0;
 
     // Java: toString() returns String
-    virtual jxx::Ptr<String> toString() const = 0;
+    virtual jxx::Ptr<std::string> toString() const = 0;
 };
 
 } // namespace jxx::lang

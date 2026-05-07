@@ -8,7 +8,7 @@ namespace jxx::lang {
 class NumberFormatException : public IllegalArgumentException {
 public:
     using IllegalArgumentException::IllegalArgumentException;
-    JXX_THROWABLE_CLONE(NumberFormatException)
+    JXX_OBJECT_CLONE(NumberFormatException)
 protected:
     const char* typeName() const noexcept override { return "NumberFormatException"; }
 };

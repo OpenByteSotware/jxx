@@ -8,7 +8,7 @@ namespace jxx::lang {
 class ArithmeticException : public RuntimeException {
 public:
     using RuntimeException::RuntimeException;
-    JXX_THROWABLE_CLONE(ArithmeticException)
+    JXX_OBJECT_CLONE(ArithmeticException)
 protected:
     const char* typeName() const noexcept override { return "ArithmeticException"; }
 };

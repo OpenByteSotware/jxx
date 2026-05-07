@@ -8,7 +8,7 @@ namespace jxx::lang {
 class IndexOutOfBoundsException : public RuntimeException {
 public:
     using RuntimeException::RuntimeException;
-    JXX_THROWABLE_CLONE(IndexOutOfBoundsException)
+    JXX_OBJECT_CLONE(IndexOutOfBoundsException)
 
 protected:
     const char* typeName() const noexcept override { return "IndexOutOfBoundsException"; }

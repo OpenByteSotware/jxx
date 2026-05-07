@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include "jxx_types.h"
 #include "jxx.lang.Object.h"
 #include "jxx.lang.String.h"
@@ -9,29 +10,24 @@ namespace jxx::lang {
 
 class StringBuilder : public Object, public jxx::io::Serializable, public CharSequence {
 public:
-    StringBuilder();
-    explicit StringBuilder(jint capacity);
-    explicit StringBuilder(jxx::Ptr<String> s);
+    static jxx::Ptr<StringBuilder> make();
+    static jxx::Ptr<StringBuilder> make(jint capacity);
+    static jxx::Ptr<StringBuilder> make(jxx::Ptr<String> s);
 
-    jint length() const;
-    jint capacity() const;
-    void ensureCapacity(jint minimumCapacity);
-    void setLength(jint newLength);
+    jxx::Ptr<StringBuilder> append(jxx::Ptr<String> s);
+    jxx::Ptr<StringBuilder> append(jxx::Ptr<Object> o);
+    jxx::Ptr<StringBuilder> append(jint v);
+    jxx::Ptr<StringBuilder> append(jlong v);
+    jxx::Ptr<StringBuilder> append(jbool v);
+    jxx::Ptr<StringBuilder> append(jchar v);
 
-    StringBuilder& append(jxx::Ptr<String> s);
-    StringBuilder& append(jxx::Ptr<Object> o);
-    StringBuilder& append(jchar c);
-    StringBuilder& append(jint i);
-    StringBuilder& append(jlong l);
-    StringBuilder& append(jfloat f);
-    StringBuilder& append(jdouble d);
-    StringBuilder& append(jbool b);
-    StringBuilder& append(jxx::Ptr<CharArray> chars);
-    StringBuilder& append(jxx::Ptr<CharArray> chars, jint off, jint len);
-
-    jxx::Ptr<String> toString() const override;
+    jxx::Ptr<std::string> toString() const override;
 
 private:
+    StringBuilder() = default;
+    explicit StringBuilder(jint cap);
+    explicit StringBuilder(jxx::Ptr<String> s);
+
     std::u16string buf_;
 };
 

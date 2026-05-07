@@ -184,10 +184,11 @@ namespace jxx::lang {
         return substring(beginIndex, endIndex);
     }
 
-    jxx::Ptr<String> String::toString() const {
+    /*
+    jxx::Ptr<std::string> String::toString() const {
         // Java returns itself
         return std::const_pointer_cast<String>(Object::shared_from_this());
-    }
+    }*/
 
     // =========================
     // Code point APIs

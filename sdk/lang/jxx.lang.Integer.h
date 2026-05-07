@@ -19,9 +19,9 @@ public:
     virtual jint hashCode() const override {
         return std::hash<int>{}(v_);
     }
-    virtual jxx::Ptr<String> toString() const override {
-        return JXX_NEW<String>(std::to_string(v_));
-    }
+    //virtual jxx::Ptr<String> toString() const override {
+    //    return JXX_NEW<String>(std::to_string(v_));
+    //}
 
 protected:
     // Implement cloneImpl for deep copy, Object uses this for C++ to mimic java like clone

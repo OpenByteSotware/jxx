@@ -73,6 +73,7 @@ namespace jxx {
 		//  - For Java-like cloning, derive from Cloneable and implement cloneImpl() for deep copy. Object::clone() checks for Cloneable and delegates to cloneImpl().
 		//  Note: we do NOT make Object copyable or assignable by default, since Java's Object is not. If you want copy semantics, derive from Cloneable and implement cloneImpl() for deep copy.
 		//  - Because this pointer may be used as return need to inherit from enable_shared_from_this for safe shared_ptr creation in clone() and getClass()
+        
         class Object : public std::enable_shared_from_this<Object> {
         public:
             std::shared_ptr<Object> thisPtr;

@@ -23,11 +23,13 @@ public:
     jxx::Ptr<String> getLanguage() const;
     jxx::Ptr<String> getCountry() const;
 
-    jxx::Ptr<String> toString() const override;
+    //jxx::Ptr<String> toString() const override;
     jbool equals(jxx::Ptr<Object> o) const override;
     jint hashCode() const override;
 
     const std::locale& cppLocale() const noexcept { return loc_; }
+
+	jxx::Ptr<std::string> toString() const override;
 
 private:
     std::string language_;
