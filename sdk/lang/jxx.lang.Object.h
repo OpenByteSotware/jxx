@@ -123,6 +123,13 @@ namespace jxx {
                     "T must derive from Object");
                 return std::dynamic_pointer_cast<T>(thisPtr);
             }
+            
+			// mimic Java 8 syncrhonized blocks: obj.synchronized([&] { ... });
+            template <typename F>
+            auto synchronized(F&& f) const -> decltype(f()) {
+                std::lock_guard<std::recursive_mutex> guard(mutex_);
+                return f();
+            }
 
             mutable std::mutex mtx_;
             std::condition_variable cv_;
@@ -132,6 +139,9 @@ namespace jxx {
             void releaseSelf();
 
             std::string getClassName_() const;
+
+            mutable std::recursive_mutex mutex_;
+
 
 		};
 
