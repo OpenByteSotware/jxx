@@ -57,7 +57,7 @@ namespace jxx::lang {
             bool enableSuppression = true,
             bool writableStackTrace = true)
             : message_(message != nullptr ? message : JXX_NEW<String>("")),
-            cause_(std::move(cause)),
+            cause_(cause),
             enableSuppression_(enableSuppression),
             writableStackTrace_(writableStackTrace) {
             if (writableStackTrace_) {
@@ -71,7 +71,7 @@ namespace jxx::lang {
             bool enableSuppression = true,
             bool writableStackTrace = true)
             : message_(JXX_NEW<String>(message)),
-            cause_(std::move(cause)),
+            cause_(cause),
             enableSuppression_(enableSuppression),
             writableStackTrace_(writableStackTrace) {
             if (writableStackTrace_) {
@@ -85,7 +85,7 @@ namespace jxx::lang {
             bool enableSuppression = true,
             bool writableStackTrace = true)
             : message_(JXX_NEW<String>(message)),
-            cause_(std::move(cause)),
+            cause_(cause),
             enableSuppression_(enableSuppression),
             writableStackTrace_(writableStackTrace) {
             if (writableStackTrace_) {
@@ -104,7 +104,7 @@ namespace jxx::lang {
          * Java's initCause has constraints (can only be set once, cannot set self, etc.).
          * This is a permissive version; tighten if you want exact rules.
          */
-        void initCause(jxx::Ptr<Throwable> cause) { cause_ = std::move(cause); }
+        void initCause(jxx::Ptr<Throwable> cause) { cause_ = cause; }
 
         // ---- Suppressed exceptions (Java 7+, present in Java 8) ----
         /**
@@ -156,7 +156,7 @@ namespace jxx::lang {
          * (dotted, template compression, operator() prettify, etc.).
          */
         void printStackTrace(std::ostream& os) const {
-            os << typeName() << ": " << message_->toStdString() << "\n";
+            os << typeName() << ": " << message_->toString() << "\n";
 
             for (const auto& e : stack_) {
                 os << "\tat " << e.symbol
@@ -183,8 +183,8 @@ namespace jxx::lang {
          * Returns a stable const char* valid until the next toString() call
          * (or object destruction).
          */
-        virtual jxx::Ptr<String>  toString() const {
-            const std::string msg = message_->toStdString();
+        virtual jxx::Ptr<std::string>  toString() const {
+            const std::string msg = message_->toString()->c_str();
 
             cachedToString_.clear();
             // Reserve reduces reallocations (optional)
@@ -195,14 +195,14 @@ namespace jxx::lang {
                 cachedToString_ += ": ";
                 cachedToString_ += msg;
             }
-            return JXX_NEW<String>(cachedToString_);
+            return JXX_NEW<std::string>(cachedToString_);
         }
 
         /**
          * std::exception bridge. Same caching rationale as toString().
          */
         const char* what() const noexcept override {
-            cachedWhat_ = message_->toStdString();
+            cachedWhat_ = message_->toString()->c_str();
             return cachedWhat_.c_str();
         }
 

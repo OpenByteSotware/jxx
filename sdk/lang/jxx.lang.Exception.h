@@ -23,7 +23,7 @@ namespace jxx::lang {
     class InvocationTargetException : public Exception {
     public:
         InvocationTargetException(jxx::Ptr<String> message, jxx::Ptr<Throwable> cause)
-            : Exception(std::move(message), std::move(cause)) {}
+            : Exception(message, cause) {}
         JXX_OBJECT_CLONE(InvocationTargetException)
     protected:
         const char* typeName() const noexcept override { return "InvocationTargetException"; }

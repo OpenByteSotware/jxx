@@ -2,7 +2,7 @@
 
 #include "jxx_types.h"
 #include "jxx.lang.Object.h"
-#include "jxx.io.Serializable.h"
+#include "io/jxx.io.Serializable.h"
 #include "jxx.lang.Appendable.h"
 #include "jxx.lang.CharSequence.h"
 #include "jxx.lang.String.h"
