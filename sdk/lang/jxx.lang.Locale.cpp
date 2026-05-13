@@ -1,6 +1,7 @@
+#include <functional>
+#include "jxx.lang.String.h"
 #include "jxx.lang.Locale.h"
 
-#include <functional>
 
 namespace jxx::lang {
 
@@ -37,7 +38,7 @@ jxx::Ptr<String> Locale::getLanguage() const { return from_utf8_(language_); }
 
 jxx::Ptr<String> Locale::getCountry() const { return from_utf8_(country_); }
 
-jxx::Ptr<std::string> Locale::toString() const {
+jxx::Ptr<String> Locale::toString() const {
     if (language_.empty() && country_.empty()) return from_utf8_("");
     if (country_.empty()) return from_utf8_(language_);
     return from_utf8_(language_ + "_" + country_);

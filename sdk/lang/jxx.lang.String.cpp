@@ -1,29 +1,25 @@
+
 #include <algorithm>
 #include <sstream>
 #include <regex>
 #include <locale>
-#include <ctime>
-
+#include <vector>
 #include "jxx.lang.String.h"
-#include "jxx.lang.StringBuffer.h"
-#include "jxx.lang.StringBuilder.h"
 #include "jxx.lang.NullPointerException.h"
 #include "jxx.lang.StringIndexOutOfBoundsException.h"
 #include "jxx.lang.IllegalArgumentException.h"
+#include "jxx.lang.StringBuffer.h"
+#include "jxx.lang.StringBuilder.h"
 #include "util/jxx.util.IntStream.h"
+#include "util/jxx.util.Formatter.h"
+#include "jxx.lang.Cast.h"
 
 
 namespace jxx::lang {
 
-    std::mutex String::internMutex_{};
-    std::unordered_map<std::u16string, std::weak_ptr<String>> String::internPool_{};
-
-    void String::throwNPE_() {
-        throw NullPointerException(JXX_NEW<String>("null"));
-    }
-    void String::throwSIOOBE_() {
-        throw StringIndexOutOfBoundsException(JXX_NEW<String>("String index out of range"));
-    }
+    void String::throwNPE_() { throw NullPointerException(JXX_NEW<String>("null")); }
+    void String::throwSIOOBE_() { throw StringIndexOutOfBoundsException(JXX_NEW<String>("String index out of range")); }
+    void String::throwIAE_(const char* msg) { throw IllegalArgumentException(JXX_NEW<String>(msg)); }
 
     char16_t String::toLowerAscii_(char16_t c) {
         if (c >= u'A' && c <= u'Z') return (char16_t)(c - u'A' + u'a');
@@ -34,6 +30,14 @@ namespace jxx::lang {
         return c;
     }
 
+    bool String::isTurkicLocale_(jxx::Ptr<Locale> loc) {
+        if (!loc) return false;
+        auto lang = loc->getLanguage();
+        if (!lang) return false;
+        auto s = lang->utf8();
+        return (s == "tr" || s == "az");
+    }
+
     std::u16string String::toUtf16_(jxx::Ptr<CharSequence> s) {
         if (!s) throwNPE_();
         std::u16string out;
@@ -42,7 +46,7 @@ namespace jxx::lang {
         return out;
     }
 
-    // ---------------- UTF-8 <-> UTF-16 ----------------
+    // UTF-8 helpers (used only for regex via std::regex; charset encode/decode uses Charset)
     std::u16string String::utf8ToUtf16_(const std::string& s) {
         std::u16string out;
         out.reserve(s.size());
@@ -54,9 +58,7 @@ namespace jxx::lang {
             uint32_t cp = 0;
             unsigned char c = *p++;
 
-            if (c < 0x80) {
-                cp = c;
-            }
+            if (c < 0x80) cp = c;
             else if ((c >> 5) == 0x6 && p < e) {
                 cp = (uint32_t)(c & 0x1F) << 6;
                 cp |= (uint32_t)(*p++ & 0x3F);
@@ -72,13 +74,9 @@ namespace jxx::lang {
                 cp |= (uint32_t)(*p++ & 0x3F) << 6;
                 cp |= (uint32_t)(*p++ & 0x3F);
             }
-            else {
-                cp = 0xFFFD;
-            }
+            else cp = 0xFFFD;
 
-            if (cp <= 0xFFFF) {
-                out.push_back((char16_t)cp);
-            }
+            if (cp <= 0xFFFF) out.push_back((char16_t)cp);
             else {
                 cp -= 0x10000;
                 out.push_back((char16_t)(0xD800 + ((cp >> 10) & 0x3FF)));
@@ -94,15 +92,13 @@ namespace jxx::lang {
 
         for (size_t i = 0; i < s.size(); ++i) {
             uint32_t cp = s[i];
-            if (isHigh_((char16_t)cp) && i + 1 < s.size() && isLow_((char16_t)s[i + 1])) {
+            if (isHigh_(s[i]) && i + 1 < s.size() && isLow_(s[i + 1])) {
                 uint32_t hi = (uint32_t)s[i++] - 0xD800;
                 uint32_t lo = (uint32_t)s[i] - 0xDC00;
                 cp = (hi << 10) + lo + 0x10000;
             }
 
-            if (cp < 0x80) {
-                out.push_back((char)cp);
-            }
+            if (cp < 0x80) out.push_back((char)cp);
             else if (cp < 0x800) {
                 out.push_back((char)(0xC0 | (cp >> 6)));
                 out.push_back((char)(0x80 | (cp & 0x3F)));
@@ -137,23 +133,55 @@ namespace jxx::lang {
         value_ = utf8ToUtf16_(std::string(utf8c));
     }
 
-    // byte[]
+    // byte[] ctors use Charset (Java default charset)
     String::String(jxx::Ptr<ByteArray> bytes) : String(bytes, 0, bytes ? (jint)bytes->length : 0) {}
+
     String::String(jxx::Ptr<ByteArray> bytes, jint offset, jint length) {
         if (!bytes) throwNPE_();
         if (offset < 0 || length < 0 || (std::uint32_t)(offset + length) > bytes->length) throwSIOOBE_();
-        std::string s;
-        s.resize((size_t)length);
-        for (jint i = 0; i < length; ++i) s[(size_t)i] = (char)(*bytes)[offset + i];
-        value_ = utf8ToUtf16_(s);
-    }
-    String::String(jxx::Ptr<ByteArray> bytes, jxx::Ptr<String> charsetName) : String(bytes) { (void)charsetName; }
-    String::String(jxx::Ptr<ByteArray> bytes, jint offset, jint length, jxx::Ptr<String> charsetName) : String(bytes, offset, length) { (void)charsetName; }
-    String::String(jxx::Ptr<ByteArray> bytes, jxx::Ptr<Charset> charset) : String(bytes) { (void)charset; }
-    String::String(jxx::Ptr<ByteArray> bytes, jint offset, jint length, jxx::Ptr<Charset> charset) : String(bytes, offset, length) { (void)charset; }
 
-    // deprecated hibyte
+        auto slice = JXX_NEW<ByteArray>((std::uint32_t)length);
+        for (jint i = 0; i < length; ++i) (*slice)[i] = (*bytes)[offset + i];
+
+        auto cs = Charset::defaultCharset();
+        value_ = cs->decode(slice)->utf16();
+    }
+
+    String::String(jxx::Ptr<ByteArray> bytes, jxx::Ptr<String> charsetName) {
+        if (!bytes || !charsetName) throwNPE_();
+        auto cs = Charset::forName(charsetName);
+        value_ = cs->decode(bytes)->utf16();
+    }
+
+    String::String(jxx::Ptr<ByteArray> bytes, jint offset, jint length, jxx::Ptr<String> charsetName) {
+        if (!bytes || !charsetName) throwNPE_();
+        if (offset < 0 || length < 0 || (std::uint32_t)(offset + length) > bytes->length) throwSIOOBE_();
+
+        auto slice = JXX_NEW<ByteArray>((std::uint32_t)length);
+        for (jint i = 0; i < length; ++i) (*slice)[i] = (*bytes)[offset + i];
+
+        auto cs = Charset::forName(charsetName);
+        value_ = cs->decode(slice)->utf16();
+    }
+
+    String::String(jxx::Ptr<ByteArray> bytes, jxx::Ptr<Charset> charset) {
+        if (!bytes || !charset) throwNPE_();
+        value_ = charset->decode(bytes)->utf16();
+    }
+
+    String::String(jxx::Ptr<ByteArray> bytes, jint offset, jint length, jxx::Ptr<Charset> charset) {
+        if (!bytes || !charset) throwNPE_();
+        if (offset < 0 || length < 0 || (std::uint32_t)(offset + length) > bytes->length) throwSIOOBE_();
+
+        auto slice = JXX_NEW<ByteArray>((std::uint32_t)length);
+        for (jint i = 0; i < length; ++i) (*slice)[i] = (*bytes)[offset + i];
+
+        value_ = charset->decode(slice)->utf16();
+    }
+
+    // deprecated hibyte constructors
     String::String(jxx::Ptr<ByteArray> ascii, jint hibyte) : String(ascii, hibyte, 0, ascii ? (jint)ascii->length : 0) {}
+
     String::String(jxx::Ptr<ByteArray> ascii, jint hibyte, jint offset, jint count) {
         if (!ascii) throwNPE_();
         if (offset < 0 || count < 0 || (std::uint32_t)(offset + count) > ascii->length) throwSIOOBE_();
@@ -164,16 +192,17 @@ namespace jxx::lang {
         }
     }
 
-    // char[]
+    // char[] constructors
     String::String(jxx::Ptr<CharArray> value) : String(value, 0, value ? (jint)value->length : 0) {}
+
     String::String(jxx::Ptr<CharArray> value, jint offset, jint count) {
         if (!value) throwNPE_();
         if (offset < 0 || count < 0 || (std::uint32_t)(offset + count) > value->length) throwSIOOBE_();
-        this->value_.resize((size_t)count);
-        for (jint i = 0; i < count; ++i) this->value_[(size_t)i] = (char16_t)(*value)[offset + i];
+        value_.resize((size_t)count);
+        for (jint i = 0; i < count; ++i) value_[(size_t)i] = (char16_t)(*value)[offset + i];
     }
 
-    // codePoints
+    // codePoints constructor
     String::String(jxx::Ptr<IntArray> cps, jint offset, jint count) {
         if (!cps) throwNPE_();
         if (offset < 0 || count < 0 || (std::uint32_t)(offset + count) > cps->length) throwSIOOBE_();
@@ -190,15 +219,9 @@ namespace jxx::lang {
         }
     }
 
-    // StringBuffer/StringBuilder (strict completeness; relies on their toString())
-    String::String(jxx::Ptr<StringBuffer> buffer) {
-        if (!buffer) throwNPE_();
-        value_ = buffer->substring(0)->utf16();
-    }
-    String::String(jxx::Ptr<StringBuilder> builder) {
-        if (!builder) throwNPE_();
-        value_ = builder->substring(0)->utf16();
-    }
+    // StringBuffer/StringBuilder ctors depend on your classes existing
+    String::String(jxx::Ptr<StringBuffer> buffer) { if (!buffer) throwNPE_(); value_ = buffer->toString()->utf16(); }
+    String::String(jxx::Ptr<StringBuilder> builder) { if (!builder) throwNPE_(); value_ = builder->toString()->utf16(); }
 
     // ---------------- CharSequence ----------------
     jint String::length() const { return (jint)value_.size(); }
@@ -212,11 +235,10 @@ namespace jxx::lang {
         return std::static_pointer_cast<CharSequence>(substring(start, end));
     }
 
-    jxx::Ptr<jxx::lang::String> String::toString() const {
-        return std::static_pointer_cast<jxx::lang::String>(this->thisPtr);
+    jxx::Ptr<String> String::toString() const {
+        return std::static_pointer_cast<String>(this->thisPtr);
     }
-
-    // ---------------- Comparable ----------------
+    // Comparable
     jint String::compareTo(jxx::Ptr<String> another) const {
         if (!another) throwNPE_();
         const auto& b = another->value_;
@@ -227,7 +249,7 @@ namespace jxx::lang {
         return (jint)value_.size() - (jint)b.size();
     }
 
-    // ---------------- Object overrides ----------------
+    // Object
     jbool String::equals(jxx::Ptr<Object> obj) const {
         auto s = std::dynamic_pointer_cast<String>(obj);
         return s && s->value_ == value_;
@@ -242,7 +264,7 @@ namespace jxx::lang {
         return h;
     }
 
-    // ---------------- methods ----------------
+    // ---------- remaining methods (full) ----------
     jbool String::isEmpty() const { return value_.empty(); }
 
     jint String::codePointAt(jint index) const {
@@ -308,31 +330,27 @@ namespace jxx::lang {
     }
 
     void String::getBytes(jint srcBegin, jint srcEnd, jxx::Ptr<ByteArray> dst, jint dstBegin) const {
-        // Java deprecated version uses low 8 bits of chars.
         if (!dst) throwNPE_();
         if (srcBegin < 0 || srcEnd < srcBegin || srcEnd >(jint)value_.size()) throwSIOOBE_();
         if (dstBegin < 0) throwSIOOBE_();
         if ((std::uint32_t)(dstBegin + (srcEnd - srcBegin)) > dst->length) throwSIOOBE_();
-        for (jint i = 0; i < (srcEnd - srcBegin); ++i) {
-            (*dst)[dstBegin + i] = (jbyte)(value_[(size_t)(srcBegin + i)] & 0xFF);
-        }
+        for (jint i = 0; i < (srcEnd - srcBegin); ++i) (*dst)[dstBegin + i] = (jbyte)(value_[(size_t)(srcBegin + i)] & 0xFF);
     }
 
     jxx::Ptr<ByteArray> String::getBytes() const {
-        std::string s = utf8();
-        auto out = JXX_NEW<ByteArray>((std::uint32_t)s.size());
-        for (jint i = 0; i < (jint)s.size(); ++i) (*out)[i] = (jbyte)s[(size_t)i];
-        return out;
+        auto cs = Charset::defaultCharset();
+        return cs->encode(std::static_pointer_cast<String>(this->thisPtr));
     }
 
     jxx::Ptr<ByteArray> String::getBytes(jxx::Ptr<String> charsetName) const {
-        (void)charsetName;
-        return getBytes(); // strict signature, fallback implementation
+        if (!charsetName) throwNPE_();
+        auto cs = Charset::forName(charsetName);
+        return cs->encode(std::static_pointer_cast<String>(this->thisPtr));
     }
 
     jxx::Ptr<ByteArray> String::getBytes(jxx::Ptr<Charset> charset) const {
-        (void)charset;
-        return getBytes();
+        if (!charset) throwNPE_();
+        return charset->encode(std::static_pointer_cast<String>(this->thisPtr));
     }
 
     jbool String::contentEquals(jxx::Ptr<CharSequence> cs) const {
@@ -341,19 +359,17 @@ namespace jxx::lang {
         for (jint i = 0; i < length(); ++i) if (cs->charAt(i) != charAt(i)) return false;
         return true;
     }
+
     jbool String::contentEquals(jxx::Ptr<StringBuffer> sb) const {
         if (!sb) return false;
-        if (sb->length() != length()) return false;
-        for (jint i = 0; i < length(); ++i) if (sb->charAt(i) != charAt(i)) return false;
-        return true;
+        return contentEquals(std::static_pointer_cast<CharSequence>(sb->toString()));
     }
 
     jbool String::equalsIgnoreCase(jxx::Ptr<String> other) const {
         if (!other) return false;
         if (other->length() != length()) return false;
-        for (jint i = 0; i < length(); ++i) {
+        for (jint i = 0; i < length(); ++i)
             if (toLowerAscii_(value_[(size_t)i]) != toLowerAscii_(other->value_[(size_t)i])) return false;
-        }
         return true;
     }
 
@@ -371,11 +387,13 @@ namespace jxx::lang {
     jbool String::regionMatches(jint toffset, jxx::Ptr<String> other, jint ooffset, jint len) const {
         return regionMatches(false, toffset, other, ooffset, len);
     }
+
     jbool String::regionMatches(jbool ignoreCase, jint toffset, jxx::Ptr<String> other, jint ooffset, jint len) const {
         if (!other) throwNPE_();
         if (toffset < 0 || ooffset < 0 || len < 0) return false;
         if (toffset + len > length()) return false;
         if (ooffset + len > other->length()) return false;
+
         for (jint i = 0; i < len; ++i) {
             char16_t a = value_[(size_t)(toffset + i)];
             char16_t b = other->value_[(size_t)(ooffset + i)];
@@ -386,21 +404,23 @@ namespace jxx::lang {
     }
 
     jbool String::startsWith(jxx::Ptr<String> prefix) const { return startsWith(prefix, 0); }
+
     jbool String::startsWith(jxx::Ptr<String> prefix, jint toffset) const {
         if (!prefix) throwNPE_();
         if (toffset < 0) return false;
         if (toffset + prefix->length() > length()) return false;
-        for (jint i = 0; i < prefix->length(); ++i) {
+        for (jint i = 0; i < prefix->length(); ++i)
             if (value_[(size_t)(toffset + i)] != prefix->value_[(size_t)i]) return false;
-        }
         return true;
     }
+
     jbool String::endsWith(jxx::Ptr<String> suffix) const {
         if (!suffix) throwNPE_();
         return startsWith(suffix, length() - suffix->length());
     }
 
     jint String::indexOf(jint ch) const { return indexOf(ch, 0); }
+
     jint String::indexOf(jint ch, jint fromIndex) const {
         if (fromIndex < 0) fromIndex = 0;
         if (fromIndex >= length()) return -1;
@@ -408,7 +428,9 @@ namespace jxx::lang {
         for (jint i = fromIndex; i < length(); ++i) if (value_[(size_t)i] == c) return i;
         return -1;
     }
+
     jint String::lastIndexOf(jint ch) const { return lastIndexOf(ch, length() - 1); }
+
     jint String::lastIndexOf(jint ch, jint fromIndex) const {
         char16_t c = (char16_t)ch;
         if (fromIndex >= length()) fromIndex = length() - 1;
@@ -417,6 +439,7 @@ namespace jxx::lang {
     }
 
     jint String::indexOf(jxx::Ptr<String> str) const { return indexOf(str, 0); }
+
     jint String::indexOf(jxx::Ptr<String> str, jint fromIndex) const {
         if (!str) throwNPE_();
         if (fromIndex < 0) fromIndex = 0;
@@ -424,7 +447,9 @@ namespace jxx::lang {
         auto pos = value_.find(str->value_, (size_t)fromIndex);
         return pos == std::u16string::npos ? -1 : (jint)pos;
     }
+
     jint String::lastIndexOf(jxx::Ptr<String> str) const { return lastIndexOf(str, length()); }
+
     jint String::lastIndexOf(jxx::Ptr<String> str, jint fromIndex) const {
         if (!str) throwNPE_();
         if (str->value_.empty()) return std::min(fromIndex, length());
@@ -434,15 +459,12 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<String> String::substring(jint beginIndex) const { return substring(beginIndex, length()); }
+
     jxx::Ptr<String> String::substring(jint beginIndex, jint endIndex) const {
         if (beginIndex < 0 || endIndex < beginIndex || endIndex > length()) throwSIOOBE_();
         auto out = JXX_NEW<String>();
         out->value_ = value_.substr((size_t)beginIndex, (size_t)(endIndex - beginIndex));
         return out;
-    }
-
-    jxx::Ptr<CharSequence> String::subSequence_(jint start, jint end) const {
-        return subSequence(start, end);
     }
 
     jxx::Ptr<String> String::concat(jxx::Ptr<String> str) const {
@@ -529,18 +551,41 @@ namespace jxx::lang {
         return arr;
     }
 
-    jxx::Ptr<String> String::toLowerCase() const { return toLowerCase(nullptr); }
-    jxx::Ptr<String> String::toLowerCase(jxx::Ptr<Locale> /*locale*/) const {
+    jxx::Ptr<String> String::toLowerCase() const {
+        return toLowerCase(Locale::getDefault());
+    }
+
+    jxx::Ptr<String> String::toLowerCase(jxx::Ptr<Locale> locale) const {
         auto out = JXX_NEW<String>();
         out->value_ = value_;
-        for (auto& c : out->value_) c = toLowerAscii_(c);
+        bool turkic = isTurkicLocale_(locale);
+
+        for (auto& c : out->value_) {
+            if (turkic) {
+                if (c == u'I') { c = u'\u0131'; continue; }
+                if (c == u'\u0130') { c = u'i'; continue; }
+            }
+            c = toLowerAscii_(c);
+        }
         return out;
     }
-    jxx::Ptr<String> String::toUpperCase() const { return toUpperCase(nullptr); }
-    jxx::Ptr<String> String::toUpperCase(jxx::Ptr<Locale> /*locale*/) const {
+
+    jxx::Ptr<String> String::toUpperCase() const {
+        return toUpperCase(Locale::getDefault());
+    }
+
+    jxx::Ptr<String> String::toUpperCase(jxx::Ptr<Locale> locale) const {
         auto out = JXX_NEW<String>();
         out->value_ = value_;
-        for (auto& c : out->value_) c = toUpperAscii_(c);
+        bool turkic = isTurkicLocale_(locale);
+
+        for (auto& c : out->value_) {
+            if (turkic) {
+                if (c == u'i') { c = u'\u0130'; continue; }
+                if (c == u'\u0131') { c = u'I'; continue; }
+            }
+            c = toUpperAscii_(c);
+        }
         return out;
     }
 
@@ -560,7 +605,6 @@ namespace jxx::lang {
         return a;
     }
 
-    // ---------------- streams ----------------
     jxx::Ptr<jxx::util::IntStream> String::chars() const {
         auto a = JXX_NEW<IntArray>((std::uint32_t)value_.size());
         for (jint i = 0; i < (jint)value_.size(); ++i) (*a)[i] = (jint)value_[(size_t)i];
@@ -568,7 +612,6 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<jxx::util::IntStream> String::codePoints() const {
-        // decode surrogate pairs into Unicode code points
         std::vector<jint> cps;
         cps.reserve(value_.size());
         for (size_t i = 0; i < value_.size(); ++i) {
@@ -585,7 +628,6 @@ namespace jxx::lang {
         return jxx::util::IntStream::of(a);
     }
 
-    // ---------------- intern ----------------
     jxx::Ptr<String> String::intern() const {
         std::lock_guard<std::mutex> lk(internMutex_);
         auto it = internPool_.find(value_);
@@ -597,7 +639,7 @@ namespace jxx::lang {
         return me;
     }
 
-    // ---------------- static methods ----------------
+    // ---- static methods ----
     jxx::Ptr<String> String::valueOf(jbool b) { return JXX_NEW<String>(b ? "true" : "false"); }
     jxx::Ptr<String> String::valueOf(jchar c) {
         auto a = JXX_NEW<CharArray>((std::uint32_t)1);
@@ -608,30 +650,25 @@ namespace jxx::lang {
     jxx::Ptr<String> String::valueOf(jlong l) { return JXX_NEW<String>(std::to_string((long long)l).c_str()); }
     jxx::Ptr<String> String::valueOf(jfloat f) { std::ostringstream oss; oss.imbue(std::locale::classic()); oss << f; return JXX_NEW<String>(oss.str().c_str()); }
     jxx::Ptr<String> String::valueOf(jdouble d) { std::ostringstream oss; oss.imbue(std::locale::classic()); oss << d; return JXX_NEW<String>(oss.str().c_str()); }
-    jxx::Ptr<String> String::valueOf(jxx::Ptr<Object> obj) { return obj ? JXX_NEW<String>(obj->toString()) : JXX_NEW<String>("null"); }
-
+    jxx::Ptr<String> String::valueOf(jxx::Ptr<Object> obj) { return obj ? JXX_CAST(Object, obj->toString()) : JXX_CAST(Object, JXX_NEW<String>("null")); }
     jxx::Ptr<String> String::valueOf(jxx::Ptr<CharArray> data) { return JXX_NEW<String>(data); }
     jxx::Ptr<String> String::valueOf(jxx::Ptr<CharArray> data, jint offset, jint count) { return JXX_NEW<String>(data, offset, count); }
-
     jxx::Ptr<String> String::copyValueOf(jxx::Ptr<CharArray> data) { return JXX_NEW<String>(data); }
     jxx::Ptr<String> String::copyValueOf(jxx::Ptr<CharArray> data, jint offset, jint count) { return JXX_NEW<String>(data, offset, count); }
 
-    jxx::Ptr<String> String::format(jxx::Ptr<String> format,
-        jxx::Ptr<JxxArray<jxx::Ptr<Object>, 1>> args) {
-        // strict signature; if you have jxx.util.Formatter, swap in.
-        (void)args;
-        return format ? format : JXX_NEW<String>("null");
+    jxx::Ptr<String> String::format(jxx::Ptr<String> format, jxx::Ptr<JxxArray<jxx::Ptr<Object>, 1>> args) {
+        if (!format || !args) throwNPE_();
+        jxx::util::Formatter f;
+        return f.format(format, args);
     }
 
-    jxx::Ptr<String> String::format(jxx::Ptr<Locale> l, jxx::Ptr<String> format,
-        jxx::Ptr<JxxArray<jxx::Ptr<Object>, 1>> args) {
-        (void)l;
-        return String::format(format, args);
+    jxx::Ptr<String> String::format(jxx::Ptr<Locale> l, jxx::Ptr<String> format, jxx::Ptr<JxxArray<jxx::Ptr<Object>, 1>> args) {
+        if (!l || !format || !args) throwNPE_();
+        jxx::util::Formatter f(l);
+        return f.format(format, args);
     }
 
-    jxx::Ptr<String> String::join(jxx::Ptr<CharSequence> delimiter,
-        jxx::Ptr<JxxArray<jxx::Ptr<CharSequence>, 1>> elements) {
-
+    jxx::Ptr<String> String::join(jxx::Ptr<CharSequence> delimiter, jxx::Ptr<JxxArray<jxx::Ptr<CharSequence>, 1>> elements) {
         if (!delimiter || !elements) throwNPE_();
         std::u16string delim = toUtf16_(delimiter);
 
@@ -639,8 +676,32 @@ namespace jxx::lang {
         for (std::uint32_t i = 0; i < elements->length; ++i) {
             if (i) out.append(delim);
             auto e = (*elements)[(jint)i];
-            if (!e) out.append(u"null");
-            else out.append(toUtf16_(e));
+            out.append(e ? toUtf16_(e) : std::u16string(u"null"));
+        }
+
+        auto s = JXX_NEW<String>();
+        s->value_ = std::move(out);
+        return s;
+    }
+
+    jxx::Ptr<String> String::join(jxx::Ptr<CharSequence> delimiter,
+        jxx::Ptr<jxx::lang::Iterable<jxx::Ptr<CharSequence>>> elements) {
+
+        if (!delimiter || !elements) throwNPE_();
+
+        auto it = elements->iterator();
+        if (!it) throwNPE_();
+
+        std::u16string delim = toUtf16_(delimiter);
+        std::u16string out;
+
+        bool first = true;
+        while (it->hasNext()) {
+            if (!first) out.append(delim);
+            first = false;
+
+            auto e = it->next(); // jxx::Ptr<CharSequence>
+            out.append(e ? toUtf16_(e) : std::u16string(u"null"));
         }
 
         auto s = JXX_NEW<String>();

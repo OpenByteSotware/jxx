@@ -1,41 +1,43 @@
 #pragma once
 
+#include <string>
+#include <unordered_map>
+#include <mutex>
+
 #include "jxx_types.h"
 #include "jxx.lang.buildin_array.h"
 #include "jxx.lang.Object.h"
 #include "jxx.lang.CharSequence.h"
 #include "jxx.lang.Comparable.h"
 #include "io/jxx.io.Serializable.h"
-
-#include <string>
-#include <vector>
-#include <unordered_map>
-#include <mutex>
+#include "jxx.lang.Locale.h"
+#include "jxx.lang.Charset.h"
+#include "jxx.lang.Iterable.h"
 
 namespace jxx::lang {
 
-    // Forward declarations for strict API completeness
+    // Forward declarations (avoid include cycles)
     class StringBuffer;
     class StringBuilder;
-    class Charset; // java.nio.charset.Charset (optional)
-    class Locale;  // java.util.Locale (optional)
+    class Charset; // java.nio.charset.Charset (you have this)
+    class Locale;  // java.util.Locale (you have this)
+    class ClassAny;
 
 } // namespace jxx::lang
 
-namespace jxx::util { class IntStream; }
+namespace jxx::util {
+    class IntStream; // minimal IntStream you requested
+}
 
 namespace jxx::lang {
 
     /**
-     * Strict Java 8 parity java.lang.String (C++17).
+     * Strict Java 8 parity: java.lang.String
      *
-     * Implements:
-     *  - Object
-     *  - CharSequence
-     *  - Comparable<String>
-     *  - Serializable
+     * Extends: Object
+     * Implements: CharSequence, Comparable<String>, Serializable
      *
-     * All reference-type APIs use jxx::Ptr<T>.
+     * Internal storage: UTF-16 code units (std::u16string)
      */
     class String final
         : public Object
@@ -45,35 +47,55 @@ namespace jxx::lang {
     {
     public:
         // ---------------------------------------------------------------------
-        // Constructors (Java 8 public constructors)
+        // Constructors (ALL Java 8 public constructors)
         // ---------------------------------------------------------------------
-        String();                                      // ""
-        String(jxx::Ptr<String> original);             // copy
 
-        // byte[] ctors
+        // String()
+        String();
+
+        // String(String original)
+        explicit String(jxx::Ptr<String> original);
+
+        // String(byte[] bytes)
         explicit String(jxx::Ptr<ByteArray> bytes);
+
+        // String(byte[] bytes, int offset, int length)
         String(jxx::Ptr<ByteArray> bytes, jint offset, jint length);
+
+        // String(byte[] bytes, String charsetName)
         String(jxx::Ptr<ByteArray> bytes, jxx::Ptr<String> charsetName);
+
+        // String(byte[] bytes, int offset, int length, String charsetName)
         String(jxx::Ptr<ByteArray> bytes, jint offset, jint length, jxx::Ptr<String> charsetName);
+
+        // String(byte[] bytes, Charset charset)
         String(jxx::Ptr<ByteArray> bytes, jxx::Ptr<Charset> charset);
+
+        // String(byte[] bytes, int offset, int length, Charset charset)
         String(jxx::Ptr<ByteArray> bytes, jint offset, jint length, jxx::Ptr<Charset> charset);
 
-        // deprecated byte[] hibyte ctors
+        // Deprecated: String(byte[] ascii, int hibyte)
         String(jxx::Ptr<ByteArray> ascii, jint hibyte);
+
+        // Deprecated: String(byte[] ascii, int hibyte, int offset, int count)
         String(jxx::Ptr<ByteArray> ascii, jint hibyte, jint offset, jint count);
 
-        // char[] ctors
+        // String(char[] value)
         explicit String(jxx::Ptr<CharArray> value);
+
+        // String(char[] value, int offset, int count)
         String(jxx::Ptr<CharArray> value, jint offset, jint count);
 
-        // codePoints ctor
+        // String(int[] codePoints, int offset, int count)
         String(jxx::Ptr<IntArray> codePoints, jint offset, jint count);
 
-        // StringBuffer / StringBuilder ctors
+        // String(StringBuffer buffer)
         explicit String(jxx::Ptr<StringBuffer> buffer);
+
+        // String(StringBuilder builder)
         explicit String(jxx::Ptr<StringBuilder> builder);
 
-        // JXX convenience ctor (UTF-8 c-string)
+        // JXX convenience (non-Java): String(const char* utf8)
         explicit String(const char* utf8);
 
         // ---------------------------------------------------------------------
@@ -82,7 +104,9 @@ namespace jxx::lang {
         jint length() const override;
         jchar charAt(jint index) const override;
         jxx::Ptr<CharSequence> subSequence(jint start, jint end) const override;
-        jxx::Ptr<jxx::lang::String> toString() const override;
+
+        // Java: String toString()
+        virtual jxx::Ptr<String> toString() const override;
 
         // ---------------------------------------------------------------------
         // Comparable<String>
@@ -96,7 +120,7 @@ namespace jxx::lang {
         jint hashCode() const override;
 
         // ---------------------------------------------------------------------
-        // Java 8 instance methods (strict completeness)
+        // Instance methods (ALL Java 8 public methods)
         // ---------------------------------------------------------------------
         jbool isEmpty() const;
 
@@ -107,7 +131,7 @@ namespace jxx::lang {
 
         void getChars(jint srcBegin, jint srcEnd, jxx::Ptr<CharArray> dst, jint dstBegin) const;
 
-        // deprecated Java 8:
+        // Deprecated in Java 8:
         void getBytes(jint srcBegin, jint srcEnd, jxx::Ptr<ByteArray> dst, jint dstBegin) const;
 
         jxx::Ptr<ByteArray> getBytes() const;
@@ -140,10 +164,10 @@ namespace jxx::lang {
         jxx::Ptr<String> substring(jint beginIndex) const;
         jxx::Ptr<String> substring(jint beginIndex, jint endIndex) const;
 
-        jxx::Ptr<CharSequence> subSequence_(jint start, jint end) const; // alias if needed
         jxx::Ptr<String> concat(jxx::Ptr<String> str) const;
 
         jxx::Ptr<String> replace(jchar oldChar, jchar newChar) const;
+
         jbool matches(jxx::Ptr<String> regex) const;
         jbool contains(jxx::Ptr<CharSequence> s) const;
 
@@ -151,8 +175,8 @@ namespace jxx::lang {
         jxx::Ptr<String> replaceAll(jxx::Ptr<String> regex, jxx::Ptr<String> replacement) const;
         jxx::Ptr<String> replace(jxx::Ptr<CharSequence> target, jxx::Ptr<CharSequence> replacement) const;
 
-        jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<String>, 1>> split(jxx::Ptr<String> regex) const;
-        jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<String>, 1>> split(jxx::Ptr<String> regex, jint limit) const;
+        jxx::Ptr<JxxArray<jxx::Ptr<String>, 1>> split(jxx::Ptr<String> regex) const;
+        jxx::Ptr<JxxArray<jxx::Ptr<String>, 1>> split(jxx::Ptr<String> regex, jint limit) const;
 
         jxx::Ptr<String> toLowerCase() const;
         jxx::Ptr<String> toLowerCase(jxx::Ptr<Locale> locale) const;
@@ -163,15 +187,15 @@ namespace jxx::lang {
 
         jxx::Ptr<CharArray> toCharArray() const;
 
-        // Java 8 streams
+        // Java 8 streams:
         jxx::Ptr<jxx::util::IntStream> chars() const;
         jxx::Ptr<jxx::util::IntStream> codePoints() const;
 
-        // native in Java; here we implement
+        // Java: String intern()
         jxx::Ptr<String> intern() const;
 
         // ---------------------------------------------------------------------
-        // Java 8 static methods (strict completeness)
+        // Static methods (ALL Java 8 public static methods)
         // ---------------------------------------------------------------------
         static jxx::Ptr<String> valueOf(jbool b);
         static jxx::Ptr<String> valueOf(jchar c);
@@ -186,23 +210,27 @@ namespace jxx::lang {
         static jxx::Ptr<String> copyValueOf(jxx::Ptr<CharArray> data);
         static jxx::Ptr<String> copyValueOf(jxx::Ptr<CharArray> data, jint offset, jint count);
 
-        // format (strict signature; delegate to your jxx.util.Formatter if present)
-        static jxx::Ptr<String> format(jxx::Ptr<String> format,
-            jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<Object>, 1>> args);
+        // Java 8 String.format(...) uses Formatter
+        static jxx::Ptr<String> format(
+            jxx::Ptr<String> format,
+            jxx::Ptr<JxxArray<jxx::Ptr<Object>, 1>> args);
 
-        static jxx::Ptr<String> format(jxx::Ptr<Locale> l, jxx::Ptr<String> format,
-            jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<Object>, 1>> args);
+        static jxx::Ptr<String> format(
+            jxx::Ptr<Locale> l,
+            jxx::Ptr<String> format,
+            jxx::Ptr<JxxArray<jxx::Ptr<Object>, 1>> args);
 
-        // join overloads (Java 8)
-        static jxx::Ptr<String> join(jxx::Ptr<CharSequence> delimiter,
-            jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<CharSequence>, 1>> elements);
+        // Java 8 join overloads
+        static jxx::Ptr<String> join(
+            jxx::Ptr<CharSequence> delimiter,
+            jxx::Ptr<JxxArray<jxx::Ptr<CharSequence>, 1>> elements);
 
-        // Iterable overload (forward-declared template in your util package if you have it)
-        template <class IterableCharSeq>
-        static jxx::Ptr<String> joinIterable(jxx::Ptr<CharSequence> delimiter, jxx::Ptr<IterableCharSeq> elements);
+        static jxx::Ptr<String> join(
+            jxx::Ptr<CharSequence> delimiter,
+            jxx::Ptr<jxx::lang::Iterable<jxx::Ptr<CharSequence>>> elements);
 
         // ---------------------------------------------------------------------
-        // JXX helpers
+        // Helpers used by runtime (StringBuilder/StringBuffer/etc.)
         // ---------------------------------------------------------------------
         const std::u16string& utf16() const noexcept { return value_; }
         std::string utf8() const;
@@ -212,11 +240,11 @@ namespace jxx::lang {
         mutable jint hash_ = 0;
         mutable jbool hashComputed_ = false;
 
-        // intern pool
+        // Intern pool (Java-like)
         static std::mutex internMutex_;
         static std::unordered_map<std::u16string, std::weak_ptr<String>> internPool_;
 
-        // conversion
+        // Conversion helpers (used for regex / UTF-8 interop)
         static std::u16string utf8ToUtf16_(const std::string& s);
         static std::string utf16ToUtf8_(const std::u16string& s);
 
@@ -228,8 +256,11 @@ namespace jxx::lang {
 
         static void throwNPE_();
         static void throwSIOOBE_();
+        static void throwIAE_(const char* msg);
 
         static std::u16string toUtf16_(jxx::Ptr<CharSequence> s);
+        static bool isTurkicLocale_(jxx::Ptr<Locale> loc);
     };
 
-} 
+} // namespace jxx::lang
+

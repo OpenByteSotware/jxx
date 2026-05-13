@@ -13,8 +13,10 @@ struct CharSequence {
     virtual jchar charAt(jint index) const = 0;
     virtual jxx::Ptr<CharSequence> subSequence(jint beginIndex, jint endIndex) const = 0;
 
+    // C++ doesn't allow same method signature.  This is a difference between c++ and java.
+    // use Object toString instead
     // Java: toString() returns String
-    virtual jxx::Ptr<jxx::lang::String> toString() const = 0;
+    //virtual jxx::Ptr<String> toString() const = 0;
 };
 
 } // namespace jxx::lang

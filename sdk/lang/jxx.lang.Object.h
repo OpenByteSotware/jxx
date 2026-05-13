@@ -31,12 +31,8 @@
 #include "jxx.lang.ByteType.h"
 #include "jxx_types.h"
 
-namespace jxx {
-    namespace lang {
-
-        class ClassAny;
-        class String;
-
+namespace jxx:: lang {
+     
         inline std::string demangle(const char* name) {
 #if defined(__GNUG__) || defined(__clang__)
             int status = 0;
@@ -51,6 +47,8 @@ namespace jxx {
         }
 
         class Object;
+        class String;
+		class ClassAny;
 
         class Cloneable {
         public:
@@ -88,13 +86,13 @@ namespace jxx {
             // Java-like: hashCode (default identity-based)
             virtual jxx::lang::jint hashCode() const;
 
-            jxx::Ptr<ClassAny> getClass() const;
+            jxx::Ptr<jxx::lang::ClassAny> getClass() const;
 
             // Class name (demangled where supported); override if you prefer custom names
             virtual jxx::Ptr<std::string> getClassName() const;
 
             // Java-like: "Class@hexHash"
-            virtual jxx::Ptr<jxx::lang::String>  toString() const;
+            virtual jxx::Ptr<String> toString() const;
 
             // Identity check (reference equality)
             virtual bool same(const Object& other) const;
@@ -211,7 +209,6 @@ namespace jxx {
         using PolyMap = std::unordered_map<TKeyPtr, TValue, PolyHash, PolyEqual>;
 
 } // namespace lang
-} // namespace jxx
 
 //JXX_REGISTER_CLASS(jxx::lang::Object, "jxx.lang.Object", "Object");
 

@@ -1,13 +1,12 @@
 #pragma once
-
-#include "jxx_types.h"
-#include "jxx.lang.Object.h"
-#include "jxx.lang.String.h"
-
 #include <locale>
 #include <string>
+#include "jxx_types.h"
+#include "jxx.lang.Object.h"
 
 namespace jxx::lang {
+
+    class String;
 
 // Java 8 semantic Locale (subset) backed by std::locale.
 // NOTE: Java Locale is richer; this provides parity for common operations.
@@ -29,7 +28,7 @@ public:
 
     const std::locale& cppLocale() const noexcept { return loc_; }
 
-	jxx::Ptr<jxx::lang::String> toString() const override;
+	jxx::Ptr<String> toString() const override;
 
 private:
     std::string language_;

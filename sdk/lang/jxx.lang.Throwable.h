@@ -9,6 +9,7 @@
 #include <exception>
 
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.StackTrace.h"
 
 namespace jxx::lang {

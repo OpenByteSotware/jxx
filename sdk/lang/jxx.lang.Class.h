@@ -12,10 +12,10 @@
 #include <string>
 #include <stdexcept>
 
-namespace jxx::lang {
+// ---- Forward declarations (you provide definitions elsewhere) ----
+class jxx::lang::Object;
 
-    // ---- Forward declarations (you provide definitions elsewhere) ----
-    class Object;
+namespace jxx::lang {
 
     // ---- Type metadata ----
     struct TypeInfo{
