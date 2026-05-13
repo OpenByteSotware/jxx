@@ -35,6 +35,7 @@ namespace jxx {
     namespace lang {
 
         class ClassAny;
+        class String;
 
         inline std::string demangle(const char* name) {
 #if defined(__GNUG__) || defined(__clang__)
@@ -93,7 +94,7 @@ namespace jxx {
             virtual jxx::Ptr<std::string> getClassName() const;
 
             // Java-like: "Class@hexHash"
-            virtual jxx::Ptr<std::string>  toString() const;
+            virtual jxx::Ptr<jxx::lang::String>  toString() const;
 
             // Identity check (reference equality)
             virtual bool same(const Object& other) const;

@@ -93,7 +93,7 @@ namespace jxx::lang {
         jxx::Ptr<CharSequence> subSequence(jint start, jint end) const override;
         jxx::Ptr<String> substring(jint start) const;
         jxx::Ptr<String> substring(jint start, jint end) const;
-        jxx::Ptr<std::string> toString() const override;
+        jxx::Ptr<jxx::lang::String> toString() const override;
 
     private:
         std::u16string value_;

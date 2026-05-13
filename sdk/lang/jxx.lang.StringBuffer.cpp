@@ -100,8 +100,8 @@ namespace jxx::lang {
         return std::static_pointer_cast<CharSequence>(substring(start, end));
     }
 
-    jxx::Ptr<std::string> StringBuffer::toString() const {
-        return this->synchronized([&]()->jxx::Ptr<std::string> {
+    jxx::Ptr<jxx::lang::String> StringBuffer::toString() const {
+        return this->synchronized([&]()->jxx::Ptr<jxx::lang::String> {
             auto ca = JXX_NEW<CharArray>((std::uint32_t)value_.size());
             for (jint i = 0; i < (jint)value_.size(); ++i) (*ca)[i] = (jchar)value_[(std::size_t)i];
             return JXX_NEW<std::string>(ca);

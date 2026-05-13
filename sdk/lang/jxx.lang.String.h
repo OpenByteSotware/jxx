@@ -82,7 +82,7 @@ namespace jxx::lang {
         jint length() const override;
         jchar charAt(jint index) const override;
         jxx::Ptr<CharSequence> subSequence(jint start, jint end) const override;
-        jxx::Ptr<std::string> toString() const override;
+        jxx::Ptr<jxx::lang::String> toString() const override;
 
         // ---------------------------------------------------------------------
         // Comparable<String>

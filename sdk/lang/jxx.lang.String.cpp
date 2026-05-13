@@ -212,8 +212,8 @@ namespace jxx::lang {
         return std::static_pointer_cast<CharSequence>(substring(start, end));
     }
 
-    jxx::Ptr<std::string> String::toString() const {
-        return std::static_pointer_cast<std::string>(this->thisPtr);
+    jxx::Ptr<jxx::lang::String> String::toString() const {
+        return std::static_pointer_cast<jxx::lang::String>(this->thisPtr);
     }
 
     // ---------------- Comparable ----------------

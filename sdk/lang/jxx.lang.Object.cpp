@@ -50,10 +50,10 @@ jxx::Ptr<std::string> Object::getClassName() const {
 }
 
 // Java-like: "Class@hexHash"
-jxx::Ptr<std::string>  Object::toString() const {
+jxx::Ptr<jxx::lang::String>  Object::toString() const {
     std::ostringstream oss;
     oss << getClassName_() << "@0x" << std::hex << hashCode();
-    return std::make_shared<std::string>(oss.str());
+    return JXX_NEW<jxx::lang::String>(oss.str());
 }
 
 // Identity check (reference equality)

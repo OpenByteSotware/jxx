@@ -183,7 +183,7 @@ namespace jxx::lang {
          * Returns a stable const char* valid until the next toString() call
          * (or object destruction).
          */
-        virtual jxx::Ptr<std::string>  toString() const {
+        virtual jxx::Ptr<jxx::lang::String>  toString() const {
             const std::string msg = message_->toString()->c_str();
 
             cachedToString_.clear();

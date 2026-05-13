@@ -29,7 +29,7 @@ public:
 
     const std::locale& cppLocale() const noexcept { return loc_; }
 
-	jxx::Ptr<std::string> toString() const override;
+	jxx::Ptr<jxx::lang::String> toString() const override;
 
 private:
     std::string language_;
