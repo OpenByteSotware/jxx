@@ -2,14 +2,15 @@
 
 #include <type_traits>
 #include <utility>
-#include "jxx_types.h"
-#include "jxx.lang.Object.h"
-#include "jxx.lang.String.h"
-#include "jxx.lang.NullPointerException.h"
-#include "jxx.lang.IllegalArgumentException.h"
-
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
 
 namespace jxx::util::function {
+
+    template <class T>
+    class Consumer;
 
 namespace detail {
 
@@ -60,8 +61,6 @@ private:
 /**
  * Java 8 parity: java.util.function.Consumer<T>
  *
- * Interface DOES NOT inherit Object (per your rule).
- * Default methods are implemented here.
  */
 template <class T>
 struct Consumer {
@@ -75,7 +74,7 @@ struct Consumer {
     // ------------------------------------------------------------------
     jxx::Ptr<Consumer<T>> andThen(jxx::Ptr<Consumer<T>> after) {
         if (!after) {
-            throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("after"));
+            throw jxx::lang::NullPointerException(JXX_NEW<std::string>("after"));
         }
         auto self = thisPtrAsConsumer_();
         return JXX_NEW<detail::ComposedConsumer<T>>(std::move(self), std::move(after));
@@ -97,7 +96,7 @@ struct Consumer {
     >
     jxx::Ptr<Consumer<T>> andThen(jxx::Ptr<Consumer<U>> after) {
         if (!after) {
-            throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("after"));
+            throw jxx::lang::NullPointerException(JXX_NEW<std::string>("after"));
         }
         auto self = thisPtrAsConsumer_();
         return JXX_NEW<detail::ComposedConsumerCovariant<T, U>>(std::move(self), std::move(after));
@@ -109,7 +108,7 @@ private:
         auto* obj = dynamic_cast<jxx::lang::Object*>(this);
         if (!obj || !obj->thisPtr) {
             throw jxx::lang::IllegalArgumentException(
-                JXX_NEW<jxx::lang::String>(
+                JXX_NEW<std::string>(
                     "Consumer::andThen requires implementing object to derive from jxx::lang::Object "
                     "and be created via JXX_NEW so Object::thisPtr is set"
                 )

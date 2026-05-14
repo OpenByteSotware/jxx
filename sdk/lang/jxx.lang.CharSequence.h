@@ -1,7 +1,6 @@
 #pragma once
 #include <string>
 #include "jxx_types.h"
-#include "jxx.lang.String.h"
 
 namespace jxx::lang {
 

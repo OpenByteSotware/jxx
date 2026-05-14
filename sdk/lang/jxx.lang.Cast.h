@@ -3,7 +3,7 @@
 #include <memory>
 #include "lang/jxx_types.h"
 
-namespace jxx::lang {
+namespace jxx {
 
     // ---------------------------
     // Java-style instanceof
@@ -55,10 +55,13 @@ namespace jxx::lang {
         return std::dynamic_pointer_cast<To>(obj);
     }
 
+    template <typename To, typename From>
+    std::shared_ptr<To> CAST(const std::shared_ptr<From>& ptr)
+    {
+        if constexpr (std::is_base_of_v<To, From>)
+            return std::static_pointer_cast<To>(ptr);   // upcast
+        else
+            return std::dynamic_pointer_cast<To>(ptr);  // down/unknown
+    }
+
 } // namespace jxx::lang
-
-
-#define JXX_INSTANCEOF(TO, OBJ) ::jxx::lang::instanceof<TO>(OBJ)
-#define JXX_CAST(TO, OBJ)       ::jxx::lang::cast_as<TO>(OBJ)
-#define JXX_TRY_CAST(TO, OBJ)   ::jxx::lang::try_cast_as<TO>(OBJ)
-

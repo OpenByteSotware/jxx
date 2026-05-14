@@ -1,13 +1,13 @@
 #pragma once
+#include <vector>
+#include <stdexcept>
 
-#include "jxx_types.h"
-#include "jxx.lang.Object.h"
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.Object.h"
 #include "jxx.util.AbstractCollection.h"
 #include "jxx.util.Iterator.h"
 #include "jxx.util.ElementEquals.h"
 
-#include <vector>
-#include <stdexcept>
 
 namespace jxx::util {
 
@@ -149,7 +149,7 @@ private:
     class SnapshotIt final : public Iterator<E> {
     public:
         explicit SnapshotIt(std::vector<E> items) : items_(std::move(items)) {}
-        jbool hasNext() override { return idx_ < items_.size(); }
+        jxx::lang::jbool hasNext() override { return idx_ < items_.size(); }
         E next() override {
             if (!hasNext()) throw std::out_of_range("NoSuchElementException");
             return items_[idx_++];

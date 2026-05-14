@@ -650,7 +650,7 @@ namespace jxx::lang {
     jxx::Ptr<String> String::valueOf(jlong l) { return JXX_NEW<String>(std::to_string((long long)l).c_str()); }
     jxx::Ptr<String> String::valueOf(jfloat f) { std::ostringstream oss; oss.imbue(std::locale::classic()); oss << f; return JXX_NEW<String>(oss.str().c_str()); }
     jxx::Ptr<String> String::valueOf(jdouble d) { std::ostringstream oss; oss.imbue(std::locale::classic()); oss << d; return JXX_NEW<String>(oss.str().c_str()); }
-    jxx::Ptr<String> String::valueOf(jxx::Ptr<Object> obj) { return obj ? JXX_CAST(Object, obj->toString()) : JXX_CAST(Object, JXX_NEW<String>("null")); }
+    jxx::Ptr<String> String::valueOf(jxx::Ptr<Object> obj) { return jxx::CAST<String, Object>(obj) ? obj->toString() : JXX_NEW<String>("null"); }
     jxx::Ptr<String> String::valueOf(jxx::Ptr<CharArray> data) { return JXX_NEW<String>(data); }
     jxx::Ptr<String> String::valueOf(jxx::Ptr<CharArray> data, jint offset, jint count) { return JXX_NEW<String>(data, offset, count); }
     jxx::Ptr<String> String::copyValueOf(jxx::Ptr<CharArray> data) { return JXX_NEW<String>(data); }

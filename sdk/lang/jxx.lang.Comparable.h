@@ -1,7 +1,7 @@
 #pragma once
 
-#include "jxx_types.h"
 #include <stdexcept>
+#include "jxx_types.h"
 
 namespace jxx::lang {
 

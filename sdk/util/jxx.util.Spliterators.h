@@ -23,10 +23,10 @@ public:
     template <class T>
     class IteratorSpliterator final : public jxx::lang::Object, public Spliterator<T> {
     public:
-        IteratorSpliterator(jxx::Ptr<Iterator<T>> it, jint characteristics)
+        IteratorSpliterator(jxx::Ptr<Iterator<T>> it, jxx::lang::jint characteristics)
             : it_(std::move(it)), characteristics_(characteristics) {}
 
-        jbool tryAdvance(jxx::Ptr<jxx::util::function::Consumer<T>> action) override {
+        jxx::lang::jbool tryAdvance(jxx::Ptr<jxx::util::function::Consumer<T>> action) override {
             if (!action) {
                 throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("action"));
             }
@@ -36,12 +36,12 @@ public:
             return true;
         }
 
-        jlong estimateSize() const override {
+        jxx::lang::jlong estimateSize() const override {
             // Unknown size in Java => Long.MAX_VALUE
-            return (jlong)0x7fffffffffffffffLL;
+            return (jxx::lang::jlong)0x7fffffffffffffffLL;
         }
 
-        jint characteristics() const override {
+        jxx::lang::jint characteristics() const override {
             return characteristics_;
         }
 
@@ -52,11 +52,11 @@ public:
 
     private:
         jxx::Ptr<Iterator<T>> it_;
-        jint characteristics_;
+        jxx::lang::jint characteristics_;
     };
 
     template <class T>
-    static jxx::Ptr<Spliterator<T>> spliteratorUnknownSize(jxx::Ptr<Iterator<T>> it, jint characteristics) {
+    static jxx::Ptr<Spliterator<T>> spliteratorUnknownSize(jxx::Ptr<Iterator<T>> it, jxx::lang::jint characteristics) {
         if (!it) {
             throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("it"));
         }

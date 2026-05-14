@@ -1,19 +1,13 @@
 #pragma once
 
-#include "jxx_types.h"
-
-// Iterator is a Java interface => DO NOT inherit jxx::lang::Object
-#include "jxx.lang.NullPointerException.h"
-#include "jxx.lang.String.h"
-
-// For default remove()/next() semantics (recommended parity exceptions)
-#include "jxx.lang.UnsupportedOperationException.h"
-//#include "jxx.lang.NoSuchElementException.h"
-
-// Consumer (your Java 8 Consumer implementation)
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "util/function/jxx.util.function.Consumer.h"
 
 namespace jxx::util {
+
+    class jxx::lang::String;
 
     /**
      * Java 8 parity: java.util.Iterator<E>
@@ -34,7 +28,7 @@ namespace jxx::util {
         virtual ~Iterator() = default;
 
         // Java: boolean hasNext()
-        virtual jbool hasNext() = 0;
+        virtual jxx::lang::jbool hasNext() = 0;
 
         // Java: E next()
         // Contract: should throw NoSuchElementException if no more elements.

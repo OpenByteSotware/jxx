@@ -27,6 +27,7 @@
 #include <cxxabi.h>
 #include <cstdlib>
 
+#include "jxx.lang.Cast.h"
 #endif
 
 namespace jxx::lang {

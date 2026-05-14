@@ -8,23 +8,22 @@
 namespace jxx::util {
 
 struct FormatSpec {
-    jint argIndex = -1;
-    jbool reuseLast = false;
+    jxx::lang::jint argIndex = -1;
+    jxx::lang::jbool reuseLast = false;
 
-    jbool leftJustify = false;
-    jbool alt = false;
-    jbool plus = false;
-    jbool leadingSpace = false;
-    jbool zeroPad = false;
-    jbool group = false;
-    jbool parens = false;
+    jxx::lang::jbool leftJustify = false;
+    jxx::lang::jbool alt = false;
+    jxx::lang::jbool plus = false;
+    jxx::lang::jbool leadingSpace = false;
+    jxx::lang::jbool zeroPad = false;
+    jxx::lang::jbool group = false;
+    jxx::lang::jbool parens = false;
+    jxx::lang::jint width = -1;
+    jxx::lang::jint precision = -1;
 
-    jint width = -1;
-    jint precision = -1;
-
-    jbool dateTime = false;
-    jbool upper = false;
-    char conv = 0;
+    jxx::lang::jbool dateTime = false;
+    jxx::lang::jbool upper = false;
+    jxx::lang::jchar conv = 0;
 };
 
 class Formatter final {
