@@ -46,12 +46,9 @@ namespace jxx::lang {
         , public jxx::io::Serializable
     {
     public:
-        // ---------------------------------------------------------------------
-        // Constructors (ALL Java 8 public constructors)
-        // ---------------------------------------------------------------------
 
         // String()
-        String();
+        String() = default;
 
         // String(String original)
         explicit String(jxx::Ptr<String> original);

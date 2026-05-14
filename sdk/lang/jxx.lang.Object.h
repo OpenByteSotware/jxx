@@ -77,8 +77,20 @@ namespace jxx:: lang {
         public:
             std::shared_ptr<Object> thisPtr;
 
+            Object() = default;
+
             // make Object polymorphic for RTTI and dynamic_cast (destructor default)
             virtual ~Object();
+
+            // Copy constructor: default-construct mutex and cv since they cannot be copied
+            Object(const Object& other);
+            
+            // Copy assignment: similar to copy constructor
+            Object& operator=(const Object& other);
+            
+            // Move constructor and assignment can be defaulted
+            Object(Object&&) noexcept = default;
+            Object& operator=(Object&&) noexcept = default;
 
             // Java-like: logical equality (default identity)
             virtual jbool equals(const jxx::Ptr<Object> other) const;
@@ -146,6 +158,7 @@ namespace jxx:: lang {
 
                // =============== Synchronized mixin (Java-like monitor) ===============
         // Uses reentrant mutex (like Java's monitors).
+        /*
         class Synchronized : public virtual Object {
         protected:
             mutable std::recursive_mutex mutex_;
@@ -174,6 +187,8 @@ namespace jxx:: lang {
                 Guard& operator=(const Guard&) = delete;
             };
         };
+
+        */
 
         // =============== Polymorphic hashing/equality for smart pointers ===============
         struct PolyHash {

@@ -20,7 +20,7 @@ namespace jxx::util {
 // Note: Java Vector iterators are fail-fast; we provide snapshot iteration for simplicity.
 
 template <class E>
-class Vector final : public jxx::lang::Object, public AbstractCollection<E> {
+class Vector final : public AbstractCollection<E> {
 public:
     Vector() = default;
     explicit Vector(jint initialCapacity) {

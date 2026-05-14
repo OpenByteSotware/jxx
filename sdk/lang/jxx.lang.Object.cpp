@@ -12,6 +12,27 @@ namespace jxx::lang {
         releaseSelf();
     }
 
+    // Copy constructor: default-construct mutex and cv since they cannot be copied
+    Object::Object(const Object& other) 
+        : std::enable_shared_from_this<Object>(), // reinitialize shared_from_this
+          thisPtr(nullptr), // Don't copy thisPtr, it will be set later
+          mtx_(),             // default-construct mutex
+          cv_(),              // default-construct condition_variable
+          mutex_()            // default-construct recursive_mutex
+    {
+        // Note: thisPtr should NOT be copied; each Object has its own identity
+        // Derived classes will handle their own member copying through their copy constructors
+    }
+
+    // Copy assignment: similar to copy constructor
+    Object& Object::operator=(const Object& other) {
+        if (this != &other) {
+            // Don't copy thisPtr, mtx_, cv_, or mutex_ - they represent this object's identity
+            // Derived classes will handle their own member copying through their copy assignment
+        }
+        return *this;
+    }
+
     jxx::Ptr<ClassAny> Object::getClass() const {
         const TypeInfo* ti = TypeRegistry::instance().findByType(std::type_index(typeid(*this)));
         return std::make_shared<ClassAny>(ti);
