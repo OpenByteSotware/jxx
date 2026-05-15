@@ -8,13 +8,13 @@ namespace jxx::util {
 class Date : public jxx::lang::Object {
 public:
     Date();
-    explicit Date(jlong epochMillis);
+    explicit Date(jxx::lang::jlong epochMillis);
 
-    jlong getTime() const;
-    void setTime(jlong epochMillis);
+    jxx::lang::jlong getTime() const;
+    void setTime(jxx::lang::jlong epochMillis);
 
 private:
-    jlong time_ = 0;
+    jxx::lang::jlong time_ = 0;
 };
 
 } // namespace jxx::util

@@ -101,7 +101,7 @@ namespace jxx:: lang {
             jxx::Ptr<jxx::lang::ClassAny> getClass() const;
 
             // Class name (demangled where supported); override if you prefer custom names
-            virtual jxx::Ptr<std::string> getClassName() const;
+            virtual jxx::Ptr<String> getClassName() const;
 
             // Java-like: "Class@hexHash"
             virtual jxx::Ptr<String> toString() const;
@@ -149,47 +149,13 @@ namespace jxx:: lang {
             // release thisPtr as it was a reference to this object and we are being destroyed, so break the cycle
             void releaseSelf();
 
-            std::string getClassName_() const;
+            jxx::Ptr<String> getClassName_() const;
 
             mutable std::recursive_mutex mutex_;
 
 
 		};
-
-               // =============== Synchronized mixin (Java-like monitor) ===============
-        // Uses reentrant mutex (like Java's monitors).
-        /*
-        class Synchronized : public virtual Object {
-        protected:
-            mutable std::recursive_mutex mutex_;
-
-        public:
-            Synchronized() {};
-            virtual ~Synchronized() {};
-
-            Synchronized(const Synchronized&) {};
-
-            // Execute functor under lock; returns functor's return value
-            template <typename F>
-            auto synchronized(F&& f) const -> decltype(f()) {
-                std::lock_guard<std::recursive_mutex> guard(mutex_);
-                return f();
-            }
-
-            // RAII guard if you need a multi-statement critical section
-            class Guard {
-                const Synchronized& obj_;
-                std::lock_guard<std::recursive_mutex> lock_;
-            public:
-                explicit Guard(const Synchronized& o) : obj_(o), lock_(o.mutex_) {}
-                // noncopyable
-                Guard(const Guard&) = delete;
-                Guard& operator=(const Guard&) = delete;
-            };
-        };
-
-        */
-
+  
         // =============== Polymorphic hashing/equality for smart pointers ===============
         struct PolyHash {
             using is_transparent = void;

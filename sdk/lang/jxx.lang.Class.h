@@ -1,188 +1,204 @@
 #pragma once
-
+#include <string>
 #include <typeindex>
-#include <typeinfo>
-#include <type_traits>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
-#include <memory>
 #include <mutex>
 #include <functional>
-#include <string>
-#include <stdexcept>
+#include <algorithm>
 
-// ---- Forward declarations (you provide definitions elsewhere) ----
-class jxx::lang::Object;
+#include "jxx_types.h"
+#include "jxx.lang.Object.h"
+#include "io/jxx.io.Serializable.h"
+
+#include "jxx.lang.NullPointerException.h"
+#include "jxx.lang.IllegalArgumentException.h"
+
+// If you have these, include them; otherwise forward declare and adjust throws
+#include "jxx.lang.ClassNotFoundException.h"
+#include "jxx.lang.ClassCastException.h"
+#include "jxx.lang.InstantiationException.h"
+#include "jxx.lang.IllegalAccessException.h"
+
 
 namespace jxx::lang {
 
-    // ---- Type metadata ----
-    struct TypeInfo{
-   
-        std::string canonicalName;                     // e.g. "com.acme.Foo" / "java.lang.Object"
-        std::string simpleName;                        // e.g. "Foo"
-        std::type_index type;
+    // Forward declarations for reflection types (stubs for now)
+    class Field;
+    class Method;
+    class Constructor;
+    class Annotation;
+    class Package;
+    class ClassLoader;
+    class String;
 
-        bool isInterface = false;
-        bool isAbstract = false;
-        bool isPrimitive = false;
-
-        const TypeInfo* super = nullptr;               // superclass (null for interfaces)
-
-        // For classes: implements edges
-        // For interfaces: extends edges
-        std::vector<const TypeInfo*> interfaces;
-
-        // Default ctor factory (optional)
-        bool defaultCtorAccessible = false;            // false => IllegalAccessException if factory exists
-        std::function<std::shared_ptr<jxx::lang::Object>()> defaultCtor;
-
-        // Instance check (optional, fast path)
-        std::function<bool(const std::shared_ptr<jxx::lang::Object>&)> isInstanceFn;
-    };
-
-    // ---- Registry ----
-    class TypeRegistry {
+    /**
+     * Java 8: public final class Class<T>
+     *
+     * In JXX: we implement a single runtime type-erased class object ClassAny.
+     * Generic uses in transpiled code can map to ClassAny as needed.
+     *
+     * As requested: Class<?> becomes ClassAny.
+     */
+    class ClassAny final : public Object, public jxx::io::Serializable {
     public:
-        static TypeRegistry& instance() {
-            static TypeRegistry r;
-            return r;
-        }
+        // -----------------------------------------
+        // Registration / lookup (JXX runtime support)
+        // -----------------------------------------
 
-        void registerType(const TypeInfo* ti) {
-            std::lock_guard<std::mutex> lock(mu_);
+        using FactoryFn = std::function<jxx::Ptr<Object>()>;
 
-            // Reject duplicates with different pointers (preserves "one Class object per type" semantics)
-            auto itT = byType_.find(ti->type);
-            if (itT != byType_.end() && itT->second != ti) {
-                throw std::logic_error("TypeRegistry: duplicate registration for same C++ type");
-            }
+        struct Meta {
+            std::string binaryName;                 // e.g. "java.lang.String"
+            std::type_index typeId = typeid(void);  // C++ RTTI key (if available)
+            jxx::Ptr<ClassAny> superClass;          // nullptr for Object / primitives
+            std::vector<jxx::Ptr<ClassAny>> interfaces;
+            jbool isInterface = false;
+            jbool isPrimitive = false;
+            jbool isArray = false;
+            jbool isEnum = false;
+            jbool isAnnotation = false;
+            jbool isSynthetic = false;
+            jxx::Ptr<ClassAny> componentType;       // for arrays
+            jint modifiers = 0;                     // Java modifier bitmask
+            FactoryFn factory;                      // for newInstance()
+        };
 
-            auto itN = byName_.find(ti->canonicalName);
-            if (itN != byName_.end() && itN->second != ti) {
-                throw std::logic_error("TypeRegistry: duplicate registration for same canonical name");
-            }
+        /**
+         * Register a class metadata object with the global registry.
+         * Returns the canonical ClassAny instance stored in the registry.
+         */
+        static jxx::Ptr<ClassAny> registerClass(const Meta& meta);
 
-            byName_[ti->canonicalName] = ti;
-            byType_[ti->type] = ti;
-        }
+        /**
+         * Java: static Class<?> forName(String className)
+         */
+        static jxx::Ptr<ClassAny> forName(jxx::Ptr<String> className);
 
-        const TypeInfo* findByName(const char* name) const {
-            std::lock_guard<std::mutex> lock(mu_);
-            auto it = byName_.find(name);
-            return it == byName_.end() ? nullptr : it->second;
-        }
+        /**
+         * Java: String getName()
+         */
+        jxx::Ptr<String> getName() const;
 
-        const TypeInfo* findByType(std::type_index idx) const {
-            std::lock_guard<std::mutex> lock(mu_);
-            auto it = byType_.find(idx);
-            return it == byType_.end() ? nullptr : it->second;
-        }
+        /**
+         * Java: String getSimpleName()
+         */
+        jxx::Ptr<String> getSimpleName() const;
+
+        /**
+         * Java: String getCanonicalName()
+         * (For parity: returns same as name for most classes; null for anonymous/local)
+         */
+        jxx::Ptr<String> getCanonicalName() const;
+
+        /**
+         * Java: String toString()
+         * "class X" or "interface X"
+         */
+        jxx::Ptr<String> toString() const override;
+
+        /**
+         * Java: int getModifiers()
+         */
+        jint getModifiers() const;
+
+        /**
+         * Java: boolean isInterface(), isPrimitive(), isArray(), isEnum(), isAnnotation(), isSynthetic()
+         */
+        jbool isInterface() const;
+        jbool isPrimitive() const;
+        jbool isArray() const;
+        jbool isEnum() const;
+        jbool isAnnotation() const;
+        jbool isSynthetic() const;
+
+        /**
+         * Java: Class<?> getSuperclass()
+         */
+        jxx::Ptr<ClassAny> getSuperclass() const;
+
+        /**
+         * Java: Class<?>[] getInterfaces()
+         */
+        jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> getInterfaces() const;
+
+        /**
+         * Java: Class<?> getComponentType() (arrays)
+         */
+        jxx::Ptr<ClassAny> getComponentType() const;
+
+        /**
+         * Java: boolean isAssignableFrom(Class<?> cls)
+         */
+        jbool isAssignableFrom(jxx::Ptr<ClassAny> cls) const;
+
+        /**
+         * Java: boolean isInstance(Object obj)
+         */
+        jbool isInstance(jxx::Ptr<Object> obj) const;
+
+        /**
+         * Java: T cast(Object obj)  (here: Object cast(Object))
+         */
+        jxx::Ptr<Object> cast(jxx::Ptr<Object> obj) const;
+
+        /**
+         * Java: T newInstance()
+         * (Deprecated in newer Java but present in Java 8)
+         */
+        jxx::Ptr<Object> newInstance() const;
+
+        // -----------------------------------------
+        // Reflection-heavy APIs (Java 8) - stubs
+        // -----------------------------------------
+
+        // Fields
+        jxx::Ptr<JxxArray<jxx::Ptr<Field>, 1>> getFields() const;
+        jxx::Ptr<JxxArray<jxx::Ptr<Field>, 1>> getDeclaredFields() const;
+        jxx::Ptr<Field> getField(jxx::Ptr<String> name) const;
+        jxx::Ptr<Field> getDeclaredField(jxx::Ptr<String> name) const;
+
+        // Methods
+        jxx::Ptr<JxxArray<jxx::Ptr<Method>, 1>> getMethods() const;
+        jxx::Ptr<JxxArray<jxx::Ptr<Method>, 1>> getDeclaredMethods() const;
+        jxx::Ptr<Method> getMethod(jxx::Ptr<String> name, jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> parameterTypes) const;
+        jxx::Ptr<Method> getDeclaredMethod(jxx::Ptr<String> name, jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> parameterTypes) const;
+
+        // Constructors
+        jxx::Ptr<JxxArray<jxx::Ptr<Constructor>, 1>> getConstructors() const;
+        jxx::Ptr<JxxArray<jxx::Ptr<Constructor>, 1>> getDeclaredConstructors() const;
+        jxx::Ptr<Constructor> getConstructor(jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> parameterTypes) const;
+        jxx::Ptr<Constructor> getDeclaredConstructor(jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> parameterTypes) const;
+
+        // Annotations (stubs)
+        jxx::Ptr<JxxArray<jxx::Ptr<Annotation>, 1>> getAnnotations() const;
+        jxx::Ptr<JxxArray<jxx::Ptr<Annotation>, 1>> getDeclaredAnnotations() const;
+
+        // Package / ClassLoader (stubs)
+        jxx::Ptr<Package> getPackage() const;
+        jxx::Ptr<ClassLoader> getClassLoader() const;
+
+        // -----------------------------------------
+        // JXX helper
+        // -----------------------------------------
+        const Meta& meta() const noexcept { return meta_; }
 
     private:
-        TypeRegistry() = default;
+        explicit ClassAny(Meta meta);
 
-        mutable std::mutex mu_;
-        std::unordered_map<std::string, const TypeInfo*> byName_;
-        std::unordered_map<std::type_index, const TypeInfo*> byType_;
+        Meta meta_;
+
+        // Registry storage
+        static std::mutex registryMutex_;
+        static std::unordered_map<std::string, std::weak_ptr<ClassAny>> registry_;
+
+        // helpers
+        static jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> toClassArray_(const std::vector<jxx::Ptr<ClassAny>>& v);
+        static std::string simpleNameFromBinary_(const std::string& bin);
+        static jbool isAssignableFromImpl_(const ClassAny& target, const ClassAny& src);
     };
 
-    // ---- Helper: build a TypeInfo for T ----
-    // NOTE: This assumes your object model uses std::shared_ptr<Object> and RTTI is enabled.
-    template <typename T>
-    inline TypeInfo makeTypeInfo(const char* canonical, const char* simple) {
-        TypeInfo ti{
-            std::string(canonical),
-            std::string(simple),
-            std::type_index(typeid(T)),
-            false,   // isInterface
-            false,   // isAbstract
-            false,   // isPrimitive
-            nullptr, // super
-            {},      // interfaces
-            false,   // defaultCtorAccessible
-            nullptr, // defaultCtor
-            // isInstanceFn: cross-cast works if implementing objects inherit both Object and interface T
-            [](const std::shared_ptr<Object>& o) -> bool {
-                return static_cast<bool>(std::dynamic_pointer_cast<T>(o));
-            }
-        };
-        return ti;
-    }
-
-    // ---- internal: full transitive closure through super + interfaces ----
-    inline bool _reachable_type(const TypeInfo* start,
-        const std::type_index& target,
-        std::unordered_set<std::type_index>& visited) {
-        if (!start) return false;
-        if (start->type == target) return true;
-        if (visited.find(start->type) != visited.end()) return false;
-        visited.insert(start->type);
-
-        // superclass chain
-        if (_reachable_type(start->super, target, visited)) return true;
-
-        // interface closure (covers both class implements and interface extends)
-        for (auto* iface : start->interfaces) {
-            if (_reachable_type(iface, target, visited)) return true;
-        }
-        return false;
-    }
-
-    // =========================================================================
-    // ClassAny: Java-like Class<?> handle
-    // =========================================================================
-    class ClassAny {
-    public:
-        ClassAny() = default;
-        explicit ClassAny(const TypeInfo* ti);
-
-        bool isNull() const;
-        const TypeInfo* raw() const;
-        
-        // Java-like identity (same "Class object" if same TypeInfo pointer)
-        bool operator==(const ClassAny& rhs) const noexcept;
-        bool operator!=(const ClassAny& rhs) const noexcept;
-
-        // Java-like names
-        const std::string& getName() const;
-        
-        std::string getSimpleName() const;
-
-        // Java-like factory: Class.forName(...)
-        static ClassAny forName(const char* canonicalName);
-
-        bool isAssignableFrom(const ClassAny& other) const;
-
-        bool isInstance(const std::shared_ptr<jxx::lang::Object> obj) const;
-
-        ClassAny getSuperclass() const;
-        std::vector<ClassAny> getInterfaces() const;        
-        std::shared_ptr<jxx::lang::Object> newInstance();
-    protected:
-        const TypeInfo* ti_ = nullptr;
-    };
-
-    // =========================================================================
-    // Class<T>: typed wrapper
-    // =========================================================================
-    template <typename T>
-    class Class : public ClassAny {
-    public:
-        using ClassAny::ClassAny;
-
-        static Class<T> get() {
-            static_assert(std::is_polymorphic_v<T>,
-                "Class<T>::get requires T to be polymorphic (for RTTI/dynamic casts).");
-
-            const TypeInfo* ti = TypeRegistry::instance().findByType(std::type_index(typeid(T)));
-            return Class<T>(ti);
-        }
-
-        std::shared_ptr<T> newInstanceTyped() const {
-            return std::dynamic_pointer_cast<T>(ClassAny::newInstance());
-        }
-    };
+    // As requested: "static Class<?> will become ClassAny"
+    using Class = ClassAny;
 
 } // namespace jxx::lang

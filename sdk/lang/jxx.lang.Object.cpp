@@ -20,8 +20,7 @@ namespace jxx::lang {
           cv_(),              // default-construct condition_variable
           mutex_()            // default-construct recursive_mutex
     {
-        // Note: thisPtr should NOT be copied; each Object has its own identity
-        // Derived classes will handle their own member copying through their copy constructors
+		thisPtr = std::make_shared<Object>(*this); // Set thisPtr to a shared_ptr to this object
     }
 
     // Copy assignment: similar to copy constructor
@@ -33,9 +32,10 @@ namespace jxx::lang {
         return *this;
     }
 
-    jxx::Ptr<ClassAny> Object::getClass() const {
-        const TypeInfo* ti = TypeRegistry::instance().findByType(std::type_index(typeid(*this)));
-        return std::make_shared<ClassAny>(ti);
+    jxx::Ptr<jxx::lang::ClassAny> Object::getClass() const {
+        // Exact Java semantics: runtime class of the *dynamic* object.
+        // Requires RTTI enabled (typeid on polymorphic type).
+        return ClassAny::forType(std::type_index(typeid(*this)));
     }
 
     // Virtual clone method
@@ -66,8 +66,8 @@ namespace jxx::lang {
     }
 
     // Class name (demangled where supported); override if you prefer custom names
-    jxx::Ptr<std::string> Object::getClassName() const {
-        return std::make_shared<std::string>(this->getClassName_());
+    jxx::Ptr<String> Object::getClassName() const {
+        return this->getClassName_();
     }
 
     // Java-like: "Class@hexHash"
@@ -101,11 +101,11 @@ namespace jxx::lang {
         throw std::runtime_error("cloneImpl not implemented");
     }
 
-    std::string Object::getClassName_() const {
+    jxx::Ptr<String> Object::getClassName_() const {
 #if defined(__GNUG__) || defined(__clang__) || defined(_MSC_VER)
-        return std::string(demangle(typeid(*this).name()));
+        return JXX_NEW<String>(demangle(typeid(*this).name()));
 #else
-        return std::string("Object");
+        return JXX_NEW<String>("Object");
 #endif
     }
 
