@@ -1,13 +1,13 @@
+#include "jxx.io.FilterInputStream.h"
 
-#include "io/jxx.io.FilterInputStream.h"
+namespace jxx::io {
 
-namespace jxx { namespace io {
-int FilterInputStream::read(){ return in->read(); }
-int FilterInputStream::read(ByteArray& b, int off, int len){ return in->read(b,off,len);} 
-int FilterInputStream::skip(int n){ return in->skip(n);} 
-int FilterInputStream::available(){ return in->available(); }
-void FilterInputStream::close(){ in->close(); }
-void FilterInputStream::mark(int readlimit){ in->mark(readlimit);} 
-void FilterInputStream::reset(){ in->reset(); }
-bool FilterInputStream::markSupported(){ return in->markSupported(); }
-}}
+    FilterInputStream::FilterInputStream(jxx::Ptr<InputStream> in)
+        : in_(std::move(in)) {}
+
+    jxx::lang::jint FilterInputStream::read() { return in_->read(); }
+    jxx::lang::jint FilterInputStream::read(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
+        return in_->read(b, off, len);
+    }
+
+} // namespace jxx::io

@@ -1,22 +1,20 @@
-
 #pragma once
-#include <cstddef>
-#include "lang/jxx.lang.internal.h"
-#include "io/jxx.io.FilterInputStream.h"
 
-using namespace jxx::lang;
+#include "lang/jxx_types.h"
+#include "jxx.io.FilterInputStream.h"
 
-namespace jxx { namespace io {
-class BufferedInputStream : public FilterInputStream 
-{ 
-    ByteArray buffer; size_t count=0; size_t pos=0; size_t markpos=(size_t)-1; int marklimit=0;
-public:
-    explicit BufferedInputStream(std::shared_ptr<InputStream> in, size_t size=8192);
-    int read() override; 
-    int read(ByteArray& b, int off, int len) override;
-    int available() override;
-    void mark(int readlimit_) override;
-    void reset() override; 
-    bool markSupported() override { return true; }
-private: int fill(); };
-}}
+namespace jxx::io {
+
+    class BufferedInputStream : public FilterInputStream {
+    public:
+        explicit BufferedInputStream(jxx::Ptr<InputStream> in, jxx::lang::jint size = 8192);
+
+        jxx::lang::jint read() override;
+
+    private:
+        jxx::Ptr<ByteArray> buf_;
+        jxx::lang::jint pos_ = 0;
+        jxx::lang::jint count_ = 0;
+    };
+
+} // namespace jxx::io

@@ -1,3 +1,10 @@
 #pragma once
-#include "jxx.io.AutoCloseable.h"
-namespace jxx::io { struct Closeable : public AutoCloseable { virtual ~Closeable() = default; }; }
+namespace jxx::io {
+
+    /** Java 8: java.io.Closeable (interface) */
+    struct Closeable {
+        virtual ~Closeable() = default;
+        virtual void close() = 0;
+    };
+
+} // namespace jxx::io

@@ -1,24 +1,19 @@
-
 #pragma once
-#include <memory>
-#include "io/jxx.io.InputStream.h"
 
-namespace jxx { namespace io {
+#include "lang/jxx_types.h"
+#include "jxx.io.InputStream.h"
 
-class FilterInputStream : public InputStream 
-{ 
-protected: 
-    std::shared_ptr<InputStream> in; 
-public:
+namespace jxx::io {
 
-    explicit FilterInputStream(std::shared_ptr<InputStream> in_) : in(std::move(in_)) {}
-    int read() override; 
-    int read(ByteArray& b, int off, int len) override;
-    int skip(int n) override; 
-    int available() override;
-    void close() override;
-    void mark(int readlimit) override; 
-    void reset() override;
-    bool markSupported() override; 
-};
-}}
+    class FilterInputStream : public InputStream {
+    public:
+        explicit FilterInputStream(jxx::Ptr<InputStream> in);
+
+        jxx::lang::jint read() override;
+        jxx::lang::jint read(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) override;
+
+    protected:
+        jxx::Ptr<InputStream> in_;
+    };
+
+} // namespace jxx::io
