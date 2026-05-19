@@ -1,295 +1,454 @@
 #include "jxx.util.Formatter.h"
 
-#include "jxx.util.TimeZone.h"
-#include "jxx.util.Date.h"
-#include "jxx.util.Calendar.h"
+#include "jxx.lang.NullPointerException.h"
+#include "jxx.lang.IllegalArgumentException.h"
+#include "jxx.lang.UnsupportedOperationException.h"
+#include "jxx.lang.StringBuilder.h"
 
-#include "jxx.util.format.IllegalFormatException.h"
-#include "jxx.util.format.MissingFormatArgumentException.h"
-#include "jxx.util.format.UnknownFormatConversionException.h"
-
-#include "jxx.lang.String.h"
-#include "jxx.lang.Object.h"
-
-// Wrapper types (adjust include paths if needed)
-#include "jxx.lang.Integer.h"
-#include "jxx.lang.Long.h"
-#include "jxx.lang.Short.h"
-#include "jxx.lang.Byte.h"
-#include "jxx.lang.Boolean.h"
-#include "jxx.lang.Float.h"
-#include "jxx.lang.Double.h"
-#include "jxx.lang.Character.h"
-
-#include <algorithm>
-#include <cctype>
-#include <cmath>
-#include <iomanip>
-#include <locale>
 #include <sstream>
-#include <string>
+#include <iomanip>
+#include <cctype>
 
 namespace jxx::util {
 
-static inline void throw_fmt(const char* msg) {
-    throw jxx::util::format::IllegalFormatException(std::make_shared<jxx::lang::String>(msg));
-}
-static inline void throw_missing(const char* msg) {
-    throw jxx::util::format::MissingFormatArgumentException(std::make_shared<jxx::lang::String>(msg));
-}
-static inline void throw_unknown(const std::string& msg) {
-    throw jxx::util::format::UnknownFormatConversionException(std::make_shared<jxx::lang::String>(msg.c_str()));
+static bool hasFlag(const std::string& flags, char f) {
+    return flags.find(f) != std::string::npos;
 }
 
-static inline bool is_digit(char c) { return c >= '0' && c <= '9'; }
+Formatter::Formatter() : out_(nullptr), locale_(Locale::getDefault()), lastIo_(nullptr), closed_(false) {}
 
-static inline std::string to_upper_ascii(std::string s) {
-    for (auto& ch : s) ch = (char)std::toupper((unsigned char)ch);
+Formatter::Formatter(jxx::Ptr<jxx::lang::Appendable> a)
+    : out_(std::move(a)), locale_(Locale::getDefault()), lastIo_(nullptr), closed_(false) {}
+
+Formatter::Formatter(jxx::Ptr<jxx::util::Locale> l)
+    : out_(nullptr), locale_(l ? l : Locale::getDefault()), lastIo_(nullptr), closed_(false) {}
+
+Formatter::Formatter(jxx::Ptr<jxx::lang::Appendable> a, jxx::Ptr<jxx::util::Locale> l)
+    : out_(std::move(a)), locale_(l ? l : Locale::getDefault()), lastIo_(nullptr), closed_(false) {}
+
+void Formatter::ensureOpen_() const {
+    if (closed_) throw FormatterClosedException();
+}
+
+jxx::Ptr<jxx::lang::Appendable> Formatter::out() const { return out_; }
+
+jxx::Ptr<jxx::util::Locale> Formatter::locale() const { return locale_; }
+
+jxx::Ptr<jxx::io::IOException> Formatter::ioException() const { return lastIo_; }
+
+std::string Formatter::toLower_(std::string s) {
+    for (auto& c : s) c = (char)std::tolower((unsigned char)c);
     return s;
 }
-static inline std::string to_lower_ascii(std::string s) {
-    for (auto& ch : s) ch = (char)std::tolower((unsigned char)ch);
-    return s;
+
+void Formatter::appendChar_(char c) {
+    append_(std::string(1, c));
 }
 
-static inline bool has_long(jxx::Ptr<jxx::lang::Object> o, long long& out) {
-    if (auto i = std::dynamic_pointer_cast<jxx::lang::Integer>(o)) { out = (long long)i->intValue(); return true; }
-    if (auto l = std::dynamic_pointer_cast<jxx::lang::Long>(o)) { out = (long long)l->longValue(); return true; }
-    if (auto s = std::dynamic_pointer_cast<jxx::lang::Short>(o)) { out = (long long)s->shortValue(); return true; }
-    if (auto b = std::dynamic_pointer_cast<jxx::lang::Byte>(o)) { out = (long long)b->byteValue(); return true; }
-    return false;
-}
-static inline bool has_double(jxx::Ptr<jxx::lang::Object> o, double& out) {
-    if (auto f = std::dynamic_pointer_cast<jxx::lang::Float>(o)) { out = (double)f->floatValue(); return true; }
-    if (auto d = std::dynamic_pointer_cast<jxx::lang::Double>(o)) { out = (double)d->doubleValue(); return true; }
-    long long li=0; if (has_long(o, li)) { out = (double)li; return true; }
-    return false;
-}
-static inline bool has_bool(jxx::Ptr<jxx::lang::Object> o, bool& out) {
-    if (auto b = std::dynamic_pointer_cast<jxx::lang::Boolean>(o)) { out = b->booleanValue(); return true; }
-    return false;
-}
-
-struct LocalParts { int year; unsigned mon; unsigned day; int hour; int minute; int second; int millis; int wday_java; };
-
-static inline void civil_from_days(int z, int& y, unsigned& m, unsigned& d) {
-    z += 719468;
-    const int era = (z >= 0 ? z : z - 146096) / 146097;
-    const unsigned doe = (unsigned)(z - era * 146097);
-    const unsigned yoe = (doe - doe/1460 + doe/36524 - doe/146096) / 365;
-    y = (int)yoe + era * 400;
-    const unsigned doy = doe - (365*yoe + yoe/4 - yoe/100);
-    const unsigned mp = (5*doy + 2)/153;
-    d = doy - (153*mp+2)/5 + 1;
-    m = mp + (mp < 10 ? 3 : -9);
-    y += (m <= 2);
-}
-
-static inline LocalParts epoch_to_local_parts(long long epochMillis, int offsetMillis) {
-    long long local = epochMillis + (long long)offsetMillis;
-    LocalParts p{};
-    p.millis = (int)(local % 1000); if (p.millis < 0) p.millis += 1000;
-    long long totalSec = local / 1000; if (local < 0 && (local % 1000)) --totalSec;
-    long long secOfDay = totalSec % 86400; if (secOfDay < 0) secOfDay += 86400;
-    p.hour = (int)(secOfDay / 3600);
-    p.minute = (int)((secOfDay % 3600) / 60);
-    p.second = (int)(secOfDay % 60);
-    long long days = totalSec / 86400; if (totalSec < 0 && (totalSec % 86400)) --days;
-    civil_from_days((int)days, p.year, p.mon, p.day);
-    int sun0 = (int)((days + 4) % 7); if (sun0 < 0) sun0 += 7;
-    p.wday_java = sun0 + 1;
-    return p;
-}
-
-static inline std::string locale_time_name(const std::locale& loc, const LocalParts& p, const char* fmt) {
-    std::tm tm{};
-    tm.tm_year = p.year - 1900;
-    tm.tm_mon  = (int)p.mon - 1;
-    tm.tm_mday = (int)p.day;
-    tm.tm_hour = p.hour;
-    tm.tm_min  = p.minute;
-    tm.tm_sec  = p.second;
-    tm.tm_wday = p.wday_java - 1;
-    std::ostringstream oss;
-    oss.imbue(loc);
-    oss << std::put_time(&tm, fmt);
-    return oss.str();
-}
-
-static inline void apply_width(std::string& out, const FormatSpec& s) {
-    if (s.precision >= 0 && (s.conv=='s' || s.conv=='S') && (int)out.size() > s.precision)
-        out.resize((std::size_t)s.precision);
-
-    if (s.width <= 0 || (int)out.size() >= s.width) return;
-
-    int pad = s.width - (int)out.size();
-    char padChar = (s.zeroPad && !s.leftJustify) ? '0' : ' ';
-
-    if (s.leftJustify) out.append((std::size_t)pad, ' ');
-    else out = std::string((std::size_t)pad, padChar) + out;
-}
-
-static void parse_one(const std::string& f, std::size_t& i, FormatSpec& s) {
-    // arg index/reuse
-    if (i < f.size() && f[i] == '<') { s.reuseLast=true; ++i; }
-    else {
-        std::size_t start=i;
-        while (i<f.size() && is_digit(f[i])) ++i;
-        if (i<f.size() && f[i]=='$' && i>start) { s.argIndex=std::stoi(f.substr(start,i-start)); ++i; }
-        else i=start;
+void Formatter::append_(const std::string& s) {
+    if (!out_) {
+        sb_ += s;
+        return;
     }
-    // flags (minimal set needed for common Java usage)
-    while (i<f.size()) {
-        switch (f[i]) {
-            case '-': s.leftJustify=true; ++i; break;
-            case '0': s.zeroPad=true; ++i; break;
-            default: goto flags_done;
+    // append via Appendable using a temporary String
+    try {
+        out_->append(JXX_NEW<jxx::lang::String>(s.c_str()));
+    } catch (const jxx::io::IOException& e) {
+        lastIo_ = JXX_NEW<jxx::io::IOException>(e.whatString());
+    } catch (...) {
+        // keep as null; Formatter in Java stores IOException only
+    }
+}
+
+jxx::Ptr<jxx::lang::String> Formatter::toString() const {
+    if (out_) {
+        // If out is a StringBuilder, return its toString(); else return internal snapshot marker.
+        auto sb = std::dynamic_pointer_cast<jxx::lang::StringBuilder>(out_);
+        if (sb) return sb->toString();
+        return JXX_NEW<jxx::lang::String>("(appendable)");
+    }
+    return JXX_NEW<jxx::lang::String>(sb_.c_str());
+}
+
+void Formatter::flush() {
+    ensureOpen_();
+    // If out is Flushable, flush it.
+    auto fl = std::dynamic_pointer_cast<jxx::io::Flushable>(out_);
+    if (fl) {
+        try { fl->flush(); } catch (...) {}
+    }
+}
+
+void Formatter::close() {
+    if (closed_) return;
+    closed_ = true;
+    auto cl = std::dynamic_pointer_cast<jxx::io::Closeable>(out_);
+    if (cl) {
+        try { cl->close(); } catch (...) {}
+    }
+}
+
+// Parse format string into literals and specs.
+// literals.size() == specs.size()+1
+std::vector<Formatter::Spec> Formatter::parse_(const std::string& fmt, std::vector<std::string>& literals) {
+    std::vector<Spec> specs;
+    literals.clear();
+
+    std::string cur;
+    std::size_t i = 0;
+
+    auto parseInt = [&](std::size_t& j) -> int {
+        int v = 0;
+        bool any = false;
+        while (j < fmt.size() && std::isdigit((unsigned char)fmt[j])) {
+            any = true;
+            v = v * 10 + (fmt[j] - '0');
+            ++j;
+        }
+        return any ? v : -1;
+    };
+
+    while (i < fmt.size()) {
+        char c = fmt[i];
+        if (c != '%') {
+            cur.push_back(c);
+            ++i;
+            continue;
+        }
+
+        // handle %% and %n
+        if (i + 1 < fmt.size() && (fmt[i + 1] == '%' || fmt[i + 1] == 'n')) {
+            literals.push_back(cur);
+            cur.clear();
+            Spec sp;
+            sp.conv = fmt[i + 1];
+            specs.push_back(sp);
+            i += 2;
+            continue;
+        }
+
+        literals.push_back(cur);
+        cur.clear();
+
+        Spec sp;
+        std::size_t j = i + 1;
+
+        // argument index or reuse
+        if (j < fmt.size() && fmt[j] == '<') {
+            sp.reusePrev = true;
+            ++j;
+        } else {
+            // digits then $ optional
+            std::size_t save = j;
+            int idx = parseInt(j);
+            if (idx >= 0 && j < fmt.size() && fmt[j] == '$') {
+                sp.argIndex = idx;
+                ++j;
+            } else {
+                j = save;
+            }
+        }
+
+        // flags
+        const std::string flagChars = "-+ 0,(#<";
+        while (j < fmt.size() && flagChars.find(fmt[j]) != std::string::npos) {
+            // '<' can appear as flag in Java when arg reuse; we accept it
+            if (fmt[j] == '<') sp.reusePrev = true;
+            else sp.flags.push_back(fmt[j]);
+            ++j;
+        }
+
+        // width
+        int w = parseInt(j);
+        if (w >= 0) sp.width = w;
+
+        // precision
+        if (j < fmt.size() && fmt[j] == '.') {
+            ++j;
+            int p = parseInt(j);
+            if (p < 0) throw IllegalFormatPrecisionException(-1);
+            sp.precision = p;
+        }
+
+        // date/time prefix
+        if (j < fmt.size() && (fmt[j] == 't' || fmt[j] == 'T')) {
+            sp.dateTime = true;
+            ++j;
+        }
+
+        if (j >= fmt.size()) throw UnknownFormatConversionException(JXX_NEW<jxx::lang::String>(""));
+        sp.conv = fmt[j];
+        if (sp.dateTime) {
+            sp.dt = sp.conv;
+            sp.conv = 't';
+        }
+        ++j;
+
+        specs.push_back(sp);
+        i = j;
+    }
+
+    literals.push_back(cur);
+    return specs;
+}
+
+std::string Formatter::applyWidth_(const std::string& in, const Spec& sp) {
+    if (sp.width < 0) return in;
+    int width = sp.width;
+    if ((int)in.size() >= width) return in;
+
+    bool left = hasFlag(sp.flags, '-');
+    char pad = hasFlag(sp.flags, '0') && !left ? '0' : ' ';
+    std::string out;
+    int padCount = width - (int)in.size();
+    if (left) {
+        out = in;
+        out.append((std::size_t)padCount, ' ');
+    } else {
+        out.assign((std::size_t)padCount, pad);
+        out += in;
+    }
+    return out;
+}
+
+long long Formatter::asLongLong_(jxx::Ptr<jxx::lang::Object> arg, bool& ok) {
+    ok = false;
+    if (!arg) return 0;
+    // Try common wrapper types by toString parsing.
+    try {
+        auto s = arg->toString();
+        if (!s) return 0;
+        std::string t = s->utf8();
+        size_t idx = 0;
+        long long v = std::stoll(t, &idx, 10);
+        ok = (idx > 0);
+        return v;
+    } catch (...) {
+        return 0;
+    }
+}
+
+long double Formatter::asLongDouble_(jxx::Ptr<jxx::lang::Object> arg, bool& ok) {
+    ok = false;
+    if (!arg) return 0;
+    try {
+        auto s = arg->toString();
+        if (!s) return 0;
+        std::string t = s->utf8();
+        size_t idx = 0;
+        long double v = std::stold(t, &idx);
+        ok = (idx > 0);
+        return v;
+    } catch (...) {
+        return 0;
+    }
+}
+
+std::string Formatter::formatString_(const Spec& sp, jxx::Ptr<jxx::lang::Object> arg) {
+    std::string s = arg ? arg->toString()->utf8() : std::string("null");
+    if (sp.precision >= 0 && (int)s.size() > sp.precision) s = s.substr(0, (std::size_t)sp.precision);
+    if (sp.conv == 'S') {
+        for (auto& c : s) c = (char)std::toupper((unsigned char)c);
+    }
+    return applyWidth_(s, sp);
+}
+
+std::string Formatter::formatBoolean_(const Spec& sp, jxx::Ptr<jxx::lang::Object> arg) {
+    std::string s = arg ? "true" : "false";
+    if (sp.conv == 'B') {
+        for (auto& c : s) c = (char)std::toupper((unsigned char)c);
+    }
+    return applyWidth_(s, sp);
+}
+
+std::string Formatter::formatHash_(const Spec& sp, jxx::Ptr<jxx::lang::Object> arg) {
+    std::ostringstream oss;
+    if (!arg) oss << "null";
+    else {
+        // Use pointer address as hash surrogate
+        oss << std::hex << std::nouppercase << (std::uintptr_t)arg.get();
+    }
+    auto s = oss.str();
+    if (sp.conv == 'H') {
+        for (auto& c : s) c = (char)std::toupper((unsigned char)c);
+    }
+    return applyWidth_(s, sp);
+}
+
+std::string Formatter::formatChar_(const Spec& sp, jxx::Ptr<jxx::lang::Object> arg) {
+    // Accept Character wrapper via toString; use first UTF-16 code unit.
+    std::string out;
+    if (!arg) out = "null";
+    else {
+        auto s = arg->toString();
+        auto u16 = s ? s->utf16() : std::u16string();
+        char16_t cu = u16.empty() ? 0 : u16[0];
+        // encode this single code unit as UTF-8
+        if (cu <= 0x7F) out.push_back((char)cu);
+        else if (cu <= 0x7FF) {
+            out.push_back((char)(0xC0 | ((cu >> 6) & 0x1F)));
+            out.push_back((char)(0x80 | (cu & 0x3F)));
+        } else {
+            out.push_back((char)(0xE0 | ((cu >> 12) & 0x0F)));
+            out.push_back((char)(0x80 | ((cu >> 6) & 0x3F)));
+            out.push_back((char)(0x80 | (cu & 0x3F)));
         }
     }
-flags_done:
-    // width
-    if (i<f.size() && is_digit(f[i])) {
-        std::size_t start=i;
-        while (i<f.size() && is_digit(f[i])) ++i;
-        s.width = std::stoi(f.substr(start,i-start));
-    }
-    // precision
-    if (i<f.size() && f[i]=='.') {
-        ++i;
-        std::size_t start=i;
-        while (i<f.size() && is_digit(f[i])) ++i;
-        s.precision = (i==start) ? 0 : std::stoi(f.substr(start,i-start));
-    }
-    // datetime
-    if (i<f.size() && (f[i]=='t' || f[i]=='T')) { s.dateTime=true; s.upper=(f[i]=='T'); ++i; }
-    if (i>=f.size()) throw_missing("MissingFormatArgumentException");
-    s.conv=f[i];
-    if (std::isupper((unsigned char)s.conv)) s.upper=true;
+    if (sp.conv == 'C') for (auto& c : out) c = (char)std::toupper((unsigned char)c);
+    return applyWidth_(out, sp);
 }
 
-Formatter::Formatter(jxx::Ptr<jxx::lang::Locale> locale)
-    : locale_(locale ? locale : jxx::lang::Locale::getDefault()) {}
+std::string Formatter::formatInteger_(const Spec& sp, jxx::Ptr<jxx::lang::Object> arg) {
+    bool ok = false;
+    long long v = asLongLong_(arg, ok);
+    if (!ok) throw jxx::lang::IllegalArgumentException(JXX_NEW<jxx::lang::String>("Not an integer"));
 
-jxx::Ptr<jxx::lang::String> Formatter::format(jxx::Ptr<jxx::lang::String> fmt,
-    jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::Object>, 1>> args) {
+    std::ostringstream oss;
+    bool upper = (sp.conv == 'X');
+    char conv = (char)std::tolower((unsigned char)sp.conv);
 
-    if (!fmt || !args) throw_fmt("NullPointerException");
+    if (conv == 'd') {
+        oss << v;
+    } else if (conv == 'o') {
+        oss << std::oct << (unsigned long long)v;
+    } else if (conv == 'x') {
+        oss << std::hex << (upper ? std::uppercase : std::nouppercase) << (unsigned long long)v;
+    } else {
+        throw UnknownFormatConversionException(JXX_NEW<jxx::lang::String>(std::string(1, sp.conv).c_str()));
+    }
+
+    std::string s = oss.str();
+
+    // sign flags for decimal
+    if (conv == 'd' && v >= 0) {
+        if (hasFlag(sp.flags, '+')) s = "+" + s;
+        else if (hasFlag(sp.flags, ' ')) s = " " + s;
+    }
+
+    // grouping not implemented; ignore ','
+
+    // parentheses for negatives
+    if (hasFlag(sp.flags, '(') && v < 0) {
+        // s includes '-' already
+        if (!s.empty() && s[0] == '-') s = s.substr(1);
+        s = "(" + s + ")";
+    }
+
+    return applyWidth_(s, sp);
+}
+
+std::string Formatter::formatFloat_(const Spec& sp, jxx::Ptr<jxx::lang::Object> arg) {
+    bool ok = false;
+    long double v = asLongDouble_(arg, ok);
+    if (!ok) throw jxx::lang::IllegalArgumentException(JXX_NEW<jxx::lang::String>("Not a float"));
+
+    std::ostringstream oss;
+    oss.imbue(std::locale::classic());
+
+    char conv = (char)std::tolower((unsigned char)sp.conv);
+
+    if (sp.precision >= 0) oss << std::setprecision(sp.precision);
+
+    if (conv == 'f') {
+        oss << std::fixed << (double)v;
+    } else if (conv == 'e') {
+        oss << std::scientific << (double)v;
+    } else if (conv == 'g') {
+        oss << (double)v;
+    } else if (conv == 'a') {
+        oss << std::hexfloat << (double)v;
+    } else {
+        throw UnknownFormatConversionException(JXX_NEW<jxx::lang::String>(std::string(1, sp.conv).c_str()));
+    }
+
+    std::string s = oss.str();
+
+    if (sp.conv == 'E' || sp.conv == 'G' || sp.conv == 'A') {
+        for (auto& c : s) c = (char)std::toupper((unsigned char)c);
+    }
+
+    if (v >= 0) {
+        if (hasFlag(sp.flags, '+')) s = "+" + s;
+        else if (hasFlag(sp.flags, ' ')) s = " " + s;
+    }
+
+    if (hasFlag(sp.flags, '(') && v < 0) {
+        if (!s.empty() && s[0] == '-') s = s.substr(1);
+        s = "(" + s + ")";
+    }
+
+    return applyWidth_(s, sp);
+}
+
+std::string Formatter::formatOne_(const Spec& sp, jxx::Ptr<jxx::lang::Object> arg, jxx::Ptr<jxx::util::Locale> /*loc*/) {
+    if (sp.dateTime) {
+        throw jxx::lang::UnsupportedOperationException(JXX_NEW<jxx::lang::String>("Date/time conversions not implemented"));
+    }
+
+    switch (sp.conv) {
+    case 's': case 'S': return formatString_(sp, arg);
+    case 'b': case 'B': return formatBoolean_(sp, arg);
+    case 'h': case 'H': return formatHash_(sp, arg);
+    case 'c': case 'C': return formatChar_(sp, arg);
+    case 'd': case 'o': case 'x': case 'X': return formatInteger_(sp, arg);
+    case 'f': case 'e': case 'E': case 'g': case 'G': case 'a': case 'A': return formatFloat_(sp, arg);
+    default:
+        throw UnknownFormatConversionException(JXX_NEW<jxx::lang::String>(std::string(1, sp.conv).c_str()));
+    }
+}
+
+jxx::Ptr<Formatter> Formatter::format(jxx::Ptr<jxx::lang::String> fmt, jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1>> args) {
+    return format(locale_, fmt, args);
+}
+
+jxx::Ptr<Formatter> Formatter::format(jxx::Ptr<jxx::util::Locale> l, jxx::Ptr<jxx::lang::String> fmt, jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1>> args) {
+    ensureOpen_();
+    if (!fmt) throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("format"));
+    if (!l) l = Locale::getDefault();
 
     std::string f = fmt->utf8();
-    std::ostringstream out; out.imbue(std::locale::classic());
+    std::vector<std::string> literals;
+    auto specs = parse_(f, literals);
 
-    jint nextArg=1;
-    jint lastArg=-1;
+    // argument walking
+    jxx::lang::jint nextImplicit = 1;
+    jxx::lang::jint prevIndex = 0;
 
-    const std::locale& loc = locale_->cppLocale();
+    auto argAt = [&](jxx::lang::jint oneBased) -> jxx::Ptr<jxx::lang::Object> {
+        if (!args) return nullptr;
+        jxx::lang::jint idx = oneBased - 1;
+        if (idx < 0 || (std::uint32_t)idx >= args->length) return nullptr;
+        return (*args)[idx];
+    };
 
-    for (std::size_t i=0;i<f.size();++i) {
-        if (f[i] != '%') { out<<f[i]; continue; }
-        if (i+1<f.size() && f[i+1]=='%') { out<<'%'; ++i; continue; }
+    for (std::size_t i = 0; i < specs.size(); ++i) {
+        append_(literals[i]);
+        const auto& sp = specs[i];
 
-        ++i;
-        FormatSpec spec{};
-        parse_one(f, i, spec);
+        if (sp.conv == '%') { appendChar_('%'); continue; }
+        if (sp.conv == 'n') { append_("\n"); continue; }
 
-        if (spec.conv=='n') { out<<"\n"; continue; }
-        if (spec.conv=='%') { out<<"%"; continue; }
-
-        jint argIndex = -1;
-        if (spec.reuseLast) {
-            if (lastArg<0) throw_missing("MissingFormatArgumentException");
-            argIndex=lastArg;
-        } else if (spec.argIndex>0) argIndex=spec.argIndex;
-        else argIndex=nextArg++;
-        lastArg=argIndex;
-
-        if (argIndex<=0 || (std::uint32_t)argIndex > args->length) throw_missing("MissingFormatArgumentException");
-        auto a = (*args)[argIndex-1];
-
-        std::string chunk;
-
-        if (spec.dateTime) {
-            if (!a) throw_fmt("NullPointerException");
-
-            long long epoch=0;
-            jxx::Ptr<jxx::util::TimeZone> tz;
-
-            if (auto cal = std::dynamic_pointer_cast<jxx::util::Calender>(a)) {
-                epoch = (long long)cal->getTimeInMillis();
-                tz = cal->getTimeZone();
-                if (!tz) tz = jxx::util::TimeZone::getDefault();
-            } else if (auto d = std::dynamic_pointer_cast<jxx::util::Date>(a)) {
-                epoch = (long long)d->getTime();
-                tz = jxx::util::TimeZone::getDefault();
-            } else {
-                long long v=0;
-                if (!has_long(a, v)) throw_fmt("IllegalFormatConversionException: t/T");
-                epoch=v; tz=jxx::util::TimeZone::getDefault();
-            }
-
-            jint off = tz ? tz->getOffset((jlong)epoch) : 0;
-            LocalParts lp = epoch_to_local_parts(epoch, (int)off);
-
-            auto make2 = [](int v){ std::ostringstream o; o<<std::setw(2)<<std::setfill('0')<<v; return o.str(); };
-            auto make3 = [](int v){ std::ostringstream o; o<<std::setw(3)<<std::setfill('0')<<v; return o.str(); };
-            auto make4 = [](int v){ std::ostringstream o; o<<std::setw(4)<<std::setfill('0')<<v; return o.str(); };
-
-            switch (spec.conv) {
-                case 'Y': chunk=make4(lp.year); break;
-                case 'm': chunk=make2((int)lp.mon); break;
-                case 'd': chunk=make2((int)lp.day); break;
-                case 'H': chunk=make2(lp.hour); break;
-                case 'M': chunk=make2(lp.minute); break;
-                case 'S': chunk=make2(lp.second); break;
-                case 'L': chunk=make3(lp.millis); break;
-                case 'z': {
-                    int offSec = (int)off / 1000;
-                    char sign='+'; if (offSec<0) { sign='-'; offSec=-offSec; }
-                    int hh=offSec/3600; int mm=(offSec%3600)/60;
-                    std::ostringstream o; o<<sign<<std::setw(2)<<std::setfill('0')<<hh<<std::setw(2)<<std::setfill('0')<<mm;
-                    chunk=o.str();
-                    break;
-                }
-                case 'Z': chunk = tz ? tz->getAbbreviation((jlong)epoch)->utf8() : std::string("UTC"); break;
-                case 'a': chunk = locale_time_name(loc, lp, "%a"); break;
-                case 'A': chunk = locale_time_name(loc, lp, "%A"); break;
-                case 'b': chunk = locale_time_name(loc, lp, "%b"); break;
-                case 'B': chunk = locale_time_name(loc, lp, "%B"); break;
-                case 'p': chunk = to_lower_ascii(locale_time_name(loc, lp, "%p")); break;
-                default: throw_unknown(std::string("UnknownFormatConversionException: t") + spec.conv);
-            }
-            if (spec.upper) chunk = to_upper_ascii(chunk);
-
-        } else if (spec.conv=='s' || spec.conv=='S') {
-            chunk = a ? a->toString()->utf8() : std::string("null");
-            if (spec.upper) chunk = to_upper_ascii(chunk);
-
-        } else if (spec.conv=='b' || spec.conv=='B') {
-            bool bv=false;
-            if (!a) bv=false;
-            else if (!has_bool(a, bv)) bv=true;
-            chunk = bv ? "true" : "false";
-            if (spec.upper) chunk = to_upper_ascii(chunk);
-
-        } else if (spec.conv=='d') {
-            long long v=0; if (!has_long(a, v)) throw_fmt("IllegalFormatConversionException: d");
-            chunk = std::to_string(v);
-
-        } else if (spec.conv=='f') {
-            double v=0; if (!has_double(a, v)) throw_fmt("IllegalFormatConversionException: f");
-            std::ostringstream o; o.imbue(std::locale::classic());
-            int prec = (spec.precision>=0) ? spec.precision : 6;
-            o<<std::fixed<<std::setprecision(prec)<<v;
-            chunk=o.str();
-
+        jxx::lang::jint argIndex;
+        if (sp.reusePrev) {
+            argIndex = prevIndex;
+        } else if (sp.argIndex > 0) {
+            argIndex = sp.argIndex;
         } else {
-            throw_unknown(std::string("UnknownFormatConversionException: ") + spec.conv);
+            argIndex = nextImplicit++;
+        }
+        prevIndex = argIndex;
+
+        auto arg = argAt(argIndex);
+        if (!arg && (!args || (std::uint32_t)(argIndex - 1) >= args->length)) {
+            throw MissingFormatArgumentException(JXX_NEW<jxx::lang::String>("%"));
         }
 
-        apply_width(chunk, spec);
-        out<<chunk;
+        auto piece = formatOne_(sp, arg, l);
+        append_(piece);
     }
+    append_(literals.back());
 
-    return std::make_shared<jxx::lang::String>(out.str().c_str());
+    return std::static_pointer_cast<Formatter>(this->thisPtr);
 }
 
 } // namespace jxx::util
