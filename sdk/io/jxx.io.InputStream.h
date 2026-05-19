@@ -1,8 +1,8 @@
 #pragma once
 
 #include "lang/jxx_types.h"
+#include "lang/jxx.lang.buildin_array.h"
 #include "lang/jxx.lang.Object.h"
-#include "lang/jxx.lang.String.h"
 #include "jxx.io.Closeable.h"
 
 namespace jxx::io {

@@ -1,6 +1,7 @@
 #include <cstdio>
-#include "jxx.io.Console.h"
 #include "jxx.io.BufferedReader.h"
+#include "lang/jxx.lang.System.h"
+#include "jxx.io.Console.h"
 
 using namespace jxx::io;
 
@@ -37,7 +38,7 @@ void jxx::io::Console::printf(const char* fmt, ...){
     jxx::lang::System::out->print(std::string(buf.data(), (size_t)n));
 }
 
-std::u16string jxx::io::Console::readLine(){
+jxx::Ptr<String> jxx::io::Console::readLine(){
     auto isr = std::make_shared<InputStreamReader>(jxx::lang::System::in);
     BufferedReader br(isr);
     return br.readLine();

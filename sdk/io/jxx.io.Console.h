@@ -8,10 +8,12 @@
 #include "io/jxx.io.Reader.h"
 #include "io/jxx.io.InputStreamReader.h"
 #include "io/jxx.io.BufferedReader.h"
+#include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.Object.h"
 
 namespace jxx { 
     namespace io {
-        class Console {
+        class Console : public jxx::lang::Object {
         public:
             static jxx::Ptr<Console> console();
 

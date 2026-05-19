@@ -3,9 +3,9 @@
 #include "jxx.io.Reader.h"
 #include "jxx.io.InputStream.h"
 
-#include "jxx.lang.Charset.h"
-#include "jxx.lang.String.h"
-#include "jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.Charset.h"
+#include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.NullPointerException.h"
 
 #include <string>
 
@@ -16,10 +16,10 @@ public:
     explicit InputStreamReader(jxx::Ptr<InputStream> in);
     InputStreamReader(jxx::Ptr<InputStream> in, jxx::Ptr<jxx::lang::Charset> cs);
 
-    jint read() override;
-    jint read(jxx::Ptr<CharArray> cbuf, jint off, jint len) override;
+    jxx::lang::jint read() override;
+    jxx::lang::jint read(jxx::Ptr<CharArray> cbuf, jxx::lang::jint off, jxx::lang::jint len) override;
 
-    jbool ready() override;
+    jxx::lang::jbool ready() override;
     void close() override;
 
 private:
@@ -29,7 +29,7 @@ private:
     std::u16string decoded_;
     std::size_t dpos_ = 0;
 
-    jbool refill_();
+    jxx::lang::jbool refill_();
 };
 
 } // namespace jxx::io
