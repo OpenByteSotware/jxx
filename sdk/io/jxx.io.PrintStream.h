@@ -1,11 +1,17 @@
 #pragma once
 
+#include <sstream>
+#include <locale>
 #include "jxx.io.FilterOutputStream.h"
-#include "jxx.lang.String.h"
+
+
+namespace jxx::lang {
+    class String;
+}
 
 namespace jxx::io {
 
-// Java 8: java.io.PrintStream (minimal)
+// Java 8: java.io.PrintStream (minimal; writes UTF-8 from String::utf8())
 class PrintStream final : public FilterOutputStream {
 public:
     explicit PrintStream(jxx::Ptr<OutputStream> out, jxx::lang::jbool autoFlush = false);

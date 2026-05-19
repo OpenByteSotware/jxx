@@ -1,4 +1,6 @@
+#include "lang/jxx.lang.IllegalArgumentException.h"
 #include "jxx.io.BufferedOutputStream.h"
+#include "lang/jxx.lang.String.h"
 
 namespace jxx::io {
 
@@ -36,9 +38,7 @@ void BufferedOutputStream::write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx
 
     if (len > (jxx::lang::jint)buf_->length - count_) flushBuffer_();
 
-    for (jxx::lang::jint i = 0; i < len; ++i) {
-        (*buf_)[count_ + i] = (*b)[off + i];
-    }
+    for (jxx::lang::jint i = 0; i < len; ++i) (*buf_)[count_ + i] = (*b)[off + i];
     count_ += len;
 }
 

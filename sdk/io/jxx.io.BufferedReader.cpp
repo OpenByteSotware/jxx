@@ -1,9 +1,10 @@
+#include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.StringBuilder.h"
 #include "jxx.io.BufferedReader.h"
-#include "jxx.lang.StringBuilder.h"
 
 namespace jxx::io {
 
-BufferedReader::BufferedReader(jxx::Ptr<Reader> in, jint size)
+BufferedReader::BufferedReader(jxx::Ptr<Reader> in, jxx::lang::jint size)
     : in_(std::move(in)) {
     if (!in_) throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("in"));
     if (size <= 0) throw jxx::lang::IllegalArgumentException(JXX_NEW<jxx::lang::String>("size"));
@@ -11,27 +12,27 @@ BufferedReader::BufferedReader(jxx::Ptr<Reader> in, jint size)
 }
 
 void BufferedReader::fill_() {
-    count_ = in_->read(buf_, 0, (jint)buf_->length);
+    count_ = in_->read(buf_, 0, (jxx::lang::jint)buf_->length);
     pos_ = 0;
 }
 
-jint BufferedReader::read() {
+jxx::lang::jint BufferedReader::read() {
     if (pos_ >= count_) {
         fill_();
         if (count_ <= 0) return -1;
     }
-    return (jint)(*buf_)[pos_++];
+    return (jxx::lang::jint)(*buf_)[pos_++];
 }
 
-jint BufferedReader::read(jxx::Ptr<CharArray> cbuf, jint off, jint len) {
+jxx::lang::jint BufferedReader::read(jxx::Ptr<CharArray> cbuf, jxx::lang::jint off, jxx::lang::jint len) {
     Reader::checkBounds_(cbuf, off, len);
     if (len == 0) return 0;
 
-    jint written = 0;
+    jxx::lang::jint written = 0;
     while (written < len) {
-        jint c = read();
+        jxx::lang::jint c = read();
         if (c < 0) return (written == 0) ? -1 : written;
-        (*cbuf)[off + written] = (jchar)c;
+        (*cbuf)[off + written] = (jxx::lang::jchar)c;
         ++written;
     }
     return written;
@@ -40,28 +41,25 @@ jint BufferedReader::read(jxx::Ptr<CharArray> cbuf, jint off, jint len) {
 jxx::Ptr<jxx::lang::String> BufferedReader::readLine() {
     auto sb = JXX_NEW<jxx::lang::StringBuilder>();
 
-    jint c = read();
+    jxx::lang::jint c = read();
     if (c < 0) return nullptr;
 
     while (c >= 0) {
-        if (c == '
-') break;
-        if (c == '
-') {
-            jint n = read();
-            if (n != '
-' && n >= 0) {
+        if (c == (jxx::lang::jchar)'\r') break;
+        if (c == (jxx::lang::jchar)'\n') {
+            jxx::lang::jint n = read();
+            if (n != (jxx::lang::jchar)'\n' && n >= 0) {
                 if (pos_ > 0) --pos_;
             }
             break;
         }
-        sb->append((jchar)c);
+        sb->append((jxx::lang::jchar)c);
         c = read();
     }
     return sb->toString();
 }
 
-jbool BufferedReader::ready() {
+jxx::lang::jbool BufferedReader::ready() {
     return (pos_ < count_) || in_->ready();
 }
 

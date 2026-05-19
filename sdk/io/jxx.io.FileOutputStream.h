@@ -9,7 +9,6 @@
 
 namespace jxx::io {
 
-// Java 8: java.io.FileOutputStream (minimal)
 class FileOutputStream final : public OutputStream {
 public:
     explicit FileOutputStream(jxx::Ptr<jxx::lang::String> path);

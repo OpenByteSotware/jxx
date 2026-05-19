@@ -23,9 +23,8 @@ public:
     void writeFloat(jxx::lang::jfloat v);
     void writeDouble(jxx::lang::jdouble v);
 
-    // Java 8 DataOutput methods
     void writeBytes(jxx::Ptr<jxx::lang::String> s);   // low 8 bits of each char
-    void writeChars(jxx::Ptr<jxx::lang::String> s);   // UTF-16BE (2 bytes per char)
+    void writeChars(jxx::Ptr<jxx::lang::String> s);   // UTF-16BE
     void writeUTF(jxx::Ptr<jxx::lang::String> s);     // modified UTF-8
 
     jxx::lang::jint size() const;

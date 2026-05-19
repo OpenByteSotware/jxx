@@ -5,7 +5,6 @@
 
 namespace jxx::io {
 
-// Java 8: java.io.ByteArrayOutputStream
 class ByteArrayOutputStream final : public OutputStream {
 public:
     ByteArrayOutputStream();
@@ -24,7 +23,6 @@ public:
 private:
     jxx::Ptr<ByteArray> buf_;
     jxx::lang::jint count_ = 0;
-
     void ensureCapacity_(jxx::lang::jint minCapacity);
 };
 

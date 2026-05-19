@@ -1,9 +1,7 @@
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
-#include "jxx.io.IOException.h"
 #include "jxx.io.OutputStream.h"
-
 
 namespace jxx::io {
 
@@ -26,12 +24,7 @@ void OutputStream::write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::
     }
 }
 
-void OutputStream::flush() {
-    // default no-op
-}
-
-void OutputStream::close() {
-    // default no-op
-}
+void OutputStream::flush() {}
+void OutputStream::close() {}
 
 } // namespace jxx::io

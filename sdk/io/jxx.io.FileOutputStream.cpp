@@ -30,12 +30,8 @@ void FileOutputStream::write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::la
     if (!f_) throw IOException(JXX_NEW<jxx::lang::String>("write failed"));
 }
 
-void FileOutputStream::flush() {
-    if (f_) f_.flush();
-}
+void FileOutputStream::flush() { if (f_) f_.flush(); }
 
-void FileOutputStream::close() {
-    if (f_.is_open()) f_.close();
-}
+void FileOutputStream::close() { if (f_.is_open()) f_.close(); }
 
 } // namespace jxx::io

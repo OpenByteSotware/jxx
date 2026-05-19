@@ -1,8 +1,6 @@
 #include "jxx.io.PipedInputStream.h"
 #include "jxx.io.PipedOutputStream.h"
 
-#include <algorithm>
-
 namespace jxx::io {
 
 static constexpr jxx::lang::jint DEFAULT_PIPE_SIZE = 1024;
@@ -15,13 +13,8 @@ void PipedInputStream::initPipe_(jxx::lang::jint pipeSize) {
 }
 
 PipedInputStream::PipedInputStream() { initPipe_(DEFAULT_PIPE_SIZE); }
-
-PipedInputStream::PipedInputStream(jxx::Ptr<PipedOutputStream> src) : PipedInputStream() {
-    connect(src);
-}
-
+PipedInputStream::PipedInputStream(jxx::Ptr<PipedOutputStream> src) : PipedInputStream() { connect(src); }
 PipedInputStream::PipedInputStream(jxx::lang::jint pipeSize) { initPipe_(pipeSize); }
-
 PipedInputStream::PipedInputStream(jxx::Ptr<PipedOutputStream> src, jxx::lang::jint pipeSize) {
     initPipe_(pipeSize);
     connect(src);
@@ -80,9 +73,7 @@ jxx::lang::jint PipedInputStream::read() {
 
     jxx::lang::jint ret = ((jxx::lang::jint)buffer_[(std::size_t)out_]) & 0xFF;
     out_ = (out_ + 1) % (jxx::lang::jint)buffer_.size();
-    if (out_ == in_) {
-        in_ = -1;
-    }
+    if (out_ == in_) in_ = -1;
 
     notFull_.notify_all();
     return ret;
@@ -92,10 +83,9 @@ jxx::lang::jint PipedInputStream::read(jxx::Ptr<ByteArray> b, jxx::lang::jint of
     InputStream::checkBounds_(b, off, len);
     if (len == 0) return 0;
 
-    jxx::lang::jint c = read();
-    if (c < 0) return -1;
-
-    (*b)[off] = (jxx::lang::jbyte)(c & 0xFF);
+    jxx::lang::jint first = read();
+    if (first < 0) return -1;
+    (*b)[off] = (jxx::lang::jbyte)(first & 0xFF);
 
     jxx::lang::jint i = 1;
     for (; i < len; ++i) {

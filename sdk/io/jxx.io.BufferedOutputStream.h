@@ -1,11 +1,11 @@
 #pragma once
 
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.buildin_array.h"
 #include "jxx.io.FilterOutputStream.h"
-#include "jxx.lang.IllegalArgumentException.h"
 
 namespace jxx::io {
 
-// Java 8: java.io.BufferedOutputStream
 class BufferedOutputStream final : public FilterOutputStream {
 public:
     explicit BufferedOutputStream(jxx::Ptr<OutputStream> out);
@@ -20,7 +20,6 @@ public:
 private:
     jxx::Ptr<ByteArray> buf_;
     jxx::lang::jint count_ = 0;
-
     void flushBuffer_();
 };
 

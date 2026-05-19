@@ -2,6 +2,7 @@
 
 #include "jxx.io.InputStream.h"
 #include "jxx.io.IOException.h"
+
 #include "jxx.lang.IllegalArgumentException.h"
 #include "jxx.lang.NullPointerException.h"
 #include "jxx.lang.String.h"
@@ -28,7 +29,6 @@ public:
 
     jxx::lang::jint available() override;
     void close() override;
-
     jxx::lang::jbool markSupported() override;
 
 private:

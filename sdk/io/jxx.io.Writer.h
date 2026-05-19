@@ -1,16 +1,42 @@
-
 #pragma once
-#include <string>
-#include "lang/jxx.lang.internal.h"
-#include "io/jxx.io.Closeable.h"
-#include "io/jxx.io.Flushable.h"
-#include "io/jxx.io.IOException.h"
-namespace jxx { namespace io {
-class Writer : public jxx::lang::Object, public Closeable, public Flushable { public:
-    virtual ~Writer() = default; virtual void write(int c) = 0; 
-    virtual void write(const jxx::lang::jchar* buf, int off, int len)
-    { 
-        if(!buf||off<0||len<0) throw IOException("Writer.write: invalid args"); for(int i=0;i<len;++i) write(buf[off+i]); } 
-    virtual void write(const std::u16string& s){ if(!s.empty()) write(s.data(),0,(int)s.size()); }
-    virtual void flush() override {} virtual void close() override {} };
-}}
+
+#include "jxx_types.h"
+#include "jxx.lang.Object.h"
+#include "jxx.lang.String.h"
+
+#include "jxx.lang.NullPointerException.h"
+#include "jxx.lang.IndexOutOfBoundsException.h"
+
+#include "jxx.io.Closeable.h"
+#include "jxx.io.Flushable.h"
+#include "jxx.io.IOException.h"
+
+namespace jxx::io {
+
+// Java 8: java.io.Writer
+class Writer : public jxx::lang::Object, public Closeable, public Flushable {
+public:
+    virtual ~Writer() = default;
+
+    // Java: void write(int c)
+    virtual void write(jxx::lang::jint c) = 0;
+
+    virtual void write(jxx::Ptr<CharArray> cbuf);
+    virtual void write(jxx::Ptr<CharArray> cbuf, jxx::lang::jint off, jxx::lang::jint len);
+
+    virtual void write(jxx::Ptr<jxx::lang::String> str);
+    virtual void write(jxx::Ptr<jxx::lang::String> str, jxx::lang::jint off, jxx::lang::jint len);
+
+    virtual jxx::Ptr<Writer> append(jxx::lang::jchar c);
+
+    void flush() override;
+    void close() override;
+
+protected:
+    static void checkBounds_(jxx::Ptr<CharArray> cbuf, jxx::lang::jint off, jxx::lang::jint len);
+    static void checkStringBounds_(jxx::Ptr<jxx::lang::String> s, jxx::lang::jint off, jxx::lang::jint len);
+
+    jxx::Ptr<Writer> self_();
+};
+
+} // namespace jxx::io

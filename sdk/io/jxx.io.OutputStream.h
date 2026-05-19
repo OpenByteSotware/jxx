@@ -5,7 +5,7 @@
 #include "lang/jxx.lang.Object.h"
 #include "jxx.io.Closeable.h"
 #include "jxx.io.Flushable.h"
-
+#include "jxx.io.IOException.h"
 
 namespace jxx::io {
 
@@ -14,7 +14,7 @@ class OutputStream : public jxx::lang::Object, public Closeable, public Flushabl
 public:
     virtual ~OutputStream() = default;
 
-    // Writes the low eight bits of b.
+    // Writes the low 8 bits.
     virtual void write(jxx::lang::jint b) = 0;
 
     virtual void write(jxx::Ptr<ByteArray> b);

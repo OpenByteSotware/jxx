@@ -1,7 +1,5 @@
+#include "lang/jxx.lang.String.h"
 #include "jxx.io.PrintStream.h"
-
-#include <sstream>
-#include <locale>
 
 namespace jxx::io {
 
@@ -11,9 +9,7 @@ PrintStream::PrintStream(jxx::Ptr<OutputStream> out, jxx::lang::jbool autoFlush)
 void PrintStream::writeBytes_(const std::string& bytes) {
     try {
         auto ba = JXX_NEW<ByteArray>((std::uint32_t)bytes.size());
-        for (std::size_t i = 0; i < bytes.size(); ++i) {
-            (*ba)[(jxx::lang::jint)i] = (jxx::lang::jbyte)bytes[i];
-        }
+        for (std::size_t i = 0; i < bytes.size(); ++i) (*ba)[(jxx::lang::jint)i] = (jxx::lang::jbyte)bytes[i];
         out_->write(ba, 0, (jxx::lang::jint)ba->length);
         if (autoFlush_) out_->flush();
     } catch (...) {
@@ -52,11 +48,9 @@ void PrintStream::print(jxx::lang::jdouble d) {
 
 void PrintStream::print(jxx::lang::jchar c) {
     char16_t ch = (char16_t)c;
-    // Encode this single UTF-16 code unit to UTF-8 (minimal)
     std::string out;
-    if (ch <= 0x7F) {
-        out.push_back((char)ch);
-    } else if (ch <= 0x7FF) {
+    if (ch <= 0x7F) out.push_back((char)ch);
+    else if (ch <= 0x7FF) {
         out.push_back((char)(0xC0 | ((ch >> 6) & 0x1F)));
         out.push_back((char)(0x80 | (ch & 0x3F)));
     } else {

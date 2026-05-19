@@ -34,9 +34,7 @@ void ByteArrayOutputStream::write(jxx::lang::jint b) {
 void ByteArrayOutputStream::write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
     OutputStream::checkBounds_(b, off, len);
     ensureCapacity_(count_ + len);
-    for (jxx::lang::jint i = 0; i < len; ++i) {
-        (*buf_)[count_ + i] = (*b)[off + i];
-    }
+    for (jxx::lang::jint i = 0; i < len; ++i) (*buf_)[count_ + i] = (*b)[off + i];
     count_ += len;
 }
 
@@ -55,8 +53,6 @@ void ByteArrayOutputStream::writeTo(jxx::Ptr<OutputStream> out) const {
     out->write(buf_, 0, count_);
 }
 
-void ByteArrayOutputStream::close() {
-    // Java: no-op
-}
+void ByteArrayOutputStream::close() {}
 
 } // namespace jxx::io

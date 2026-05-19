@@ -1,10 +1,10 @@
 #pragma once
-
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.buildin_array.h"
 #include "jxx.io.OutputStream.h"
 
 namespace jxx::io {
 
-// Java 8: java.io.FilterOutputStream
 class FilterOutputStream : public OutputStream {
 public:
     explicit FilterOutputStream(jxx::Ptr<OutputStream> out);

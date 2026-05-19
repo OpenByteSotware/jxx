@@ -4,10 +4,7 @@
 namespace jxx::io {
 
 PipedOutputStream::PipedOutputStream() = default;
-
-PipedOutputStream::PipedOutputStream(jxx::Ptr<PipedInputStream> snk) {
-    connect(std::move(snk));
-}
+PipedOutputStream::PipedOutputStream(jxx::Ptr<PipedInputStream> snk) { connect(std::move(snk)); }
 
 void PipedOutputStream::connect(jxx::Ptr<PipedInputStream> snk) {
     if (!snk) throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("snk"));
@@ -15,12 +12,12 @@ void PipedOutputStream::connect(jxx::Ptr<PipedInputStream> snk) {
 
     sink_ = std::move(snk);
 
-    // Mark both as connected
     {
         std::lock_guard<std::recursive_mutex> lk(sink_->mutex_);
         if (sink_->connected_) throw IOException(JXX_NEW<jxx::lang::String>("Already connected"));
         sink_->connected_ = true;
     }
+
     connected_ = true;
 }
 
@@ -37,7 +34,6 @@ void PipedOutputStream::write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::l
 }
 
 void PipedOutputStream::flush() {
-    // Java: flush may wake readers; we notify.
     if (sink_) {
         std::lock_guard<std::recursive_mutex> lk(sink_->mutex_);
         sink_->notEmpty_.notify_all();
