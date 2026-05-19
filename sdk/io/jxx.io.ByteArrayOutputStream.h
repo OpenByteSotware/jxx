@@ -1,20 +1,31 @@
-
 #pragma once
-#include <cstddef>
-#include <algorithm>
-#include <cstring>
-#include "io/jxx.io.OutputStream.h"
 
-namespace jxx { namespace io {
-class ByteArrayOutputStream : public OutputStream { ByteArray buf; size_t count=0; public:
-    explicit ByteArrayOutputStream(size_t size=32);
-    void write(int b) override;
-    void write(const ByteArray& b, int off, int len) override; 
-    void reset(); 
-    jint size() const { return count; } 
-    ByteArray toByteArray() const; 
-    void writeTo(OutputStream& out);
-private: 
-    void ensureCapacity(jint minCap);
+#include "jxx.io.OutputStream.h"
+#include "jxx.lang.IllegalArgumentException.h"
+
+namespace jxx::io {
+
+// Java 8: java.io.ByteArrayOutputStream
+class ByteArrayOutputStream final : public OutputStream {
+public:
+    ByteArrayOutputStream();
+    explicit ByteArrayOutputStream(jxx::lang::jint size);
+
+    void write(jxx::lang::jint b) override;
+    void write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) override;
+
+    void reset();
+    jxx::lang::jint size() const;
+    jxx::Ptr<ByteArray> toByteArray() const;
+    void writeTo(jxx::Ptr<OutputStream> out) const;
+
+    void close() override;
+
+private:
+    jxx::Ptr<ByteArray> buf_;
+    jxx::lang::jint count_ = 0;
+
+    void ensureCapacity_(jxx::lang::jint minCapacity);
 };
-}}
+
+} // namespace jxx::io

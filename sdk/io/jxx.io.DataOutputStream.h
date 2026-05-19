@@ -1,33 +1,38 @@
-
 #pragma once
-#include "lang/jxx.lang.internal.h"
-#include "io/jxx.io.FilterOutputStream.h"
-#include "io/jxx.io.DataOutput.h"
-#include "io/jxx.io.ModifiedUTF.h"
-#include "io/jxx.io.UTFDataFormatException.h"
 
-namespace jxx { namespace io {
-class DataOutputStream : public FilterOutputStream, public DataOutput
-{ 
-    long written_=0; 
+#include "jxx.io.FilterOutputStream.h"
+#include "jxx.io.IOException.h"
+#include "jxx.lang.String.h"
+
+namespace jxx::io {
+
+// Java 8: java.io.DataOutputStream
+class DataOutputStream final : public FilterOutputStream {
 public:
-    explicit DataOutputStream(std::shared_ptr<OutputStream> out) : FilterOutputStream(std::move(out)) {}
-    void write(jint b) override { out->write(b); written_+=1; }
-    void write(const ByteArray& b) override { write(b,0,(int)b.size()); }
-    void write(const ByteArray& b, int off, int len) override { out->write(b,off,len); written_+=len; }
-    void writeBoolean(bool v) override { write(v?1:0); }
-    void writeByte(jbyte v) override { write(v); }
-    void writeShort(jshort v) override { ByteArray t{ (jbyte)((v>>8)&0xFF), (jbyte)(v&0xFF)}; write(t); }
-    void writeChar(jchar v) override { writeShort(v); }
-    void writeInt(jint v) override { ByteArray t(4); t[0]=(uint8_t)((v>>24)&0xFF); t[1]=(uint8_t)((v>>16)&0xFF); t[2]=(uint8_t)((v>>8)&0xFF); t[3]=(uint8_t)(v&0xFF); write(t); }
-    void writeLong(jlong v) override { ByteArray t(8); for(int i=7;i>=0;--i){ t[7-i]=(uint8_t)((v>>(i*8))&0xFF);} write(t); }
-    void writeFloat(float v) override { uint32_t bits; std::memcpy(&bits,&v,4); writeInt((int)bits); }
-    void writeDouble(double v) override { uint64_t bits; std::memcpy(&bits,&v,8); writeLong((long)bits); }
-    void writeUTF(const std::u16string& s) override { 
-        auto enc=ModifiedUTF::encode(s); 
-        if(enc->size()>65535) throw UTFDataFormatException("writeUTF: length exceeds 65535"); 
-        writeShort((int)enc->size()); 
-        write(*enc.get()); }
-    long size() const { return written_; }
+    explicit DataOutputStream(jxx::Ptr<OutputStream> out);
+
+    void write(jxx::lang::jint b) override;
+    void write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) override;
+
+    void writeBoolean(jxx::lang::jbool v);
+    void writeByte(jxx::lang::jint v);
+    void writeShort(jxx::lang::jint v);
+    void writeChar(jxx::lang::jint v);
+    void writeInt(jxx::lang::jint v);
+    void writeLong(jxx::lang::jlong v);
+    void writeFloat(jxx::lang::jfloat v);
+    void writeDouble(jxx::lang::jdouble v);
+
+    // Java 8 DataOutput methods
+    void writeBytes(jxx::Ptr<jxx::lang::String> s);   // low 8 bits of each char
+    void writeChars(jxx::Ptr<jxx::lang::String> s);   // UTF-16BE (2 bytes per char)
+    void writeUTF(jxx::Ptr<jxx::lang::String> s);     // modified UTF-8
+
+    jxx::lang::jint size() const;
+
+private:
+    jxx::lang::jint written_ = 0;
+    void inc_(jxx::lang::jint n) { written_ += n; }
 };
-}}
+
+} // namespace jxx::io

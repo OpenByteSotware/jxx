@@ -1,19 +1,28 @@
-
 #pragma once
+
+#include "jxx.io.OutputStream.h"
+#include "jxx.io.IOException.h"
+#include "jxx.lang.NullPointerException.h"
+#include "jxx.lang.String.h"
+
 #include <fstream>
-#include <ostream>
-#include "io/jxx.io.OutputStream.h"
-#include "io/jxx.io.FileDescriptor.h"
-namespace jxx { namespace io {
-class FileOutputStream : public OutputStream { 
-    std::ofstream ofs;            // owned file stream when opened by path
-    std::ostream* ext = nullptr;  // non-owning pointer to external stream (e.g., std::cout/cerr)
+
+namespace jxx::io {
+
+// Java 8: java.io.FileOutputStream (minimal)
+class FileOutputStream final : public OutputStream {
 public:
-    explicit FileOutputStream(const std::string& path, bool append=false);
-    explicit FileOutputStream(const FileDescriptor& fd);
-    void write(int b) override;
-    void write(const ByteArray& b, jxx::lang::jint off, jxx::lang::jint len) override;
+    explicit FileOutputStream(jxx::Ptr<jxx::lang::String> path);
+    FileOutputStream(jxx::Ptr<jxx::lang::String> path, jxx::lang::jbool append);
+
+    void write(jxx::lang::jint b) override;
+    void write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) override;
+
     void flush() override;
     void close() override;
+
+private:
+    std::ofstream f_;
 };
-}}
+
+} // namespace jxx::io

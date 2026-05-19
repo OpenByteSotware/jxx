@@ -1,65 +1,30 @@
-// output_stream.hpp
 #pragma once
-#include <cstdint>
-#include <vector>
-#include <string>
-#include <stdexcept>
-#include <memory>
-#include <algorithm>
-#include "lang/jxx.lang.internal.h"
-#include "io/jxx.io.IOException.h"
-using namespace std;
-using namespace jxx::lang;
+
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.Object.h"
+#include "jxx.io.Closeable.h"
+#include "jxx.io.Flushable.h"
+
 
 namespace jxx::io {
 
-class OutputStream {
+// Java 8: java.io.OutputStream
+class OutputStream : public jxx::lang::Object, public Closeable, public Flushable {
 public:
-    OutputStream() = default;
     virtual ~OutputStream() = default;
 
-    OutputStream(const OutputStream&) = delete;
-    OutputStream& operator=(const OutputStream&) = delete;
-    OutputStream(OutputStream&&) = default;
-    OutputStream& operator=(OutputStream&&) = default;
+    // Writes the low eight bits of b.
+    virtual void write(jxx::lang::jint b) = 0;
 
-    virtual void write(int b) {
-        jbyte one = static_cast<jbyte>(b & 0xFF);
-        write(&one, 0, 1);
-    }
+    virtual void write(jxx::Ptr<ByteArray> b);
+    virtual void write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len);
 
-    virtual void write(const ByteArray& b, int off, int len) {
-        if (b.size() != 0) {
-            write(b.data(), 0, b.size());
-        }
-    }
+    void flush() override;
+    void close() override;
 
-    // write(byte[] b, int off, int len)
-    virtual void write(const jbyte* b, std::size_t off, std::size_t len) = 0;
-
-    // flush()
-    virtual void flush() {}
-
-    // close()
-    virtual void close() {}
-
-    // Convenience overloads (C++ only)
-    void write(const std::string& s) {
-        if (!s.empty()) {
-            const auto* p = reinterpret_cast<const jbyte*>(s.data());
-            write(p, 0, s.size());
-        }
-    }
-
-    void write(jbyte* data, std::size_t len) {
-        if (len) write(data, 0, len);
-    }
-    
 protected:
-    // Protected helper to throw I/O failures
-    [[noreturn]] static void fail(const std::string& msg) {
-        throw IOException(msg);
-    }
+    static void checkBounds_(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len);
 };
 
-}
+} // namespace jxx::io

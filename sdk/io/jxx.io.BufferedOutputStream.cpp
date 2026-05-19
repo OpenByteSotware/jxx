@@ -1,18 +1,55 @@
+#include "jxx.io.BufferedOutputStream.h"
 
-#include "io/jxx.io.BufferedOutputStream.h"
-#include <cstring>
-#include <algorithm>
-namespace jxx { namespace io {
-BufferedOutputStream::BufferedOutputStream(std::shared_ptr<OutputStream> out_, size_t size): FilterOutputStream(std::move(out_)), buffer(size){}
-void BufferedOutputStream::write(int b){ if(count>=buffer.size()) flushBuffer(); buffer[count++]=(uint8_t)(b&0xFF);} 
-void BufferedOutputStream::write(const ByteArray& b, int off, int len)
-{ 
-	if(b.size()< (size_t)off + (size_t)len) throw IOException("IndexOutOfBounds in BufferedOutputStream.write"); if(len >= (int)buffer.size()){ flushBuffer(); 
-out->write(b,off,len); return;} if(count + (size_t)len > buffer.size()) flushBuffer(); std::memcpy(buffer.data()+count, b.data()+off, (size_t)len); count += (size_t)len; 
+namespace jxx::io {
+
+static constexpr jxx::lang::jint DEFAULT_BUF_SIZE = 8192;
+
+BufferedOutputStream::BufferedOutputStream(jxx::Ptr<OutputStream> out)
+    : BufferedOutputStream(std::move(out), DEFAULT_BUF_SIZE) {}
+
+BufferedOutputStream::BufferedOutputStream(jxx::Ptr<OutputStream> out, jxx::lang::jint size)
+    : FilterOutputStream(std::move(out)) {
+    if (size <= 0) throw jxx::lang::IllegalArgumentException(JXX_NEW<jxx::lang::String>("size <= 0"));
+    buf_ = JXX_NEW<ByteArray>((std::uint32_t)size);
 }
-void BufferedOutputStream::flush(){ flushBuffer(); out->flush(); }
-void BufferedOutputStream::close(){ flush(); out->close(); }
-void BufferedOutputStream::flushBuffer(){ if(count>0){ 
-	out->write(buffer,0,(int)count); count=0; }
+
+void BufferedOutputStream::flushBuffer_() {
+    if (count_ > 0) {
+        out_->write(buf_, 0, count_);
+        count_ = 0;
+    }
 }
-}}
+
+void BufferedOutputStream::write(jxx::lang::jint b) {
+    if (count_ >= (jxx::lang::jint)buf_->length) flushBuffer_();
+    (*buf_)[count_++] = (jxx::lang::jbyte)(b & 0xFF);
+}
+
+void BufferedOutputStream::write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
+    OutputStream::checkBounds_(b, off, len);
+
+    if (len >= (jxx::lang::jint)buf_->length) {
+        flushBuffer_();
+        out_->write(b, off, len);
+        return;
+    }
+
+    if (len > (jxx::lang::jint)buf_->length - count_) flushBuffer_();
+
+    for (jxx::lang::jint i = 0; i < len; ++i) {
+        (*buf_)[count_ + i] = (*b)[off + i];
+    }
+    count_ += len;
+}
+
+void BufferedOutputStream::flush() {
+    flushBuffer_();
+    out_->flush();
+}
+
+void BufferedOutputStream::close() {
+    try { flush(); } catch (...) {}
+    out_->close();
+}
+
+} // namespace jxx::io

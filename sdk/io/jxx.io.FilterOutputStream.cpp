@@ -1,8 +1,23 @@
+#include "jxx.io.FilterOutputStream.h"
 
-#include "io/jxx.io.FilterOutputStream.h"
-namespace jxx { namespace io {
-void FilterOutputStream::write(int b){ out->write(b);} 
-void FilterOutputStream::write(const ByteArray& b, int off, int len){ out->write(b,off,len);} 
-void FilterOutputStream::flush(){ out->flush(); }
-void FilterOutputStream::close(){ out->close(); }
-}}
+namespace jxx::io {
+
+FilterOutputStream::FilterOutputStream(jxx::Ptr<OutputStream> out)
+    : out_(std::move(out)) {
+    if (!out_) throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("out"));
+}
+
+void FilterOutputStream::write(jxx::lang::jint b) { out_->write(b); }
+
+void FilterOutputStream::write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
+    out_->write(b, off, len);
+}
+
+void FilterOutputStream::flush() { out_->flush(); }
+
+void FilterOutputStream::close() {
+    try { flush(); } catch (...) {}
+    out_->close();
+}
+
+} // namespace jxx::io

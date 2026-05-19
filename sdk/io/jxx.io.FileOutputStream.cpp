@@ -1,26 +1,41 @@
+#include "jxx.io.FileOutputStream.h"
 
-#include "io/jxx.io.FileOutputStream.h"
-#include "io/jxx.io.FileNotFoundException.h"
-#include "io/jxx.io.IOException.h"
-#include <iostream>
-namespace jxx { namespace io {
-FileOutputStream::FileOutputStream(const std::string& path, bool append){ ofs.open(path, std::ios::binary | (append? std::ios::app : std::ios::trunc)); if(!ofs.is_open()) throw FileNotFoundException("FileOutputStream: cannot open "+path);} 
-FileOutputStream::FileOutputStream(const FileDescriptor& fd){
-    switch(fd.kind()){
-        case FileDescriptor::STDOUT: ext = &std::cout; break;
-        case FileDescriptor::STDERR: ext = &std::cerr; break;
-        default: throw IOException("FileOutputStream: unsupported FileDescriptor kind for output");
-    }
+namespace jxx::io {
+
+FileOutputStream::FileOutputStream(jxx::Ptr<jxx::lang::String> path)
+    : FileOutputStream(std::move(path), false) {}
+
+FileOutputStream::FileOutputStream(jxx::Ptr<jxx::lang::String> path, jxx::lang::jbool append) {
+    if (!path) throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("path"));
+
+    std::ios::openmode mode = std::ios::binary | std::ios::out;
+    if (append) mode |= std::ios::app;
+    else mode |= std::ios::trunc;
+
+    f_.open(path->utf8(), mode);
+    if (!f_) throw IOException(JXX_NEW<jxx::lang::String>("Failed to open file for write"));
 }
-void FileOutputStream::write(int b){
-    if(ext){ char c=(char)(b&0xFF); ext->write(&c,1); if(!(*ext)) throw IOException("FileOutputStream.write failed"); return; }
-    char c=(char)(b&0xFF); ofs.write(&c,1); if(!ofs) throw IOException("FileOutputStream.write failed");
+
+void FileOutputStream::write(jxx::lang::jint b) {
+    if (!f_) throw IOException(JXX_NEW<jxx::lang::String>("stream closed"));
+    char c = (char)(b & 0xFF);
+    f_.put(c);
+    if (!f_) throw IOException(JXX_NEW<jxx::lang::String>("write failed"));
 }
-void FileOutputStream::write(const ByteArray& b, jxx::lang::jint off, jxx::lang::jint len){
-    if(b.size()< (size_t)off + (size_t)len) throw IOException("IndexOutOfBounds in FileOutputStream.write");
-    if(ext){ ext->write((const char*)(b.data()+off), len); if(!(*ext)) throw IOException("FileOutputStream.write failed"); return; }
-    ofs.write((const char*)(b.data()+off), len); if(!ofs) throw IOException("FileOutputStream.write failed");
+
+void FileOutputStream::write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
+    OutputStream::checkBounds_(b, off, len);
+    if (!f_) throw IOException(JXX_NEW<jxx::lang::String>("stream closed"));
+    f_.write(reinterpret_cast<const char*>(b->data()) + off, len);
+    if (!f_) throw IOException(JXX_NEW<jxx::lang::String>("write failed"));
 }
-void FileOutputStream::flush(){ if(ext){ ext->flush(); return; } ofs.flush(); }
-void FileOutputStream::close(){ if(ext) return; if(ofs.is_open()) ofs.close(); }
-}} // ns
+
+void FileOutputStream::flush() {
+    if (f_) f_.flush();
+}
+
+void FileOutputStream::close() {
+    if (f_.is_open()) f_.close();
+}
+
+} // namespace jxx::io
