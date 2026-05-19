@@ -1,13 +1,12 @@
-#include "jxx.util.Formatter.h"
-
-#include "jxx.lang.NullPointerException.h"
-#include "jxx.lang.IllegalArgumentException.h"
-#include "jxx.lang.UnsupportedOperationException.h"
-#include "jxx.lang.StringBuilder.h"
-
 #include <sstream>
 #include <iomanip>
 #include <cctype>
+#include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.UnsupportedOperationException.h"
+#include "lang/jxx.lang.StringBuilder.h"
+#include "jxx.util.Formatter.h"
 
 namespace jxx::util {
 

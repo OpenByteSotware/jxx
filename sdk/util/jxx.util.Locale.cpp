@@ -1,3 +1,4 @@
+#include "lang/jxx.lang.String.h"
 #include "jxx.util.Locale.h"
 #include "lang/jxx.lang.NullPointerException.h"
 

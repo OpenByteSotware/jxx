@@ -1,6 +1,6 @@
 #include "jxx.util.TimeZone.h"
 #include "jxx.util.Date.h"
-#include "jxx.util.tz.tzif.h"
+#include "jxx.util.tzif.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -29,7 +29,7 @@ static std::string base_dir() {
 #endif
 }
 
-static inline jint parse_gmt_offset_millis(const std::string& s) {
+static inline jxx::lang::jint parse_gmt_offset_millis(const std::string& s) {
     // Accept GMT+hh:mm, GMT-hh:mm, UTC+..., UTC-...
     if (s.size() < 4) return 0;
     std::size_t pos = 3;
@@ -43,23 +43,23 @@ static inline jint parse_gmt_offset_millis(const std::string& s) {
     if (pos < s.size() && s[pos] == ':') ++pos;
     int mm = 0;
     if (pos + 1 < s.size()) mm = std::stoi(s.substr(pos,2));
-    return (jint)(sign * ((hh*60 + mm) * 60 * 1000));
+    return (jxx::lang::jint)(sign * ((hh*60 + mm) * 60 * 1000));
 }
 
 class FixedOffsetTimeZone final : public TimeZone {
     std::string id_;
-    jint off_ms_ = 0;
+    jxx::lang::jint off_ms_ = 0;
 public:
-    FixedOffsetTimeZone(std::string id, jint off_ms) : id_(std::move(id)), off_ms_(off_ms) {}
+    FixedOffsetTimeZone(std::string id, jxx::lang::jint off_ms) : id_(std::move(id)), off_ms_(off_ms) {}
     jxx::Ptr<jxx::lang::String> getID() const override { return std::make_shared<jxx::lang::String>(id_.c_str()); }
-    jint getOffset(jlong /*epochMillis*/) const override { return off_ms_; }
-    jxx::Ptr<jxx::lang::String> getAbbreviation(jlong /*epochMillis*/) const override {
+    jxx::lang::jint getOffset(jxx::lang::jlong /*epochMillis*/) const override { return off_ms_; }
+    jxx::Ptr<jxx::lang::String> getAbbreviation(jxx::lang::jlong /*epochMillis*/) const override {
         // Java often uses GMT+hh:mm for fixed offsets; keep ID.
         return std::make_shared<jxx::lang::String>(id_.c_str());
     }
-    jint getRawOffset() const override { return off_ms_; }
-    jbool useDaylightTime() const override { return false; }
-    jbool inDaylightTime(jxx::Ptr<Date> /*d*/) const override { return false; }
+    jxx::lang::jint getRawOffset() const override { return off_ms_; }
+    jxx::lang::jbool useDaylightTime() const override { return false; }
+    jxx::lang::jbool inDaylightTime(jxx::Ptr<Date> /*d*/) const override { return false; }
 };
 
 class TzdbTimeZone final : public TimeZone {
@@ -71,18 +71,18 @@ public:
         return std::make_shared<jxx::lang::String>(z_.id.c_str());
     }
 
-    jint getOffset(jlong epochMillis) const override {
+    jxx::lang::jint getOffset(jxx::lang::jlong epochMillis) const override {
         int64_t sec = (int64_t)(epochMillis / 1000);
         const auto& t = z_.transitions;
-        if (t.empty()) return (jint)(z_.default_offset * 1000);
+        if (t.empty()) return (jxx::lang::jint)(z_.default_offset * 1000);
         auto it = std::upper_bound(t.begin(), t.end(), sec,
             [](int64_t v, const Transition& tr){ return v < tr.at_utc; });
-        if (it == t.begin()) return (jint)(z_.default_offset * 1000);
+        if (it == t.begin()) return (jxx::lang::jint)(z_.default_offset * 1000);
         --it;
-        return (jint)(it->offset * 1000);
+        return (jxx::lang::jint)(it->offset * 1000);
     }
 
-    jxx::Ptr<jxx::lang::String> getAbbreviation(jlong epochMillis) const override {
+    jxx::Ptr<jxx::lang::String> getAbbreviation(jxx::lang::jlong epochMillis) const override {
         int64_t sec = (int64_t)(epochMillis / 1000);
         const auto& t = z_.transitions;
         if (t.empty()) return std::make_shared<jxx::lang::String>(z_.default_abbrev.c_str());
@@ -93,12 +93,12 @@ public:
         return std::make_shared<jxx::lang::String>(it->abbrev.c_str());
     }
 
-    jint getRawOffset() const override { return (jint)(z_.default_offset * 1000); }
-    jbool useDaylightTime() const override { return true; }
+    jxx::lang::jint getRawOffset() const override { return (jxx::lang::jint)(z_.default_offset * 1000); }
+    jxx::lang::jbool useDaylightTime() const override { return true; }
 
-    jbool inDaylightTime(jxx::Ptr<Date> d) const override {
+    jxx::lang::jbool inDaylightTime(jxx::Ptr<Date> d) const override {
         if (!d) return false;
-        jint off = getOffset(d->getTime());
+        jxx::lang::jint off = getOffset(d->getTime());
         return off != getRawOffset();
     }
 };
@@ -114,7 +114,7 @@ jxx::Ptr<TimeZone> TimeZone::getTimeZone(jxx::Ptr<jxx::lang::String> id) {
     if (zid == "UTC" || zid == "GMT") return std::make_shared<FixedOffsetTimeZone>(zid, 0);
 
     if (zid.rfind("GMT", 0) == 0 || zid.rfind("UTC", 0) == 0) {
-        jint off = parse_gmt_offset_millis(zid);
+        jxx::lang::jint off = parse_gmt_offset_millis(zid);
         return std::make_shared<FixedOffsetTimeZone>(zid, off);
     }
 

@@ -10,7 +10,7 @@
 #include "jxx.lang.CharSequence.h"
 #include "jxx.lang.Comparable.h"
 #include "io/jxx.io.Serializable.h"
-#include "jxx.lang.Locale.h"
+#include "util/jxx.util.Locale.h"
 #include "jxx.lang.Charset.h"
 #include "jxx.lang.Iterable.h"
 
