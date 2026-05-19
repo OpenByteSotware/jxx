@@ -27,9 +27,7 @@ void Writer::write(jxx::Ptr<CharArray> cbuf) {
 
 void Writer::write(jxx::Ptr<CharArray> cbuf, jxx::lang::jint off, jxx::lang::jint len) {
     checkBounds_(cbuf, off, len);
-    for (jxx::lang::jint i = 0; i < len; ++i) {
-        write((jxx::lang::jint)(*cbuf)[off + i]);
-    }
+    for (jxx::lang::jint i = 0; i < len; ++i) write((jxx::lang::jint)(*cbuf)[off + i]);
 }
 
 void Writer::write(jxx::Ptr<jxx::lang::String> str) {
@@ -40,9 +38,30 @@ void Writer::write(jxx::Ptr<jxx::lang::String> str) {
 void Writer::write(jxx::Ptr<jxx::lang::String> str, jxx::lang::jint off, jxx::lang::jint len) {
     checkStringBounds_(str, off, len);
     const auto& u16 = str->utf16();
-    for (jxx::lang::jint i = 0; i < len; ++i) {
-        write((jxx::lang::jint)u16[(std::size_t)(off + i)]);
+    for (jxx::lang::jint i = 0; i < len; ++i) write((jxx::lang::jint)u16[(std::size_t)(off + i)]);
+}
+
+jxx::Ptr<Writer> Writer::append(jxx::Ptr<jxx::lang::CharSequence> csq) {
+    if (!csq) {
+        write(JXX_NEW<jxx::lang::String>("null"));
+        return self_();
     }
+    // write entire sequence
+    auto a = JXX_NEW<CharArray>((std::uint32_t)csq->length());
+    for (jxx::lang::jint i = 0; i < csq->length(); ++i) (*a)[i] = csq->charAt(i);
+    write(a);
+    return self_();
+}
+
+jxx::Ptr<Writer> Writer::append(jxx::Ptr<jxx::lang::CharSequence> csq, jxx::lang::jint start, jxx::lang::jint end) {
+    if (!csq) csq = JXX_NEW<jxx::lang::String>("null");
+    if (start < 0 || end < start || end > csq->length()) {
+        throw jxx::lang::IndexOutOfBoundsException(JXX_NEW<jxx::lang::String>("start/end"));
+    }
+    auto a = JXX_NEW<CharArray>((std::uint32_t)(end - start));
+    for (jxx::lang::jint i = 0; i < (end - start); ++i) (*a)[i] = csq->charAt(start + i);
+    write(a);
+    return self_();
 }
 
 jxx::Ptr<Writer> Writer::append(jxx::lang::jchar c) {
