@@ -11,6 +11,7 @@ namespace jxx::lang {
 class Charset final : public Object {
 public:
     enum class Kind { UTF8, ASCII, ISO_8859_1 };
+    virtual ~Charset() = default;
 
     static jxx::Ptr<Charset> defaultCharset();
     static jxx::Ptr<Charset> forName(jxx::Ptr<String> name);
