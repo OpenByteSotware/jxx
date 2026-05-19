@@ -10,7 +10,7 @@ namespace jxx::util {
 template <class E>
 struct Enumeration {
     virtual ~Enumeration() = default;
-    virtual jbool hasMoreElements() = 0;
+    virtual jxx::lang::jbool hasMoreElements() = 0;
     virtual E nextElement() = 0;
 };
 

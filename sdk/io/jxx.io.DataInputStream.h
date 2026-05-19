@@ -1,33 +1,38 @@
-
 #pragma once
-#include "lang/jxx.lang.internal.h"
-#include "io/jxx.io.FilterInputStream.h"
-#include "io/jxx.io.DataInput.h"
-#include "io/jxx.io.ModifiedUTF.h"
-#include "io/jxx.io.EOFException.h"
 
-using namespace jxx::lang;
+#include "jxx.io.FilterInputStream.h"
+#include "jxx.io.EOFException.h"
+#include "jxx.io.IOException.h"
+#include "jxx.lang.String.h"
 
-namespace jxx { namespace io {
-class DataInputStream : public FilterInputStream, public DataInput 
-{ 
+namespace jxx::io {
+
+class DataInputStream final : public FilterInputStream {
 public:
-    explicit DataInputStream(std::shared_ptr<InputStream> in) : FilterInputStream(std::move(in)) {}
-    void readFully(ByteArray& b) override { readFully(b,0,(int)b.size()); }
-    void readFully(ByteArray& b, int off, int len) override { int n=0; while(n<len){ auto r=in->read(b, off+n, len-n); if(r<0) throw EOFException("DataInputStream.readFully: EOF"); n+=r; } }
-    jint skipBytes(jint n) override { return (jint)in->skip(n); }
-    jbool readBoolean() override { int v=in->read(); if(v<0) throw EOFException("readBoolean"); return v!=0; }
-    jbyte readByte() override { int v=in->read(); if(v<0) throw EOFException("readByte"); return (byte)v; }
-    jshort readShort() override { ByteArray b(2); readFully(b); return (jshort)((b[0]<<8)|b[1]); }
-    
-    jchar readChar() override { ByteArray b(2); readFully(b); return ((jchar)b[2] << 8) | ((jchar)b[3]); }
-    jint readInt() override { ByteArray b(4); readFully(b); return ((int)b[0]<<24)|((int)b[1]<<16)|((int)b[2]<<8)|((int)b[3]); }
-    jlong readLong() override { ByteArray b(8); readFully(b); long v=0; for(int i=0;i<8;++i) v=(v<<8)|b[i]; return v; }
-    jfloat readFloat() override { uint32_t bits=(uint32_t)readInt(); jfloat f; std::memcpy(&f,&bits,4); return f; }
-    jdouble readDouble() override { uint64_t bits=(uint64_t)readLong(); jdouble d; std::memcpy(&d,&bits,8); return d; }
-    std::u16string readUTF() override {
-        ByteArray bytes(2); readFully(bytes);
-        return ModifiedUTF::decode(bytes); 
-    }
+    explicit DataInputStream(jxx::Ptr<InputStream> in);
+
+    void readFully(jxx::Ptr<ByteArray> b);
+    void readFully(jxx::Ptr<ByteArray> b, jint off, jint len);
+
+    jint skipBytes(jint n);
+
+    jbool readBoolean();
+    jbyte readByte();
+    jint readUnsignedByte();
+    jshort readShort();
+    jint readUnsignedShort();
+    jchar readChar();
+    jint readInt();
+    jlong readLong();
+    jfloat readFloat();
+    jdouble readDouble();
+
+    jxx::Ptr<jxx::lang::String> readLine();
+    jxx::Ptr<jxx::lang::String> readUTF();
+
+private:
+    void readFullyRaw_(jxx::Ptr<ByteArray> b, jint off, jint len);
+    jint readUnsignedShortBE_();
 };
-}}
+
+} // namespace jxx::io

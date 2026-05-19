@@ -1,19 +1,26 @@
-
 #pragma once
+
+#include "jxx.io.InputStream.h"
+#include "jxx.io.IOException.h"
+#include "jxx.lang.NullPointerException.h"
+#include "jxx.lang.String.h"
+
 #include <fstream>
-#include <istream>
-#include "io/jxx.io.InputStream.h"
-#include "io/jxx.io.FileDescriptor.h"
-namespace jxx { namespace io {
-class FileInputStream : public InputStream {
-    std::ifstream ifs;           // owned file stream when opened by path
-    std::istream* ext = nullptr; // non-owning pointer to external stream (e.g., std::cin)
+
+namespace jxx::io {
+
+class FileInputStream final : public InputStream {
 public:
-    explicit FileInputStream(const std::string& path);
-    explicit FileInputStream(const FileDescriptor& fd);
-    int read() override;
-    jxx::lang::jint read(ByteArray& b, jxx::lang::jint off, jxx::lang::jint len) override;
-    int available() override;
+    explicit FileInputStream(jxx::Ptr<jxx::lang::String> path);
+
+    jint read() override;
+    jint read(jxx::Ptr<ByteArray> b, jint off, jint len) override;
+
+    jint available() override;
     void close() override;
+
+private:
+    std::ifstream f_;
 };
-}}
+
+} // namespace jxx::io

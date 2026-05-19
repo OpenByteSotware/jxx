@@ -9,6 +9,16 @@
 
 namespace jxx::util::function {
 
+    namespace detail {
+        template <class T>
+        class ComposedConsumer;
+
+        template <class T, class U>
+        class ComposedConsumerCovariant;
+
+        template <class T, class F>
+        class LambdaConsumer;
+    }
     /**
    * Java 8 parity: java.util.function.Consumer<T>
    *

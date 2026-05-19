@@ -1,43 +1,63 @@
+#include "jxx.io.InputStreamReader.h"
 
-#include "io/jxx.io.InputStreamReader.h"
-#include "io/jxx.io.IOException.h"
-namespace jxx { namespace io {
-InputStreamReader::InputStreamReader(std::shared_ptr<InputStream> in_, const std::string& cs): 
-	in(std::move(in_)), charset(cs), byteBuf(4096), pos(0), limit(0), eof(false), hasPending(false), pending(0){}
-bool InputStreamReader::fill(){ 
-	if(eof) return false; 
-	pos=0; limit=0;
-	int n=in->read(byteBuf,0,(int)byteBuf.size());
-	if(n<=0){ eof=true; 
-	return false;
-	} 
-	limit=(size_t)n;
-	return true; 
+namespace jxx::io {
+
+InputStreamReader::InputStreamReader(jxx::Ptr<InputStream> in)
+    : InputStreamReader(std::move(in), jxx::lang::Charset::defaultCharset()) {}
+
+InputStreamReader::InputStreamReader(jxx::Ptr<InputStream> in, jxx::Ptr<jxx::lang::Charset> cs)
+    : in_(std::move(in)), cs_(std::move(cs)) {
+    if (!in_) throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("in"));
+    if (!cs_) throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("charset"));
 }
-int InputStreamReader::decodeOne(){ 
-	if(hasPending){
-		hasPending=false; 
-		return (int)pending;
-	}
-	
-	while(true){ 
-		if(pos>=limit){ 
-			if(!fill()) return -1; 
-		} 
-	ByteArray slice; 
-	slice.reserve(4); slice.push_back(byteBuf[pos++]); auto needMore=[&](uint8_t first)->int{ if((first&0x80)==0) return 0; 
-	if((first&0xE0)==0xC0) return 1; if((first&0xF0)==0xE0) return 2; if((first&0xF8)==0xF0) return 3; return 0; };
-	int cont=needMore(slice[0]); while(cont-- > 0){
-		if(pos>=limit){ if(!fill()) break;
-	}
-	
-	slice.push_back(byteBuf[pos++]); 
-	} std::u16string u=UTF8::decode(slice); if(u.empty()) return -1; 
-if(u.size()==1) return (int)u[0]; pending=u[1]; hasPending=true; return (int)u[0]; } }
-int InputStreamReader::read(){ return decodeOne(); }
-int InputStreamReader::read(CharArray& buf, int off, int len){ if(off<0||len<0) throw IOException("InputStreamReader.read: invalid args"); 
-int i=0; for(;i<len;++i){ int c=decodeOne(); if(c<0) break; buf[off+i]=(jxx::lang::jchar)c; } return (i==0)?-1:i;
+
+jbool InputStreamReader::refill_() {
+    decoded_.clear();
+    dpos_ = 0;
+
+    auto buf = JXX_NEW<ByteArray>(4096);
+    jint r = in_->read(buf, 0, (jint)buf->length);
+    if (r < 0) return false;
+
+    auto slice = JXX_NEW<ByteArray>((std::uint32_t)r);
+    for (jint i = 0; i < r; ++i) (*slice)[i] = (*buf)[i];
+
+    auto s = cs_->decode(slice);
+    decoded_ = s ? s->utf16() : std::u16string{};
+    return (r > 0);
 }
-bool InputStreamReader::ready(){ return (limit - pos) > 0; }
-void InputStreamReader::close(){ if(in) in->close(); }
-}}
+
+jint InputStreamReader::read() {
+    if (dpos_ >= decoded_.size()) {
+        if (!refill_()) return -1;
+        if (decoded_.empty()) return -1;
+    }
+    return (jint)decoded_[dpos_++];
+}
+
+jint InputStreamReader::read(jxx::Ptr<CharArray> cbuf, jint off, jint len) {
+    Reader::checkBounds_(cbuf, off, len);
+    if (len == 0) return 0;
+
+    jint written = 0;
+    while (written < len) {
+        jint c = read();
+        if (c < 0) return (written == 0) ? -1 : written;
+        (*cbuf)[off + written] = (jchar)c;
+        ++written;
+    }
+    return written;
+}
+
+jbool InputStreamReader::ready() {
+    return (dpos_ < decoded_.size()) || (in_->available() > 0);
+}
+
+void InputStreamReader::close() {
+    if (in_) in_->close();
+    in_ = nullptr;
+    decoded_.clear();
+    dpos_ = 0;
+}
+
+} // namespace jxx::io

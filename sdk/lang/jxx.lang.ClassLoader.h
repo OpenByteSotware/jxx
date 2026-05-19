@@ -35,6 +35,9 @@ namespace jxx::lang {
  */
 class ClassLoader : public Object {
 public:
+
+    ClassLoader();                           // parent = system
+    explicit ClassLoader(jxx::Ptr<ClassLoader> parent);
     virtual ~ClassLoader() = default;
 
     // -------------------------
@@ -72,8 +75,7 @@ protected:
     // Java 8 protected API
     // -------------------------
 
-    ClassLoader();                           // parent = system
-    explicit ClassLoader(jxx::Ptr<ClassLoader> parent);
+   
 
     // Override point: provide actual class loading
     virtual jxx::Ptr<ClassAny> findClass(jxx::Ptr<String> name);

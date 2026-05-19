@@ -4,7 +4,7 @@
 #include <string>
 #include <cstdarg>
 #include <vector>
-#include "lang/jxx.lang.System.h"
+
 #include "io/jxx.io.Reader.h"
 #include "io/jxx.io.InputStreamReader.h"
 #include "io/jxx.io.BufferedReader.h"
@@ -15,7 +15,7 @@ namespace jxx {
         public:
             static jxx::Ptr<Console> console();
 
-            std::u16string readLine();
+            jxx::Ptr<String> readLine();
             void printf(const char* fmt, ...);
 
             jxx::Ptr<Reader> reader();

@@ -77,6 +77,8 @@ namespace jxx::lang {
             FactoryFn factory;
         };
 
+        explicit ClassAny(Meta meta);
+
         // ---------------------------------------------------------------------
         // Registry / lookup
         // ---------------------------------------------------------------------
@@ -160,8 +162,7 @@ namespace jxx::lang {
         const Meta& meta() const noexcept { return meta_; }
 
     private:
-        explicit ClassAny(Meta meta);
-
+        
         Meta meta_;
 
         // canonical registry

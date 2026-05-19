@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdexcept>
 #include <string>
 #include "lang/jxx.lang.Throwable.h"
@@ -9,15 +11,6 @@ namespace jxx::lang {
         JXX_OBJECT_CLONE(jxx::lang::Exception)
     protected:
         const char* typeName() const noexcept override { return "Exception"; }
-    };
-
-    class IllegalStateException : public Exception {
-    public:
-        using Exception::Exception;
-        virtual ~IllegalStateException() = default;
-        JXX_OBJECT_CLONE(IllegalStateException)
-    protected:
-        const char* typeName() const noexcept override { return "IllegalStateException"; }
     };
 
     class InvocationTargetException : public Exception {

@@ -1,20 +1,35 @@
-
 #pragma once
-#include <memory>
-#include "lang/jxx.lang.internal.h"
-#include "io/jxx.io.Reader.h"
-#include "io/jxx.io.InputStream.h"
-#include "io/jxx.io.UTF8.h"
-namespace jxx { namespace io {
-class InputStreamReader : public Reader { 
-std::shared_ptr<InputStream> in; std::string charset; ByteArray byteBuf; size_t pos=0,limit=0; bool eof=false; bool hasPending=false; jxx::lang::jchar pending; 
+
+#include "jxx.io.Reader.h"
+#include "jxx.io.InputStream.h"
+
+#include "jxx.lang.Charset.h"
+#include "jxx.lang.String.h"
+#include "jxx.lang.NullPointerException.h"
+
+#include <string>
+
+namespace jxx::io {
+
+class InputStreamReader : public Reader {
 public:
-    explicit InputStreamReader(std::shared_ptr<InputStream> in_, const std::string& cs="UTF-8"); 
-int read() override; 
-int read(CharArray& buf, int off, int len) override;
-bool ready() override; 
-void close() override; 
-private: 
-    int decodeOne(); 
-    bool fill(); };
-}}
+    explicit InputStreamReader(jxx::Ptr<InputStream> in);
+    InputStreamReader(jxx::Ptr<InputStream> in, jxx::Ptr<jxx::lang::Charset> cs);
+
+    jint read() override;
+    jint read(jxx::Ptr<CharArray> cbuf, jint off, jint len) override;
+
+    jbool ready() override;
+    void close() override;
+
+private:
+    jxx::Ptr<InputStream> in_;
+    jxx::Ptr<jxx::lang::Charset> cs_;
+
+    std::u16string decoded_;
+    std::size_t dpos_ = 0;
+
+    jbool refill_();
+};
+
+} // namespace jxx::io

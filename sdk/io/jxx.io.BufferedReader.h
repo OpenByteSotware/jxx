@@ -1,25 +1,29 @@
-
 #pragma once
-#include <memory>
-#include <vector>
-#include "jxx.io.Reader.h"
 
-namespace jxx { namespace io {
-class BufferedReader : public Reader 
-{ 
-std::shared_ptr<Reader> in; 
-CharArray buf; 
-int pos=0; 
-int limit=0; 
-int markPos=-1; 
-int readAheadLimit=0; 
+#include "jxx.io.Reader.h"
+#include "jxx.lang.String.h"
+
+namespace jxx::io {
+
+class BufferedReader : public Reader {
 public:
-    explicit BufferedReader(std::shared_ptr<Reader> in_, int size=8192);
-    virtual int read() override; 
-    virtual int read(jxx::lang::jchar* cbuf, int off, int len);
-    virtual int read(CharArray& cbuf, int off, int len) override;
-    virtual std::u16string readLine(); bool ready() override; void close() override; 
-    virtual void mark(int readAheadLimit_) override; void reset() override; 
-    virtual bool markSupported() override { return true; }
-private: int fill(); };
-}}
+    explicit BufferedReader(jxx::Ptr<Reader> in, jint size = 8192);
+
+    jint read() override;
+    jint read(jxx::Ptr<CharArray> cbuf, jint off, jint len) override;
+
+    jxx::Ptr<jxx::lang::String> readLine();
+
+    jbool ready() override;
+    void close() override;
+
+private:
+    jxx::Ptr<Reader> in_;
+    jxx::Ptr<CharArray> buf_;
+    jint pos_ = 0;
+    jint count_ = 0;
+
+    void fill_();
+};
+
+} // namespace jxx::io
