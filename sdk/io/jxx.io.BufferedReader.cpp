@@ -1,5 +1,6 @@
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.StringBuilder.h"
+#include "jxx.io.IOHelper.h"
 #include "jxx.io.BufferedReader.h"
 
 namespace jxx::io {
@@ -25,7 +26,7 @@ jxx::lang::jint BufferedReader::read() {
 }
 
 jxx::lang::jint BufferedReader::read(jxx::Ptr<CharArray> cbuf, jxx::lang::jint off, jxx::lang::jint len) {
-    Reader::checkBounds_(cbuf, off, len);
+    IOHelper::checkBounds_(cbuf, off, len);
     if (len == 0) return 0;
 
     jxx::lang::jint written = 0;

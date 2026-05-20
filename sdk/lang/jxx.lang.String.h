@@ -20,13 +20,13 @@ namespace jxx::lang {
     class StringBuffer;
     class StringBuilder;
     class Charset; // java.nio.charset.Charset (you have this)
-    class Locale;  // java.util.Locale (you have this)
     class ClassAny;
 
 } // namespace jxx::lang
 
 namespace jxx::util {
-    class IntStream; // minimal IntStream you requested
+    class IntStream;
+	class Locale;    
 }
 
 namespace jxx::lang {
@@ -175,9 +175,9 @@ namespace jxx::lang {
         jxx::Ptr<JxxArray<jxx::Ptr<String>, 1>> split(jxx::Ptr<String> regex, jxx::lang::jint limit) const;
 
         jxx::Ptr<String> toLowerCase() const;
-        jxx::Ptr<String> toLowerCase(jxx::Ptr<Locale> locale) const;
+        jxx::Ptr<String> toLowerCase(jxx::Ptr<jxx::util::Locale> locale) const;
         jxx::Ptr<String> toUpperCase() const;
-        jxx::Ptr<String> toUpperCase(jxx::Ptr<Locale> locale) const;
+        jxx::Ptr<String> toUpperCase(jxx::Ptr<jxx::util::Locale> locale) const;
 
         jxx::Ptr<String> trim() const;
 
@@ -231,6 +231,11 @@ namespace jxx::lang {
         const std::u16string& utf16() const noexcept { return value_; }
         std::string utf8() const;
 
+        //Serializeable
+        virtual void writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out);
+        virtual void readObject(jxx::Ptr<jxx::io::ObjectInputStream> in);
+        virtual void readObjectNoData();
+
     private:
         std::u16string value_;
         mutable jxx::lang::jint hash_ = 0;
@@ -255,7 +260,7 @@ namespace jxx::lang {
         static void throwIAE_(const char* msg);
 
         static std::u16string toUtf16_(jxx::Ptr<CharSequence> s);
-        static jxx::lang::jbool isTurkicLocale_(jxx::Ptr<Locale> loc);
+        static jxx::lang::jbool isTurkicLocale_(jxx::Ptr<jxx::util::Locale> loc);
     };
 
 } // namespace jxx::lang

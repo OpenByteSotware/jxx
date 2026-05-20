@@ -3,11 +3,11 @@
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.Object.h"
 
-
 namespace jxx::lang {
     class ClassAny; // forward declaration to avoid include cycles
 	class String;   // forward declaration to avoid include cycles
 }
+
 namespace jxx::util {
 
 /**

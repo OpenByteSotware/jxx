@@ -24,7 +24,8 @@ namespace jxx::util {
      *  - This interface returns E by value (same as Java); if E is a Ptr, that’s still by value.
      */
     template <class E>
-    struct Iterator {
+    class Iterator {
+    public:
         virtual ~Iterator() = default;
 
         // Java: boolean hasNext()

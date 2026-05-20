@@ -1,5 +1,5 @@
+#include "lang/jxx.lang.StringBuilder.h"
 #include "jxx.io.DataInputStream.h"
-#include "jxx.lang.StringBuilder.h"
 
 #include <cstring>
 

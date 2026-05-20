@@ -4,7 +4,7 @@
 #include <regex>
 #include <locale>
 #include <vector>
-#include "jxx.lang.String.h"
+#include "util/jxx.util.Locale.h"
 #include "jxx.lang.NullPointerException.h"
 #include "jxx.lang.StringIndexOutOfBoundsException.h"
 #include "jxx.lang.IllegalArgumentException.h"
@@ -13,6 +13,7 @@
 #include "util/jxx.util.IntStream.h"
 #include "util/jxx.util.Formatter.h"
 #include "jxx.lang.Cast.h"
+#include "jxx.lang.String.h"
 
 
 namespace jxx::lang {
@@ -30,7 +31,7 @@ namespace jxx::lang {
         return c;
     }
 
-    bool String::isTurkicLocale_(jxx::Ptr<Locale> loc) {
+    bool String::isTurkicLocale_(jxx::Ptr<jxx::util::Locale> loc) {
         if (!loc) return false;
         auto lang = loc->getLanguage();
         if (!lang) return false;
@@ -552,10 +553,10 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<String> String::toLowerCase() const {
-        return toLowerCase(Locale::getDefault());
+        return toLowerCase(jxx::util::Locale::getDefault());
     }
 
-    jxx::Ptr<String> String::toLowerCase(jxx::Ptr<Locale> locale) const {
+    jxx::Ptr<String> String::toLowerCase(jxx::Ptr<jxx::util::Locale> locale) const {
         auto out = JXX_NEW<String>();
         out->value_ = value_;
         bool turkic = isTurkicLocale_(locale);
@@ -571,10 +572,10 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<String> String::toUpperCase() const {
-        return toUpperCase(Locale::getDefault());
+        return toUpperCase(jxx::util::Locale::getDefault());
     }
 
-    jxx::Ptr<String> String::toUpperCase(jxx::Ptr<Locale> locale) const {
+    jxx::Ptr<String> String::toUpperCase(jxx::Ptr<jxx::util::Locale> locale) const {
         auto out = JXX_NEW<String>();
         out->value_ = value_;
         bool turkic = isTurkicLocale_(locale);
@@ -662,7 +663,7 @@ namespace jxx::lang {
         return f.format(format, args);
     }
 
-    jxx::Ptr<String> String::format(jxx::Ptr<Locale> l, jxx::Ptr<String> format, jxx::Ptr<JxxArray<jxx::Ptr<Object>, 1>> args) {
+    jxx::Ptr<String> String::format(jxx::Ptr<jxx::util::Locale> l, jxx::Ptr<String> format, jxx::Ptr<JxxArray<jxx::Ptr<Object>, 1>> args) {
         if (!l || !format || !args) throwNPE_();
         jxx::util::Formatter f(l);
         return f.format(format, args);
@@ -708,5 +709,9 @@ namespace jxx::lang {
         s->value_ = std::move(out);
         return s;
     }
+
+    void String::writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out) {}
+    void String::readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) {}
+    void String::readObjectNoData() {}
 
 } // namespace jxx::lang

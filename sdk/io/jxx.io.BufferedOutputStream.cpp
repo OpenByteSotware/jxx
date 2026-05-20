@@ -1,4 +1,5 @@
 #include "lang/jxx.lang.IllegalArgumentException.h"
+#include "jxx.io.IOHelper.h"
 #include "jxx.io.BufferedOutputStream.h"
 #include "lang/jxx.lang.String.h"
 
@@ -28,7 +29,7 @@ void BufferedOutputStream::write(jxx::lang::jint b) {
 }
 
 void BufferedOutputStream::write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
-    OutputStream::checkBounds_(b, off, len);
+    IOHelper::checkBounds_(b, off, len);
 
     if (len >= (jxx::lang::jint)buf_->length) {
         flushBuffer_();

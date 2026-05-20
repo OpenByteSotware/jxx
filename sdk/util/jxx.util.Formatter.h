@@ -1,14 +1,13 @@
 #pragma once
 
-#include "jxx_types.h"
-#include "jxx.lang.Object.h"
-#include "jxx.lang.String.h"
-#include "jxx.lang.CharSequence.h"
-#include "jxx.lang.Appendable.h"
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.CharSequence.h"
+#include "lang/jxx.lang.Appendable.h"
+#include "io/jxx.io.Flushable.h"
+#include "io/jxx.io.Closeable.h"
 
-#include "jxx.io.Flushable.h"
-#include "jxx.io.Closeable.h"
-#include "jxx.io.IOException.h"
 
 #include "jxx.util.Locale.h"
 #include "jxx.util.FormatterClosedException.h"
@@ -21,6 +20,10 @@
 
 #include <string>
 #include <vector>
+
+namespace io {
+	class IOException;
+}
 
 namespace jxx::util {
 

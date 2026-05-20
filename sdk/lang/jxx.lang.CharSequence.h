@@ -8,7 +8,8 @@ namespace jxx::lang {
  * Java 8 parity: java.lang.CharSequence
  * Interface => does NOT inherit Object.
  */
-struct CharSequence {
+class CharSequence {
+public:
     virtual ~CharSequence() = default;
 
     virtual jxx::lang::jint length() const = 0;

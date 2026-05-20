@@ -24,7 +24,8 @@ namespace jxx::util::function {
    *
    */
     template <class T>
-    struct Consumer {
+    class Consumer {
+	public:
         virtual ~Consumer() = default;
 
         // Java: void accept(T t)

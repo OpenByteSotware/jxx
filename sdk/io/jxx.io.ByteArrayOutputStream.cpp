@@ -1,3 +1,6 @@
+#include "jxx.io.IOHelper.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.NullPointerException.h"
 #include "jxx.io.ByteArrayOutputStream.h"
 
 namespace jxx::io {
@@ -32,7 +35,7 @@ void ByteArrayOutputStream::write(jxx::lang::jint b) {
 }
 
 void ByteArrayOutputStream::write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
-    OutputStream::checkBounds_(b, off, len);
+    IOHelper::checkBounds_(b, off, len);
     ensureCapacity_(count_ + len);
     for (jxx::lang::jint i = 0; i < len; ++i) (*buf_)[count_ + i] = (*b)[off + i];
     count_ += len;

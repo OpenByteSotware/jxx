@@ -4,8 +4,11 @@
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
+#include "util/jxx.util.FormatterClosedException.h"
 #include "lang/jxx.lang.UnsupportedOperationException.h"
+#include "util/jxx.util.IllegalFormatFlagsException.h"
 #include "lang/jxx.lang.StringBuilder.h"
+#include "io/jxx.io.IOException.h"
 #include "jxx.util.Formatter.h"
 
 namespace jxx::util {
@@ -26,7 +29,7 @@ Formatter::Formatter(jxx::Ptr<jxx::lang::Appendable> a, jxx::Ptr<jxx::util::Loca
     : out_(std::move(a)), locale_(l ? l : Locale::getDefault()), lastIo_(nullptr), closed_(false) {}
 
 void Formatter::ensureOpen_() const {
-    if (closed_) throw FormatterClosedException();
+    if (closed_) throw jxx::util::FormatterClosedException();
 }
 
 jxx::Ptr<jxx::lang::Appendable> Formatter::out() const { return out_; }
@@ -53,7 +56,7 @@ void Formatter::append_(const std::string& s) {
     try {
         out_->append(JXX_NEW<jxx::lang::String>(s.c_str()));
     } catch (const jxx::io::IOException& e) {
-        lastIo_ = JXX_NEW<jxx::io::IOException>(e.whatString());
+        lastIo_ = JXX_NEW<jxx::io::IOException>(e.what());
     } catch (...) {
         // keep as null; Formatter in Java stores IOException only
     }
@@ -165,7 +168,7 @@ std::vector<Formatter::Spec> Formatter::parse_(const std::string& fmt, std::vect
         if (j < fmt.size() && fmt[j] == '.') {
             ++j;
             int p = parseInt(j);
-            if (p < 0) throw IllegalFormatPrecisionException(-1);
+            if (p < 0) throw jxx::util::IllegalFormatPrecisionException(-1);
             sp.precision = p;
         }
 
@@ -175,7 +178,7 @@ std::vector<Formatter::Spec> Formatter::parse_(const std::string& fmt, std::vect
             ++j;
         }
 
-        if (j >= fmt.size()) throw UnknownFormatConversionException(JXX_NEW<jxx::lang::String>(""));
+        if (j >= fmt.size()) throw jxx::util::UnknownFormatConversionException(JXX_NEW<jxx::lang::String>(""));
         sp.conv = fmt[j];
         if (sp.dateTime) {
             sp.dt = sp.conv;
@@ -313,7 +316,7 @@ std::string Formatter::formatInteger_(const Spec& sp, jxx::Ptr<jxx::lang::Object
     } else if (conv == 'x') {
         oss << std::hex << (upper ? std::uppercase : std::nouppercase) << (unsigned long long)v;
     } else {
-        throw UnknownFormatConversionException(JXX_NEW<jxx::lang::String>(std::string(1, sp.conv).c_str()));
+        throw jxx::util::UnknownFormatConversionException(JXX_NEW<jxx::lang::String>(std::string(1, sp.conv).c_str()));
     }
 
     std::string s = oss.str();
@@ -357,7 +360,7 @@ std::string Formatter::formatFloat_(const Spec& sp, jxx::Ptr<jxx::lang::Object> 
     } else if (conv == 'a') {
         oss << std::hexfloat << (double)v;
     } else {
-        throw UnknownFormatConversionException(JXX_NEW<jxx::lang::String>(std::string(1, sp.conv).c_str()));
+        throw jxx::util::UnknownFormatConversionException(JXX_NEW<jxx::lang::String>(std::string(1, sp.conv).c_str()));
     }
 
     std::string s = oss.str();
@@ -392,7 +395,7 @@ std::string Formatter::formatOne_(const Spec& sp, jxx::Ptr<jxx::lang::Object> ar
     case 'd': case 'o': case 'x': case 'X': return formatInteger_(sp, arg);
     case 'f': case 'e': case 'E': case 'g': case 'G': case 'a': case 'A': return formatFloat_(sp, arg);
     default:
-        throw UnknownFormatConversionException(JXX_NEW<jxx::lang::String>(std::string(1, sp.conv).c_str()));
+        throw jxx::util::UnknownFormatConversionException(JXX_NEW<jxx::lang::String>(std::string(1, sp.conv).c_str()));
     }
 }
 
@@ -416,8 +419,8 @@ jxx::Ptr<Formatter> Formatter::format(jxx::Ptr<jxx::util::Locale> l, jxx::Ptr<jx
     auto argAt = [&](jxx::lang::jint oneBased) -> jxx::Ptr<jxx::lang::Object> {
         if (!args) return nullptr;
         jxx::lang::jint idx = oneBased - 1;
-        if (idx < 0 || (std::uint32_t)idx >= args->length) return nullptr;
-        return (*args)[idx];
+        if (idx < 0 || (std::uint32_t)idx >= args->size()) return nullptr;
+        return (*args)(idx);
     };
 
     for (std::size_t i = 0; i < specs.size(); ++i) {
@@ -438,8 +441,8 @@ jxx::Ptr<Formatter> Formatter::format(jxx::Ptr<jxx::util::Locale> l, jxx::Ptr<jx
         prevIndex = argIndex;
 
         auto arg = argAt(argIndex);
-        if (!arg && (!args || (std::uint32_t)(argIndex - 1) >= args->length)) {
-            throw MissingFormatArgumentException(JXX_NEW<jxx::lang::String>("%"));
+        if (!arg && (!args || (std::uint32_t)(argIndex - 1) >= args->size())) {
+            throw jxx::util::MissingFormatArgumentException(JXX_NEW<jxx::lang::String>("%"));
         }
 
         auto piece = formatOne_(sp, arg, l);

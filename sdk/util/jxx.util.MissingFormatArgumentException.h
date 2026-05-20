@@ -1,5 +1,5 @@
 #pragma once
-#include "jxx.util.format.IllegalFormatException.h"
+#include "jxx.util.IllegalFormatException.h"
 
 namespace jxx::util::format {
 

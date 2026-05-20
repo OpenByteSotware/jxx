@@ -1,3 +1,8 @@
+#include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.CharSequence.h"
+#include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.IndexOutOfBoundsException.h"
+#include "jxx.io.IOException.h"
 #include "jxx.io.Writer.h"
 
 namespace jxx::io {
