@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-namespace io {
+namespace jxx::io {
 	class IOException;
 }
 

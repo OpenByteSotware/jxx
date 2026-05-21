@@ -1,6 +1,6 @@
 #pragma once
 
-#include "jxx_types.h"
+#include "lang/jxx_types.h"
 
 namespace jxx::util {
 class Formatter;

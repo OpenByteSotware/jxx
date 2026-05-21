@@ -21,6 +21,7 @@ namespace jxx::lang {
     class StringBuilder;
     class Charset; // java.nio.charset.Charset (you have this)
     class ClassAny;
+    class String;
 
 } // namespace jxx::lang
 
@@ -211,9 +212,7 @@ namespace jxx::lang {
             jxx::Ptr<String> format,
             jxx::Ptr<JxxArray<jxx::Ptr<Object>, 1>> args);
 
-        static jxx::Ptr<String> format(
-            jxx::Ptr<Locale> l,
-            jxx::Ptr<String> format,
+        static jxx::Ptr<jxx::lang::String> format(jxx::Ptr<jxx::util::Locale> l, jxx::Ptr<String> format,
             jxx::Ptr<JxxArray<jxx::Ptr<Object>, 1>> args);
 
         // Java 8 join overloads

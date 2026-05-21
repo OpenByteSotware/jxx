@@ -7,6 +7,7 @@
 #include "util/jxx.util.FormatterClosedException.h"
 #include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "util/jxx.util.IllegalFormatFlagsException.h"
+#include "util/IllegalFormatPrecisionException.h"
 #include "lang/jxx.lang.StringBuilder.h"
 #include "io/jxx.io.IOException.h"
 #include "jxx.util.Formatter.h"

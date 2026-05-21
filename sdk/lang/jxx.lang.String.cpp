@@ -660,13 +660,13 @@ namespace jxx::lang {
     jxx::Ptr<String> String::format(jxx::Ptr<String> format, jxx::Ptr<JxxArray<jxx::Ptr<Object>, 1>> args) {
         if (!format || !args) throwNPE_();
         jxx::util::Formatter f;
-        return f.format(format, args);
+        return f.format(format, args)->toString();
     }
 
-    jxx::Ptr<String> String::format(jxx::Ptr<jxx::util::Locale> l, jxx::Ptr<String> format, jxx::Ptr<JxxArray<jxx::Ptr<Object>, 1>> args) {
+    jxx::Ptr<jxx::lang::String> String::format(jxx::Ptr<jxx::util::Locale> l, jxx::Ptr<String> format, jxx::Ptr<JxxArray<jxx::Ptr<Object>, 1>> args) {
         if (!l || !format || !args) throwNPE_();
         jxx::util::Formatter f(l);
-        return f.format(format, args);
+        return f.format(format, args)->toString();
     }
 
     jxx::Ptr<String> String::join(jxx::Ptr<CharSequence> delimiter, jxx::Ptr<JxxArray<jxx::Ptr<CharSequence>, 1>> elements) {

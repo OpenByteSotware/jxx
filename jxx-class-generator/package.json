@@ -1,0 +1,32 @@
+{
+  "name": "jxx-class-generator",
+  "displayName": "JXX Class Generator",
+  "description": "Generate JXX classes and interfaces with Object inheritance",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:jxx.createClass"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "jxx.createClass",
+        "title": "JXX: Create Class"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.0.0"
+  }
+}

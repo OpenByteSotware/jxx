@@ -1,4 +1,3 @@
-/*
 #include <sstream>
 #include <iomanip>
 #include <cctype>
@@ -178,4 +177,3 @@ Formatter& Formatter::setLocale(const std::string& locale_name) {
     return *this;
 }
 Formatter& Formatter::setLocale(const std::locale& loc) { locale_ = loc; return *this; }
-*/
