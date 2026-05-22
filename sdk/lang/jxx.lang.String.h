@@ -87,15 +87,15 @@ namespace jxx::lang {
         String(const IntArray codePoints, jxx::lang::jint offset, jxx::lang::jint count);
 
         // String(StringBuffer buffer)
-        explicit String(jxx::Ptr<StringBuffer> buffer);
+        explicit String(const jxx::Ptr<StringBuffer> buffer);
 
         // String(StringBuilder builder)
-        explicit String(jxx::Ptr<StringBuilder> builder);
+        explicit String(const jxx::Ptr<StringBuilder> builder);
 
         // JXX convenience (non-Java): String(const char* utf8)
         explicit String(const char* utf8);
 
-        explicit String(std::string& stdString);
+        explicit String(const std::string& stdString);
 
         // ---------------------------------------------------------------------
         // CharSequence

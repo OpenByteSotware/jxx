@@ -20,26 +20,26 @@ namespace jxx::lang {
     public:
         StringBuffer();
         explicit StringBuffer(jint capacity);
-        explicit StringBuffer(jxx::Ptr<String> str);
-        explicit StringBuffer(jxx::Ptr<CharSequence> seq);
+        explicit StringBuffer(const jxx::Ptr<String> str);
+        explicit StringBuffer(const jxx::Ptr<CharSequence> seq);
 
         // append (Java 8)
         jxx::Ptr<StringBuffer> append(jbool b);
         jxx::Ptr<Appendable> append(jchar c);
         jxx::Ptr<StringBuffer> appendSB(jchar c);
-        jxx::Ptr<StringBuffer> append(jxx::Ptr<CharArray> str);
-        jxx::Ptr<StringBuffer> append(jxx::Ptr<CharArray> str, jint offset, jint len);
-        jxx::Ptr<Appendable> append(jxx::Ptr<CharSequence> s);
-        jxx::Ptr<StringBuffer> appendSB(jxx::Ptr<CharSequence> s);
-        jxx::Ptr<Appendable> append(jxx::Ptr<CharSequence> s, jint start, jint end);
-        jxx::Ptr<StringBuffer> appendSB(jxx::Ptr<CharSequence> s, jint start, jint end);
+        jxx::Ptr<StringBuffer> append(const CharArray str);
+        jxx::Ptr<StringBuffer> append(const CharArray str, jint offset, jint len);
+        jxx::Ptr<Appendable> append(const jxx::Ptr<CharSequence> s);
+        jxx::Ptr<StringBuffer> appendSB(const jxx::Ptr<CharSequence> s);
+        jxx::Ptr<Appendable> append(const jxx::Ptr<CharSequence> s, jint start, jint end);
+        jxx::Ptr<StringBuffer> appendSB(const jxx::Ptr<CharSequence> s, jint start, jint end);
         jxx::Ptr<StringBuffer> append(jdouble d);
         jxx::Ptr<StringBuffer> append(jfloat f);
         jxx::Ptr<StringBuffer> append(jint i);
         jxx::Ptr<StringBuffer> append(jlong lng);
-        jxx::Ptr<StringBuffer> append(jxx::Ptr<Object> obj);
-        jxx::Ptr<StringBuffer> append(jxx::Ptr<String> str);
-        jxx::Ptr<StringBuffer> append(jxx::Ptr<StringBuffer> sb);
+        jxx::Ptr<StringBuffer> append(const jxx::Ptr<Object> obj);
+        jxx::Ptr<StringBuffer> append(const jxx::Ptr<String> str);
+        jxx::Ptr<StringBuffer> append(const jxx::Ptr<StringBuffer> sb);
 
         jxx::Ptr<StringBuffer> appendCodePoint(jint codePoint);
 
@@ -63,31 +63,31 @@ namespace jxx::lang {
         // delete/replace/reverse
         jxx::Ptr<StringBuffer> delete_(jint start, jint end);
         jxx::Ptr<StringBuffer> deleteCharAt(jint index);
-        jxx::Ptr<StringBuffer> replace(jint start, jint end, jxx::Ptr<String> str);
+        jxx::Ptr<StringBuffer> replace(jint start, jint end, const jxx::Ptr<String> str);
         jxx::Ptr<StringBuffer> reverse();
 
         // insert
         jxx::Ptr<StringBuffer> insert(jint offset, jbool b);
         jxx::Ptr<StringBuffer> insert(jint offset, jchar c);
-        jxx::Ptr<StringBuffer> insert(jint offset, jxx::Ptr<CharArray> str);
-        jxx::Ptr<StringBuffer> insert(jint index, jxx::Ptr<CharArray> str, jint offset, jint len);
-        jxx::Ptr<StringBuffer> insert(jint dstOffset, jxx::Ptr<CharSequence> s);
-        jxx::Ptr<StringBuffer> insert(jint dstOffset, jxx::Ptr<CharSequence> s, jint start, jint end);
+        jxx::Ptr<StringBuffer> insert(jint offset, const CharArray str);
+        jxx::Ptr<StringBuffer> insert(jint index, const CharArray str, jint offset, jint len);
+        jxx::Ptr<StringBuffer> insert(jint dstOffset, const jxx::Ptr<CharSequence> s);
+        jxx::Ptr<StringBuffer> insert(jint dstOffset, const jxx::Ptr<CharSequence> s, jint start, jint end);
         jxx::Ptr<StringBuffer> insert(jint offset, jdouble d);
         jxx::Ptr<StringBuffer> insert(jint offset, jfloat f);
         jxx::Ptr<StringBuffer> insert(jint offset, jint i);
         jxx::Ptr<StringBuffer> insert(jint offset, jlong l);
-        jxx::Ptr<StringBuffer> insert(jint offset, jxx::Ptr<Object> obj);
-        jxx::Ptr<StringBuffer> insert(jint offset, jxx::Ptr<String> str);
+        jxx::Ptr<StringBuffer> insert(jint offset, const jxx::Ptr<Object> obj);
+        jxx::Ptr<StringBuffer> insert(jint offset, const jxx::Ptr<String> str);
 
         // getChars
-        void getChars(jint srcBegin, jint srcEnd, jxx::Ptr<CharArray> dst, jint dstBegin) const;
+        void getChars(jint srcBegin, jint srcEnd, const CharArray dst, jint dstBegin) const;
 
         // search
-        jint indexOf(jxx::Ptr<String> str) const;
-        jint indexOf(jxx::Ptr<String> str, jint fromIndex) const;
-        jint lastIndexOf(jxx::Ptr<String> str) const;
-        jint lastIndexOf(jxx::Ptr<String> str, jint fromIndex) const;
+        jint indexOf(const jxx::Ptr<String> str) const;
+        jint indexOf(const jxx::Ptr<String> str, jint fromIndex) const;
+        jint lastIndexOf(const jxx::Ptr<String> str) const;
+        jint lastIndexOf(const jxx::Ptr<String> str, jint fromIndex) const;
 
         // subsequence/substring/toString
         jxx::Ptr<CharSequence> subSequence(jint start, jint end) const override;
@@ -103,10 +103,10 @@ namespace jxx::lang {
 
         void appendUtf16_(const std::u16string& s);
         void insertUtf16_(jint offset, const std::u16string& s);
-        static std::u16string toUtf16_(jxx::Ptr<CharSequence> s);
+        static std::u16string toUtf16_(const jxx::Ptr<CharSequence> s);
 
-        jxx::Ptr<StringBuffer> insert_(jint offset, jxx::Ptr<std::string> str);
-        jxx::Ptr<StringBuffer> append_(jxx::Ptr<std::string> str);
+        jxx::Ptr<StringBuffer> insert_(jint offset, jxx::Ptr<String> str);
+        jxx::Ptr<StringBuffer> append_(const jxx::Ptr<String> str);
 
 
         static inline bool isHigh_(char16_t c) { return c >= 0xD800 && c <= 0xDBFF; }

@@ -18,7 +18,7 @@
 
 namespace jxx::lang {
 
-    String::String(std::string& stdString) {
+    String::String(const std::string& stdString) {
         value_ = utf8ToUtf16_(stdString);        
     }
 
