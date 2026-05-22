@@ -1,16 +1,16 @@
 #pragma once
 
 #include <memory>
-#include "jxx.lang.RuntimeException.h"
+#include "lang/jxx.lang.RuntimeException.h"
 
 namespace jxx::util {
 
-class NoSuchElementException : public jxx::lang::RuntimeException {
+class IllegalFormatWidthException : public jxx::lang::RuntimeException {
 public:
     using jxx::lang::RuntimeException::RuntimeException;
-    JXX_OBJECT_CLONE(NoSuchElementException)
+    JXX_OBJECT_CLONE(IllegalFormatWidthException)
 protected:
-    const char* typeName() const noexcept override { return "NoSuchElementException"; }
+    const char* typeName() const noexcept override { return "IllegalFormatWidthException"; }
 };
 
 } // namespace jxx::util

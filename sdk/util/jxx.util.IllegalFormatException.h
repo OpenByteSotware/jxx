@@ -1,6 +1,10 @@
 #pragma once
 #include "lang/jxx.lang.IllegalArgumentException.h"
-#include "jxx.lang.String.h"
+
+
+namespace jxx::lang {
+    class String;
+}
 
 namespace jxx::util {
 

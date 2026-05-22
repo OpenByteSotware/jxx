@@ -1,14 +1,14 @@
 #pragma once
 
 #include <memory>
-#include "jxx.lang.RuntimeException.h"
+#include "lang/jxx.lang.RuntimeException.h"
 
 namespace jxx::util {
 
-class NoSuchElementException : public jxx::lang::RuntimeException {
+class IllegalFormatFlagsException : public jxx::lang::RuntimeException {
 public:
     using jxx::lang::RuntimeException::RuntimeException;
-    JXX_OBJECT_CLONE(NoSuchElementException)
+    JXX_OBJECT_CLONE(IllegalFormatFlagsException)
 protected:
     const char* typeName() const noexcept override { return "NoSuchElementException"; }
 };

@@ -4,13 +4,19 @@
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
-#include "util/jxx.util.FormatterClosedException.h"
+#include "jxx.util.FormatterClosedException.h"
 #include "lang/jxx.lang.UnsupportedOperationException.h"
-#include "util/jxx.util.IllegalFormatFlagsException.h"
-#include "util/IllegalFormatPrecisionException.h"
+#include "jxx.util.IllegalFormatFlagsException.h"
+#include "jxx.util.IllegalFormatPrecisionException.h"
+#include "jxx.util.MissingFormatArgumentException.h"
 #include "lang/jxx.lang.StringBuilder.h"
 #include "io/jxx.io.IOException.h"
 #include "jxx.util.Formatter.h"
+
+namespace jxx::lang {
+    class StringBuilder;
+    class String;
+}
 
 namespace jxx::util {
 

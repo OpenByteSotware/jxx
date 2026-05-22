@@ -1,7 +1,7 @@
 #pragma once
 #include "jxx.util.IllegalFormatException.h"
 
-namespace jxx::util::format {
+namespace jxx::util {
 
 class MissingFormatArgumentException : public IllegalFormatException {
 public:

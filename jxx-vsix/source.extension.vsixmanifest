@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+    <Metadata>
+        <Identity Id="JxxClassGenerator" Version="1.0" Language="en-US" Publisher="JXX" />
+        <DisplayName>JXX Class Generator</DisplayName>
+        <Description>Generate JXX classes and interfaces</Description>
+    </Metadata>
+    <Installation InstalledByMsi="true">
+        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0,18.0)" />
+    </Installation>
+</PackageManifest>

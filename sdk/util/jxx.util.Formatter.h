@@ -7,8 +7,6 @@
 #include "lang/jxx.lang.Appendable.h"
 #include "io/jxx.io.Flushable.h"
 #include "io/jxx.io.Closeable.h"
-
-
 #include "jxx.util.Locale.h"
 #include "jxx.util.FormatterClosedException.h"
 #include "jxx.util.UnknownFormatConversionException.h"

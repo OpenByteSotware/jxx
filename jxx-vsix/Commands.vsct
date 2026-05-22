@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable">
+
+	<Commands>
+		<Buttons>
+			<Button guid="guidJxxCmdSet"
+					id="0x0100"
+					priority="0x0100"
+					type="Button">
+
+				<Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE"/>
+
+				<Strings>
+					<ButtonText>JXX: Create Class</ButtonText>
+				</Strings>
+
+			</Button>
+		</Buttons>
+	</Commands>
+
+	<Symbols>
+		<GuidSymbol name="guidJxxCmdSet" value="{A7D7B6D8-1111-2222-3333-444444444444}" />
+	</Symbols>
+
+</CommandTable>
