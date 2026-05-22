@@ -17,14 +17,14 @@ public:
     // Writes the low 8 bits.
     virtual void write(jxx::lang::jint b) = 0;
 
-    virtual void write(jxx::Ptr<ByteArray> b);
-    virtual void write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len);
+    virtual void write(const jxx::lang::ByteArray b);
+    virtual void write(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len);
 
     void flush() override;
     void close() override;
 
 protected:
-    static void checkBounds_(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len);
+    static void checkBounds_(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len);
 };
 
 } // namespace jxx::io

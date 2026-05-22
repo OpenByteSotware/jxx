@@ -15,11 +15,11 @@ jbool InputStreamReader::refill_() {
     decoded_.clear();
     dpos_ = 0;
 
-    auto buf = jxx::NEW<ByteArray>(4096);
+    auto buf = jxx::NEW<jxx::lang::ByteArrayType>(4096);
     jint r = in_->read(buf, 0, (jint)buf->length);
     if (r < 0) return false;
 
-    auto slice = jxx::NEW<ByteArray>((std::uint32_t)r);
+    auto slice = jxx::NEW<jxx::lang::ByteArrayType>((std::uint32_t)r);
     for (jint i = 0; i < r; ++i) (*slice)[i] = (*buf)[i];
 
     auto s = cs_->decode(slice);

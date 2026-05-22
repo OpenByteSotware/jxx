@@ -8,7 +8,7 @@ PrintStream::PrintStream(jxx::Ptr<OutputStream> out, jxx::lang::jbool autoFlush)
 
 void PrintStream::writeBytes_(const std::string& bytes) {
     try {
-        auto ba = jxx::NEW<ByteArray>((std::uint32_t)bytes.size());
+        auto ba = jxx::NEW<jxx::lang::ByteArrayType>((std::uint32_t)bytes.size());
         for (std::size_t i = 0; i < bytes.size(); ++i) (*ba)[(jxx::lang::jint)i] = (jxx::lang::jbyte)bytes[i];
         out_->write(ba, 0, (jxx::lang::jint)ba->length);
         if (autoFlush_) out_->flush();

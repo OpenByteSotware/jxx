@@ -145,7 +145,7 @@ namespace jxx::lang {
         if (!bytes) throwNPE_();
         if (offset < 0 || length < 0 || (std::uint32_t)(offset + length) > bytes->length) throwSIOOBE_();
 
-        auto slice = jxx::NEW<ByteArrayType>((std::uint32_t)length);
+        auto slice = jxx::NEW<jxx::lang::ByteArrayType>((std::uint32_t)length);
         for (jint i = 0; i < length; ++i) (*slice)[i] = (*bytes)[offset + i];
 
         auto cs = Charset::defaultCharset();
@@ -162,7 +162,7 @@ namespace jxx::lang {
         if (!bytes || !charsetName) throwNPE_();
         if (offset < 0 || length < 0 || (std::uint32_t)(offset + length) > bytes->length) throwSIOOBE_();
 
-        auto slice = jxx::NEW<ByteArrayType>((std::uint32_t)length);
+        auto slice = jxx::NEW<jxx::lang::ByteArrayType>((std::uint32_t)length);
         for (jint i = 0; i < length; ++i) (*slice)[i] = (*bytes)[offset + i];
 
         auto cs = Charset::forName(charsetName);
@@ -178,7 +178,7 @@ namespace jxx::lang {
         if (!bytes || !charset) throwNPE_();
         if (offset < 0 || length < 0 || (std::uint32_t)(offset + length) > bytes->length) throwSIOOBE_();
 
-        auto slice = jxx::NEW<ByteArrayType>((std::uint32_t)length);
+        auto slice = jxx::NEW<jxx::lang::ByteArrayType>((std::uint32_t)length);
         for (jint i = 0; i < length; ++i) (*slice)[i] = (*bytes)[offset + i];
 
         value_ = charset->decode(slice)->utf16();

@@ -1,3 +1,4 @@
+#include "lang/jxx.lang.NullPointerException.h"
 #include "jxx.io.FilterOutputStream.h"
 
 namespace jxx::io {
@@ -9,7 +10,7 @@ FilterOutputStream::FilterOutputStream(jxx::Ptr<OutputStream> out)
 
 void FilterOutputStream::write(jxx::lang::jint b) { out_->write(b); }
 
-void FilterOutputStream::write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
+void FilterOutputStream::write(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) {
     out_->write(b, off, len);
 }
 

@@ -13,7 +13,7 @@ BufferedOutputStream::BufferedOutputStream(jxx::Ptr<OutputStream> out)
 BufferedOutputStream::BufferedOutputStream(jxx::Ptr<OutputStream> out, jxx::lang::jint size)
     : FilterOutputStream(std::move(out)) {
     if (size <= 0) throw jxx::lang::IllegalArgumentException(jxx::NEW<jxx::lang::String>("size <= 0"));
-    buf_ = jxx::NEW<ByteArray>((std::uint32_t)size);
+    buf_ = jxx::NEW<jxx::lang::ByteArrayType>((std::uint32_t)size);
 }
 
 void BufferedOutputStream::flushBuffer_() {
@@ -28,7 +28,7 @@ void BufferedOutputStream::write(jxx::lang::jint b) {
     (*buf_)[count_++] = (jxx::lang::jbyte)(b & 0xFF);
 }
 
-void BufferedOutputStream::write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
+void BufferedOutputStream::write(const ByteArray b, jxx::lang::jint off, jxx::lang::jint len) {
     IOHelper::checkBounds_(b, off, len);
 
     if (len >= (jxx::lang::jint)buf_->length) {

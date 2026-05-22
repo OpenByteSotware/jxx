@@ -14,7 +14,7 @@ if(u>=0xD800 && u<=0xDBFF){ if(i<s.size()){
 append_utf8(out, cp); continue;} }
 append_utf8(out, 0xFFFD);} else if(u>=0xDC00 && u<=0xDFFF){
 	append_utf8(out, 0xFFFD);} else { append_utf8(out, u);} }
-return jxx::NEW<ByteArray>(out.data(), out.size()); 
+return jxx::NEW<jxx::lang::ByteArrayType>(out.data(), out.size()); 
 }
 std::u16string UTF8::decode(const ByteArray& bytes){ std::u16string out; size_t i=0,n=bytes.size(); while(i<n){ uint8_t b0=bytes[i++]; uint32_t cp=0; int trail=0;
 if((b0&0x80)==0){ cp=b0;} else if((b0&0xE0)==0xC0){ cp=b0&0x1F; trail=1;} else if((b0&0xF0)==0xE0){ cp=b0&0x0F; trail=2;} else if((b0&0xF8)==0xF0){ cp=b0&0x07; trail=3;} 

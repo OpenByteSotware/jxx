@@ -45,7 +45,7 @@ ByteArray Charset::encode(const jxx::Ptr<String> s) const {
     }
 
     auto u = s->utf16();
-    auto out = jxx::NEW<ByteArrayType>((std::uint32_t)u.size());
+    auto out = jxx::NEW<jxx::lang::ByteArrayType>((std::uint32_t)u.size());
 
     if (kind_ == Kind::ASCII) {
         for (std::size_t i = 0; i < u.size(); ++i) {

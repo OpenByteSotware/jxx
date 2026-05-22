@@ -122,7 +122,7 @@ jxx::Ptr<jxx::lang::String> DataInputStream::readLine() {
 
 jxx::Ptr<jxx::lang::String> DataInputStream::readUTF() {
     jint utflen = readUnsignedShortBE_();
-    auto data = jxx::NEW<ByteArray>((std::uint32_t)utflen);
+    auto data = jxx::NEW<jxx::lang::ByteArrayType>((std::uint32_t)utflen);
     readFullyRaw_(data, 0, utflen);
 
     std::u16string out;

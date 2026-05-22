@@ -9,7 +9,7 @@ FilterInputStream::FilterInputStream(jxx::Ptr<InputStream> in) : in_(std::move(i
 
 jxx::lang::jint FilterInputStream::read() { return in_->read(); }
 
-jxx::lang::jint FilterInputStream::read(jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) { return in_->read(b, off, len); }
+jxx::lang::jint FilterInputStream::read(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) { return in_->read(b, off, len); }
 
 jxx::lang::jlong FilterInputStream::skip(jxx::lang::jlong n) { return in_->skip(n); }
 

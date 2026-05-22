@@ -12,13 +12,13 @@ public:
     BufferedOutputStream(jxx::Ptr<OutputStream> out, jxx::lang::jint size);
 
     void write(jxx::lang::jint b) override;
-    void write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) override;
+    void write(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) override;
 
     void flush() override;
     void close() override;
 
 private:
-    jxx::Ptr<ByteArray> buf_;
+    jxx::Ptr<jxx::lang::ByteArray> buf_;
     jxx::lang::jint count_ = 0;
     void flushBuffer_();
 };

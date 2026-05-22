@@ -211,12 +211,12 @@ namespace jxx::lang {
         return append_(obj->toString());
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::append_(const jxx::Ptr<String> str) {
+    jxx::Ptr<StringBuffer> StringBuffer::append_(jxx::Ptr<String> str) {
         if (!str) return append(jxx::NEW<String>("null"));
         return str->append(0, str);
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::append(const jxx::Ptr<String> str) {
+    jxx::Ptr<StringBuffer> StringBuffer::append(jxx::Ptr<String> str) {
         this->synchronized([&] {
             if (!str) str = jxx::NEW<String>("null");
             appendUtf16_(str->utf16());
@@ -325,7 +325,7 @@ namespace jxx::lang {
         return self_();
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::replace(jint start, jint end, const jxx::Ptr<String> str) {
+    jxx::Ptr<StringBuffer> StringBuffer::replace(jint start, jint end, jxx::Ptr<String> str) {
         this->synchronized([&] {
             if (start < 0 || start > end || end > (jint)value_.size()) throwSIOOBE_();
             if (!str) str = jxx::NEW<String>("null");
@@ -384,9 +384,9 @@ namespace jxx::lang {
         return self_();
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::insert(jint dstOffset, const jxx::Ptr<CharSequence> s, jint start, jint end) {
+    jxx::Ptr<StringBuffer> StringBuffer::insert(jint dstOffset, jxx::Ptr<CharSequence> s, jint start, jint end) {
         this->synchronized([&] {
-            if (!s) s = jxx::NEW<String>("null");
+            if (!s) s = jxx::CAST<CharSequence, String>(jxx::NEW<String>("null"));
             if (start < 0 || end < start || end > s->length()) throwSIOOBE_();
             std::u16string sub;
             sub.reserve((std::size_t)(end - start));
@@ -414,9 +414,9 @@ namespace jxx::lang {
         return insert_(offset, obj->toString());
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, const jxx::Ptr<String> str) {
+    jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, jxx::Ptr<String> str) {
         this->synchronized([&] {
-            if (!str) str = jxx::NEW<String>("null");
+            if (!str) str = jxx::CAST<StringBuffer, String>(jxx::NEW<String>("null"));
             insertUtf16_(offset, str->utf16());
             });
         return self_();

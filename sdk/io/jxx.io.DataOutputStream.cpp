@@ -103,7 +103,7 @@ void DataOutputStream::writeUTF(jxx::Ptr<jxx::lang::String> s) {
     // unsigned short length
     writeShort((jxx::lang::jint)enc.size());
 
-    auto ba = jxx::NEW<ByteArray>((std::uint32_t)enc.size());
+    auto ba = jxx::NEW<jxx::lang::ByteArrayType>((std::uint32_t)enc.size());
     for (std::size_t i = 0; i < enc.size(); ++i) (*ba)[(jxx::lang::jint)i] = (jxx::lang::jbyte)enc[i];
 
     write(ba, 0, (jxx::lang::jint)ba->length);
