@@ -13,7 +13,7 @@ using jxx::util::Vector;
 using jxx::lang::String;
 
 TEST(StringBuilderTest, ConstructReserveAndEmpty) {
-    auto b = JXX_NEW<StringBuilder>(128);
+    auto b = jxx::NEW<StringBuilder>(128);
     EXPECT_TRUE(b->empty());
     EXPECT_EQ(b->size(), 0u);
     // Capacity is allowed to exceed request, but must be >= requested.

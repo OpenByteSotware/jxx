@@ -7,7 +7,7 @@ namespace jxx::io {
 
     ByteArrayInputStream::ByteArrayInputStream(jxx::Ptr<ByteArray> buf, jxx::lang::jint offset, jxx::lang::jint length)
         : buf_(std::move(buf)) {
-        if (!buf_) throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("buf"));
+        if (!buf_) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("buf"));
         pos_ = offset;
         mark_ = offset;
         end_ = offset + length;

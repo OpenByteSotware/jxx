@@ -83,7 +83,7 @@ namespace {                                                                     
         (::jxx::lang::detail::ensure_iface_edge<T, IFACE>(), true);               \
 }
 
-// Expose default ctor via JXX_NEW<T>()
+// Expose default ctor via jxx::NEW<T>()
 #define JXX_ENABLE_DEFAULT_CTOR(T)                                                \
 namespace {                                                                       \
     [[maybe_unused]] inline const bool                                            \

@@ -13,7 +13,7 @@ namespace jxx::io {
         jxx::lang::jint read() override;
 
     private:
-        jxx::Ptr<ByteArray> buf_;
+        jxx::lang::ByteArray buf_;
         jxx::lang::jint pos_ = 0;
         jxx::lang::jint count_ = 0;
     };

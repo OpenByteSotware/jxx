@@ -1,4 +1,5 @@
 #include <cstdio>
+#include "lang/jxx.lang.String.h"
 #include "jxx.io.BufferedReader.h"
 #include "lang/jxx.lang.System.h"
 #include "jxx.io.Console.h"
@@ -8,12 +9,12 @@ using namespace jxx::io;
 static std::shared_ptr<jxx::io::Console> __console_instance;
 
 std::shared_ptr<jxx::io::Console> jxx::io::Console::console(){
-    if(!__console_instance) __console_instance = JXX_NEW<jxx::io::Console>();
+    if(!__console_instance) __console_instance = jxx::NEW<jxx::io::Console>();
     return __console_instance;
 }
 
 std::shared_ptr<Reader> jxx::io::Console::reader(){
-    return std::make_shared<InputStreamReader>(jxx::lang::System::in);
+    return jxx::NEW<InputStreamReader>(jxx::lang::System::in);
 }
 
 std::shared_ptr<PrintStream> jxx::io::Console::out(){
@@ -38,7 +39,7 @@ void jxx::io::Console::printf(const char* fmt, ...){
     jxx::lang::System::out->print(std::string(buf.data(), (size_t)n));
 }
 
-jxx::Ptr<String> jxx::io::Console::readLine(){
+jxx::Ptr<jxx::lang::String> jxx::io::Console::readLine(){
     auto isr = std::make_shared<InputStreamReader>(jxx::lang::System::in);
     BufferedReader br(isr);
     return br.readLine();

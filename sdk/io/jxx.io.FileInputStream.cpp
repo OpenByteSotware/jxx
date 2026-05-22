@@ -3,9 +3,9 @@
 namespace jxx::io {
 
 FileInputStream::FileInputStream(jxx::Ptr<jxx::lang::String> path) {
-    if (!path) throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("path"));
+    if (!path) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("path"));
     f_.open(path->utf8(), std::ios::binary);
-    if (!f_) throw IOException(JXX_NEW<jxx::lang::String>("Failed to open file"));
+    if (!f_) throw IOException(jxx::NEW<jxx::lang::String>("Failed to open file"));
 }
 
 jint FileInputStream::read() {

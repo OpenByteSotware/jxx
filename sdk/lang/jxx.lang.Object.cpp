@@ -1,9 +1,10 @@
 //#include "jxx.lang.ClassNotFoundException.h"
-#include "jxx.lang.Object.h"
 #include "jxx.lang.String.h"
 #include "jxx.lang.ClassRegistration.h"
 #include "jxx.lang.Class.h"
 #include "jxx.lang.Cast.h"
+#include "jxx.lang.Object.h"
+
 
 namespace jxx::lang {
 
@@ -74,7 +75,7 @@ namespace jxx::lang {
     jxx::Ptr<String>  Object::toString() const {
         std::ostringstream oss;
         oss << getClassName_() << "@0x" << std::hex << hashCode();
-        return JXX_NEW<String>(oss.str());
+        return jxx::NEW<String>(oss.str());
     }
 
     // Identity check (reference equality)
@@ -101,11 +102,11 @@ namespace jxx::lang {
         throw std::runtime_error("cloneImpl not implemented");
     }
 
-    jxx::Ptr<String> Object::getClassName_() const {
+    jxx::Ptr<jxx::lang::String> Object::getClassName_() const {
 #if defined(__GNUG__) || defined(__clang__) || defined(_MSC_VER)
-        return JXX_NEW<String>(demangle(typeid(*this).name()));
+        return jxx::NEW<String>(demangle(typeid(*this).name()));
 #else
-        return JXX_NEW<String>("Object");
+        return jxx::NEW<String>("Object");
 #endif
     }
 

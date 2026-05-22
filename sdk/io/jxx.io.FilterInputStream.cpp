@@ -1,14 +1,15 @@
+#include "lang/jxx.lang.NullPointerException.h"
 #include "jxx.io.FilterInputStream.h"
 
 namespace jxx::io {
 
 FilterInputStream::FilterInputStream(jxx::Ptr<InputStream> in) : in_(std::move(in)) {
-    if (!in_) throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("in"));
+    if (!in_) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("in"));
 }
 
 jxx::lang::jint FilterInputStream::read() { return in_->read(); }
 
-jxx::lang::jint FilterInputStream::read(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) { return in_->read(b, off, len); }
+jxx::lang::jint FilterInputStream::read(jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) { return in_->read(b, off, len); }
 
 jxx::lang::jlong FilterInputStream::skip(jxx::lang::jlong n) { return in_->skip(n); }
 

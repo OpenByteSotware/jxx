@@ -30,7 +30,7 @@ struct Spliterator {
     // Java 8 default: void forEachRemaining(Consumer<? super T> action)
     virtual void forEachRemaining(jxx::Ptr<jxx::util::function::Consumer<T>> action) {
         if (!action) {
-            throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("action"));
+            throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("action"));
         }
         while (tryAdvance(action)) { /* keep advancing */ }
     }
@@ -46,7 +46,7 @@ struct Spliterator {
     >
     void forEachRemaining(jxx::Ptr<jxx::util::function::Consumer<U>> action) {
         if (!action) {
-            throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("action"));
+            throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("action"));
         }
         // Adapt by wrapping U-consumer into a T-consumer using your variance-friendly Consumer
         auto adapter = jxx::util::function::consumerOf<T>(

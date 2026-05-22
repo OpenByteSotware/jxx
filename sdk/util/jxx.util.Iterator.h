@@ -39,7 +39,7 @@ namespace jxx::util {
         // Contract: optional operation; default throws UnsupportedOperationException.
         virtual void remove() {
             throw jxx::lang::UnsupportedOperationException(
-                JXX_NEW<jxx::lang::String>("remove")
+                jxx::NEW<jxx::lang::String>("remove")
             );
         }
 
@@ -50,7 +50,7 @@ namespace jxx::util {
          */
         virtual void forEachRemaining(jxx::Ptr<jxx::util::function::Consumer<E>> action) {
             if (!action) {
-                throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("action"));
+                throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("action"));
             }
             while (hasNext()) {
                 action->accept(next());
@@ -73,7 +73,7 @@ namespace jxx::util {
         >
         void forEachRemaining(jxx::Ptr<jxx::util::function::Consumer<U>> action) {
             if (!action) {
-                throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("action"));
+                throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("action"));
             }
             while (hasNext()) {
                 action->accept(static_cast<U>(next()));

@@ -15,7 +15,7 @@ public:
     IllegalFormatPrecisionException(jxx::Ptr<jxx::lang::String> msg)
 		: jxx::util::IllegalFormatException(std::move(msg)) {}
     IllegalFormatPrecisionException(jxx::lang::jint precision)
-		: jxx::util::IllegalFormatException(JXX_NEW<jxx::lang::String>("precision: " + std::to_string(precision))) {}   
+		: jxx::util::IllegalFormatException(jxx::NEW<jxx::lang::String>("precision: " + std::to_string(precision))) {}   
     JXX_OBJECT_CLONE(IllegalFormatPrecisionException)
 protected:
     const char* typeName() const noexcept override { return "IllegalFormatPrecisionException"; }

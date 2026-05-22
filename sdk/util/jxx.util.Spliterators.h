@@ -28,7 +28,7 @@ public:
 
         jxx::lang::jbool tryAdvance(jxx::Ptr<jxx::util::function::Consumer<T>> action) override {
             if (!action) {
-                throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("action"));
+                throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("action"));
             }
             if (!it_) return false;
             if (!it_->hasNext()) return false;
@@ -58,9 +58,9 @@ public:
     template <class T>
     static jxx::Ptr<Spliterator<T>> spliteratorUnknownSize(jxx::Ptr<Iterator<T>> it, jxx::lang::jint characteristics) {
         if (!it) {
-            throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("it"));
+            throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("it"));
         }
-        return JXX_NEW<IteratorSpliterator<T>>(std::move(it), characteristics);
+        return jxx::NEW<IteratorSpliterator<T>>(std::move(it), characteristics);
     }
 };
 

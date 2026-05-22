@@ -5,11 +5,11 @@
 
 namespace jxx::lang {
 
-    explicit Throwable::Throwable(jxx::Ptr<String> message = JXX_NEW<String>(""),
+    explicit Throwable::Throwable(jxx::Ptr<String> message = jxx::NEW<String>(""),
         jxx::Ptr<Throwable> cause = nullptr,
         bool enableSuppression = true,
         bool writableStackTrace = true)
-        : message_(message != nullptr ? message : JXX_NEW<String>("")),
+        : message_(message != nullptr ? message : jxx::NEW<String>("")),
         cause_(cause),
         enableSuppression_(enableSuppression),
         writableStackTrace_(writableStackTrace) {
@@ -23,7 +23,7 @@ namespace jxx::lang {
         jxx::Ptr<Throwable> cause = nullptr,
         bool enableSuppression = true,
         bool writableStackTrace = true)
-        : message_(JXX_NEW<String>(message)),
+        : message_(jxx::NEW<String>(message)),
         cause_(cause),
         enableSuppression_(enableSuppression),
         writableStackTrace_(writableStackTrace) {
@@ -37,7 +37,7 @@ namespace jxx::lang {
         jxx::Ptr<Throwable> cause = nullptr,
         bool enableSuppression = true,
         bool writableStackTrace = true)
-        : message_(JXX_NEW<String>(message)),
+        : message_(jxx::NEW<String>(message)),
         cause_(cause),
         enableSuppression_(enableSuppression),
         writableStackTrace_(writableStackTrace) {
@@ -146,7 +146,7 @@ namespace jxx::lang {
             cachedToString_ += ": ";
             cachedToString_ += msg;
         }
-        return JXX_NEW<String>(cachedToString_);
+        return jxx::NEW<String>(cachedToString_);
     }
 
     /**

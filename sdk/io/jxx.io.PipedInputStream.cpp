@@ -6,7 +6,7 @@ namespace jxx::io {
 static constexpr jxx::lang::jint DEFAULT_PIPE_SIZE = 1024;
 
 void PipedInputStream::initPipe_(jxx::lang::jint pipeSize) {
-    if (pipeSize <= 0) throw jxx::lang::IllegalArgumentException(JXX_NEW<jxx::lang::String>("pipeSize <= 0"));
+    if (pipeSize <= 0) throw jxx::lang::IllegalArgumentException(jxx::NEW<jxx::lang::String>("pipeSize <= 0"));
     buffer_.assign((std::size_t)pipeSize, (jxx::lang::jbyte)0);
     in_ = -1;
     out_ = 0;
@@ -21,18 +21,18 @@ PipedInputStream::PipedInputStream(jxx::Ptr<PipedOutputStream> src, jxx::lang::j
 }
 
 void PipedInputStream::connect(jxx::Ptr<PipedOutputStream> src) {
-    if (!src) throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("src"));
+    if (!src) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("src"));
     src->connect(std::static_pointer_cast<PipedInputStream>(this->thisPtr));
 }
 
 void PipedInputStream::receive_(jxx::lang::jint b) {
-    if (!connected_) throw IOException(JXX_NEW<jxx::lang::String>("Pipe not connected"));
-    if (closedByReader_) throw IOException(JXX_NEW<jxx::lang::String>("Pipe closed"));
+    if (!connected_) throw IOException(jxx::NEW<jxx::lang::String>("Pipe not connected"));
+    if (closedByReader_) throw IOException(jxx::NEW<jxx::lang::String>("Pipe closed"));
 
     std::unique_lock<std::recursive_mutex> lk(mutex_);
 
     while (in_ == out_) {
-        if (closedByReader_) throw IOException(JXX_NEW<jxx::lang::String>("Pipe closed"));
+        if (closedByReader_) throw IOException(jxx::NEW<jxx::lang::String>("Pipe closed"));
         notFull_.wait(lk);
     }
 
@@ -63,8 +63,8 @@ void PipedInputStream::receivedLast_() {
 jxx::lang::jint PipedInputStream::read() {
     std::unique_lock<std::recursive_mutex> lk(mutex_);
 
-    if (!connected_) throw IOException(JXX_NEW<jxx::lang::String>("Pipe not connected"));
-    if (closedByReader_) throw IOException(JXX_NEW<jxx::lang::String>("Pipe closed"));
+    if (!connected_) throw IOException(jxx::NEW<jxx::lang::String>("Pipe not connected"));
+    if (closedByReader_) throw IOException(jxx::NEW<jxx::lang::String>("Pipe closed"));
 
     while (in_ < 0) {
         if (closedByWriter_) return -1;

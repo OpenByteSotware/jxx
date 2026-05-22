@@ -145,7 +145,7 @@ private:
     class LoadingLock final : public Object {
     public:
         jxx::Ptr<String> toString() const override {
-            return JXX_NEW<String>("ClassLoadingLock");
+            return jxx::NEW<String>("ClassLoadingLock");
         }
     };
 

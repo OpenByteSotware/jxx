@@ -70,7 +70,7 @@ namespace jxx::lang::detail {
             auto& ti = typeinfo<T>();
             ti.defaultCtorAccessible = true;
 
-            // Use your allocator if you have one (JXX_NEW<T>()), otherwise std::make_shared<T>()
+            // Use your allocator if you have one (jxx::NEW<T>()), otherwise std::make_shared<T>()
             ti.defaultCtor = [->std::shared_ptr<::jxx::lang::Object> {
                 return std::static_pointer_cast<::jxx::lang::Object>(std::make_shared<T>());
             }];

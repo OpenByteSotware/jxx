@@ -1,6 +1,7 @@
 #pragma once
 
 #include "lang/jxx_types.h"
+#include "lang/jxx.lang.buildin_array.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.CharSequence.h"
@@ -46,8 +47,8 @@ public:
 
     jxx::Ptr<jxx::io::IOException> ioException() const;
 
-    jxx::Ptr<Formatter> format(jxx::Ptr<jxx::lang::String> fmt, jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1>> args);
-    jxx::Ptr<Formatter> format(jxx::Ptr<jxx::util::Locale> l, jxx::Ptr<jxx::lang::String> fmt, jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1>> args);
+    jxx::Ptr<Formatter> format(jxx::Ptr<jxx::lang::String> fmt, jxx::lang::ObjectArray args);
+    jxx::Ptr<Formatter> format(jxx::Ptr<jxx::util::Locale> l, jxx::Ptr<jxx::lang::String> fmt, jxx::lang::ObjectArray args);
 
     jxx::Ptr<jxx::lang::String> toString() const override;
 

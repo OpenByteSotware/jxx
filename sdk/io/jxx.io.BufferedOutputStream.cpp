@@ -12,8 +12,8 @@ BufferedOutputStream::BufferedOutputStream(jxx::Ptr<OutputStream> out)
 
 BufferedOutputStream::BufferedOutputStream(jxx::Ptr<OutputStream> out, jxx::lang::jint size)
     : FilterOutputStream(std::move(out)) {
-    if (size <= 0) throw jxx::lang::IllegalArgumentException(JXX_NEW<jxx::lang::String>("size <= 0"));
-    buf_ = JXX_NEW<ByteArray>((std::uint32_t)size);
+    if (size <= 0) throw jxx::lang::IllegalArgumentException(jxx::NEW<jxx::lang::String>("size <= 0"));
+    buf_ = jxx::NEW<ByteArray>((std::uint32_t)size);
 }
 
 void BufferedOutputStream::flushBuffer_() {

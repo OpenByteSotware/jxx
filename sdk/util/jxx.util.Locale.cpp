@@ -10,7 +10,7 @@ namespace jxx::util {
     }
 
     jxx::Ptr<jxx::lang::String> Locale::from_utf8_(const std::string& s) {
-        return std::make_shared<jxx::lang::String>(s);
+        return jxx::NEW<jxx::lang::String>(s);
     }
 
     Locale::Locale() : language_(), country_(), loc_(std::locale()) {}
@@ -19,17 +19,17 @@ namespace jxx::util {
         : language_(to_utf8_(language)), country_(to_utf8_(country)), loc_(std::locale()) {}
 
     jxx::Ptr<Locale> Locale::getDefault() {
-        static jxx::Ptr<Locale> inst = std::make_shared<Locale>();
+        static jxx::Ptr<Locale> inst = jxx::NEW<Locale>();
         return inst;
     }
 
     jxx::Ptr<Locale> Locale::ROOT() {
-        static jxx::Ptr<Locale> root = std::make_shared<Locale>(std::make_shared<jxx::lang::String>(""), std::make_shared<jxx::lang::String>(""));
+        static jxx::Ptr<Locale> root = jxx::NEW<Locale>(jxx::NEW<jxx::lang::String>(""), jxx::NEW<jxx::lang::String>(""));
         return root;
     }
 
     jxx::Ptr<Locale> Locale::US() {
-        static jxx::Ptr<Locale> us = std::make_shared<Locale>(std::make_shared<jxx::lang::String>("en"), std::make_shared<jxx::lang::String>("US"));
+        static jxx::Ptr<Locale> us = jxx::NEW<Locale>(jxx::NEW<jxx::lang::String>("en"), jxx::NEW<jxx::lang::String>("US"));
         return us;
     }
 

@@ -13,7 +13,7 @@ namespace jxx::lang {
 
     jxx::Ptr<ClassAny> ClassAny::registerClass(const Meta& meta) {
         if (meta.binaryName.empty()) {
-            throw IllegalArgumentException(JXX_NEW<String>("Class.registerClass: binaryName is empty"));
+            throw IllegalArgumentException(jxx::NEW<String>("Class.registerClass: binaryName is empty"));
         }
 
         std::lock_guard<std::mutex> lk(registryMutex_);
@@ -23,7 +23,7 @@ namespace jxx::lang {
             if (auto existing = it->second.lock()) return existing;
         }
 
-        auto cls = JXX_NEW<ClassAny>(meta);
+        auto cls = jxx::NEW<ClassAny>(meta);
 
         registryByName_[meta.binaryName] = cls;
         if (meta.typeId != std::type_index(typeid(void))) {
@@ -33,7 +33,7 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<ClassAny> ClassAny::forName(jxx::Ptr<String> className) {
-        if (!className) throw NullPointerException(JXX_NEW<String>("className"));
+        if (!className) throw NullPointerException(jxx::NEW<String>("className"));
 
         std::string key = className->utf8();
         std::lock_guard<std::mutex> lk(registryMutex_);
@@ -43,7 +43,7 @@ namespace jxx::lang {
             if (auto c = it->second.lock()) return c;
         }
 
-        throw ClassNotFoundException(JXX_NEW<String>(className->utf8().c_str()));
+        throw ClassNotFoundException(jxx::NEW<String>(className->utf8().c_str()));
     }
 
     jxx::Ptr<ClassAny> ClassAny::forName(jxx::Ptr<String> className, jxx::lang::jbool /*initialize*/, jxx::Ptr<ClassLoader> /*loader*/) {
@@ -60,7 +60,7 @@ namespace jxx::lang {
         }
 
         // Java never returns null; if type isn't registered, this is a runtime configuration error.
-        throw IllegalStateException(JXX_NEW<String>("Class.forType: unregistered type"));
+        throw IllegalStateException(jxx::NEW<String>("Class.forType: unregistered type"));
     }
 
     jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> ClassAny::getAllLoadedClasses() {
@@ -74,7 +74,7 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<String> ClassAny::getName() const {
-        return JXX_NEW<String>(meta_.binaryName.c_str());
+        return jxx::NEW<String>(meta_.binaryName.c_str());
     }
 
     std::string ClassAny::simpleNameFromBinary_(const std::string& bin) {
@@ -102,7 +102,7 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<String> ClassAny::getSimpleName() const {
-        return JXX_NEW<String>(simpleNameFromBinary_(meta_.binaryName).c_str());
+        return jxx::NEW<String>(simpleNameFromBinary_(meta_.binaryName).c_str());
     }
 
     jxx::Ptr<String> ClassAny::getCanonicalName() const {
@@ -127,7 +127,7 @@ namespace jxx::lang {
     jxx::Ptr<ClassAny> ClassAny::getSuperclass() const { return meta_.superClass; }
 
     jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> ClassAny::toClassArray_(const std::vector<jxx::Ptr<ClassAny>>& v) {
-        auto a = JXX_NEW<JxxArray<jxx::Ptr<ClassAny>, 1>>((std::uint32_t)v.size());
+        auto a = jxx::NEW<JxxArray<jxx::Ptr<ClassAny>, 1>>((std::uint32_t)v.size());
         for (std::uint32_t i = 0; i < (std::uint32_t)v.size(); ++i) (*a)[(jint)i] = v[i];
         return a;
     }
@@ -188,7 +188,7 @@ namespace jxx::lang {
     }
 
     jbool ClassAny::isAssignableFrom(jxx::Ptr<ClassAny> cls) const {
-        if (!cls) throw NullPointerException(JXX_NEW<String>("cls"));
+        if (!cls) throw NullPointerException(jxx::NEW<String>("cls"));
         return isAssignableFromImpl_(*this, *cls);
     }
 
@@ -209,21 +209,21 @@ namespace jxx::lang {
         else msg = "Object";
         msg += " cannot be cast to ";
         msg += meta_.binaryName;
-        throw ClassCastException(JXX_NEW<String>(msg.c_str()));
+        throw ClassCastException(jxx::NEW<String>(msg.c_str()));
     }
 
     jxx::Ptr<Object> ClassAny::newInstance() const {
         // Java-ish checks
         if (meta_.isInterface || meta_.isPrimitive || meta_.isArray) {
-            throw InstantiationException(JXX_NEW<String>(meta_.binaryName.c_str()));
+            throw InstantiationException(jxx::NEW<String>(meta_.binaryName.c_str()));
         }
         // Modifier.ABSTRACT in Java is 0x0400
         constexpr jint ABSTRACT = 0x0400;
         if ((meta_.modifiers & ABSTRACT) != 0) {
-            throw InstantiationException(JXX_NEW<String>(meta_.binaryName.c_str()));
+            throw InstantiationException(jxx::NEW<String>(meta_.binaryName.c_str()));
         }
         if (!meta_.factory) {
-            throw InstantiationException(JXX_NEW<String>(meta_.binaryName.c_str()));
+            throw InstantiationException(jxx::NEW<String>(meta_.binaryName.c_str()));
         }
         return meta_.factory();
     }
@@ -231,7 +231,7 @@ namespace jxx::lang {
     jxx::Ptr<String> ClassAny::toString() const {
         std::string s = meta_.isInterface ? "interface " : "class ";
         s += meta_.binaryName;
-        return JXX_NEW<String>(s.c_str());
+        return jxx::NEW<String>(s.c_str());
     }
 
     // -------- Array class creation helpers --------
@@ -261,7 +261,7 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<ClassAny> ClassAny::arrayOf(jxx::Ptr<ClassAny> component) {
-        if (!component) throw NullPointerException(JXX_NEW<String>("component"));
+        if (!component) throw NullPointerException(jxx::NEW<String>("component"));
 
         std::string name = arrayBinaryName_(*component);
 
@@ -284,11 +284,11 @@ namespace jxx::lang {
         // Arrays are Objects and implement Cloneable + Serializable in Java.
         // If those classes exist and were registered, attach them.
         // (Safe: if not registered, ignore.)
-        try { m.superClass = forName(JXX_NEW<String>("java.lang.Object")); }
+        try { m.superClass = forName(jxx::NEW<String>("java.lang.Object")); }
         catch (...) { m.superClass = nullptr; }
-        try { m.interfaces.push_back(forName(JXX_NEW<String>("java.lang.Cloneable"))); }
+        try { m.interfaces.push_back(forName(jxx::NEW<String>("java.lang.Cloneable"))); }
         catch (...) {}
-        try { m.interfaces.push_back(forName(JXX_NEW<String>("java.io.Serializable"))); }
+        try { m.interfaces.push_back(forName(jxx::NEW<String>("java.io.Serializable"))); }
         catch (...) {}
 
         // No newInstance() for array Class in Java via Class.newInstance()
@@ -299,37 +299,37 @@ namespace jxx::lang {
 
     // ---------------- Reflection stubs ----------------
     jxx::Ptr<JxxArray<jxx::Ptr<Field>, 1>> ClassAny::getFields() const {
-        return JXX_NEW<JxxArray<jxx::Ptr<Field>, 1>>(0);
+        return jxx::NEW<JxxArray<jxx::Ptr<Field>, 1>>(0);
     }
     jxx::Ptr<JxxArray<jxx::Ptr<Field>, 1>> ClassAny::getDeclaredFields() const {
-        return JXX_NEW<JxxArray<jxx::Ptr<Field>, 1>>(0);
+        return jxx::NEW<JxxArray<jxx::Ptr<Field>, 1>>(0);
     }
     jxx::Ptr<Field> ClassAny::getField(jxx::Ptr<String> /*name*/) const { return nullptr; }
     jxx::Ptr<Field> ClassAny::getDeclaredField(jxx::Ptr<String> /*name*/) const { return nullptr; }
 
     jxx::Ptr<JxxArray<jxx::Ptr<Method>, 1>> ClassAny::getMethods() const {
-        return JXX_NEW<JxxArray<jxx::Ptr<Method>, 1>>(0);
+        return jxx::NEW<JxxArray<jxx::Ptr<Method>, 1>>(0);
     }
     jxx::Ptr<JxxArray<jxx::Ptr<Method>, 1>> ClassAny::getDeclaredMethods() const {
-        return JXX_NEW<JxxArray<jxx::Ptr<Method>, 1>>(0);
+        return jxx::NEW<JxxArray<jxx::Ptr<Method>, 1>>(0);
     }
     jxx::Ptr<Method> ClassAny::getMethod(jxx::Ptr<String> /*name*/, jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> /*pt*/) const { return nullptr; }
     jxx::Ptr<Method> ClassAny::getDeclaredMethod(jxx::Ptr<String> /*name*/, jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> /*pt*/) const { return nullptr; }
 
     jxx::Ptr<JxxArray<jxx::Ptr<Constructor>, 1>> ClassAny::getConstructors() const {
-        return JXX_NEW<JxxArray<jxx::Ptr<Constructor>, 1>>(0);
+        return jxx::NEW<JxxArray<jxx::Ptr<Constructor>, 1>>(0);
     }
     jxx::Ptr<JxxArray<jxx::Ptr<Constructor>, 1>> ClassAny::getDeclaredConstructors() const {
-        return JXX_NEW<JxxArray<jxx::Ptr<Constructor>, 1>>(0);
+        return jxx::NEW<JxxArray<jxx::Ptr<Constructor>, 1>>(0);
     }
     jxx::Ptr<Constructor> ClassAny::getConstructor(jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> /*pt*/) const { return nullptr; }
     jxx::Ptr<Constructor> ClassAny::getDeclaredConstructor(jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> /*pt*/) const { return nullptr; }
 
     jxx::Ptr<JxxArray<jxx::Ptr<Annotation>, 1>> ClassAny::getAnnotations() const {
-        return JXX_NEW<JxxArray<jxx::Ptr<Annotation>, 1>>(0);
+        return jxx::NEW<JxxArray<jxx::Ptr<Annotation>, 1>>(0);
     }
     jxx::Ptr<JxxArray<jxx::Ptr<Annotation>, 1>> ClassAny::getDeclaredAnnotations() const {
-        return JXX_NEW<JxxArray<jxx::Ptr<Annotation>, 1>>(0);
+        return jxx::NEW<JxxArray<jxx::Ptr<Annotation>, 1>>(0);
     }
 
     jxx::Ptr<Package> ClassAny::getPackage() const { return nullptr; }

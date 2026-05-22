@@ -48,7 +48,7 @@ namespace jxx::lang {
          *   - enableSuppression: if false, addSuppressed is a no-op
          *   - writableStackTrace: if false, stack trace is empty and fillInStackTrace is a no-op
          */
-        explicit Throwable(jxx::Ptr<String> message = JXX_NEW<String>(""),
+        explicit Throwable(jxx::Ptr<String> message = jxx::NEW<String>(""),
             jxx::Ptr<Throwable> cause = nullptr,
             bool enableSuppression = true,
             bool writableStackTrace = true);

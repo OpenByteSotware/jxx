@@ -1,14 +1,15 @@
+#include "lang/jxx.lang.buildin_array.h"
 #include "jxx.util.IntStream.h"
 
 namespace jxx::util {
 
-IntStream::IntStream(jxx::Ptr<IntArray> backing) : data_(backing) {}
+IntStream::IntStream(jxx::lang::IntArray backing) : data_(backing) {}
 
-jxx::Ptr<IntStream> IntStream::of(jxx::Ptr<IntArray> backing) {
-    return JXX_NEW<IntStream>(backing);
+jxx::Ptr<IntStream> IntStream::of(jxx::lang::IntArray backing) {
+    return jxx::NEW<IntStream>(backing);
 }
 
-jxx::Ptr<IntArray> IntStream::toArray() const {
+jxx::lang::IntArray IntStream::toArray() const {
     // Return the backing array directly (minimal).
     // If you want defensive copy, tell me and I’ll adjust.
     return data_;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "lang/jxx_types.h"
+#include "lang/jxx.lang.Object.h"
 #include "jxx.io.InputStream.h"
 
 namespace jxx::io {
@@ -10,7 +11,7 @@ public:
     explicit FilterInputStream(jxx::Ptr<InputStream> in);
 
     jxx::lang::jint read() override;
-    jxx::lang::jint read(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) override;
+    jxx::lang::jint read(jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) override;
 
     jxx::lang::jlong skip(jxx::lang::jlong n) override;
     jxx::lang::jint available() override;

@@ -4,7 +4,7 @@ namespace jxx::io {
 
     BufferedInputStream::BufferedInputStream(jxx::Ptr<InputStream> in, jxx::lang::jint size)
         : FilterInputStream(std::move(in)) {
-        buf_ = JXX_NEW<ByteArray>((std::uint32_t)size);
+        buf_ = jxx::NEW<ByteArray>((std::uint32_t)size);
     }
 
     jxx::lang::jint BufferedInputStream::read() {

@@ -36,10 +36,10 @@ namespace jxx::util::function {
         // ------------------------------------------------------------------
         jxx::Ptr<Consumer<T>> andThen(jxx::Ptr<Consumer<T>> after) {
             if (!after) {
-                throw jxx::lang::NullPointerException(JXX_NEW<std::string>("after"));
+                throw jxx::lang::NullPointerException(jxx::NEW<std::string>("after"));
             }
             auto self = thisPtrAsConsumer_();
-            return JXX_NEW<detail::ComposedConsumer<T>>(std::move(self), std::move(after));
+            return jxx::NEW<detail::ComposedConsumer<T>>(std::move(self), std::move(after));
         }
 
         // ------------------------------------------------------------------
@@ -58,21 +58,21 @@ namespace jxx::util::function {
         >
         jxx::Ptr<Consumer<T>> andThen(jxx::Ptr<Consumer<U>> after) {
             if (!after) {
-                throw jxx::lang::NullPointerException(JXX_NEW<std::string>("after"));
+                throw jxx::lang::NullPointerException(jxx::NEW<std::string>("after"));
             }
             auto self = thisPtrAsConsumer_();
-            return JXX_NEW<detail::ComposedConsumerCovariant<T, U>>(std::move(self), std::move(after));
+            return jxx::NEW<detail::ComposedConsumerCovariant<T, U>>(std::move(self), std::move(after));
         }
 
     private:
-        // Requires concrete implementer to derive from Object and be created via JXX_NEW.
+        // Requires concrete implementer to derive from Object and be created via jxx::NEW.
         jxx::Ptr<Consumer<T>> thisPtrAsConsumer_() {
             auto* obj = dynamic_cast<jxx::lang::Object*>(this);
             if (!obj || !obj->thisPtr) {
                 throw jxx::lang::IllegalArgumentException(
-                    JXX_NEW<std::string>(
+                    jxx::NEW<std::string>(
                         "Consumer::andThen requires implementing object to derive from jxx::lang::Object "
-                        "and be created via JXX_NEW so Object::thisPtr is set"
+                        "and be created via jxx::NEW so Object::thisPtr is set"
                     )
                 );
             }
@@ -135,7 +135,7 @@ private:
 template <class T, class F>
 jxx::Ptr<Consumer<T>> consumerOf(F&& f) {
     using Fn = std::decay_t<F>;
-    return JXX_NEW<detail::LambdaConsumer<T, Fn>>(std::forward<F>(f));
+    return jxx::NEW<detail::LambdaConsumer<T, Fn>>(std::forward<F>(f));
 }
 
 } // namespace jxx::util::function

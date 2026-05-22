@@ -41,7 +41,7 @@ protected:
 
 // Demonstrate some basic assertions.
 TEST(TestArrayListTest, BasicAssertions) {
-    auto t = JXX_NEW<ArrayListIntTest>();
+    auto t = jxx::NEW<ArrayListIntTest>();
     int val = 5;
     ASSERT_TRUE(t->isEmpty());
     t->add(5);

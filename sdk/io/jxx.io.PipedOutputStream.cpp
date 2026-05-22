@@ -7,14 +7,14 @@ PipedOutputStream::PipedOutputStream() = default;
 PipedOutputStream::PipedOutputStream(jxx::Ptr<PipedInputStream> snk) { connect(std::move(snk)); }
 
 void PipedOutputStream::connect(jxx::Ptr<PipedInputStream> snk) {
-    if (!snk) throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("snk"));
-    if (connected_) throw IOException(JXX_NEW<jxx::lang::String>("Already connected"));
+    if (!snk) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("snk"));
+    if (connected_) throw IOException(jxx::NEW<jxx::lang::String>("Already connected"));
 
     sink_ = std::move(snk);
 
     {
         std::lock_guard<std::recursive_mutex> lk(sink_->mutex_);
-        if (sink_->connected_) throw IOException(JXX_NEW<jxx::lang::String>("Already connected"));
+        if (sink_->connected_) throw IOException(jxx::NEW<jxx::lang::String>("Already connected"));
         sink_->connected_ = true;
     }
 
@@ -22,14 +22,14 @@ void PipedOutputStream::connect(jxx::Ptr<PipedInputStream> snk) {
 }
 
 void PipedOutputStream::write(jxx::lang::jint b) {
-    if (closed_) throw IOException(JXX_NEW<jxx::lang::String>("Pipe closed"));
-    if (!sink_ || !connected_) throw IOException(JXX_NEW<jxx::lang::String>("Pipe not connected"));
+    if (closed_) throw IOException(jxx::NEW<jxx::lang::String>("Pipe closed"));
+    if (!sink_ || !connected_) throw IOException(jxx::NEW<jxx::lang::String>("Pipe not connected"));
     sink_->receive_(b);
 }
 
 void PipedOutputStream::write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
-    if (closed_) throw IOException(JXX_NEW<jxx::lang::String>("Pipe closed"));
-    if (!sink_ || !connected_) throw IOException(JXX_NEW<jxx::lang::String>("Pipe not connected"));
+    if (closed_) throw IOException(jxx::NEW<jxx::lang::String>("Pipe closed"));
+    if (!sink_ || !connected_) throw IOException(jxx::NEW<jxx::lang::String>("Pipe not connected"));
     sink_->receive_(b, off, len);
 }
 

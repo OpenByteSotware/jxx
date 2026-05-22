@@ -7,9 +7,9 @@ namespace jxx::io {
 
 BufferedReader::BufferedReader(jxx::Ptr<Reader> in, jxx::lang::jint size)
     : in_(std::move(in)) {
-    if (!in_) throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("in"));
-    if (size <= 0) throw jxx::lang::IllegalArgumentException(JXX_NEW<jxx::lang::String>("size"));
-    buf_ = JXX_NEW<CharArray>((std::uint32_t)size);
+    if (!in_) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("in"));
+    if (size <= 0) throw jxx::lang::IllegalArgumentException(jxx::NEW<jxx::lang::String>("size"));
+    buf_ = jxx::NEW<CharArray>((std::uint32_t)size);
 }
 
 void BufferedReader::fill_() {
@@ -40,7 +40,7 @@ jxx::lang::jint BufferedReader::read(jxx::Ptr<CharArray> cbuf, jxx::lang::jint o
 }
 
 jxx::Ptr<jxx::lang::String> BufferedReader::readLine() {
-    auto sb = JXX_NEW<jxx::lang::StringBuilder>();
+    auto sb = jxx::NEW<jxx::lang::StringBuilder>();
 
     jxx::lang::jint c = read();
     if (c < 0) return nullptr;

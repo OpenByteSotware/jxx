@@ -34,7 +34,7 @@ public:
     }
 
     virtual std::shared_ptr<Object> clone() const override {
-        return JXX_NEW<Person>(this->name_, this->age_);
+        return jxx::NEW<Person>(this->name_, this->age_);
     }
 
     std::size_t hashCode() const noexcept override {
@@ -50,7 +50,7 @@ public:
 protected:
     // Implement cloneImpl for deep copy, Ojbect uses this for C++ to mimic java like clone
     virtual std::shared_ptr<Object> cloneImpl() const override {
-        return JXX_NEW<Person>(this->name_, this->age_);
+        return jxx::NEW<Person>(this->name_, this->age_);
     }
     /*
     // Serializable API
@@ -87,7 +87,7 @@ TEST(PersonTest, IntValueTest) {
     //const std::string output_filepath = "this/package/testdata/myoutputfile.dat";
     int age = 10;
     std::string name = "Sue";
-    auto ixx = JXX_NEW<Person>(name, age);
+    auto ixx = jxx::NEW<Person>(name, age);
     EXPECT_EQ(age, ixx->age());
 }
 
@@ -96,7 +96,7 @@ TEST(PersonTest, Clone) {
     //const std::string output_filepath = "this/package/testdata/myoutputfile.dat";
     int age = 10;
     std::string name = "Sue";
-    auto p1 = JXX_NEW<Person>(name, age);
+    auto p1 = jxx::NEW<Person>(name, age);
     EXPECT_EQ(age, p1->age());
 
     auto p2 = p1->clone();

@@ -34,12 +34,12 @@ namespace jxx::lang {
         // Java 8 default: void forEach(Consumer<? super T> action)
         virtual void forEach(jxx::Ptr<jxx::util::function::Consumer<T>> action) {
             if (!action) {
-                throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("action"));
+                throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("action"));
             }
             auto it = iterator();
             if (!it) {
                 // Not specified by Java, but avoids UB; treat as NPE-ish in practice.
-                throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("iterator"));
+                throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("iterator"));
             }
             while (it->hasNext()) {
                 action->accept(it->next());
@@ -57,7 +57,7 @@ namespace jxx::lang {
         >
         void forEach(jxx::Ptr<jxx::util::function::Consumer<U>> action) {
             if (!action) {
-                throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("action"));
+                throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("action"));
             }
 
             // Wrap Consumer<U> into Consumer<T> (Java '? super T' behavior).

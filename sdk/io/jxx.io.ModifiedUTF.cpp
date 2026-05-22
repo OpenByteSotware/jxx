@@ -22,7 +22,7 @@ shared_ptr<ByteArray> ModifiedUTF::encode(const std::u16string& s){
 	}
 	} 
 	
-	return JXX_NEW<ByteArray>(out.data());
+	return jxx::NEW<ByteArray>(out.data());
 }
 std::u16string ModifiedUTF::decode(const ByteArray& bytes){
 	std::u16string out; 

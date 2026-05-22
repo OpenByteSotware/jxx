@@ -20,13 +20,13 @@ public:
         return std::hash<int>{}(v_);
     }
     virtual jxx::Ptr<jxx::lang::String> toString() const override {
-        return JXX_NEW<jxx::lang::String>(std::to_string(v_));
+        return jxx::NEW<jxx::lang::String>(std::to_string(v_));
     }
 
 protected:
     // Implement cloneImpl for deep copy, Object uses this for C++ to mimic java like clone
     virtual jxx::Ptr<jxx::lang::Object> cloneImpl() const override {
-        return JXX_NEW<Integer>(this->v_);
+        return jxx::NEW<Integer>(this->v_);
     }
 };
     

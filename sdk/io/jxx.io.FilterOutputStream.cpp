@@ -4,7 +4,7 @@ namespace jxx::io {
 
 FilterOutputStream::FilterOutputStream(jxx::Ptr<OutputStream> out)
     : out_(std::move(out)) {
-    if (!out_) throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("out"));
+    if (!out_) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("out"));
 }
 
 void FilterOutputStream::write(jxx::lang::jint b) { out_->write(b); }

@@ -16,18 +16,18 @@ namespace jxx::util {
 class IntStream final : public jxx::lang::Object, public jxx::io::Serializable {
 public:
     IntStream() = default;
-    explicit IntStream(jxx::Ptr<IntArray> backing);
+    explicit IntStream(jxx::lang::IntArray backing);
 
-    static jxx::Ptr<IntStream> of(jxx::Ptr<IntArray> backing);
+    static jxx::Ptr<IntStream> of(jxx::lang::IntArray backing);
 
     // Java: int[] toArray()
-    jxx::Ptr<IntArray> toArray() const;
+    jxx::lang::IntArray toArray() const;
 
     // convenience
     jxx::lang::jint size() const;
 
 private:
-    jxx::Ptr<IntArray> data_;
+    jxx::lang::IntArray data_;
 };
 
 }

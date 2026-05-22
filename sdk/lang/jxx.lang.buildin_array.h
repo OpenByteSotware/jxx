@@ -19,13 +19,13 @@
 namespace jxx::lang {
 
     // Forward declaration
-    template <typename T, std::uint32_t Rank>
+    template <typename T, std::uint32_t N>
     class JxxArray;
 
     // ---------- Init-list metatype to nest initializer_list like Java literals ----------
-    template <typename T, std::uint32_t Rank>
+    template <typename T, std::uint32_t N>
     struct JInitList {
-        using type = std::initializer_list<typename JInitList<T, Rank - 1>::type>;
+        using type = std::initializer_list<typename JInitList<T, N - 1>::type>;
     };
 
     template <typename T>
@@ -494,29 +494,43 @@ namespace jxx::lang {
         }
     };
 
+    using ByteArrayType = jxx::lang::JxxArray<jxx::lang::jbyte, 1>;
+    using CharArrayType = jxx::lang::JxxArray<jxx::lang::jchar, 1>;
+    using IntArrayType = jxx::lang::JxxArray<jxx::lang::jint, 1>;
+    using ShortArrayType = jxx::lang::JxxArray<jxx::lang::jshort, 1>;
+    using LongArrayType = jxx::lang::JxxArray<jxx::lang::jlong, 1>;
+    using FloatArrayType = jxx::lang::JxxArray<jxx::lang::jfloat, 1>;
+    using DoubleArrayType = jxx::lang::JxxArray<jxx::lang::jdouble, 1>;
+    using ObjectArrayType = jxx::lang::JxxArray<jxx::Ptr<jxx::lang::Object>, 1>;
+   
+    // Convenience aliases (same as you had)
+    using ByteArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jbyte, 1>>;
+    using CharArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jchar, 1>>;
+    using IntArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jint, 1>>;
+    using ShortArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jshort, 1>>;
+    using LongArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jlong, 1>>;
+    using FloatArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jfloat, 1>>;
+    using DoubleArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jdouble, 1>>;
+    using ObjectArray = jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::Object>, 1>>;
+
+    using ByteArray2D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jbyte, 2>>;
+    using CharArray2D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jchar, 2>>;
+    using IntArray2D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jint, 2>>;
+    using ShortArray2D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jshort, 2>>;
+    using LongArray2D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jlong, 2>>;
+    using FloatArray2D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jfloat, 2>>;
+    using DoubleArray2D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jdouble, 2>>;
+    using ObjectArray2D = jxx::Ptr<jxx::lang::JxxArray < jxx::Ptr<jxx::lang::Object>, 2>>;
+
+    using ByteArray3D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jbyte, 3>>;
+    using CharArray3D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jchar, 3>>;
+    using IntArray3D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jint, 3>>;
+    using ShortArray3D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jshort, 3>>;
+    using LongArray3D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jlong, 3>>;
+    using FloatArray3D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jfloat, 3>>;
+    using DoubleArray3D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jdouble, 3>>;
+    using ObjectArray3D = jxx::Ptr<jxx::lang::JxxArray < jxx::Ptr<jxx::lang::Object>, 3>>;
+
+
 } // namespace jxx::lang
 
-// Convenience aliases (same as you had)
-using ByteArray = jxx::lang::JxxArray<jxx::lang::jbyte, 1>;
-using CharArray = jxx::lang::JxxArray<jxx::lang::jchar, 1>;
-using IntArray = jxx::lang::JxxArray<jxx::lang::jint, 1>;
-using ShortArray = jxx::lang::JxxArray<jxx::lang::jshort, 1>;
-using LongArray = jxx::lang::JxxArray<jxx::lang::jlong, 1>;
-using FloatArray = jxx::lang::JxxArray<jxx::lang::jfloat, 1>;
-using DoubleArray = jxx::lang::JxxArray<jxx::lang::jdouble, 1>;
-
-using ByteArray2D = jxx::lang::JxxArray<jxx::lang::jbyte, 2>;
-using CharArray2D = jxx::lang::JxxArray<jxx::lang::jchar, 2>;
-using IntArray2D = jxx::lang::JxxArray<jxx::lang::jint, 2>;
-using ShortArray2D = jxx::lang::JxxArray<jxx::lang::jshort, 2>;
-using LongArray2D = jxx::lang::JxxArray<jxx::lang::jlong, 2>;
-using FloatArray2D = jxx::lang::JxxArray<jxx::lang::jfloat, 2>;
-using DoubleArray2D = jxx::lang::JxxArray<jxx::lang::jdouble, 2>;
-
-using ByteArray3D = jxx::lang::JxxArray<jxx::lang::jbyte, 3>;
-using CharArray3D = jxx::lang::JxxArray<jxx::lang::jchar, 3>;
-using IntArray3D = jxx::lang::JxxArray<jxx::lang::jint, 3>;
-using ShortArray3D = jxx::lang::JxxArray<jxx::lang::jshort, 3>;
-using LongArray3D = jxx::lang::JxxArray<jxx::lang::jlong, 3>;
-using FloatArray3D = jxx::lang::JxxArray<jxx::lang::jfloat, 3>;
-using DoubleArray3D = jxx::lang::JxxArray<jxx::lang::jdouble, 3>;

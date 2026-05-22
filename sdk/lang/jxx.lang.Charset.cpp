@@ -37,7 +37,7 @@ jxx::Ptr<String> Charset::name() const {
     return std::make_shared<String>("UTF-8");
 }
 
-jxx::Ptr<ByteArray> Charset::encode(jxx::Ptr<String> s) const {
+ByteArray Charset::encode(const jxx::Ptr<String> s) const {
     if (!s) throw std::invalid_argument("NullPointerException: Charset.encode(null)");
 
     if (kind_ == Kind::UTF8) {
@@ -45,7 +45,7 @@ jxx::Ptr<ByteArray> Charset::encode(jxx::Ptr<String> s) const {
     }
 
     auto u = s->utf16();
-    auto out = std::make_shared<ByteArray>((std::uint32_t)u.size());
+    auto out = jxx::NEW<ByteArrayType>((std::uint32_t)u.size());
 
     if (kind_ == Kind::ASCII) {
         for (std::size_t i = 0; i < u.size(); ++i) {
@@ -63,7 +63,7 @@ jxx::Ptr<ByteArray> Charset::encode(jxx::Ptr<String> s) const {
     return out;
 }
 
-jxx::Ptr<String> Charset::decode(jxx::Ptr<ByteArray> bytes) const {
+jxx::Ptr<String> Charset::decode(const ByteArray bytes) const {
     if (!bytes) throw std::invalid_argument("NullPointerException: Charset.decode(null)");
 
     if (kind_ == Kind::UTF8) {
@@ -72,7 +72,7 @@ jxx::Ptr<String> Charset::decode(jxx::Ptr<ByteArray> bytes) const {
         for (std::uint32_t i = 0; i < bytes->length; ++i) {
             s[i] = (char)(unsigned char)(*bytes)[(jint)i];
         }
-        return std::make_shared<String>(s);
+        return jxx::NEW<String>(s);
     }
 
     std::u16string u;

@@ -5,7 +5,7 @@ namespace jxx::net {
 URL::URL(jxx::Ptr<jxx::lang::String> spec) : spec_(spec) {}
 
 jxx::Ptr<jxx::lang::String> URL::toString() const {
-    return spec_ ? spec_ : JXX_NEW<jxx::lang::String>("null");
+    return spec_ ? spec_ : jxx::NEW<jxx::lang::String>("null");
 }
 
 jxx::Ptr<jxx::io::InputStream> URL::openStream() const {

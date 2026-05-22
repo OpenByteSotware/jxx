@@ -110,11 +110,11 @@ jxx::Ptr<TimeZone> TimeZone::getTimeZone(jxx::Ptr<jxx::lang::String> id) {
     if (!id) return getDefault();
     std::string zid = id->utf8();
 
-    if (zid == "UTC" || zid == "GMT") return std::make_shared<FixedOffsetTimeZone>(zid, 0);
+    if (zid == "UTC" || zid == "GMT") return jxx::NEW<FixedOffsetTimeZone>(zid, 0);
 
     if (zid.rfind("GMT", 0) == 0 || zid.rfind("UTC", 0) == 0) {
         jxx::lang::jint off = parse_gmt_offset_millis(zid);
-        return std::make_shared<FixedOffsetTimeZone>(zid, off);
+        return jxx::NEW<FixedOffsetTimeZone>(zid, off);
     }
 
     std::lock_guard<std::mutex> lk(g_lock);
@@ -124,11 +124,11 @@ jxx::Ptr<TimeZone> TimeZone::getTimeZone(jxx::Ptr<jxx::lang::String> id) {
     Zone z;
     std::string path = base_dir() + "/" + zid;
     if (!load_zone_file(path, zid, z)) {
-        return std::make_shared<FixedOffsetTimeZone>("UTC", 0);
+        return jxx::NEW<FixedOffsetTimeZone>("UTC", 0);
     }
 
     g_zoneCache.emplace(zid, z);
-    return std::make_shared<TzdbTimeZone>(z);
+    return jxx::NEW<TzdbTimeZone>(z);
 }
 
 jxx::Ptr<TimeZone> TimeZone::getDefault() {
@@ -153,7 +153,7 @@ jxx::Ptr<TimeZone> TimeZone::getDefault() {
             }
         }
     }
-    return std::make_shared<FixedOffsetTimeZone>("UTC", 0);
+    return jxx::NEW<FixedOffsetTimeZone>("UTC", 0);
 #else
     std::filesystem::path etcLocal("/etc/localtime");
     std::error_code ec;
@@ -201,7 +201,7 @@ jxx::Ptr<TimeZone> TimeZone::getDefault() {
         }
     }
 
-    return std::make_shared<FixedOffsetTimeZone>("UTC", 0);
+    return jxx::NEW<FixedOffsetTimeZone>("UTC", 0);
 #endif
 }
 

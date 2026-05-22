@@ -40,8 +40,7 @@ namespace jxx::lang {
      *
      * Internal storage: UTF-16 code units (std::u16string)
      */
-    class String final
-        : public Object
+    class String final : public Object
         , public CharSequence
         , public Comparable<String>
         , public jxx::io::Serializable
@@ -52,40 +51,40 @@ namespace jxx::lang {
         String();
 
         // String(String original)
-        explicit String(jxx::Ptr<String> original);
+        explicit String(const jxx::Ptr<String> original);
 
         // String(byte[] bytes)
-        explicit String(jxx::Ptr<ByteArray> bytes);
+        explicit String(const ByteArray bytes);
 
         // String(byte[] bytes, int offset, int length)
-        String(jxx::Ptr<ByteArray> bytes, jxx::lang::jint offset, jxx::lang::jint length);
+        String(const ByteArray bytes, jxx::lang::jint offset, jxx::lang::jint length);
 
         // String(byte[] bytes, String charsetName)
-        String(jxx::Ptr<ByteArray> bytes, jxx::Ptr<String> charsetName);
+        String(const ByteArray bytes, jxx::Ptr<String> charsetName);
 
         // String(byte[] bytes, int offset, int length, String charsetName)
-        String(jxx::Ptr<ByteArray> bytes, jxx::lang::jint offset, jxx::lang::jint length, jxx::Ptr<String> charsetName);
+        String(const ByteArray bytes, jxx::lang::jint offset, jxx::lang::jint length, jxx::Ptr<String> charsetName);
 
         // String(byte[] bytes, Charset charset)
-        String(jxx::Ptr<ByteArray> bytes, jxx::Ptr<Charset> charset);
+        String(const ByteArray bytes, jxx::Ptr<Charset> charset);
 
         // String(byte[] bytes, int offset, int length, Charset charset)
-        String(jxx::Ptr<ByteArray> bytes, jxx::lang::jint offset, jxx::lang::jint length, jxx::Ptr<Charset> charset);
+        String(const ByteArray bytes, jxx::lang::jint offset, jxx::lang::jint length, jxx::Ptr<Charset> charset);
 
         // Deprecated: String(byte[] ascii, int hibyte)
-        String(jxx::Ptr<ByteArray> ascii, jxx::lang::jint hibyte);
+        String(const ByteArray ascii, jxx::lang::jint hibyte);
 
         // Deprecated: String(byte[] ascii, int hibyte, int offset, int count)
-        String(jxx::Ptr<ByteArray> ascii, jxx::lang::jint hibyte, jxx::lang::jint offset, jxx::lang::jint count);
+        String(const ByteArray ascii, jxx::lang::jint hibyte, jxx::lang::jint offset, jxx::lang::jint count);
 
         // String(char[] value)
-        explicit String(jxx::Ptr<CharArray> value);
+        explicit String(const CharArray value);
 
         // String(char[] value, int offset, int count)
-        String(jxx::Ptr<CharArray> value, jxx::lang::jint offset, jxx::lang::jint count);
+        String(const CharArray value, jxx::lang::jint offset, jxx::lang::jint count);
 
         // String(int[] codePoints, int offset, int count)
-        String(jxx::Ptr<IntArray> codePoints, jxx::lang::jint offset, jxx::lang::jint count);
+        String(const IntArray codePoints, jxx::lang::jint offset, jxx::lang::jint count);
 
         // String(StringBuffer buffer)
         explicit String(jxx::Ptr<StringBuffer> buffer);
@@ -95,6 +94,8 @@ namespace jxx::lang {
 
         // JXX convenience (non-Java): String(const char* utf8)
         explicit String(const char* utf8);
+
+        explicit String(std::string& stdString);
 
         // ---------------------------------------------------------------------
         // CharSequence
@@ -127,14 +128,14 @@ namespace jxx::lang {
         jxx::lang::jint codePointCount(jxx::lang::jint beginIndex, jxx::lang::jint endIndex) const;
         jxx::lang::jint offsetByCodePoints(jxx::lang::jint index, jxx::lang::jint codePointOffset) const;
 
-        void getChars(jxx::lang::jint srcBegin, jxx::lang::jint srcEnd, jxx::Ptr<CharArray> dst, jxx::lang::jint dstBegin) const;
+        void getChars(jxx::lang::jint srcBegin, jxx::lang::jint srcEnd, const CharArray dst, jxx::lang::jint dstBegin) const;
 
         // Deprecated in Java 8:
-        void getBytes(jxx::lang::jint srcBegin, jxx::lang::jint srcEnd, jxx::Ptr<ByteArray> dst, jxx::lang::jint dstBegin) const;
+        void getBytes(jxx::lang::jint srcBegin, jxx::lang::jint srcEnd, const ByteArray dst, jxx::lang::jint dstBegin) const;
 
-        jxx::Ptr<ByteArray> getBytes() const;
-        jxx::Ptr<ByteArray> getBytes(jxx::Ptr<String> charsetName) const;
-        jxx::Ptr<ByteArray> getBytes(jxx::Ptr<Charset> charset) const;
+        ByteArray getBytes() const;
+        ByteArray getBytes(jxx::Ptr<String> charsetName) const;
+        ByteArray getBytes(jxx::Ptr<Charset> charset) const;
 
         jbool contentEquals(jxx::Ptr<CharSequence> cs) const;
         jbool contentEquals(jxx::Ptr<StringBuffer> sb) const;
@@ -182,7 +183,7 @@ namespace jxx::lang {
 
         jxx::Ptr<String> trim() const;
 
-        jxx::Ptr<CharArray> toCharArray() const;
+        CharArray toCharArray() const;
 
         // Java 8 streams:
         jxx::Ptr<jxx::util::IntStream> chars() const;
@@ -201,11 +202,11 @@ namespace jxx::lang {
         static jxx::Ptr<String> valueOf(jxx::lang::jfloat f);
         static jxx::Ptr<String> valueOf(jxx::lang::jdouble d);
         static jxx::Ptr<String> valueOf(jxx::Ptr<Object> obj);
-        static jxx::Ptr<String> valueOf(jxx::Ptr<CharArray> data);
-        static jxx::Ptr<String> valueOf(jxx::Ptr<CharArray> data, jxx::lang::jint offset, jxx::lang::jint count);
+        static jxx::Ptr<String> valueOf(CharArray data);
+        static jxx::Ptr<String> valueOf(CharArray data, jxx::lang::jint offset, jxx::lang::jint count);
 
-        static jxx::Ptr<String> copyValueOf(jxx::Ptr<CharArray> data);
-        static jxx::Ptr<String> copyValueOf(jxx::Ptr<CharArray> data, jxx::lang::jint offset, jxx::lang::jint count);
+        static jxx::Ptr<String> copyValueOf(CharArray data);
+        static jxx::Ptr<String> copyValueOf(CharArray data, jxx::lang::jint offset, jxx::lang::jint count);
 
         // Java 8 String.format(...) uses Formatter
         static jxx::Ptr<String> format(

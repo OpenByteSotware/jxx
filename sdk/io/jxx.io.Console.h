@@ -8,7 +8,6 @@
 #include "io/jxx.io.Reader.h"
 #include "io/jxx.io.InputStreamReader.h"
 #include "io/jxx.io.BufferedReader.h"
-#include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Object.h"
 
 namespace jxx { 
@@ -17,7 +16,7 @@ namespace jxx {
         public:
             static jxx::Ptr<Console> console();
 
-            jxx::Ptr<String> readLine();
+            jxx::Ptr<jxx::lang::String> readLine();
             void printf(const char* fmt, ...);
 
             jxx::Ptr<Reader> reader();

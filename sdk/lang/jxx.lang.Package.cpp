@@ -10,7 +10,7 @@ jxx::Ptr<String> Package::toString() const {
     // Java: "package <name>"
     std::string s = "package ";
     s += name_ ? name_->utf8() : std::string("null");
-    return JXX_NEW<String>(s.c_str());
+    return jxx::NEW<String>(s.c_str());
 }
 
 } // namespace jxx::lang

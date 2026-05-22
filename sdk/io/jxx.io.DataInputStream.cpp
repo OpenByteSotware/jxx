@@ -12,13 +12,13 @@ void DataInputStream::readFullyRaw_(jxx::Ptr<ByteArray> b, jint off, jint len) {
     jint total = 0;
     while (total < len) {
         jint r = in_->read(b, off + total, len - total);
-        if (r < 0) throw EOFException(JXX_NEW<jxx::lang::String>("EOF"));
+        if (r < 0) throw EOFException(jxx::NEW<jxx::lang::String>("EOF"));
         total += r;
     }
 }
 
 void DataInputStream::readFully(jxx::Ptr<ByteArray> b) {
-    if (!b) throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("b"));
+    if (!b) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("b"));
     readFullyRaw_(b, 0, (jint)b->length);
 }
 
@@ -34,19 +34,19 @@ jint DataInputStream::skipBytes(jint n) {
 
 jbool DataInputStream::readBoolean() {
     jint c = in_->read();
-    if (c < 0) throw EOFException(JXX_NEW<jxx::lang::String>("EOF"));
+    if (c < 0) throw EOFException(jxx::NEW<jxx::lang::String>("EOF"));
     return c != 0;
 }
 
 jbyte DataInputStream::readByte() {
     jint c = in_->read();
-    if (c < 0) throw EOFException(JXX_NEW<jxx::lang::String>("EOF"));
+    if (c < 0) throw EOFException(jxx::NEW<jxx::lang::String>("EOF"));
     return (jbyte)c;
 }
 
 jint DataInputStream::readUnsignedByte() {
     jint c = in_->read();
-    if (c < 0) throw EOFException(JXX_NEW<jxx::lang::String>("EOF"));
+    if (c < 0) throw EOFException(jxx::NEW<jxx::lang::String>("EOF"));
     return c & 0xFF;
 }
 
@@ -101,7 +101,7 @@ jdouble DataInputStream::readDouble() {
 }
 
 jxx::Ptr<jxx::lang::String> DataInputStream::readLine() {
-    auto sb = JXX_NEW<jxx::lang::StringBuilder>();
+    auto sb = jxx::NEW<jxx::lang::StringBuilder>();
     jint c = in_->read();
     if (c < 0) return nullptr;
 
@@ -122,7 +122,7 @@ jxx::Ptr<jxx::lang::String> DataInputStream::readLine() {
 
 jxx::Ptr<jxx::lang::String> DataInputStream::readUTF() {
     jint utflen = readUnsignedShortBE_();
-    auto data = JXX_NEW<ByteArray>((std::uint32_t)utflen);
+    auto data = jxx::NEW<ByteArray>((std::uint32_t)utflen);
     readFullyRaw_(data, 0, utflen);
 
     std::u16string out;
@@ -136,26 +136,26 @@ jxx::Ptr<jxx::lang::String> DataInputStream::readUTF() {
             out.push_back((char16_t)a);
             ++i;
         } else if ((a & 0xE0) == 0xC0) {
-            if (i + 1 >= utflen) throw IOException(JXX_NEW<jxx::lang::String>("malformed UTF"));
+            if (i + 1 >= utflen) throw IOException(jxx::NEW<jxx::lang::String>("malformed UTF"));
             jint b = ((jint)(*data)[i + 1]) & 0x3F;
             jint ch = ((a & 0x1F) << 6) | b;
             out.push_back((char16_t)ch);
             i += 2;
         } else if ((a & 0xF0) == 0xE0) {
-            if (i + 2 >= utflen) throw IOException(JXX_NEW<jxx::lang::String>("malformed UTF"));
+            if (i + 2 >= utflen) throw IOException(jxx::NEW<jxx::lang::String>("malformed UTF"));
             jint b = ((jint)(*data)[i + 1]) & 0x3F;
             jint c = ((jint)(*data)[i + 2]) & 0x3F;
             jint ch = ((a & 0x0F) << 12) | (b << 6) | c;
             out.push_back((char16_t)ch);
             i += 3;
         } else {
-            throw IOException(JXX_NEW<jxx::lang::String>("malformed UTF"));
+            throw IOException(jxx::NEW<jxx::lang::String>("malformed UTF"));
         }
     }
 
-    auto ca = JXX_NEW<CharArray>((std::uint32_t)out.size());
+    auto ca = jxx::NEW<CharArray>((std::uint32_t)out.size());
     for (jint k = 0; k < (jint)out.size(); ++k) (*ca)[k] = (jchar)out[(std::size_t)k];
-    return JXX_NEW<jxx::lang::String>(ca);
+    return jxx::NEW<jxx::lang::String>(ca);
 }
 
 } // namespace jxx::io

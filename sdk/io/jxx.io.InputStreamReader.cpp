@@ -7,19 +7,19 @@ InputStreamReader::InputStreamReader(jxx::Ptr<InputStream> in)
 
 InputStreamReader::InputStreamReader(jxx::Ptr<InputStream> in, jxx::Ptr<jxx::lang::Charset> cs)
     : in_(std::move(in)), cs_(std::move(cs)) {
-    if (!in_) throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("in"));
-    if (!cs_) throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("charset"));
+    if (!in_) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("in"));
+    if (!cs_) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("charset"));
 }
 
 jbool InputStreamReader::refill_() {
     decoded_.clear();
     dpos_ = 0;
 
-    auto buf = JXX_NEW<ByteArray>(4096);
+    auto buf = jxx::NEW<ByteArray>(4096);
     jint r = in_->read(buf, 0, (jint)buf->length);
     if (r < 0) return false;
 
-    auto slice = JXX_NEW<ByteArray>((std::uint32_t)r);
+    auto slice = jxx::NEW<ByteArray>((std::uint32_t)r);
     for (jint i = 0; i < r; ++i) (*slice)[i] = (*buf)[i];
 
     auto s = cs_->decode(slice);

@@ -12,11 +12,11 @@ static inline std::string upper_ascii(std::string s) {
 }
 
 OutputStreamWriter::OutputStreamWriter(jxx::Ptr<OutputStream> out)
-    : OutputStreamWriter(std::move(out), JXX_NEW<jxx::lang::String>("UTF-8")) {}
+    : OutputStreamWriter(std::move(out), jxx::NEW<jxx::lang::String>("UTF-8")) {}
 
 OutputStreamWriter::OutputStreamWriter(jxx::Ptr<OutputStream> out, jxx::Ptr<jxx::lang::String> charsetName)
     : out_(std::move(out)) {
-    if (!out_) throw jxx::lang::NullPointerException(JXX_NEW<jxx::lang::String>("out"));
+    if (!out_) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("out"));
     enc_ = parseEncoding_(charsetName);
 }
 
@@ -32,17 +32,17 @@ OutputStreamWriter::Enc OutputStreamWriter::parseEncoding_(jxx::Ptr<jxx::lang::S
     if (n == "UTF-16LE" || n == "UTF16LE") return Enc::UTF16LE;
     if (n == "UTF-16" || n == "UTF16") return Enc::UTF16_BOM;
 
-    throw jxx::lang::IllegalArgumentException(JXX_NEW<jxx::lang::String>("Unsupported charset"));
+    throw jxx::lang::IllegalArgumentException(jxx::NEW<jxx::lang::String>("Unsupported charset"));
 }
 
 jxx::Ptr<jxx::lang::String> OutputStreamWriter::getEncoding() const {
     switch (enc_) {
-    case Enc::UTF8: return JXX_NEW<jxx::lang::String>("UTF-8");
-    case Enc::UTF16BE: return JXX_NEW<jxx::lang::String>("UTF-16BE");
-    case Enc::UTF16LE: return JXX_NEW<jxx::lang::String>("UTF-16LE");
-    case Enc::UTF16_BOM: return JXX_NEW<jxx::lang::String>("UTF-16");
+    case Enc::UTF8: return jxx::NEW<jxx::lang::String>("UTF-8");
+    case Enc::UTF16BE: return jxx::NEW<jxx::lang::String>("UTF-16BE");
+    case Enc::UTF16LE: return jxx::NEW<jxx::lang::String>("UTF-16LE");
+    case Enc::UTF16_BOM: return jxx::NEW<jxx::lang::String>("UTF-16");
     }
-    return JXX_NEW<jxx::lang::String>("UTF-8");
+    return jxx::NEW<jxx::lang::String>("UTF-8");
 }
 
 void OutputStreamWriter::writeBomIfNeeded_() {

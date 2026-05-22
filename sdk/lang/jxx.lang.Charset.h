@@ -14,14 +14,14 @@ public:
     virtual ~Charset() = default;
 
     static jxx::Ptr<Charset> defaultCharset();
-    static jxx::Ptr<Charset> forName(jxx::Ptr<String> name);
+    static jxx::Ptr<Charset> forName(const jxx::Ptr<String> name);
 
     jxx::Ptr<String> name() const;
 
-    jxx::Ptr<ByteArray> encode(jxx::Ptr<String> s) const;
-    jxx::Ptr<String> decode(jxx::Ptr<ByteArray> bytes) const;
+    ByteArray encode(const jxx::Ptr<String> s) const;
+    jxx::Ptr<String> decode(const ByteArray bytes) const;
 
-    jbool equals(jxx::Ptr<Object> o) const override;
+    jbool equals(const jxx::Ptr<Object> o) const override;
     jint hashCode() const override;
 
 private:

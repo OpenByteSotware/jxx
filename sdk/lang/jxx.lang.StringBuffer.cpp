@@ -17,9 +17,9 @@ namespace jxx::lang {
         return out;
     }
 
-    void StringBuffer::throwNPE_() { throw NullPointerException(JXX_NEW<String>("null")); }
-    void StringBuffer::throwSIOOBE_() { throw StringIndexOutOfBoundsException(JXX_NEW<String>("String index out of range")); }
-    void StringBuffer::throwIAE_(const char* msg) { throw IllegalArgumentException(JXX_NEW<String>(msg)); }
+    void StringBuffer::throwNPE_() { throw NullPointerException(jxx::NEW<String>("null")); }
+    void StringBuffer::throwSIOOBE_() { throw StringIndexOutOfBoundsException(jxx::NEW<String>("String index out of range")); }
+    void StringBuffer::throwIAE_(const char* msg) { throw IllegalArgumentException(jxx::NEW<String>(msg)); }
 
     jxx::Ptr<StringBuffer> StringBuffer::self_() {
         return this->getThis<StringBuffer>();
@@ -102,9 +102,9 @@ namespace jxx::lang {
 
     jxx::Ptr<jxx::lang::String> StringBuffer::toString() const {
         return this->synchronized([&]()->jxx::Ptr<jxx::lang::String> {
-            auto ca = JXX_NEW<CharArray>((std::uint32_t)value_.size());
+            auto ca = jxx::NEW<CharArray>((std::uint32_t)value_.size());
             for (jint i = 0; i < (jint)value_.size(); ++i) (*ca)[i] = (jchar)value_[(std::size_t)i];
-            return JXX_NEW<String>(ca);
+            return jxx::NEW<String>(ca);
             });
     }
 
@@ -131,7 +131,7 @@ namespace jxx::lang {
     }
 
     // ---- append overloads ----
-    jxx::Ptr<StringBuffer> StringBuffer::append(jbool b) { return append(JXX_NEW<String>(b ? "true" : "false")); }
+    jxx::Ptr<StringBuffer> StringBuffer::append(jbool b) { return append(jxx::NEW<String>(b ? "true" : "false")); }
 
     jxx::Ptr<Appendable> StringBuffer::append(jchar c) {
         this->synchronized([&] { value_.push_back((char16_t)c); });
@@ -144,7 +144,7 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<StringBuffer> StringBuffer::append(jxx::Ptr<CharArray> str) {
-        if (!str) return append(JXX_NEW<String>("null"));
+        if (!str) return append(jxx::NEW<String>("null"));
         return append(str, 0, (jint)str->length);
     }
 
@@ -158,20 +158,20 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<StringBuffer> StringBuffer::appendSB(jxx::Ptr<CharSequence> s) {
-        if (!s) return append(JXX_NEW<String>("null"));
+        if (!s) return append(jxx::NEW<String>("null"));
         this->synchronized([&] { appendUtf16_(toUtf16_(s)); });
         return self_();
     }
 
     jxx::Ptr<Appendable> StringBuffer::append(jxx::Ptr<CharSequence> s) {
-        if (!s) return append(JXX_NEW<String>("null"));
+        if (!s) return append(jxx::NEW<String>("null"));
         this->synchronized([&] { appendUtf16_(toUtf16_(s)); });
         return self_();
     }
 
     jxx::Ptr<Appendable> StringBuffer::append(jxx::Ptr<CharSequence> s, jint start, jint end) {
         this->synchronized([&] {
-            if (!s) s = JXX_NEW<String>("null");
+            if (!s) s = jxx::NEW<String>("null");
             if (start < 0 || end < start || end > s->length()) throwSIOOBE_();
             std::u16string sub;
             sub.reserve((std::size_t)(end - start));
@@ -183,7 +183,7 @@ namespace jxx::lang {
 
     jxx::Ptr<StringBuffer> StringBuffer::appendSB(jxx::Ptr<CharSequence> s, jint start, jint end) {
         this->synchronized([&] {
-            if (!s) s = JXX_NEW<String>("null");
+            if (!s) s = jxx::NEW<String>("null");
             if (start < 0 || end < start || end > s->length()) throwSIOOBE_();
             std::u16string sub;
             sub.reserve((std::size_t)(end - start));
@@ -195,37 +195,37 @@ namespace jxx::lang {
 
     jxx::Ptr<StringBuffer> StringBuffer::append(jdouble d) {
         std::ostringstream oss; oss.imbue(std::locale::classic()); oss << d;
-        return append(JXX_NEW<String>(oss.str().c_str()));
+        return append(jxx::NEW<String>(oss.str().c_str()));
     }
 
     jxx::Ptr<StringBuffer> StringBuffer::append(jfloat f) {
         std::ostringstream oss; oss.imbue(std::locale::classic()); oss << f;
-        return append(JXX_NEW<String>(oss.str().c_str()));
+        return append(jxx::NEW<String>(oss.str().c_str()));
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::append(jint i) { return append(JXX_NEW<String>(std::to_string(i).c_str())); }
-    jxx::Ptr<StringBuffer> StringBuffer::append(jlong lng) { return append(JXX_NEW<String>(std::to_string((long long)lng).c_str())); }
+    jxx::Ptr<StringBuffer> StringBuffer::append(jint i) { return append(jxx::NEW<String>(std::to_string(i).c_str())); }
+    jxx::Ptr<StringBuffer> StringBuffer::append(jlong lng) { return append(jxx::NEW<String>(std::to_string((long long)lng).c_str())); }
 
     jxx::Ptr<StringBuffer> StringBuffer::append(jxx::Ptr<Object> obj) {
-        if (!obj) return append(JXX_NEW<String>("null"));
+        if (!obj) return append(jxx::NEW<String>("null"));
         return append_(obj->toString());
     }
 
     jxx::Ptr<StringBuffer> StringBuffer::append_(jxx::Ptr<std::string> str) {
-        if (!str) return append(JXX_NEW<String>("null"));
+        if (!str) return append(jxx::NEW<String>("null"));
         return str->append(0, str);
     }
 
     jxx::Ptr<StringBuffer> StringBuffer::append(jxx::Ptr<String> str) {
         this->synchronized([&] {
-            if (!str) str = JXX_NEW<String>("null");
+            if (!str) str = jxx::NEW<String>("null");
             appendUtf16_(str->utf16());
             });
         return self_();
     }
 
     jxx::Ptr<StringBuffer> StringBuffer::append(jxx::Ptr<StringBuffer> sb) {
-        if (!sb) return append(JXX_NEW<String>("null"));
+        if (!sb) return append(jxx::NEW<String>("null"));
         return append_(sb->toString());
     }
 
@@ -328,7 +328,7 @@ namespace jxx::lang {
     jxx::Ptr<StringBuffer> StringBuffer::replace(jint start, jint end, jxx::Ptr<String> str) {
         this->synchronized([&] {
             if (start < 0 || start > end || end > (jint)value_.size()) throwSIOOBE_();
-            if (!str) str = JXX_NEW<String>("null");
+            if (!str) str = jxx::NEW<String>("null");
             value_.erase(value_.begin() + start, value_.begin() + end);
             insertUtf16_(start, str->utf16());
             });
@@ -352,7 +352,7 @@ namespace jxx::lang {
     }
 
     // ---- insert ----
-    jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, jbool b) { return insert(offset, JXX_NEW<String>(b ? "true" : "false")); }
+    jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, jbool b) { return insert(offset, jxx::NEW<String>(b ? "true" : "false")); }
 
     jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, jchar c) {
         this->synchronized([&] {
@@ -363,13 +363,13 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, jxx::Ptr<CharArray> str) {
-        if (!str) return insert(offset, JXX_NEW<String>("null"));
+        if (!str) return insert(offset, jxx::NEW<String>("null"));
         return insert(offset, str, 0, (jint)str->length);
     }
 
     jxx::Ptr<StringBuffer> StringBuffer::insert(jint index, jxx::Ptr<CharArray> str, jint offset, jint len) {
         this->synchronized([&] {
-            if (!str) { insertUtf16_(index, JXX_NEW<String>("null")->utf16()); return; }
+            if (!str) { insertUtf16_(index, jxx::NEW<String>("null")->utf16()); return; }
             if (offset < 0 || len < 0 || (std::uint32_t)(offset + len) > str->length) throwSIOOBE_();
             insertUtf16_(index, u16_from_char_array(str, offset, len));
             });
@@ -378,7 +378,7 @@ namespace jxx::lang {
 
     jxx::Ptr<StringBuffer> StringBuffer::insert(jint dstOffset, jxx::Ptr<CharSequence> s) {
         this->synchronized([&] {
-            if (!s) s = JXX_NEW<String>("null");
+            if (!s) s = jxx::NEW<String>("null");
             insertUtf16_(dstOffset, toUtf16_(s));
             });
         return self_();
@@ -386,7 +386,7 @@ namespace jxx::lang {
 
     jxx::Ptr<StringBuffer> StringBuffer::insert(jint dstOffset, jxx::Ptr<CharSequence> s, jint start, jint end) {
         this->synchronized([&] {
-            if (!s) s = JXX_NEW<String>("null");
+            if (!s) s = jxx::NEW<String>("null");
             if (start < 0 || end < start || end > s->length()) throwSIOOBE_();
             std::u16string sub;
             sub.reserve((std::size_t)(end - start));
@@ -398,25 +398,25 @@ namespace jxx::lang {
 
     jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, jdouble d) {
         std::ostringstream oss; oss.imbue(std::locale::classic()); oss << d;
-        return insert(offset, JXX_NEW<String>(oss.str().c_str()));
+        return insert(offset, jxx::NEW<String>(oss.str().c_str()));
     }
 
     jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, jfloat f) {
         std::ostringstream oss; oss.imbue(std::locale::classic()); oss << f;
-        return insert(offset, JXX_NEW<String>(oss.str().c_str()));
+        return insert(offset, jxx::NEW<String>(oss.str().c_str()));
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, jint i) { return insert(offset, JXX_NEW<String>(std::to_string(i).c_str())); }
-    jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, jlong l) { return insert(offset, JXX_NEW<String>(std::to_string((long long)l).c_str())); }
+    jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, jint i) { return insert(offset, jxx::NEW<String>(std::to_string(i).c_str())); }
+    jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, jlong l) { return insert(offset, jxx::NEW<String>(std::to_string((long long)l).c_str())); }
 
     jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, jxx::Ptr<Object> obj) {
-        if (!obj) return insert(offset, JXX_NEW<String>("null"));
+        if (!obj) return insert(offset, jxx::NEW<String>("null"));
         return insert_(offset, obj->toString());
     }
 
     jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, jxx::Ptr<String> str) {
         this->synchronized([&] {
-            if (!str) str = JXX_NEW<String>("null");
+            if (!str) str = jxx::NEW<String>("null");
             insertUtf16_(offset, str->utf16());
             });
         return self_();
@@ -471,9 +471,9 @@ namespace jxx::lang {
         return this->synchronized([&]()->jxx::Ptr<String> {
             if (start < 0 || end < start || end >(jint)value_.size()) throwSIOOBE_();
             jint n = end - start;
-            auto ca = JXX_NEW<CharArray>((std::uint32_t)n);
+            auto ca = jxx::NEW<CharArray>((std::uint32_t)n);
             for (jint i = 0; i < n; ++i) (*ca)[i] = (jchar)value_[(std::size_t)(start + i)];
-            return JXX_NEW<String>(ca);
+            return jxx::NEW<String>(ca);
             });
     }
 

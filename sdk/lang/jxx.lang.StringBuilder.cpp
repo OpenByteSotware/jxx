@@ -17,9 +17,9 @@ namespace jxx::lang {
         return out;
     }
 
-    void StringBuilder::throwNPE_() { throw NullPointerException(JXX_NEW<String>("null")); }
-    void StringBuilder::throwSIOOBE_() { throw StringIndexOutOfBoundsException(JXX_NEW<String>("String index out of range")); }
-    void StringBuilder::throwIAE_(const char* msg) { throw IllegalArgumentException(JXX_NEW<String>(msg)); }
+    void StringBuilder::throwNPE_() { throw NullPointerException(jxx::NEW<String>("null")); }
+    void StringBuilder::throwSIOOBE_() { throw StringIndexOutOfBoundsException(jxx::NEW<String>("String index out of range")); }
+    void StringBuilder::throwIAE_(const char* msg) { throw IllegalArgumentException(jxx::NEW<String>(msg)); }
 
     jxx::Ptr<StringBuilder> StringBuilder::self_() {
         return std::static_pointer_cast<StringBuilder>(this->thisPtr);
@@ -90,9 +90,9 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<String> StringBuilder::toString() const {
-        auto ca = JXX_NEW<CharArray>((std::uint32_t)value_.size());
+        auto ca = jxx::NEW<CharArray>((std::uint32_t)value_.size());
         for (jint i = 0; i < (jint)value_.size(); ++i) (*ca)[i] = (jchar)value_[(std::size_t)i];
-        return JXX_NEW<String>(ca);
+        return jxx::NEW<String>(ca);
     }
 
     // ---- code points ----
@@ -184,30 +184,30 @@ namespace jxx::lang {
     }
 
     // ---- append overloads ----
-    jxx::Ptr<StringBuilder> StringBuilder::append(jbool b) { return append(JXX_NEW<String>(b ? "true" : "false")); }
+    jxx::Ptr<StringBuilder> StringBuilder::append(jbool b) { return append(jxx::NEW<String>(b ? "true" : "false")); }
     jxx::Ptr<Appendable> StringBuilder::append(jchar c) { value_.push_back((char16_t)c); return self_(); }
     jxx::Ptr<StringBuilder> StringBuilder::appendSB(jchar c) { value_.push_back((char16_t)c); return self_(); }
 
     jxx::Ptr<StringBuilder> StringBuilder::append(jxx::Ptr<CharArray> str) {
-        if (!str) return append(JXX_NEW<String>("null"));
+        if (!str) return append(jxx::NEW<String>("null"));
         return append(str, 0, (jint)str->length);
     }
 
     jxx::Ptr<StringBuilder> StringBuilder::append(jxx::Ptr<CharArray> str, jint offset, jint len) {
-        if (!str) return append(JXX_NEW<String>("null"));
+        if (!str) return append(jxx::NEW<String>("null"));
         if (offset < 0 || len < 0 || (std::uint32_t)(offset + len) > str->length) throwSIOOBE_();
         appendUtf16_(u16_from_char_array(str, offset, len));
         return self_();
     }
 
     jxx::Ptr<StringBuilder> StringBuilder::append(jxx::Ptr<CharSequence> s) {
-        if (!s) return append(JXX_NEW<String>("null"));
+        if (!s) return append(jxx::NEW<String>("null"));
         appendUtf16_(toUtf16_(s));
         return self_();
     }
 
     jxx::Ptr<StringBuilder> StringBuilder::append(jxx::Ptr<CharSequence> s, jint start, jint end) {
-        if (!s) s = JXX_NEW<String>("null");
+        if (!s) s = jxx::NEW<String>("null");
         if (start < 0 || end < start || end > s->length()) throwSIOOBE_();
         std::u16string sub;
         sub.reserve((std::size_t)(end - start));
@@ -218,26 +218,26 @@ namespace jxx::lang {
 
     jxx::Ptr<StringBuilder> StringBuilder::append(jdouble d) {
         std::ostringstream oss; oss.imbue(std::locale::classic()); oss << d;
-        return append(JXX_NEW<String>(oss.str().c_str()));
+        return append(jxx::NEW<String>(oss.str().c_str()));
     }
     jxx::Ptr<StringBuilder> StringBuilder::append(jfloat f) {
         std::ostringstream oss; oss.imbue(std::locale::classic()); oss << f;
-        return append(JXX_NEW<String>(oss.str().c_str()));
+        return append(jxx::NEW<String>(oss.str().c_str()));
     }
-    jxx::Ptr<StringBuilder> StringBuilder::append(jint i) { return append(JXX_NEW<String>(std::to_string(i).c_str())); }
-    jxx::Ptr<StringBuilder> StringBuilder::append(jlong lng) { return append(JXX_NEW<String>(std::to_string((long long)lng).c_str())); }
+    jxx::Ptr<StringBuilder> StringBuilder::append(jint i) { return append(jxx::NEW<String>(std::to_string(i).c_str())); }
+    jxx::Ptr<StringBuilder> StringBuilder::append(jlong lng) { return append(jxx::NEW<String>(std::to_string((long long)lng).c_str())); }
 
     jxx::Ptr<StringBuilder> StringBuilder::append(jxx::Ptr<Object> obj) {
-        if (!obj) return append(JXX_NEW<String>("null"));
+        if (!obj) return append(jxx::NEW<String>("null"));
         return append(obj->toString());
     }
     jxx::Ptr<StringBuilder> StringBuilder::append(jxx::Ptr<String> str) {
-        if (!str) str = JXX_NEW<String>("null");
+        if (!str) str = jxx::NEW<String>("null");
         appendUtf16_(str->utf16());
         return self_();
     }
     jxx::Ptr<StringBuilder> StringBuilder::append(jxx::Ptr<StringBuffer> sb) {
-        if (!sb) return append(JXX_NEW<String>("null"));
+        if (!sb) return append(jxx::NEW<String>("null"));
         return append(sb->toString());
     }
 
@@ -258,7 +258,7 @@ namespace jxx::lang {
 
     jxx::Ptr<StringBuilder> StringBuilder::replace(jint start, jint end, jxx::Ptr<String> str) {
         if (start < 0 || start > end || end > (jint)value_.size()) throwSIOOBE_();
-        if (!str) str = JXX_NEW<String>("null");
+        if (!str) str = jxx::NEW<String>("null");
         value_.erase(value_.begin() + start, value_.begin() + end);
         insertUtf16_(start, str->utf16());
         return self_();
@@ -279,7 +279,7 @@ namespace jxx::lang {
     }
 
     // ---- insert overloads ----
-    jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jbool b) { return insert(offset, JXX_NEW<String>(b ? "true" : "false")); }
+    jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jbool b) { return insert(offset, jxx::NEW<String>(b ? "true" : "false")); }
 
     jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jchar c) {
         if (offset < 0 || offset >(jint)value_.size()) throwSIOOBE_();
@@ -288,25 +288,25 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jxx::Ptr<CharArray> str) {
-        if (!str) return insert(offset, JXX_NEW<String>("null"));
+        if (!str) return insert(offset, jxx::NEW<String>("null"));
         return insert(offset, str, 0, (jint)str->length);
     }
 
     jxx::Ptr<StringBuilder> StringBuilder::insert(jint index, jxx::Ptr<CharArray> str, jint offset, jint len) {
-        if (!str) return insert(index, JXX_NEW<String>("null"));
+        if (!str) return insert(index, jxx::NEW<String>("null"));
         if (offset < 0 || len < 0 || (std::uint32_t)(offset + len) > str->length) throwSIOOBE_();
         insertUtf16_(index, u16_from_char_array(str, offset, len));
         return self_();
     }
 
     jxx::Ptr<StringBuilder> StringBuilder::insert(jint dstOffset, jxx::Ptr<CharSequence> s) {
-        if (!s) s = JXX_NEW<String>("null");
+        if (!s) s = jxx::NEW<String>("null");
         insertUtf16_(dstOffset, toUtf16_(s));
         return self_();
     }
 
     jxx::Ptr<StringBuilder> StringBuilder::insert(jint dstOffset, jxx::Ptr<CharSequence> s, jint start, jint end) {
-        if (!s) s = JXX_NEW<String>("null");
+        if (!s) s = jxx::NEW<String>("null");
         if (start < 0 || end < start || end > s->length()) throwSIOOBE_();
         std::u16string sub;
         sub.reserve((std::size_t)(end - start));
@@ -317,22 +317,22 @@ namespace jxx::lang {
 
     jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jdouble d) {
         std::ostringstream oss; oss.imbue(std::locale::classic()); oss << d;
-        return insert(offset, JXX_NEW<String>(oss.str().c_str()));
+        return insert(offset, jxx::NEW<String>(oss.str().c_str()));
     }
     jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jfloat f) {
         std::ostringstream oss; oss.imbue(std::locale::classic()); oss << f;
-        return insert(offset, JXX_NEW<String>(oss.str().c_str()));
+        return insert(offset, jxx::NEW<String>(oss.str().c_str()));
     }
-    jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jint i) { return insert(offset, JXX_NEW<String>(std::to_string(i).c_str())); }
-    jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jlong l) { return insert(offset, JXX_NEW<String>(std::to_string((long long)l).c_str())); }
+    jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jint i) { return insert(offset, jxx::NEW<String>(std::to_string(i).c_str())); }
+    jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jlong l) { return insert(offset, jxx::NEW<String>(std::to_string((long long)l).c_str())); }
 
     jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jxx::Ptr<Object> obj) {
-        if (!obj) return insert(offset, JXX_NEW<String>("null"));
+        if (!obj) return insert(offset, jxx::NEW<String>("null"));
         return insert(offset, obj->toString());
     }
 
     jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jxx::Ptr<String> str) {
-        if (!str) str = JXX_NEW<String>("null");
+        if (!str) str = jxx::NEW<String>("null");
         insertUtf16_(offset, str->utf16());
         return self_();
     }
@@ -379,9 +379,9 @@ namespace jxx::lang {
     jxx::Ptr<String> StringBuilder::substring(jint start, jint end) const {
         if (start < 0 || end < start || end >(jint)value_.size()) throwSIOOBE_();
         jint n = end - start;
-        auto ca = JXX_NEW<CharArray>((std::uint32_t)n);
+        auto ca = jxx::NEW<CharArray>((std::uint32_t)n);
         for (jint i = 0; i < n; ++i) (*ca)[i] = (jchar)value_[(std::size_t)(start + i)];
-        return JXX_NEW<String>(ca);
+        return jxx::NEW<String>(ca);
     }
 
 } // namespace jxx::lang

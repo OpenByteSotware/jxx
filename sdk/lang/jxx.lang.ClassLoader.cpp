@@ -17,7 +17,7 @@ namespace jxx::lang {
 
     jxx::Ptr<jxx::net::URL> ClassLoader::VectorUrlEnumeration::nextElement() {
         if (idx_ >= items_.size()) {
-            throw jxx::util::NoSuchElementException(JXX_NEW<String>("nextElement"));
+            throw jxx::util::NoSuchElementException(jxx::NEW<String>("nextElement"));
         }
         return items_[idx_++];
     }
@@ -35,7 +35,7 @@ namespace jxx::lang {
     jxx::Ptr<ClassLoader> ClassLoader::getSystemClassLoader() {
         std::lock_guard<std::mutex> lk(systemMutex_);
         if (auto s = systemLoader_.lock()) return s;
-        auto sys = JXX_NEW<ClassLoader>(jxx::Ptr<ClassLoader>(nullptr));
+        auto sys = jxx::NEW<ClassLoader>(jxx::Ptr<ClassLoader>(nullptr));
         systemLoader_ = sys;
         return sys;
     }
@@ -51,7 +51,7 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<Object> ClassLoader::getClassLoadingLock(jxx::Ptr<String> className) {
-        if (!className) throw NullPointerException(JXX_NEW<String>("className"));
+        if (!className) throw NullPointerException(jxx::NEW<String>("className"));
         const std::string n = className->utf8();
 
         std::lock_guard<std::mutex> lk(lockMapMutex_);
@@ -59,7 +59,7 @@ namespace jxx::lang {
         if (it != loadLocks_.end()) {
             if (auto existing = it->second.lock()) return existing;
         }
-        auto lockObj = JXX_NEW<LoadingLock>();
+        auto lockObj = jxx::NEW<LoadingLock>();
         loadLocks_[n] = lockObj;
         return lockObj;
     }
@@ -69,7 +69,7 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<ClassAny> ClassLoader::loadClass(jxx::Ptr<String> name, jbool resolve) {
-        if (!name) throw NullPointerException(JXX_NEW<String>("name"));
+        if (!name) throw NullPointerException(jxx::NEW<String>("name"));
         const std::string n = name->utf8();
 
         auto lockObj = getClassLoadingLock(name);
@@ -118,7 +118,7 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<ClassAny> ClassLoader::findLoadedClass(jxx::Ptr<String> name) {
-        if (!name) throw NullPointerException(JXX_NEW<String>("name"));
+        if (!name) throw NullPointerException(jxx::NEW<String>("name"));
         const std::string n = name->utf8();
         std::lock_guard<std::mutex> lk(loadedMutex_);
         auto it = loadedByName_.find(n);
@@ -139,30 +139,30 @@ namespace jxx::lang {
     }
 
     void ClassLoader::addResource(jxx::Ptr<String> name, jxx::Ptr<ByteArray> bytes) {
-        if (!name) throw NullPointerException(JXX_NEW<String>("name"));
+        if (!name) throw NullPointerException(jxx::NEW<String>("name"));
         const std::string n = name->utf8();
         std::lock_guard<std::mutex> lk(resourceMutex_);
         resources_[n] = bytes;
     }
 
     jxx::Ptr<jxx::net::URL> ClassLoader::findResource(jxx::Ptr<String> name) {
-        if (!name) throw NullPointerException(JXX_NEW<String>("name"));
+        if (!name) throw NullPointerException(jxx::NEW<String>("name"));
         const std::string n = name->utf8();
         std::lock_guard<std::mutex> lk(resourceMutex_);
         if (resources_.find(n) == resources_.end()) return nullptr;
         std::string spec = "jxxres://";
         spec += n;
-        return JXX_NEW<jxx::net::URL>(JXX_NEW<String>(spec.c_str()));
+        return jxx::NEW<jxx::net::URL>(jxx::NEW<String>(spec.c_str()));
     }
 
     jxx::Ptr<jxx::util::Enumeration<jxx::Ptr<jxx::net::URL>>> ClassLoader::findResources(jxx::Ptr<String> name) {
         std::vector<jxx::Ptr<jxx::net::URL>> v;
         if (auto u = findResource(name)) v.push_back(u);
-        return JXX_NEW<VectorUrlEnumeration>(std::move(v));
+        return jxx::NEW<VectorUrlEnumeration>(std::move(v));
     }
 
     jxx::Ptr<jxx::net::URL> ClassLoader::getResource(jxx::Ptr<String> name) {
-        if (!name) throw NullPointerException(JXX_NEW<String>("name"));
+        if (!name) throw NullPointerException(jxx::NEW<String>("name"));
         if (parent_) {
             if (auto u = parent_->getResource(name)) return u;
         }
@@ -170,7 +170,7 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<jxx::util::Enumeration<jxx::Ptr<jxx::net::URL>>> ClassLoader::getResources(jxx::Ptr<String> name) {
-        if (!name) throw NullPointerException(JXX_NEW<String>("name"));
+        if (!name) throw NullPointerException(jxx::NEW<String>("name"));
 
         std::vector<jxx::Ptr<jxx::net::URL>> all;
         if (parent_) {
@@ -180,11 +180,11 @@ namespace jxx::lang {
         auto le = findResources(name);
         if (le) while (le->hasMoreElements()) all.push_back(le->nextElement());
 
-        return JXX_NEW<VectorUrlEnumeration>(std::move(all));
+        return jxx::NEW<VectorUrlEnumeration>(std::move(all));
     }
 
     jxx::Ptr<jxx::io::InputStream> ClassLoader::getResourceAsStream(jxx::Ptr<String> name) {
-        if (!name) throw NullPointerException(JXX_NEW<String>("name"));
+        if (!name) throw NullPointerException(jxx::NEW<String>("name"));
         if (parent_) {
             if (auto s = parent_->getResourceAsStream(name)) return s;
         }
@@ -192,25 +192,25 @@ namespace jxx::lang {
         std::lock_guard<std::mutex> lk(resourceMutex_);
         auto it = resources_.find(n);
         if (it == resources_.end()) return nullptr;
-        return JXX_NEW<jxx::io::ByteArrayInputStream>(it->second);
+        return jxx::NEW<jxx::io::ByteArrayInputStream>(it->second);
     }
 
     // Packages
     jxx::Ptr<Package> ClassLoader::definePackage(jxx::Ptr<String> name) {
-        if (!name) throw NullPointerException(JXX_NEW<String>("name"));
+        if (!name) throw NullPointerException(jxx::NEW<String>("name"));
         const std::string n = name->utf8();
 
         std::lock_guard<std::mutex> lk(pkgMutex_);
         if (auto it = packages_.find(n); it != packages_.end()) {
             if (auto p = it->second.lock()) return p;
         }
-        auto p = JXX_NEW<Package>(name);
+        auto p = jxx::NEW<Package>(name);
         packages_[n] = p;
         return p;
     }
 
     jxx::Ptr<Package> ClassLoader::getPackage(jxx::Ptr<String> name) {
-        if (!name) throw NullPointerException(JXX_NEW<String>("name"));
+        if (!name) throw NullPointerException(jxx::NEW<String>("name"));
         const std::string n = name->utf8();
         std::lock_guard<std::mutex> lk(pkgMutex_);
         auto it = packages_.find(n);
@@ -222,7 +222,7 @@ namespace jxx::lang {
         std::lock_guard<std::mutex> lk(pkgMutex_);
         std::vector<jxx::Ptr<Package>> alive;
         for (auto& kv : packages_) if (auto p = kv.second.lock()) alive.push_back(p);
-        auto arr = JXX_NEW<JxxArray<jxx::Ptr<Package>, 1>>((std::uint32_t)alive.size());
+        auto arr = jxx::NEW<JxxArray<jxx::Ptr<Package>, 1>>((std::uint32_t)alive.size());
         for (std::uint32_t i = 0; i < (std::uint32_t)alive.size(); ++i) (*arr)[(jint)i] = alive[i];
         return arr;
     }
