@@ -7,9 +7,9 @@ using namespace std;
 using namespace jxx::lang;
 
 namespace jxx { namespace io {
-shared_ptr<ByteArray> ModifiedUTF::encode(const std::u16string& s){
+shared_ptr<jxx::lang::ByteArray> ModifiedUTF::encode(const std::u16string& s){
 	std::vector<jbyte> out;
-	//ByteArray outArray;
+	//jxx::lang::ByteArray outArray;
 	out.reserve(s.size()*3);
 	for(char16_t ch: s){ uint16_t c=(uint16_t)ch; 
 	if(c>=1 && c<=0x7F){ out.push_back((uint8_t)c);} 
@@ -24,7 +24,7 @@ shared_ptr<ByteArray> ModifiedUTF::encode(const std::u16string& s){
 	
 	return jxx::NEW<jxx::lang::ByteArrayType>(out.data());
 }
-std::u16string ModifiedUTF::decode(const ByteArray& bytes){
+std::u16string ModifiedUTF::decode(const jxx::lang::ByteArray& bytes){
 	std::u16string out; 
 size_t i=0; while(i<bytes.size()){ uint8_t b=bytes[i++]; if((b&0x80)==0){ out.push_back((char16_t)b);} 
 else if((b&0xE0)==0xC0){ if(i>=bytes.size()) throw UTFDataFormatException("Invalid modified UTF-8"); uint8_t b2=bytes[i++]; 

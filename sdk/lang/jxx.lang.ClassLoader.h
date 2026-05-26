@@ -87,8 +87,8 @@ protected:
     virtual jxx::Ptr<ClassAny> findLoadedClass(jxx::Ptr<String> name);
 
     // Bytecode defineClass - unsupported by default (override if you build a bytecode pipeline)
-    virtual jxx::Ptr<ClassAny> defineClass(jxx::Ptr<String> name, jxx::Ptr<ByteArray> b, jint off, jint len);
-    virtual jxx::Ptr<ClassAny> defineClass(jxx::Ptr<ByteArray> b, jint off, jint len);
+    virtual jxx::Ptr<ClassAny> defineClass(jxx::Ptr<String> name, jxx::Ptr<jxx::lang::ByteArray> b, jint off, jint len);
+    virtual jxx::Ptr<ClassAny> defineClass(jxx::Ptr<jxx::lang::ByteArray> b, jint off, jint len);
 
     // Resource hooks
     virtual jxx::Ptr<jxx::net::URL> findResource(jxx::Ptr<String> name);
@@ -110,7 +110,7 @@ protected:
     virtual jxx::Ptr<String> findLibrary(jxx::Ptr<String> libname);
 
     // JXX-only: in-memory resource store
-    void addResource(jxx::Ptr<String> name, jxx::Ptr<ByteArray> bytes);
+    void addResource(jxx::Ptr<String> name, jxx::Ptr<jxx::lang::ByteArray> bytes);
 
 private:
     jxx::Ptr<ClassLoader> parent_;
@@ -125,7 +125,7 @@ private:
 
     // resource store: name -> bytes
     mutable std::mutex resourceMutex_;
-    std::unordered_map<std::string, jxx::Ptr<ByteArray>> resources_;
+    std::unordered_map<std::string, jxx::Ptr<jxx::lang::ByteArray>> resources_;
 
     // assertion status
     jbool defaultAssertionStatus_ = false;

@@ -19,7 +19,7 @@ public:
     void connect(jxx::Ptr<PipedInputStream> snk);
 
     void write(jxx::lang::jint b) override;
-    void write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) override;
+    void write(jxx::Ptr<jxx::lang::ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) override;
 
     void flush() override;
     void close() override;

@@ -11,17 +11,17 @@ public:
     explicit ByteArrayOutputStream(jxx::lang::jint size);
 
     void write(jxx::lang::jint b) override;
-    void write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) override;
+    void write(jxx::Ptr<jxx::lang::ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) override;
 
     void reset();
     jxx::lang::jint size() const;
-    jxx::Ptr<ByteArray> toByteArray() const;
+    jxx::Ptr<jxx::lang::ByteArray> toByteArray() const;
     void writeTo(jxx::Ptr<OutputStream> out) const;
 
     void close() override;
 
 private:
-    jxx::Ptr<ByteArray> buf_;
+    jxx::Ptr<jxx::lang::ByteArray> buf_;
     jxx::lang::jint count_ = 0;
     void ensureCapacity_(jxx::lang::jint minCapacity);
 };

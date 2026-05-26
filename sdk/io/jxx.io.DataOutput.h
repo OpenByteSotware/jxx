@@ -8,8 +8,8 @@ class DataOutput {
 public:
     virtual ~DataOutput() = default;
     virtual void write(jint b) = 0;
-    virtual void write(const ByteArray& b) = 0;
-    virtual void write(const ByteArray& b, int off, int len) = 0;
+    virtual void write(const jxx::lang::ByteArray& b) = 0;
+    virtual void write(const jxx::lang::ByteArray& b, int off, int len) = 0;
     virtual void writeBoolean(bool v) = 0;
     virtual void writeByte(jbyte v) = 0;
     virtual void writeShort(jshort v) = 0;

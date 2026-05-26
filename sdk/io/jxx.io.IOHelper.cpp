@@ -20,7 +20,7 @@ namespace jxx::io {
         }
     }
 
-    void IOHelper::checkBounds_(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
+    void IOHelper::checkBounds_(jxx::Ptr<jxx::lang::ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
         if (!b) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("b"));
         if (off < 0 || len < 0 || (std::uint32_t)(off + len) > b->length) {
             throw jxx::lang::IndexOutOfBoundsException(jxx::NEW<jxx::lang::String>("off/len"));

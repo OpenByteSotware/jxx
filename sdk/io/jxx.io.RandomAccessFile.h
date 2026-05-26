@@ -16,8 +16,8 @@ std::fstream fs; public:
     void close() override; jxx::lang::jlong getFilePointer(); 
     void seek(jxx::lang::jlong pos); jxx::lang::jlong length(); 
     void setLength(jxx::lang::jlong newLen);
-    void write(int b) override; void write(const ByteArray& b) override; 
-    void write(const ByteArray& b, int off, int len) override; 
+    void write(int b) override; void write(const jxx::lang::ByteArray& b) override; 
+    void write(const jxx::lang::ByteArray& b, int off, int len) override; 
     void writeBoolean(bool v) override;
     void writeByte(jbyte v) override; 
     void writeShort(jshort v) override;
@@ -25,8 +25,8 @@ std::fstream fs; public:
     void writeInt(int v) override; void writeLong(jxx::lang::jlong v) override; 
     void writeFloat(float v) override; void writeDouble(double v) override; 
     void writeUTF(const std::u16string& s) override; 
-    void readFully(ByteArray& b) override; 
-    void readFully(ByteArray& b, int off, int len) override; 
+    void readFully(jxx::lang::ByteArray& b) override; 
+    void readFully(jxx::lang::ByteArray& b, int off, int len) override; 
     jint skipBytes(jint n) override; 
     jbool readBoolean() override; jxx::lang::jbyte readByte() override; 
     jshort readShort() override; 

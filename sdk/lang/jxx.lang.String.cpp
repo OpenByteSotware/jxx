@@ -139,9 +139,9 @@ namespace jxx::lang {
     }
 
     // byte[] ctors use Charset (Java default charset)
-    String::String(const ByteArray bytes) : String(bytes, 0, bytes ? (jint)bytes->length : 0) {}
+    String::String(const jxx::lang::ByteArray bytes) : String(bytes, 0, bytes ? (jint)bytes->length : 0) {}
 
-    String::String(const ByteArray bytes, jint offset, jint length) {
+    String::String(const jxx::lang::ByteArray bytes, jint offset, jint length) {
         if (!bytes) throwNPE_();
         if (offset < 0 || length < 0 || (std::uint32_t)(offset + length) > bytes->length) throwSIOOBE_();
 
@@ -152,13 +152,13 @@ namespace jxx::lang {
         value_ = cs->decode(slice)->utf16();
     }
 
-    String::String(const ByteArray bytes, jxx::Ptr<String> charsetName) {
+    String::String(const jxx::lang::ByteArray bytes, jxx::Ptr<String> charsetName) {
         if (!bytes || !charsetName) throwNPE_();
         auto cs = Charset::forName(charsetName);
         value_ = cs->decode(bytes)->utf16();
     }
 
-    String::String(const ByteArray bytes, jint offset, jint length, jxx::Ptr<String> charsetName) {
+    String::String(const jxx::lang::ByteArray bytes, jint offset, jint length, jxx::Ptr<String> charsetName) {
         if (!bytes || !charsetName) throwNPE_();
         if (offset < 0 || length < 0 || (std::uint32_t)(offset + length) > bytes->length) throwSIOOBE_();
 
@@ -169,12 +169,12 @@ namespace jxx::lang {
         value_ = cs->decode(slice)->utf16();
     }
 
-    String::String(const ByteArray bytes, jxx::Ptr<Charset> charset) {
+    String::String(const jxx::lang::ByteArray bytes, jxx::Ptr<Charset> charset) {
         if (!bytes || !charset) throwNPE_();
         value_ = charset->decode(bytes)->utf16();
     }
 
-    String::String(const ByteArray bytes, jint offset, jint length, jxx::Ptr<Charset> charset) {
+    String::String(const jxx::lang::ByteArray bytes, jint offset, jint length, jxx::Ptr<Charset> charset) {
         if (!bytes || !charset) throwNPE_();
         if (offset < 0 || length < 0 || (std::uint32_t)(offset + length) > bytes->length) throwSIOOBE_();
 
@@ -185,9 +185,9 @@ namespace jxx::lang {
     }
 
     // deprecated hibyte constructors
-    String::String(const ByteArray ascii, jint hibyte) : String(ascii, hibyte, 0, ascii ? (jint)ascii->length : 0) {}
+    String::String(const jxx::lang::ByteArray ascii, jint hibyte) : String(ascii, hibyte, 0, ascii ? (jint)ascii->length : 0) {}
 
-    String::String(const ByteArray ascii, jint hibyte, jint offset, jint count) {
+    String::String(const jxx::lang::ByteArray ascii, jint hibyte, jint offset, jint count) {
         if (!ascii) throwNPE_();
         if (offset < 0 || count < 0 || (std::uint32_t)(offset + count) > ascii->length) throwSIOOBE_();
         value_.resize((size_t)count);
@@ -334,7 +334,7 @@ namespace jxx::lang {
         for (jint i = 0; i < (srcEnd - srcBegin); ++i) (*dst)[dstBegin + i] = (jchar)value_[(size_t)(srcBegin + i)];
     }
 
-    void String::getBytes(jint srcBegin, jint srcEnd, const ByteArray dst, jint dstBegin) const {
+    void String::getBytes(jint srcBegin, jint srcEnd, const jxx::lang::ByteArray dst, jint dstBegin) const {
         if (!dst) throwNPE_();
         if (srcBegin < 0 || srcEnd < srcBegin || srcEnd >(jint)value_.size()) throwSIOOBE_();
         if (dstBegin < 0) throwSIOOBE_();
@@ -342,18 +342,18 @@ namespace jxx::lang {
         for (jint i = 0; i < (srcEnd - srcBegin); ++i) (*dst)[dstBegin + i] = (jbyte)(value_[(size_t)(srcBegin + i)] & 0xFF);
     }
 
-    ByteArray String::getBytes() const {
+    jxx::lang::ByteArray String::getBytes() const {
         auto cs = Charset::defaultCharset();
         return cs->encode(std::static_pointer_cast<String>(this->thisPtr));
     }
 
-    ByteArray String::getBytes(jxx::Ptr<String> charsetName) const {
+    jxx::lang::ByteArray String::getBytes(jxx::Ptr<String> charsetName) const {
         if (!charsetName) throwNPE_();
         auto cs = Charset::forName(charsetName);
         return cs->encode(std::static_pointer_cast<String>(this->thisPtr));
     }
 
-    ByteArray String::getBytes(jxx::Ptr<Charset> charset) const {
+    jxx::lang::ByteArray String::getBytes(jxx::Ptr<Charset> charset) const {
         if (!charset) throwNPE_();
         return charset->encode(std::static_pointer_cast<String>(this->thisPtr));
     }

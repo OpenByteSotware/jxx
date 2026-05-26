@@ -14,7 +14,7 @@ public:
     explicit FileInputStream(jxx::Ptr<jxx::lang::String> path);
 
     jint read() override;
-    jint read(jxx::Ptr<ByteArray> b, jint off, jint len) override;
+    jint read(jxx::Ptr<jxx::lang::ByteArray> b, jint off, jint len) override;
 
     jint available() override;
     void close() override;

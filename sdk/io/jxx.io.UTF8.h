@@ -7,6 +7,6 @@
 namespace jxx { namespace io {
 class UTF8 {
 public:
-	static shared_ptr<ByteArray> encode(const std::u16string& s);
-	static std::u16string decode(const ByteArray& bytes); };
+	static shared_ptr<jxx::lang::ByteArray> encode(const std::u16string& s);
+	static std::u16string decode(const jxx::lang::ByteArray& bytes); };
 }}

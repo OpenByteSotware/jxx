@@ -47,7 +47,7 @@ void PipedInputStream::receive_(jxx::lang::jint b) {
     notEmpty_.notify_all();
 }
 
-void PipedInputStream::receive_(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
+void PipedInputStream::receive_(jxx::Ptr<jxx::lang::ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
     InputStream::checkBounds_(b, off, len);
     for (jxx::lang::jint i = 0; i < len; ++i) {
         receive_(((jxx::lang::jint)(*b)[off + i]) & 0xFF);
@@ -79,7 +79,7 @@ jxx::lang::jint PipedInputStream::read() {
     return ret;
 }
 
-jxx::lang::jint PipedInputStream::read(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
+jxx::lang::jint PipedInputStream::read(jxx::Ptr<jxx::lang::ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
     InputStream::checkBounds_(b, off, len);
     if (len == 0) return 0;
 

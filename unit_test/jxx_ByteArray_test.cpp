@@ -47,7 +47,7 @@ public:
 TEST_F(ByteArrayTest, RandomJaggedStressTest) {
    
     const int maxDepth = 3; // e.g., byte[][][]
-    ByteArray arr(this->randomSize()); // random first dimension
+    jxx::lang::ByteArray arr(this->randomSize()); // random first dimension
 
     allocateJagged(arr[0], 0, maxDepth);
 

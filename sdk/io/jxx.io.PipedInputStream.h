@@ -25,7 +25,7 @@ public:
     void connect(jxx::Ptr<PipedOutputStream> src);
 
     jxx::lang::jint read() override;
-    jxx::lang::jint read(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) override;
+    jxx::lang::jint read(jxx::Ptr<jxx::lang::ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) override;
 
     jxx::lang::jint available() override;
     void close() override;
@@ -35,7 +35,7 @@ private:
     friend class PipedOutputStream;
 
     void receive_(jxx::lang::jint b);
-    void receive_(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len);
+    void receive_(jxx::Ptr<jxx::lang::ByteArray> b, jxx::lang::jint off, jxx::lang::jint len);
     void receivedLast_();
 
     void initPipe_(jxx::lang::jint pipeSize);

@@ -11,7 +11,7 @@ public:
     explicit BufferedReader(jxx::Ptr<Reader> in, jxx::lang::jint size = 8192);
 
     jxx::lang::jint read() override;
-    jxx::lang::jint read(jxx::Ptr<CharArray> cbuf, jxx::lang::jint off, jxx::lang::jint len) override;
+    jxx::lang::jint read(jxx::lang::CharArray cbuf, jxx::lang::jint off, jxx::lang::jint len) override;
 
     jxx::Ptr<jxx::lang::String> readLine();
 
@@ -20,7 +20,7 @@ public:
 
 private:
     jxx::Ptr<Reader> in_;
-    jxx::Ptr<CharArray> buf_;
+    jxx::lang::CharArray buf_;
     jxx::lang::jint pos_ = 0;
     jxx::lang::jint count_ = 0;
 

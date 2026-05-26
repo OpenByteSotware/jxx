@@ -28,7 +28,7 @@ void BufferedOutputStream::write(jxx::lang::jint b) {
     (*buf_)[count_++] = (jxx::lang::jbyte)(b & 0xFF);
 }
 
-void BufferedOutputStream::write(const ByteArray b, jxx::lang::jint off, jxx::lang::jint len) {
+void BufferedOutputStream::write(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) {
     IOHelper::checkBounds_(b, off, len);
 
     if (len >= (jxx::lang::jint)buf_->length) {

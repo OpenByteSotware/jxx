@@ -15,7 +15,7 @@ jint FileInputStream::read() {
     return c & 0xFF;
 }
 
-jint FileInputStream::read(jxx::Ptr<ByteArray> b, jint off, jint len) {
+jint FileInputStream::read(jxx::Ptr<jxx::lang::ByteArray> b, jint off, jint len) {
     InputStream::checkBounds_(b, off, len);
     if (len == 0) return 0;
     if (!f_) return -1;

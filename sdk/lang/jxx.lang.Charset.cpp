@@ -37,7 +37,7 @@ jxx::Ptr<String> Charset::name() const {
     return std::make_shared<String>("UTF-8");
 }
 
-ByteArray Charset::encode(const jxx::Ptr<String> s) const {
+jxx::lang::ByteArray Charset::encode(const jxx::Ptr<String> s) const {
     if (!s) throw std::invalid_argument("NullPointerException: Charset.encode(null)");
 
     if (kind_ == Kind::UTF8) {
@@ -63,7 +63,7 @@ ByteArray Charset::encode(const jxx::Ptr<String> s) const {
     return out;
 }
 
-jxx::Ptr<String> Charset::decode(const ByteArray bytes) const {
+jxx::Ptr<String> Charset::decode(const jxx::lang::ByteArray bytes) const {
     if (!bytes) throw std::invalid_argument("NullPointerException: Charset.decode(null)");
 
     if (kind_ == Kind::UTF8) {

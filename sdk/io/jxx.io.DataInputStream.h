@@ -11,8 +11,8 @@ class DataInputStream final : public FilterInputStream {
 public:
     explicit DataInputStream(jxx::Ptr<InputStream> in);
 
-    void readFully(jxx::Ptr<ByteArray> b);
-    void readFully(jxx::Ptr<ByteArray> b, jint off, jint len);
+    void readFully(jxx::Ptr<jxx::lang::ByteArray> b);
+    void readFully(jxx::Ptr<jxx::lang::ByteArray> b, jint off, jint len);
 
     jint skipBytes(jint n);
 
@@ -31,7 +31,7 @@ public:
     jxx::Ptr<jxx::lang::String> readUTF();
 
 private:
-    void readFullyRaw_(jxx::Ptr<ByteArray> b, jint off, jint len);
+    void readFullyRaw_(jxx::Ptr<jxx::lang::ByteArray> b, jint off, jint len);
     jint readUnsignedShortBE_();
 };
 

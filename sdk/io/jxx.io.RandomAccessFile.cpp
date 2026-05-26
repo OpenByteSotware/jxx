@@ -14,34 +14,34 @@ void RandomAccessFile::seek(jxx::lang::jlong pos){ fs.seekg(pos); fs.seekp(pos);
 jxx::lang::jlong RandomAccessFile::length(){ auto cur=fs.tellg(); fs.seekg(0,std::ios::end); auto end=fs.tellg(); fs.seekg(cur); return (jxx::lang::jlong)end; }
 void RandomAccessFile::setLength(jxx::lang::jlong newLen){ jxx::lang::jlong len=length(); if(newLen < len){ throw IOException("RandomAccessFile.setLength shrink not supported"); 
 }
-else if(newLen > len){ seek(len); ByteArray zeros((size_t)(newLen-len),0); write(zeros);} }
+else if(newLen > len){ seek(len); jxx::lang::ByteArray zeros((size_t)(newLen-len),0); write(zeros);} }
 void RandomAccessFile::write(int b){ char c=(char)(b&0xFF); fs.write(&c,1); if(!fs) throw IOException("RandomAccessFile.write failed"); }
-void RandomAccessFile::write(const ByteArray& b){ write(b,0,(int)b.size()); }
-void RandomAccessFile::write(const ByteArray& b, int off, int len){ if(b.size()< (size_t)off + (size_t)len) throw IOException("IndexOutOfBounds in RandomAccessFile.write");
+void RandomAccessFile::write(const jxx::lang::ByteArray& b){ write(b,0,(int)b.size()); }
+void RandomAccessFile::write(const jxx::lang::ByteArray& b, int off, int len){ if(b.size()< (size_t)off + (size_t)len) throw IOException("IndexOutOfBounds in RandomAccessFile.write");
 fs.write((const char*)(b.data()+off), len); if(!fs) throw IOException("RandomAccessFile.write failed"); }
 void RandomAccessFile::writeBoolean(bool v){ write(v?1:0);} 
 void RandomAccessFile::writeByte(jbyte v){ write(v);}
-void RandomAccessFile::writeShort(jshort v){ ByteArray t{ (jbyte)((v>>8)&0xFF), (jbyte)(v&0xFF)}; write(t);}
-void RandomAccessFile::writeChar(jchar v){ writeShort(v);} void RandomAccessFile::writeInt(int v){ ByteArray t(4); t[0]=(uint8_t)((v>>24)&0xFF); t[1]=(uint8_t)((v>>16)&0xFF);
-t[2]=(uint8_t)((v>>8)&0xFF); t[3]=(uint8_t)(v&0xFF); write(t);} void RandomAccessFile::writeLong(jxx::lang::jlong v){ ByteArray t(8);
+void RandomAccessFile::writeShort(jshort v){ jxx::lang::ByteArray t{ (jbyte)((v>>8)&0xFF), (jbyte)(v&0xFF)}; write(t);}
+void RandomAccessFile::writeChar(jchar v){ writeShort(v);} void RandomAccessFile::writeInt(int v){ jxx::lang::ByteArray t(4); t[0]=(uint8_t)((v>>24)&0xFF); t[1]=(uint8_t)((v>>16)&0xFF);
+t[2]=(uint8_t)((v>>8)&0xFF); t[3]=(uint8_t)(v&0xFF); write(t);} void RandomAccessFile::writeLong(jxx::lang::jlong v){ jxx::lang::ByteArray t(8);
 for(int i=7;i>=0;--i){ t[7-i]=(uint8_t)((v>>(i*8))&0xFF);} write(t);} void RandomAccessFile::writeFloat(float v){ uint32_t bits;
 std::memcpy(&bits,&v,4); writeInt((int)bits);} void RandomAccessFile::writeDouble(double v){ uint64_t bits; std::memcpy(&bits,&v,8);
 writeLong((jxx::lang::jlong)bits);} 
 void RandomAccessFile::writeUTF(const std::u16string& s){ 
 	auto enc=ModifiedUTF::encode(s); if(enc->size()>65535) throw UTFDataFormatException("writeUTF: length exceeds 65535"); 
 writeShort((int)enc->size()); 
-write(*enc.get(), 0, enc->length);} void RandomAccessFile::readFully(ByteArray& b){ readFully(b,0,(int)b.size()); } 
-void RandomAccessFile::readFully(ByteArray& b, int off, int len){ if(b.size()< (size_t)off + (size_t)len) throw IOException("IndexOutOfBounds in RandomAccessFile.readFully");
+write(*enc.get(), 0, enc->length);} void RandomAccessFile::readFully(jxx::lang::ByteArray& b){ readFully(b,0,(int)b.size()); } 
+void RandomAccessFile::readFully(jxx::lang::ByteArray& b, int off, int len){ if(b.size()< (size_t)off + (size_t)len) throw IOException("IndexOutOfBounds in RandomAccessFile.readFully");
 char* dst=(char*)(b.data()+off); fs.read(dst,len); if(fs.gcount()!=len) throw EOFException("readFully: EOF"); } int RandomAccessFile::skipBytes(int n){ auto cur=fs.tellg();
 fs.seekg(n,std::ios::cur); return (int)(fs.tellg()-cur);} bool RandomAccessFile::readBoolean(){ int b=readUnsignedByte(); return b!=0;} 
 jxx::lang::jbyte RandomAccessFile::readByte(){ char c; fs.read(&c,1); if(!fs) throw EOFException("readByte: EOF"); return (jxx::lang::jbyte)(unsigned char)c;} 
-char RandomAccessFile::readUnsignedByte(){ int v=readByte(); return (char)(v&0xFF);} jxx::lang::jshort RandomAccessFile::readShort(){ ByteArray b(2); readFully(b);
+char RandomAccessFile::readUnsignedByte(){ int v=readByte(); return (char)(v&0xFF);} jxx::lang::jshort RandomAccessFile::readShort(){ jxx::lang::ByteArray b(2); readFully(b);
 return (jxx::lang::jshort)((b[0]<<8)|b[1]); } 
-unsigned short RandomAccessFile::readUnsignedShort(){ ByteArray b(2); readFully(b); return (unsigned short)((b[0]<<8)|b[1]); }
+unsigned short RandomAccessFile::readUnsignedShort(){ jxx::lang::ByteArray b(2); readFully(b); return (unsigned short)((b[0]<<8)|b[1]); }
 
-jxx::lang::jchar RandomAccessFile::readChar(){ return (jxx::lang::jchar)readUnsignedShort(); } int RandomAccessFile::readInt(){ ByteArray b(4);
-readFully(b); return ((int)b[0]<<24)|((int)b[1]<<16)|((int)b[2]<<8)|((int)b[3]); } jxx::lang::jlong RandomAccessFile::readLong(){ ByteArray b(8); 
+jxx::lang::jchar RandomAccessFile::readChar(){ return (jxx::lang::jchar)readUnsignedShort(); } int RandomAccessFile::readInt(){ jxx::lang::ByteArray b(4);
+readFully(b); return ((int)b[0]<<24)|((int)b[1]<<16)|((int)b[2]<<8)|((int)b[3]); } jxx::lang::jlong RandomAccessFile::readLong(){ jxx::lang::ByteArray b(8); 
 readFully(b); jxx::lang::jlong v=0; for(int i=0;i<8;++i) v=(v<<8)|b[i]; return v;} float RandomAccessFile::readFloat(){ uint32_t bits=(uint32_t)readInt(); float f;
 std::memcpy(&f,&bits,4); return f;} double RandomAccessFile::readDouble(){ uint64_t bits=(uint64_t)readLong(); double d; std::memcpy(&d,&bits,8); return d;}
-std::u16string RandomAccessFile::readUTF(){ unsigned short utflen=readUnsignedShort(); ByteArray bytes(utflen); readFully(bytes); return ModifiedUTF::decode(bytes); }
+std::u16string RandomAccessFile::readUTF(){ unsigned short utflen=readUnsignedShort(); jxx::lang::ByteArray bytes(utflen); readFully(bytes); return ModifiedUTF::decode(bytes); }
 }}

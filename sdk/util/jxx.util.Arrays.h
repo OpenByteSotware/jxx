@@ -15,23 +15,23 @@ struct Arrays {
         return a==b;
     }
 
-    static bool equals(ByteArray& a, ByteArray& b) {
+    static bool equals(jxx::lang::ByteArray& a, jxx::lang::ByteArray& b) {
         if (a.size()!=b.size()) return false; return std::memcmp(a.data(), b.data(), a.size())==0;
     }
 
-    static int hashCode(ByteArray& a) {
+    static int hashCode(jxx::lang::ByteArray& a) {
         int h=1; for (size_t i=0;i<a.size();++i) h = 31*h + (int)a[i]; return h;
     }
 
-    static ByteArray copyOf(ByteArray& a, int newLength) {
+    static jxx::lang::ByteArray copyOf(jxx::lang::ByteArray& a, int newLength) {
         if (newLength < 0) throw std::out_of_range("copyOf");
-        ByteArray out((size_t)newLength);
+        jxx::lang::ByteArray out((size_t)newLength);
         size_t n = std::min<size_t>(a.size(), (size_t)newLength);
         std::memcpy(out.data(), a.data(), n);
         return out;
     }
 
-    static void sort(ByteArray& a) {
+    static void sort(jxx::lang::ByteArray& a) {
         std::sort(a.begin(), a.end());
     }
 };

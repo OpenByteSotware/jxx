@@ -138,7 +138,7 @@ namespace jxx::lang {
         // no-op in JXX
     }
 
-    void ClassLoader::addResource(jxx::Ptr<String> name, jxx::Ptr<ByteArray> bytes) {
+    void ClassLoader::addResource(jxx::Ptr<String> name, jxx::Ptr<jxx::lang::ByteArray> bytes) {
         if (!name) throw NullPointerException(jxx::NEW<String>("name"));
         const std::string n = name->utf8();
         std::lock_guard<std::mutex> lk(resourceMutex_);

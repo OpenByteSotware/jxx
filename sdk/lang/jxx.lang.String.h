@@ -54,28 +54,28 @@ namespace jxx::lang {
         explicit String(const jxx::Ptr<String> original);
 
         // String(byte[] bytes)
-        explicit String(const ByteArray bytes);
+        explicit String(const jxx::lang::ByteArray bytes);
 
         // String(byte[] bytes, int offset, int length)
-        String(const ByteArray bytes, jxx::lang::jint offset, jxx::lang::jint length);
+        String(const jxx::lang::ByteArray bytes, jxx::lang::jint offset, jxx::lang::jint length);
 
         // String(byte[] bytes, String charsetName)
-        String(const ByteArray bytes, jxx::Ptr<String> charsetName);
+        String(const jxx::lang::ByteArray bytes, jxx::Ptr<String> charsetName);
 
         // String(byte[] bytes, int offset, int length, String charsetName)
-        String(const ByteArray bytes, jxx::lang::jint offset, jxx::lang::jint length, jxx::Ptr<String> charsetName);
+        String(const jxx::lang::ByteArray bytes, jxx::lang::jint offset, jxx::lang::jint length, jxx::Ptr<String> charsetName);
 
         // String(byte[] bytes, Charset charset)
-        String(const ByteArray bytes, jxx::Ptr<Charset> charset);
+        String(const jxx::lang::ByteArray bytes, jxx::Ptr<Charset> charset);
 
         // String(byte[] bytes, int offset, int length, Charset charset)
-        String(const ByteArray bytes, jxx::lang::jint offset, jxx::lang::jint length, jxx::Ptr<Charset> charset);
+        String(const jxx::lang::ByteArray bytes, jxx::lang::jint offset, jxx::lang::jint length, jxx::Ptr<Charset> charset);
 
         // Deprecated: String(byte[] ascii, int hibyte)
-        String(const ByteArray ascii, jxx::lang::jint hibyte);
+        String(const jxx::lang::ByteArray ascii, jxx::lang::jint hibyte);
 
         // Deprecated: String(byte[] ascii, int hibyte, int offset, int count)
-        String(const ByteArray ascii, jxx::lang::jint hibyte, jxx::lang::jint offset, jxx::lang::jint count);
+        String(const jxx::lang::ByteArray ascii, jxx::lang::jint hibyte, jxx::lang::jint offset, jxx::lang::jint count);
 
         // String(char[] value)
         explicit String(const CharArray value);
@@ -131,11 +131,11 @@ namespace jxx::lang {
         void getChars(jxx::lang::jint srcBegin, jxx::lang::jint srcEnd, const CharArray dst, jxx::lang::jint dstBegin) const;
 
         // Deprecated in Java 8:
-        void getBytes(jxx::lang::jint srcBegin, jxx::lang::jint srcEnd, const ByteArray dst, jxx::lang::jint dstBegin) const;
+        void getBytes(jxx::lang::jint srcBegin, jxx::lang::jint srcEnd, const jxx::lang::ByteArray dst, jxx::lang::jint dstBegin) const;
 
-        ByteArray getBytes() const;
-        ByteArray getBytes(jxx::Ptr<String> charsetName) const;
-        ByteArray getBytes(jxx::Ptr<Charset> charset) const;
+        jxx::lang::ByteArray getBytes() const;
+        jxx::lang::ByteArray getBytes(jxx::Ptr<String> charsetName) const;
+        jxx::lang::ByteArray getBytes(jxx::Ptr<Charset> charset) const;
 
         jbool contentEquals(jxx::Ptr<CharSequence> cs) const;
         jbool contentEquals(jxx::Ptr<StringBuffer> sb) const;

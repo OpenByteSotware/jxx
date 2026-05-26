@@ -494,6 +494,8 @@ namespace jxx::lang {
         }
     };
 
+
+    // Convenience aliases
     using ByteArrayType = jxx::lang::JxxArray<jxx::lang::jbyte, 1>;
     using CharArrayType = jxx::lang::JxxArray<jxx::lang::jchar, 1>;
     using IntArrayType = jxx::lang::JxxArray<jxx::lang::jint, 1>;
@@ -503,7 +505,6 @@ namespace jxx::lang {
     using DoubleArrayType = jxx::lang::JxxArray<jxx::lang::jdouble, 1>;
     using ObjectArrayType = jxx::lang::JxxArray<jxx::Ptr<jxx::lang::Object>, 1>;
    
-    // Convenience aliases (same as you had)
     using ByteArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jbyte, 1>>;
     using CharArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jchar, 1>>;
     using IntArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jint, 1>>;

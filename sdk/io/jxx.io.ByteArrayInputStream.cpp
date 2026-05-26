@@ -2,10 +2,10 @@
 
 namespace jxx::io {
 
-    ByteArrayInputStream::ByteArrayInputStream(jxx::Ptr<ByteArray> buf)
+    ByteArrayInputStream::ByteArrayInputStream(jxx::Ptr<jxx::lang::ByteArray> buf)
         : ByteArrayInputStream(buf, 0, buf ? (jxx::lang::jint)buf->length : 0) {}
 
-    ByteArrayInputStream::ByteArrayInputStream(jxx::Ptr<ByteArray> buf, jxx::lang::jint offset, jxx::lang::jint length)
+    ByteArrayInputStream::ByteArrayInputStream(jxx::Ptr<jxx::lang::ByteArray> buf, jxx::lang::jint offset, jxx::lang::jint length)
         : buf_(std::move(buf)) {
         if (!buf_) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("buf"));
         pos_ = offset;
@@ -18,7 +18,7 @@ namespace jxx::io {
         return ((jxx::lang::jint)(*buf_)[pos_++]) & 0xFF;
     }
 
-    jxx::lang::jint ByteArrayInputStream::read(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
+    jxx::lang::jint ByteArrayInputStream::read(jxx::Ptr<jxx::lang::ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
         if (pos_ >= end_) return -1;
         jxx::lang::jint n = std::min(len, end_ - pos_);
         for (jxx::lang::jint i = 0; i < n; ++i) {

@@ -14,7 +14,7 @@ void DataOutputStream::write(jxx::lang::jint b) {
     inc_(1);
 }
 
-void DataOutputStream::write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
+void DataOutputStream::write(jxx::Ptr<jxx::lang::ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
     out_->write(b, off, len);
     inc_(len);
 }

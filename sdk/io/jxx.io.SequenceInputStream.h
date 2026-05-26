@@ -15,7 +15,7 @@ public:
     explicit SequenceInputStream(std::vector<std::shared_ptr<InputStream>> streams);
 
     int read() override;
-    int read(ByteArray& b, int off, int len) override;
+    int read(jxx::lang::ByteArray b, int off, int len) override;
     int available() override;
     void close() override;
 };

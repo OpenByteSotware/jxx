@@ -28,11 +28,5 @@ namespace compat {
 typedef char byte;
 #endif
 
-/*
-namespace jxx::lang {
-
-    using ByteArray = std::vector<byte>; 
-}
-*/
 #endif
 

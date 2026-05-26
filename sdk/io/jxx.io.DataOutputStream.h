@@ -12,7 +12,7 @@ public:
     explicit DataOutputStream(jxx::Ptr<OutputStream> out);
 
     void write(jxx::lang::jint b) override;
-    void write(jxx::Ptr<ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) override;
+    void write(jxx::Ptr<jxx::lang::ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) override;
 
     void writeBoolean(jxx::lang::jbool v);
     void writeByte(jxx::lang::jint v);

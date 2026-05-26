@@ -9,8 +9,8 @@ namespace jxx { namespace io {
 class DataInput {
 public:
     virtual ~DataInput() = default;
-    virtual void readFully(ByteArray& b) = 0;
-    virtual void readFully(ByteArray& b, jint off, jint len) = 0;
+    virtual void readFully(jxx::lang::ByteArray& b) = 0;
+    virtual void readFully(jxx::lang::ByteArray& b, jint off, jint len) = 0;
     virtual jint skipBytes(jint n) = 0;
     virtual jbool readBoolean() = 0;
     virtual jbyte readByte() = 0; 

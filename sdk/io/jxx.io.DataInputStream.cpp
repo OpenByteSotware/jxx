@@ -8,7 +8,7 @@ namespace jxx::io {
 DataInputStream::DataInputStream(jxx::Ptr<InputStream> in)
     : FilterInputStream(std::move(in)) {}
 
-void DataInputStream::readFullyRaw_(jxx::Ptr<ByteArray> b, jint off, jint len) {
+void DataInputStream::readFullyRaw_(jxx::Ptr<jxx::lang::ByteArray> b, jint off, jint len) {
     jint total = 0;
     while (total < len) {
         jint r = in_->read(b, off + total, len - total);
@@ -17,12 +17,12 @@ void DataInputStream::readFullyRaw_(jxx::Ptr<ByteArray> b, jint off, jint len) {
     }
 }
 
-void DataInputStream::readFully(jxx::Ptr<ByteArray> b) {
+void DataInputStream::readFully(jxx::Ptr<jxx::lang::ByteArray> b) {
     if (!b) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("b"));
     readFullyRaw_(b, 0, (jint)b->length);
 }
 
-void DataInputStream::readFully(jxx::Ptr<ByteArray> b, jint off, jint len) {
+void DataInputStream::readFully(jxx::Ptr<jxx::lang::ByteArray> b, jint off, jint len) {
     InputStream::checkBounds_(b, off, len);
     readFullyRaw_(b, off, len);
 }
