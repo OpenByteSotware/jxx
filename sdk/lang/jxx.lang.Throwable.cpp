@@ -5,10 +5,10 @@
 
 namespace jxx::lang {
 
-    explicit Throwable::Throwable(jxx::Ptr<String> message = jxx::NEW<String>(""),
-        jxx::Ptr<Throwable> cause = nullptr,
-        bool enableSuppression = true,
-        bool writableStackTrace = true)
+    explicit Throwable::Throwable(jxx::Ptr<String> message,
+        jxx::Ptr<Throwable> cause,
+        bool enableSuppression,
+        bool writableStackTrace)
         : message_(message != nullptr ? message : jxx::NEW<String>("")),
         cause_(cause),
         enableSuppression_(enableSuppression),
@@ -20,9 +20,9 @@ namespace jxx::lang {
     }
 
     explicit Throwable::Throwable(const char* message,
-        jxx::Ptr<Throwable> cause = nullptr,
-        bool enableSuppression = true,
-        bool writableStackTrace = true)
+        jxx::Ptr<Throwable> cause,
+        bool enableSuppression,
+        bool writableStackTrace)
         : message_(jxx::NEW<String>(message)),
         cause_(cause),
         enableSuppression_(enableSuppression),
@@ -34,9 +34,9 @@ namespace jxx::lang {
     }
 
     explicit Throwable::Throwable(std::string message,
-        jxx::Ptr<Throwable> cause = nullptr,
-        bool enableSuppression = true,
-        bool writableStackTrace = true)
+        jxx::Ptr<Throwable> cause,
+        bool enableSuppression,
+        bool writableStackTrace)
         : message_(jxx::NEW<String>(message)),
         cause_(cause),
         enableSuppression_(enableSuppression),
@@ -56,25 +56,6 @@ namespace jxx::lang {
      * This is a permissive version; tighten if you want exact rules.
      */
     void Throwable::initCause(jxx::Ptr<Throwable> cause) { cause_ = cause; }
-
-    // ---- Suppressed exceptions (Java 7+, present in Java 8) ----
-    /**
-     * Java rules:
-     *   - addSuppressed(null) => NullPointerException
-     *   - addSuppressed(this) => IllegalArgumentException
-     *   - if suppression disabled => no-op
-     */
-    void Throwable::addSuppressed(const jxx::Ptr<Throwable> ex) {
-        if (!enableSuppression_) return;
-
-        if (!ex) {
-            ////throwNullSuppressed(); // throws NullPointerException
-        }
-        if (ex.get() == this) {
-            ////throwSelfSuppressed(); // throws IllegalArgumentException
-        }
-        suppressed_.push_back(ex);
-    }
 
     /**
      * Java returns a copy of the internal array.
