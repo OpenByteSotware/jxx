@@ -32,10 +32,10 @@ namespace jxx::lang {
         jxx::Ptr<StringBuilder> appendSB(jchar c);
         jxx::Ptr<StringBuilder> append(jxx::Ptr<CharArray> str);
         jxx::Ptr<StringBuilder> append(jxx::Ptr<CharArray> str, jint offset, jint len);
-        virtual jxx::Ptr<Appendable> append(jxx::Ptr<CharSequence> s);
-        jxx::Ptr<StringBuilder> appendSB(jxx::Ptr<CharSequence> s);
-        virtual jxx::Ptr<Appendable> append(jxx::Ptr<CharSequence> s, jint start, jint end);
-        jxx::Ptr<StringBuilder> appendSB(jxx::Ptr<CharSequence> s, jint start, jint end);
+        virtual jxx::Ptr<Appendable> append(const jxx::Ptr<CharSequence> s);
+        jxx::Ptr<StringBuilder> appendSB(const jxx::Ptr<CharSequence> s);
+        virtual jxx::Ptr<Appendable> append(const jxx::Ptr<CharSequence> s, jint start, jint end);
+        jxx::Ptr<StringBuilder> appendSB(const jxx::Ptr<CharSequence> s, jint start, jint end);
         jxx::Ptr<StringBuilder> append(jdouble d);
         jxx::Ptr<StringBuilder> append(jfloat f);
         jxx::Ptr<StringBuilder> append(jint i);

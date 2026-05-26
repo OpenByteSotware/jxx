@@ -1,11 +1,13 @@
 #pragma once
-
+#include <algorithm>
+#include <sstream>
+#include <locale>
 #include "jxx_types.h"
 #include "jxx.lang.Object.h"
 #include "io/jxx.io.Serializable.h"
 #include "jxx.lang.Appendable.h"
 #include "jxx.lang.CharSequence.h"
-#include "jxx.lang.String.h"
+
 
 #include <string>
 
@@ -25,13 +27,13 @@ namespace jxx::lang {
 
         // append (Java 8)
         jxx::Ptr<StringBuffer> append(jbool b);
-        jxx::Ptr<Appendable> append(jchar c);
+        virtual jxx::Ptr<Appendable> append(jchar c);
         jxx::Ptr<StringBuffer> appendSB(jchar c);
         jxx::Ptr<StringBuffer> append(const CharArray str);
         jxx::Ptr<StringBuffer> append(const CharArray str, jint offset, jint len);
-        jxx::Ptr<Appendable> append(const jxx::Ptr<CharSequence> s);
+        virtual jxx::Ptr<Appendable> append(const jxx::Ptr<CharSequence> s);
         jxx::Ptr<StringBuffer> appendSB(const jxx::Ptr<CharSequence> s);
-        jxx::Ptr<Appendable> append(const jxx::Ptr<CharSequence> s, jint start, jint end);
+        virtual jxx::Ptr<Appendable> append(const jxx::Ptr<CharSequence> s, jint start, jint end);
         jxx::Ptr<StringBuffer> appendSB(const jxx::Ptr<CharSequence> s, jint start, jint end);
         jxx::Ptr<StringBuffer> append(jdouble d);
         jxx::Ptr<StringBuffer> append(jfloat f);

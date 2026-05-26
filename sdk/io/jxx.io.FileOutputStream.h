@@ -2,10 +2,14 @@
 
 #include "jxx.io.OutputStream.h"
 #include "jxx.io.IOException.h"
-#include "jxx.lang.NullPointerException.h"
-#include "jxx.lang.String.h"
+
 
 #include <fstream>
+
+namespace jxx { namespace lang {
+    class String;
+}
+}
 
 namespace jxx::io {
 
@@ -14,11 +18,11 @@ public:
     explicit FileOutputStream(jxx::Ptr<jxx::lang::String> path);
     FileOutputStream(jxx::Ptr<jxx::lang::String> path, jxx::lang::jbool append);
 
-    void write(jxx::lang::jint b) override;
-    void write(jxx::Ptr<jxx::lang::ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) override;
+    virtual void write(jxx::lang::jint b) override;
+    virtual void write(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) override;
 
-    void flush() override;
-    void close() override;
+    virtual void flush() override;
+    virtual void close() override;
 
 private:
     std::ofstream f_;

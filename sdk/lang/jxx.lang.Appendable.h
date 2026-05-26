@@ -18,8 +18,8 @@ namespace jxx::lang {
     struct Appendable {
         virtual ~Appendable() = default;
 
-        virtual jxx::Ptr<Appendable> append(jxx::Ptr<CharSequence> csq) = 0;
-        virtual jxx::Ptr<Appendable> append(jxx::Ptr<CharSequence> csq, jint start, jint end) = 0;
+        virtual jxx::Ptr<Appendable> append(const jxx::Ptr<CharSequence> csq) = 0;
+        virtual jxx::Ptr<Appendable> append(const jxx::Ptr<CharSequence> csq, jint start, jint end) = 0;
         virtual jxx::Ptr<Appendable> append(jchar c) = 0;
     };
 

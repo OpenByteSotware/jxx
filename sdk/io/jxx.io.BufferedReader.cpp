@@ -9,7 +9,7 @@ BufferedReader::BufferedReader(jxx::Ptr<Reader> in, jxx::lang::jint size)
     : in_(std::move(in)) {
     if (!in_) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("in"));
     if (size <= 0) throw jxx::lang::IllegalArgumentException(jxx::NEW<jxx::lang::String>("size"));
-    buf_ = jxx::NEW<CharArray>((std::uint32_t)size);
+    buf_ = jxx::NEW<jxx::lang::CharArrayType>((std::uint32_t)size);
 }
 
 void BufferedReader::fill_() {
@@ -25,7 +25,7 @@ jxx::lang::jint BufferedReader::read() {
     return (jxx::lang::jint)(*buf_)[pos_++];
 }
 
-jxx::lang::jint BufferedReader::read(jxx::Ptr<CharArray> cbuf, jxx::lang::jint off, jxx::lang::jint len) {
+jxx::lang::jint BufferedReader::read(const jxx::lang::CharArray cbuf, jxx::lang::jint off, jxx::lang::jint len) {
     IOHelper::checkBounds_(cbuf, off, len);
     if (len == 0) return 0;
 

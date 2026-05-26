@@ -1,3 +1,5 @@
+#include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.String.h"
 #include "jxx.io.FileOutputStream.h"
 
 namespace jxx::io {
@@ -23,7 +25,7 @@ void FileOutputStream::write(jxx::lang::jint b) {
     if (!f_) throw IOException(jxx::NEW<jxx::lang::String>("write failed"));
 }
 
-void FileOutputStream::write(jxx::Ptr<jxx::lang::ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
+void FileOutputStream::write(jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) {
     OutputStream::checkBounds_(b, off, len);
     if (!f_) throw IOException(jxx::NEW<jxx::lang::String>("stream closed"));
     f_.write(reinterpret_cast<const char*>(b->data()) + off, len);

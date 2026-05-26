@@ -17,10 +17,12 @@ void System::init(){
     System::out = std::make_shared<PrintStream>(outOs, true);
     System::err = std::make_shared<PrintStream>(errOs, true);
 }
-}} // ns
 
-jxx::lang::jlong System::currentTimeMillis(){
+jxx::lang::jlong System::currentTimeMillis() {
     using namespace std::chrono;
     auto now = time_point_cast<milliseconds>(system_clock::now());
     return (jxx::lang::jlong)now.time_since_epoch().count();
 }
+
+}} // ns
+

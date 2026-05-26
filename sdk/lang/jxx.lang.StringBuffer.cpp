@@ -1,12 +1,8 @@
-#include "jxx.lang.StringBuffer.h"
-
+#include "jxx.lang.String.h"
 #include "jxx.lang.NullPointerException.h"
 #include "jxx.lang.StringIndexOutOfBoundsException.h"
 #include "jxx.lang.IllegalArgumentException.h"
-
-#include <algorithm>
-#include <sstream>
-#include <locale>
+#include "jxx.lang.StringBuffer.h"
 
 namespace jxx::lang {
 
