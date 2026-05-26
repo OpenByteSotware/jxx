@@ -5,7 +5,7 @@
 
 namespace jxx::lang {
 
-    explicit Throwable::Throwable(jxx::Ptr<String> message,
+    Throwable::Throwable(jxx::Ptr<String> message,
         jxx::Ptr<Throwable> cause,
         bool enableSuppression,
         bool writableStackTrace)
@@ -19,7 +19,7 @@ namespace jxx::lang {
         }
     }
 
-    explicit Throwable::Throwable(const char* message,
+    Throwable::Throwable(const char* message,
         jxx::Ptr<Throwable> cause,
         bool enableSuppression,
         bool writableStackTrace)
@@ -33,7 +33,7 @@ namespace jxx::lang {
         }
     }
 
-    explicit Throwable::Throwable(std::string message,
+    Throwable::Throwable(std::string message,
         jxx::Ptr<Throwable> cause,
         bool enableSuppression,
         bool writableStackTrace)
