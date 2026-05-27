@@ -111,7 +111,6 @@ namespace jxx::lang {
         jxx::Ptr<StringBuffer> insert_(jxx::lang::jint offset, const jxx::Ptr<String> str);
         jxx::Ptr<StringBuffer> append_(const jxx::Ptr<String> str);
 
-
         static inline bool isHigh_(char16_t c) { return c >= 0xD800 && c <= 0xDBFF; }
         static inline bool isLow_(char16_t c) { return c >= 0xDC00 && c <= 0xDFFF; }
 

@@ -15,10 +15,10 @@ namespace jxx::io {
         virtual jxx::lang::jint read() = 0;
 
         // read(byte[])
-        virtual jxx::lang::jint read(jxx::lang::ByteArray b);
+        virtual jxx::lang::jint read(const jxx::lang::ByteArray b);
 
         // read(byte[], off, len)
-        virtual jxx::lang::jint read(jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len);
+        virtual jxx::lang::jint read(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len);
 
         virtual jxx::lang::jlong skip(jxx::lang::jlong n);
         virtual jxx::lang::jint available();
@@ -30,7 +30,7 @@ namespace jxx::io {
         virtual jxx::lang::jbool markSupported();
 
     protected:
-        static void checkBounds_(jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len);
+        static void checkBounds_(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len);
     };
 
 } // namespace jxx::io

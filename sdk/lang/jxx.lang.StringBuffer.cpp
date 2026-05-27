@@ -457,6 +457,11 @@ namespace jxx::lang {
         return insert_(offset, obj->toString());
     }
 
+    jxx::Ptr<StringBuffer> StringBuffer::insert_(jint offset, const jxx::Ptr<String> str) {
+        if (!str) return insert(offset, jxx::NEW<String>("null"));
+        return insert(offset, str->toString());
+    }
+
     jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, const jxx::Ptr<String> str)
     {
         // Mutable local copy (required)
