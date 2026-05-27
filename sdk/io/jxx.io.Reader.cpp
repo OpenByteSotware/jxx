@@ -5,7 +5,7 @@
 namespace jxx {
     namespace io {
 
-        int Reader::read(jxx::Ptr<CharArray> buf, jxx::lang::jint off, jxx::lang::jint len) {
+        int Reader::read(const jxx::lang::CharArray buf, jxx::lang::jint off, jxx::lang::jint len) {
             if (off < 0 || len < 0) throw IOException("Reader.read: invalid args");
             int i = 0; for (; i < len; ++i) {
                 int c = read();

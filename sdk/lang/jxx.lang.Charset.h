@@ -2,15 +2,17 @@
 
 #include "jxx_types.h"
 #include "jxx.lang.Object.h"
-#include "jxx.lang.String.h"
+
 
 namespace jxx::lang {
+    class String;
 
 // Minimal Charset with Java-8-like surface.
 // Supports UTF-8 (default), US-ASCII, ISO-8859-1.
 class Charset final : public Object {
 public:
     enum class Kind { UTF8, ASCII, ISO_8859_1 };
+    explicit Charset(Kind k);
     virtual ~Charset() = default;
 
     static jxx::Ptr<Charset> defaultCharset();
@@ -25,7 +27,7 @@ public:
     jint hashCode() const override;
 
 private:
-    explicit Charset(Kind k);
+
     Kind kind_;
 };
 

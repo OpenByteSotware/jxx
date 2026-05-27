@@ -13,6 +13,7 @@
 #include "util/jxx.util.IntStream.h"
 #include "util/jxx.util.Formatter.h"
 #include "jxx.lang.Cast.h"
+#include "jxx.lang.Iterable.h"
 #include "jxx.lang.String.h"
 
 
@@ -20,6 +21,10 @@ namespace jxx::lang {
 
     String::String(const std::string& stdString) {
         value_ = utf8ToUtf16_(stdString);        
+    }
+
+    String::String(const std::u16string& stdString) {
+        value_ = stdString;
     }
 
     void String::throwNPE_() { throw NullPointerException(jxx::NEW<String>("null")); }

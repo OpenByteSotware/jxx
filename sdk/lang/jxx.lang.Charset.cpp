@@ -1,7 +1,7 @@
-#include "jxx.lang.Charset.h"
-
 #include <algorithm>
 #include <stdexcept>
+#include "jxx.lang.String.h"
+#include "jxx.lang.Charset.h"
 
 namespace jxx::lang {
 
@@ -13,7 +13,7 @@ static std::string to_upper_ascii(std::string s) {
 Charset::Charset(Kind k) : kind_(k) {}
 
 jxx::Ptr<Charset> Charset::defaultCharset() {
-    static jxx::Ptr<Charset> cs = std::make_shared<Charset>(Kind::UTF8);
+    static jxx::Ptr<Charset> cs = jxx::NEW<Charset>(Kind::UTF8);
     return cs;
 }
 
@@ -21,20 +21,20 @@ jxx::Ptr<Charset> Charset::forName(jxx::Ptr<String> n) {
     if (!n) throw std::invalid_argument("NullPointerException: Charset.forName(null)");
 
     std::string name = to_upper_ascii(n->utf8());
-    if (name == "UTF-8" || name == "UTF8") return std::make_shared<Charset>(Kind::UTF8);
-    if (name == "US-ASCII" || name == "ASCII") return std::make_shared<Charset>(Kind::ASCII);
-    if (name == "ISO-8859-1" || name == "ISO8859-1" || name == "LATIN1") return std::make_shared<Charset>(Kind::ISO_8859_1);
+    if (name == "UTF-8" || name == "UTF8") return jxx::NEW<Charset>(Kind::UTF8);
+    if (name == "US-ASCII" || name == "ASCII") return jxx::NEW<Charset>(Kind::ASCII);
+    if (name == "ISO-8859-1" || name == "ISO8859-1" || name == "LATIN1") return jxx::NEW<Charset>(Kind::ISO_8859_1);
 
     throw std::invalid_argument("UnsupportedCharsetException");
 }
 
 jxx::Ptr<String> Charset::name() const {
     switch (kind_) {
-        case Kind::UTF8: return std::make_shared<String>("UTF-8");
-        case Kind::ASCII: return std::make_shared<String>("US-ASCII");
-        case Kind::ISO_8859_1: return std::make_shared<String>("ISO-8859-1");
+        case Kind::UTF8: return jxx::NEW<String>("UTF-8");
+        case Kind::ASCII: return jxx::NEW<String>("US-ASCII");
+        case Kind::ISO_8859_1: return jxx::NEW<String>("ISO-8859-1");
     }
-    return std::make_shared<String>("UTF-8");
+    return jxx::NEW<String>("UTF-8");
 }
 
 jxx::lang::ByteArray Charset::encode(const jxx::Ptr<String> s) const {
@@ -82,7 +82,7 @@ jxx::Ptr<String> Charset::decode(const jxx::lang::ByteArray bytes) const {
         if (kind_ == Kind::ASCII && b > 0x7F) b = '?';
         u[i] = (char16_t)b;
     }
-    return std::make_shared<String>(u);
+    return jxx::NEW<String>(u);
 }
 
 jbool Charset::equals(jxx::Ptr<Object> o) const {

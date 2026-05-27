@@ -25,7 +25,8 @@ namespace jxx::lang {
      * - Interface does NOT inherit jxx::lang::Object (Java-like).
      */
     template <class T>
-    struct Iterable {
+    class Iterable {
+    public:
         virtual ~Iterable() = default;
 
         // Java: Iterator<T> iterator()

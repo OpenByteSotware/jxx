@@ -12,7 +12,6 @@
 #include "io/jxx.io.Serializable.h"
 #include "util/jxx.util.Locale.h"
 #include "jxx.lang.Charset.h"
-#include "jxx.lang.Iterable.h"
 
 namespace jxx::lang {
 
@@ -22,6 +21,9 @@ namespace jxx::lang {
     class Charset; // java.nio.charset.Charset (you have this)
     class ClassAny;
     class String;
+
+	template <typename T>
+	class Iterable;
 
 } // namespace jxx::lang
 
@@ -96,6 +98,7 @@ namespace jxx::lang {
         explicit String(const char* utf8);
 
         explicit String(const std::string& stdString);
+        explicit String(const std::u16string& stdString);
 
         // ---------------------------------------------------------------------
         // CharSequence
