@@ -29,7 +29,7 @@ namespace jxx::lang {
         jxx::Ptr<StringBuffer> append(jbool b);
         virtual jxx::Ptr<Appendable> append(jchar c);
         jxx::Ptr<StringBuffer> appendSB(jchar c);
-        jxx::Ptr<StringBuffer> append(const CharArray str);
+        jxx::Ptr<StringBuffer> append(const jxx::lang::CharArray str);
         jxx::Ptr<StringBuffer> append(const CharArray str, jint offset, jint len);
         virtual jxx::Ptr<Appendable> append(const jxx::Ptr<CharSequence> s);
         jxx::Ptr<StringBuffer> appendSB(const jxx::Ptr<CharSequence> s);
@@ -65,7 +65,7 @@ namespace jxx::lang {
         // delete/replace/reverse
         jxx::Ptr<StringBuffer> delete_(jint start, jint end);
         jxx::Ptr<StringBuffer> deleteCharAt(jint index);
-        jxx::Ptr<StringBuffer> replace(jint start, jint end, jxx::Ptr<String> str);
+        jxx::Ptr<StringBuffer> replace(jint start, jint end, const jxx::Ptr<String> str);
         jxx::Ptr<StringBuffer> reverse();
 
         // insert
@@ -74,7 +74,7 @@ namespace jxx::lang {
         jxx::Ptr<StringBuffer> insert(jint offset, const CharArray str);
         jxx::Ptr<StringBuffer> insert(jint index, const CharArray str, jint offset, jint len);
         jxx::Ptr<StringBuffer> insert(jint dstOffset, const jxx::Ptr<CharSequence> s);
-        jxx::Ptr<StringBuffer> insert(jint dstOffset, jxx::Ptr<CharSequence> s, jint start, jint end);
+        jxx::Ptr<StringBuffer> insert(jint dstOffset, const jxx::Ptr<CharSequence> s, jint start, jint end);
         jxx::Ptr<StringBuffer> insert(jint offset, jdouble d);
         jxx::Ptr<StringBuffer> insert(jint offset, jfloat f);
         jxx::Ptr<StringBuffer> insert(jint offset, jint i);
@@ -107,7 +107,7 @@ namespace jxx::lang {
         void insertUtf16_(jint offset, const std::u16string& s);
         static std::u16string toUtf16_(const jxx::Ptr<CharSequence> s);
 
-        jxx::Ptr<StringBuffer> insert_(jint offset, jxx::Ptr<String> str);
+        jxx::Ptr<StringBuffer> insert_(jint offset, const jxx::Ptr<String> str);
         jxx::Ptr<StringBuffer> append_(const jxx::Ptr<String> str);
 
 

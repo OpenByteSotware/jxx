@@ -10,7 +10,7 @@
 
 namespace jxx::lang {
 
-    static inline std::u16string u16_from_char_array(jxx::Ptr<CharArray> a, jint off, jint len) {
+    static inline std::u16string u16_from_char_array(CharArray a, jint off, jint len) {
         std::u16string out;
         out.resize((std::size_t)len);
         for (jint i = 0; i < len; ++i) out[(std::size_t)i] = (char16_t)(*a)[off + i];
@@ -90,7 +90,7 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<String> StringBuilder::toString() const {
-        auto ca = jxx::NEW<CharArray>((std::uint32_t)value_.size());
+        auto ca = jxx::NEW<CharArrayType>((std::uint32_t)value_.size());
         for (jint i = 0; i < (jint)value_.size(); ++i) (*ca)[i] = (jchar)value_[(std::size_t)i];
         return jxx::NEW<String>(ca);
     }
@@ -188,25 +188,25 @@ namespace jxx::lang {
     jxx::Ptr<Appendable> StringBuilder::append(jchar c) { value_.push_back((char16_t)c); return self_(); }
     jxx::Ptr<StringBuilder> StringBuilder::appendSB(jchar c) { value_.push_back((char16_t)c); return self_(); }
 
-    jxx::Ptr<StringBuilder> StringBuilder::append(jxx::Ptr<CharArray> str) {
+    jxx::Ptr<StringBuilder> StringBuilder::append(CharArray str) {
         if (!str) return append(jxx::NEW<String>("null"));
         return append(str, 0, (jint)str->length);
     }
 
-    jxx::Ptr<StringBuilder> StringBuilder::append(jxx::Ptr<CharArray> str, jint offset, jint len) {
+    jxx::Ptr<StringBuilder> StringBuilder::append(CharArray str, jint offset, jint len) {
         if (!str) return append(jxx::NEW<String>("null"));
         if (offset < 0 || len < 0 || (std::uint32_t)(offset + len) > str->length) throwSIOOBE_();
         appendUtf16_(u16_from_char_array(str, offset, len));
         return self_();
     }
 
-    jxx::Ptr<StringBuilder> StringBuilder::append(jxx::Ptr<CharSequence> s) {
+    jxx::Ptr<StringBuilder> StringBuilder::append(const jxx::Ptr<CharSequence> s) {
         if (!s) return append(jxx::NEW<String>("null"));
         appendUtf16_(toUtf16_(s));
         return self_();
     }
 
-    jxx::Ptr<StringBuilder> StringBuilder::append(jxx::Ptr<CharSequence> s, jint start, jint end) {
+    jxx::Ptr<StringBuilder> StringBuilder::append(const jxx::Ptr<CharSequence> s, jint start, jint end) {
         if (!s) s = jxx::NEW<String>("null");
         if (start < 0 || end < start || end > s->length()) throwSIOOBE_();
         std::u16string sub;
@@ -287,30 +287,53 @@ namespace jxx::lang {
         return self_();
     }
 
-    jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jxx::Ptr<CharArray> str) {
+    jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, const CharArray str) {
         if (!str) return insert(offset, jxx::NEW<String>("null"));
         return insert(offset, str, 0, (jint)str->length);
     }
 
-    jxx::Ptr<StringBuilder> StringBuilder::insert(jint index, jxx::Ptr<CharArray> str, jint offset, jint len) {
+    jxx::Ptr<StringBuilder> StringBuilder::insert(jint index, const CharArray str, jint offset, jint len) {
         if (!str) return insert(index, jxx::NEW<String>("null"));
         if (offset < 0 || len < 0 || (std::uint32_t)(offset + len) > str->length) throwSIOOBE_();
         insertUtf16_(index, u16_from_char_array(str, offset, len));
         return self_();
     }
 
-    jxx::Ptr<StringBuilder> StringBuilder::insert(jint dstOffset, jxx::Ptr<CharSequence> s) {
-        if (!s) s = jxx::NEW<String>("null");
-        insertUtf16_(dstOffset, toUtf16_(s));
+    jxx::Ptr<StringBuilder> StringBuilder::insert(jint dstOffset, const jxx::Ptr<CharSequence> s)
+    {
+        jxx::Ptr<CharSequence> seq = s;
+
+        if (!seq) {
+            seq = jxx::NEW<String>("null");
+        }
+
+        insertUtf16_(dstOffset, toUtf16_(seq));
         return self_();
     }
 
-    jxx::Ptr<StringBuilder> StringBuilder::insert(jint dstOffset, jxx::Ptr<CharSequence> s, jint start, jint end) {
-        if (!s) s = jxx::NEW<String>("null");
-        if (start < 0 || end < start || end > s->length()) throwSIOOBE_();
+    jxx::Ptr<StringBuilder> StringBuilder::insert(
+        jint dstOffset,
+        const jxx::Ptr<CharSequence> s,
+        jint start,
+        jint end)
+    {
+        jxx::Ptr<CharSequence> seq = s;
+
+        if (!seq) {
+            seq = jxx::NEW<String>("null");
+        }
+
+        if (start < 0 || end < start || end > seq->length()) {
+            throwSIOOBE_();
+        }
+
         std::u16string sub;
         sub.reserve((std::size_t)(end - start));
-        for (jint i = start; i < end; ++i) sub.push_back((char16_t)s->charAt(i));
+
+        for (jint i = start; i < end; ++i) {
+            sub.push_back((char16_t)seq->charAt(i));
+        }
+
         insertUtf16_(dstOffset, sub);
         return self_();
     }
@@ -326,19 +349,19 @@ namespace jxx::lang {
     jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jint i) { return insert(offset, jxx::NEW<String>(std::to_string(i).c_str())); }
     jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jlong l) { return insert(offset, jxx::NEW<String>(std::to_string((long long)l).c_str())); }
 
-    jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jxx::Ptr<Object> obj) {
+    jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, const jxx::Ptr<Object> obj) {
         if (!obj) return insert(offset, jxx::NEW<String>("null"));
         return insert(offset, obj->toString());
     }
 
-    jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jxx::Ptr<String> str) {
+    jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, const jxx::Ptr<String> str) {
         if (!str) str = jxx::NEW<String>("null");
         insertUtf16_(offset, str->utf16());
         return self_();
     }
 
     // ---- getChars ----
-    void StringBuilder::getChars(jint srcBegin, jint srcEnd, jxx::Ptr<CharArray> dst, jint dstBegin) const {
+    void StringBuilder::getChars(jint srcBegin, jint srcEnd, const jxx::Ptr<CharArray> dst, jint dstBegin) const {
         if (!dst) throwNPE_();
         if (srcBegin < 0 || srcEnd < srcBegin || srcEnd >(jint)value_.size()) throwSIOOBE_();
         if (dstBegin < 0) throwSIOOBE_();
@@ -349,9 +372,9 @@ namespace jxx::lang {
     }
 
     // ---- indexOf / lastIndexOf ----
-    jint StringBuilder::indexOf(jxx::Ptr<String> str) const { return indexOf(str, 0); }
+    jint StringBuilder::indexOf(const jxx::Ptr<String> str) const { return indexOf(str, 0); }
 
-    jint StringBuilder::indexOf(jxx::Ptr<String> str, jint fromIndex) const {
+    jint StringBuilder::indexOf(const jxx::Ptr<String> str, jint fromIndex) const {
         if (!str) throwNPE_();
         if (fromIndex < 0) fromIndex = 0;
         if (fromIndex > (jint)value_.size()) return -1;
@@ -361,9 +384,9 @@ namespace jxx::lang {
         return (pos == std::u16string::npos) ? -1 : (jint)pos;
     }
 
-    jint StringBuilder::lastIndexOf(jxx::Ptr<String> str) const { return lastIndexOf(str, (jint)value_.size()); }
+    jint StringBuilder::lastIndexOf(const jxx::Ptr<String> str) const { return lastIndexOf(str, (jint)value_.size()); }
 
-    jint StringBuilder::lastIndexOf(jxx::Ptr<String> str, jint fromIndex) const {
+    jint StringBuilder::lastIndexOf(const jxx::Ptr<String> str, jint fromIndex) const {
         if (!str) throwNPE_();
         const auto& needle = str->utf16();
         if (needle.empty()) return std::min(fromIndex, (jint)value_.size());
@@ -379,7 +402,7 @@ namespace jxx::lang {
     jxx::Ptr<String> StringBuilder::substring(jint start, jint end) const {
         if (start < 0 || end < start || end >(jint)value_.size()) throwSIOOBE_();
         jint n = end - start;
-        auto ca = jxx::NEW<CharArray>((std::uint32_t)n);
+        auto ca = jxx::NEW<CharArrayType>((std::uint32_t)n);
         for (jint i = 0; i < n; ++i) (*ca)[i] = (jchar)value_[(std::size_t)(start + i)];
         return jxx::NEW<String>(ca);
     }
