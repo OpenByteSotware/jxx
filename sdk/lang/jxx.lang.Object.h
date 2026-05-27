@@ -218,8 +218,8 @@ namespace jxx::lang {
 
 namespace jxx {
     // =====================================================
-// N-Dimensional Array Wrapper
-// =====================================================
+    // N-Dimensional Array Wrapper
+    // =====================================================
 
     template <typename T, std::uint32_t N>
     class JxxArray {
@@ -276,7 +276,15 @@ namespace jxx {
     // Auto-detect jxx::NEW
     // =====================================================
 
-
+    namespace detail {
+        // Helper to detect if T has a thisPtr member without requiring complete type
+        template <typename T, typename = void>
+        struct has_this_ptr : std::false_type {};
+        
+        template <typename T>
+        struct has_this_ptr<T, std::void_t<decltype(std::declval<T>().thisPtr)>> 
+            : std::true_type {};
+    }
 
     // Case 1: Fixed-size arrays (T[N])
     template <typename T,
@@ -317,8 +325,8 @@ namespace jxx {
         auto obj = std::make_shared<T>(std::forward<Args>(args)...);
 
         // if its an Object, set thisPtr for safe shared_from_this in clone() and getClass()
-        // set the thisPtr member if T derives from Object, so that clone() and getClass() can safely use shared_from_this()
-        if constexpr (std::is_base_of_v<jxx::lang::Object, T>) {
+        // Check for thisPtr member instead of is_base_of to avoid requiring complete type definition
+        if constexpr (detail::has_this_ptr<T>::value) {
             obj->thisPtr = obj;
         }
 
