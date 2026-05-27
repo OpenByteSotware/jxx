@@ -42,12 +42,10 @@ namespace jxx::util {
         jxx::Ptr<Locale> locale() const;
         jxx::Ptr<jxx::io::IOException> ioException() const;
 
-        jxx::Ptr<Formatter> format(
-            const jxx::Ptr<jxx::lang::String> format,
+        jxx::Ptr<Formatter> format(const jxx::Ptr<jxx::lang::String> format,
             const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args);
 
-        jxx::Ptr<Formatter> format(
-            const jxx::Ptr<jxx::util::Locale> l,
+        jxx::Ptr<Formatter> format(const jxx::Ptr<jxx::util::Locale> l,
             const jxx::Ptr<jxx::lang::String> format,
             const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args);
 

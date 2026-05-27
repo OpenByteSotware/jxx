@@ -669,15 +669,13 @@ namespace jxx::lang {
     jxx::Ptr<String> String::format(const jxx::Ptr<jxx::lang::String> format, const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args) {
         if (!format || !args) throwNPE_();
         auto f = jxx::NEW<jxx::util::Formatter>();
-        f->format(format, args);
-        return f->toString();
+		return f->format(format, args)->toString();        
     }
 
     jxx::Ptr<jxx::lang::String> String::format(const jxx::Ptr<jxx::util::Locale> l, const jxx::Ptr<String> format, const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args) {
         if (!l || !format || !args) throwNPE_();
         auto f = jxx::NEW<jxx::util::Formatter>();
-        f->format(l, format, args);
-        return f->toString();
+        return f->format(l, format, args)->toString();     
     }
 
     jxx::Ptr<String> String::join(jxx::Ptr<CharSequence> delimiter, jxx::Ptr<JxxArray<jxx::Ptr<CharSequence>, 1U>> elements) {
