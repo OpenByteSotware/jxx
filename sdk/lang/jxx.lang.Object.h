@@ -398,10 +398,10 @@ namespace jxx {
     template <typename To, typename From>
     jxx::Ptr<To> CAST(const std::shared_ptr<From>& ptr)
     {
-        if constexpr (std::is_base_of_v<To, From>)
-            return std::static_pointer_cast<To>(ptr);   // upcast
+        if constexpr (std::is_base_of_v<From, To>)
+            return std::static_pointer_cast<To>(ptr);   // upcast (Derived -> Base)
         else
-            return std::dynamic_pointer_cast<To>(ptr);  // down/unknown
+            return std::dynamic_pointer_cast<To>(ptr);  // downcast / unrelated
     }
 
 } // namespace jxx::lang
