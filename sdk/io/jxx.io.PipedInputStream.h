@@ -1,15 +1,13 @@
 #pragma once
-
+#include <condition_variable>
+#include <vector>
 #include "jxx.io.InputStream.h"
 #include "jxx.io.IOException.h"
 
-#include "jxx.lang.IllegalArgumentException.h"
-#include "jxx.lang.NullPointerException.h"
-#include "jxx.lang.String.h"
-
-#include <condition_variable>
-#include <vector>
-
+namespace jxx::lang {
+    class Integer;
+    class String;
+}
 namespace jxx::io {
 
 class PipedOutputStream;
@@ -25,7 +23,7 @@ public:
     void connect(jxx::Ptr<PipedOutputStream> src);
 
     jxx::lang::jint read() override;
-    jxx::lang::jint read(jxx::Ptr<jxx::lang::ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) override;
+    jxx::lang::jint read(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) override;
 
     jxx::lang::jint available() override;
     void close() override;
@@ -35,7 +33,7 @@ private:
     friend class PipedOutputStream;
 
     void receive_(jxx::lang::jint b);
-    void receive_(jxx::Ptr<jxx::lang::ByteArray> b, jxx::lang::jint off, jxx::lang::jint len);
+    void receive_(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len);
     void receivedLast_();
 
     void initPipe_(jxx::lang::jint pipeSize);

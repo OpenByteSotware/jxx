@@ -1,6 +1,10 @@
+#include <algorithm>
+#include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.CharSequence.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
 #include "jxx.io.OutputStreamWriter.h"
 
-#include <algorithm>
+
 
 namespace jxx::io {
 
@@ -11,21 +15,19 @@ static inline std::string upper_ascii(std::string s) {
     return s;
 }
 
-OutputStreamWriter::OutputStreamWriter(jxx::Ptr<OutputStream> out)
-    : OutputStreamWriter(std::move(out), jxx::NEW<jxx::lang::String>("UTF-8")) {}
+OutputStreamWriter::OutputStreamWriter(const jxx::Ptr<OutputStream> out)
+    : OutputStreamWriter(out, jxx::NEW<jxx::lang::String>("UTF-8")) {}
 
-OutputStreamWriter::OutputStreamWriter(jxx::Ptr<OutputStream> out, jxx::Ptr<jxx::lang::String> charsetName)
-    : out_(std::move(out)) {
+OutputStreamWriter::OutputStreamWriter(const jxx::Ptr<OutputStream> out, const jxx::Ptr<jxx::lang::String> charsetName)
+    : out_(out) {
     if (!out_) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("out"));
     enc_ = parseEncoding_(charsetName);
 }
 
-OutputStreamWriter::Enc OutputStreamWriter::parseEncoding_(jxx::Ptr<jxx::lang::String> name) {
+OutputStreamWriter::Enc OutputStreamWriter::parseEncoding_(const jxx::Ptr<jxx::lang::String> name) {
     if (!name) return Enc::UTF8;
     std::string n = upper_ascii(name->utf8());
-    n.erase(std::remove_if(n.begin(), n.end(), [](unsigned char c){ return c==' ' || c=='	' || c=='
-' || c=='
-'; }), n.end());
+    n.erase(std::remove_if(n.begin(), n.end(), [](unsigned char c){ return c==' ' || c=='	' || c=='\n' || c=='\r'; }), n.end());
 
     if (n == "UTF-8" || n == "UTF8") return Enc::UTF8;
     if (n == "UTF-16BE" || n == "UTF16BE") return Enc::UTF16BE;
@@ -107,7 +109,7 @@ void OutputStreamWriter::write(jxx::lang::jint c) {
     else writeUtf8CodePoint_(cu);
 }
 
-void OutputStreamWriter::write(jxx::Ptr<CharArray> cbuf, jxx::lang::jint off, jxx::lang::jint len) {
+void OutputStreamWriter::write(const jxx::lang::CharArray cbuf, jxx::lang::jint off, jxx::lang::jint len) {
     Writer::checkBounds_(cbuf, off, len);
     writeBomIfNeeded_();
 
@@ -139,7 +141,7 @@ void OutputStreamWriter::write(jxx::Ptr<CharArray> cbuf, jxx::lang::jint off, jx
     }
 }
 
-void OutputStreamWriter::write(jxx::Ptr<jxx::lang::String> str, jxx::lang::jint off, jxx::lang::jint len) {
+void OutputStreamWriter::write(const jxx::Ptr<jxx::lang::String> str, jxx::lang::jint off, jxx::lang::jint len) {
     Writer::checkStringBounds_(str, off, len);
     writeBomIfNeeded_();
     const auto& u16 = str->utf16();

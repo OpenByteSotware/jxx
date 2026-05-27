@@ -7,7 +7,7 @@ namespace jxx::io {
 
 class FilterOutputStream : public OutputStream {
 public:
-    explicit FilterOutputStream(jxx::Ptr<OutputStream> out);
+    explicit FilterOutputStream(const jxx::Ptr<OutputStream> out);
 
     void write(jxx::lang::jint b) override;
     void write(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) override;

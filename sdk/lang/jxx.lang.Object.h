@@ -396,7 +396,7 @@ namespace jxx {
     }
 
     template <typename To, typename From>
-    std::shared_ptr<To> CAST(const std::shared_ptr<From>& ptr)
+    jxx::Ptr<To> CAST(const std::shared_ptr<From>& ptr)
     {
         if constexpr (std::is_base_of_v<To, From>)
             return std::static_pointer_cast<To>(ptr);   // upcast

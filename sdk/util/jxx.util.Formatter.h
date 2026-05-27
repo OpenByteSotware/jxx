@@ -1,101 +1,104 @@
 #pragma once
-
+#include <string>
+#include <sstream>
+#include <iomanip>
+#include <limits>
+#include <stdexcept>
+#include <algorithm>
+#include <cctype>
+#include <ctime>
+#include <cmath>
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.buildin_array.h"
 #include "lang/jxx.lang.Object.h"
-#include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.CharSequence.h"
 #include "lang/jxx.lang.Appendable.h"
-#include "io/jxx.io.Flushable.h"
 #include "io/jxx.io.Closeable.h"
-#include "jxx.util.Locale.h"
-#include "jxx.util.FormatterClosedException.h"
-#include "jxx.util.UnknownFormatConversionException.h"
-#include "jxx.util.MissingFormatArgumentException.h"
-#include "jxx.util.IllegalFormatFlagsException.h"
-#include "jxx.util.IllegalFormatWidthException.h"
-#include "jxx.util.IllegalFormatPrecisionException.h"
-#include "jxx.util.Formattable.h"
+#include "io/jxx.io.Flushable.h"
 
-#include <string>
-#include <vector>
+namespace jxx::lang {
+    class String;
+    
+}
+
+namespace jxx::util {
+    class Locale;
+}
 
 namespace jxx::io {
 	class IOException;
 }
 
 namespace jxx::util {
+    class Formatter final : public jxx::lang::Object, public jxx::io::Closeable, public jxx::io::Flushable {
+    public:
+        Formatter();
+        explicit Formatter(const jxx::Ptr<jxx::lang::Appendable> a);
+        explicit Formatter(const jxx::Ptr<Locale> l);
+        Formatter(const jxx::Ptr<jxx::lang::Appendable> a, const jxx::Ptr<Locale> l);
+        virtual ~Formatter() override = default;
 
-/**
- * Java 8 parity (practical): java.util.Formatter
- *
- * - Supports core conversions: s/S, d, o, x/X, f, e/E, g/G, a/A, b/B, c/C, h/H, n, %
- * - Supports flags: '-', '+', ' ', '0', ',', '(', '#', '<'
- * - Supports width and precision
- * - Date/time t/T conversions: present but throw UnsupportedOperationException (unless you add time API)
- */
-class Formatter final : public jxx::lang::Object, public jxx::io::Flushable, public jxx::io::Closeable {
-public:
-    Formatter();
-    explicit Formatter(jxx::Ptr<jxx::lang::Appendable> a);
-    explicit Formatter(jxx::Ptr<jxx::util::Locale> l);
-    Formatter(jxx::Ptr<jxx::lang::Appendable> a, jxx::Ptr<jxx::util::Locale> l);
+    public:
+        jxx::Ptr<jxx::lang::Appendable> out() const;
+        jxx::Ptr<Locale> locale() const;
+        jxx::Ptr<jxx::io::IOException> ioException() const;
 
-    // Core API
-    jxx::Ptr<jxx::lang::Appendable> out() const;
-    jxx::Ptr<jxx::util::Locale> locale() const;
+        jxx::Ptr<Formatter> format(
+            const jxx::Ptr<jxx::lang::String> format,
+            const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args);
 
-    jxx::Ptr<jxx::io::IOException> ioException() const;
+        jxx::Ptr<Formatter> format(
+            const jxx::Ptr<jxx::util::Locale> l,
+            const jxx::Ptr<jxx::lang::String> format,
+            const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args);
 
-    jxx::Ptr<Formatter> format(jxx::Ptr<jxx::lang::String> fmt, jxx::lang::ObjectArray args);
-    jxx::Ptr<Formatter> format(jxx::Ptr<jxx::util::Locale> l, jxx::Ptr<jxx::lang::String> fmt, jxx::lang::ObjectArray args);
+        void flush() override;
+        void close() override;
 
-    jxx::Ptr<jxx::lang::String> toString() const override;
+        jxx::Ptr<jxx::lang::String> toString() const override;
 
-    void flush() override;
-    void close() override;
+    private:
+        struct FormatSpec;
+        struct ParseState;
+        struct ArgCursor;
 
-private:
-    struct Spec {
-        // argument index (1-based). 0 means implicit next.
-        jxx::lang::jint argIndex = 0;
-        jxx::lang::jbool reusePrev = false; // '<'
-        std::string flags;
-        jxx::lang::jint width = -1;
-        jxx::lang::jint precision = -1;
-        jxx::lang::jbool dateTime = false; // t/T
-        char conv = 0;
-        char dt = 0; // date/time suffix
+    private:
+        jxx::Ptr<jxx::lang::Appendable> out_;
+        jxx::Ptr<Locale> locale_;
+        jxx::Ptr<jxx::io::IOException> lastIOException_;
+        jxx::lang::jbool closed_;
+        std::u16string buffer_;
+
+    private:
+        jxx::Ptr<Formatter> self_();
+        void ensureOpen_() const;
+
+        void appendUtf16_(const std::u16string& s);
+        void appendChar_(char16_t ch);
+
+        static jxx::lang::jint parseDecimal_(const std::u16string& fmt, std::size_t& i);
+        static ParseState parseOne_(const std::u16string& fmt, std::size_t start);
+
+        static std::u16string upperAscii_(const std::u16string& s);
+        static std::u16string lowerAscii_(const std::u16string& s);
+        static std::u16string applyPrecisionToString_(const std::u16string& s, jxx::lang::jint precision);
+        static std::u16string applyWidth_(const std::u16string& s, jxx::lang::jbool leftJustify, jxx::lang::jint width, char16_t pad);
+        static std::u16string addGrouping_(const std::u16string& s);
+        static std::u16string prefixSign_(const std::u16string& magnitude, jxx::lang::jbool negative, const FormatSpec& spec);
+        static std::u16string asciiToUtf16_(const std::string& s);
+        static std::string utf16ToAscii_(const std::u16string& s);
+
+        static std::u16string objectToString_(const jxx::Ptr<Object> arg);
+        static std::u16string objectToBooleanString_(const jxx::Ptr<Object> arg, jxx::lang::jbool upper);
+        static std::u16string objectToHashString_(const jxx::Ptr<Object> arg, jxx::lang::jbool upper);
+        static std::u16string objectToCharString_(const jxx::Ptr<Object> arg, jxx::lang::jbool upper);
+
+        static jxx::lang::jbool isFloatingObject_(const jxx::Ptr<Object> arg);
+        static long long extractLongLong_(const jxx::Ptr<Object> arg);
+        static long double extractLongDouble_(const jxx::Ptr<Object> arg);
+        static std::u16string formatIntegral_(const jxx::Ptr<Object> arg, const FormatSpec& spec);
+        static std::u16string formatFloating_(const jxx::Ptr<Object> arg, const FormatSpec& spec);
+        static std::u16string formatDateTime_(const jxx::Ptr<Object> arg, const FormatSpec& spec);
+
+        static std::u16string formatOne_(const FormatSpec& spec, const jxx::Ptr<Object> arg);
     };
-
-    jxx::Ptr<jxx::lang::Appendable> out_;
-    jxx::Ptr<jxx::util::Locale> locale_;
-    jxx::Ptr<jxx::io::IOException> lastIo_;
-    jxx::lang::jbool closed_ = false;
-
-    // when out_ is null, we use internal string builder
-    std::string sb_;
-
-    void ensureOpen_() const;
-    void append_(const std::string& s);
-    void appendChar_(char c);
-
-    static std::vector<Spec> parse_(const std::string& fmt, std::vector<std::string>& literals);
-
-    static std::string formatOne_(const Spec& sp, jxx::Ptr<jxx::lang::Object> arg, jxx::Ptr<jxx::util::Locale> loc);
-    static std::string applyWidth_(const std::string& in, const Spec& sp);
-
-    static std::string toLower_(std::string s);
-
-    static std::string formatString_(const Spec& sp, jxx::Ptr<jxx::lang::Object> arg);
-    static std::string formatBoolean_(const Spec& sp, jxx::Ptr<jxx::lang::Object> arg);
-    static std::string formatChar_(const Spec& sp, jxx::Ptr<jxx::lang::Object> arg);
-    static std::string formatHash_(const Spec& sp, jxx::Ptr<jxx::lang::Object> arg);
-    static std::string formatInteger_(const Spec& sp, jxx::Ptr<jxx::lang::Object> arg);
-    static std::string formatFloat_(const Spec& sp, jxx::Ptr<jxx::lang::Object> arg);
-
-    static long long asLongLong_(jxx::Ptr<jxx::lang::Object> arg, bool& ok);
-    static long double asLongDouble_(jxx::Ptr<jxx::lang::Object> arg, bool& ok);
-};
-
-} // namespace jxx::util
+}

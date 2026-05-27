@@ -19,9 +19,9 @@ class IOHelper {
 public:
     virtual ~IOHelper() = default;
 
-    static void checkBounds_(jxx::Ptr<CharArray> cbuf, jxx::lang::jint off, jxx::lang::jint len);
-    static void checkStringBounds_(jxx::Ptr<jxx::lang::String> s, jxx::lang::jint off, jxx::lang::jint len);   
-    static void checkBounds_(jxx::Ptr<jxx::lang::ByteArray> b, jxx::lang::jint off, jxx::lang::jint len);
+    static void checkBounds_(const jxx::lang::CharArray cbuf, jxx::lang::jint off, jxx::lang::jint len);
+    static void checkStringBounds_(const jxx::Ptr<jxx::lang::String> s, jxx::lang::jint off, jxx::lang::jint len);   
+    static void checkBounds_(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len);
 };
 
 } // namespace jxx::io

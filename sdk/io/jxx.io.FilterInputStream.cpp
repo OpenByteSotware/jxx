@@ -3,7 +3,7 @@
 
 namespace jxx::io {
 
-FilterInputStream::FilterInputStream(jxx::Ptr<InputStream> in) : in_(std::move(in)) {
+FilterInputStream::FilterInputStream(const jxx::Ptr<InputStream> in) : in_(std::move(in)) {
     if (!in_) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("in"));
 }
 

@@ -8,7 +8,7 @@ namespace jxx::io {
 
 class FilterInputStream : public InputStream {
 public:
-    explicit FilterInputStream(jxx::Ptr<InputStream> in);
+    explicit FilterInputStream(const jxx::Ptr<InputStream> in);
 
     jxx::lang::jint read() override;
     jxx::lang::jint read(jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) override;

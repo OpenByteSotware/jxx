@@ -3,7 +3,7 @@
 
 namespace jxx::io {
 
-FilterOutputStream::FilterOutputStream(jxx::Ptr<OutputStream> out)
+FilterOutputStream::FilterOutputStream(const jxx::Ptr<OutputStream> out)
     : out_(std::move(out)) {
     if (!out_) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("out"));
 }

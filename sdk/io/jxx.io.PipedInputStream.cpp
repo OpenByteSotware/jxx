@@ -1,3 +1,7 @@
+
+#include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.String.h"
 #include "jxx.io.PipedInputStream.h"
 #include "jxx.io.PipedOutputStream.h"
 
@@ -29,7 +33,7 @@ void PipedInputStream::receive_(jxx::lang::jint b) {
     if (!connected_) throw IOException(jxx::NEW<jxx::lang::String>("Pipe not connected"));
     if (closedByReader_) throw IOException(jxx::NEW<jxx::lang::String>("Pipe closed"));
 
-    std::unique_lock<std::recursive_mutex> lk(mutex_);
+    std::unique_lock<std::recursive_mutex> lk(this->mutex_);
 
     while (in_ == out_) {
         if (closedByReader_) throw IOException(jxx::NEW<jxx::lang::String>("Pipe closed"));
@@ -47,7 +51,7 @@ void PipedInputStream::receive_(jxx::lang::jint b) {
     notEmpty_.notify_all();
 }
 
-void PipedInputStream::receive_(jxx::Ptr<jxx::lang::ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
+void PipedInputStream::receive_(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) {
     InputStream::checkBounds_(b, off, len);
     for (jxx::lang::jint i = 0; i < len; ++i) {
         receive_(((jxx::lang::jint)(*b)[off + i]) & 0xFF);
@@ -79,7 +83,7 @@ jxx::lang::jint PipedInputStream::read() {
     return ret;
 }
 
-jxx::lang::jint PipedInputStream::read(jxx::Ptr<jxx::lang::ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
+jxx::lang::jint PipedInputStream::read(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) {
     InputStream::checkBounds_(b, off, len);
     if (len == 0) return 0;
 

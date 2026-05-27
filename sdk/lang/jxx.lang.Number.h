@@ -1,7 +1,5 @@
 #pragma once
-
 #include "lang/jxx.lang.Object.h"
-#include "lang/jxx.lang.String.h"
 
 namespace jxx::lang {
 class Number : public Object {

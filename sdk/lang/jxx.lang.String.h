@@ -213,17 +213,15 @@ namespace jxx::lang {
 
         // Java 8 String.format(...) uses Formatter
         static jxx::Ptr<String> format(
-            jxx::Ptr<String> format,
-            jxx::Ptr<JxxArray<jxx::Ptr<Object>, 1>> args);
+            const jxx::Ptr<String> format,
+            const jxx::Ptr<JxxArray<jxx::Ptr<Object>, 1U>> args);
 
-        static jxx::Ptr<jxx::lang::String> format(jxx::Ptr<jxx::util::Locale> l, jxx::Ptr<String> format,
-            jxx::Ptr<JxxArray<jxx::Ptr<Object>, 1>> args);
-
+        static jxx::Ptr<jxx::lang::String> format(const jxx::Ptr<jxx::util::Locale> l, const jxx::Ptr<String> format,
+            const jxx::Ptr<JxxArray<jxx::Ptr<Object>, 1U>> args);
         // Java 8 join overloads
         static jxx::Ptr<String> join(
             jxx::Ptr<CharSequence> delimiter,
-            jxx::Ptr<JxxArray<jxx::Ptr<CharSequence>, 1>> elements);
-
+            jxx::Ptr<JxxArray<jxx::Ptr<CharSequence>, 1U>> elements);
         static jxx::Ptr<String> join(
             jxx::Ptr<CharSequence> delimiter,
             jxx::Ptr<jxx::lang::Iterable<jxx::Ptr<CharSequence>>> elements);
