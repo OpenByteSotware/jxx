@@ -5,17 +5,13 @@
 
 namespace jxx::lang
 {
-    class Integer final : public Number {
+    class Float final : public Number {
     public:
-        static constexpr jint MIN_VALUE = static_cast<jint>(0x80000000);
-        static constexpr jint MAX_VALUE = static_cast<jint>(0x7fffffff);
+        explicit Float(jfloat value);
 
-    public:
-        explicit Integer(jint value);
-
-        static jxx::Ptr<Integer> valueOf(jint value);
-        static jxx::Ptr<Integer> valueOf(const jxx::Ptr<String> s);
-        static jint parseInt(const jxx::Ptr<String> s);
+        static jxx::Ptr<Float> valueOf(jfloat value);
+        static jxx::Ptr<Float> valueOf(const jxx::Ptr<String> s);
+        static jfloat parseFloat(const jxx::Ptr<String> s);
 
     public:
         jbyte byteValue() const override;
@@ -30,6 +26,6 @@ namespace jxx::lang
         jbool equals(const jxx::Ptr<Object> obj) const override;
 
     private:
-        jint value_;
+        jfloat value_;
     };
 }

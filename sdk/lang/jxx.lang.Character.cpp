@@ -25,7 +25,7 @@ jint Character::codePointBefore(jxx::Ptr<String> s, jint index) {
     return s->codePointBefore(index);
 }
 
-jint Character::codePointAt(jxx::Ptr<CharArray> a, jint index) {
+jint Character::codePointAt(const CharArray a, jint index) {
     if (!a) throw std::invalid_argument("NullPointerException");
     if (index < 0 || (std::uint32_t)index >= a->length) throw std::out_of_range("StringIndexOutOfBoundsException");
 
@@ -37,7 +37,7 @@ jint Character::codePointAt(jxx::Ptr<CharArray> a, jint index) {
     return (jint)c1;
 }
 
-jint Character::codePointBefore(jxx::Ptr<CharArray> a, jint index) {
+jint Character::codePointBefore(const CharArray a, jint index) {
     if (!a) throw std::invalid_argument("NullPointerException");
     if (index <= 0 || (std::uint32_t)index > a->length) throw std::out_of_range("StringIndexOutOfBoundsException");
 

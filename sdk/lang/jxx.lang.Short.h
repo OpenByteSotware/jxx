@@ -5,17 +5,17 @@
 
 namespace jxx::lang
 {
-    class Integer final : public Number {
+    class Short final : public Number {
     public:
-        static constexpr jint MIN_VALUE = static_cast<jint>(0x80000000);
-        static constexpr jint MAX_VALUE = static_cast<jint>(0x7fffffff);
+        static constexpr jshort MIN_VALUE = static_cast<jshort>(-32768);
+        static constexpr jshort MAX_VALUE = static_cast<jshort>(32767);
 
     public:
-        explicit Integer(jint value);
+        explicit Short(jshort value);
 
-        static jxx::Ptr<Integer> valueOf(jint value);
-        static jxx::Ptr<Integer> valueOf(const jxx::Ptr<String> s);
-        static jint parseInt(const jxx::Ptr<String> s);
+        static jxx::Ptr<Short> valueOf(jshort value);
+        static jxx::Ptr<Short> valueOf(const jxx::Ptr<String> s);
+        static jshort parseShort(const jxx::Ptr<String> s);
 
     public:
         jbyte byteValue() const override;
@@ -30,6 +30,6 @@ namespace jxx::lang
         jbool equals(const jxx::Ptr<Object> obj) const override;
 
     private:
-        jint value_;
+        jshort value_;
     };
 }

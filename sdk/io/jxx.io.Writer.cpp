@@ -11,7 +11,7 @@ jxx::Ptr<Writer> Writer::self_() {
     return std::static_pointer_cast<Writer>(this->thisPtr);
 }
 
-void Writer::checkBounds_(jxx::Ptr<CharArray> cbuf, jxx::lang::jint off, jxx::lang::jint len) {
+void Writer::checkBounds_(const jxx::lang::CharArray cbuf, jxx::lang::jint off, jxx::lang::jint len) {
     if (!cbuf) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("cbuf"));
     if (off < 0 || len < 0 || (std::uint32_t)(off + len) > cbuf->length) {
         throw jxx::lang::IndexOutOfBoundsException(jxx::NEW<jxx::lang::String>("off/len"));
@@ -25,12 +25,12 @@ void Writer::checkStringBounds_(jxx::Ptr<jxx::lang::String> s, jxx::lang::jint o
     }
 }
 
-void Writer::write(jxx::Ptr<CharArray> cbuf) {
+void Writer::write(const jxx::lang::CharArray cbuf) {
     if (!cbuf) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("cbuf"));
     write(cbuf, 0, (jxx::lang::jint)cbuf->length);
 }
 
-void Writer::write(jxx::Ptr<CharArray> cbuf, jxx::lang::jint off, jxx::lang::jint len) {
+void Writer::write(const jxx::lang::CharArray cbuf, jxx::lang::jint off, jxx::lang::jint len) {
     checkBounds_(cbuf, off, len);
     for (jxx::lang::jint i = 0; i < len; ++i) write((jxx::lang::jint)(*cbuf)[off + i]);
 }
@@ -52,7 +52,7 @@ jxx::Ptr<Writer> Writer::append(jxx::Ptr<jxx::lang::CharSequence> csq) {
         return self_();
     }
     // write entire sequence
-    auto a = jxx::NEW<CharArray>((std::uint32_t)csq->length());
+    auto a = jxx::NEW<jxx::lang::CharArrayType>((std::uint32_t)csq->length());
     for (jxx::lang::jint i = 0; i < csq->length(); ++i) (*a)[i] = csq->charAt(i);
     write(a);
     return self_();
@@ -63,7 +63,7 @@ jxx::Ptr<Writer> Writer::append(jxx::Ptr<jxx::lang::CharSequence> csq, jxx::lang
     if (start < 0 || end < start || end > csq->length()) {
         throw jxx::lang::IndexOutOfBoundsException(jxx::NEW<jxx::lang::String>("start/end"));
     }
-    auto a = jxx::NEW<CharArray>((std::uint32_t)(end - start));
+    auto a = jxx::NEW<jxx::lang::CharArrayType>((std::uint32_t)(end - start));
     for (jxx::lang::jint i = 0; i < (end - start); ++i) (*a)[i] = csq->charAt(start + i);
     write(a);
     return self_();

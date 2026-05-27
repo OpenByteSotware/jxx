@@ -1,21 +1,20 @@
 #pragma once
-
+#include "jxx.lang.buildin_array.h"
 #include "lang/jxx.lang.Number.h"
 #include "lang/jxx.lang.String.h"
 
-namespace jxx::lang
-{
-    class Integer final : public Number {
+namespace jxx::lang {
+    class Byte final : public Number {
     public:
-        static constexpr jint MIN_VALUE = static_cast<jint>(0x80000000);
-        static constexpr jint MAX_VALUE = static_cast<jint>(0x7fffffff);
+        static constexpr jbyte MIN_VALUE = static_cast<jbyte>(-128);
+        static constexpr jbyte MAX_VALUE = static_cast<jbyte>(127);
 
     public:
-        explicit Integer(jint value);
+        explicit Byte(jbyte value);
 
-        static jxx::Ptr<Integer> valueOf(jint value);
-        static jxx::Ptr<Integer> valueOf(const jxx::Ptr<String> s);
-        static jint parseInt(const jxx::Ptr<String> s);
+        static jxx::Ptr<Byte> valueOf(jbyte value);
+        static jxx::Ptr<Byte> valueOf(const jxx::Ptr<String> s);
+        static jbyte parseByte(const jxx::Ptr<String> s);
 
     public:
         jbyte byteValue() const override;
@@ -30,6 +29,6 @@ namespace jxx::lang
         jbool equals(const jxx::Ptr<Object> obj) const override;
 
     private:
-        jint value_;
+        jbyte value_;
     };
 }

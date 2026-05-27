@@ -5,17 +5,17 @@
 
 namespace jxx::lang
 {
-    class Integer final : public Number {
+    class Long final : public Number {
     public:
-        static constexpr jint MIN_VALUE = static_cast<jint>(0x80000000);
-        static constexpr jint MAX_VALUE = static_cast<jint>(0x7fffffff);
+        static constexpr jlong MIN_VALUE = static_cast<jlong>(0x8000000000000000LL);
+        static constexpr jlong MAX_VALUE = static_cast<jlong>(0x7fffffffffffffffLL);
 
     public:
-        explicit Integer(jint value);
+        explicit Long(jlong value);
 
-        static jxx::Ptr<Integer> valueOf(jint value);
-        static jxx::Ptr<Integer> valueOf(const jxx::Ptr<String> s);
-        static jint parseInt(const jxx::Ptr<String> s);
+        static jxx::Ptr<Long> valueOf(jlong value);
+        static jxx::Ptr<Long> valueOf(const jxx::Ptr<String> s);
+        static jlong parseLong(const jxx::Ptr<String> s);
 
     public:
         jbyte byteValue() const override;
@@ -30,6 +30,6 @@ namespace jxx::lang
         jbool equals(const jxx::Ptr<Object> obj) const override;
 
     private:
-        jint value_;
+        jlong value_;
     };
 }
