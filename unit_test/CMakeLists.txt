@@ -63,6 +63,7 @@ if(UNIX AND NOT APPLE)
     target_link_libraries(all_tests PRIVATE dl)
 endif()
 
+target_link_libraries(all_tests PRIVATE unicode::unicode)
 
 
 # Automatically discover tests in the executable

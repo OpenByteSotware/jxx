@@ -41,6 +41,7 @@ endif()
 target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_compile_features(jxxsdk PRIVATE cxx_std_17)
+option(JXX_WITH_LIBUNICODE "Enable libunicode backend" ON)
 
 # On MSVC, silence some warnings for interface-heavy code
 if(MSVC)

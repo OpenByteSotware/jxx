@@ -2,7 +2,7 @@ Java to C++ converter and SDK
 
 With STL and C++ 17 moving from java code base to C++ becomes easier
 By implementing all java class hiearchy and interfaces (virtual classes in c++). 
-And with the help of python converter, moving to c++ from java is easy.
+With the help of python converter, moving to c++ from java is easy.
 
 The idea is to make the interface and c++ class act exactly or close to java.
 With the help of converter and macros. you can convert applications to run as c++.
@@ -17,7 +17,17 @@ No open source libraries used under the hood to keep from dependecies across pla
 So if adding new capabilites to jxx, you will need to implement from ground up.  Cannot include boost
 libraries.  Only stl, clib can be used.  You can reimplement a behavior required using those.
 The dependecy tree can become large and changes can have a ripple effect.  That is the reason to
-implement from group up.  
+implement from group up.
+
+With that said sometimes it is too much work to build from ground up.  But packages needed are scruiized for 
+license compatibility and amount of work to include.  Mainly use MIT license.
+
+
+Pre-req:
+- must be MIT compatibility license (for 3rdparty)
+- must have a cmake to easily automate build for jxx
+- must test via facade wrapper around jxx classes (jxx.<package>.<class> -> uses in private methods <library added>
+- public interface must be jxx constraints (derived from Object - memeory deletion, use jxx::Ptr<type> for returns and const jxx::Ptr<type> for parameters)  
 
 For windows:
 Need to create an environment variable:   JXX_TIME_ZONE_DATA
@@ -25,6 +35,7 @@ Then use provided zoneinfo.tar.gz (from ubuntu linux timezone /usr/shared/zonein
 This provides windows with timezone data.
 Also create a file in JXX_TIME_ZONE_DATA/timezone
 Set inside file the correct timezone.  Default is GMT
+If using linux based systems timezone is already in /usr/shared/zoneinfo
 
 
 There are two parts to this project:
@@ -109,4 +120,14 @@ python3 java_to_cpp.py \
 python3 java_to_cpp.py MyFile.java --instanceof-style macro --downcast-style macro
 
 python3 java_to_cpp.py --dir src_java --out outcpp --cmake
+
+
+
+To build 3rd party packages
+These 3rd party libraries have been modified to support C++17 at a minimum
+
+top level directory do these commands
+git submodule add --name libunicode https://github.com/OpenByteSotware/libunicode 3rdparty/libunicode
+git submodule add --name libgsl https://github.com/OpenByteSotware/GSL 3rdparty/gsl
+git submodule add --name libfmt https://github.com/OpenByteSotware/fmt 3rdparty/fmt
 

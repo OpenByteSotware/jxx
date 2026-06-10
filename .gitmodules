@@ -1,0 +1,10 @@
+[submodule "libunicode"]
+	path = 3rdparty/libunicode
+	url = https://github.com/OpenByteSotware/libunicode
+
+[submodule "libgsl"]
+	path = 3rdparty/gsl
+	url = https://github.com/OpenByteSotware/GSL
+[submodule "libfmt"]
+	path = 3rdparty/fmt
+	url = https://github.com/OpenByteSotware/fmt
