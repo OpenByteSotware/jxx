@@ -63,8 +63,7 @@ if(UNIX AND NOT APPLE)
     target_link_libraries(all_tests PRIVATE dl)
 endif()
 
-target_link_libraries(all_tests PRIVATE unicode::unicode)
-
+target_link_libraries(all_tests PRIVATE fmt::fmt Microsoft.GSL::GSL unicode::unicode)
 
 # Automatically discover tests in the executable
 include(GoogleTest)

@@ -212,12 +212,12 @@ namespace jxx::lang {
         static jxx::Ptr<String> copyValueOf(CharArray data, jxx::lang::jint offset, jxx::lang::jint count);
 
         // Java 8 String.format(...) uses Formatter
-        static jxx::Ptr<String> format(
-            const jxx::Ptr<String> format,
-            const jxx::Ptr<JxxArray<jxx::Ptr<Object>, 1U>> args);
+        static jxx::Ptr<String> format(const jxx::Ptr<jxx::lang::String> formatString,
+            const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args);
 
-        static jxx::Ptr<jxx::lang::String> format(const jxx::Ptr<jxx::util::Locale> l, const jxx::Ptr<String> format,
-            const jxx::Ptr<JxxArray<jxx::Ptr<Object>, 1U>> args);
+        static jxx::Ptr<jxx::lang::String> format(const jxx::Ptr<jxx::util::Locale> locale,
+            const jxx::Ptr<jxx::lang::String> formatString,
+            const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args);
         // Java 8 join overloads
         static jxx::Ptr<String> join(
             jxx::Ptr<CharSequence> delimiter,

@@ -1,905 +1,1081 @@
-#include "lang/jxx.lang.String.h"
-#include "io/jxx.io.IOException.h"
-#include "util/jxx.util.Locale.h"
-#include "lang/jxx.lang.Number.h"
-#include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.Byte.h"
-#include "lang/jxx.lang.Short.h"
-#include "lang/jxx.lang.Integer.h"
-#include "lang/jxx.lang.Long.h"
-#include "lang/jxx.lang.Float.h"
-#include "lang/jxx.lang.Double.h"
+#include "util/jxx.util.Formatter.h"
+
+#include <algorithm>
+#include <cctype>
+#include <chrono>
+#include <cmath>
+#include <cstdio>
+#include <ctime>
+#include <iomanip>
+#include <locale>
+#include <memory>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include <fmt/format.h>
 #include "lang/jxx.lang.Character.h"
-#include "math/jxx.math.BigInteger.h"
-#include "math/jxx.math.BigDecimal.h"
-#include "util/jxx.util.Date.h"
-#include "util/jxx.util.Calendar.h"
-#include "jxx.util.Formatter.h"
+#include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.Number.h"
 
 namespace jxx::util
 {
 
-    struct Formatter::FormatSpec {
-        jxx::lang::jint argumentIndex = -1;      // explicit n$ index, normalized to 0-based
-        jxx::lang::jbool reusePrevious = false;  // '<'
-        jxx::lang::jbool leftJustify = false;    // '-'
-        jxx::lang::jbool alternate = false;      // '#'
-        jxx::lang::jbool plus = false;           // '+'
-        jxx::lang::jbool leadingSpace = false;   // ' '
-        jxx::lang::jbool zeroPad = false;        // '0'
-        jxx::lang::jbool group = false;          // ','
-        jxx::lang::jbool parentheses = false;    // '('
-        jxx::lang::jint width = -1;
-        jxx::lang::jint precision = -1;
-        char16_t conversion = 0;      // lower-case normalized conversion
-        char16_t dateTimeSuffix = 0;  // for %tX
-        jxx::lang::jbool upper = false;
-    };
-
-    struct Formatter::ParseState {
-        FormatSpec spec;
-        std::size_t next = 0;
-    };
-
-    struct Formatter::ArgCursor {
-        jxx::lang::jint nextArg = 0;
-        jxx::lang::jint previousArg = -1;
-    };
-
-    namespace {
-        static std::tm toLocalTm_(std::time_t t)
-        {
-            std::tm tmv{};
-#if defined(_WIN32)
-            localtime_s(&tmv, &t);
-#else
-            localtime_r(&t, &tmv);
-#endif
-            return tmv;
-        }
-
-        static std::tm toGmTm_(std::time_t t)
-        {
-            std::tm tmv{};
-#if defined(_WIN32)
-            gmtime_s(&tmv, &t);
-#else
-            gmtime_r(&t, &tmv);
-#endif
-            return tmv;
-        }
-
-        static std::string twoDigits_(int v)
-        {
-            std::ostringstream oss;
-            oss << std::setw(2) << std::setfill('0') << v;
-            return oss.str();
-        }
-
-        static std::string threeDigits_(int v)
-        {
-            std::ostringstream oss;
-            oss << std::setw(3) << std::setfill('0') << v;
-            return oss.str();
-        }
-
-        static std::string fourDigits_(int v)
-        {
-            std::ostringstream oss;
-            oss << std::setw(4) << std::setfill('0') << v;
-            return oss.str();
-        }
-
-        static std::string padLeft_(const std::string& s, int width, char fill = '0')
-        {
-            if (static_cast<int>(s.size()) >= width) {
-                return s;
-            }
-            return std::string(static_cast<std::size_t>(width - static_cast<int>(s.size())), fill) + s;
-        }
-
-        static long long extractMillis_(const jxx::Ptr<jxx::lang::Object> arg)
-        {
-            if (!arg) {
-                throw std::runtime_error("null date/time argument");
-            }
-
-            jxx::Ptr<Date> d = jxx::CAST<Date, jxx::lang::Object>(arg);
-            if (d) {
-                return static_cast<long long>(d->getTime());
-            }
-
-            jxx::Ptr<Calendar> c = jxx::CAST<Calendar, jxx::lang::Object>(arg);
-            if (c) {
-                return static_cast<long long>(c->getTimeInMillis());
-            }
-
-            jxx::Ptr<jxx::lang::Long> l = jxx::CAST<jxx::lang::Long, jxx::lang::Object>(arg);
-            if (l) {
-                return static_cast<long long>(l->longValue());
-            }
-
-            jxx::Ptr<jxx::lang::Integer> i = jxx::CAST<jxx::lang::Integer, jxx::lang::Object>(arg);
-            if (i) {
-                return static_cast<long long>(i->longValue());
-            }
-
-            throw std::runtime_error("unsupported date/time argument type");
-        }
-
-        static std::string weekdayShort_(int wday)
-        {
-            static const char* names[] = { "Sun","Mon","Tue","Wed","Thu","Fri","Sat" };
-            return (wday >= 0 && wday < 7) ? names[wday] : "";
-        }
-
-        static std::string weekdayLong_(int wday)
-        {
-            static const char* names[] = { "Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday" };
-            return (wday >= 0 && wday < 7) ? names[wday] : "";
-        }
-
-        static std::string monthShort_(int mon)
-        {
-            static const char* names[] = { "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec" };
-            return (mon >= 0 && mon < 12) ? names[mon] : "";
-        }
-
-        static std::string monthLong_(int mon)
-        {
-            static const char* names[] = { "January","February","March","April","May","June","July","August","September","October","November","December" };
-            return (mon >= 0 && mon < 12) ? names[mon] : "";
-        }
+    void fail_(const char* message)
+    {
+        throw std::runtime_error(message);
     }
 
-    Formatter::Formatter()
-        : out_(nullptr),
-        locale_(nullptr),
-        lastIOException_(nullptr),
-        closed_(false),
-        buffer_()
-    {}
-
-    Formatter::Formatter(const jxx::Ptr<jxx::lang::Appendable> a)
-        : out_(a),
-        locale_(nullptr),
-        lastIOException_(nullptr),
-        closed_(false),
-        buffer_()
-    {}
-
-    Formatter::Formatter(const jxx::Ptr<Locale> l)
-        : out_(nullptr),
-        locale_(l),
-        lastIOException_(nullptr),
-        closed_(false),
-        buffer_()
-    {}
-
-    Formatter::Formatter(const jxx::Ptr<jxx::lang::Appendable> a, const jxx::Ptr<Locale> l)
-        : out_(a),
-        locale_(l),
-        lastIOException_(nullptr),
-        closed_(false),
-        buffer_()
-    {}
-
-    jxx::Ptr<jxx::util::Formatter> Formatter::self_()
+    inline std::string toUtf8OrEmpty_(const jxx::Ptr<jxx::lang::String>& s)
     {
-        return jxx::CAST<jxx::util::Formatter, jxx::lang::Object>(this);
+        return s ? s->utf8() : std::string{};
     }
 
-    jxx::Ptr<jxx::lang::Appendable> Formatter::out() const
+    inline std::string toUpperAscii_(std::string s)
     {
-        return out_;
+        for (char& ch : s)
+            ch = static_cast<char>(std::toupper(static_cast<unsigned char>(ch)));
+        return s;
     }
 
-    jxx::Ptr<Locale> Formatter::locale() const
+    inline std::string toLowerAscii_(std::string s)
     {
-        return locale_;
+        for (char& ch : s)
+            ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+        return s;
     }
 
-    jxx::Ptr<jxx::io::IOException> Formatter::ioException() const
+    inline bool isDigit_(char ch) noexcept
     {
-        return lastIOException_;
+        return ch >= '0' && ch <= '9';
     }
 
-    void Formatter::ensureOpen_() const
+    inline std::string repeat_(char ch, int count)
     {
-        if (closed_) {
-            throw std::runtime_error("Formatter is closed");
-        }
+        return count > 0 ? std::string(static_cast<std::size_t>(count), ch) : std::string{};
     }
 
-    void Formatter::appendUtf16_(const std::u16string& s)
+    inline std::string insertGrouping_(std::string digits)
     {
-        ensureOpen_();
+        if (digits.size() <= 3)
+            return digits;
 
-        if (!out_) {
-            buffer_ += s;
-            return;
-        }
+        std::string out;
+        const int first = static_cast<int>(digits.size()) % 3;
+        std::size_t pos = 0;
 
-        try {
-            out_->append(jxx::NEW<jxx::lang::String>(s));
-        }
-        catch (...) {
-            throw;
-        }
-    }
-
-    void Formatter::appendChar_(char16_t ch)
-    {
-        std::u16string one(1, ch);
-        appendUtf16_(one);
-    }
-
-    jxx::lang::jint Formatter::parseDecimal_(const std::u16string& fmt, std::size_t& i)
-    {
-        jxx::lang::jint value = 0;
-        bool any = false;
-
-        while (i < fmt.size() && fmt[i] >= u'0' && fmt[i] <= u'9') {
-            any = true;
-            value = value * 10 + static_cast<jxx::lang::jint>(fmt[i] - u'0');
-            ++i;
-        }
-
-        return any ? value : -1;
-    }
-
-    Formatter::ParseState Formatter::parseOne_(const std::u16string& fmt, std::size_t start)
-    {
-        ParseState st;
-        std::size_t i = start;
-
-        if (i >= fmt.size() || fmt[i] != u'%') {
-            throw std::runtime_error("expected %");
-        }
-        ++i;
-
-        if (i < fmt.size() && fmt[i] == u'%') {
-            st.spec.conversion = u'%';
-            st.next = i + 1;
-            return st;
-        }
-        if (i < fmt.size() && fmt[i] == u'n') {
-            st.spec.conversion = u'n';
-            st.next = i + 1;
-            return st;
-        }
-
+        if (first != 0)
         {
-            std::size_t save = i;
-            jxx::lang::jint n = parseDecimal_(fmt, i);
-            if (n >= 0 && i < fmt.size() && fmt[i] == u'$') {
-                st.spec.argumentIndex = n - 1;
-                ++i;
-            }
-            else {
-                i = save;
-            }
+            out.append(digits, 0, static_cast<std::size_t>(first));
+            pos = static_cast<std::size_t>(first);
+            if (pos < digits.size())
+                out.push_back(',');
         }
 
-        bool scanningFlags = true;
-        while (scanningFlags && i < fmt.size()) {
-            switch (fmt[i]) {
-            case u'-': st.spec.leftJustify = true; ++i; break;
-            case u'#': st.spec.alternate = true; ++i; break;
-            case u'+': st.spec.plus = true; ++i; break;
-            case u' ': st.spec.leadingSpace = true; ++i; break;
-            case u'0': st.spec.zeroPad = true; ++i; break;
-            case u',': st.spec.group = true; ++i; break;
-            case u'(': st.spec.parentheses = true; ++i; break;
-            case u'<': st.spec.reusePrevious = true; ++i; break;
-            default: scanningFlags = false; break;
-            }
-        }
-
+        while (pos < digits.size())
         {
-            std::size_t save = i;
-            jxx::lang::jint w = parseDecimal_(fmt, i);
-            if (w >= 0) {
-                st.spec.width = w;
-            }
-            else {
-                i = save;
-            }
+            out.append(digits, pos, 3);
+            pos += 3;
+            if (pos < digits.size())
+                out.push_back(',');
         }
 
-        if (i < fmt.size() && fmt[i] == u'.') {
-            ++i;
-            jxx::lang::jint p = parseDecimal_(fmt, i);
-            if (p < 0) {
-                throw std::runtime_error("illegal precision");
-            }
-            st.spec.precision = p;
-        }
-
-        if (i >= fmt.size()) {
-            throw std::runtime_error("missing conversion");
-        }
-
-        if (fmt[i] == u't' || fmt[i] == u'T') {
-            st.spec.conversion = u't';
-            st.spec.upper = (fmt[i] == u'T');
-            ++i;
-            if (i >= fmt.size()) {
-                throw std::runtime_error("missing date/time suffix");
-            }
-            st.spec.dateTimeSuffix = fmt[i];
-            ++i;
-            st.next = i;
-            return st;
-        }
-
-        st.spec.conversion = static_cast<char16_t>(std::tolower(static_cast<unsigned char>(fmt[i])));
-        st.spec.upper = (fmt[i] >= u'A' && fmt[i] <= u'Z');
-        ++i;
-        st.next = i;
-        return st;
-    }
-
-    std::u16string Formatter::upperAscii_(const std::u16string& s)
-    {
-        std::u16string out = s;
-        for (auto& ch : out) {
-            if (ch >= u'a' && ch <= u'z') {
-                ch = static_cast<char16_t>(ch - u'a' + u'A');
-            }
-        }
         return out;
     }
 
-    std::u16string Formatter::lowerAscii_(const std::u16string& s)
+    inline std::string groupFloatIntegralPart_(const std::string& s)
     {
-        std::u16string out = s;
-        for (auto& ch : out) {
-            if (ch >= u'A' && ch <= u'Z') {
-                ch = static_cast<char16_t>(ch - u'A' + u'a');
-            }
+        if (s.empty())
+            return s;
+
+        std::size_t start = 0;
+        std::string prefix;
+
+        if (s[0] == '+' || s[0] == '-' || s[0] == ' ')
+        {
+            prefix.push_back(s[0]);
+            start = 1;
         }
+
+        const auto dot = s.find('.', start);
+        const auto expPos = s.find_first_of("eE", start);
+
+        std::size_t intEnd = s.size();
+        if (dot != std::string::npos)
+            intEnd = dot;
+        else if (expPos != std::string::npos)
+            intEnd = expPos;
+
+        const std::string integral = s.substr(start, intEnd - start);
+        const std::string rest = s.substr(intEnd);
+
+        return prefix + insertGrouping_(integral) + rest;
+    }
+
+    inline std::string applyWidth_(std::string s, int width, bool leftJustify, char fill)
+    {
+        if (width <= 0 || static_cast<int>(s.size()) >= width)
+            return s;
+
+        const int pad = width - static_cast<int>(s.size());
+
+        if (leftJustify)
+            return s + repeat_(fill, pad);
+
+        return repeat_(fill, pad) + s;
+    }
+
+    inline std::string applyNumericWidth_(
+        const std::string& prefix,
+        const std::string& body,
+        int width,
+        bool leftJustify,
+        bool zeroPad)
+    {
+        const std::string combined = prefix + body;
+        if (width <= 0 || static_cast<int>(combined.size()) >= width)
+            return combined;
+
+        const int pad = width - static_cast<int>(combined.size());
+
+        if (leftJustify)
+            return combined + repeat_(' ', pad);
+
+        if (zeroPad)
+            return prefix + repeat_('0', pad) + body;
+
+        return repeat_(' ', pad) + combined;
+    }
+
+    enum class ArgKind
+    {
+        Null,
+        Boolean,
+        Integral,
+        Floating,
+        Character,
+        String,
+        ObjectString
+    };
+
+    struct ArgValue
+    {
+        ArgKind kind = ArgKind::Null;
+        bool boolValue = false;
+        long long intValue = 0;
+        double floatValue = 0.0;
+        char32_t charValue = 0;
+        std::string stringValue;
+        jxx::Ptr<jxx::lang::Object> objectValue;
+    };
+
+    inline std::vector<ArgValue> unboxArgs_(
+        const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args)
+    {
+        std::vector<ArgValue> out;
+
+        if (!args)
+            return out;
+
+        const jxx::lang::jint n = args->size();
+        out.reserve(static_cast<std::size_t>(n));
+
+        for (jxx::lang::jint i = 0; i < n; ++i)
+        {
+            auto value = (*args)[i];
+
+            ArgValue arg;
+            arg.objectValue = value;
+
+            if (!value)
+            {
+                arg.kind = ArgKind::Null;
+            }
+            else if (auto s = jxx::CAST<jxx::lang::String, jxx::lang::Object>(value))
+            {
+                arg.kind = ArgKind::String;
+                arg.stringValue = s->utf8();
+            }
+            else if (auto v = std::dynamic_pointer_cast<jxx::lang::Boolean>(value))
+            {
+                arg.kind = ArgKind::Boolean;
+                arg.boolValue = static_cast<bool>(v->booleanValue());
+            }
+            else if (auto v = std::dynamic_pointer_cast<Byte>(value))
+            {
+                arg.kind = ArgKind::Integral;
+                arg.intValue = static_cast<long long>(v->byteValue());
+            }
+            else if (auto v = std::dynamic_pointer_cast<Short>(value))
+            {
+                arg.kind = ArgKind::Integral;
+                arg.intValue = static_cast<long long>(v->shortValue());
+            }
+            else if (auto v = std::dynamic_pointer_cast<Integer>(value))
+            {
+                arg.kind = ArgKind::Integral;
+                arg.intValue = static_cast<long long>(v->intValue());
+            }
+            else if (auto v = std::dynamic_pointer_cast<Long>(value))
+            {
+                arg.kind = ArgKind::Integral;
+                arg.intValue = static_cast<long long>(v->longValue());
+            }
+            else if (auto v = std::dynamic_pointer_cast<Float>(value))
+            {
+                arg.kind = ArgKind::Floating;
+                arg.floatValue = static_cast<double>(v->floatValue());
+            }
+            else if (auto v = std::dynamic_pointer_cast<Double>(value))
+            {
+                arg.kind = ArgKind::Floating;
+                arg.floatValue = static_cast<double>(v->doubleValue());
+            }
+            else if (auto v = std::dynamic_pointer_cast<Character>(value))
+            {
+                arg.kind = ArgKind::Character;
+                arg.charValue = static_cast<char32_t>(v->charValue());
+            }
+            else
+            {
+                arg.kind = ArgKind::ObjectString;
+                const auto s = value->toString();
+                arg.stringValue = s ? s->utf8() : std::string("null");
+            }
+
+            out.push_back(std::move(arg));
+        }
+
         return out;
     }
 
-    std::u16string Formatter::applyPrecisionToString_(const std::u16string& s, jxx::lang::jint precision)
+    struct Spec
     {
-        if (precision < 0 || static_cast<std::size_t>(precision) >= s.size()) {
-            return s;
+        int argIndex = -1;          // Stored 0-based
+        bool previous = false;      // %<...
+        bool leftJustify = false;   // -
+        bool alternate = false;     // #
+        bool plus = false;          // +
+        bool leadingSpace = false;  // ' '
+        bool zeroPad = false;       // 0
+        bool grouping = false;      // ,
+        bool parentheses = false;   // (
+        int width = -1;
+        int precision = -1;
+        bool dateTime = false;      // t/T prefix
+        bool upper = false;         // uppercase output variant
+        char conv = '\0';           // normalized lower-case conversion (non-date/time)
+        char dateSuffix = '\0';     // exact date/time suffix
+    };
+
+    inline int parseUnsigned_(const std::string& fmt, std::size_t& i)
+    {
+        if (i >= fmt.size() || !isDigit_(fmt[i]))
+            fail_("expected digits in format specifier");
+
+        int value = 0;
+        while (i < fmt.size() && isDigit_(fmt[i]))
+        {
+            value = value * 10 + (fmt[i] - '0');
+            ++i;
         }
-        return s.substr(0, static_cast<std::size_t>(precision));
+        return value;
     }
 
-    std::u16string Formatter::applyWidth_(const std::u16string& s, jxx::lang::jbool leftJustify, jxx::lang::jint width, char16_t pad)
+    inline Spec parseSpec_(const std::string& fmt, std::size_t& i)
     {
-        if (width < 0 || s.size() >= static_cast<std::size_t>(width)) {
-            return s;
-        }
-        std::u16string fill(static_cast<std::size_t>(width) - s.size(), pad);
-        return leftJustify ? (s + fill) : (fill + s);
-    }
+        Spec spec{};
 
-    std::u16string Formatter::addGrouping_(const std::u16string& s)
-    {
-        if (s.empty()) {
-            return s;
-        }
+        // Optional argument_index$
+        {
+            const std::size_t save = i;
 
-        std::u16string sign;
-        std::u16string body = s;
-        if (!body.empty() && (body[0] == u'+' || body[0] == u'-')) {
-            sign.push_back(body[0]);
-            body.erase(body.begin());
-        }
-
-        std::u16string intPart = body;
-        std::u16string fracPart;
-        std::size_t dot = body.find(u'.');
-        if (dot != std::u16string::npos) {
-            intPart = body.substr(0, dot);
-            fracPart = body.substr(dot);
-        }
-
-        std::u16string grouped;
-        for (std::size_t i = 0; i < intPart.size(); ++i) {
-            if (i > 0 && ((intPart.size() - i) % 3 == 0)) {
-                grouped.push_back(u',');
+            if (i < fmt.size() && isDigit_(fmt[i]))
+            {
+                const int index = parseUnsigned_(fmt, i);
+                if (i < fmt.size() && fmt[i] == '$')
+                {
+                    spec.argIndex = index - 1;
+                    ++i;
+                }
+                else
+                {
+                    i = save;
+                }
             }
-            grouped.push_back(intPart[i]);
         }
 
-        return sign + grouped + fracPart;
-    }
-
-    std::u16string Formatter::prefixSign_(const std::u16string& magnitude, jxx::lang::jbool negative, const FormatSpec& spec)
-    {
-        if (negative) {
-            if (spec.parentheses) {
-                return std::u16string(1, u'(') + magnitude + std::u16string(1, u')');
+        // Flags
+        bool doneFlags = false;
+        while (!doneFlags && i < fmt.size())
+        {
+            switch (fmt[i])
+            {
+            case '-': spec.leftJustify = true; ++i; break;
+            case '#': spec.alternate = true; ++i; break;
+            case '+': spec.plus = true; ++i; break;
+            case ' ': spec.leadingSpace = true; ++i; break;
+            case '0': spec.zeroPad = true; ++i; break;
+            case ',': spec.grouping = true; ++i; break;
+            case '(': spec.parentheses = true; ++i; break;
+            case '<': spec.previous = true; ++i; break;
+            default: doneFlags = true; break;
             }
-            return std::u16string(1, u'-') + magnitude;
         }
-        if (spec.plus) {
-            return std::u16string(1, u'+') + magnitude;
+
+        // Width
+        if (i < fmt.size() && isDigit_(fmt[i]))
+        {
+            spec.width = parseUnsigned_(fmt, i);
         }
-        if (spec.leadingSpace) {
-            return std::u16string(1, u' ') + magnitude;
+
+        // Precision
+        if (i < fmt.size() && fmt[i] == '.')
+        {
+            ++i;
+            spec.precision = parseUnsigned_(fmt, i);
         }
-        return magnitude;
+
+        // Date/time prefix
+        if (i < fmt.size() && (fmt[i] == 't' || fmt[i] == 'T'))
+        {
+            spec.dateTime = true;
+            spec.upper = (fmt[i] == 'T');
+            ++i;
+
+            if (i >= fmt.size())
+                fail_("unterminated date/time format specifier");
+
+            spec.dateSuffix = fmt[i++];
+            return spec;
+        }
+
+        if (i >= fmt.size())
+            fail_("unterminated format specifier");
+
+        const char c = fmt[i++];
+        spec.conv = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        if (std::isupper(static_cast<unsigned char>(c)))
+            spec.upper = true;
+
+        return spec;
     }
 
-    std::u16string Formatter::asciiToUtf16_(const std::string& s)
+    inline const ArgValue& selectArg_(
+        const std::vector<ArgValue>& args,
+        const Spec& spec,
+        int& nextArg,
+        int& lastArg)
     {
-        std::u16string out;
-        out.reserve(s.size());
-        for (char c : s) {
-            out.push_back(static_cast<char16_t>(static_cast<unsigned char>(c)));
+        int index = -1;
+
+        if (spec.previous)
+        {
+            if (lastArg < 0)
+                fail_("previous argument flag '<' used without previous argument");
+            index = lastArg;
         }
-        return out;
+        else if (spec.argIndex >= 0)
+        {
+            index = spec.argIndex;
+        }
+        else
+        {
+            index = nextArg++;
+        }
+
+        if (index < 0 || static_cast<std::size_t>(index) >= args.size())
+            fail_("missing format argument");
+
+        lastArg = index;
+        return args[static_cast<std::size_t>(index)];
     }
 
-    std::string Formatter::utf16ToAscii_(const std::u16string& s)
+    inline std::string objectHashHex_(const ArgValue& arg)
+    {
+        if (!arg.objectValue)
+            return "null";
+
+        const unsigned int hv = static_cast<unsigned int>(arg.objectValue->hashCode());
+        return fmt::format("{:x}", hv);
+    }
+
+    inline std::string renderString_(const ArgValue& arg, const Spec& spec)
     {
         std::string out;
-        out.reserve(s.size());
-        for (char16_t c : s) {
-            out.push_back(static_cast<char>(c <= 0x7f ? c : '?'));
-        }
-        return out;
-    }
 
-    std::u16string Formatter::objectToString_(const jxx::Ptr<Object> arg)
-    {
-        if (!arg) {
-            return u"null";
-        }
-        return arg->toString()->utf16();
-    }
-
-    std::u16string Formatter::objectToBooleanString_(const jxx::Ptr<Object> arg, jxx::lang::jbool upper)
-    {
-        std::u16string out = arg ? u"true" : u"false";
-        return upper ? upperAscii_(out) : out;
-    }
-
-    std::u16string Formatter::objectToHashString_(const jxx::Ptr<Object> arg, jxx::lang::jbool upper)
-    {
-        if (!arg) {
-            return upper ? u"NULL" : u"null";
-        }
-
-        std::ostringstream oss;
-        oss << std::hex << std::nouppercase << static_cast<unsigned int>(arg->hashCode());
-        std::u16string out = asciiToUtf16_(oss.str());
-        return upper ? upperAscii_(out) : out;
-    }
-
-    std::u16string Formatter::objectToCharString_(const jxx::Ptr<Object> arg, jxx::lang::jbool upper)
-    {
-        if (!arg) {
-            throw std::runtime_error("null argument for %c");
-        }
-
-        jxx::lang::jchar ch = 0;
-
-        jxx::Ptr<jxx::lang::Character> c = jxx::CAST<jxx::lang::Character, Object>(arg);
-        if (c) {
-            ch = c->charValue();
-        }
-        else {
-            long long value = extractLongLong_(arg);
-            if (value < 0 || value > 0x10ffff) {
-                throw std::runtime_error("illegal code point");
-            }
-            ch = static_cast<jxx::lang::jchar>(value);
-        }
-
-        if (upper) {
-            ch = jxx::lang::Character::toUpperCase(ch);
-        }
-
-        return std::u16string(1, static_cast<char16_t>(ch));
-    }
-
-    jxx::lang::jbool Formatter::isFloatingObject_(const jxx::Ptr<Object> arg)
-    {
-        return jxx::CAST<jxx::lang::Float, Object>(arg)
-            || jxx::CAST<jxx::lang::Double, Object>(arg)
-            || jxx::CAST<jxx::math::BigDecimal, Object>(arg);
-    }
-
-    long long Formatter::extractLongLong_(const jxx::Ptr<Object> arg)
-    {
-        if (!arg) {
-            throw std::runtime_error("null integral argument");
-        }
-
-        jxx::Ptr<jxx::lang::Byte> b = jxx::CAST<jxx::lang::Byte, Object>(arg);
-        if (b) return static_cast<long long>(b->longValue());
-        jxx::Ptr<jxx::lang::Short> s = jxx::CAST<jxx::lang::Short, Object>(arg);
-        if (s) return static_cast<long long>(s->longValue());
-        jxx::Ptr<jxx::lang::Integer> i = jxx::CAST<jxx::lang::Integer, Object>(arg);
-        if (i) return static_cast<long long>(i->longValue());
-        jxx::Ptr<jxx::lang::Long> l = jxx::CAST<jxx::lang::Long, Object>(arg);
-        if (l) return static_cast<long long>(l->longValue());
-
-        jxx::Ptr<jxx::lang::Number> n = jxx::CAST<jxx::lang::Number, Object>(arg);
-        if (n) return static_cast<long long>(n->longValue());
-
-        throw std::runtime_error("unsupported integral argument type");
-    }
-
-    long double Formatter::extractLongDouble_(const jxx::Ptr<Object> arg)
-    {
-        if (!arg) {
-            throw std::runtime_error("null floating argument");
-        }
-
-        jxx::Ptr<jxx::lang::Float> f = jxx::CAST<jxx::lang::Float, Object>(arg);
-        if (f) return static_cast<long double>(f->doubleValue());
-        jxx::Ptr<jxx::lang::Double> d = jxx::CAST<jxx::lang::Double, Object>(arg);
-        if (d) return static_cast<long double>(d->doubleValue());
-        jxx::Ptr<jxx::math::BigDecimal> bd = jxx::CAST<jxx::math::BigDecimal, Object>(arg);
-        if (bd) return static_cast<long double>(bd->doubleValue());
-
-        jxx::Ptr<jxx::lang::Number> n = jxx::CAST<jxx::lang::Number, Object>(arg);
-        if (n) return static_cast<long double>(n->doubleValue());
-
-        throw std::runtime_error("unsupported floating argument type");
-    }
-
-    std::u16string Formatter::formatIntegral_(const jxx::Ptr<Object> arg, const FormatSpec& spec)
-    {
-        if (!arg) {
-            throw std::runtime_error("null integral argument");
-        }
-
-        std::u16string mag;
-        jxx::lang::jbool negative = false;
-
-        if (jxx::Ptr<jxx::math::BigInteger> bi = jxx::CAST<jxx::math::BigInteger, Object>(arg)) {
-            jxx::lang::jint radix = (spec.conversion == u'o') ? 8 : ((spec.conversion == u'x') ? 16 : 10);
-            mag = bi->toString(radix)->utf16();
-            if (!mag.empty() && mag[0] == u'-') {
-                negative = true;
-                mag.erase(mag.begin());
-            }
-        }
-        else {
-            long long v = extractLongLong_(arg);
-            negative = (v < 0 && spec.conversion == u'd');
-
-            std::ostringstream oss;
-            if (spec.conversion == u'd') {
-                unsigned long long magv = negative ? static_cast<unsigned long long>(-(v + 1)) + 1ULL : static_cast<unsigned long long>(v);
-                oss << magv;
-            }
-            else if (spec.conversion == u'o') {
-                oss << std::oct << static_cast<unsigned long long>(v);
-            }
-            else {
-                oss << std::hex << static_cast<unsigned long long>(v);
-            }
-            mag = asciiToUtf16_(oss.str());
-        }
-
-        if (spec.group && spec.conversion == u'd') {
-            mag = addGrouping_(mag);
-        }
-
-        if (spec.upper) {
-            mag = upperAscii_(mag);
-        }
-
-        if (spec.alternate) {
-            if (spec.conversion == u'o' && !mag.empty() && mag[0] != u'0') {
-                mag = std::u16string(1, u'0') + mag;
-            }
-            else if (spec.conversion == u'x') {
-                mag = std::u16string(spec.upper ? u"0X" : u"0x") + mag;
-            }
-        }
-
-        std::u16string withSign = (spec.conversion == u'd') ? prefixSign_(mag, negative, spec) : mag;
-
-        if (spec.zeroPad && spec.width > 0 && !spec.leftJustify && withSign.size() < static_cast<std::size_t>(spec.width)) {
-            std::u16string prefix;
-            std::u16string rest = withSign;
-            if (!rest.empty() && (rest[0] == u'+' || rest[0] == u'-' || rest[0] == u' ')) {
-                prefix.push_back(rest[0]);
-                rest.erase(rest.begin());
-            }
-            else if (rest.size() >= 2 && rest[0] == u'0' && (rest[1] == u'x' || rest[1] == u'X')) {
-                prefix = rest.substr(0, 2);
-                rest = rest.substr(2);
-            }
-            else if (!rest.empty() && rest[0] == u'(' && rest.back() == u')') {
-                prefix = u"(";
-                rest = rest.substr(1, rest.size() - 2);
-                std::u16string zeros(static_cast<std::size_t>(spec.width) - prefix.size() - rest.size() - 1, u'0');
-                return prefix + zeros + rest + u")";
-            }
-            std::u16string zeros(static_cast<std::size_t>(spec.width) - prefix.size() - rest.size(), u'0');
-            return prefix + zeros + rest;
-        }
-
-        return applyWidth_(withSign, spec.leftJustify, spec.width, u' ');
-    }
-
-    std::u16string Formatter::formatFloating_(const jxx::Ptr<Object> arg, const FormatSpec& spec)
-    {
-        long double value = extractLongDouble_(arg);
-        bool negative = std::signbit(static_cast<double>(value));
-        long double mag = negative ? -value : value;
-
-        std::ostringstream oss;
-        if (spec.precision >= 0) {
-            oss << std::setprecision(spec.precision);
-        }
-
-        switch (spec.conversion) {
-        case u'e': oss << std::scientific; break;
-        case u'f': oss << std::fixed; break;
-        case u'g': oss << std::defaultfloat; break;
-        case u'a': oss << std::hexfloat; break;
-        default: break;
-        }
-
-        oss << static_cast<long double>(mag);
-        std::string raw = oss.str();
-
-        if (spec.conversion == u'g' && spec.precision < 0) {
-            // Java default precision is 6 for general floating-point conversions
-            std::ostringstream oss2;
-            oss2 << std::setprecision(6) << std::defaultfloat << static_cast<long double>(mag);
-            raw = oss2.str();
-        }
-
-        std::u16string body = asciiToUtf16_(raw);
-        if (spec.group && spec.conversion == u'f') {
-            body = addGrouping_(body);
-        }
-        if (spec.upper) {
-            body = upperAscii_(body);
-        }
-
-        std::u16string withSign = prefixSign_(body, negative, spec);
-
-        if (spec.zeroPad && spec.width > 0 && !spec.leftJustify && withSign.size() < static_cast<std::size_t>(spec.width)) {
-            std::u16string prefix;
-            std::u16string rest = withSign;
-            if (!rest.empty() && (rest[0] == u'+' || rest[0] == u'-' || rest[0] == u' ')) {
-                prefix.push_back(rest[0]);
-                rest.erase(rest.begin());
-            }
-            else if (!rest.empty() && rest[0] == u'(' && rest.back() == u')') {
-                prefix = u"(";
-                rest = rest.substr(1, rest.size() - 2);
-                std::u16string zeros(static_cast<std::size_t>(spec.width) - prefix.size() - rest.size() - 1, u'0');
-                return prefix + zeros + rest + u")";
-            }
-            std::u16string zeros(static_cast<std::size_t>(spec.width) - prefix.size() - rest.size(), u'0');
-            return prefix + zeros + rest;
-        }
-
-        return applyWidth_(withSign, spec.leftJustify, spec.width, u' ');
-    }
-
-    std::u16string Formatter::formatDateTime_(const jxx::Ptr<Object> arg, const FormatSpec& spec)
-    {
-        long long millis = extractMillis_(arg);
-        std::time_t sec = static_cast<std::time_t>(millis / 1000LL);
-        int milli = static_cast<int>(std::llabs(millis % 1000LL));
-        std::tm tmv = toLocalTm_(sec);
-        std::tm gmv = toGmTm_(sec);
-
-        char16_t c = spec.dateTimeSuffix;
-        std::string out;
-
-        switch (c) {
-        case u'H': out = twoDigits_(tmv.tm_hour); break;
-        case u'I': { int h = tmv.tm_hour % 12; if (h == 0) h = 12; out = twoDigits_(h); break; }
-        case u'k': out = padLeft_(std::to_string(tmv.tm_hour), 2, ' '); break;
-        case u'l': { int h = tmv.tm_hour % 12; if (h == 0) h = 12; out = padLeft_(std::to_string(h), 2, ' '); break; }
-        case u'M': out = twoDigits_(tmv.tm_min); break;
-        case u'S': out = twoDigits_(tmv.tm_sec); break;
-        case u'L': out = threeDigits_(milli); break;
-        case u'N': out = threeDigits_(milli) + std::string("000000"); break;
-        case u'p': out = (tmv.tm_hour < 12) ? "am" : "pm"; break;
-        case u'B': out = monthLong_(tmv.tm_mon); break;
-        case u'b':
-        case u'h': out = monthShort_(tmv.tm_mon); break;
-        case u'A': out = weekdayLong_(tmv.tm_wday); break;
-        case u'a': out = weekdayShort_(tmv.tm_wday); break;
-        case u'C': out = twoDigits_((tmv.tm_year + 1900) / 100); break;
-        case u'Y': out = fourDigits_(tmv.tm_year + 1900); break;
-        case u'y': out = twoDigits_((tmv.tm_year + 1900) % 100); break;
-        case u'j': out = std::string(3 - std::min<int>(3, static_cast<int>(std::to_string(tmv.tm_yday + 1).size())), '0') + std::to_string(tmv.tm_yday + 1); break;
-        case u'm': out = twoDigits_(tmv.tm_mon + 1); break;
-        case u'd': out = twoDigits_(tmv.tm_mday); break;
-        case u'e': out = padLeft_(std::to_string(tmv.tm_mday), 2, ' '); break;
-        case u'R': out = twoDigits_(tmv.tm_hour) + ":" + twoDigits_(tmv.tm_min); break;
-        case u'T': out = twoDigits_(tmv.tm_hour) + ":" + twoDigits_(tmv.tm_min) + ":" + twoDigits_(tmv.tm_sec); break;
-        case u'r': { int h = tmv.tm_hour % 12; if (h == 0) h = 12; out = twoDigits_(h) + ":" + twoDigits_(tmv.tm_min) + ":" + twoDigits_(tmv.tm_sec) + (tmv.tm_hour < 12 ? " AM" : " PM"); break; }
-        case u'D': out = twoDigits_(tmv.tm_mon + 1) + "/" + twoDigits_(tmv.tm_mday) + "/" + twoDigits_((tmv.tm_year + 1900) % 100); break;
-        case u'F': out = fourDigits_(tmv.tm_year + 1900) + "-" + twoDigits_(tmv.tm_mon + 1) + "-" + twoDigits_(tmv.tm_mday); break;
-        case u'c': out = weekdayShort_(tmv.tm_wday) + std::string(" ") + monthShort_(tmv.tm_mon) + std::string(" ") + twoDigits_(tmv.tm_mday) + std::string(" ") + twoDigits_(tmv.tm_hour) + ":" + twoDigits_(tmv.tm_min) + ":" + twoDigits_(tmv.tm_sec) + std::string(" ") + fourDigits_(tmv.tm_year + 1900); break;
-        case u's': out = std::to_string(static_cast<long long>(sec)); break;
-        case u'Q': out = std::to_string(millis); break;
-        case u'z': {
-            std::time_t gsec = std::mktime(&gmv);
-            std::time_t lsec = std::mktime(&tmv);
-            long diff = static_cast<long>(std::difftime(lsec, gsec));
-            char sign = diff < 0 ? '-' : '+';
-            diff = std::labs(diff);
-            int hh = static_cast<int>(diff / 3600);
-            int mm = static_cast<int>((diff % 3600) / 60);
-            out.push_back(sign);
-            out += twoDigits_(hh);
-            out += twoDigits_(mm);
+        switch (arg.kind)
+        {
+        case ArgKind::Null:
+            out = "null";
+            break;
+        case ArgKind::Boolean:
+            out = arg.boolValue ? "true" : "false";
+            break;
+        case ArgKind::Integral:
+            out = fmt::format("{}", arg.intValue);
+            break;
+        case ArgKind::Floating:
+            out = fmt::format("{}", arg.floatValue);
+            break;
+        case ArgKind::Character:
+            out = String::valueOf(static_cast<jxx::lang::jchar>(arg.charValue))->utf8();
+            break;
+        case ArgKind::String:
+        case ArgKind::ObjectString:
+            out = arg.stringValue;
             break;
         }
-        case u'Z': out = "LOCAL"; break;
-        default: throw std::runtime_error("unsupported date/time suffix");
-        }
 
-        std::u16string u = asciiToUtf16_(out);
-        if (spec.upper) {
-            u = upperAscii_(u);
-        }
-        return applyWidth_(u, spec.leftJustify, spec.width, u' ');
+        if (spec.precision >= 0 && static_cast<int>(out.size()) > spec.precision)
+            out.resize(static_cast<std::size_t>(spec.precision));
+
+        if (spec.upper)
+            out = toUpperAscii_(std::move(out));
+
+        return applyWidth_(std::move(out), spec.width, spec.leftJustify, ' ');
     }
 
-    std::u16string Formatter::formatOne_(const FormatSpec& spec, const jxx::Ptr<Object> arg)
+    inline std::string renderBoolean_(const ArgValue& arg, const Spec& spec)
     {
-        switch (spec.conversion) {
-        case u's': {
-            std::u16string out = objectToString_(arg);
-            if (spec.upper) {
-                out = upperAscii_(out);
-            }
-            out = applyPrecisionToString_(out, spec.precision);
-            return applyWidth_(out, spec.leftJustify, spec.width, u' ');
-        }
-        case u'b': {
-            std::u16string out = objectToBooleanString_(arg, spec.upper);
-            out = applyPrecisionToString_(out, spec.precision);
-            return applyWidth_(out, spec.leftJustify, spec.width, u' ');
-        }
-        case u'h': {
-            std::u16string out = objectToHashString_(arg, spec.upper);
-            return applyWidth_(out, spec.leftJustify, spec.width, u' ');
-        }
-        case u'c': {
-            std::u16string out = objectToCharString_(arg, spec.upper);
-            return applyWidth_(out, spec.leftJustify, spec.width, u' ');
-        }
-        case u'd':
-        case u'o':
-        case u'x':
-            return formatIntegral_(arg, spec);
-        case u'e':
-        case u'f':
-        case u'g':
-        case u'a':
-            return formatFloating_(arg, spec);
-        case u't':
-            return formatDateTime_(arg, spec);
-        case u'%':
-            return applyWidth_(u"%", spec.leftJustify, spec.width, u' ');
-        case u'n':
-            return u"\n";
+        std::string out;
+
+        if (arg.kind == ArgKind::Null)
+            out = "false";
+        else if (arg.kind == ArgKind::Boolean)
+            out = arg.boolValue ? "true" : "false";
+        else
+            out = "true";
+
+        if (spec.upper)
+            out = toUpperAscii_(std::move(out));
+
+        return applyWidth_(std::move(out), spec.width, spec.leftJustify, ' ');
+    }
+
+    inline std::string renderHash_(const ArgValue& arg, const Spec& spec)
+    {
+        std::string out = objectHashHex_(arg);
+
+        if (spec.upper)
+            out = toUpperAscii_(std::move(out));
+
+        return applyWidth_(std::move(out), spec.width, spec.leftJustify, ' ');
+    }
+
+    inline std::string renderChar_(const ArgValue& arg, const Spec& spec)
+    {
+        char32_t cp = 0;
+
+        switch (arg.kind)
+        {
+        case ArgKind::Character:
+            cp = arg.charValue;
+            break;
+        case ArgKind::Integral:
+            cp = static_cast<char32_t>(arg.intValue);
+            break;
         default:
-            throw std::runtime_error("unknown conversion");
+            fail_("illegal argument type for %c");
+        }
+
+        std::string out = String::valueOf(static_cast<jxx::lang::jchar>(cp))->utf8();
+
+        if (spec.upper)
+            out = toUpperAscii_(std::move(out));
+
+        return applyWidth_(std::move(out), spec.width, spec.leftJustify, ' ');
+    }
+
+    inline std::string applySignAndParens_(
+        bool negative,
+        const Spec& spec,
+        const std::string& digits)
+    {
+        if (negative)
+        {
+            if (spec.parentheses)
+                return "(" + digits + ")";
+            return "-" + digits;
+        }
+
+        if (spec.plus)
+            return "+" + digits;
+
+        if (spec.leadingSpace)
+            return " " + digits;
+
+        return digits;
+    }
+
+    template<typename UInt>
+    std::string toUnsignedBase_(UInt value, unsigned base, bool upper)
+    {
+        if (base == 10)
+            return fmt::format("{}", value);
+        if (base == 8)
+            return fmt::format("{:o}", value);
+        if (base == 16)
+            return upper ? fmt::format("{:X}", value) : fmt::format("{:x}", value);
+
+        fail_("unsupported integral base");
+    }
+
+    inline std::string renderIntegral_(const ArgValue& arg, const Spec& spec)
+    {
+        if (arg.kind != ArgKind::Integral)
+            fail_("illegal argument type for integral conversion");
+
+        if (spec.precision >= 0)
+            fail_("precision not allowed for integral conversions");
+
+        const long long value = arg.intValue;
+        const bool negative = value < 0;
+
+        if (spec.conv != 'd' && spec.conv != 'o' && spec.conv != 'x')
+            fail_("unsupported integral conversion");
+
+        unsigned base = 10;
+        bool upperHex = false;
+
+        if (spec.conv == 'o')
+            base = 8;
+        else if (spec.conv == 'x')
+        {
+            base = 16;
+            upperHex = spec.upper;
+        }
+
+        const unsigned long long magnitude =
+            negative
+            ? static_cast<unsigned long long>(-(value + 1LL)) + 1ULL
+            : static_cast<unsigned long long>(value);
+
+        std::string digits = toUnsignedBase_(magnitude, base, upperHex);
+
+        if (spec.grouping && spec.conv == 'd')
+            digits = insertGrouping_(digits);
+
+        std::string prefix;
+        if (spec.alternate)
+        {
+            if (spec.conv == 'o')
+                prefix = "0";
+            else if (spec.conv == 'x')
+                prefix = spec.upper ? "0X" : "0x";
+        }
+
+        const std::string signedBody = applySignAndParens_(negative, spec, digits);
+
+        if (!prefix.empty())
+        {
+            if (!signedBody.empty() &&
+                (signedBody[0] == '+' || signedBody[0] == '-' || signedBody[0] == ' '))
+            {
+                return applyNumericWidth_(
+                    std::string(1, signedBody[0]) + prefix,
+                    signedBody.substr(1),
+                    spec.width,
+                    spec.leftJustify,
+                    spec.zeroPad && !spec.leftJustify);
+            }
+
+            if (negative && spec.parentheses)
+            {
+                return applyWidth_(
+                    prefix + signedBody,
+                    spec.width,
+                    spec.leftJustify,
+                    spec.zeroPad ? '0' : ' ');
+            }
+
+            return applyNumericWidth_(
+                prefix,
+                signedBody,
+                spec.width,
+                spec.leftJustify,
+                spec.zeroPad && !spec.leftJustify);
+        }
+
+        if (!signedBody.empty() &&
+            (signedBody[0] == '+' || signedBody[0] == '-' || signedBody[0] == ' '))
+        {
+            return applyNumericWidth_(
+                std::string(1, signedBody[0]),
+                signedBody.substr(1),
+                spec.width,
+                spec.leftJustify,
+                spec.zeroPad && !spec.leftJustify);
+        }
+
+        if (negative && spec.parentheses)
+        {
+            return applyWidth_(
+                signedBody,
+                spec.width,
+                spec.leftJustify,
+                spec.zeroPad ? '0' : ' ');
+        }
+
+        return applyWidth_(
+            signedBody,
+            spec.width,
+            spec.leftJustify,
+            spec.zeroPad && !spec.leftJustify ? '0' : ' ');
+    }
+
+    inline std::string formatHexFloat_(double absValue, const Spec& spec)
+    {
+        // Use snprintf because C's %a/%A formatting is the most direct way
+        // to get Java-like hex-float output in C++17.
+        const char* fmtPattern = nullptr;
+        if (spec.precision >= 0)
+            fmtPattern = spec.upper ? "%.*A" : "%.*a";
+        else
+            fmtPattern = spec.upper ? "%A" : "%a";
+
+        const int needed =
+            (spec.precision >= 0)
+            ? std::snprintf(nullptr, 0, fmtPattern, spec.precision, absValue)
+            : std::snprintf(nullptr, 0, fmtPattern, absValue);
+
+        if (needed < 0)
+            fail_("hex float formatting failed");
+
+        std::string out(static_cast<std::size_t>(needed), '\0');
+
+        const int written =
+            (spec.precision >= 0)
+            ? std::snprintf(&out[0], out.size() + 1, fmtPattern, spec.precision, absValue)
+            : std::snprintf(&out[0], out.size() + 1, fmtPattern, absValue);
+
+        if (written < 0)
+            fail_("hex float formatting failed");
+
+        return out;
+    }
+
+    inline std::string formatFloatBody_(double absValue, const Spec& spec)
+    {
+        const int precision = (spec.precision >= 0) ? spec.precision : 6;
+
+        switch (spec.conv)
+        {
+        case 'f':
+        {
+            const std::string fs = fmt::format("{{:.{}f}}", precision);
+            return fmt::format(fmt::runtime(fs), absValue);
+        }
+        case 'e':
+        {
+            const std::string fs = fmt::format("{{:.{}e}}", precision);
+            return fmt::format(fmt::runtime(fs), absValue);
+        }
+        case 'g':
+        {
+            const std::string fs = fmt::format("{{:.{}g}}", precision);
+            return fmt::format(fmt::runtime(fs), absValue);
+        }
+        case 'a':
+            return formatHexFloat_(absValue, spec);
+        default:
+            fail_("unsupported floating conversion");
         }
     }
 
-    jxx::Ptr<Formatter> Formatter::format(
-        const jxx::Ptr<jxx::lang::String> format,
-        const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args)
+    inline std::string renderFloating_(const ArgValue& arg, const Spec& spec)
     {
-        return this->format(locale_, format, args);
-    }
+        if (arg.kind != ArgKind::Floating && arg.kind != ArgKind::Integral)
+            fail_("illegal argument type for floating conversion");
 
-    jxx::Ptr<Formatter> Formatter::format(
-        const jxx::Ptr<jxx::util::Locale> l,
-        const jxx::Ptr<jxx::lang::String> format,
-        const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args)
-    {
-        ensureOpen_();
+        const double raw = (arg.kind == ArgKind::Floating)
+            ? arg.floatValue
+            : static_cast<double>(arg.intValue);
 
-        if (l) {
-            locale_ = l;
+        const bool negative = std::signbit(raw);
+        const double absValue = negative ? -raw : raw;
+
+        std::string body = formatFloatBody_(absValue, spec);
+
+        if (spec.grouping && spec.conv == 'f')
+            body = groupFloatIntegralPart_(body);
+
+        if (spec.upper && spec.conv != 'a')
+            body = toUpperAscii_(std::move(body));
+
+        const std::string signedBody = applySignAndParens_(negative, spec, body);
+
+        if (!signedBody.empty() &&
+            (signedBody[0] == '+' || signedBody[0] == '-' || signedBody[0] == ' '))
+        {
+            return applyNumericWidth_(
+                std::string(1, signedBody[0]),
+                signedBody.substr(1),
+                spec.width,
+                spec.leftJustify,
+                spec.zeroPad && !spec.leftJustify);
         }
 
-        const std::u16string fmt = format ? format->utf16() : std::u16string();
-        ArgCursor cursor;
+        if (negative && spec.parentheses)
+        {
+            return applyWidth_(
+                signedBody,
+                spec.width,
+                spec.leftJustify,
+                spec.zeroPad ? '0' : ' ');
+        }
 
-        std::size_t i = 0;
-        while (i < fmt.size()) {
-            if (fmt[i] != u'%') {
-                appendChar_(fmt[i]);
+        return applyWidth_(
+            signedBody,
+            spec.width,
+            spec.leftJustify,
+            spec.zeroPad && !spec.leftJustify ? '0' : ' ');
+    }
+
+    inline std::vector<std::string> localeCandidates_(const jxx::Ptr<Locale>& locale)
+    {
+        std::vector<std::string> names;
+
+        if (!locale)
+            return names;
+
+        const auto s = locale->toString();
+        const std::string raw = s ? s->utf8() : std::string{};
+
+        if (raw.empty())
+            return names;
+
+        auto pushIfNew = [&names](const std::string& v)
+            {
+                if (!v.empty() && std::find(names.begin(), names.end(), v) == names.end())
+                    names.push_back(v);
+            };
+
+        pushIfNew(raw);
+        pushIfNew(raw + ".UTF-8");
+
+        std::string hyphen = raw;
+        std::replace(hyphen.begin(), hyphen.end(), '_', '-');
+        pushIfNew(hyphen);
+        pushIfNew(hyphen + ".UTF-8");
+
+        std::string underscore = raw;
+        std::replace(underscore.begin(), underscore.end(), '-', '_');
+        pushIfNew(underscore);
+        pushIfNew(underscore + ".UTF-8");
+
+        return names;
+    }
+
+    inline std::locale resolveStdLocale_(const jxx::Ptr<Locale>& locale)
+    {
+        for (const auto& candidate : localeCandidates_(locale))
+        {
+            try
+            {
+                return std::locale(candidate.c_str());
+            }
+            catch (...)
+            {
+                // try next candidate
+            }
+        }
+
+        try
+        {
+            return std::locale("");
+        }
+        catch (...)
+        {
+            return std::locale::classic();
+        }
+    }
+
+    inline std::tm localTmFromMillis_(long long epochMillis)
+    {
+        using namespace std::chrono;
+
+        const system_clock::time_point tp = system_clock::time_point{ std::chrono::milliseconds{ epochMillis } };
+        const std::time_t tt = system_clock::to_time_t(tp);
+
+        std::tm tm{};
+#if defined(_WIN32)
+        localtime_s(&tm, &tt);
+#else
+        localtime_r(&tt, &tm);
+#endif
+        return tm;
+    }
+
+    inline int millisPart_(long long epochMillis) noexcept
+    {
+        long long m = epochMillis % 1000LL;
+        if (m < 0)
+            m += 1000LL;
+        return static_cast<int>(m);
+    }
+
+    inline std::string putTime_(const std::tm& tm, const char* fmtPattern, const std::locale& loc)
+    {
+        std::ostringstream oss;
+        oss.imbue(loc);
+        oss << std::put_time(&tm, fmtPattern);
+        return oss.str();
+    }
+
+    inline std::string dateTimeField_(
+        long long epochMillis,
+        char suffix,
+        bool upperPrefixResult,
+        const jxx::Ptr<Locale>& locale)
+    {
+        const std::tm tm = localTmFromMillis_(epochMillis);
+        const int millis = millisPart_(epochMillis);
+        const std::locale stdloc = resolveStdLocale_(locale);
+
+        std::string out;
+
+        switch (suffix)
+        {
+            // Time
+        case 'H': out = putTime_(tm, "%H", stdloc); break;
+        case 'I': out = putTime_(tm, "%I", stdloc); break;
+        case 'k':
+        {
+            const int hour = tm.tm_hour;
+            out = (hour < 10) ? fmt::format(" {}", hour) : fmt::format("{}", hour);
+            break;
+        }
+        case 'l':
+        {
+            int hour = tm.tm_hour % 12;
+            if (hour == 0)
+                hour = 12;
+            out = (hour < 10) ? fmt::format(" {}", hour) : fmt::format("{}", hour);
+            break;
+        }
+        case 'M': out = putTime_(tm, "%M", stdloc); break;
+        case 'S': out = putTime_(tm, "%S", stdloc); break;
+        case 'L': out = fmt::format("{:03}", millis); break;
+        case 'N': out = fmt::format("{:09}", millis * 1000000); break;
+        case 'p': out = toLowerAscii_(putTime_(tm, "%p", stdloc)); break;
+        case 'z': out = putTime_(tm, "%z", stdloc); break;
+        case 'Z': out = putTime_(tm, "%Z", stdloc); break;
+        case 's': out = fmt::format("{}", epochMillis / 1000LL); break;
+        case 'Q': out = fmt::format("{}", epochMillis); break;
+
+            // Date
+        case 'B': out = putTime_(tm, "%B", stdloc); break;
+        case 'b':
+        case 'h': out = putTime_(tm, "%b", stdloc); break;
+        case 'A': out = putTime_(tm, "%A", stdloc); break;
+        case 'a': out = putTime_(tm, "%a", stdloc); break;
+        case 'C': out = fmt::format("{:02}", (tm.tm_year + 1900) / 100); break;
+        case 'Y': out = putTime_(tm, "%Y", stdloc); break;
+        case 'y': out = putTime_(tm, "%y", stdloc); break;
+        case 'j': out = putTime_(tm, "%j", stdloc); break;
+        case 'm': out = putTime_(tm, "%m", stdloc); break;
+        case 'd': out = putTime_(tm, "%d", stdloc); break;
+        case 'e':
+            out = (tm.tm_mday < 10) ? fmt::format(" {}", tm.tm_mday)
+                : fmt::format("{}", tm.tm_mday);
+            break;
+
+            // Composite
+        case 'R': out = putTime_(tm, "%H:%M", stdloc); break;
+        case 'T': out = putTime_(tm, "%H:%M:%S", stdloc); break;
+        case 'r': out = putTime_(tm, "%I:%M:%S %p", stdloc); break;
+        case 'D': out = putTime_(tm, "%m/%d/%y", stdloc); break;
+        case 'F': out = putTime_(tm, "%Y-%m-%d", stdloc); break;
+        case 'c': out = putTime_(tm, "%a %b %e %H:%M:%S %Y", stdloc); break;
+
+        default:
+            fail_("unsupported date/time conversion");
+        }
+
+        if (upperPrefixResult)
+            out = toUpperAscii_(std::move(out));
+
+        return out;
+    }
+
+    inline std::string renderDateTime_(
+        const ArgValue& arg,
+        const Spec& spec,
+        const jxx::Ptr<Locale>& locale)
+    {
+        if (spec.precision >= 0)
+            fail_("precision not allowed for date/time conversions");
+
+        long long epochMillis = 0;
+
+        if (arg.kind == ArgKind::Integral)
+        {
+            epochMillis = arg.intValue;
+        }
+        else
+        {
+            fail_("date/time conversions currently require integral epoch milliseconds");
+        }
+
+        return applyWidth_(
+            dateTimeField_(epochMillis, spec.dateSuffix, spec.upper, locale),
+            spec.width,
+            spec.leftJustify,
+            ' ');
+    }
+
+    inline std::string renderPercent_(const Spec& spec)
+    {
+        if (spec.precision >= 0)
+            fail_("precision not allowed for %% conversion");
+
+        return applyWidth_("%", spec.width, spec.leftJustify, spec.zeroPad ? '0' : ' ');
+    }
+
+    inline std::string renderNewline_(const Spec& spec)
+    {
+        if (spec.width >= 0 || spec.precision >= 0)
+            fail_("width/precision not allowed for %n conversion");
+
+        return "\n";
+    }
+
+    inline std::string renderOne_(
+        const ArgValue* arg,
+        const Spec& spec,
+        const jxx::Ptr<Locale>& locale)
+    {
+        if (spec.dateTime)
+            return renderDateTime_(*arg, spec, locale);
+
+        switch (spec.conv)
+        {
+        case 's': return renderString_(*arg, spec);
+        case 'b': return renderBoolean_(*arg, spec);
+        case 'h': return renderHash_(*arg, spec);
+        case 'c': return renderChar_(*arg, spec);
+        case 'd':
+        case 'o':
+        case 'x': return renderIntegral_(*arg, spec);
+        case 'e':
+        case 'f':
+        case 'g':
+        case 'a': return renderFloating_(*arg, spec);
+        case '%': return renderPercent_(spec);
+        case 'n': return renderNewline_(spec);
+        default:  fail_("unknown format conversion");
+        }
+    }
+
+    inline std::string formatJavaLike_(
+        const std::string& fmt,
+        const std::vector<ArgValue>& args,
+        const jxx::Ptr<Locale>& locale)
+    {
+        std::string out;
+        out.reserve(fmt.size() + 32);
+
+        int nextArg = 0;
+        int lastArg = -1;
+
+        for (std::size_t i = 0; i < fmt.size(); )
+        {
+            if (fmt[i] != '%')
+            {
+                out.push_back(fmt[i]);
                 ++i;
                 continue;
             }
 
-            ParseState ps = parseOne_(fmt, i);
-            const FormatSpec& spec = ps.spec;
+            ++i; // skip '%'
+            const Spec spec = parseSpec_(fmt, i);
 
-            if (spec.conversion == u'%' || spec.conversion == u'n') {
-                appendUtf16_(formatOne_(spec, nullptr));
-                i = ps.next;
+            if (!spec.dateTime && (spec.conv == '%' || spec.conv == 'n'))
+            {
+                out += renderOne_(nullptr, spec, locale);
                 continue;
             }
 
-            jxx::lang::jint argIndex = -1;
-            if (spec.reusePrevious) {
-                if (cursor.previousArg < 0) {
-                    throw std::runtime_error("missing previous argument");
-                }
-                argIndex = cursor.previousArg;
-            }
-            else if (spec.argumentIndex >= 0) {
-                argIndex = spec.argumentIndex;
-                cursor.previousArg = argIndex;
-            }
-            else {
-                argIndex = cursor.nextArg++;
-                cursor.previousArg = argIndex;
-            }
-
-            jxx::Ptr<Object> arg;
-            if (args && argIndex >= 0 && argIndex < args->length()) {
-                arg = args->get(argIndex);
-            }
-            else {
-                throw std::runtime_error("missing format argument");
-            }
-
-            appendUtf16_(formatOne_(spec, arg));
-            i = ps.next;
+            const ArgValue& arg = selectArg_(args, spec, nextArg, lastArg);
+            out += renderOne_(&arg, spec, locale);
         }
 
-        return self_();
+        return out;
+    }
+
+    inline jxx::Ptr<Formatter> selfPtr_(Formatter* self)
+    {
+        if (self->thisPtr)
+            return std::static_pointer_cast<Formatter>(self->thisPtr);
+
+        return std::static_pointer_cast<Formatter>(self->shared_from_this());
+    }
+}
+
+namespace jxx::util
+{
+    Formatter::Formatter()
+        : locale_(nullptr)
+    {}
+
+    Formatter::Formatter(const jxx::Ptr<Locale> locale)
+        : locale_(std::move(locale))
+    {}
+
+    jxx::Ptr<Locale> Formatter::locale() const noexcept
+    {
+        return locale_;
     }
 
     void Formatter::flush()
     {
         ensureOpen_();
-        if (!out_) {
-            return;
-        }
-
-        jxx::Ptr<jxx::io::Flushable> f = jxx::CAST<jxx::io::Flushable, jxx::lang::Object>(out_);
-        if (f) {
-            f->flush();
-        }
+        // String-backed sink: nothing to flush.
     }
 
     void Formatter::close()
     {
-        if (closed_) {
-            return;
-        }
-
-        if (out_) {
-            jxx::Ptr<jxx::io::Closeable> c = jxx::CAST<jxx::io::Closeable, jxx::lang::Object>(out_);
-            if (c) {
-                c->close();
-            }
-        }
-
         closed_ = true;
+    }
+
+    jxx::lang::jbool Formatter::closed() const noexcept
+    {
+        return closed_;
+    }
+
+    void Formatter::ensureOpen_() const
+    {
+        if (closed_)
+            throw std::runtime_error("Formatter is closed");
+    }
+
+    jxx::Ptr<Formatter> Formatter::format(const jxx::Ptr<jxx::lang::String> formatString, 
+        const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args)
+    {
+        return format(locale_, std::move(formatString), std::move(args));
+    }
+
+    jxx::Ptr<Formatter> Formatter::format(const jxx::Ptr<Locale> locale,
+        const jxx::Ptr<jxx::lang::String> formatString,
+        const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args)
+    {
+        ensureOpen_();
+
+        if (locale)
+            locale_ = std::move(locale);
+
+        const std::string pattern = toUtf8OrEmpty_(formatString);
+        const auto values = unboxArgs_(args);
+
+        buffer_ += formatJavaLike_(pattern, values, locale_);
+        return selfPtr_(this);
     }
 
     jxx::Ptr<jxx::lang::String> Formatter::toString() const
     {
-        if (out_) {
-            jxx::Ptr<jxx::lang::Object> o = jxx::CAST<jxx::lang::Object, jxx::lang::Appendable>(out_);
-            if (o) {
-                return o->toString();
-            }
-        }
-        return jxx::NEW<jxx::lang::String>(buffer_);
+        return std::make_shared<jxx::lang::String>(buffer_);
     }
 }

@@ -666,17 +666,23 @@ namespace jxx::lang {
     jxx::Ptr<String> String::copyValueOf(CharArray data) { return jxx::NEW<String>(data); }
     jxx::Ptr<String> String::copyValueOf(CharArray data, jint offset, jint count) { return jxx::NEW<String>(data, offset, count); }
 
-    jxx::Ptr<String> String::format(const jxx::Ptr<jxx::lang::String> format, const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args) {
-        if (!format || !args) throwNPE_();
-        auto f = jxx::NEW<jxx::util::Formatter>();
-		return f->format(format, args)->toString();        
+   
+    jxx::Ptr<String> String::format(const jxx::Ptr<jxx::lang::String> formatString,
+        const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args)
+    {
+        auto formatter = jxx::NEW<jxx::util::Formatter>();
+        formatter->format(formatString, args);
+        return formatter->toString();
     }
 
-    jxx::Ptr<jxx::lang::String> String::format(const jxx::Ptr<jxx::util::Locale> l, const jxx::Ptr<String> format, const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args) {
-        if (!l || !format || !args) throwNPE_();
-        auto f = jxx::NEW<jxx::util::Formatter>();
-        return f->format(l, format, args)->toString();     
-    }
+    jxx::Ptr<jxx::lang::String> String::format(const jxx::Ptr<jxx::util::Locale> locale,
+        const jxx::Ptr<jxx::lang::String> formatString,
+        const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args)
+    {
+        auto formatter = jxx::NEW<jxx::util::Formatter>(locale);
+        formatter->format(l, format, args);
+        return formatter->toString();
+    }   
 
     jxx::Ptr<String> String::join(jxx::Ptr<CharSequence> delimiter, jxx::Ptr<JxxArray<jxx::Ptr<CharSequence>, 1U>> elements) {
         if (!delimiter || !elements) throwNPE_();

@@ -39,6 +39,9 @@ endif()
 # Public include is current source dir because headers live next to sources
 # If you prefer a nested include dir, we can reorganize later.
 target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/gsl/include)
+target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/fmt/include)
+target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/libunicode/src)
 
 target_compile_features(jxxsdk PRIVATE cxx_std_17)
 option(JXX_WITH_LIBUNICODE "Enable libunicode backend" ON)
