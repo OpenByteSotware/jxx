@@ -1,5 +1,3 @@
-#include "util/jxx.util.Formatter.h"
-
 #include <algorithm>
 #include <cctype>
 #include <chrono>
@@ -16,9 +14,18 @@
 #include <vector>
 
 #include <fmt/format.h>
+#include "lang/jxx.lang.Byte.h"
+#include "lang/jxx.lang.Integer.h"
+#include "lang/jxx.lang.Short.h"
+#include "lang/jxx.lang.Long.h"
+#include "lang/jxx.lang.Float.h"
+#include "lang/jxx.lang.Double.h"
+#include "lang/jxx.lang.Boolean.h"
 #include "lang/jxx.lang.Character.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Number.h"
+#include "util/jxx.util.Formatter.h"
+
 
 namespace jxx::util
 {
@@ -184,7 +191,8 @@ namespace jxx::util
 
         for (jxx::lang::jint i = 0; i < n; ++i)
         {
-            auto value = (*args)[i];
+            auto& argsRef = *args;
+            auto value = argsRef[i];
 
             ArgValue arg;
             arg.objectValue = value;
@@ -198,42 +206,42 @@ namespace jxx::util
                 arg.kind = ArgKind::String;
                 arg.stringValue = s->utf8();
             }
-            else if (auto v = std::dynamic_pointer_cast<jxx::lang::Boolean>(value))
+            else if (auto v = jxx::CAST<jxx::lang::Boolean, jxx::lang::Object>(value))
             {
                 arg.kind = ArgKind::Boolean;
                 arg.boolValue = static_cast<bool>(v->booleanValue());
             }
-            else if (auto v = std::dynamic_pointer_cast<Byte>(value))
+            else if (auto v = jxx::CAST<jxx::lang::Byte, jxx::lang::Object>(value))
             {
                 arg.kind = ArgKind::Integral;
                 arg.intValue = static_cast<long long>(v->byteValue());
             }
-            else if (auto v = std::dynamic_pointer_cast<Short>(value))
+            else if (auto v = jxx::CAST<jxx::lang::Short, jxx::lang::Object>(value))
             {
                 arg.kind = ArgKind::Integral;
                 arg.intValue = static_cast<long long>(v->shortValue());
             }
-            else if (auto v = std::dynamic_pointer_cast<Integer>(value))
+            else if (auto v = jxx::CAST<jxx::lang::Integer, jxx::lang::Object>(value))
             {
                 arg.kind = ArgKind::Integral;
                 arg.intValue = static_cast<long long>(v->intValue());
             }
-            else if (auto v = std::dynamic_pointer_cast<Long>(value))
+            else if (auto v = jxx::CAST<jxx::lang::Long, jxx::lang::Object>(value))
             {
                 arg.kind = ArgKind::Integral;
                 arg.intValue = static_cast<long long>(v->longValue());
             }
-            else if (auto v = std::dynamic_pointer_cast<Float>(value))
+            else if (auto v = jxx::CAST<jxx::lang::Float, jxx::lang::Object>(value))
             {
                 arg.kind = ArgKind::Floating;
                 arg.floatValue = static_cast<double>(v->floatValue());
             }
-            else if (auto v = std::dynamic_pointer_cast<Double>(value))
+            else if (auto v = jxx::CAST<jxx::lang::Double, jxx::lang::Object>(value))
             {
                 arg.kind = ArgKind::Floating;
                 arg.floatValue = static_cast<double>(v->doubleValue());
             }
-            else if (auto v = std::dynamic_pointer_cast<Character>(value))
+            else if (auto v = jxx::CAST<jxx::lang::Character, jxx::lang::Object>(value))
             {
                 arg.kind = ArgKind::Character;
                 arg.charValue = static_cast<char32_t>(v->charValue());
@@ -421,7 +429,7 @@ namespace jxx::util
             out = fmt::format("{}", arg.floatValue);
             break;
         case ArgKind::Character:
-            out = String::valueOf(static_cast<jxx::lang::jchar>(arg.charValue))->utf8();
+            out = jxx::lang::String::valueOf(static_cast<jxx::lang::jchar>(arg.charValue))->utf8();
             break;
         case ArgKind::String:
         case ArgKind::ObjectString:
@@ -481,7 +489,7 @@ namespace jxx::util
             fail_("illegal argument type for %c");
         }
 
-        std::string out = String::valueOf(static_cast<jxx::lang::jchar>(cp))->utf8();
+        std::string out = jxx::lang::String::valueOf(static_cast<jxx::lang::jchar>(cp))->utf8();
 
         if (spec.upper)
             out = toUpperAscii_(std::move(out));
@@ -1053,14 +1061,14 @@ namespace jxx::util
     }
 
     jxx::Ptr<Formatter> Formatter::format(const jxx::Ptr<jxx::lang::String> formatString, 
-        const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args)
+        const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args)
     {
         return format(locale_, std::move(formatString), std::move(args));
     }
 
     jxx::Ptr<Formatter> Formatter::format(const jxx::Ptr<Locale> locale,
         const jxx::Ptr<jxx::lang::String> formatString,
-        const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args)
+        const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args)
     {
         ensureOpen_();
 

@@ -37,11 +37,11 @@ namespace jxx::util
         jxx::lang::jbool closed() const noexcept;
 
         jxx::Ptr<Formatter> format(const jxx::Ptr<jxx::lang::String> formatString,
-            const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args);
+            const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args);
 
         jxx::Ptr<Formatter> format(const jxx::Ptr<Locale> locale,
             const jxx::Ptr<jxx::lang::String> formatString,
-            const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args);
+            const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args);
 
         jxx::Ptr<jxx::lang::String> toString() const override;
 

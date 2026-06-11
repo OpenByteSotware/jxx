@@ -1,4 +1,3 @@
-
 #include <algorithm>
 #include <sstream>
 #include <regex>
@@ -668,7 +667,7 @@ namespace jxx::lang {
 
    
     jxx::Ptr<String> String::format(const jxx::Ptr<jxx::lang::String> formatString,
-        const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args)
+        const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args)
     {
         auto formatter = jxx::NEW<jxx::util::Formatter>();
         formatter->format(formatString, args);
@@ -677,10 +676,10 @@ namespace jxx::lang {
 
     jxx::Ptr<jxx::lang::String> String::format(const jxx::Ptr<jxx::util::Locale> locale,
         const jxx::Ptr<jxx::lang::String> formatString,
-        const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args)
+        const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args)
     {
         auto formatter = jxx::NEW<jxx::util::Formatter>(locale);
-        formatter->format(l, format, args);
+        formatter->format(locale, formatString, args);
         return formatter->toString();
     }   
 
@@ -729,4 +728,4 @@ namespace jxx::lang {
     void String::readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) {}
     void String::readObjectNoData() {}
 
-} // namespace jxx::lang
+} // namespace jxx::lang} // namespace jxx::lang
