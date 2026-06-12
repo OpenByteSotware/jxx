@@ -11,14 +11,14 @@ public:
     explicit BufferedOutputStream(jxx::Ptr<OutputStream> out);
     BufferedOutputStream(jxx::Ptr<OutputStream> out, jxx::lang::jint size);
 
-    void write(jxx::lang::jint b) override;
-    void write(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) override;
+    virtual void write(jxx::lang::jint b) override;
+    virtual void write(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) override;
 
-    void flush() override;
-    void close() override;
+    virtual void flush() override;
+    virtual void close() override;
 
 private:
-    jxx::Ptr<jxx::lang::ByteArray> buf_;
+    jxx::lang::ByteArray buf_;
     jxx::lang::jint count_ = 0;
     void flushBuffer_();
 };

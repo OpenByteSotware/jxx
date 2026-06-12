@@ -1,5 +1,7 @@
-#include "jxx.io.PipedOutputStream.h"
+#include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.NullPointerException.h"
 #include "jxx.io.PipedInputStream.h"
+#include "jxx.io.PipedOutputStream.h"
 
 namespace jxx::io {
 
@@ -27,7 +29,7 @@ void PipedOutputStream::write(jxx::lang::jint b) {
     sink_->receive_(b);
 }
 
-void PipedOutputStream::write(jxx::Ptr<jxx::lang::ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
+void PipedOutputStream::write(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) {
     if (closed_) throw IOException(jxx::NEW<jxx::lang::String>("Pipe closed"));
     if (!sink_ || !connected_) throw IOException(jxx::NEW<jxx::lang::String>("Pipe not connected"));
     sink_->receive_(b, off, len);

@@ -44,6 +44,7 @@ target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty
 target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/libunicode/src)
 
 target_compile_features(jxxsdk PRIVATE cxx_std_17)
+target_compile_options(jxxsdk PRIVATE /utf-8)
 option(JXX_WITH_LIBUNICODE "Enable libunicode backend" ON)
 
 # On MSVC, silence some warnings for interface-heavy code

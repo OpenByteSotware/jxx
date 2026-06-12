@@ -1,6 +1,8 @@
-#include "jxx.io.DataOutputStream.h"
-
 #include <cstring>
+#include "lang/jxx.lang.String.h"
+#include "jxx.io.IOException.h"
+#include "lang/jxx.lang.NullPointerException.h"
+#include "jxx.io.DataOutputStream.h"
 
 namespace jxx::io {
 
@@ -14,7 +16,7 @@ void DataOutputStream::write(jxx::lang::jint b) {
     inc_(1);
 }
 
-void DataOutputStream::write(jxx::Ptr<jxx::lang::ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
+void DataOutputStream::write(jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) {
     out_->write(b, off, len);
     inc_(len);
 }

@@ -1,6 +1,8 @@
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.StringBuilder.h"
 #include "jxx.io.IOHelper.h"
+#include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
 #include "jxx.io.BufferedReader.h"
 
 namespace jxx::io {

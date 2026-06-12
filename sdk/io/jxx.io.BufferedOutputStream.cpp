@@ -1,7 +1,7 @@
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "jxx.io.IOHelper.h"
-#include "jxx.io.BufferedOutputStream.h"
 #include "lang/jxx.lang.String.h"
+#include "jxx.io.BufferedOutputStream.h"
 
 namespace jxx::io {
 

@@ -1,8 +1,10 @@
 #pragma once
 
 #include "jxx.io.FilterOutputStream.h"
-#include "jxx.io.IOException.h"
-#include "jxx.lang.String.h"
+
+namespace jxx::lang {
+    class String;
+}
 
 namespace jxx::io {
 
@@ -12,8 +14,7 @@ public:
     explicit DataOutputStream(jxx::Ptr<OutputStream> out);
 
     void write(jxx::lang::jint b) override;
-    void write(jxx::Ptr<jxx::lang::ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) override;
-
+    void write(jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) override;
     void writeBoolean(jxx::lang::jbool v);
     void writeByte(jxx::lang::jint v);
     void writeShort(jxx::lang::jint v);

@@ -11,7 +11,7 @@ BufferedWriter::BufferedWriter(jxx::Ptr<Writer> out, jxx::lang::jint sz)
     : out_(std::move(out)) {
     if (!out_) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("out"));
     if (sz <= 0) throw jxx::lang::IllegalArgumentException(jxx::NEW<jxx::lang::String>("sz"));
-    buf_ = jxx::NEW<CharArray>((std::uint32_t)sz);
+    buf_ = jxx::NEW<jxx::lang::CharArrayType>((std::uint32_t)sz);
 }
 
 void BufferedWriter::flushBuffer_() {
@@ -26,7 +26,7 @@ void BufferedWriter::write(jxx::lang::jint c) {
     (*buf_)[count_++] = (jxx::lang::jchar)(c & 0xFFFF);
 }
 
-void BufferedWriter::write(jxx::Ptr<CharArray> cbuf, jxx::lang::jint off, jxx::lang::jint len) {
+void BufferedWriter::write(const jxx::lang::CharArray cbuf, jxx::lang::jint off, jxx::lang::jint len) {
     Writer::checkBounds_(cbuf, off, len);
 
     if (len >= (jxx::lang::jint)buf_->length) {
@@ -44,7 +44,7 @@ void BufferedWriter::write(jxx::Ptr<jxx::lang::String> str, jxx::lang::jint off,
     Writer::checkStringBounds_(str, off, len);
     const auto& u16 = str->utf16();
     // write via temp buffer
-    auto tmp = jxx::NEW<CharArray>((std::uint32_t)len);
+    auto tmp = jxx::NEW<jxx::lang::CharArrayType>((std::uint32_t)len);
     for (jxx::lang::jint i = 0; i < len; ++i) (*tmp)[i] = (jxx::lang::jchar)u16[(std::size_t)(off + i)];
     write(tmp, 0, len);
 }

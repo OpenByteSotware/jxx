@@ -15,6 +15,12 @@ under most implementations.
 
 #include <string>
 
+namespace jxx::io {
+    class ObjectOutputStream;
+	class ObjectInput;
+    class Stream;
+}
+
 namespace jxx::lang {
 
     class StringBuffer; // for append(StringBuffer)
@@ -27,7 +33,7 @@ namespace jxx::lang {
     {
     public:
         // ---- constructors (Java 8) ----
-        StringBuilder();
+        explicit StringBuilder();
         explicit StringBuilder(jint capacity);
         explicit StringBuilder(const jxx::Ptr<String> str);
         explicit StringBuilder(const jxx::Ptr<CharSequence> seq);
@@ -103,6 +109,10 @@ namespace jxx::lang {
         jxx::Ptr<String> substring(jint start) const;
         jxx::Ptr<String> substring(jint start, jint end) const;
         jxx::Ptr<jxx::lang::String> toString() const override;
+
+        virtual void writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out) override;
+        virtual void readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) override;
+        virtual void readObjectNoData() override;
 
     private:
         std::u16string value_;

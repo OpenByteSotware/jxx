@@ -1,11 +1,13 @@
 #include <algorithm>
 #include <sstream>
 #include <locale>
-#include "jxx.lang.StringBuilder.h"
 #include "jxx.lang.StringBuffer.h"
 #include "jxx.lang.NullPointerException.h"
 #include "jxx.lang.StringIndexOutOfBoundsException.h"
 #include "jxx.lang.IllegalArgumentException.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "jxx.lang.StringBuilder.h"
 
 
 namespace jxx::lang {
@@ -461,6 +463,24 @@ namespace jxx::lang {
         auto ca = jxx::NEW<CharArrayType>((std::uint32_t)n);
         for (jint i = 0; i < n; ++i) (*ca)[i] = (jchar)value_[(std::size_t)(start + i)];
         return jxx::NEW<String>(ca);
+    }
+
+    void StringBuilder::writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out) {
+        if (!out) throwNPE_();
+        out->writeInt((jint)value_.size());
+		for (char16_t c : value_) out->writeChar((jchar)c);
+    }
+    void StringBuilder::readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) {
+        if (!in) throwNPE_();
+        jint size = in->readInt();
+        auto ca = jxx::NEW<CharArrayType>((std::uint32_t)size);
+        for (jint i = 0; i < size; ++i) {
+            (*ca)[i] = in->readChar();
+        }
+        value_ = ca->toString()->utf16();
+    }
+    void StringBuilder::readObjectNoData() {
+        value_.clear();
     }
 
 } // namespace jxx::lang

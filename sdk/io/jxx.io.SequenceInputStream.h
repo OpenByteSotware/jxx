@@ -14,9 +14,9 @@ public:
     SequenceInputStream(std::shared_ptr<InputStream> s1, std::shared_ptr<InputStream> s2);
     explicit SequenceInputStream(std::vector<std::shared_ptr<InputStream>> streams);
 
-    int read() override;
-    int read(jxx::lang::ByteArray b, int off, int len) override;
-    int available() override;
+    jxx::lang::jint read() override;
+    jxx::lang::jint read(jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) override;
+    jxx::lang::jint available() override;
     void close() override;
 };
 

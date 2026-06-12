@@ -12,7 +12,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
 #include <fmt/format.h>
 #include "lang/jxx.lang.Byte.h"
 #include "lang/jxx.lang.Integer.h"
@@ -24,18 +23,17 @@
 #include "lang/jxx.lang.Character.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Number.h"
-#include "util/jxx.util.Formatter.h"
-
+#include "jxx.util.TimeZone.h"
+#include "jxx.util.Formatter.h"
 
 namespace jxx::util
 {
-
     void fail_(const char* message)
     {
         throw std::runtime_error(message);
     }
 
-    inline std::string toUtf8OrEmpty_(const jxx::Ptr<jxx::lang::String>& s)
+    inline std::string toUtf8OrEmpty_(const jxx::Ptr<jxx::lang::String> s)
     {
         return s ? s->utf8() : std::string{};
     }
@@ -142,6 +140,7 @@ namespace jxx::util
         bool zeroPad)
     {
         const std::string combined = prefix + body;
+
         if (width <= 0 || static_cast<int>(combined.size()) >= width)
             return combined;
 
@@ -191,8 +190,7 @@ namespace jxx::util
 
         for (jxx::lang::jint i = 0; i < n; ++i)
         {
-            auto& argsRef = *args;
-            auto value = argsRef[i];
+            const auto& value = (*args)(i);
 
             ArgValue arg;
             arg.objectValue = value;
@@ -261,7 +259,7 @@ namespace jxx::util
 
     struct Spec
     {
-        int argIndex = -1;          // Stored 0-based
+        int argIndex = -1;          // stored 0-based
         bool previous = false;      // %<...
         bool leftJustify = false;   // -
         bool alternate = false;     // #
@@ -274,7 +272,7 @@ namespace jxx::util
         int precision = -1;
         bool dateTime = false;      // t/T prefix
         bool upper = false;         // uppercase output variant
-        char conv = '\0';           // normalized lower-case conversion (non-date/time)
+        char conv = '\0';           // normalized lower-case conversion
         char dateSuffix = '\0';     // exact date/time suffix
     };
 
@@ -636,8 +634,6 @@ namespace jxx::util
 
     inline std::string formatHexFloat_(double absValue, const Spec& spec)
     {
-        // Use snprintf because C's %a/%A formatting is the most direct way
-        // to get Java-like hex-float output in C++17.
         const char* fmtPattern = nullptr;
         if (spec.precision >= 0)
             fmtPattern = spec.upper ? "%.*A" : "%.*a";
@@ -652,17 +648,17 @@ namespace jxx::util
         if (needed < 0)
             fail_("hex float formatting failed");
 
-        std::string out(static_cast<std::size_t>(needed), '\0');
+        std::vector<char> buf(static_cast<std::size_t>(needed) + 1U, '\0');
 
         const int written =
             (spec.precision >= 0)
-            ? std::snprintf(&out[0], out.size() + 1, fmtPattern, spec.precision, absValue)
-            : std::snprintf(&out[0], out.size() + 1, fmtPattern, absValue);
+            ? std::snprintf(buf.data(), buf.size(), fmtPattern, spec.precision, absValue)
+            : std::snprintf(buf.data(), buf.size(), fmtPattern, absValue);
 
         if (written < 0)
             fail_("hex float formatting failed");
 
-        return out;
+        return std::string(buf.data(), static_cast<std::size_t>(written));
     }
 
     inline std::string formatFloatBody_(double absValue, const Spec& spec)
@@ -742,6 +738,24 @@ namespace jxx::util
             spec.zeroPad && !spec.leftJustify ? '0' : ' ');
     }
 
+    // ---------------------------------------------------------------------
+    // Locale resolution using Locale fields directly
+    // ---------------------------------------------------------------------
+
+    inline void pushIfNew_(std::vector<std::string>& out, const std::string& value)
+    {
+        if (value.empty())
+            return;
+
+        if (std::find(out.begin(), out.end(), value) == out.end())
+            out.push_back(value);
+    }
+
+    inline std::string localeField_(const jxx::Ptr<jxx::lang::String>& s)
+    {
+        return s ? s->utf8() : std::string{};
+    }
+
     inline std::vector<std::string> localeCandidates_(const jxx::Ptr<Locale>& locale)
     {
         std::vector<std::string> names;
@@ -749,30 +763,67 @@ namespace jxx::util
         if (!locale)
             return names;
 
-        const auto s = locale->toString();
-        const std::string raw = s ? s->utf8() : std::string{};
+        const std::string language = toLowerAscii_(localeField_(locale->getLanguage()));
+        const std::string script = localeField_(locale->getScript());
+        const std::string country = localeField_(locale->getCountry());
+        const std::string variant = localeField_(locale->getVariant());
 
-        if (raw.empty())
-            return names;
+        // Try explicit BCP-47 form from Locale first.
+        if (const auto tag = locale->toLanguageTag())
+        {
+            const std::string rawTag = tag->utf8();
+            pushIfNew_(names, rawTag);
+            pushIfNew_(names, rawTag + ".UTF-8");
 
-        auto pushIfNew = [&names](const std::string& v)
+            std::string tagUnderscore = rawTag;
+            std::replace(tagUnderscore.begin(), tagUnderscore.end(), '-', '_');
+            pushIfNew_(names, tagUnderscore);
+            pushIfNew_(names, tagUnderscore + ".UTF-8");
+        }
+
+        if (!language.empty())
+        {
+            // language only
+            pushIfNew_(names, language);
+            pushIfNew_(names, language + ".UTF-8");
+
+            // language-country
+            if (!country.empty())
             {
-                if (!v.empty() && std::find(names.begin(), names.end(), v) == names.end())
-                    names.push_back(v);
-            };
+                pushIfNew_(names, language + "_" + country);
+                pushIfNew_(names, language + "_" + country + ".UTF-8");
+                pushIfNew_(names, language + "-" + country);
+                pushIfNew_(names, language + "-" + country + ".UTF-8");
+            }
 
-        pushIfNew(raw);
-        pushIfNew(raw + ".UTF-8");
+            // language-script-country[-variant]
+            std::string composed = language;
+            if (!script.empty())
+                composed += "-" + script;
+            if (!country.empty())
+                composed += "-" + country;
+            if (!variant.empty())
+                composed += "-" + variant;
 
-        std::string hyphen = raw;
-        std::replace(hyphen.begin(), hyphen.end(), '_', '-');
-        pushIfNew(hyphen);
-        pushIfNew(hyphen + ".UTF-8");
+            pushIfNew_(names, composed);
+            pushIfNew_(names, composed + ".UTF-8");
 
-        std::string underscore = raw;
-        std::replace(underscore.begin(), underscore.end(), '-', '_');
-        pushIfNew(underscore);
-        pushIfNew(underscore + ".UTF-8");
+            std::string composedUnderscore = composed;
+            std::replace(composedUnderscore.begin(), composedUnderscore.end(), '-', '_');
+            pushIfNew_(names, composedUnderscore);
+            pushIfNew_(names, composedUnderscore + ".UTF-8");
+
+            // POSIX-ish variant form
+            if (!country.empty())
+            {
+                std::string posix = language + "_" + country;
+                if (!variant.empty())
+                    posix += "@" + variant;
+
+                pushIfNew_(names, posix);
+                pushIfNew_(names, posix + ".UTF-8");
+            }
+        }
 
         return names;
     }
@@ -801,18 +852,19 @@ namespace jxx::util
         }
     }
 
-    inline std::tm localTmFromMillis_(long long epochMillis)
-    {
-        using namespace std::chrono;
+    // ---------------------------------------------------------------------
+    // TimeZone-backed date/time support
+    // ---------------------------------------------------------------------
 
-        const system_clock::time_point tp = system_clock::time_point{ std::chrono::milliseconds{ epochMillis } };
-        const std::time_t tt = system_clock::to_time_t(tp);
+    inline std::tm gmtTmFromSeconds_(long long epochSeconds)
+    {
+        const std::time_t tt = static_cast<std::time_t>(epochSeconds);
 
         std::tm tm{};
 #if defined(_WIN32)
-        localtime_s(&tm, &tt);
+        gmtime_s(&tm, &tt);
 #else
-        localtime_r(&tt, &tm);
+        gmtime_r(&tt, &tm);
 #endif
         return tm;
     }
@@ -823,6 +875,51 @@ namespace jxx::util
         if (m < 0)
             m += 1000LL;
         return static_cast<int>(m);
+    }
+
+    inline jxx::Ptr<jxx::util::TimeZone> defaultTimeZone_()
+    {
+        try
+        {
+            return jxx::util::TimeZone::getDefault();
+        }
+        catch (...)
+        {
+            return nullptr;
+        }
+    }
+
+    inline std::tm localTmInTimeZone_(long long epochMillis, const jxx::Ptr<TimeZone>& tz)
+    {
+        // Convert epochMillis into wall-clock time in the requested timezone by
+        // shifting by the zone offset and then interpreting as UTC/GMT.
+        const jxx::lang::jint offsetMillis = tz ? tz->getOffset(epochMillis) : 0;
+        const long long shiftedMillis = epochMillis + static_cast<long long>(offsetMillis);
+        const long long shiftedSeconds = shiftedMillis / 1000LL;
+        return gmtTmFromSeconds_(shiftedSeconds);
+    }
+
+    inline std::string formatRfc822Offset_(jxx::lang::jint offsetMillis)
+    {
+        long long totalMinutes = static_cast<long long>(offsetMillis) / 60000LL;
+        const char sign = totalMinutes < 0 ? '-' : '+';
+
+        if (totalMinutes < 0)
+            totalMinutes = -totalMinutes;
+
+        const long long hours = totalMinutes / 60LL;
+        const long long mins = totalMinutes % 60LL;
+
+        return fmt::format("{}{:02}{:02}", sign, hours, mins);
+    }
+
+    inline std::string timeZoneAbbreviation_(const jxx::Ptr<TimeZone>& tz, long long epochMillis)
+    {
+        if (!tz)
+            return std::string{};
+
+        const auto abbr = tz->getAbbreviation(epochMillis);
+        return abbr ? abbr->utf8() : std::string{};
     }
 
     inline std::string putTime_(const std::tm& tm, const char* fmtPattern, const std::locale& loc)
@@ -839,9 +936,12 @@ namespace jxx::util
         bool upperPrefixResult,
         const jxx::Ptr<Locale>& locale)
     {
-        const std::tm tm = localTmFromMillis_(epochMillis);
-        const int millis = millisPart_(epochMillis);
         const std::locale stdloc = resolveStdLocale_(locale);
+        const auto tz = defaultTimeZone_();
+        const std::tm tm = localTmInTimeZone_(epochMillis, tz);
+        const int millis = millisPart_(epochMillis);
+        const jxx::lang::jint offsetMillis = tz ? tz->getOffset(epochMillis) : 0;
+        const std::string tzAbbr = timeZoneAbbreviation_(tz, epochMillis);
 
         std::string out;
 
@@ -869,8 +969,8 @@ namespace jxx::util
         case 'L': out = fmt::format("{:03}", millis); break;
         case 'N': out = fmt::format("{:09}", millis * 1000000); break;
         case 'p': out = toLowerAscii_(putTime_(tm, "%p", stdloc)); break;
-        case 'z': out = putTime_(tm, "%z", stdloc); break;
-        case 'Z': out = putTime_(tm, "%Z", stdloc); break;
+        case 'z': out = formatRfc822Offset_(offsetMillis); break;
+        case 'Z': out = tzAbbr; break;
         case 's': out = fmt::format("{}", epochMillis / 1000LL); break;
         case 'Q': out = fmt::format("{}", epochMillis); break;
 
@@ -892,12 +992,36 @@ namespace jxx::util
             break;
 
             // Composite
-        case 'R': out = putTime_(tm, "%H:%M", stdloc); break;
-        case 'T': out = putTime_(tm, "%H:%M:%S", stdloc); break;
-        case 'r': out = putTime_(tm, "%I:%M:%S %p", stdloc); break;
-        case 'D': out = putTime_(tm, "%m/%d/%y", stdloc); break;
-        case 'F': out = putTime_(tm, "%Y-%m-%d", stdloc); break;
-        case 'c': out = putTime_(tm, "%a %b %e %H:%M:%S %Y", stdloc); break;
+        case 'R':
+            out = putTime_(tm, "%H:%M", stdloc);
+            break;
+
+        case 'T':
+            out = putTime_(tm, "%H:%M:%S", stdloc);
+            break;
+
+        case 'r':
+            out = putTime_(tm, "%I:%M:%S %p", stdloc);
+            break;
+
+        case 'D':
+            out = putTime_(tm, "%m/%d/%y", stdloc);
+            break;
+
+        case 'F':
+            out = putTime_(tm, "%Y-%m-%d", stdloc);
+            break;
+
+        case 'c':
+        {
+            // Closer to Java: "Sat Nov 04 12:02:33 EST 1999"
+            const std::string left = putTime_(tm, "%a %b %e %H:%M:%S", stdloc);
+            if (!tzAbbr.empty())
+                out = left + " " + tzAbbr + " " + putTime_(tm, "%Y", stdloc);
+            else
+                out = left + " " + putTime_(tm, "%Y", stdloc);
+            break;
+        }
 
         default:
             fail_("unsupported date/time conversion");
@@ -1029,7 +1153,7 @@ namespace jxx::util
         : locale_(nullptr)
     {}
 
-    Formatter::Formatter(const jxx::Ptr<Locale> locale)
+    Formatter::Formatter(jxx::Ptr<Locale> locale)
         : locale_(std::move(locale))
     {}
 
@@ -1060,15 +1184,17 @@ namespace jxx::util
             throw std::runtime_error("Formatter is closed");
     }
 
-    jxx::Ptr<Formatter> Formatter::format(const jxx::Ptr<jxx::lang::String> formatString, 
-        const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args)
+    jxx::Ptr<Formatter> Formatter::format(
+        jxx::Ptr<jxx::lang::String> formatString,
+        jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args)
     {
         return format(locale_, std::move(formatString), std::move(args));
     }
 
-    jxx::Ptr<Formatter> Formatter::format(const jxx::Ptr<Locale> locale,
-        const jxx::Ptr<jxx::lang::String> formatString,
-        const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args)
+    jxx::Ptr<Formatter> Formatter::format(
+        jxx::Ptr<Locale> locale,
+        jxx::Ptr<jxx::lang::String> formatString,
+        jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args)
     {
         ensureOpen_();
 
@@ -1087,3 +1213,4 @@ namespace jxx::util
         return std::make_shared<jxx::lang::String>(buffer_);
     }
 }
+

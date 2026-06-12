@@ -3,7 +3,6 @@
 #include "lang/jxx.lang.buildin_array.h"
 #include "jxx.io.Reader.h"
 
-
 namespace jxx::io {
 
 class BufferedReader : public Reader {
