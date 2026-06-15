@@ -1,7 +1,7 @@
 #pragma once
 
-#include "lang/jxx_types.h"
-#include "lang/jxx.lang.Object.h"
+#include "jxx_types.h"
+#include "jxx.lang.Object.h"
 
 namespace jxx::net
 {

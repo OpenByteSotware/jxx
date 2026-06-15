@@ -21,12 +21,6 @@ namespace jxx::net::internal
     #endif
     }
 
-    void shutdownNetworkIfNeeded()
-    {
-        // Intentionally a no-op at this layer. For library-style usage, we keep
-        // WinSock initialized for process lifetime once started.
-    }
-
     void closeNativeSocket(NativeSocket s) noexcept
     {
         if (s == kInvalidSocket)

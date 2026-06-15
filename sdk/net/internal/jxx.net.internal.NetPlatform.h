@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lang/jxx_types.h"
+#include "jxx_types.h"
 
 #if defined(_WIN32)
     #ifndef NOMINMAX
@@ -8,7 +8,7 @@
     #endif
     #include <winsock2.h>
     #include <ws2tcpip.h>
-    #include <iphlpapi.h>
+    #include <mswsock.h>
 #else
     #include <unistd.h>
 #endif
@@ -24,6 +24,5 @@ namespace jxx::net::internal
 #endif
 
     void ensureNetworkInitialized();
-    void shutdownNetworkIfNeeded();
     void closeNativeSocket(NativeSocket s) noexcept;
 }
