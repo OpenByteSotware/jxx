@@ -11,8 +11,8 @@ namespace jxx { namespace io {
 
 class PrintWriter : public jxx::lang::Object, public Flushable, public Closeable {
     std::shared_ptr<Writer> out;
-    bool autoFlush = false;
-    bool error_ = false;
+    jxx::lang::jbool autoFlush = false;
+    jxx::lang::jbool error_ = false;
     std::string lineSep = "\n";
 
     void setError() { error_ = true; }
@@ -32,21 +32,20 @@ public:
     void print(const std::string& s);
     void print(const char* s);
     void print(const std::u16string& s);
-    void print(bool v);
-    void print(int v);
-    void print(long long v);
-    void print(float v);
-    void print(double v);
-
+    void print(jxx::lang::jbool v);
+    void print(jxx::lang::jint v);
+    void print(jxx::lang::jlong v);
+    void print(jxx::lang::jfloat v);
+    void print(jxx::lang::jdouble v);
     void println();
     void println(const std::string& s);
     void println(const char* s);
     void println(const std::u16string& s);
-    void println(bool v);
-    void println(int v);
-    void println(long long v);
-    void println(float v);
-    void println(double v);
+    void println(jxx::lang::jbool v);
+    void println(jxx::lang::jint v);
+    void println(jxx::lang::jlong v);
+    void println(jxx::lang::jfloat v);
+    void println(jxx::lang::jdouble v);
 };
 
 }}

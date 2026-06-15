@@ -140,15 +140,13 @@ namespace jxx::lang {
         mutable std::mutex mtx_;
         std::condition_variable cv_;
 
-    private:
+    protected:
         // release thisPtr as it was a reference to this object and we are being destroyed, so break the cycle
         void releaseSelf();
 
         jxx::Ptr<jxx::lang::String> getClassName_() const;
 
         mutable std::recursive_mutex mutex_;
-
-
     };
 
     class Cloneable {

@@ -61,8 +61,7 @@ void PrintStream::print(jxx::lang::jchar c) {
     writeBytes_(out);
 }
 
-void PrintStream::println() { writeBytes_("
-"); }
+void PrintStream::println() { writeBytes_(""); }
 void PrintStream::println(jxx::Ptr<jxx::lang::String> s) { print(s); println(); }
 
 } // namespace jxx::io

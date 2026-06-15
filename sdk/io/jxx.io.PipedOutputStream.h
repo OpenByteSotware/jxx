@@ -3,8 +3,6 @@
 #include "jxx.io.OutputStream.h"
 #include "jxx.io.IOException.h"
 
-#include "jxx.lang.NullPointerException.h"
-#include "jxx.lang.String.h"
 
 namespace jxx::io {
 
