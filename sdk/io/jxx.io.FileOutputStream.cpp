@@ -1,39 +1,130 @@
-#include "lang/jxx.lang.NullPointerException.h"
-#include "lang/jxx.lang.String.h"
-#include "jxx.io.FileOutputStream.h"
+#include "io/jxx.io.FileOutputStream.h"
 
-namespace jxx::io {
+#include <stdexcept>
+#include <string>
+#include <vector>
 
-FileOutputStream::FileOutputStream(jxx::Ptr<jxx::lang::String> path)
-    : FileOutputStream(std::move(path), false) {}
+#if !defined(_WIN32)
+    #include <unistd.h>
+#endif
 
-FileOutputStream::FileOutputStream(jxx::Ptr<jxx::lang::String> path, jxx::lang::jbool append) {
-    if (!path) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("path"));
+#include "jxx.lang.String.h"
+#include "io/jxx.io.File.h"
+#include "io/jxx.io.FileDescriptor.h"
 
-    std::ios::openmode mode = std::ios::binary | std::ios::out;
-    if (append) mode |= std::ios::app;
-    else mode |= std::ios::trunc;
+namespace
+{
+    [[noreturn]] void throwIOE_(const char* msg)
+    {
+        throw std::runtime_error(msg);
+    }
 
-    f_.open(path->utf8(), mode);
-    if (!f_) throw IOException(jxx::NEW<jxx::lang::String>("Failed to open file for write"));
+    [[noreturn]] void throwIAE_(const char* msg)
+    {
+        throw std::invalid_argument(msg);
+    }
 }
 
-void FileOutputStream::write(jxx::lang::jint b) {
-    if (!f_) throw IOException(jxx::NEW<jxx::lang::String>("stream closed"));
-    char c = (char)(b & 0xFF);
-    f_.put(c);
-    if (!f_) throw IOException(jxx::NEW<jxx::lang::String>("write failed"));
+namespace jxx::io
+{
+    FileOutputStream::FileOutputStream(jxx::Ptr<jxx::lang::String> name)
+    {
+        if (!name)
+            throwIOE_("null file name");
+        openPath_(name->utf8(), false);
+    }
+
+    FileOutputStream::FileOutputStream(jxx::Ptr<jxx::lang::String> name, jxx::lang::jbool append)
+    {
+        if (!name)
+            throwIOE_("null file name");
+        openPath_(name->utf8(), append);
+    }
+
+    FileOutputStream::FileOutputStream(jxx::Ptr<File> file)
+    {
+        if (!file)
+            throwIOE_("null file");
+        openPath_(file->getPath()->utf8(), false);
+    }
+
+    FileOutputStream::FileOutputStream(jxx::Ptr<File> file, jxx::lang::jbool append)
+    {
+        if (!file)
+            throwIOE_("null file");
+        openPath_(file->getPath()->utf8(), append);
+    }
+
+    FileOutputStream::FileOutputStream(jxx::Ptr<FileDescriptor> fdObj)
+        : fd_(std::move(fdObj))
+    {
+        throwIOE_("FileOutputStream(FileDescriptor) needs native descriptor integration");
+    }
+
+    FileOutputStream::~FileOutputStream()
+    {
+        close();
+    }
+
+    void FileOutputStream::openPath_(const std::string& path, bool append)
+    {
+        file_ = std::fopen(path.c_str(), append ? "ab" : "wb");
+        if (!file_)
+            throwIOE_("failed to open file");
+
+    #if !defined(_WIN32)
+        fd_ = std::make_shared<FileDescriptor>();
+        fd_->setNativeFd_(::fileno(file_));
+    #endif
+    }
+
+    void FileOutputStream::write(jxx::lang::jint b)
+    {
+        if (!file_)
+            throwIOE_("stream closed");
+
+        if (std::fputc(static_cast<unsigned char>(b), file_) == EOF)
+            throwIOE_("write failed");
+    }
+
+    void FileOutputStream::write(const jxx::lang::ByteArray b,
+                                 jxx::lang::jint off,
+                                 jxx::lang::jint len)
+    {
+        if (!file_)
+            throwIOE_("stream closed");
+        if (!b)
+            throwIAE_("null byte array");
+        if (off < 0 || len < 0 || off > b->length() - len)
+            throwIAE_("index out of bounds");
+
+        std::vector<unsigned char> tmp(static_cast<std::size_t>(len));
+        for (jxx::lang::jint i = 0; i < len; ++i)
+            tmp[static_cast<std::size_t>(i)] = static_cast<unsigned char>((*b)[off + i]);
+
+        const std::size_t n = std::fwrite(tmp.data(), 1, tmp.size(), file_);
+        if (n != tmp.size())
+            throwIOE_("write failed");
+    }
+
+    void FileOutputStream::flush()
+    {
+        if (file_)
+            std::fflush(file_);
+    }
+
+    void FileOutputStream::close()
+    {
+        if (file_)
+        {
+            std::fflush(file_);
+            std::fclose(file_);
+            file_ = nullptr;
+        }
+    }
+
+    jxx::Ptr<FileDescriptor> FileOutputStream::getFD() const
+    {
+        return fd_;
+    }
 }
-
-void FileOutputStream::write(jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) {
-    OutputStream::checkBounds_(b, off, len);
-    if (!f_) throw IOException(jxx::NEW<jxx::lang::String>("stream closed"));
-    f_.write(reinterpret_cast<const char*>(b->data()) + off, len);
-    if (!f_) throw IOException(jxx::NEW<jxx::lang::String>("write failed"));
-}
-
-void FileOutputStream::flush() { if (f_) f_.flush(); }
-
-void FileOutputStream::close() { if (f_.is_open()) f_.close(); }
-
-} // namespace jxx::io

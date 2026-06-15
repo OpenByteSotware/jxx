@@ -1,23 +1,37 @@
-
 #pragma once
-#include <memory>
-#include "lang/jxx.lang.internal.h"
+
+#include "jxx_types.h"
+#include "jxx.lang.buildin_array.h"
 #include "io/jxx.io.FilterInputStream.h"
 
-namespace jxx { namespace io {
+namespace jxx::io
+{
+    class PushbackInputStream final : public FilterInputStream
+    {
+    public:
+        explicit PushbackInputStream(jxx::Ptr<InputStream> in);
+        PushbackInputStream(jxx::Ptr<InputStream> in, jxx::lang::jint size);
 
-class PushbackInputStream : public FilterInputStream {
-    jxx::lang::ByteArray buf; // pushback buffer
-    int pos;       // next byte to read from pushback buffer; equals size when empty
-public:
-    explicit PushbackInputStream(std::shared_ptr<InputStream> in, int size = 1);
+        ~PushbackInputStream() override = default;
 
-    int read() override;
-    int read(jxx::lang::ByteArray b, int off, int len) override;
-    void unread(int b);
-    void unread(const jxx::lang::ByteArray b, int off, int len);
-    void unread(const jxx::lang::ByteArray b);
-    int available() override;
-};
+    public:
+        jxx::lang::jint read() override;
+        jxx::lang::jint read(const jxx::lang::ByteArray b,
+                             jxx::lang::jint off,
+                             jxx::lang::jint len) override;
 
-}}
+        void unread(jxx::lang::jint b);
+        void unread(const jxx::lang::ByteArray b);
+        void unread(const jxx::lang::ByteArray b,
+                    jxx::lang::jint off,
+                    jxx::lang::jint len);
+
+        jxx::lang::jint available() override;
+        jxx::lang::jlong skip(jxx::lang::jlong n) override;
+        jxx::lang::jbool markSupported() const override;
+
+    private:
+        jxx::lang::ByteArray buf_;
+        jxx::lang::jint pos_ = 0;
+    };
+}

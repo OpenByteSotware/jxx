@@ -12,17 +12,16 @@ namespace jxx::util {
 
 class ZonedDateTime : public jxx::lang::Object {
 private:
-    jlong epochMillis_;
+    jxx::lang::jlong epochMillis_;
     jxx::Ptr<TimeZone> timeZone_;
 
 public:
-    ZonedDateTime(jlong epochMillis, const jxx::Ptr<TimeZone>& timeZone);
-
-    static jxx::Ptr<ZonedDateTime> ofEpochMillis(jlong epochMillis,
+    ZonedDateTime(jxx::lang::jlong epochMillis, const jxx::Ptr<TimeZone>& timeZone);
+    static jxx::Ptr<ZonedDateTime> ofEpochMillis(jxx::lang::jlong epochMillis,
                                                  const jxx::Ptr<TimeZone>& timeZone);
     static jxx::Ptr<ZonedDateTime> now(const jxx::Ptr<TimeZone>& timeZone);
 
-    jlong toEpochMillis() const;
+    jxx::lang::jlong toEpochMillis() const;
     jxx::Ptr<TimeZone> getTimeZone() const;
     jxx::Ptr<jxx::lang::String> toString() const override;
 };

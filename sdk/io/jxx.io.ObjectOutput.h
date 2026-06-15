@@ -1,11 +1,11 @@
 #pragma once
 
-#include "jxx_types.h"
-#include "jxx.lang.Object.h"
-#include "jxx.lang.buildin_array.h"
-#include "io/jxx.io.Closeable.h"
-#include "io/jxx.io.Flushable.h"
-#include "io/jxx.io.DataOutput.h"
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.buildin_array.h"
+#include "jxx.io.Closeable.h"
+#include "jxx.io.Flushable.h"
+#include "jxx.io.DataOutput.h"
 
 namespace jxx::io
 {

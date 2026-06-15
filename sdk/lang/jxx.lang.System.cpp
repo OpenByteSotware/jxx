@@ -1,4 +1,4 @@
-
+#include "io/jxx.io.FileDescriptor.h"
 #include "lang/jxx.lang.System.h"
 
 using namespace jxx::io;
@@ -11,9 +11,9 @@ std::shared_ptr<PrintStream> System::err;
 static struct __SystemBootstrap { __SystemBootstrap(){ System::init(); } } __sys_bootstrap;
 
 void System::init(){
-    System::in  = std::make_shared<FileInputStream>(FileDescriptor::in());
-    auto outOs  = std::make_shared<FileOutputStream>(FileDescriptor::out());
-    auto errOs  = std::make_shared<FileOutputStream>(FileDescriptor::err());
+    System::in  = std::make_shared<FileInputStream>(FileDescriptor::in);
+    auto outOs  = std::make_shared<FileOutputStream>(FileDescriptor::out);
+    auto errOs  = std::make_shared<FileOutputStream>(FileDescriptor::err);
     System::out = std::make_shared<PrintStream>(outOs, true);
     System::err = std::make_shared<PrintStream>(errOs, true);
 }

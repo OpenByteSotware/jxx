@@ -1,31 +1,41 @@
 #pragma once
 
-#include "jxx.io.OutputStream.h"
-#include "jxx.io.IOException.h"
+#include <cstdio>
 
+#include "jxx_types.h"
+#include "io/jxx.io.OutputStream.h"
 
-#include <fstream>
+namespace jxx::io
+{
+    class File;
+    class FileDescriptor;
 
-namespace jxx { namespace lang {
-    class String;
+    class FileOutputStream final : public OutputStream
+    {
+    public:
+        explicit FileOutputStream(jxx::Ptr<jxx::lang::String> name);
+        FileOutputStream(jxx::Ptr<jxx::lang::String> name, jxx::lang::jbool append);
+        explicit FileOutputStream(jxx::Ptr<File> file);
+        FileOutputStream(jxx::Ptr<File> file, jxx::lang::jbool append);
+        explicit FileOutputStream(jxx::Ptr<FileDescriptor> fdObj);
+
+        ~FileOutputStream() override;
+
+    public:
+        void write(jxx::lang::jint b) override;
+        void write(const jxx::lang::ByteArray b,
+                   jxx::lang::jint off,
+                   jxx::lang::jint len) override;
+        void flush() override;
+        void close() override;
+
+        jxx::Ptr<FileDescriptor> getFD() const;
+
+    private:
+        void openPath_(const std::string& path, bool append);
+
+    private:
+        std::FILE* file_ = nullptr;
+        jxx::Ptr<FileDescriptor> fd_;
+    };
 }
-}
-
-namespace jxx::io {
-
-class FileOutputStream final : public OutputStream {
-public:
-    explicit FileOutputStream(jxx::Ptr<jxx::lang::String> path);
-    FileOutputStream(jxx::Ptr<jxx::lang::String> path, jxx::lang::jbool append);
-
-    virtual void write(jxx::lang::jint b) override;
-    virtual void write(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) override;
-
-    virtual void flush() override;
-    virtual void close() override;
-
-private:
-    std::ofstream f_;
-};
-
-} // namespace jxx::io
