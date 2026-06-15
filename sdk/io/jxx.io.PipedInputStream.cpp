@@ -121,6 +121,6 @@ void PipedInputStream::close() {
     notEmpty_.notify_all();
 }
 
-jxx::lang::jbool PipedInputStream::markSupported() { return false; }
+jxx::lang::jbool PipedInputStream::markSupported() const { return false; }
 
 } // namespace jxx::io

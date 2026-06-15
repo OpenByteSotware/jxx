@@ -23,6 +23,7 @@ namespace jxx::io
 
     public:
         FileDescriptor();
+        explicit FileDescriptor(jxx::lang::jint fd);
         ~FileDescriptor() override = default;
 
     public:
@@ -33,8 +34,7 @@ namespace jxx::io
         jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> other) const override;
         jxx::lang::jint hashCode() const override;
 
-    private:
-        explicit FileDescriptor(jxx::lang::jint fd);
+    private:        
 
         void setNativeFd_(jxx::lang::jint fd) noexcept { fd_ = fd; }
         jxx::lang::jint nativeFd_() const noexcept { return fd_; }

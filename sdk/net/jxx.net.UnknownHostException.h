@@ -1,16 +1,15 @@
 #pragma once
 
-#include <memory>
-#include "jxx.io.IOException.h"
+#include <stdexcept>
 
-namespace jxx::net {
-
-class UnknownHostException : public jxx::io::IOException {
-public:
-    using jxx::io::IOException::IOException;
-    JXX_OBJECT_CLONE(UnknownHostException)
-protected:
-    const char* typeName() const noexcept override { return "UnknownHostException"; }
-};
-
-} // namespace jxx::net
+namespace jxx::net
+{
+    class UnknownHostException : public std::runtime_error
+    {
+    public:
+        UnknownHostException();
+        explicit UnknownHostException(const char* message);
+        explicit UnknownHostException(const std::string& message);
+        ~UnknownHostException() override = default;
+    };
+}

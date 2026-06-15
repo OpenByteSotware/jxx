@@ -21,5 +21,5 @@ void FilterInputStream::mark(jxx::lang::jint rl) { in_->mark(rl); }
 
 void FilterInputStream::reset() { in_->reset(); }
 
-jxx::lang::jbool FilterInputStream::markSupported() { return in_->markSupported(); }
+jxx::lang::jbool FilterInputStream::markSupported() const { return in_->markSupported(); }
 } // namespace jxx::io

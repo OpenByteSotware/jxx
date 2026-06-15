@@ -1,4 +1,3 @@
-#include "io/jxx.io.FileDescriptor.h"
 
 #include <stdexcept>
 #include <string>
@@ -7,7 +6,8 @@
     #include <unistd.h>
 #endif
 
-#include "jxx.lang.String.h"
+#include "lang/jxx.lang.String.h"
+#include "io/jxx.io.FileDescriptor.h"
 
 namespace jxx::io
 {

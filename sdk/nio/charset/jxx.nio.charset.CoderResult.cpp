@@ -2,8 +2,8 @@
 
 namespace jxx::nio::charset
 {
-    jxx::Ptr<CoderResult> CoderResult::UNDERFLOW = std::make_shared<CoderResult>(std::make_shared<jxx::lang::String>("UNDERFLOW"));
-    jxx::Ptr<CoderResult> CoderResult::OVERFLOW = std::make_shared<CoderResult>(std::make_shared<jxx::lang::String>("OVERFLOW"));
+    jxx::Ptr<CoderResult> CoderResult::JXX_UNDERFLOW = std::make_shared<CoderResult>(std::make_shared<jxx::lang::String>("UNDERFLOW"));
+    jxx::Ptr<CoderResult> CoderResult::JXX_OVERFLOW = std::make_shared<CoderResult>(std::make_shared<jxx::lang::String>("OVERFLOW"));
 
     CoderResult::CoderResult(jxx::Ptr<jxx::lang::String> kind,
                              jxx::lang::jint length)

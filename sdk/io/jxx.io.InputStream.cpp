@@ -64,7 +64,7 @@ namespace jxx::io {
     void InputStream::reset() {
         throw IOException(jxx::NEW<jxx::lang::String>("reset not supported"));
     }
-    jxx::lang::jbool InputStream::markSupported() {
+    jxx::lang::jbool InputStream::markSupported() const {
         return false;
     }
 

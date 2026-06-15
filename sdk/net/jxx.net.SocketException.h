@@ -1,16 +1,15 @@
 #pragma once
 
-#include <memory>
-#include "jxx.io.IOException.h"
+#include <stdexcept>
 
-namespace jxx::net {
-
-class SocketException : public jxx::io::IOException {
-public:
-    using jxx::io::IOException::IOException;
-    JXX_OBJECT_CLONE(SocketException)
-protected:
-    const char* typeName() const noexcept override { return "SocketException"; }
-};
-
-} // namespace jxx::net
+namespace jxx::net
+{
+    class SocketException : public std::runtime_error
+    {
+    public:
+        SocketException();
+        explicit SocketException(const char* message);
+        explicit SocketException(const std::string& message);
+        ~SocketException() override = default;
+    };
+}

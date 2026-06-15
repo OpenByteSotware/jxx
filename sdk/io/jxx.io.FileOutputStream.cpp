@@ -8,7 +8,7 @@
     #include <unistd.h>
 #endif
 
-#include "jxx.lang.String.h"
+#include "lang/jxx.lang.String.h"
 #include "io/jxx.io.File.h"
 #include "io/jxx.io.FileDescriptor.h"
 

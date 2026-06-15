@@ -3,8 +3,8 @@
 #include <fstream>
 #include <string>
 
-#include "jxx_types.h"
-#include "jxx.lang.String.h"
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.String.h"
 #include "io/jxx.io.File.h"
 #include "nio/jxx.nio.ByteBuffer.h"
 #include "nio/jxx.nio.MappedByteBuffer.h"

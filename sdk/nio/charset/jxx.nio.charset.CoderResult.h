@@ -1,16 +1,16 @@
 #pragma once
 
-#include "jxx_types.h"
-#include "jxx.lang.Object.h"
-#include "jxx.lang.String.h"
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
 
 namespace jxx::nio::charset
 {
     class CoderResult final : public jxx::lang::Object
     {
     public:
-        static jxx::Ptr<CoderResult> UNDERFLOW;
-        static jxx::Ptr<CoderResult> OVERFLOW;
+        static jxx::Ptr<CoderResult> JXX_UNDERFLOW;
+        static jxx::Ptr<CoderResult> JXX_OVERFLOW;
 
     public:
         explicit CoderResult(jxx::Ptr<jxx::lang::String> kind,

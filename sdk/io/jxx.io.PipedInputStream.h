@@ -27,7 +27,7 @@ public:
 
     jxx::lang::jint available() override;
     void close() override;
-    jxx::lang::jbool markSupported() override;
+    jxx::lang::jbool markSupported() const override;
 
 private:
     friend class PipedOutputStream;

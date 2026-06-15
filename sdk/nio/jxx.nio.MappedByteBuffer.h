@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "jxx_types.h"
+#include "lang/jxx_types.h"
 #include "nio/jxx.nio.ByteBuffer.h"
 
 namespace jxx::nio

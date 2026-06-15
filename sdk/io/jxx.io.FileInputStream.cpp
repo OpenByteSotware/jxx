@@ -8,7 +8,7 @@
     #include <unistd.h>
 #endif
 
-#include "jxx.lang.String.h"
+#include "lang/jxx.lang.String.h"
 #include "io/jxx.io.File.h"
 #include "io/jxx.io.FileDescriptor.h"
 
@@ -78,7 +78,7 @@ namespace jxx::io
             return -1;
         if (!b)
             throwIOE_("null byte array");
-        if (off < 0 || len < 0 || off > b->length() - len)
+        if (off < 0 || len < 0 || off > b->length - len)
             throwIOE_("index out of bounds");
         if (len == 0)
             return 0;
