@@ -42,7 +42,7 @@ namespace jxx::nio
     {
         if (!array)
             throwIAE_("null array");
-        return wrap(array, 0, array->length());
+        return wrap(array, 0, array->length);
     }
 
     jxx::Ptr<FloatBuffer> FloatBuffer::wrap(const jxx::lang::FloatArray array,
@@ -51,11 +51,11 @@ namespace jxx::nio
     {
         if (!array)
             throwIAE_("null array");
-        if (offset < 0 || length < 0 || offset > array->length() - length)
+        if (offset < 0 || length < 0 || offset > array->length - length)
             throwIAE_("index out of bounds");
 
-        auto storage = std::make_shared<std::vector<jxx::lang::jfloat>>(static_cast<std::size_t>(array->length()));
-        for (jxx::lang::jint i = 0; i < array->length(); ++i)
+        auto storage = std::make_shared<std::vector<jxx::lang::jfloat>>(static_cast<std::size_t>(array->length));
+        for (jxx::lang::jint i = 0; i < array->length; ++i)
             (*storage)[static_cast<std::size_t>(i)] = (*array)[i];
 
         auto out = std::shared_ptr<FloatBuffer>(new FloatBuffer(storage, offset, length, false));
@@ -103,7 +103,7 @@ namespace jxx::nio
     {
         if (!dst)
             throwIAE_("null array");
-        return get(dst, 0, dst->length());
+        return get(dst, 0, dst->length);
     }
 
     jxx::Ptr<FloatBuffer> FloatBuffer::get(const jxx::lang::FloatArray dst,
@@ -112,7 +112,7 @@ namespace jxx::nio
     {
         if (!dst)
             throwIAE_("null array");
-        if (offset < 0 || length < 0 || offset > dst->length() - length)
+        if (offset < 0 || length < 0 || offset > dst->length - length)
             throwIAE_("index out of bounds");
         checkRemaining_(length);
         for (jxx::lang::jint i = 0; i < length; ++i)
@@ -141,7 +141,7 @@ namespace jxx::nio
     {
         if (!src)
             throwIAE_("null array");
-        return put(src, 0, src->length());
+        return put(src, 0, src->length);
     }
 
     jxx::Ptr<FloatBuffer> FloatBuffer::put(const jxx::lang::FloatArray src,
@@ -150,7 +150,7 @@ namespace jxx::nio
     {
         if (!src)
             throwIAE_("null array");
-        if (offset < 0 || length < 0 || offset > src->length() - length)
+        if (offset < 0 || length < 0 || offset > src->length - length)
             throwIAE_("index out of bounds");
         checkWritable_();
         checkRemaining_(length);
@@ -217,7 +217,7 @@ namespace jxx::nio
 
     jxx::lang::FloatArray FloatBuffer::array() const
     {
-        auto out = std::make_shared<jxx::JxxArray<jxx::lang::jfloat, 1U>>(cap_);
+        auto out = jxx::NEW<jxx::lang::FloatArrayType>(cap_);
         for (jxx::lang::jint i = 0; i < cap_; ++i)
             (*out)[i] = at_(i);
         return out;

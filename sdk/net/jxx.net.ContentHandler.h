@@ -1,8 +1,8 @@
 #pragma once
 
-#include "jxx_types.h"
-#include "jxx.lang.Object.h"
-#include "jxx.lang.buildin_array.h"
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.buildin_array.h"
 
 namespace jxx::lang
 {

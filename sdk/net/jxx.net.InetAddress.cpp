@@ -27,7 +27,7 @@ namespace
 {
     inline jxx::lang::ByteArray toByteArray_(const std::vector<jxx::lang::jbyte>& bytes)
     {
-        auto out = std::make_shared<jxx::JxxArray<jxx::lang::jbyte, 1U>>(static_cast<jxx::lang::jint>(bytes.size()));
+        auto out = jxx::NEW<jxx::lang::ByteArrayType>(static_cast<jxx::lang::jint>(bytes.size()));
         for (std::size_t i = 0; i < bytes.size(); ++i)
             (*out)[static_cast<jxx::lang::jint>(i)] = bytes[i];
         return out;
@@ -38,8 +38,8 @@ namespace
         std::vector<jxx::lang::jbyte> out;
         if (!arr)
             return out;
-        out.reserve(static_cast<std::size_t>(arr->length()));
-        for (jxx::lang::jint i = 0; i < arr->length(); ++i)
+        out.reserve(static_cast<std::size_t>(arr->length));
+        for (jxx::lang::jint i = 0; i < arr->length; ++i)
             out.push_back((*arr)[i]);
         return out;
     }
@@ -105,9 +105,9 @@ namespace jxx::net
     jxx::Ptr<InetAddress> InetAddress::getByName(jxx::Ptr<jxx::lang::String> host)
     {
         auto all = getAllByName(host);
-        if (!all || all->length() == 0)
+        if (!all || all->size() == 0)
             throw UnknownHostException("host not found");
-        return (*all)[0];
+        return (*all)(0);
     }
 
     jxx::Ptr<jxx::JxxArray<jxx::Ptr<InetAddress>, 1U>> InetAddress::getAllByName(jxx::Ptr<jxx::lang::String> host)
@@ -152,7 +152,7 @@ namespace jxx::net
 
         auto out = std::make_shared<jxx::JxxArray<jxx::Ptr<InetAddress>, 1U>>(static_cast<jxx::lang::jint>(addrs.size()));
         for (std::size_t i = 0; i < addrs.size(); ++i)
-            (*out)[static_cast<jxx::lang::jint>(i)] = addrs[i];
+            (*out)(static_cast<jxx::lang::jint>(i)) = addrs[i];
         return out;
     }
 
@@ -164,7 +164,7 @@ namespace jxx::net
         }
         catch (...)
         {
-            auto arr = std::make_shared<jxx::JxxArray<jxx::lang::jbyte, 1U>>(4);
+            auto arr = jxx::NEW<jxx::lang::ByteArrayType>(4);
             (*arr)[0] = 127; (*arr)[1] = 0; (*arr)[2] = 0; (*arr)[3] = 1;
             return getByAddress(std::make_shared<jxx::lang::String>("localhost"), arr);
         }

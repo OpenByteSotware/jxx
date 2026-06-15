@@ -54,14 +54,14 @@ namespace jxx::nio::charset
             throwIAE_("null buffer");
         auto tmp = decode(in);
         if (out->remaining() < tmp->remaining())
-            return CoderResult::OVERFLOW;
+            return CoderResult::JXX_OVERFLOW;
         out->put(tmp);
-        return CoderResult::UNDERFLOW;
+        return CoderResult::JXX_UNDERFLOW;
     }
 
     jxx::Ptr<CoderResult> CharsetDecoder::flush(jxx::Ptr<jxx::nio::CharBuffer> /*out*/)
     {
-        return CoderResult::UNDERFLOW;
+        return CoderResult::JXX_UNDERFLOW;
     }
 
     jxx::Ptr<CharsetDecoder> CharsetDecoder::reset() { return self_(); }

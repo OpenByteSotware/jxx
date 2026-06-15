@@ -1,6 +1,6 @@
 #pragma once
 
-#include "jxx_types.h"
+#include "lang/jxx_types.h"
 #include "nio/jxx.nio.ByteBuffer.h"
 #include "nio/channels/jxx.nio.channels.Channel.h"
 

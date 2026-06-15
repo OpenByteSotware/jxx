@@ -3,8 +3,8 @@
 #include <memory>
 #include <vector>
 
-#include "jxx_types.h"
-#include "jxx.lang.buildin_array.h"
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.buildin_array.h"
 #include "nio/jxx.nio.Buffer.h"
 
 namespace jxx::nio

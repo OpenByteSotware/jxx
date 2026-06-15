@@ -42,7 +42,7 @@ namespace jxx::nio
     {
         if (!array)
             throwIAE_("null array");
-        return wrap(array, 0, array->length());
+        return wrap(array, 0, array->length);
     }
 
     jxx::Ptr<CharBuffer> CharBuffer::wrap(const jxx::lang::CharArray array,
@@ -51,11 +51,11 @@ namespace jxx::nio
     {
         if (!array)
             throwIAE_("null array");
-        if (offset < 0 || length < 0 || offset > array->length() - length)
+        if (offset < 0 || length < 0 || offset > array->length - length)
             throwIAE_("index out of bounds");
 
-        auto storage = std::make_shared<std::vector<jxx::lang::jchar>>(static_cast<std::size_t>(array->length()));
-        for (jxx::lang::jint i = 0; i < array->length(); ++i)
+        auto storage = std::make_shared<std::vector<jxx::lang::jchar>>(static_cast<std::size_t>(array->length));
+        for (jxx::lang::jint i = 0; i < array->length; ++i)
             (*storage)[static_cast<std::size_t>(i)] = (*array)[i];
 
         auto out = std::shared_ptr<CharBuffer>(new CharBuffer(storage, offset, length, false));
@@ -110,7 +110,7 @@ namespace jxx::nio
     {
         if (!dst)
             throwIAE_("null array");
-        return get(dst, 0, dst->length());
+        return get(dst, 0, dst->length);
     }
 
     jxx::Ptr<CharBuffer> CharBuffer::get(const jxx::lang::CharArray dst,
@@ -119,7 +119,7 @@ namespace jxx::nio
     {
         if (!dst)
             throwIAE_("null array");
-        if (offset < 0 || length < 0 || offset > dst->length() - length)
+        if (offset < 0 || length < 0 || offset > dst->length - length)
             throwIAE_("index out of bounds");
         checkRemaining_(length);
         for (jxx::lang::jint i = 0; i < length; ++i)
@@ -148,7 +148,7 @@ namespace jxx::nio
     {
         if (!src)
             throwIAE_("null array");
-        return put(src, 0, src->length());
+        return put(src, 0, src->length);
     }
 
     jxx::Ptr<CharBuffer> CharBuffer::put(const jxx::lang::CharArray src,
@@ -157,7 +157,7 @@ namespace jxx::nio
     {
         if (!src)
             throwIAE_("null array");
-        if (offset < 0 || length < 0 || offset > src->length() - length)
+        if (offset < 0 || length < 0 || offset > src->length - length)
             throwIAE_("index out of bounds");
         checkWritable_();
         checkRemaining_(length);
@@ -224,7 +224,7 @@ namespace jxx::nio
 
     jxx::lang::CharArray CharBuffer::array() const
     {
-        auto out = std::make_shared<jxx::JxxArray<jxx::lang::jchar, 1U>>(cap_);
+        auto out = jxx::NEW<jxx::lang::CharArrayType>(cap_);
         for (jxx::lang::jint i = 0; i < cap_; ++i)
             (*out)[i] = at_(i);
         return out;
@@ -235,10 +235,9 @@ namespace jxx::nio
     jxx::lang::jbool CharBuffer::isDirect() const { return false; }
     jxx::Ptr<jxx::lang::String> CharBuffer::toString() const
     {
-        auto arr = std::make_shared<jxx::JxxArray<jxx::lang::jchar, 1U>>(remaining());
+        auto arr = jxx::NEW<jxx::lang::CharArrayType>(remaining());
         for (jxx::lang::jint i = 0; i < remaining(); ++i)
             (*arr)[i] = at_(pos_ + i);
-        return std::make_shared<jxx::lang::String>(arr);
+        return jxx::NEW<jxx::lang::String>(arr);
     }
-
 }
