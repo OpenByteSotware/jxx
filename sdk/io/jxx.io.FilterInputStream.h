@@ -19,7 +19,7 @@ public:
 
     void mark(jxx::lang::jint readlimit) override;
     void reset() override;
-    jxx::lang::jbool markSupported() override;
+    jxx::lang::jbool markSupported() const override;
 
 protected:
     jxx::Ptr<InputStream> in_;

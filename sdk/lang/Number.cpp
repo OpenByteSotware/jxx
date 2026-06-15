@@ -1,11 +1,14 @@
 #include "lang/jxx.lang.Number.h"
 
-jbyte Number::byteValue() const
+namespace jxx::lang
 {
-    return static_cast<jbyte>(intValue());
-}
+    jxx::lang::jbyte Number::byteValue() const
+    {
+        return static_cast<jxx::lang::jbyte>(intValue());
+    }
 
-jshort Number::shortValue() const
-{
-    return static_cast<jshort>(intValue());
+    jxx::lang::jshort Number::shortValue() const
+    {
+        return static_cast<jxx::lang::jshort>(intValue());
+    }
 }

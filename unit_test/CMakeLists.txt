@@ -49,6 +49,7 @@ target_include_directories(all_tests
 		${CMAKE_SOURCE_DIR}/sdk/io
 		${CMAKE_SOURCE_DIR}/sdk/math
 		${CMAKE_SOURCE_DIR}/sdk/net	
+        ${CMAKE_SOURCE_DIR}/sdk/nio
 		${CMAKE_SOURCE_DIR}/sdk/security	
         
 )

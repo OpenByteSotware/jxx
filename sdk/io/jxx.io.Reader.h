@@ -14,7 +14,7 @@ public:
     virtual void close() override;
     virtual jxx::lang::jlong skip(jxx::lang::jlong n);
     virtual jxx::lang::jbool ready();
-    virtual jxx::lang::jbool markSupported();
+    virtual jxx::lang::jbool markSupported() const;
     virtual void mark(jxx::lang::jint);
     virtual void reset();
 };

@@ -22,6 +22,7 @@ target_include_directories(jxxsdk
 		${CMAKE_SOURCE_DIR}/io
 		${CMAKE_SOURCE_DIR}/math		
 		${CMAKE_SOURCE_DIR}/net		
+		${CMAKE_SOURCE_DIR}/nio		
 		${CMAKE_SOURCE_DIR}/security	
 )
 

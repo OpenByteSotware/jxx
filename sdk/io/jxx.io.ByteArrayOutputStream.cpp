@@ -34,7 +34,7 @@ void ByteArrayOutputStream::write(jxx::lang::jint b) {
     (*buf_)[count_++] = (jxx::lang::jbyte)(b & 0xFF);
 }
 
-void ByteArrayOutputStream::write(jxx::Ptr<jxx::lang::ByteArray> b, jxx::lang::jint off, jxx::lang::jint len) {
+void ByteArrayOutputStream::write(jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) {
     IOHelper::checkBounds_(b, off, len);
     ensureCapacity_(count_ + len);
     for (jxx::lang::jint i = 0; i < len; ++i) (*buf_)[count_ + i] = (*b)[off + i];
@@ -45,7 +45,7 @@ void ByteArrayOutputStream::reset() { count_ = 0; }
 
 jxx::lang::jint ByteArrayOutputStream::size() const { return count_; }
 
-jxx::Ptr<jxx::lang::ByteArray> ByteArrayOutputStream::toByteArray() const {
+jxx::lang::ByteArray ByteArrayOutputStream::toByteArray() const {
     auto out = jxx::NEW<jxx::lang::ByteArrayType>((std::uint32_t)count_);
     for (jxx::lang::jint i = 0; i < count_; ++i) (*out)[i] = (*buf_)[i];
     return out;

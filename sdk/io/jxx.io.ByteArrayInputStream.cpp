@@ -7,7 +7,8 @@ namespace jxx::io {
         : ByteArrayInputStream(buf, 0, buf ? (jxx::lang::jint)buf->length : 0) {}
 
     ByteArrayInputStream::ByteArrayInputStream(const jxx::lang::ByteArray buf, jxx::lang::jint offset, jxx::lang::jint length)
-        : ByteArrayInputStream(buf, 0, buf ? (jxx::lang::jint)buf->length : 0) {
+    {
+		buf_ = buf;
         if (!buf_) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("buf"));
         pos_ = offset;
         mark_ = offset;
@@ -47,7 +48,7 @@ namespace jxx::io {
         pos_ = mark_;
     }
 
-    jxx::lang::jbool ByteArrayInputStream::markSupported() {
+    jxx::lang::jbool ByteArrayInputStream::markSupported() const {
         return true;
     }
 

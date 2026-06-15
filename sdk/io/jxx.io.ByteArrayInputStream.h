@@ -18,7 +18,7 @@ namespace jxx::io {
 
         void mark(jxx::lang::jint readlimit) override;
         void reset() override;
-        jxx::lang::jbool markSupported() override;
+        jxx::lang::jbool markSupported() const override;
     private:
         jxx::lang::ByteArray buf_;
         jxx::lang::jint pos_ = 0;

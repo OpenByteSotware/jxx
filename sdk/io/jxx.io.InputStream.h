@@ -27,7 +27,7 @@ namespace jxx::io {
 
         virtual void mark(jxx::lang::jint readlimit);
         virtual void reset();
-        virtual jxx::lang::jbool markSupported();
+        virtual jxx::lang::jbool markSupported() const;
 
     protected:
         static void checkBounds_(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len);

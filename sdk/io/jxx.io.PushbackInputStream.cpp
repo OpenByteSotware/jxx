@@ -1,7 +1,7 @@
-#include "io/jxx.io.PushbackInputStream.h"
 
 #include <algorithm>
 #include <stdexcept>
+#include "io/jxx.io.PushbackInputStream.h"
 
 namespace
 {
@@ -29,7 +29,7 @@ namespace jxx::io
         if (size <= 0)
             throwIAE_("size <= 0");
 
-        buf_ = jxx::NEW<jxx::JxxArray<jxx::lang::jbyte, 1U>>(size);
+        buf_ = jxx::NEW<jxx::lang::ByteArrayType>(size);
         pos_ = size;
     }
 

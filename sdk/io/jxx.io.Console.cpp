@@ -29,14 +29,14 @@ void jxx::io::Console::printf(const char* fmt, ...){
     va_end(ap);
     if(n < 0) return;
     if(n < (int)sizeof(tmp)){
-        jxx::lang::System::out->print(std::string(tmp, (size_t)n));
+        jxx::lang::System::out->print(jxx::NEW<jxx::lang::String>(std::string(tmp, (size_t)n)));
         return;
     }
     std::vector<char> buf((int)n + 1);
     va_start(ap, fmt);
     vsnprintf(buf.data(), buf.size(), fmt, ap);
     va_end(ap);
-    jxx::lang::System::out->print(std::string(buf.data(), (size_t)n));
+    jxx::lang::System::out->print(jxx::NEW<jxx::lang::String>(std::string(buf.data(), (size_t)n)));
 }
 
 jxx::Ptr<jxx::lang::String> jxx::io::Console::readLine(){

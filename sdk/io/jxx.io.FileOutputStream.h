@@ -2,8 +2,8 @@
 
 #include <cstdio>
 
-#include "jxx_types.h"
-#include "io/jxx.io.OutputStream.h"
+#include "lang/jxx_types.h"
+#include "jxx.io.OutputStream.h"
 
 namespace jxx::io
 {
