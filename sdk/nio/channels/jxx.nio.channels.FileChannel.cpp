@@ -130,7 +130,7 @@ namespace jxx::nio::channels
         if (n <= 0)
             return 0;
 
-        auto temp = std::make_shared<jxx::JxxArray<jxx::lang::jbyte, 1U>>(n);
+        auto temp = jxx::NEW<jxx::lang::ByteArrayType>(n);
         src->get(temp, 0, n);
         stream_.write(reinterpret_cast<const char*>(&(*temp)[0]), static_cast<std::streamsize>(n));
         if (!stream_.good())

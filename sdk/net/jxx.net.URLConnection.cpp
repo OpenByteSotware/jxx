@@ -26,7 +26,9 @@ namespace
     public:
         jxx::Ptr<jxx::lang::Object> getContent(jxx::Ptr<jxx::net::URLConnection> urlc) override
         {
-            return urlc ? urlc->getInputStream() : nullptr;
+			if (!urlc)
+                return nullptr;
+            return jxx::CAST<jxx::lang::Object>(urlc->getInputStream());
         }
     };
 
