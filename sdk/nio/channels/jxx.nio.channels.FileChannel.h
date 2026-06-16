@@ -5,6 +5,7 @@
 
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.Object.h"
 #include "io/jxx.io.File.h"
 #include "nio/jxx.nio.ByteBuffer.h"
 #include "nio/jxx.nio.MappedByteBuffer.h"
@@ -12,7 +13,7 @@
 
 namespace jxx::nio::channels
 {
-    class FileChannel final : public SeekableByteChannel
+    class FileChannel final : public jxx::lang::Object, SeekableByteChannel
     {
     public:
         class MapMode final : public jxx::lang::Object

@@ -17,7 +17,7 @@ namespace jxx {
         void Reader::close() {}
         jxx::lang::jlong Reader::skip(jxx::lang::jlong n) { jxx::lang::jlong r = 0; for (; r < n; ++r) { if (read() < 0) break; } return r; }
         jxx::lang::jbool Reader::ready() { return false; }
-        jxx::lang::jbool Reader::markSupported() { return false; }
+        jxx::lang::jbool Reader::markSupported() const { return false; }
         void Reader::mark(jxx::lang::jint) { throw IOException("mark not supported"); }
         void Reader::reset() { throw IOException("reset not supported"); }
     }

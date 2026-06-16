@@ -229,7 +229,7 @@ namespace jxx::net
         localAddr_ = isa->getAddress();
         localPort_ = isa->getPort();
         if (!localAddr_)
-            localAddr_ = InetAddress::getByAddress(std::make_shared<jxx::JxxArray<jxx::lang::jbyte, 1U>>(4));
+            localAddr_ = InetAddress::getByAddress(jxx::NEW<jxx::lang::ByteArrayType>(4));
         ensureCreated_(true);
 
         socklen_t len = 0;
@@ -312,10 +312,10 @@ namespace jxx::net
     void Socket::setSoLinger(jxx::lang::jbool on, jxx::lang::jint linger)
     {
         ensureCreated_(true);
-        linger l{};
-        l.l_onoff = on ? 1 : 0;
-        l.l_linger = static_cast<u_short>(linger);
-        if (::setsockopt(state_->socket, SOL_SOCKET, SO_LINGER, reinterpret_cast<const char*>(&l), sizeof(l)) != 0)
+        struct linger ls{};
+        ls.l_onoff = on ? 1 : 0;
+        ls.l_linger = static_cast<u_short>(linger);
+        if (::setsockopt(state_->socket, SOL_SOCKET, SO_LINGER, reinterpret_cast<const char*>(&ls), sizeof(ls)) != 0)
             throwSE_("setsockopt(linger) failed");
     }
 

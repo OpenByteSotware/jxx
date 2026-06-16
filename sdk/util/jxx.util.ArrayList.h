@@ -1,32 +1,24 @@
 #pragma once
 
-#include "io/jxx.util.AbstractList.h"
-#include "io/jxx.util.List.h"
-#include "io/jxx.util.RandomAccess.h"
-#include "io/jxx.lang.Cloneable.h"
+#include "util/jxx.util.AbstractList.h"
+#include "util/jxx.util.List.h"
+#include "lang/jxx.lang.Cloneable.h"
 #include "io/jxx.io.Serializable.h"
-#include "io/jxx.util.Comparator.h"
-#include "io/jxx.util.Spliterator.h"
-#include "io/jxx.util.function.Predicate.h"
-#include "io/jxx.util.function.UnaryOperator.h"
-#include "io/jxx.util.function.Consumer.h"
-#include "io/jxx.lang.Object.h"
-#include "io/jxx.lang.Exceptions.h"
+#include "util/jxx.util.Comparator.h"
+#include "util/jxx.util.Spliterator.h"
+#include "util/jxx.util.function.Predicate.h"
+#include "util/jxx.util.function.UnaryOperator.h"
+#include "util/jxx.util.function.Consumer.h"
+#include "lang/jxx.lang.Object.h"
+#include "util/jxx.util.SubList.h"
 
-namespace jxx {
-template <typename T> class Ptr;
-template <typename T> class JxxArray;
-}
-
-namespace jxx {
-namespace util {
+namespace jxx::util {
 
 template <typename E> class SubList;
 
 template <typename E>
 class ArrayList
     : public AbstractList<E>
-    , public virtual RandomAccess
     , public virtual jxx::lang::Cloneable
     , public virtual jxx::io::Serializable {
 private:
@@ -416,16 +408,14 @@ private:
     }
 };
 
-} // namespace util
-} // namespace jxx
-
-#include "io/jxx.util.SubList.h"
+}
+/*
 
 namespace jxx {
 namespace util {
 
 template <typename E>
-jxx::Ptr<List<E>> ArrayList<E>::subList(jint fromIndex, jint toIndex) {
+jxx::Ptr<List<E>> ArrayList<E>::subList(jxx::lang::jint fromIndex, jxx::lang::jint toIndex) {
     if (fromIndex < 0 || toIndex > size_ || fromIndex > toIndex) {
         throw IndexOutOfBoundsException();
     }
@@ -434,3 +424,4 @@ jxx::Ptr<List<E>> ArrayList<E>::subList(jint fromIndex, jint toIndex) {
 
 } // namespace util
 } // namespace jxx
+*/

@@ -3,8 +3,8 @@
 #include <vector>
 
 #include "lang/jxx_types.h"
+#include "lang/jxx.lang.buildin_array.h"
 #include "lang/jxx.lang.Object.h"
-
 
 namespace jxx::nio
 {

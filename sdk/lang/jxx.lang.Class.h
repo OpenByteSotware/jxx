@@ -161,6 +161,10 @@ namespace jxx::lang {
         // ---------------------------------------------------------------------
         const Meta& meta() const noexcept { return meta_; }
 
+        virtual void writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out) override;
+        virtual void readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) override;
+        virtual void readObjectNoData() override;
+
     private:
         
         Meta meta_;

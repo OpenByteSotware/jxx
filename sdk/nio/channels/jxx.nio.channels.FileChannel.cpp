@@ -110,8 +110,8 @@ namespace jxx::nio::channels
         if (!dst->hasRemaining())
             return 0;
 
-        auto temp = std::make_shared<jxx::JxxArray<jxx::lang::jbyte, 1U>>(dst->remaining());
-        stream_.read(reinterpret_cast<char*>(&(*temp)[0]), static_cast<std::streamsize>(temp->length()));
+        auto temp = jxx::NEW<jxx::lang::ByteArrayType>(dst->remaining());
+        stream_.read(reinterpret_cast<char*>(&(*temp)[(jxx::lang::jint)0]), static_cast<std::streamsize>(temp->length));
         const auto n = static_cast<jxx::lang::jint>(stream_.gcount());
         if (n <= 0)
             return -1;
