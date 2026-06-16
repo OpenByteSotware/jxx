@@ -16,7 +16,7 @@ namespace jxx::nio::charset
         : cs_(std::move(cs)),
           malformedAction_(CodingErrorAction::REPORT),
           unmappableAction_(CodingErrorAction::REPORT),
-          replacement_(std::make_shared<jxx::JxxArray<jxx::lang::jbyte, 1U>>(1))
+          replacement_(jxx::NEW<jxx::lang::ByteArrayType>(1))
     {
         if (!cs_)
             throwIAE_("null charset");
@@ -40,9 +40,9 @@ namespace jxx::nio::charset
     {
         if (!in)
             throwIAE_("null input buffer");
-        auto chars = std::make_shared<jxx::JxxArray<jxx::lang::jchar, 1U>>(in->remaining());
-        in->get(chars, 0, chars->length());
-        auto str = std::make_shared<jxx::lang::String>(chars);
+        auto chars = jxx::NEW<jxx::lang::CharArrayType>(in->remaining());
+        in->get(chars, 0, chars->length);
+        auto str = jxx::NEW<jxx::lang::String>(chars);
         auto bytes = str->getBytes(cs_->name());
         return jxx::nio::ByteBuffer::wrap(bytes);
     }

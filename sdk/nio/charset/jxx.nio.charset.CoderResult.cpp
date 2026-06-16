@@ -2,8 +2,8 @@
 
 namespace jxx::nio::charset
 {
-    jxx::Ptr<CoderResult> CoderResult::JXX_UNDERFLOW = std::make_shared<CoderResult>(std::make_shared<jxx::lang::String>("UNDERFLOW"));
-    jxx::Ptr<CoderResult> CoderResult::JXX_OVERFLOW = std::make_shared<CoderResult>(std::make_shared<jxx::lang::String>("OVERFLOW"));
+    jxx::Ptr<CoderResult> CoderResult::JXX_UNDERFLOW = jxx::NEW<CoderResult>(jxx::NEW<jxx::lang::String>("UNDERFLOW"));
+    jxx::Ptr<CoderResult> CoderResult::JXX_OVERFLOW = jxx::NEW<CoderResult>(jxx::NEW<jxx::lang::String>("OVERFLOW"));
 
     CoderResult::CoderResult(jxx::Ptr<jxx::lang::String> kind,
                              jxx::lang::jint length)
@@ -13,12 +13,12 @@ namespace jxx::nio::charset
 
     jxx::Ptr<CoderResult> CoderResult::malformedForLength(jxx::lang::jint length)
     {
-        return std::make_shared<CoderResult>(std::make_shared<jxx::lang::String>("MALFORMED"), length);
+        return jxx::NEW<CoderResult>(jxx::NEW<jxx::lang::String>("MALFORMED"), length);
     }
 
     jxx::Ptr<CoderResult> CoderResult::unmappableForLength(jxx::lang::jint length)
     {
-        return std::make_shared<CoderResult>(std::make_shared<jxx::lang::String>("UNMAPPABLE"), length);
+        return jxx::NEW<CoderResult>(jxx::NEW<jxx::lang::String>("UNMAPPABLE"), length);
     }
 
     jxx::lang::jbool CoderResult::isUnderflow() const { return kind_ && kind_->utf8() == "UNDERFLOW"; }

@@ -35,7 +35,7 @@ namespace jxx::nio
         if (capacity < 0)
             throwIAE_("capacity < 0");
         auto storage = std::make_shared<std::vector<jxx::lang::jshort>>(static_cast<std::size_t>(capacity));
-        return std::shared_ptr<ShortBuffer>(new ShortBuffer(storage, 0, capacity, false));
+        return jxx::NEW<ShortBuffer>(storage, 0, capacity, false);
     }
 
     jxx::Ptr<ShortBuffer> ShortBuffer::wrap(const jxx::lang::ShortArray array)

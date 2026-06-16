@@ -62,7 +62,7 @@ namespace jxx::net
     jxx::Ptr<jxx::lang::String> InetSocketAddress::toString() const
     {
         const auto host = getHostString();
-        return std::make_shared<jxx::lang::String>((host ? host->utf8() : std::string()) + ":" + std::to_string(port_));
+        return jxx::NEW<jxx::lang::String>((host ? host->utf8() : std::string()) + ":" + std::to_string(port_));
     }
 
     jxx::lang::jbool InetSocketAddress::equals(jxx::Ptr<jxx::lang::Object> other) const

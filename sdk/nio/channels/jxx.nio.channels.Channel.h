@@ -3,11 +3,12 @@
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.Object.h"
 #include "io/jxx.io.Closeable.h"
+#include "lang/jxx.lang.AutoCloseable.h"
 
 namespace jxx::nio::channels
 {
     class Channel
-        : public jxx::lang::Object
+        : public jxx::lang::AutoCloseable
         , public jxx::io::Closeable
     {
     public:

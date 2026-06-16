@@ -26,7 +26,7 @@ namespace jxx::nio::charset
     {
     protected:
         Charset(jxx::Ptr<jxx::lang::String> canonicalName,
-                const std::vector<jxx::Ptr<jxx::lang::String>>& aliases);
+                const jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> aliases);
 
     public:
         ~Charset() override = default;
@@ -47,6 +47,6 @@ namespace jxx::nio::charset
 
     protected:
         jxx::Ptr<jxx::lang::String> canonicalName_;
-        std::vector<jxx::Ptr<jxx::lang::String>> aliases_;
+        jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> aliases_;
     };
 }

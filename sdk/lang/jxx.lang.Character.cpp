@@ -67,7 +67,7 @@ namespace jxx::lang
 
     jxx::Ptr<Character> Character::valueOf(jchar c)
     {
-        return std::make_shared<Character>(c);
+        return jxx::NEW<Character>(c);
     }
 
     jbool Character::isValidCodePoint(jint codePoint) noexcept
@@ -254,12 +254,12 @@ namespace jxx::lang
 
         if (isBmpCodePoint(codePoint))
         {
-            CharArray result = std::make_shared<JxxArray<jchar, 1U>>(1U);
+            CharArray result = jxx::NEW<JxxArray<jchar, 1U>>(1U);
             (*result)[0] = static_cast<jchar>(codePoint);
             return result;
         }
 
-        CharArray result = std::make_shared<JxxArray<jchar, 1U>>(2U);
+        CharArray result = jxx::NEW<JxxArray<jchar, 1U>>(2U);
         (*result)[0] = highSurrogate(codePoint);
         (*result)[1] = lowSurrogate(codePoint);
         return result;

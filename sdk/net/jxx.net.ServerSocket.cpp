@@ -147,7 +147,7 @@ namespace jxx::net
         bind(std::move(endpoint), 50);
     }
 
-    void ServerSocket::bind(jxx::Ptr<SocketAddress> endpoint,
+    void ServerSocket::bind(const jxx::Ptr<SocketAddress> endpoint,
                             jxx::lang::jint backlog)
     {
         auto isa = std::dynamic_pointer_cast<InetSocketAddress>(endpoint);
@@ -158,7 +158,7 @@ namespace jxx::net
         localPort_ = isa->getPort();
         if (!localAddr_)
         {
-            auto any = std::make_shared<jxx::JxxArray<jxx::lang::jbyte, 1U>>(4);
+            auto any = jxx::NEW<jxx::lang::ByteArrayType>(4);
             (*any)[0] = 0; (*any)[1] = 0; (*any)[2] = 0; (*any)[3] = 0;
             localAddr_ = InetAddress::getByAddress(any);
         }

@@ -40,9 +40,9 @@ namespace jxx::nio::charset
     {
         if (!in)
             throwIAE_("null input buffer");
-        auto bytes = std::make_shared<jxx::JxxArray<jxx::lang::jbyte, 1U>>(in->remaining());
-        in->get(bytes, 0, bytes->length());
-        auto str = std::make_shared<jxx::lang::String>(bytes, cs_->name());
+        auto bytes = jxx::NEW<jxx::lang::ByteArrayType>(in->remaining());
+        in->get(bytes, 0, bytes->length);
+        auto str = jxx::NEW<jxx::lang::String>(bytes, cs_->name());
         return jxx::nio::CharBuffer::wrap(str);
     }
 

@@ -61,7 +61,7 @@ namespace
             auto bytes = copyAddr4_(sa);
             char buf[INET_ADDRSTRLEN] = {0};
             ::inet_ntop(AF_INET, bytes.data(), buf, sizeof(buf));
-            return std::make_shared<jxx::net::Inet4Address>(nullptr, std::make_shared<jxx::lang::String>(std::string(buf)), bytes);
+            return jxx::NEW<jxx::net::Inet4Address>(nullptr, jxx::NEW<jxx::lang::String>(std::string(buf)), bytes);
         }
         if (addr.lpSockaddr->sa_family == AF_INET6)
         {
@@ -69,7 +69,7 @@ namespace
             auto bytes = copyAddr6_(sa);
             char buf[INET6_ADDRSTRLEN] = {0};
             ::inet_ntop(AF_INET6, bytes.data(), buf, sizeof(buf));
-            return std::make_shared<jxx::net::Inet6Address>(nullptr, std::make_shared<jxx::lang::String>(std::string(buf)), bytes, static_cast<jxx::lang::jint>(sa->sin6_scope_id), nullptr);
+            return jxx::NEW<jxx::net::Inet6Address>(nullptr, jxx::NEW<jxx::lang::String>(std::string(buf)), bytes, static_cast<jxx::lang::jint>(sa->sin6_scope_id), nullptr);
         }
         return nullptr;
     }
@@ -97,7 +97,7 @@ namespace
             auto bytes = copyAddr4_(reinterpret_cast<sockaddr_in*>(sa));
             char buf[INET_ADDRSTRLEN] = {0};
             ::inet_ntop(AF_INET, bytes.data(), buf, sizeof(buf));
-            return std::make_shared<jxx::net::Inet4Address>(nullptr, std::make_shared<jxx::lang::String>(std::string(buf)), bytes);
+            return jxx::NEW<jxx::net::Inet4Address>(nullptr, jxx::NEW<jxx::lang::String>(std::string(buf)), bytes);
         }
         if (sa->sa_family == AF_INET6)
         {
@@ -105,7 +105,7 @@ namespace
             auto bytes = copyAddr6_(sa6);
             char buf[INET6_ADDRSTRLEN] = {0};
             ::inet_ntop(AF_INET6, bytes.data(), buf, sizeof(buf));
-            return std::make_shared<jxx::net::Inet6Address>(nullptr, std::make_shared<jxx::lang::String>(std::string(buf)), bytes, static_cast<jxx::lang::jint>(sa6->sin6_scope_id), nullptr);
+            return jxx::NEW<jxx::net::Inet6Address>(nullptr, jxx::NEW<jxx::lang::String>(std::string(buf)), bytes, static_cast<jxx::lang::jint>(sa6->sin6_scope_id), nullptr);
         }
         return nullptr;
     }
@@ -117,8 +117,8 @@ namespace jxx::net
     jxx::Ptr<NetworkInterface> NetworkInterface::fromName_(const std::string& name,
                                                            jxx::lang::jint indexHint)
     {
-        auto out = std::shared_ptr<NetworkInterface>(new NetworkInterface());
-        out->name_ = std::make_shared<jxx::lang::String>(name);
+        auto out = jxx::NEW<NetworkInterface>();
+        out->name_ = jxx::NEW<jxx::lang::String>(name);
         out->displayName_ = out->name_;
         out->index_ = indexHint;
 
@@ -150,7 +150,7 @@ namespace jxx::net
 
             out->index_ = indexHint > 0 ? indexHint : static_cast<jxx::lang::jint>(p->IfIndex ? p->IfIndex : p->Ipv6IfIndex);
             if (!friendlyName.empty())
-                out->displayName_ = std::make_shared<jxx::lang::String>(friendlyName);
+                out->displayName_ = jxx::NEW<jxx::lang::String>(friendlyName);
 
             out->isLoopback_ = (p->IfType == IF_TYPE_SOFTWARE_LOOPBACK);
             out->supportsMulticast_ = !p->NoMulticast;
@@ -159,7 +159,7 @@ namespace jxx::net
 
             if (p->PhysicalAddressLength > 0)
             {
-                out->hardwareAddr_ = std::make_shared<jxx::JxxArray<jxx::lang::jbyte, 1U>>(static_cast<jxx::lang::jint>(p->PhysicalAddressLength));
+                out->hardwareAddr_ = jxx::NEW<jxx::lang::ByteArrayType>(static_cast<jxx::lang::jint>(p->PhysicalAddressLength));
                 for (ULONG i = 0; i < p->PhysicalAddressLength; ++i)
                     (*out->hardwareAddr_)[static_cast<jxx::lang::jint>(i)] = static_cast<jxx::lang::jbyte>(p->PhysicalAddress[i]);
             }
@@ -170,7 +170,7 @@ namespace jxx::net
                 if (inet)
                 {
                     out->inetAddresses_.push_back(inet);
-                    out->interfaceAddresses_.push_back(std::make_shared<InterfaceAddress>(inet, nullptr, static_cast<jxx::lang::jshort>(ua->OnLinkPrefixLength)));
+                    out->interfaceAddresses_.push_back(jxx::NEW<InterfaceAddress>(inet, nullptr, static_cast<jxx::lang::jshort>(ua->OnLinkPrefixLength)));
                 }
             }
             break;
@@ -226,7 +226,7 @@ namespace jxx::net
                 }
             }
             if (addr)
-                out->interfaceAddresses_.push_back(std::make_shared<InterfaceAddress>(addr, bcast, prefix));
+                out->interfaceAddresses_.push_back(jxx::NEW<InterfaceAddress>(addr, bcast, prefix));
         }
         ::freeifaddrs(list);
 
@@ -241,7 +241,7 @@ namespace jxx::net
         #if defined(__linux__)
             if (::ioctl(fd, SIOCGIFHWADDR, &ifr) == 0)
             {
-                out->hardwareAddr_ = std::make_shared<jxx::JxxArray<jxx::lang::jbyte, 1U>>(6);
+                out->hardwareAddr_ = jxx::NEW<jxx::lang::ByteArrayType>(6);
                 for (int i = 0; i < 6; ++i)
                     (*out->hardwareAddr_)[i] = static_cast<jxx::lang::jbyte>(ifr.ifr_hwaddr.sa_data[i]);
             }
@@ -355,17 +355,17 @@ namespace jxx::net
         std::vector<jxx::Ptr<NetworkInterface>> items;
         for (const auto& kv : map)
             items.push_back(kv.second);
-        return std::make_shared<jxx::util::VectorEnumeration<jxx::Ptr<NetworkInterface>>>(std::move(items));
+        return jxx::NEW<jxx::util::VectorEnumeration<jxx::Ptr<NetworkInterface>>>(std::move(items));
     }
 
     jxx::Ptr<jxx::util::Enumeration<jxx::Ptr<InetAddress>>> NetworkInterface::getInetAddresses() const
     {
-        return std::make_shared<jxx::util::VectorEnumeration<jxx::Ptr<InetAddress>>>(inetAddresses_);
+        return jxx::NEW<jxx::util::VectorEnumeration<jxx::Ptr<InetAddress>>>(inetAddresses_);
     }
 
     jxx::Ptr<jxx::util::List<jxx::Ptr<InterfaceAddress>>> NetworkInterface::getInterfaceAddresses() const
     {
-        auto list = std::make_shared<jxx::util::ArrayList<jxx::Ptr<InterfaceAddress>>>();
+        auto list = jxx::NEW<jxx::util::ArrayList<jxx::Ptr<InterfaceAddress>>>();
         for (const auto& x : interfaceAddresses_)
             list->add(x);
         return list;
@@ -373,7 +373,7 @@ namespace jxx::net
 
     jxx::Ptr<jxx::util::Enumeration<jxx::Ptr<NetworkInterface>>> NetworkInterface::getSubInterfaces() const
     {
-        return std::make_shared<jxx::util::VectorEnumeration<jxx::Ptr<NetworkInterface>>>(std::vector<jxx::Ptr<NetworkInterface>>{});
+        return jxx::NEW<jxx::util::VectorEnumeration<jxx::Ptr<NetworkInterface>>>(std::vector<jxx::Ptr<NetworkInterface>>{});
     }
 
     jxx::Ptr<NetworkInterface> NetworkInterface::getParent() const { return nullptr; }
@@ -390,7 +390,7 @@ namespace jxx::net
 
     jxx::Ptr<jxx::lang::String> NetworkInterface::toString() const
     {
-        return std::make_shared<jxx::lang::String>(name_ ? name_->utf8() : std::string());
+        return jxx::NEW<jxx::lang::String>(name_ ? name_->utf8() : std::string());
     }
 
     jxx::lang::jbool NetworkInterface::equals(jxx::Ptr<jxx::lang::Object> other) const

@@ -41,7 +41,7 @@ namespace jxx::nio
         if (capacity < 0)
             throwIAE_("capacity < 0");
         auto storage = std::make_shared<std::vector<jxx::lang::jbyte>>(static_cast<std::size_t>(capacity));
-        return std::shared_ptr<ByteBuffer>(new ByteBuffer(storage, 0, capacity, false, false, ByteOrder::BIG_ENDIAN));
+        return jxx::NEW<ByteBuffer>(storage, 0, capacity, false, false, ByteOrder::BIG_ENDIAN);
     }
 
     jxx::Ptr<ByteBuffer> ByteBuffer::allocateDirect(jxx::lang::jint capacity)
@@ -49,7 +49,7 @@ namespace jxx::nio
         if (capacity < 0)
             throwIAE_("capacity < 0");
         auto storage = std::make_shared<std::vector<jxx::lang::jbyte>>(static_cast<std::size_t>(capacity));
-        return std::shared_ptr<ByteBuffer>(new ByteBuffer(storage, 0, capacity, false, true, ByteOrder::BIG_ENDIAN));
+        return jxx::NEW<ByteBuffer>(storage, 0, capacity, false, true, ByteOrder::BIG_ENDIAN);
     }
 
     jxx::Ptr<ByteBuffer> ByteBuffer::wrap(const jxx::lang::ByteArray array)
@@ -72,7 +72,7 @@ namespace jxx::nio
         for (jxx::lang::jint i = 0; i < array->length; ++i)
             (*storage)[static_cast<std::size_t>(i)] = (*array)[i];
 
-        auto out = std::shared_ptr<ByteBuffer>(new ByteBuffer(storage, offset, length, false, false, ByteOrder::BIG_ENDIAN));
+        auto out = jxx::NEW<ByteBuffer>(storage, offset, length, false, false, ByteOrder::BIG_ENDIAN);
         out->position(0);
         out->limit(length);
         return out;

@@ -3,7 +3,7 @@
 #include <memory>
 #include <mutex>
 
-#include "jxx_types.h"
+#include "lang/jxx_types.h"
 #include "io/jxx.io.InputStream.h"
 #include "io/jxx.io.OutputStream.h"
 #include "net/internal/jxx.net.internal.NetPlatform.h"

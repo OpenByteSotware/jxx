@@ -40,7 +40,7 @@ namespace
 
     inline jxx::Ptr<jxx::lang::String> toStringPtr_(const std::string& s)
     {
-        return std::make_shared<jxx::lang::String>(s);
+        return jxx::NEW<jxx::lang::String>(s);
     }
 
     inline std::mutex& deleteOnExitMutex_()
@@ -117,7 +117,7 @@ namespace jxx::io
     jxx::Ptr<File> File::getParentFile() const
     {
         auto p = getParent();
-        return p ? std::make_shared<File>(p) : nullptr;
+        return p ? jxx::NEW<File>(p) : nullptr;
     }
 
     jxx::Ptr<jxx::lang::String> File::getPath() const
@@ -139,7 +139,7 @@ namespace jxx::io
 
     jxx::Ptr<File> File::getAbsoluteFile() const
     {
-        return std::make_shared<File>(getAbsolutePath());
+        return jxx::NEW<File>(getAbsolutePath());
     }
 
     jxx::Ptr<jxx::lang::String> File::getCanonicalPath() const
@@ -155,7 +155,7 @@ namespace jxx::io
 
     jxx::Ptr<File> File::getCanonicalFile() const
     {
-        return std::make_shared<File>(getCanonicalPath());
+        return jxx::NEW<File>(getCanonicalPath());
     }
 
     jxx::lang::jbool File::canRead() const
@@ -268,7 +268,7 @@ namespace jxx::io
             names.push_back(toStringPtr_(entry.path().filename().generic_string()));
         }
 
-        auto out = std::make_shared<jxx::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>>(
+        auto out = jxx::NEW<jxx::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>>(
             static_cast<jxx::lang::jint>(names.size()));
 
         for (std::size_t i = 0; i < names.size(); ++i)
@@ -289,10 +289,10 @@ namespace jxx::io
         {
             if (ec)
                 break;
-            files.push_back(std::make_shared<File>(toStringPtr_(entry.path().generic_string())));
+            files.push_back(jxx::NEW<File>(toStringPtr_(entry.path().generic_string())));
         }
 
-        auto out = std::make_shared<jxx::JxxArray<jxx::Ptr<File>, 1U>>(
+        auto out = jxx::NEW<jxx::JxxArray<jxx::Ptr<File>, 1U>>(
             static_cast<jxx::lang::jint>(files.size()));
 
         for (std::size_t i = 0; i < files.size(); ++i)
@@ -449,7 +449,7 @@ namespace jxx::io
             const auto candidate = dir / fs::path(pfx + std::to_string(std::rand()) + sfx);
             std::ofstream out(candidate.string(), std::ios::binary);
             if (out.good())
-                return std::make_shared<File>(toStringPtr_(candidate.generic_string()));
+                return jxx::NEW<File>(toStringPtr_(candidate.generic_string()));
         }
 
         throw std::runtime_error("failed to create temp file");
@@ -458,11 +458,11 @@ namespace jxx::io
     jxx::Ptr<jxx::JxxArray<jxx::Ptr<File>, 1U>> File::listRoots()
     {
     #if defined(_WIN32)
-        auto out = std::make_shared<jxx::JxxArray<jxx::Ptr<File>, 1U>>(0);
+        auto out = jxx::NEW<jxx::JxxArray<jxx::Ptr<File>, 1U>>(0);
         return out;
     #else
-        auto out = std::make_shared<jxx::JxxArray<jxx::Ptr<File>, 1U>>(1);
-        (*out)[0] = std::make_shared<File>(std::make_shared<jxx::lang::String>("/"));
+        auto out = jxx::NEW<jxx::JxxArray<jxx::Ptr<File>, 1U>>(1);
+        (*out)[0] = jxx::NEW<File>(jxx::NEW<jxx::lang::String>("/"));
         return out;
     #endif
     }

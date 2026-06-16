@@ -18,8 +18,8 @@ namespace
         std::vector<jxx::lang::jbyte> out;
         if (!arr)
             return out;
-        out.reserve(static_cast<std::size_t>(arr->length()));
-        for (jxx::lang::jint i = 0; i < arr->length(); ++i)
+        out.reserve(static_cast<std::size_t>(arr->length));
+        for (jxx::lang::jint i = 0; i < arr->length; ++i)
             out.push_back((*arr)[i]);
         return out;
     }
@@ -52,7 +52,7 @@ namespace jxx::net
         auto bytes = fromByteArray_(addr);
         if (bytes.size() != 16)
             throw std::invalid_argument("invalid IPv6 address length");
-        return std::make_shared<Inet6Address>(host, std::make_shared<jxx::lang::String>(toPrintable6_(bytes)), bytes, scopeId, nullptr);
+        return jxx::NEW<Inet6Address>(host, jxx::NEW<jxx::lang::String>(toPrintable6_(bytes)), bytes, scopeId, nullptr);
     }
 
     jxx::Ptr<Inet6Address> Inet6Address::getByAddress(jxx::Ptr<jxx::lang::String> host,
@@ -62,7 +62,7 @@ namespace jxx::net
         auto bytes = fromByteArray_(addr);
         if (bytes.size() != 16)
             throw std::invalid_argument("invalid IPv6 address length");
-        return std::make_shared<Inet6Address>(host, std::make_shared<jxx::lang::String>(toPrintable6_(bytes)), bytes, 0, std::move(nif));
+        return jxx::NEW<Inet6Address>(host, jxx::NEW<jxx::lang::String>(toPrintable6_(bytes)), bytes, 0, std::move(nif));
     }
 
     jxx::lang::jint Inet6Address::getScopeId() const noexcept { return scopeId_; }

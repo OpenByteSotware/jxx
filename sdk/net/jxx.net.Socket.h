@@ -2,9 +2,9 @@
 
 #include <memory>
 
-#include "jxx_types.h"
-#include "jxx.lang.Object.h"
-#include "jxx.lang.String.h"
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
 #include "net/internal/jxx.net.internal.NetPlatform.h"
 #include "net/jxx.net.SocketOptions.h"
 

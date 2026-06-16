@@ -40,7 +40,7 @@ void jxx::io::Console::printf(const char* fmt, ...){
 }
 
 jxx::Ptr<jxx::lang::String> jxx::io::Console::readLine(){
-    auto isr = std::make_shared<InputStreamReader>(jxx::lang::System::in);
+    auto isr = jxx::NEW<InputStreamReader>(jxx::lang::System::in);
     BufferedReader br(isr);
     return br.readLine();
 }

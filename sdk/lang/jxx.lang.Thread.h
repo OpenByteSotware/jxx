@@ -93,7 +93,7 @@ namespace jxx::lang {
             State() = default;
         };
 
-        std::shared_ptr<State> st_ = std::make_shared<State>();
+        std::shared_ptr<State> st_ = jxx::NEW<State>();
         std::thread th_{};
 
         // Per-thread pointer to current State (only set for threads started via this wrapper)

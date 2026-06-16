@@ -2,8 +2,8 @@
 
 #include <memory>
 
-#include "jxx_types.h"
-#include "jxx.lang.Object.h"
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.Object.h"
 #include "net/internal/jxx.net.internal.NetPlatform.h"
 
 namespace jxx::net
@@ -17,9 +17,7 @@ namespace jxx::net
     namespace internal
     {
         struct NativeSocketState;
-    }
-
-    namespace jxx_nio_channels = jxx::nio::channels;
+    }   
 }
 
 namespace jxx::nio::channels

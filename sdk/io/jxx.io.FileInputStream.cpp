@@ -56,7 +56,7 @@ namespace jxx::io
             throwIOE_("failed to open file");
 
     #if !defined(_WIN32)
-        fd_ = std::make_shared<FileDescriptor>();
+        fd_ = jxx::NEW<FileDescriptor>();
         fd_->setNativeFd_(::fileno(file_));
     #endif
     }

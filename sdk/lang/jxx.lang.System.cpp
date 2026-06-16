@@ -11,11 +11,11 @@ std::shared_ptr<PrintStream> System::err;
 static struct __SystemBootstrap { __SystemBootstrap(){ System::init(); } } __sys_bootstrap;
 
 void System::init(){
-    System::in  = std::make_shared<FileInputStream>(FileDescriptor::in);
-    auto outOs  = std::make_shared<FileOutputStream>(FileDescriptor::out);
-    auto errOs  = std::make_shared<FileOutputStream>(FileDescriptor::err);
-    System::out = std::make_shared<PrintStream>(outOs, true);
-    System::err = std::make_shared<PrintStream>(errOs, true);
+    System::in  = jxx::NEW<FileInputStream>(FileDescriptor::in);
+    auto outOs  = jxx::NEW<FileOutputStream>(FileDescriptor::out);
+    auto errOs  = jxx::NEW<FileOutputStream>(FileDescriptor::err);
+    System::out = jxx::NEW<PrintStream>(outOs, true);
+    System::err = jxx::NEW<PrintStream>(errOs, true);
 }
 
 jxx::lang::jlong System::currentTimeMillis() {

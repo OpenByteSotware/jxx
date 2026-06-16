@@ -50,11 +50,11 @@ class FixedOffsetTimeZone final : public TimeZone {
     jxx::lang::jint off_ms_ = 0;
 public:
     FixedOffsetTimeZone(std::string id, jxx::lang::jint off_ms) : id_(std::move(id)), off_ms_(off_ms) {}
-    jxx::Ptr<jxx::lang::String> getID() const override { return std::make_shared<jxx::lang::String>(id_.c_str()); }
+    jxx::Ptr<jxx::lang::String> getID() const override { return jxx::NEW<jxx::lang::String>(id_.c_str()); }
     jxx::lang::jint getOffset(jxx::lang::jlong /*epochMillis*/) const override { return off_ms_; }
     jxx::Ptr<jxx::lang::String> getAbbreviation(jxx::lang::jlong /*epochMillis*/) const override {
         // Java often uses GMT+hh:mm for fixed offsets; keep ID.
-        return std::make_shared<jxx::lang::String>(id_.c_str());
+        return jxx::NEW<jxx::lang::String>(id_.c_str());
     }
     jxx::lang::jint getRawOffset() const override { return off_ms_; }
     jxx::lang::jbool useDaylightTime() const override { return false; }
@@ -67,7 +67,7 @@ public:
     explicit TzdbTimeZone(Zone z) : z_(std::move(z)) {}
 
     jxx::Ptr<jxx::lang::String> getID() const override {
-        return std::make_shared<jxx::lang::String>(z_.id.c_str());
+        return jxx::NEW<jxx::lang::String>(z_.id.c_str());
     }
 
     jxx::lang::jint getOffset(jxx::lang::jlong epochMillis) const override {
@@ -84,12 +84,12 @@ public:
     jxx::Ptr<jxx::lang::String> getAbbreviation(jxx::lang::jlong epochMillis) const override {
         int64_t sec = (int64_t)(epochMillis / 1000);
         const auto& t = z_.transitions;
-        if (t.empty()) return std::make_shared<jxx::lang::String>(z_.default_abbrev.c_str());
+        if (t.empty()) return jxx::NEW<jxx::lang::String>(z_.default_abbrev.c_str());
         auto it = std::upper_bound(t.begin(), t.end(), sec,
             [](int64_t v, const Transition& tr){ return v < tr.at_utc; });
-        if (it == t.begin()) return std::make_shared<jxx::lang::String>(z_.default_abbrev.c_str());
+        if (it == t.begin()) return jxx::NEW<jxx::lang::String>(z_.default_abbrev.c_str());
         --it;
-        return std::make_shared<jxx::lang::String>(it->abbrev.c_str());
+        return jxx::NEW<jxx::lang::String>(it->abbrev.c_str());
     }
 
     jxx::lang::jint getRawOffset() const override { return (jxx::lang::jint)(z_.default_offset * 1000); }
@@ -144,12 +144,12 @@ jxx::Ptr<TimeZone> TimeZone::getDefault() {
         if (std::filesystem::exists(p, ec) && !ec) {
             const std::string key = "@localtime";
             auto it = g_zoneCache.find(key);
-            if (it != g_zoneCache.end()) return std::make_shared<TzdbTimeZone>(it->second);
+            if (it != g_zoneCache.end()) return jxx::NEW<TzdbTimeZone>(it->second);
 
             Zone z;
             if (load_zone_file(p.string(), "localtime", z)) {
                 g_zoneCache.emplace(key, z);
-                return std::make_shared<TzdbTimeZone>(z);
+                return jxx::NEW<TzdbTimeZone>(z);
             }
         }
     }

@@ -4,7 +4,7 @@
 #include <sstream>
 namespace jxx { namespace io {
 PrintWriter::PrintWriter(std::shared_ptr<Writer> w, bool autoFlush_) : out(std::move(w)), autoFlush(autoFlush_) {}
-PrintWriter::PrintWriter(std::shared_ptr<OutputStream> os, bool autoFlush_, const std::string& charset) : out(std::make_shared<OutputStreamWriter>(std::move(os), charset)), autoFlush(autoFlush_) {}
+PrintWriter::PrintWriter(std::shared_ptr<OutputStream> os, bool autoFlush_, const std::string& charset) : out(jxx::NEW<OutputStreamWriter>(std::move(os), charset)), autoFlush(autoFlush_) {}
 void PrintWriter::flush(){ try{ out->flush(); } catch(...){ setError(); } }
 void PrintWriter::close(){ try{ out->close(); } catch(...){ setError(); } }
 void PrintWriter::doWrite(const std::u16string& s){ try{ out->write(s);} catch(...){ setError(); } }

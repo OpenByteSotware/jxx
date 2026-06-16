@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include "jxx_types.h"
+#include "lang/jxx_types.h"
 #include "util/jxx.util.Enumeration.h"
 
 namespace jxx::util

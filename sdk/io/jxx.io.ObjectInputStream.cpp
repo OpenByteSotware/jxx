@@ -28,34 +28,34 @@ namespace jxx::io
 
     void ObjectInputStream::readFully(const jxx::lang::ByteArray b)
     {
-        auto din = std::make_shared<DataInputStream>(in_);
+        auto din = jxx::NEW<DataInputStream>(in_);
         din->readFully(b);
     }
 
     void ObjectInputStream::readFully(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len)
     {
-        auto din = std::make_shared<DataInputStream>(in_);
+        auto din = jxx::NEW<DataInputStream>(in_);
         din->readFully(b, off, len);
     }
 
     jxx::lang::jint ObjectInputStream::skipBytes(jxx::lang::jint n)
     {
-        auto din = std::make_shared<DataInputStream>(in_);
+        auto din = jxx::NEW<DataInputStream>(in_);
         return din->skipBytes(n);
     }
 
-    jxx::lang::jbool ObjectInputStream::readBoolean() { return std::make_shared<DataInputStream>(in_)->readBoolean(); }
-    jxx::lang::jbyte ObjectInputStream::readByte() { return std::make_shared<DataInputStream>(in_)->readByte(); }
-    jxx::lang::jint ObjectInputStream::readUnsignedByte() { return std::make_shared<DataInputStream>(in_)->readUnsignedByte(); }
-    jxx::lang::jshort ObjectInputStream::readShort() { return std::make_shared<DataInputStream>(in_)->readShort(); }
-    jxx::lang::jint ObjectInputStream::readUnsignedShort() { return std::make_shared<DataInputStream>(in_)->readUnsignedShort(); }
-    jxx::lang::jchar ObjectInputStream::readChar() { return std::make_shared<DataInputStream>(in_)->readChar(); }
-    jxx::lang::jint ObjectInputStream::readInt() { return std::make_shared<DataInputStream>(in_)->readInt(); }
-    jxx::lang::jlong ObjectInputStream::readLong() { return std::make_shared<DataInputStream>(in_)->readLong(); }
-    jxx::lang::jfloat ObjectInputStream::readFloat() { return std::make_shared<DataInputStream>(in_)->readFloat(); }
-    jxx::lang::jdouble ObjectInputStream::readDouble() { return std::make_shared<DataInputStream>(in_)->readDouble(); }
-    jxx::Ptr<jxx::lang::String> ObjectInputStream::readLine() { return std::make_shared<DataInputStream>(in_)->readLine(); }
-    jxx::Ptr<jxx::lang::String> ObjectInputStream::readUTF() { return std::make_shared<DataInputStream>(in_)->readUTF(); }
+    jxx::lang::jbool ObjectInputStream::readBoolean() { return jxx::NEW<DataInputStream>(in_)->readBoolean(); }
+    jxx::lang::jbyte ObjectInputStream::readByte() { return jxx::NEW<DataInputStream>(in_)->readByte(); }
+    jxx::lang::jint ObjectInputStream::readUnsignedByte() { return jxx::NEW<DataInputStream>(in_)->readUnsignedByte(); }
+    jxx::lang::jshort ObjectInputStream::readShort() { return jxx::NEW<DataInputStream>(in_)->readShort(); }
+    jxx::lang::jint ObjectInputStream::readUnsignedShort() { return jxx::NEW<DataInputStream>(in_)->readUnsignedShort(); }
+    jxx::lang::jchar ObjectInputStream::readChar() { return jxx::NEW<DataInputStream>(in_)->readChar(); }
+    jxx::lang::jint ObjectInputStream::readInt() { return jxx::NEW<DataInputStream>(in_)->readInt(); }
+    jxx::lang::jlong ObjectInputStream::readLong() { return jxx::NEW<DataInputStream>(in_)->readLong(); }
+    jxx::lang::jfloat ObjectInputStream::readFloat() { return jxx::NEW<DataInputStream>(in_)->readFloat(); }
+    jxx::lang::jdouble ObjectInputStream::readDouble() { return jxx::NEW<DataInputStream>(in_)->readDouble(); }
+    jxx::Ptr<jxx::lang::String> ObjectInputStream::readLine() { return jxx::NEW<DataInputStream>(in_)->readLine(); }
+    jxx::Ptr<jxx::lang::String> ObjectInputStream::readUTF() { return jxx::NEW<DataInputStream>(in_)->readUTF(); }
 
     jxx::Ptr<jxx::lang::Object> ObjectInputStream::readObject()
     {

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "jxx_types.h"
-#include "jxx.lang.Object.h"
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.Object.h"
 #include "net/jxx.net.SocketOptions.h"
 
 namespace jxx::io

@@ -378,7 +378,7 @@ namespace jxx::lang {
             elems_.resize(length);
             auto tail = tail_dims_(dims);
             for (size_type i = 0; i < length; ++i) {
-                elems_[i] = std::make_shared<SubArray>(tail);
+                elems_[i] = jxx::NEW<SubArray>(tail);
             }
         }
 
@@ -386,7 +386,7 @@ namespace jxx::lang {
         JxxArray(InitList init) : length(static_cast<size_type>(init.size())) {
             elems_.reserve(length);
             for (const auto& sub : init) {
-                elems_.push_back(std::make_shared<SubArray>(sub));
+                elems_.push_back(jxx::NEW<SubArray>(sub));
             }
         }
 

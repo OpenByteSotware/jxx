@@ -26,7 +26,7 @@ namespace jxx::net::internal
 
     jxx::lang::jint NativeSocketInputStream::read()
     {
-        auto arr = std::make_shared<jxx::JxxArray<jxx::lang::jbyte, 1U>>(1);
+        auto arr = jxx::NEW<jxx::lang::ByteArrayType>(1);
         const auto n = read(arr, 0, 1);
         return n <= 0 ? -1 : static_cast<jxx::lang::jint>((*arr)[0] & 0xFF);
     }
@@ -90,7 +90,7 @@ namespace jxx::net::internal
 
     void NativeSocketOutputStream::write(jxx::lang::jint b)
     {
-        auto arr = std::make_shared<jxx::JxxArray<jxx::lang::jbyte, 1U>>(1);
+        auto arr = jxx::NEW<jxx::lang::ByteArrayType>(1);
         (*arr)[0] = static_cast<jxx::lang::jbyte>(b);
         write(arr, 0, 1);
     }

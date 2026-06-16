@@ -11,7 +11,7 @@ namespace jxx::lang {
         
     protected:
         std::shared_ptr<jxx::lang::Object> cloneImpl() const override {
-            return std::make_shared<RuntimeException>(*this);
+            return jxx::NEW<RuntimeException>(*this);
         }
         const char* typeName() const noexcept override { return "RuntimeException"; }
     };

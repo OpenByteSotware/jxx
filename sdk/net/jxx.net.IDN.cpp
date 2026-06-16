@@ -27,7 +27,7 @@ namespace jxx::net
     {
         if (!input)
             throw std::invalid_argument("null input");
-        return std::make_shared<jxx::lang::String>(asciiFold_(input->utf8()));
+        return jxx::NEW<jxx::lang::String>(asciiFold_(input->utf8()));
     }
 
     jxx::Ptr<jxx::lang::String> IDN::toUnicode(jxx::Ptr<jxx::lang::String> input)

@@ -12,8 +12,8 @@ namespace jxx::net
 {
     HttpURLConnection::HttpURLConnection(jxx::Ptr<URL> url)
         : URLConnection(std::move(url)),
-          method_(std::make_shared<jxx::lang::String>("GET")),
-          responseMessage_(std::make_shared<jxx::lang::String>("Not Connected"))
+          method_(jxx::NEW<jxx::lang::String>("GET")),
+          responseMessage_(jxx::NEW<jxx::lang::String>("Not Connected"))
     {
     }
 

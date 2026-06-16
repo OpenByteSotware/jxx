@@ -61,10 +61,10 @@ jxx::Ptr<Calendar> Calendar::getInstance() {
 jxx::lang::jlong Calendar::getTimeInMillis() const { return millis_; }
 void Calendar::setTimeInMillis(jxx::lang::jlong millis) { millis_ = millis; }
 
-jxx::Ptr<Date> Calendar::getTime() const { return std::make_shared<Date>(millis_); }
+jxx::Ptr<Date> Calendar::getTime() const { return jxx::NEW<Date>(millis_); }
 
 void Calendar::setTime(jxx::Ptr<Date> date) {
-    if (!date) throw jxx::lang::NullPointerException(std::make_shared<jxx::lang::String>("null"));
+    if (!date) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("null"));
     millis_ = date->getTime();
 }
 
@@ -73,7 +73,7 @@ jxx::Ptr<TimeZone> Calendar::getTimeZone() const {
 }
 
 void Calendar::setTimeZone(jxx::Ptr<TimeZone> tz) {
-    if (!tz) throw jxx::lang::NullPointerException(std::make_shared<jxx::lang::String>("null"));
+    if (!tz) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("null"));
     tz_ = std::move(tz);
 }
 
@@ -95,7 +95,7 @@ jxx::lang::jint Calendar::get(jxx::lang::jint field) const {
         case MILLISECOND: return (jxx::lang::jint)ms;
         case DAY_OF_WEEK: return (jxx::lang::jint)dow;
         default:
-            throw jxx::lang::IndexOutOfBoundsException(std::make_shared<jxx::lang::String>("Unsupported Calendar field"));
+            throw jxx::lang::IndexOutOfBoundsException(jxx::NEW<jxx::lang::String>("Unsupported Calendar field"));
     }
 }
 

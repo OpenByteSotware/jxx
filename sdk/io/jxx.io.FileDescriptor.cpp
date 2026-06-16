@@ -11,9 +11,9 @@
 
 namespace jxx::io
 {
-    jxx::Ptr<FileDescriptor> FileDescriptor::in  = std::make_shared<FileDescriptor>(0);
-    jxx::Ptr<FileDescriptor> FileDescriptor::out = std::make_shared<FileDescriptor>(1);
-    jxx::Ptr<FileDescriptor> FileDescriptor::err = std::make_shared<FileDescriptor>(2);
+    jxx::Ptr<FileDescriptor> FileDescriptor::in  = jxx::NEW<FileDescriptor>(0);
+    jxx::Ptr<FileDescriptor> FileDescriptor::out = jxx::NEW<FileDescriptor>(1);
+    jxx::Ptr<FileDescriptor> FileDescriptor::err = jxx::NEW<FileDescriptor>(2);
 
     FileDescriptor::FileDescriptor() = default;
 
@@ -42,7 +42,7 @@ namespace jxx::io
 
     jxx::Ptr<jxx::lang::String> FileDescriptor::toString() const
     {
-        return std::make_shared<jxx::lang::String>(
+        return jxx::NEW<jxx::lang::String>(
             std::string("FileDescriptor[fd=") + std::to_string(fd_) + "]");
     }
 

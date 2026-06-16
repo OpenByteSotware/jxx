@@ -23,7 +23,7 @@ namespace
 namespace jxx::nio::charset
 {
     Charset::Charset(jxx::Ptr<jxx::lang::String> canonicalName,
-                     const std::vector<jxx::Ptr<jxx::lang::String>>& aliases)
+        const jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> aliases)
         : canonicalName_(std::move(canonicalName)), aliases_(aliases)
     {
     }
@@ -46,17 +46,17 @@ namespace jxx::nio::charset
             throwIAE_("null charset name");
         const auto n = up_(charsetName->utf8());
         if (n == "UTF-8" || n == "UTF8")
-            return std::make_shared<Charset>(std::make_shared<jxx::lang::String>("UTF-8"), std::vector<jxx::Ptr<jxx::lang::String>>{});
+            return jxx::NEW<Charset>(jxx::NEW<jxx::lang::String>("UTF-8"), jxx::NEW<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>>(0));
         if (n == "UTF-16" || n == "UTF16")
-            return std::make_shared<Charset>(std::make_shared<jxx::lang::String>("UTF-16"), std::vector<jxx::Ptr<jxx::lang::String>>{});
+            return jxx::NEW<Charset>(jxx::NEW<jxx::lang::String>("UTF-16"), jxx::NEW<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>>(0));
         if (n == "UTF-16BE" || n == "UTF16BE")
-            return std::make_shared<Charset>(std::make_shared<jxx::lang::String>("UTF-16BE"), std::vector<jxx::Ptr<jxx::lang::String>>{});
+            return jxx::NEW<Charset>(jxx::NEW<jxx::lang::String>("UTF-16BE"), jxx::NEW<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>>(0) );
         if (n == "UTF-16LE" || n == "UTF16LE")
-            return std::make_shared<Charset>(std::make_shared<jxx::lang::String>("UTF-16LE"), std::vector<jxx::Ptr<jxx::lang::String>>{});
+            return jxx::NEW<Charset>(jxx::NEW<jxx::lang::String>("UTF-16LE"), jxx::NEW<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>>(0));
         if (n == "US-ASCII" || n == "ASCII" || n == "US_ASCII")
-            return std::make_shared<Charset>(std::make_shared<jxx::lang::String>("US-ASCII"), std::vector<jxx::Ptr<jxx::lang::String>>{});
+            return jxx::NEW<Charset>(jxx::NEW<jxx::lang::String>("US-ASCII"), jxx::NEW<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>>(0));
         if (n == "ISO-8859-1" || n == "ISO8859-1" || n == "LATIN1")
-            return std::make_shared<Charset>(std::make_shared<jxx::lang::String>("ISO-8859-1"), std::vector<jxx::Ptr<jxx::lang::String>>{});
+            return jxx::NEW<Charset>(jxx::NEW<jxx::lang::String>("ISO-8859-1"), jxx::NEW<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>>(0));
         throwIAE_("unsupported charset");
     }
 

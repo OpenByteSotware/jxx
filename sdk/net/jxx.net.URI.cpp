@@ -76,7 +76,7 @@ namespace jxx::net
         if (port_ >= 0)
             authority += ":" + std::to_string(port_);
         authority_ = authority.empty() ? nullptr : std::make_shared<jxx::lang::String>(authority);
-        schemeSpecificPart_ = std::make_shared<jxx::lang::String>((authority_.empty() ? std::string() : std::string("//") + authority) + (path_ ? path_->utf8() : std::string()) + (query_ ? std::string("?") + query_->utf8() : std::string()));
+        schemeSpecificPart_ = std::make_shared<jxx::lang::String>((authority_ ? std::string("//") + authority_->utf8() : std::string()) + (path_ ? path_->utf8() : std::string()) + (query_ ? std::string("?") + query_->utf8() : std::string()));
     }
 
     void URI::parse_(jxx::Ptr<jxx::lang::String> spec)

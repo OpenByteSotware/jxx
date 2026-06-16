@@ -64,11 +64,11 @@ namespace
                                                        const std::vector<jxx::lang::jbyte>& bytes,
                                                        int family)
     {
-        auto printable = std::make_shared<jxx::lang::String>(toPrintable_(bytes, family));
+        auto printable = jxx::NEW<jxx::lang::String>(toPrintable_(bytes, family));
         if (family == AF_INET)
-            return std::make_shared<jxx::net::Inet4Address>(host, printable, bytes);
+            return jxx::NEW<jxx::net::Inet4Address>(host, printable, bytes);
         if (family == AF_INET6)
-            return std::make_shared<jxx::net::Inet6Address>(host, printable, bytes, 0, nullptr);
+            return jxx::NEW<jxx::net::Inet6Address>(host, printable, bytes, 0, nullptr);
         throw jxx::net::UnknownHostException("unsupported address family");
     }
 }
@@ -96,9 +96,9 @@ namespace jxx::net
     {
         auto bytes = fromByteArray_(addr);
         if (bytes.size() == 4)
-            return std::make_shared<Inet4Address>(host, std::make_shared<jxx::lang::String>(toPrintable_(bytes, AF_INET)), bytes);
+            return jxx::NEW<Inet4Address>(host, jxx::NEW<jxx::lang::String>(toPrintable_(bytes, AF_INET)), bytes);
         if (bytes.size() == 16)
-            return std::make_shared<Inet6Address>(host, std::make_shared<jxx::lang::String>(toPrintable_(bytes, AF_INET6)), bytes, 0, nullptr);
+            return jxx::NEW<Inet6Address>(host, jxx::NEW<jxx::lang::String>(toPrintable_(bytes, AF_INET6)), bytes, 0, nullptr);
         throw UnknownHostException("invalid address length");
     }
 
@@ -150,7 +150,7 @@ namespace jxx::net
         }
         ::freeaddrinfo(result);
 
-        auto out = std::make_shared<jxx::JxxArray<jxx::Ptr<InetAddress>, 1U>>(static_cast<jxx::lang::jint>(addrs.size()));
+        auto out = jxx::NEW<jxx::JxxArray<jxx::Ptr<InetAddress>, 1U>>(static_cast<jxx::lang::jint>(addrs.size()));
         for (std::size_t i = 0; i < addrs.size(); ++i)
             (*out)(static_cast<jxx::lang::jint>(i)) = addrs[i];
         return out;
@@ -160,13 +160,13 @@ namespace jxx::net
     {
         try
         {
-            return getByName(std::make_shared<jxx::lang::String>("localhost"));
+            return getByName(jxx::NEW<jxx::lang::String>("localhost"));
         }
         catch (...)
         {
             auto arr = jxx::NEW<jxx::lang::ByteArrayType>(4);
             (*arr)[0] = 127; (*arr)[1] = 0; (*arr)[2] = 0; (*arr)[3] = 1;
-            return getByAddress(std::make_shared<jxx::lang::String>("localhost"), arr);
+            return getByAddress(jxx::NEW<jxx::lang::String>("localhost"), arr);
         }
     }
 
@@ -176,7 +176,7 @@ namespace jxx::net
         char name[256] = {0};
         if (::gethostname(name, sizeof(name) - 1) != 0)
             throw UnknownHostException("gethostname failed");
-        return getByName(std::make_shared<jxx::lang::String>(std::string(name)));
+        return getByName(jxx::NEW<jxx::lang::String>(std::string(name)));
     }
 
     jxx::Ptr<jxx::lang::String> InetAddress::getHostName() const { return hostName_ ? hostName_ : hostAddress_; }
@@ -202,7 +202,7 @@ namespace jxx::net
     {
         const auto hn = getHostName();
         const auto ha = getHostAddress();
-        return std::make_shared<jxx::lang::String>((hn ? hn->utf8() : std::string()) + "/" + (ha ? ha->utf8() : std::string()));
+        return jxx::NEW<jxx::lang::String>((hn ? hn->utf8() : std::string()) + "/" + (ha ? ha->utf8() : std::string()));
     }
 
     jxx::lang::jbool InetAddress::equals(jxx::Ptr<jxx::lang::Object> other) const

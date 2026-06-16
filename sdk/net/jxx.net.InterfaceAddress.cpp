@@ -19,7 +19,7 @@ namespace jxx::net
 
     jxx::Ptr<jxx::lang::String> InterfaceAddress::toString() const
     {
-        return std::make_shared<jxx::lang::String>(
+        return jxx::NEW<jxx::lang::String>(
             (address_ ? address_->getHostAddress()->utf8() : std::string()) + "/" + std::to_string(prefixLength_));
     }
 }

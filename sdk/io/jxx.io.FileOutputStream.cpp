@@ -73,7 +73,7 @@ namespace jxx::io
             throwIOE_("failed to open file");
 
     #if !defined(_WIN32)
-        fd_ = std::make_shared<FileDescriptor>();
+        fd_ = jxx::NEW<FileDescriptor>();
         fd_->setNativeFd_(::fileno(file_));
     #endif
     }
@@ -95,7 +95,7 @@ namespace jxx::io
             throwIOE_("stream closed");
         if (!b)
             throwIAE_("null byte array");
-        if (off < 0 || len < 0 || off > b->length() - len)
+        if (off < 0 || len < 0 || off > b->length - len)
             throwIAE_("index out of bounds");
 
         std::vector<unsigned char> tmp(static_cast<std::size_t>(len));
