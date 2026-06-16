@@ -71,7 +71,7 @@ namespace jxx::util {
             int
             > = 0
         >
-        void forEachRemaining(jxx::Ptr<jxx::util::function::Consumer<U>> action) {
+        void forEachRemaining(jxx::Ptr<jxx::util::function::Consumer<U>> const action) {
             if (!action) {
                 throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("action"));
             }

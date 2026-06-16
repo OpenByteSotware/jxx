@@ -1,12 +1,11 @@
 #pragma once
-
-#include "jxx_types.h"
-#include "jxx.lang.Object.h"
-#include "jxx.lang.String.h"
-#include "jxx.util.Collection.h"
-#include "jxx.util.ElementEquals.h"
-
 #include <stdexcept>
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
+#include "util/jxx.util.Collection.h"
+#include "util/jxx.util.ElementEquals.h"
+
 
 namespace jxx::util {
 
@@ -20,9 +19,9 @@ public:
     virtual jxx::Ptr<Iterator<E>> iterator() override = 0;
 
     // Default implementations
-    jbool isEmpty() const override { return size() == 0; }
+    jxx::lang::jbool isEmpty() const override { return size() == 0; }
 
-    jbool contains(const E& e) const override {
+    jxx::lang::jbool contains(const E& e) const override {
         auto it = const_cast<AbstractCollection*>(this)->iterator();
         while (it->hasNext()) {
             E cur = it->next();
@@ -31,11 +30,11 @@ public:
         return false;
     }
 
-    jbool add(const E& /*e*/) override {
+    jxx::lang::jbool add(const E& /*e*/) override {
         throw std::logic_error("UnsupportedOperationException: Collection.add()");
     }
 
-    jbool remove(const E& e) override {
+    jxx::lang::jbool remove(const E& e) override {
         auto it = iterator();
         while (it->hasNext()) {
             E cur = it->next();
@@ -55,9 +54,9 @@ public:
         }
     }
 
-    jbool addAll(jxx::Ptr<Collection<E>> c) override {
+    jxx::lang::jbool addAll(jxx::Ptr<Collection<E>> c) override {
         if (!c) throw std::invalid_argument("NullPointerException: addAll(null)");
-        jbool modified = false;
+        jxx::lang::jbool modified = false;
         auto it = c->iterator();
         while (it->hasNext()) {
             if (add(it->next())) modified = true;
@@ -65,7 +64,7 @@ public:
         return modified;
     }
 
-    jbool containsAll(jxx::Ptr<Collection<E>> c) const override {
+    jxx::lang::jbool containsAll(jxx::Ptr<Collection<E>> c) const override {
         if (!c) throw std::invalid_argument("NullPointerException: containsAll(null)");
         auto it = const_cast<Collection<E>*>(c.get())->iterator();
         while (it->hasNext()) {
@@ -74,9 +73,9 @@ public:
         return true;
     }
 
-    jbool removeAll(jxx::Ptr<Collection<E>> c) override {
+    jxx::lang::jbool removeAll(jxx::Ptr<Collection<E>> c) override {
         if (!c) throw std::invalid_argument("NullPointerException: removeAll(null)");
-        jbool modified = false;
+        jxx::lang::jbool modified = false;
         auto it = iterator();
         while (it->hasNext()) {
             E cur = it->next();
@@ -88,9 +87,9 @@ public:
         return modified;
     }
 
-    jbool retainAll(jxx::Ptr<Collection<E>> c) override {
+    jxx::lang::jbool retainAll(jxx::Ptr<Collection<E>> c) override {
         if (!c) throw std::invalid_argument("NullPointerException: retainAll(null)");
-        jbool modified = false;
+        jxx::lang::jbool modified = false;
         auto it = iterator();
         while (it->hasNext()) {
             E cur = it->next();
@@ -103,7 +102,7 @@ public:
     }
 
     jxx::Ptr<jxx::lang::String> toString() const override {
-        return std::make_shared<jxx::lang::String>("[AbstractCollection]");
+        return jxx::NEW<jxx::lang::String>("[AbstractCollection]");
     }
 };
 

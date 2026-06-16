@@ -1,10 +1,10 @@
-#include "util/jxx.util.DecimalFormat.h"
-#include "lang/jxx.lang.String.h"
-
 #include <algorithm>
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include "lang/jxx.lang.String.h"
+#include "util/jxx.util.Locale.h"
+#include "util/jxx.util.DecimalFormat.h"
 
 namespace jxx::util {
 namespace {

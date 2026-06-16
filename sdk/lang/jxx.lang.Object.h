@@ -99,7 +99,7 @@ namespace jxx::lang {
         virtual jxx::Ptr<jxx::lang::String> getClassName() const;
 
         // Java-like: "Class@hexHash"
-        virtual jxx::Ptr<String> toString() const;
+        virtual jxx::Ptr<jxx::lang::String> toString() const;
 
         // Identity check (reference equality)
         virtual bool same(const Object& other) const;

@@ -54,11 +54,11 @@ namespace jxx::lang {
     }
 
     // ---- equals ----
-    bool Boolean::equals(const jxx::Ptr<Object> obj) const {
+    jxx::lang::jbool Boolean::equals(const jxx::Ptr<jxx::lang::Object> obj) const {
         if (this == obj.get()) return true;
         if (!obj) return false;
 
-        auto other = jxx::CAST<Boolean, Object>(obj);
+        auto other = jxx::CAST<Boolean, jxx::lang::Object>(obj);
         if (!other) return false;
 
         return value == other->value;

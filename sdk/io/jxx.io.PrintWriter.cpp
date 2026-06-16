@@ -7,8 +7,8 @@ PrintWriter::PrintWriter(std::shared_ptr<Writer> w, bool autoFlush_) : out(std::
 PrintWriter::PrintWriter(std::shared_ptr<OutputStream> os, bool autoFlush_, const std::string& charset) : out(jxx::NEW<OutputStreamWriter>(std::move(os), charset)), autoFlush(autoFlush_) {}
 void PrintWriter::flush(){ try{ out->flush(); } catch(...){ setError(); } }
 void PrintWriter::close(){ try{ out->close(); } catch(...){ setError(); } }
-void PrintWriter::doWrite(const std::u16string& s){ try{ out->write(s);} catch(...){ setError(); } }
-void PrintWriter::write(const jxx::lang::jchar* buf, int off, int len){ try{ out->write(buf,off,len);} catch(...){ setError(); } }
+void PrintWriter::doWrite(const std::u16string& s) {} //try{ //out->write(s);} catch(...){ setError(); } }
+void PrintWriter::write(const jxx::lang::jchar* buf, int off, int len) {}// try{ out->write(buf,off,len);} catch(...){ setError(); } }
 void PrintWriter::write(const std::u16string& s){ doWrite(s); }
 void PrintWriter::print(const std::string& s){ std::u16string u; u.reserve(s.size()); for(unsigned char c: s) u.push_back((jxx::lang::jchar)c); doWrite(u);} 
 void PrintWriter::print(const char* s){ print(s? std::string(s) : std::string("null")); }

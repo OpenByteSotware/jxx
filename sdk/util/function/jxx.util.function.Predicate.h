@@ -1,17 +1,13 @@
 #pragma once
 
-#include "io/jxx.lang.Object.h"
-
-namespace jxx {
-template <typename T> class Ptr;
-}
+#include "lang/jxx.lang.Object.h"
 
 namespace jxx {
 namespace util {
 namespace function {
 
 template <typename T>
-class Predicate : virtual public jxx::lang::Object {
+class Predicate {
 public:
     virtual ~Predicate() = default;
     virtual jbool test(jxx::Ptr<T> value) = 0;

@@ -1,9 +1,7 @@
 #pragma once
 
-#include "io/jxx.util.AbstractList.h"
-#include "io/jxx.util.List.h"
-#include "io/jxx.util.RandomAccess.h"
-#include "io/jxx.lang.Exceptions.h"
+#include "util/jxx.util.AbstractList.h"
+#include "util/jxx.util.List.h"
 
 namespace jxx {
 template <typename T> class Ptr;
@@ -13,7 +11,7 @@ namespace jxx {
 namespace util {
 
 template <typename E>
-class SubList : public AbstractList<E>, public virtual RandomAccess {
+class SubList : public AbstractList<E> {
 private:
     jxx::Ptr<List<E>> root;
     jint offset_;

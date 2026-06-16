@@ -477,7 +477,7 @@ namespace jxx::lang {
         for (jint i = 0; i < size; ++i) {
             (*ca)[i] = in->readChar();
         }
-        value_ = ca->toString()->utf16();
+        //value_ = ca->toString()->utf16();
     }
     void StringBuilder::readObjectNoData() {
         value_.clear();

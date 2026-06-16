@@ -26,9 +26,9 @@ namespace jxx::lang {
         value_ = stdString;
     }
 
-    void String::throwNPE_() { throw NullPointerException(jxx::NEW<String>("null")); }
-    void String::throwSIOOBE_() { throw StringIndexOutOfBoundsException(jxx::NEW<String>("String index out of range")); }
-    void String::throwIAE_(const char* msg) { throw IllegalArgumentException(jxx::NEW<String>(msg)); }
+    void String::throwNPE_() { throw NullPointerException("null"); }
+    void String::throwSIOOBE_() { throw StringIndexOutOfBoundsException("String index out of range"); }
+    void String::throwIAE_(const char* msg) { throw IllegalArgumentException(msg); }
 
     char16_t String::toLowerAscii_(char16_t c) {
         if (c >= u'A' && c <= u'Z') return (char16_t)(c - u'A' + u'a');
@@ -39,7 +39,7 @@ namespace jxx::lang {
         return c;
     }
 
-    bool String::isTurkicLocale_(jxx::Ptr<jxx::util::Locale> loc) {
+    jxx::lang::jbool String::isTurkicLocale_(const jxx::Ptr<jxx::util::Locale> const loc) {
         if (!loc) return false;
         auto lang = loc->getLanguage();
         if (!lang) return false;
@@ -47,7 +47,7 @@ namespace jxx::lang {
         return (s == "tr" || s == "az");
     }
 
-    std::u16string String::toUtf16_(jxx::Ptr<CharSequence> s) {
+    std::u16string String::toUtf16_(const jxx::Ptr<CharSequence> s) {
         if (!s) throwNPE_();
         std::u16string out;
         out.reserve((std::size_t)s->length());
@@ -156,7 +156,7 @@ namespace jxx::lang {
         value_ = cs->decode(slice)->utf16();
     }
 
-    String::String(const jxx::lang::ByteArray bytes, jxx::Ptr<String> charsetName) {
+    String::String(const jxx::lang::ByteArray bytes, jxx::Ptr<jxx::lang::String> charsetName) {
         if (!bytes || !charsetName) throwNPE_();
         auto cs = Charset::forName(charsetName);
         value_ = cs->decode(bytes)->utf16();
@@ -240,34 +240,40 @@ namespace jxx::lang {
         return (jchar)value_[(size_t)index];
     }
 
-    jxx::Ptr<CharSequence> String::subSequence(jint start, jint end) const {
-        return std::static_pointer_cast<CharSequence>(substring(start, end));
+    jxx::Ptr<CharSequence> String::subSequence(jxx::lang::jint start, jxx::lang::jint end) const {
+        // Validate indices
+        if (start < 0 || end > length() || start > end) {
+            throwSIOOBE_();
+        }
+        
+        // Create substring and return as CharSequence
+        return substring(start, end);
     }
 
-    jxx::Ptr<String> String::toString() const {
-        return std::static_pointer_cast<String>(this->thisPtr);
+    jxx::Ptr<jxx::lang::String> String::toString() const {
+        return jxx::CAST<jxx::lang::String>(std::static_pointer_cast<jxx::lang::String>(this->thisPtr));
     }
     // Comparable
-    jint String::compareTo(const jxx::Ptr<String> another) const {
+    jxx::lang::jint String::compareTo(const jxx::Ptr<String> another) const {
         if (!another) throwNPE_();
         const auto& b = another->value_;
         size_t n = std::min(value_.size(), b.size());
         for (size_t i = 0; i < n; ++i) {
-            if (value_[i] != b[i]) return (jint)value_[i] - (jint)b[i];
+            if (value_[i] != b[i]) return (jxx::lang::jint)value_[i] - (jxx::lang::jint)b[i];
         }
-        return (jint)value_.size() - (jint)b.size();
+        return (jxx::lang::jint)value_.size() - (jxx::lang::jint)b.size();
     }
 
     // Object
-    jbool String::equals(const jxx::Ptr<Object> obj) const {
+    jxx::lang::jbool String::equals(const jxx::Ptr<Object> obj) const {
         auto s = std::dynamic_pointer_cast<String>(obj);
         return s && s->value_ == value_;
     }
 
-    jint String::hashCode() const {
+    jxx::lang::jint String::hashCode() const {
         if (hashComputed_) return hash_;
-        jint h = 0;
-        for (char16_t c : value_) h = 31 * h + (jint)c;
+        jxx::lang::jint h = 0;
+        for (char16_t c : value_) h = 31 * h + (jxx::lang::jint)c;
         hash_ = h;
         hashComputed_ = true;
         return h;

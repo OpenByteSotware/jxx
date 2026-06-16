@@ -80,8 +80,8 @@ namespace jxx::io
         jxx::lang::jbool setReadable(jxx::lang::jbool readable);
         jxx::lang::jbool setExecutable(jxx::lang::jbool executable);
 
-        jxx::lang::jint compareTo(jxx::Ptr<File> pathname) const override;
-        jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> other) const override;
+        jxx::lang::jint compareTo(const jxx::Ptr<File> pathname) const override;
+        jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object> other) const override;
         jxx::lang::jint hashCode() const override;
         jxx::Ptr<jxx::lang::String> toString() const override;
 

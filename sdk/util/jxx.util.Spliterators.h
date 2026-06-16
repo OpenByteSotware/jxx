@@ -56,7 +56,7 @@ public:
     };
 
     template <class T>
-    static jxx::Ptr<Spliterator<T>> spliteratorUnknownSize(jxx::Ptr<Iterator<T>> it, jxx::lang::jint characteristics) {
+    static jxx::Ptr<Spliterator<T>> spliteratorUnknownSize(jxx::Ptr<Iterator<T>> const it, jxx::lang::jint characteristics) {
         if (!it) {
             throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("it"));
         }

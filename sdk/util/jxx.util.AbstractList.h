@@ -1,10 +1,9 @@
 #pragma once
 
-#include "io/jxx.util.AbstractCollection.h"
-#include "io/jxx.util.List.h"
-#include "io/jxx.util.Iterator.h"
-#include "io/jxx.util.ListIterator.h"
-#include "io/jxx.lang.Exceptions.h"
+#include "util/jxx.util.AbstractCollection.h"
+#include "util/jxx.util.List.h"
+#include "util/jxx.util.Iterator.h"
+#include "util/jxx.util.ListIterator.h"
 
 namespace jxx {
 template <typename T> class Ptr;

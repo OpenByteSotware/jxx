@@ -398,7 +398,7 @@ namespace jxx::io
         return !ec;
     }
 
-    jxx::lang::jint File::compareTo(jxx::Ptr<File> pathname) const
+    jxx::lang::jint File::compareTo(const jxx::Ptr<File> pathname) const
     {
         if (!pathname)
             return 1;

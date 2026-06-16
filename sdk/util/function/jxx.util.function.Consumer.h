@@ -1,141 +1,55 @@
 #pragma once
 
-#include <type_traits>
-#include <utility>
-#include "lang/jxx_types.h"
-#include "lang/jxx.lang.Object.h"
-#include "lang/jxx.lang.NullPointerException.h"
-#include "lang/jxx.lang.IllegalArgumentException.h"
+#include "util/function/jxx.util.function.ConsumerSuper.h"
 
-namespace jxx::util::function {
-
-    namespace detail {
-        template <class T>
-        class ComposedConsumer;
-
-        template <class T, class U>
-        class ComposedConsumerCovariant;
-
-        template <class T, class F>
-        class LambdaConsumer;
-    }
-    /**
-   * Java 8 parity: java.util.function.Consumer<T>
-   *
-   */
-    template <class T>
-    class Consumer {
-	public:
-        virtual ~Consumer() = default;
-
-        // Java: void accept(T t)
-        virtual void accept(T t) = 0;
-
-        // ------------------------------------------------------------------
-        // Default method: exact type
-        // ------------------------------------------------------------------
-        jxx::Ptr<Consumer<T>> andThen(jxx::Ptr<Consumer<T>> after) {
-            if (!after) {
-                throw jxx::lang::NullPointerException(jxx::NEW<std::string>("after"));
-            }
-            auto self = thisPtrAsConsumer_();
-            return jxx::NEW<detail::ComposedConsumer<T>>(std::move(self), std::move(after));
-        }
-
-        // ------------------------------------------------------------------
-        // Default method: variance-friendly
-        //
-        // Java: Consumer<? super T>
-        // C++: allow Consumer<U> when T is convertible to U (U is “supertype”)
-        // ------------------------------------------------------------------
-        template <
-            class U,
-            typename std::enable_if_t<
-            !std::is_same_v<T, U> &&
-            (std::is_convertible_v<T, U> || std::is_constructible_v<U, T>),
-            int
-            > = 0
-        >
-        jxx::Ptr<Consumer<T>> andThen(jxx::Ptr<Consumer<U>> after) {
-            if (!after) {
-                throw jxx::lang::NullPointerException(jxx::NEW<std::string>("after"));
-            }
-            auto self = thisPtrAsConsumer_();
-            return jxx::NEW<detail::ComposedConsumerCovariant<T, U>>(std::move(self), std::move(after));
-        }
-
-    private:
-        // Requires concrete implementer to derive from Object and be created via jxx::NEW.
-        jxx::Ptr<Consumer<T>> thisPtrAsConsumer_() {
-            auto* obj = dynamic_cast<jxx::lang::Object*>(this);
-            if (!obj || !obj->thisPtr) {
-                throw jxx::lang::IllegalArgumentException(
-                    jxx::NEW<std::string>(
-                        "Consumer::andThen requires implementing object to derive from jxx::lang::Object "
-                        "and be created via jxx::NEW so Object::thisPtr is set"
-                    )
-                );
-            }
-            return std::static_pointer_cast<Consumer<T>>(obj->thisPtr);
-        }
-    };
-
-namespace detail {
-
-template <class T>
-class ComposedConsumer final : public jxx::lang::Object, public Consumer<T> {
-public:
-    ComposedConsumer(jxx::Ptr<Consumer<T>> first, jxx::Ptr<Consumer<T>> second)
-        : first_(std::move(first)), second_(std::move(second)) {}
-
-    void accept(T t) override {
-        first_->accept(t);
-        second_->accept(t);
-    }
-
-private:
-    jxx::Ptr<Consumer<T>> first_;
-    jxx::Ptr<Consumer<T>> second_;
-};
-
-template <class T, class U>
-class ComposedConsumerCovariant final : public jxx::lang::Object, public Consumer<T> {
-public:
-    ComposedConsumerCovariant(jxx::Ptr<Consumer<T>> first, jxx::Ptr<Consumer<U>> second)
-        : first_(std::move(first)), second_(std::move(second)) {}
-
-    void accept(T t) override {
-        first_->accept(t);
-        // Java '? super T' means U can accept T (upcast). We model that with convertibility.
-        second_->accept(static_cast<U>(t));
-    }
-
-private:
-    jxx::Ptr<Consumer<T>> first_;
-    jxx::Ptr<Consumer<U>> second_;
-};
-
-template <class T, class F>
-class LambdaConsumer final : public jxx::lang::Object, public Consumer<T> {
-public:
-    explicit LambdaConsumer(F f) : f_(std::move(f)) {}
-    void accept(T t) override { f_(t); }
-private:
-    F f_;
-};
-
-} // namespace detail
-
-
-
-/**
- * Factory: build a Consumer<T> from a lambda/functor.
- * Returned object derives from Object so andThen() works.
- */
-template <class T, class F>
-jxx::Ptr<Consumer<T>> consumerOf(F&& f) {
-    using Fn = std::decay_t<F>;
-    return jxx::NEW<detail::LambdaConsumer<T, Fn>>(std::forward<F>(f));
+namespace jxx {
+    template <typename T> class Ptr;
 }
 
-} // namespace jxx::util::function
+namespace jxx {
+    namespace util {
+        namespace function {
+
+            template <typename T>
+            class Consumer : public virtual ConsumerSuper<T> {
+            public:
+                virtual ~Consumer() = default;
+
+                // Inherits:
+                //   virtual void accept(Ptr<T> value) = 0;
+
+                // Java 8 default method:
+                //   Consumer<T> andThen(Consumer<? super T> after)
+                virtual jxx::Ptr<Consumer<T>> andThen(jxx::Ptr<ConsumerSuper<T>> const after) {
+                    if (after == nullptr) {
+                        throw NullPointerException();
+                    }
+
+                    class AndThenConsumer : public virtual Consumer<T> {
+                    private:
+                        jxx::Ptr<ConsumerSuper<T>> first_;
+                        jxx::Ptr<ConsumerSuper<T>> second_;
+
+                    public:
+                        AndThenConsumer(
+                            jxx::Ptr<ConsumerSuper<T>> first,
+                            jxx::Ptr<ConsumerSuper<T>> second)
+                            : first_(first), second_(second) {}
+
+                        virtual ~AndThenConsumer() = default;
+
+                        virtual void accept(jxx::Ptr<T> value) override {
+                            first_->accept(value);
+                            second_->accept(value);
+                        }
+                    };
+
+                    return jxx::Ptr<Consumer<T>>(
+                        new AndThenConsumer(
+                            jxx::runtime::SelfRef<ConsumerSuper<T>, Consumer<T>>::get(this), after));
+                }
+            };
+
+        } // namespace function
+    } // namespace util
+} // namespace jxx

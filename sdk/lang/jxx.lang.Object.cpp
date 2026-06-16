@@ -72,10 +72,10 @@ namespace jxx::lang {
     }
 
     // Java-like: "Class@hexHash"
-    jxx::Ptr<String>  Object::toString() const {
+    jxx::Ptr<jxx::lang::String>  Object::toString() const {
         std::ostringstream oss;
         oss << getClassName_() << "@0x" << std::hex << hashCode();
-        return jxx::NEW<String>(oss.str());
+        return jxx::NEW<jxx::lang::String>(oss.str());
     }
 
     // Identity check (reference equality)

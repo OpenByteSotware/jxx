@@ -10,7 +10,6 @@
 #include "jxx.lang.CharSequence.h"
 #include "jxx.lang.Comparable.h"
 #include "io/jxx.io.Serializable.h"
-#include "util/jxx.util.Locale.h"
 #include "jxx.lang.Charset.h"
 
 namespace jxx::lang {
@@ -20,7 +19,6 @@ namespace jxx::lang {
     class StringBuilder;
     class Charset; // java.nio.charset.Charset (you have this)
     class ClassAny;
-    class String;
 
 	template <typename T>
 	class Iterable;
@@ -43,8 +41,8 @@ namespace jxx::lang {
      * Internal storage: UTF-16 code units (std::u16string)
      */
     class String final : public Object
-        , public CharSequence
-        , public Comparable<String>
+        , public jxx::lang::CharSequence
+        , public jxx::lang::Comparable<jxx::lang::String>
         , public jxx::io::Serializable
     {
     public:
@@ -105,26 +103,26 @@ namespace jxx::lang {
         // ---------------------------------------------------------------------
         jxx::lang::jint length() const override;
         jxx::lang::jchar charAt(jxx::lang::jint index) const override;
-        jxx::Ptr<CharSequence> subSequence(jxx::lang::jint start, jxx::lang::jint end) const override;
+        jxx::Ptr<jxx::lang::CharSequence> subSequence(jxx::lang::jint start, jxx::lang::jint end) const override;
 
         // Java: String toString()
-        virtual jxx::Ptr<String> toString() const override;
+        virtual jxx::Ptr<jxx::lang::String> toString() const override;
 
         // ---------------------------------------------------------------------
         // Comparable<String>
         // ---------------------------------------------------------------------
-        jint compareTo(jxx::Ptr<String> anotherString) const override;
+        virtual jxx::lang::jint compareTo(const jxx::Ptr<jxx::lang::String> anotherString) const override;
 
         // ---------------------------------------------------------------------
         // Object overrides
         // ---------------------------------------------------------------------
-        jbool equals(jxx::Ptr<Object> obj) const override;
-        jint hashCode() const override;
+        virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object> obj) const override;
+        virtual jxx::lang::jint hashCode() const override;
 
         // ---------------------------------------------------------------------
         // Instance methods (ALL Java 8 public methods)
         // ---------------------------------------------------------------------
-        jbool isEmpty() const;
+        jxx::lang::jbool isEmpty() const;
 
         jxx::lang::jint codePointAt(jxx::lang::jint index) const;
         jxx::lang::jint codePointBefore(jxx::lang::jint index) const;
@@ -260,8 +258,8 @@ namespace jxx::lang {
         static void throwSIOOBE_();
         static void throwIAE_(const char* msg);
 
-        static std::u16string toUtf16_(jxx::Ptr<CharSequence> s);
-        static jxx::lang::jbool isTurkicLocale_(jxx::Ptr<jxx::util::Locale> loc);
+        static std::u16string toUtf16_(const jxx::Ptr<CharSequence> s);
+        static jxx::lang::jbool isTurkicLocale_(const jxx::Ptr<jxx::util::Locale> loc);
     };
 
 } // namespace jxx::lang

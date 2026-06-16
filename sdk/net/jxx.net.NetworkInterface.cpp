@@ -1,30 +1,28 @@
-#include "net/jxx.net.NetworkInterface.h"
-
 #include <map>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 #if defined(_WIN32)
-    #ifndef NOMINMAX
-        #define NOMINMAX
-    #endif
-    #include <winsock2.h>
-    #include <ws2tcpip.h>
-    #include <iphlpapi.h>
-    #pragma comment(lib, "iphlpapi.lib")
-    #pragma comment(lib, "ws2_32.lib")
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <iphlpapi.h>
+#pragma comment(lib, "iphlpapi.lib")
+#pragma comment(lib, "ws2_32.lib")
 #else
-    #include <arpa/inet.h>
-    #include <ifaddrs.h>
-    #include <net/if.h>
-    #include <sys/ioctl.h>
-    #include <sys/socket.h>
-    #include <unistd.h>
-    #include <cstring>
-    #if defined(__linux__)
-        #include <netpacket/packet.h>
-    #endif
+#include <arpa/inet.h>
+#include <ifaddrs.h>
+#include <net/if.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <cstring>
+#if defined(__linux__)
+#include <netpacket/packet.h>
+#endif
 #endif
 
 #include "net/internal/jxx.net.internal.NetPlatform.h"
@@ -33,6 +31,7 @@
 #include "net/jxx.net.InterfaceAddress.h"
 #include "util/jxx.util.ArrayList.h"
 #include "util/jxx.util.VectorEnumeration.h"
+#include "net/jxx.net.NetworkInterface.h"
 
 namespace
 {

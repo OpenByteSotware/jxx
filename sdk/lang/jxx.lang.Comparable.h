@@ -27,7 +27,7 @@ namespace jxx::lang {
          * Compare this object with another object.
          * Must throw on nullptr to match Java semantics.
          */
-        virtual jint compareTo(jxx::Ptr<T> other) const = 0;
+        virtual jxx::lang::jint compareTo(const jxx::Ptr<T> other) const = 0;
 
     protected:
         /**
