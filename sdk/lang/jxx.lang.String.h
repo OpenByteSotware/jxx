@@ -103,7 +103,7 @@ namespace jxx::lang {
         // ---------------------------------------------------------------------
         jxx::lang::jint length() const override;
         jxx::lang::jchar charAt(jxx::lang::jint index) const override;
-        jxx::Ptr<jxx::lang::CharSequence> subSequence(jxx::lang::jint start, jxx::lang::jint end) const override;
+        virtual jxx::Ptr<CharSequence> subSequence(jxx::lang::jint start, jxx::lang::jint end) const override;
 
         // Java: String toString()
         virtual jxx::Ptr<jxx::lang::String> toString() const override;

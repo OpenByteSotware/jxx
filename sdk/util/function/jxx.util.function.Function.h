@@ -1,10 +1,6 @@
 #pragma once
 
 namespace jxx {
-    template <typename T> class Ptr;
-}
-
-namespace jxx {
     namespace util {
         namespace function {
 

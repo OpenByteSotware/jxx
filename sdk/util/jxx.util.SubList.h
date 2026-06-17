@@ -4,10 +4,6 @@
 #include "util/jxx.util.List.h"
 
 namespace jxx {
-template <typename T> class Ptr;
-}
-
-namespace jxx {
 namespace util {
 
 template <typename E>

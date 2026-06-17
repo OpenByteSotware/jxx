@@ -1,10 +1,7 @@
 #pragma once
 
 #include "util/function/jxx.util.function.ConsumerSuper.h"
-
-namespace jxx {
-    template <typename T> class Ptr;
-}
+#include "lang/jxx.lang.NullPointerException.h"
 
 namespace jxx {
     namespace util {
@@ -16,13 +13,13 @@ namespace jxx {
                 virtual ~Consumer() = default;
 
                 // Inherits:
-                //   virtual void accept(Ptr<T> value) = 0;
+                //   virtual void accept(T value) = 0;
 
                 // Java 8 default method:
                 //   Consumer<T> andThen(Consumer<? super T> after)
                 virtual jxx::Ptr<Consumer<T>> andThen(jxx::Ptr<ConsumerSuper<T>> const after) {
                     if (after == nullptr) {
-                        throw NullPointerException();
+                        throw jxx::lang::NullPointerException();
                     }
 
                     class AndThenConsumer : public virtual Consumer<T> {
@@ -38,7 +35,7 @@ namespace jxx {
 
                         virtual ~AndThenConsumer() = default;
 
-                        virtual void accept(jxx::Ptr<T> value) override {
+                        virtual void accept(T value) override {
                             first_->accept(value);
                             second_->accept(value);
                         }
@@ -46,7 +43,7 @@ namespace jxx {
 
                     return jxx::Ptr<Consumer<T>>(
                         new AndThenConsumer(
-                            jxx::runtime::SelfRef<ConsumerSuper<T>, Consumer<T>>::get(this), after));
+                            jxx::util::function::SelfRef<ConsumerSuper<T>, Consumer<T>>::get(this), after));
                 }
             };
 

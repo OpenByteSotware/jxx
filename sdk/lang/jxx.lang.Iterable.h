@@ -61,14 +61,19 @@ namespace jxx::lang {
                 throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("action"));
             }
 
-            // Wrap Consumer<U> into Consumer<T> (Java '? super T' behavior).
-            // Important: avoid static_cast for jxx::Ptr<Derived> -> jxx::Ptr<Base>; let implicit conversion work.
-            auto adapter = jxx::util::function::consumerOf<T>(
-                [action](T t) {
-                    action->accept(t); // implicit T -> U conversion occurs here if needed
+            // Create a Consumer<T> adapter that wraps Consumer<U>
+            struct ConsumerAdapter : public jxx::util::function::Consumer<T> {
+                jxx::Ptr<jxx::util::function::Consumer<U>> wrapped;
+                
+                explicit ConsumerAdapter(jxx::Ptr<jxx::util::function::Consumer<U>> w) : wrapped(w) {}
+                
+                void accept(T value) override {
+                    // implicit T -> U conversion occurs here
+                    wrapped->accept(static_cast<U>(value));
                 }
-            );
+            };
 
+            auto adapter = jxx::NEW<ConsumerAdapter>(action);
             forEach(adapter);
         }
 

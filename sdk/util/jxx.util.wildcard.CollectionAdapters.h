@@ -1,14 +1,9 @@
 #pragma once
 
-#include "io/jxx.util.Collection.h"
-#include "io/jxx.util.Iterator.h"
-#include "io/jxx.util.wildcard.CollectionAny.h"
-#include "io/jxx.util.wildcard.CollectionExtends.h"
-#include "io/jxx.lang.Exceptions.h"
-
-namespace jxx {
-template <typename T> class Ptr;
-}
+#include "util/jxx.util.Collection.h"
+#include "util/jxx.util.Iterator.h"
+#include "util/jxx.util.wildcard.CollectionAny.h"
+#include "util/jxx.util.wildcard.CollectionExtends.h"
 
 namespace jxx {
 namespace util {

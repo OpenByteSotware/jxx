@@ -1,20 +1,36 @@
 #pragma once
 
-#include "io/jxx.lang.Object.h"
-
 namespace jxx {
-template <typename T> class Ptr;
-}
+    namespace util {
+        namespace function {
 
-namespace jxx {
-namespace util {
+            template <typename T>
+            class ConsumerSuper {
+            public:
+                virtual ~ConsumerSuper() = default;
 
-template <typename T>
-class ComparatorSuper : virtual public jxx::lang::Object {
-public:
-    virtual ~ComparatorSuper() = default;
-    virtual jint compare(jxx::Ptr<T> a, jxx::Ptr<T> b) = 0;
-};
+                // Java: void accept(T t)
+                // Changed from jxx::Ptr<T> to T to match Java semantics
+                virtual void accept(T value) = 0;
+            };
 
-} // namespace util
+            template <typename T>
+            class SelfRef {
+            public:
+                static jxx::Ptr<T> get(T* ptr) {
+                    // Attempt to cast to enable_shared_from_this if possible
+                    if (auto eshared = dynamic_cast<std::enable_shared_from_this<T>*>(ptr)) {
+                        try {
+                            return std::static_pointer_cast<T>(eshared->shared_from_this());
+                        }
+                        catch (const std::bad_weak_ptr&) {
+                            // Fall through to nullptr
+                        }
+                    }
+                    return nullptr;
+                }
+            };
+
+        } // namespace function
+    } // namespace util
 } // namespace jxx

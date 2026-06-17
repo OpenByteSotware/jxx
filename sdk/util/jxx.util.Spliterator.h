@@ -6,9 +6,18 @@
 #include "lang/jxx.lang.NullPointerException.h"
 #include "util/function/jxx.util.function.Consumer.h"
 
+namespace jxx::lang {
+    class String;
+}
+
+// Forward declaration of consumerOf to allow usage in Spliterator
+namespace jxx::util::function {
+    template<typename T, typename F>
+    jxx::Ptr<Consumer<T>> consumerOf(F&& func);
+}
+
 namespace jxx::util {
 
-    class jxx::lang::String;
 /**
  * Java 8 parity: java.util.Spliterator<T>
  *
@@ -36,21 +45,18 @@ struct Spliterator {
     }
 
     // Variance-friendly overload: Consumer<U> where T -> U convertible (Consumer<? super T>)
-    template <
-        class U,
-        typename std::enable_if_t<
-            !std::is_same_v<T, U> &&
-            (std::is_convertible_v<T, U> || std::is_constructible_v<U, T>),
-            int
-        > = 0
-    >
+    template <class U, std::enable_if_t<!std::is_same_v<T, U> &&
+        (std::is_convertible_v<T, U> || std::is_constructible_v<U, T>), int> = 0>
+
     void forEachRemaining(jxx::Ptr<jxx::util::function::Consumer<U>> action) {
         if (!action) {
             throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("action"));
         }
         // Adapt by wrapping U-consumer into a T-consumer using your variance-friendly Consumer
         auto adapter = jxx::util::function::consumerOf<T>(
-            [action](T t) { action->accept(static_cast<U>(t)); }
+            [action](jxx::Ptr<T> t) { 
+                action->accept(jxx::Ptr<U>(static_cast<U>(*t))); 
+            }
         );
         forEachRemaining(adapter);
     }

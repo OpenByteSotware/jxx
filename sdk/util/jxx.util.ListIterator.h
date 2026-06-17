@@ -1,10 +1,8 @@
 #pragma once
 
-#include "io/jxx.util.Iterator.h"
+#include "util/jxx.util.Iterator.h"
 
-namespace jxx {
-template <typename T> class Ptr;
-}
+
 
 namespace jxx {
 namespace util {
