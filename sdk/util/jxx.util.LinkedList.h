@@ -12,7 +12,7 @@
 #include <optional>
 #include <vector>
 #include <iterator>
-#include "io/jxx.io.h"
+#include "util/jxx.util.AbstractSequentialList.h"
 
 // ====================== Java-like exceptions ======================
 struct index_out_of_bounds_error : std::out_of_range {
@@ -26,33 +26,6 @@ struct illegal_state_error : std::logic_error {
 };
 struct concurrent_modification_error : std::runtime_error {
     explicit concurrent_modification_error(const char* msg) : std::runtime_error(msg) {}
-};
-
-namespace jxx::util {
-// ====================== Interfaces ======================
-template <typename T>
-struct List {
-    virtual ~List() = default;
-
-    virtual std::size_t size() const noexcept = 0;
-    virtual bool empty() const noexcept = 0;
-
-    virtual void clear() = 0;
-
-    virtual const T& get(std::size_t index) const = 0;
-    virtual T& get(std::size_t index) = 0;
-
-    // Java List#set returns previous element; we keep void (see setRetPrev below).
-    virtual void set(std::size_t index, const T& value) = 0;
-    virtual void set(std::size_t index, T&& value) = 0;
-
-    virtual void add(const T& value) = 0;                 // add at end
-    virtual void add(T&& value) = 0;                      // add at end
-    virtual void add(std::size_t index, const T& value) = 0;
-    virtual void add(std::size_t index, T&& value) = 0;
-
-    // Java List.remove(int index) returns removed element
-    virtual T removeAtRet(std::size_t index) = 0;
 };
 
 template <typename T>
@@ -92,16 +65,6 @@ struct Deque {
 struct Cloneable {
     virtual ~Cloneable() = default;
     virtual std::unique_ptr<Cloneable> clone_base() const = 0;
-};
-
-// ====================== AbstractSequentialList ======================
-template <typename T>
-class AbstractSequentialList : public List<T> {
-public:
-    ~AbstractSequentialList() override = default;
-    bool empty() const noexcept override { return this->size() == 0; }
-    void add(const T& value) override { this->add(this->size(), value); }
-    void add(T&& value) override { this->add(this->size(), std::move(value)); }
 };
 
 // ====================== LinkedList (Java 8 surface) ======================

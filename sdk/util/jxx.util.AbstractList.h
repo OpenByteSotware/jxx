@@ -16,36 +16,32 @@ protected:
 public:
     virtual ~AbstractList() = default;
 
-    // ===== Concrete subclasses must implement =====
-    virtual jxx::Ptr<E> get(jint index) override = 0;
-    virtual jint size() override = 0;
+    virtual jxx::Ptr<E> get(jxx::lang::jint index) override = 0;
+    virtual jxx::lang::jint size() override = 0;
 
-    // ===== Optional operations =====
-    virtual jxx::Ptr<E> set(jint /*index*/, jxx::Ptr<E> /*element*/) override {
+    virtual jxx::Ptr<E> set(jxx::lang::jint index, jxx::Ptr<E> element) override {
         throw UnsupportedOperationException();
     }
 
-    virtual void add(jint /*index*/, jxx::Ptr<E> /*element*/) override {
+    virtual void add(jxx::lang::jint index, jxx::Ptr<E> element) override {
         throw UnsupportedOperationException();
     }
 
-    virtual jxx::Ptr<E> remove(jint /*index*/) override {
+    virtual jxx::Ptr<E> remove(jxx::lang::jint index) override {
         throw UnsupportedOperationException();
     }
 
-    // ===== Collection add(E) =====
-    virtual jbool add(jxx::Ptr<E> e) override {
+    virtual jxx::lang::jbool add(jxx::Ptr<E> e) override {
         add(size(), e);
         return true;
     }
 
-    // ===== Bulk positional op =====
-    virtual jbool addAll(jint index, jxx::Ptr<Collection<E>> c) override {
+    virtual jxx::lang::jbool addAll(jxx::lang::jint index, jxx::Ptr<wildcard::CollectionExtends<E>> c) override {
         rangeCheckForAdd(index);
 
-        jbool modified = false;
-        auto it = c->iterator();
-        jint i = index;
+        jxx::lang::jbool modified = false;
+        auto it = c->iteratorExtends();
+        jxx::lang::jint i = index;
         while (it->hasNext()) {
             add(i++, it->next());
             modified = true;
@@ -53,8 +49,7 @@ public:
         return modified;
     }
 
-    // ===== Search =====
-    virtual jint indexOf(jxx::Ptr<E> o) override {
+    virtual jxx::lang::jint indexOf(jxx::Ptr<E> o) override {
         auto it = listIterator();
         if (o == nullptr) {
             while (it->hasNext()) {
@@ -73,7 +68,7 @@ public:
         return -1;
     }
 
-    virtual jint lastIndexOf(jxx::Ptr<E> o) override {
+    virtual jxx::lang::jint lastIndexOf(jxx::Ptr<E> o) override {
         auto it = listIterator(size());
         if (o == nullptr) {
             while (it->hasPrevious()) {
@@ -96,21 +91,20 @@ public:
         removeRange(0, size());
     }
 
-    // ===== Iterators =====
     class Itr : public virtual Iterator<E> {
     protected:
-        AbstractList<E>* list;
-        jint cursor;
-        jint lastRet;
-        jint expectedModCount;
+        jxx::Ptr<AbstractList<E>> list;
+        jxx::lang::jint cursor;
+        jxx::lang::jint lastRet;
+        jxx::lang::jint expectedModCount;
 
     public:
-        explicit Itr(AbstractList<E>* l)
+        explicit Itr(jxx::Ptr<AbstractList<E>> l)
             : list(l), cursor(0), lastRet(-1), expectedModCount(l->modCount) {}
 
         virtual ~Itr() = default;
 
-        virtual jbool hasNext() override {
+        virtual jxx::lang::jbool hasNext() override {
             return cursor != list->size();
         }
 
@@ -218,17 +212,15 @@ public:
         return jxx::Ptr<ListIterator<E>>(new ListItr(this, index));
     }
 
-    // ===== View =====
     virtual jxx::Ptr<List<E>> subList(jint /*fromIndex*/, jint /*toIndex*/) override {
-        // Requires a SubList view class for full parity.
         throw UnsupportedOperationException();
     }
 
 protected:
-    virtual void removeRange(jint fromIndex, jint toIndex) {
+    virtual void removeRange(jxx::lang::jint fromIndex, jxx::lang::jint toIndex) {
         auto it = listIterator(fromIndex);
-        const jint n = toIndex - fromIndex;
-        for (jint i = 0; i < n; ++i) {
+        const jxx::lang::jint n = toIndex - fromIndex;
+        for (jxx::lang::jint i = 0; i < n; ++i) {
             it->next();
             it->remove();
         }

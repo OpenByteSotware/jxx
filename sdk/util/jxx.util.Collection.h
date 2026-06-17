@@ -1,28 +1,28 @@
 #pragma once
 
-#include "lang/jxx_types.h"
-#include "lang/jxx.lang.Iterable.h"
+#include "jxx_types.h"
+#include "util/jxx.util.Iterator.h"
 
-namespace jxx::util {
+namespace jxx::util
+{
+    template<typename E>
+    class Collection
+    {
+    protected:
+        Collection() = default;
 
-template <class E>
-struct Collection : public virtual Iterable<E> {
-    virtual ~Collection() = default;
+    public:
+        virtual ~Collection() = default;
 
-    virtual jxx::lang::jint size() const = 0;
-    virtual jxx::lang::jbool isEmpty() const = 0;
-    virtual jxx::lang::jbool contains(const E& e) const = 0;
-
-    virtual jxx::Ptr<Iterator<E>> iterator() = 0;
-
-    virtual jxx::lang::jbool add(const E& e) = 0;
-    virtual jxx::lang::jbool remove(const E& e) = 0;
-    virtual void clear() = 0;
-
-    virtual jxx::lang::jbool addAll(jxx::Ptr<Collection<E>> c) = 0;
-    virtual jxx::lang::jbool containsAll(jxx::Ptr<Collection<E>> c) const = 0;
-    virtual jxx::lang::jbool removeAll(jxx::Ptr<Collection<E>> c) = 0;
-    virtual jxx::lang::jbool retainAll(jxx::Ptr<Collection<E>> c) = 0;
-};
-
-} // namespace jxx::util
+    public:
+        virtual jxx::lang::jint size() const = 0;
+        virtual jxx::lang::jbool isEmpty() const = 0;
+        virtual jxx::lang::jbool contains(jxx::Ptr<E> e) const = 0;
+        virtual jxx::Ptr<Iterator<E>> iterator() = 0;
+        virtual jxx::Ptr<E> get(jxx::lang::jint index) const = 0;
+        virtual void add(const jxx::Ptr<E>& value) = 0;
+        virtual jxx::lang::jbool addAll(jxx::Ptr<Collection<E>> c) = 0;
+        virtual jxx::lang::jbool removeElement(jxx::Ptr<E> e) = 0;
+        virtual void clear() = 0;
+    };
+}

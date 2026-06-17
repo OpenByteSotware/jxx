@@ -722,7 +722,7 @@ namespace jxx::lang {
             first = false;
 
             auto e = it->next(); // jxx::Ptr<CharSequence>
-            out.append(e ? toUtf16_(e) : std::u16string(u"null"));
+            out.append(e ? toUtf16_((*e)) : std::u16string(u"null"));
         }
 
         auto s = jxx::NEW<String>();

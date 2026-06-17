@@ -1,16 +1,19 @@
 #pragma once
 
-#include "lang/jxx.lang.Object.h"
+#include "jxx_types.h"
 
-namespace jxx {
-namespace util {
+namespace jxx::util
+{
+    template<typename E>
+    class Comparator
+    {
+    protected:
+        Comparator() = default;
 
-template <typename T>
-class Comparator : virtual public jxx::lang::Object {
-public:
-    virtual ~Comparator() = default;
-    virtual jint compare(jxx::Ptr<T> a, jxx::Ptr<T> b) = 0;
-};
+    public:
+        virtual ~Comparator() = default;
 
-} // namespace util
-} // namespace jxx
+    public:
+        virtual jxx::lang::jint compare(jxx::Ptr<E> a, jxx::Ptr<E> b) const = 0;
+    };
+}

@@ -34,7 +34,7 @@ namespace jxx::lang {
          * Helper for Java parity: compareTo(nullptr) => NPE
          * Replace the throw type with your jxx::lang::NullPointerException when available.
          */
-        static inline void throw_npe_if_null(const jxx::Ptr<T>& p) {
+        static inline void throw_npe_if_null(const jxx::Ptr<T> p) {
             if (!p) {
                 // If you already have jxx::lang::NullPointerException thrown by value, use that instead:
                 // throw jxx::lang::NullPointerException(jxx::lang::String("..."));

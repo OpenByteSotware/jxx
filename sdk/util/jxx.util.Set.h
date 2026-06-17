@@ -1,12 +1,19 @@
 #pragma once
 
-#include "jxx.util.Collection.h"
+#include "util/jxx.util.Collection.h"
 
-namespace jxx::util {
+namespace jxx::util
+{
+    template<typename E>
+    class Set : public Collection<E>
+    {
+    protected:
+        Set() = default;
 
-template <class E>
-struct Set : public virtual Collection<E> {
-    virtual ~Set() = default;
-};
+    public:
+        ~Set() override = default;
 
-} // namespace jxx::util
+    public:
+        virtual jxx::lang::jbool addElement(jxx::Ptr<E> e) = 0;
+    };
+}
