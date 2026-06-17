@@ -62,11 +62,6 @@ struct Deque {
     virtual T popRet() = 0;
 };
 
-struct Cloneable {
-    virtual ~Cloneable() = default;
-    virtual std::unique_ptr<Cloneable> clone_base() const = 0;
-};
-
 // ====================== LinkedList (Java 8 surface) ======================
 template <typename T>
 class LinkedList
@@ -651,7 +646,7 @@ public:
             : list_(list), cur_(list->first_), est_(list->size_), expected_mod_count_(list->mod_count_) {}
 
         std::size_t estimateSize() const { return est_; }
-        int characteristics() const { return ORDERED | SIZED | SUBSIZED; }
+        jxx::lang::jint characteristics() const { return ORDERED | SIZED | SUBSIZED; }
 
         // trySplit: split roughly in half; O(n/2) to locate mid node
         std::optional<Spliterator> trySplit() {

@@ -22,12 +22,12 @@ namespace jxx::util
         virtual jxx::Ptr<E> pollLast() = 0;
         virtual jxx::Ptr<Iterator<E>> descendingIterator() = 0;
         virtual jxx::Ptr<NavigableSet<E>> descendingSet() const = 0;
-        virtual jxx::Ptr<NavigableSet<E>> headSet(jxx::Ptr<E> toElement,
-                                                  jxx::lang::jbool inclusive) const = 0;
         virtual jxx::Ptr<NavigableSet<E>> subSet(jxx::Ptr<E> fromElement,
                                                  jxx::lang::jbool fromInclusive,
                                                  jxx::Ptr<E> toElement,
                                                  jxx::lang::jbool toInclusive) const = 0;
+        virtual jxx::Ptr<NavigableSet<E>> headSet(jxx::Ptr<E> toElement,
+                                                  jxx::lang::jbool inclusive) const = 0;
         virtual jxx::Ptr<NavigableSet<E>> tailSet(jxx::Ptr<E> fromElement,
                                                   jxx::lang::jbool inclusive) const = 0;
     };

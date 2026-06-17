@@ -1,21 +1,18 @@
 #pragma once
 
-#include "lang/jxx_types.h"
+#include "lang/jxx.lang.Object.h"
 
-namespace jxx::util
-{
-    template<typename E>
-    class Iterator
-    {
-    protected:
-        Iterator() = default;
+namespace jxx {
+namespace util {
 
-    public:
-        virtual ~Iterator() = default;
+template <typename E>
+class Iterator : virtual public jxx::lang::Object {
+public:
+    virtual ~Iterator() = default;
+    virtual jxx::lang::jbool hasNext() = 0;
+    virtual jxx::Ptr<E> next() = 0;
+    virtual void remove() = 0;
+};
 
-    public:
-        virtual jxx::lang::jbool hasNext() const = 0;
-        virtual jxx::Ptr<E> next() = 0;
-        virtual void remove() = 0;
-    };
-}
+} // namespace util
+} // namespace jxx

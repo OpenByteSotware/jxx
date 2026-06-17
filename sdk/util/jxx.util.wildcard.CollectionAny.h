@@ -1,19 +1,19 @@
 #pragma once
 
-#include "lang/jxx.lang.Object.h"
-#include "util/jxx.util.Iterator.h"
+#include "io/jxx.lang.Object.h"
+
+namespace jxx { template <typename T> class Ptr; }
 
 namespace jxx {
 namespace util {
-
+template <typename E> class Iterator;
 namespace wildcard {
 
-class CollectionAny {
+class CollectionAny : virtual public jxx::lang::Object {
 public:
     virtual ~CollectionAny() = default;
-
-    virtual jxx::lang::jint size() = 0;
-    virtual jxx::lang::jbool containsObject(jxx::Ptr<jxx::lang::Object> o) = 0;
+    virtual jint size() = 0;
+    virtual jbool containsObject(jxx::Ptr<jxx::lang::Object> o) = 0;
     virtual jxx::Ptr<Iterator<jxx::lang::Object>> iteratorObject() = 0;
 };
 

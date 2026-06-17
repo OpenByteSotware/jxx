@@ -1,12 +1,12 @@
 #pragma once
 
-#include "util/jxx.util.wildcard.CollectionAny.h"
+#include "io/jxx.util.wildcard.CollectionAny.h"
+
+namespace jxx { template <typename T> class Ptr; }
 
 namespace jxx {
 namespace util {
-
 template <typename E> class Iterator;
-
 namespace wildcard {
 
 template <typename E>

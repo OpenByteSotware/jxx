@@ -1,69 +1,192 @@
 #pragma once
+
 #include <list>
 #include <unordered_map>
-#include <optional>
-#include <utility>
 
-namespace jxx { namespace util {
+#include "util/jxx.util.HashMap.h"
 
-template <typename K, typename V, typename Hash = std::hash<K>, typename Eq = std::equal_to<K>>
-class LinkedHashMap {
-public:
-    using Node = std::pair<K,V>;
-    using List = std::list<Node>;
+namespace jxx { template <typename T> class Ptr; }
 
-    explicit LinkedHashMap(bool accessOrder=false) : accessOrder_(accessOrder) {}
+namespace jxx {
+namespace util {
 
-    int  size() const noexcept { return (int)order_.size(); }
-    bool isEmpty() const noexcept { return order_.empty(); }
-
-    bool containsKey(const K& key) const { return index_.find(key) != index_.end(); }
-    bool containsValue(const V& value) const { for (auto& kv : order_) if (kv.second==value) return true; return false; }
-
-    std::optional<V> get(const K& key) {
-        auto it = index_.find(key); if (it==index_.end()) return std::nullopt;
-        auto lit = it->second;
-        if (accessOrder_) { // move to end on access
-            order_.splice(order_.end(), order_, lit);
-            it->second = std::prev(order_.end());
-        }
-        return lit->second;
-    }
-
-    V put(const K& key, const V& value) {
-        auto it = index_.find(key);
-        if (it == index_.end()) {
-            order_.emplace_back(key, value);
-            index_[key] = std::prev(order_.end());
-            return V{};
-        } else {
-            V old = it->second->second;
-            it->second->second = value;
-            if (accessOrder_) {
-                order_.splice(order_.end(), order_, it->second);
-                it->second = std::prev(order_.end());
-            }
-            return old;
-        }
-    }
-
-    std::optional<V> remove(const K& key) {
-        auto it = index_.find(key); if (it==index_.end()) return std::nullopt;
-        V old = it->second->second;
-        order_.erase(it->second);
-        index_.erase(it);
-        return old;
-    }
-
-    void clear() { index_.clear(); order_.clear(); }
-
-    // Iteration support
-    const List& entryList() const { return order_; }
-
+template <typename K, typename V>
+class LinkedHashMap : public HashMap<K, V> {
 private:
-    bool accessOrder_ = false;
-    List order_;
-    std::unordered_map<K, typename List::iterator, Hash, Eq> index_;
+    using OrderList = std::list<jxx::Ptr<K>>;
+    using OrderIndexMap = std::unordered_map<jxx::Ptr<K>, typename OrderList::iterator, typename HashMap<K, V>::KeyHash, typename HashMap<K, V>::KeyEq>;
+
+    OrderList order_;
+    OrderIndexMap orderIndex_;
+    jbool accessOrder_;
+
+public:
+    LinkedHashMap()
+        : HashMap<K, V>()
+        , order_()
+        , orderIndex_()
+        , accessOrder_(false) {
+    }
+
+    explicit LinkedHashMap(jint initialCapacity)
+        : HashMap<K, V>(initialCapacity)
+        , order_()
+        , orderIndex_()
+        , accessOrder_(false) {
+    }
+
+    LinkedHashMap(jint initialCapacity, jfloat loadFactor)
+        : HashMap<K, V>(initialCapacity, loadFactor)
+        , order_()
+        , orderIndex_()
+        , accessOrder_(false) {
+    }
+
+    LinkedHashMap(jint initialCapacity, jfloat loadFactor, jbool accessOrder)
+        : HashMap<K, V>(initialCapacity, loadFactor)
+        , order_()
+        , orderIndex_()
+        , accessOrder_(accessOrder) {
+    }
+
+    explicit LinkedHashMap(jxx::Ptr<Map<K, V>> m)
+        : LinkedHashMap() {
+        if (m == nullptr) throw NullPointerException();
+        this->putAll(m);
+    }
+
+    virtual ~LinkedHashMap() = default;
+
+    // Java hook: protected boolean removeEldestEntry(Map.Entry<K,V> eldest)
+    virtual jbool removeEldestEntry(jxx::Ptr<MapEntry<K, V>> /*eldest*/) {
+        return false;
+    }
+
+    virtual jxx::Ptr<jxx::lang::Object> clone() {
+        jxx::Ptr<LinkedHashMap<K, V>> cloned(new LinkedHashMap<K, V>(static_cast<jint>(this->map_.size()), this->loadFactor_, accessOrder_));
+        for (const auto& key : order_) {
+            cloned->put(key, this->map_.at(key));
+        }
+        return cloned;
+    }
+
+protected:
+    virtual void afterNodeAccess(jxx::Ptr<K> key) override {
+        if (!accessOrder_) return;
+        auto idx = orderIndex_.find(key);
+        if (idx == orderIndex_.end()) return;
+        auto it = idx->second;
+        auto backIt = order_.end();
+        if (!order_.empty()) {
+            --backIt;
+            if (it == backIt) return;
+        }
+        order_.erase(it);
+        order_.push_back(key);
+        auto tailIt = order_.end();
+        --tailIt;
+        idx->second = tailIt;
+        ++this->modCount_;
+    }
+
+    virtual void afterNodeInsertion(jxx::Ptr<K> key, jbool isNewKey) override {
+        if (isNewKey) {
+            order_.push_back(key);
+            auto tailIt = order_.end();
+            --tailIt;
+            orderIndex_[key] = tailIt;
+
+            if (!order_.empty()) {
+                auto eldestKey = order_.front();
+                auto eldest = this->makeEntryView(eldestKey);
+                if (removeEldestEntry(eldest)) {
+                    this->remove(eldestKey);
+                }
+            }
+        }
+    }
+
+    virtual void afterNodeRemoval(jxx::Ptr<K> key) override {
+        auto idx = orderIndex_.find(key);
+        if (idx != orderIndex_.end()) {
+            order_.erase(idx->second);
+            orderIndex_.erase(idx);
+        }
+    }
+
+    virtual void afterClear() override {
+        order_.clear();
+        orderIndex_.clear();
+    }
+
+    class LinkedEntryIterator : public virtual Iterator<MapEntry<K, V>> {
+    private:
+        LinkedHashMap<K, V>* map_;
+        typename OrderList::iterator current_;
+        typename OrderList::iterator end_;
+        jxx::Ptr<K> lastReturnedKey_;
+        jbool canRemove_;
+        jint expectedModCount_;
+    public:
+        explicit LinkedEntryIterator(LinkedHashMap<K, V>* map)
+            : map_(map)
+            , current_(map->order_.begin())
+            , end_(map->order_.end())
+            , lastReturnedKey_(nullptr)
+            , canRemove_(false)
+            , expectedModCount_(map->modCount_) {
+        }
+
+        virtual ~LinkedEntryIterator() = default;
+
+        virtual jbool hasNext() override {
+            return current_ != end_;
+        }
+
+        virtual jxx::Ptr<MapEntry<K, V>> next() override {
+            checkForComodification();
+            if (current_ == end_) throw NoSuchElementException();
+            lastReturnedKey_ = *current_;
+            ++current_;
+            canRemove_ = true;
+            return map_->makeEntryView(lastReturnedKey_);
+        }
+
+        virtual void remove() override {
+            if (!canRemove_) throw IllegalStateException();
+            checkForComodification();
+            map_->remove(lastReturnedKey_);
+            expectedModCount_ = map_->modCount_;
+            canRemove_ = false;
+            lastReturnedKey_ = nullptr;
+        }
+
+    private:
+        void checkForComodification() {
+            if (map_->modCount_ != expectedModCount_) throw ConcurrentModificationException();
+        }
+    };
+
+    class LinkedEntrySet : public HashMap<K, V>::EntrySet {
+    private:
+        LinkedHashMap<K, V>* linkedMap_;
+    public:
+        explicit LinkedEntrySet(LinkedHashMap<K, V>* map)
+            : HashMap<K, V>::EntrySet(map)
+            , linkedMap_(map) {
+        }
+
+        virtual ~LinkedEntrySet() = default;
+
+        virtual jxx::Ptr<Iterator<MapEntry<K, V>>> iterator() override {
+            return jxx::Ptr<Iterator<MapEntry<K, V>>>(new LinkedEntryIterator(linkedMap_));
+        }
+    };
+
+    virtual jxx::Ptr<Set<MapEntry<K, V>>> createEntrySetView() override {
+        return jxx::Ptr<Set<MapEntry<K, V>>>(new LinkedEntrySet(this));
+    }
 };
 
-}} // namespace jxx::util
+} // namespace util
+} // namespace jxx

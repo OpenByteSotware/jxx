@@ -1,13 +1,19 @@
 #pragma once
 
-#include "util/jxx.util.AbstractList.h"
-#include "util/jxx.util.List.h"
+#include "io/jxx.util.AbstractList.h"
+#include "io/jxx.util.List.h"
+#include "io/jxx.util.RandomAccess.h"
+#include "io/jxx.lang.Exceptions.h"
+
+namespace jxx {
+template <typename T> class Ptr;
+}
 
 namespace jxx {
 namespace util {
 
 template <typename E>
-class SubList : public AbstractList<E> {
+class SubList : public AbstractList<E>, public virtual RandomAccess {
 private:
     jxx::Ptr<List<E>> root;
     jint offset_;
@@ -16,6 +22,9 @@ private:
 public:
     SubList(jxx::Ptr<List<E>> list, jint fromIndex, jint toIndex)
         : root(list), offset_(fromIndex), size_(toIndex - fromIndex) {
+        if (list == nullptr) {
+            throw NullPointerException();
+        }
         if (fromIndex < 0 || toIndex < fromIndex) {
             throw IndexOutOfBoundsException();
         }
@@ -52,8 +61,11 @@ public:
         return size_;
     }
 
-    virtual jbool addAll(jint index, jxx::Ptr<Collection<E>> c) override {
+    virtual jbool addAll(jint index, jxx::Ptr<wildcard::CollectionExtends<E>> c) override {
         rangeCheckForAddLocal(index);
+        if (c == nullptr) {
+            throw NullPointerException();
+        }
         const jint cSize = c->size();
         if (cSize == 0) {
             return false;

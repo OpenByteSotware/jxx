@@ -1,154 +1,77 @@
 #pragma once
 
-#include "lang/jxx_types.h"
-#include "lang/jxx.lang.Object.h"
+#include "util/jxx.util.Collection.h"
+#include "util/jxx.util.ListIterator.h"
+#include "util/jxx.util.ComparatorSuper.h"
 
-namespace jxx::util
-{
-    // Forward declarations for related Java 8 utility types.
-    template<typename E>
-    class Collection;
+namespace jxx {
+namespace util {
 
-    template<typename E>
-    class Iterator;
+template <typename E> class Spliterator;
 
-    template<typename E>
-    class ListIterator;
-
-    template<typename E>
-    class List;
-
-    template<typename E>
-    class Spliterator;
-
-    template<typename E>
-    class Comparator;
+namespace function {
+template <typename T> class UnaryOperator;
 }
 
-namespace jxx::util::function
-{
-    template<typename T>
-    class UnaryOperator;
-}
+template <typename E>
+class List : virtual public Collection<E> {
+public:
+    virtual ~List() = default;
 
-namespace jxx::util
-{
-    /**
-     * JXX / C++17 parity interface for Java 8 java.util.List<E>.
-     *
-     * Notes:
-     * - This is an abstract base class used as an interface.
-     * - Per JXX constraint, it does NOT derive from jxx::lang::Object.
-     * - It assumes Collection<jxx::Ptr<E>> is also an interface-style abstract base.
-     * - Java wildcard and default-method behavior is approximated where necessary.
-     */
-    template<typename E>
-    class List : public Collection<jxx::Ptr<E>>
-    {
-    protected:
-        List() = default;
+    // ===== Collection methods redeclared for Java 8 List parity =====
+    virtual jint size() override = 0;
 
-    public:
-        ~List() override = default;
+    virtual jbool isEmpty() override {
+        return size() == 0;
+    }
 
-    public:
-        /**
-         * Java 8:
-         *   void add(int index, E element)
-         */
-        virtual void add(jxx::lang::jint index,
-            jxx::Ptr<E> element) = 0;
+    virtual jbool contains(jxx::Ptr<jxx::lang::Object> o) override = 0;
 
-        /**
-         * Java 8:
-         *   boolean addAll(int index, Collection<? extends E> c)
-         *
-         * Practical JXX approximation:
-         *   Collection<jxx::Ptr<E>>
-         */
-        virtual jxx::lang::jbool addAll(
-            jxx::lang::jint index,
-            jxx::Ptr<Collection<jxx::Ptr<E>>> c) = 0;
+    virtual jxx::Ptr<ListIterator<E>> listIterator() = 0;
+    virtual jxx::Ptr<ListIterator<E>> listIterator(jint index) = 0;
+    virtual jxx::Ptr<Iterator<E>> iterator() override = 0;
+    virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>>> toArray() override = 0;
+    virtual jbool add(jxx::Ptr<E> e) override = 0;
+    virtual jbool remove(jxx::Ptr<jxx::lang::Object> o) override = 0;
+    virtual jbool containsAll(jxx::Ptr<wildcard::CollectionAny> c) override = 0;
+    virtual jbool addAll(jxx::Ptr<wildcard::CollectionExtends<E>> c) override = 0;
+    virtual jbool removeAll(jxx::Ptr<wildcard::CollectionAny> c) override = 0;
+    virtual jbool retainAll(jxx::Ptr<wildcard::CollectionAny> c) override = 0;
+    virtual void clear() override = 0;
 
-        /**
-         * Java 8:
-         *   E get(int index)
-         */
-        virtual jxx::Ptr<E> get(jxx::lang::jint index) const = 0;
+    // ===== List-specific methods =====
+    virtual jxx::Ptr<E> get(jint index) = 0;
+    virtual jxx::Ptr<E> set(jint index, jxx::Ptr<E> element) = 0;
+    virtual void add(jint index, jxx::Ptr<E> element) = 0;
+    virtual jxx::Ptr<E> remove(jint index) = 0;
 
-        /**
-         * Java 8:
-         *   int indexOf(Object o)
-         */
-        virtual jxx::lang::jint indexOf(
-            jxx::Ptr<jxx::lang::Object> o) const = 0;
+    // Java: int indexOf(Object o), lastIndexOf(Object o)
+    virtual jint indexOf(jxx::Ptr<jxx::lang::Object> o) = 0;
+    virtual jint lastIndexOf(jxx::Ptr<jxx::lang::Object> o) = 0;
 
-        /**
-         * Java 8:
-         *   int lastIndexOf(Object o)
-         */
-        virtual jxx::lang::jint lastIndexOf(
-            jxx::Ptr<jxx::lang::Object> o) const = 0;
+    // Java: boolean addAll(int, Collection<? extends E>)
+    virtual jbool addAll(jint index, jxx::Ptr<wildcard::CollectionExtends<E>> c) = 0;
 
-        /**
-         * Java 8:
-         *   ListIterator<E> listIterator()
-         */
-        virtual jxx::Ptr<ListIterator<jxx::Ptr<E>>> listIterator() = 0;
+    virtual jxx::Ptr<List<E>> subList(jint fromIndex, jint toIndex) = 0;
 
-        /**
-         * Java 8:
-         *   ListIterator<E> listIterator(int index)
-         */
-        virtual jxx::Ptr<ListIterator<jxx::Ptr<E>>> listIterator(
-            jxx::lang::jint index) = 0;
+    // Java 8 default methods
+    virtual void replaceAll(jxx::Ptr<function::UnaryOperator<E>> /*op*/) {
+        throw UnsupportedOperationException();
+    }
 
-        /**
-         * Java 8:
-         *   E remove(int index)
-         */
-        virtual jxx::Ptr<E> remove(jxx::lang::jint index) = 0;
+    // Java: sort(Comparator<? super E>)
+    virtual void sort(jxx::Ptr<ComparatorSuper<E>> /*c*/) {
+        throw UnsupportedOperationException();
+    }
 
-        /**
-         * Java 8:
-         *   E set(int index, E element)
-         */
-        virtual jxx::Ptr<E> set(jxx::lang::jint index,
-            jxx::Ptr<E> element) = 0;
+    virtual jxx::Ptr<Spliterator<E>> spliterator() override {
+        throw UnsupportedOperationException();
+    }
 
-        /**
-         * Java 8:
-         *   List<E> subList(int fromIndex, int toIndex)
-         */
-        virtual jxx::Ptr<List<E>> subList(
-            jxx::lang::jint fromIndex,
-            jxx::lang::jint toIndex) = 0;
+    // Java List contract redeclarations
+    virtual jbool equals(jxx::Ptr<jxx::lang::Object> o) override = 0;
+    virtual jint hashCode() override = 0;
+};
 
-        /**
-         * Java 8 default method:
-         *   default void replaceAll(UnaryOperator<E> operator)
-         *
-         * Practical JXX parity:
-         * - Preserved as a virtual member.
-         * - Uses jxx::util::function::UnaryOperator<jxx::Ptr<E>>.
-         */
-        virtual void replaceAll(
-            jxx::Ptr<jxx::util::function::UnaryOperator<jxx::Ptr<E>>> op) = 0;
-
-        /**
-         * Java 8 default method:
-         *   default void sort(Comparator<? super E> c)
-         *
-         * Practical JXX approximation:
-         * - Comparator<jxx::Ptr<E>>
-         */
-        virtual void sort(
-            jxx::Ptr<Comparator<jxx::Ptr<E>>> c) = 0;
-
-        /**
-         * Java 8 default method:
-         *   default Spliterator<E> spliterator()
-         */
-        virtual jxx::Ptr<Spliterator<jxx::Ptr<E>>> spliterator() = 0;
-    };
-}
+} // namespace util
+} // namespace jxx

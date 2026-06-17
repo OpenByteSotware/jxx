@@ -16,32 +16,34 @@ protected:
 public:
     virtual ~AbstractList() = default;
 
-    virtual jxx::Ptr<E> get(jxx::lang::jint index) override = 0;
-    virtual jxx::lang::jint size() override = 0;
+    // ===== Concrete subclasses must implement =====
+    virtual jxx::Ptr<E> get(jint index) override = 0;
+    virtual jint size() override = 0;
 
-    virtual jxx::Ptr<E> set(jxx::lang::jint index, jxx::Ptr<E> element) override {
-        throw UnsupportedOperationException();
-    }
+    // ===== Optional operations =====
+    virtual jxx::Ptr<E> set(jint index, jxx::Ptr<E> element) = 0;
+        
+    virtual void add(jint index, jxx::Ptr<E> element) = 0;
+    
 
-    virtual void add(jxx::lang::jint index, jxx::Ptr<E> element) override {
-        throw UnsupportedOperationException();
-    }
+    virtual jxx::Ptr<E> remove(jint index) = 0;
+    
 
-    virtual jxx::Ptr<E> remove(jxx::lang::jint index) override {
-        throw UnsupportedOperationException();
-    }
-
-    virtual jxx::lang::jbool add(jxx::Ptr<E> e) override {
+    virtual jbool add(jxx::Ptr<E> e) override {
         add(size(), e);
         return true;
     }
 
-    virtual jxx::lang::jbool addAll(jxx::lang::jint index, jxx::Ptr<wildcard::CollectionExtends<E>> c) override {
+    virtual jbool addAll(jxx::Ptr<wildcard::CollectionExtends<E>> c) override {
+        return addAll(size(), c);
+    }
+
+    virtual jbool addAll(jint index, jxx::Ptr<wildcard::CollectionExtends<E>> c) override {
         rangeCheckForAdd(index);
 
-        jxx::lang::jbool modified = false;
+        jbool modified = false;
         auto it = c->iteratorExtends();
-        jxx::lang::jint i = index;
+        jint i = index;
         while (it->hasNext()) {
             add(i++, it->next());
             modified = true;
@@ -49,7 +51,7 @@ public:
         return modified;
     }
 
-    virtual jxx::lang::jint indexOf(jxx::Ptr<E> o) override {
+    virtual jint indexOf(jxx::Ptr<jxx::lang::Object> o) override {
         auto it = listIterator();
         if (o == nullptr) {
             while (it->hasNext()) {
@@ -60,7 +62,7 @@ public:
         } else {
             while (it->hasNext()) {
                 auto e = it->next();
-                if (o->equals(e)) {
+                if (e != nullptr && o->equals(jxx::lang::ptr_static_cast<jxx::lang::Object>(e))) {
                     return it->previousIndex();
                 }
             }
@@ -68,7 +70,7 @@ public:
         return -1;
     }
 
-    virtual jxx::lang::jint lastIndexOf(jxx::Ptr<E> o) override {
+    virtual jint lastIndexOf(jxx::Ptr<jxx::lang::Object> o) override {
         auto it = listIterator(size());
         if (o == nullptr) {
             while (it->hasPrevious()) {
@@ -79,7 +81,7 @@ public:
         } else {
             while (it->hasPrevious()) {
                 auto e = it->previous();
-                if (o->equals(e)) {
+                if (e != nullptr && o->equals(jxx::lang::ptr_static_cast<jxx::lang::Object>(e))) {
                     return it->nextIndex();
                 }
             }
@@ -87,35 +89,82 @@ public:
         return -1;
     }
 
+    virtual jbool remove(jxx::Ptr<jxx::lang::Object> o) override {
+        jint i = indexOf(o);
+        if (i >= 0) {
+            remove(i);
+            return true;
+        }
+        return false;
+    }
+
     virtual void clear() override {
         removeRange(0, size());
     }
 
+    // Java List equality contract: ordered element-wise equality.
+    virtual jbool equals(jxx::Ptr<jxx::lang::Object> o) override {
+        auto c = jxx::lang::ptr_checked_cast<wildcard::CollectionAny>(o);
+        if (c == nullptr) {
+            return false;
+        }
+        if (c->size() != this->size()) {
+            return false;
+        }
+
+        auto it1 = this->iterator();
+        auto it2 = c->iteratorObject();
+        while (it1->hasNext() && it2->hasNext()) {
+            auto e1 = it1->next();
+            auto e2 = it2->next();
+            if (e1 == nullptr) {
+                if (e2 != nullptr) {
+                    return false;
+                }
+            } else {
+                if (!e1->equals(e2)) {
+                    return false;
+                }
+            }
+        }
+        return !it1->hasNext() && !it2->hasNext();
+    }
+
+    // Java List hashCode contract.
+    virtual jint hashCode() override {
+        jint hash = 1;
+        auto it = this->iterator();
+        while (it->hasNext()) {
+            auto e = it->next();
+            hash = 31 * hash + (e == nullptr ? 0 : e->hashCode());
+        }
+        return hash;
+    }
+
+    // ===== Iterators =====
     class Itr : public virtual Iterator<E> {
     protected:
-        jxx::Ptr<AbstractList<E>> list;
-        jxx::lang::jint cursor;
-        jxx::lang::jint lastRet;
-        jxx::lang::jint expectedModCount;
+        AbstractList<E>* list;
+        jint cursor;
+        jint lastRet;
+        jint expectedModCount;
 
     public:
-        explicit Itr(jxx::Ptr<AbstractList<E>> l)
+        explicit Itr(AbstractList<E>* l)
             : list(l), cursor(0), lastRet(-1), expectedModCount(l->modCount) {}
 
         virtual ~Itr() = default;
 
-        virtual jxx::lang::jbool hasNext() override {
+        virtual jbool hasNext() override {
             return cursor != list->size();
         }
 
         virtual jxx::Ptr<E> next() override {
             checkForComodification();
-
             const jint i = cursor;
             if (i >= list->size()) {
                 throw NoSuchElementException();
             }
-
             cursor = i + 1;
             lastRet = i;
             return list->get(i);
@@ -127,7 +176,6 @@ public:
             }
 
             checkForComodification();
-
             list->remove(lastRet);
             if (lastRet < cursor) {
                 cursor--;
@@ -159,12 +207,10 @@ public:
 
         virtual jxx::Ptr<E> previous() override {
             this->checkForComodification();
-
             const jint i = this->cursor - 1;
             if (i < 0) {
                 throw NoSuchElementException();
             }
-
             this->cursor = i;
             this->lastRet = i;
             return this->list->get(i);
@@ -182,7 +228,6 @@ public:
             if (this->lastRet < 0) {
                 throw IllegalStateException();
             }
-
             this->checkForComodification();
             this->list->set(this->lastRet, e);
             this->expectedModCount = this->list->modCount;
@@ -190,7 +235,6 @@ public:
 
         virtual void add(jxx::Ptr<E> e) override {
             this->checkForComodification();
-
             const jint i = this->cursor;
             this->list->add(i, e);
             this->cursor = i + 1;
@@ -217,10 +261,10 @@ public:
     }
 
 protected:
-    virtual void removeRange(jxx::lang::jint fromIndex, jxx::lang::jint toIndex) {
+    virtual void removeRange(jint fromIndex, jint toIndex) {
         auto it = listIterator(fromIndex);
-        const jxx::lang::jint n = toIndex - fromIndex;
-        for (jxx::lang::jint i = 0; i < n; ++i) {
+        const jint n = toIndex - fromIndex;
+        for (jint i = 0; i < n; ++i) {
             it->next();
             it->remove();
         }

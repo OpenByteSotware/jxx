@@ -18,10 +18,9 @@ namespace jxx::util
         virtual jxx::Ptr<Comparator<K>> comparator() const = 0;
         virtual jxx::Ptr<K> firstKey() const = 0;
         virtual jxx::Ptr<K> lastKey() const = 0;
-
-        virtual jxx::Ptr<SortedMap<K, V>> headMap(jxx::Ptr<K> toKey) const = 0;
         virtual jxx::Ptr<SortedMap<K, V>> subMap(jxx::Ptr<K> fromKey,
                                                  jxx::Ptr<K> toKey) const = 0;
+        virtual jxx::Ptr<SortedMap<K, V>> headMap(jxx::Ptr<K> toKey) const = 0;
         virtual jxx::Ptr<SortedMap<K, V>> tailMap(jxx::Ptr<K> fromKey) const = 0;
     };
 }

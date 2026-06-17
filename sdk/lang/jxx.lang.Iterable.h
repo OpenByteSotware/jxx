@@ -1,10 +1,8 @@
 #pragma once
 #include <type_traits>
 
-#include "jxx_types.h"
-#include "jxx.lang.NullPointerException.h"
-#include "jxx.lang.String.h"
-
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.NullPointerException.h"
 #include "util/jxx.util.Iterator.h"
 #include "util/jxx.util.Spliterator.h"
 #include "util/jxx.util.Spliterators.h"
@@ -35,12 +33,12 @@ namespace jxx::lang {
         // Java 8 default: void forEach(Consumer<? super T> action)
         virtual void forEach(jxx::Ptr<jxx::util::function::Consumer<T>> action) {
             if (!action) {
-                throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("action"));
+                throw jxx::lang::NullPointerException("action");
             }
             auto it = iterator();
             if (!it) {
                 // Not specified by Java, but avoids UB; treat as NPE-ish in practice.
-                throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("iterator"));
+                throw jxx::lang::NullPointerException("iterator");
             }
             while (it->hasNext()) {
                 action->accept(it->next());

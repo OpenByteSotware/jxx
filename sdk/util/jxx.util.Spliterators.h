@@ -36,12 +36,12 @@ public:
             return true;
         }
 
-        jxx::lang::jlong estimateSize() const override {
+        virtual jxx::lang::jlong estimateSize() const override {
             // Unknown size in Java => Long.MAX_VALUE
             return (jxx::lang::jlong)0x7fffffffffffffffLL;
         }
 
-        jxx::lang::jint characteristics() const override {
+        virtual jxx::lang::jint characteristics() const override {
             return characteristics_;
         }
 

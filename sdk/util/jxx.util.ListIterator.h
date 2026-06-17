@@ -2,8 +2,6 @@
 
 #include "util/jxx.util.Iterator.h"
 
-
-
 namespace jxx {
 namespace util {
 
