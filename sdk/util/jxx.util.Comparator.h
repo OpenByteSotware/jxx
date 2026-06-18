@@ -1,6 +1,6 @@
 #pragma once
 
-#include "jxx_types.h"
+#include "lang/jxx.lang.Object.h"
 
 namespace jxx::util
 {
@@ -14,7 +14,6 @@ namespace jxx::util
         virtual ~Comparator() = default;
 
     public:
-        virtual jxx::lang::jint compare(jxx::Ptr<E> a,
-                                        jxx::Ptr<E> b) const = 0;
+        virtual jxx::lang::jint compare(jxx::Ptr<E> a, jxx::Ptr<E> b) const = 0;
     };
 }

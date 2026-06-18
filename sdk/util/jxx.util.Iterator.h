@@ -6,7 +6,7 @@ namespace jxx {
 namespace util {
 
 template <typename E>
-class Iterator : virtual public jxx::lang::Object {
+class Iterator {
 public:
     virtual ~Iterator() = default;
     virtual jxx::lang::jbool hasNext() = 0;

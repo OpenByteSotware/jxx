@@ -1,11 +1,12 @@
 #pragma once
 
-#include "io/jxx.lang.Object.h"
+#include "lang/jxx.lang.Object.h"
 
 namespace jxx {
 namespace util {
 
-class RandomAccess : virtual public jxx::lang::Object {
+	// Marker interface for random access collections (e.g., ArrayList)
+class RandomAccess {
 public:
     virtual ~RandomAccess() = default;
 };

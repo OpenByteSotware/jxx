@@ -2,14 +2,12 @@
 
 #include <map>
 #include <utility>
-
-#include "io/jxx.util.AbstractMap.h"
-#include "io/jxx.util.ComparatorSuper.h"
-#include "io/jxx.lang.Comparable.h"
-#include "io/jxx.lang.Cloneable.h"
+#include "lang/jxx.lang.Object.h"
+#include "util/jxx.util.AbstractMap.h"
+#include "util/jxx.util.ComparatorSuper.h"
+#include "lang/jxx.lang.Comparable.h"
+#include "lang/jxx.lang.Cloneable.h"
 #include "io/jxx.io.Serializable.h"
-#include "io/jxx.lang.Casts.h"
-#include "io/jxx.lang.Exceptions.h"
 
 namespace jxx {
 namespace util {

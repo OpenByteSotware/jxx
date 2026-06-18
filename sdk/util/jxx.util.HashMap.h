@@ -6,7 +6,7 @@
 #include "util/jxx.util.AbstractMap.h"
 #include "lang/jxx.lang.Cloneable.h"
 #include "io/jxx.io.Serializable.h"
-#include "lang/IllegalArgumentException.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
 
 namespace jxx {
 namespace util {

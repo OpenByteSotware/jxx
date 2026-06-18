@@ -7,10 +7,10 @@ namespace util {
 namespace function {
 
 template <typename T>
-class ConsumerSuper : virtual public jxx::lang::Object {
+class ConsumerSuper {
 public:
     virtual ~ConsumerSuper() = default;
-    virtual void accept(jxx::Ptr<T> value) = 0;
+    virtual void acceptSuper(jxx::Ptr<T> value) = 0;
 };
 
 } // namespace function

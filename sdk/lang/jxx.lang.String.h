@@ -7,6 +7,7 @@
 #include "jxx_types.h"
 #include "jxx.lang.buildin_array.h"
 #include "jxx.lang.Object.h"
+#include "jxx.lang.Iterable.h"
 #include "jxx.lang.CharSequence.h"
 #include "jxx.lang.Comparable.h"
 #include "io/jxx.io.Serializable.h"

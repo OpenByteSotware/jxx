@@ -28,7 +28,7 @@ public:
             throw jxx::lang::NullPointerException();
         }
         return jxx::Ptr<jxx::util::Spliterator<E>>(
-            new jxx::util::spliterators::ArrayRefSpliterator<E>(array, 0, array->length(), characteristics, comparator));
+            jxx::NEW<jxx::util::spliterators::ArrayRefSpliterator<E>>(array, (jxx::lang::jint)0, (jxx::lang::jint)array->length, characteristics, comparator));
     }
 
     template <typename E>
@@ -38,7 +38,7 @@ public:
         jxx::lang::jint characteristics = 0,
         jxx::Ptr<jxx::util::ComparatorSuper<E>> comparator = nullptr) {
         return jxx::Ptr<jxx::util::Spliterator<E>>(
-            new jxx::util::spliterators::IteratorSpliterator<E>(iterator, estimatedSize, characteristics, comparator));
+            jxx::NEW<jxx::util::spliterators::IteratorSpliterator<E>>(iterator, estimatedSize, characteristics, comparator));
     }
 
     template <typename E>
@@ -135,7 +135,7 @@ public:
     static jxx::Ptr<jxx::util::Spliterator<E>> spliteratorUnknownSize(
         jxx::Ptr<jxx::util::Iterator<E>> iterator,
         jxx::lang::jint characteristics = 0) {
-        return forIterator<E>(iterator, -1LL, characteristics, nullptr);
+        return forIterator<E>(iterator, (jxx::lang::jlong)-1, characteristics, nullptr);
     }
 };
 

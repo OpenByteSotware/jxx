@@ -12,7 +12,7 @@ namespace jxx {
 namespace util {
 
 template <typename K, typename V>
-class Map : virtual public jxx::lang::Object {
+class Map {
 public:
     virtual ~Map() = default;
 

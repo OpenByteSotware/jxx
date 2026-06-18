@@ -30,7 +30,6 @@
 #include "jxx.io.PrintStream.h"
 #include "jxx.io.PrintWriter.h"
 #include "jxx.io.PushbackInputStream.h"
-#include "jxx.io.RandomAccessFile.h"
 #include "jxx.io.Reader.h"
 #include "jxx.io.SequenceInputStream.h"
 #include "jxx.io.Serializable.h"

@@ -34,7 +34,7 @@ public:
         if (array_ == nullptr) {
             throw jxx::lang::NullPointerException();
         }
-        if (origin < 0 || fence < origin || fence > array_->length()) {
+        if (origin < 0 || fence < origin || fence > array_->size()) {
             throw jxx::lang::IndexOutOfBoundsException();
         }
     }
@@ -46,7 +46,8 @@ public:
             throw jxx::lang::NullPointerException();
         }
         if (index_ < fence_) {
-            action->accept(array_->get(index_++));
+            action->accept((*array_)(index_));
+            index_++;
             return true;
         }
         return false;
@@ -57,7 +58,8 @@ public:
             throw jxx::lang::NullPointerException();
         }
         while (index_ < fence_) {
-            action->accept(array_->get(index_++));
+            action->accept((*array_)(index_));
+            index_++;
         }
     }
 
