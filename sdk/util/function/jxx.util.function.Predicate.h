@@ -1,11 +1,6 @@
 #pragma once
 
-#include "io/jxx.util.function.PredicateSuper.h"
-#include "io/jxx.lang.Exceptions.h"
-
-namespace jxx {
-template <typename T> class Ptr;
-}
+#include "util/function/jxx.util.function.PredicateSuper.h"
 
 namespace jxx {
 namespace util {

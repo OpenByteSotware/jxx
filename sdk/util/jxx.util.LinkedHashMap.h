@@ -2,10 +2,8 @@
 
 #include <list>
 #include <unordered_map>
-
+#include "lang/jxx.lang.Object.h"
 #include "util/jxx.util.HashMap.h"
-
-namespace jxx { template <typename T> class Ptr; }
 
 namespace jxx {
 namespace util {
@@ -18,7 +16,7 @@ private:
 
     OrderList order_;
     OrderIndexMap orderIndex_;
-    jbool accessOrder_;
+    jxx::lang::jbool accessOrder_;
 
 public:
     LinkedHashMap()
@@ -28,21 +26,21 @@ public:
         , accessOrder_(false) {
     }
 
-    explicit LinkedHashMap(jint initialCapacity)
+    explicit LinkedHashMap(jxx::lang::jint initialCapacity)
         : HashMap<K, V>(initialCapacity)
         , order_()
         , orderIndex_()
         , accessOrder_(false) {
     }
 
-    LinkedHashMap(jint initialCapacity, jfloat loadFactor)
+    LinkedHashMap(jxx::lang::jint initialCapacity, jxx::lang::jfloat loadFactor)
         : HashMap<K, V>(initialCapacity, loadFactor)
         , order_()
         , orderIndex_()
         , accessOrder_(false) {
     }
 
-    LinkedHashMap(jint initialCapacity, jfloat loadFactor, jbool accessOrder)
+    LinkedHashMap(jxx::lang::jint initialCapacity, jxx::lang::jfloat loadFactor, jxx::lang::jbool accessOrder)
         : HashMap<K, V>(initialCapacity, loadFactor)
         , order_()
         , orderIndex_()
@@ -58,7 +56,7 @@ public:
     virtual ~LinkedHashMap() = default;
 
     // Java hook: protected boolean removeEldestEntry(Map.Entry<K,V> eldest)
-    virtual jbool removeEldestEntry(jxx::Ptr<MapEntry<K, V>> /*eldest*/) {
+    virtual jxx::lang::jbool removeEldestEntry(jxx::Ptr<MapEntry<K, V>> /*eldest*/) {
         return false;
     }
 

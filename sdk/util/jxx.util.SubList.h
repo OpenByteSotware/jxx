@@ -1,13 +1,8 @@
 #pragma once
 
-#include "io/jxx.util.AbstractList.h"
-#include "io/jxx.util.List.h"
-#include "io/jxx.util.RandomAccess.h"
-#include "io/jxx.lang.Exceptions.h"
-
-namespace jxx {
-template <typename T> class Ptr;
-}
+#include "util/jxx.util.AbstractList.h"
+#include "util/jxx.util.List.h"
+#include "util/jxx.util.RandomAccess.h"
 
 namespace jxx {
 namespace util {

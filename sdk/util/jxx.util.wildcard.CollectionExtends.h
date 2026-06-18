@@ -1,8 +1,6 @@
 #pragma once
 
-#include "io/jxx.util.wildcard.CollectionAny.h"
-
-namespace jxx { template <typename T> class Ptr; }
+#include "util/jxx.util.wildcard.CollectionAny.h"
 
 namespace jxx {
 namespace util {

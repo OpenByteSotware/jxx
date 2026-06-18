@@ -59,7 +59,7 @@ namespace jxx::lang {
     //  - Provides Java-like equals(), hashCode(), toString(), getClass(), and cloning semantics
     //  - Provides Java-like monitor methods: wait(), notify(), notifyAll() using condition_variable
     //  - Note: Java's Object is not thread-safe by default, but these methods allow you to use it as a monitor if desired. 
-    //  - For Java-like synchronized blocks, use JXX_SYNCHRONIZE(obj, [&] { ... });
+    //  - For Java-like synchronized blocks, use synchronized(obj, [&] { ... });
     //  - For Java-like synchronized methods, inherit from Synchronized below.
     //  - For Java-like polymorphic collections, use PolySet/PolyMap below.
     //  - For Java-like cloning, derive from Cloneable and implement cloneImpl() for deep copy. Object::clone() checks for Cloneable and delegates to cloneImpl().
@@ -334,11 +334,6 @@ namespace jxx {
 #ifndef CAST_PTR
 #define CAST_PTR(Type, ptr) std::dynamic_pointer_cast<const Type>(ptr)
 #endif
-
-#ifndef SYNCHRONIZE
-#define SYNCHRONIZE(obj, ...) ((obj)->synchronized(__VA_ARGS__))
-#endif
-
 }
 
 namespace jxx {

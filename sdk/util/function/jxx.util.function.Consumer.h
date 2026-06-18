@@ -13,7 +13,9 @@ public:
     virtual ~Consumer() = default;
 
     virtual jxx::Ptr<Consumer<T>> andThen(jxx::Ptr<ConsumerSuper<T>> after) {
-        if (after == nullptr) throw jxx::lang::NullPointerException();
+        if (after == nullptr) {
+            throw jxx::lang::NullPointerException();
+        }
 
         class AndThenConsumer : public virtual Consumer<T> {
         private:

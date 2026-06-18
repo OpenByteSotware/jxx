@@ -1,10 +1,6 @@
 #pragma once
 
-#include "io/jxx.util.function.Function.h"
-
-namespace jxx {
-template <typename T> class Ptr;
-}
+#include "util/function/jxx.util.function.Function.h"
 
 namespace jxx {
 namespace util {

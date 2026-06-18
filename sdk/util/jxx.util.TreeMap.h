@@ -11,8 +11,6 @@
 #include "io/jxx.lang.Casts.h"
 #include "io/jxx.lang.Exceptions.h"
 
-namespace jxx { template <typename T> class Ptr; }
-
 namespace jxx {
 namespace util {
 

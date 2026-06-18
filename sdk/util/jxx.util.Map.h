@@ -8,8 +8,6 @@
 #include "util/function/jxx.util.function.BiFunction.h"
 #include "util/function/jxx.util.function.Function.h"
 
-namespace jxx { template <typename T> class Ptr; }
-
 namespace jxx {
 namespace util {
 

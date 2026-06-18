@@ -1,12 +1,7 @@
 #pragma once
 
-#include "io/jxx.lang.Object.h"
-#include "io/jxx.lang.Exceptions.h"
-#include "io/jxx.util.function.ConsumerSuper.h"
-
-namespace jxx {
-template <typename T> class Ptr;
-}
+#include "lang/jxx.lang.Object.h"
+#include "util/function/jxx.util.function.ConsumerSuper.h"
 
 namespace jxx {
 namespace util {

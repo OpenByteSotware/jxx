@@ -8,7 +8,6 @@
 #include "util/jxx.util.Spliterators.h"
 #include "util/function/jxx.util.function.Consumer.h"
 
-
 namespace jxx::lang {
 
     /**
