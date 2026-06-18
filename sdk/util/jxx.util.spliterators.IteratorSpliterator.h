@@ -82,7 +82,7 @@ public:
             return nullptr;
         }
 
-        auto a = jxx::Ptr<JxxArray<jxx::Ptr<E>>>(new JxxArray<jxx::Ptr<E>>(n));
+        auto a = jxx::Ptr<JxxArray<jxx::Ptr<E>, 1U>>(new JxxArray<jxx::Ptr<E>, 1U>(n));
         jxx::lang::jint j = 0;
         while (j < n && iterator_->hasNext()) {
             a->set(j++, iterator_->next());
@@ -96,7 +96,7 @@ public:
         }
 
         return jxx::Ptr<jxx::util::Spliterator<E>>(
-            new ArrayRefSpliterator<E>(a, 0, j, characteristics_, comparator_));
+            new ArrayRefSpliterator<E>(a, (jxx::lang::jint)0, j, characteristics_, comparator_));
     }
 
     virtual jxx::lang::jlong estimateSize() override {

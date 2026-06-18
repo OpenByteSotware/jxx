@@ -47,10 +47,10 @@ namespace jxx::lang {
         // Variance-friendly forEach: Consumer<U> where T -> U convertible (Consumer<? super T>)
         template <
             class U,
-            typename std::enable_if_t<
-            !std::is_same_v<T, U> &&
-            (std::is_convertible_v<T, U> || std::is_constructible_v<U, T>),
-            int
+            std::enable_if_t<
+                !std::is_same_v<T, U> &&
+                (std::is_convertible_v<T, U> || std::is_constructible_v<U, T>),
+                int
             > = 0
         >
         void forEach(jxx::Ptr<jxx::util::function::Consumer<U>> action) {
@@ -77,7 +77,7 @@ namespace jxx::lang {
         // Java 8 default: Spliterator<T> spliterator()
         virtual jxx::Ptr<jxx::util::Spliterator<T>> spliterator() {
             // Java 8 uses Spliterators.spliteratorUnknownSize(iterator(), 0)
-            return jxx::util::Spliterators::spliteratorUnknownSize<T>(iterator(), 0);
+            return jxx::util::Spliterators::template spliteratorUnknownSize<T>(iterator(), 0);
         }
     };
 

@@ -130,6 +130,13 @@ public:
                 jxx::util::Spliterator<V>::SUBSIZED |
                 extraCharacteristics));
     }
+
+    template <typename E>
+    static jxx::Ptr<jxx::util::Spliterator<E>> spliteratorUnknownSize(
+        jxx::Ptr<jxx::util::Iterator<E>> iterator,
+        jxx::lang::jint characteristics = 0) {
+        return forIterator<E>(iterator, -1LL, characteristics, nullptr);
+    }
 };
 
 } // namespace util
