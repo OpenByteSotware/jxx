@@ -1,5 +1,6 @@
 #pragma once
 
+#include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "lang/jxx.lang.Iterable.h"
 #include "lang/jxx.lang.Object.h"
 #include "util/jxx.util.Iterator.h"
@@ -50,16 +51,16 @@ public:
     virtual void clear() = 0;
 
     virtual jxx::lang::jbool removeIf(jxx::Ptr<function::PredicateSuper<E>> /*filter*/) {
-        throw UnsupportedOperationException();
+        throw jxx::lang::UnsupportedOperationException();
     }
     virtual jxx::Ptr<Spliterator<E>> spliterator() override {
-        throw UnsupportedOperationException();
+        throw jxx::lang::UnsupportedOperationException();
     }
     virtual jxx::Ptr<stream::Stream<E>> stream() {
-        throw UnsupportedOperationException();
+        throw jxx::lang::UnsupportedOperationException();
     }
     virtual jxx::Ptr<stream::Stream<E>> parallelStream() {
-        throw UnsupportedOperationException();
+        throw jxx::lang::UnsupportedOperationException();
     }
 };
 

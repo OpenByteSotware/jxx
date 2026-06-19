@@ -8,7 +8,7 @@ namespace jxx {
 namespace util {
 
 template <typename E>
-class AbstractCollection : public Object, public virtual Collection<E> {
+class AbstractCollection : public jxx::lang::Object, public virtual Collection<E> {
 public:
     virtual ~AbstractCollection() = default;
     virtual jxx::lang::jbool isEmpty() override { return this->size() == 0; }
@@ -28,10 +28,12 @@ public:
 
     virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> toArray() override {
         const jxx::lang::jint sz = this->size();
-        auto result = jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>(new JxxArray<jxx::Ptr<jxx::lang::Object>>(sz));
+        auto result = jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>(jxx::NEW<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>(sz));
         auto it = this->iterator();
         jxx::lang::jint i = 0;
-        while (it->hasNext()) result->set(i++, jxx::lang::ptr_static_cast<jxx::lang::Object>(it->next()));
+        while (it->hasNext()) {
+            result->set(i++, jxx::lang::ptr_static_cast<jxx::lang::Object>(it->next()));
+        }
         return result;
     }
 

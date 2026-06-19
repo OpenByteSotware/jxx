@@ -12,6 +12,7 @@
 #include "util/function/jxx.util.function.UnaryOperator.h"
 #include "util/function/jxx.util.function.Consumer.h"
 #include "util/jxx.util.wildcard.CollectionExtends.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.Object.h"
 
 namespace jxx {
@@ -26,7 +27,7 @@ class ArrayList
 private:
     static constexpr jxx::lang::jint DEFAULT_CAPACITY = 10;
 
-    jxx::Ptr<JxxArray<jxx::Ptr<E>>> elementData;
+    jxx::Ptr<JxxArray<jxx::Ptr<E>, 1U>> elementData;
     jxx::lang::jint size_;
 
 public:
@@ -37,19 +38,19 @@ public:
     explicit ArrayList(jxx::lang::jint initialCapacity)
         : elementData(), size_(0) {
         if (initialCapacity < 0) {
-            throw IllegalArgumentException();
+            throw jxx::lang::IllegalArgumentException();
         }
-        elementData = jxx::Ptr<JxxArray<jxx::Ptr<E>>>(new JxxArray<jxx::Ptr<E>>(initialCapacity));
+        elementData = jxx::Ptr<JxxArray<jxx::Ptr<E>, 1U>>(jxx::NEW<JxxArray<jxx::Ptr<E>, 1U>>(initialCapacity));
     }
 
     // Java: ArrayList(Collection<? extends E> c)
     explicit ArrayList(jxx::Ptr<wildcard::CollectionExtends<E>> c)
         : elementData(), size_(0) {
         if (c == nullptr) {
-            throw NullPointerException();
+            throw jxx::lang::NullPointerException();
         }
         const jxx::lang::jint n = c->size();
-        elementData = jxx::Ptr<JxxArray<jxx::Ptr<E>>>(new JxxArray<jxx::Ptr<E>>(n > 0 ? n : DEFAULT_CAPACITY));
+        elementData = jxx::Ptr<JxxArray<jxx::Ptr<E>>>(new JxxArray<jxx::Ptr<E>, 1U>(n > 0 ? n : DEFAULT_CAPACITY));
         auto it = c->iteratorExtends();
         while (it->hasNext()) {
             elementData->set(size_++, it->next());
@@ -65,7 +66,7 @@ public:
         }
     }
 
-    virtual void ensureCapacity(jint minCapacity) {
+    virtual void ensureCapacity(jxx::lang::jint minCapacity) {
         if (minCapacity > elementData->length()) {
             grow(minCapacity);
         }
@@ -128,7 +129,7 @@ public:
         return cloned;
     }
 
-    virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>>> toArray() override {
+    virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> toArray() override {
         auto a = jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>>>(
             new JxxArray<jxx::Ptr<jxx::lang::Object>>(size_));
         for (jxx::lang::jint i = 0; i < size_; ++i) {
@@ -380,8 +381,8 @@ private:
         ++this->modCount;
     }
 
-    jxx::Ptr<JxxArray<jxx::Ptr<E>>> copyArray(jint newCapacity) {
-        auto newData = jxx::Ptr<JxxArray<jxx::Ptr<E>>>(new JxxArray<jxx::Ptr<E>>(newCapacity));
+    jxx::Ptr<JxxArray<jxx::Ptr<E>, 1U>> copyArray(jint newCapacity) {
+        auto newData = jxx::Ptr<JxxArray<jxx::Ptr<E>, 1U>>(jxx::NEW<JxxArray<jxx::Ptr<E>, 1U>>(newCapacity));
         const jxx::lang::jint limit = (size_ < newCapacity) ? size_ : newCapacity;
         for (jxx::lang::jint i = 0; i < limit; ++i) {
             newData->set(i, elementData->get(i));
