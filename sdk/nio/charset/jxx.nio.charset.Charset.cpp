@@ -14,7 +14,7 @@ namespace
         return s;
     }
 
-    [[noreturn]] void throwIAE_(const char* msg)
+    void throwIAE_(const char* msg)
     {
         throw std::invalid_argument(msg);
     }

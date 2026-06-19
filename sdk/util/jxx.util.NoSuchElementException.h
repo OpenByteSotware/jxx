@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include "jxx.lang.RuntimeException.h"
+#include "lang/jxx.lang.RuntimeException.h"
 
 namespace jxx::util {
 

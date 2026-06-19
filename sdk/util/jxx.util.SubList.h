@@ -11,40 +11,40 @@ template <typename E>
 class SubList : public AbstractList<E>, public virtual RandomAccess {
 private:
     jxx::Ptr<List<E>> root;
-    jint offset_;
-    jint size_;
+    jxx::lang::jint offset_;
+    jxx::lang::jint size_;
 
 public:
-    SubList(jxx::Ptr<List<E>> list, jint fromIndex, jint toIndex)
+    SubList(jxx::Ptr<List<E>> list, jxx::lang::jint fromIndex, jxx::lang::jint toIndex)
         : root(list), offset_(fromIndex), size_(toIndex - fromIndex) {
         if (list == nullptr) {
-            throw NullPointerException();
+            throw jxx::lang::NullPointerException();
         }
         if (fromIndex < 0 || toIndex < fromIndex) {
-            throw IndexOutOfBoundsException();
+            throw jxx::lang::IndexOutOfBoundsException();
         }
     }
 
     virtual ~SubList() = default;
 
-    virtual jxx::Ptr<E> get(jint index) override {
+    virtual jxx::Ptr<E> get(jxx::lang::jint index) override {
         rangeCheck(index);
         return root->get(offset_ + index);
     }
 
-    virtual jxx::Ptr<E> set(jint index, jxx::Ptr<E> element) override {
+    virtual jxx::Ptr<E> set(jxx::lang::jint index, jxx::Ptr<E> element) override {
         rangeCheck(index);
         return root->set(offset_ + index, element);
     }
 
-    virtual void add(jint index, jxx::Ptr<E> element) override {
+    virtual void add(jxx::lang::jint index, jxx::Ptr<E> element) override {
         rangeCheckForAddLocal(index);
         root->add(offset_ + index, element);
         ++size_;
         ++this->modCount;
     }
 
-    virtual jxx::Ptr<E> remove(jint index) override {
+    virtual jxx::Ptr<E> remove(jxx::lang::jint index) override {
         rangeCheck(index);
         jxx::Ptr<E> oldValue = root->remove(offset_ + index);
         --size_;
@@ -52,16 +52,16 @@ public:
         return oldValue;
     }
 
-    virtual jint size() override {
+    virtual jxx::lang::jint size() override {
         return size_;
     }
 
-    virtual jbool addAll(jint index, jxx::Ptr<wildcard::CollectionExtends<E>> c) override {
+    virtual jxx::lang::jbool addAll(jxx::lang::jint index, jxx::Ptr<wildcard::CollectionExtends<E>> c) override {
         rangeCheckForAddLocal(index);
         if (c == nullptr) {
-            throw NullPointerException();
+            throw jxx::lang::NullPointerException();
         }
-        const jint cSize = c->size();
+        const jxx::lang::jint cSize = c->size();
         if (cSize == 0) {
             return false;
         }
@@ -71,19 +71,19 @@ public:
         return true;
     }
 
-    virtual jxx::Ptr<List<E>> subList(jint fromIndex, jint toIndex) override {
+    virtual jxx::Ptr<List<E>> subList(jxx::lang::jint fromIndex, jxx::lang::jint toIndex) override {
         if (fromIndex < 0 || toIndex > size_ || fromIndex > toIndex) {
-            throw IndexOutOfBoundsException();
+            throw jxx::lang::IndexOutOfBoundsException();
         }
         return jxx::Ptr<List<E>>(new SubList<E>(root, offset_ + fromIndex, offset_ + toIndex));
     }
 
 protected:
-    virtual void removeRange(jint fromIndex, jint toIndex) override {
+    virtual void removeRange(jxx::lang::jint fromIndex, jxx::lang::jint toIndex) override {
         if (fromIndex < 0 || toIndex > size_ || fromIndex > toIndex) {
-            throw IndexOutOfBoundsException();
+            throw jxx::lang::IndexOutOfBoundsException();
         }
-        for (jint i = 0; i < (toIndex - fromIndex); ++i) {
+        for (jxx::lang::jint i = 0; i < (toIndex - fromIndex); ++i) {
             root->remove(offset_ + fromIndex);
         }
         size_ -= (toIndex - fromIndex);
@@ -91,15 +91,15 @@ protected:
     }
 
 private:
-    void rangeCheck(jint index) {
+    void rangeCheck(jxx::lang::jint index) {
         if (index < 0 || index >= size_) {
-            throw IndexOutOfBoundsException();
+            throw jxx::lang::IndexOutOfBoundsException();
         }
     }
 
-    void rangeCheckForAddLocal(jint index) {
+    void rangeCheckForAddLocal(jxx::lang::jint index) {
         if (index < 0 || index > size_) {
-            throw IndexOutOfBoundsException();
+            throw jxx::lang::IndexOutOfBoundsException();
         }
     }
 };

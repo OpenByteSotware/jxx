@@ -24,17 +24,17 @@ class ArrayList
     , public virtual jxx::lang::Cloneable
     , public virtual jxx::io::Serializable {
 private:
-    static constexpr jint DEFAULT_CAPACITY = 10;
+    static constexpr jxx::lang::jint DEFAULT_CAPACITY = 10;
 
     jxx::Ptr<JxxArray<jxx::Ptr<E>>> elementData;
-    jint size_;
+    jxx::lang::jint size_;
 
 public:
     ArrayList()
-        : elementData(new JxxArray<jxx::Ptr<E>>(DEFAULT_CAPACITY)), size_(0) {
+        : elementData(new JxxArray<jxx::Ptr<E>, 1U>(DEFAULT_CAPACITY)), size_(0) {
     }
 
-    explicit ArrayList(jint initialCapacity)
+    explicit ArrayList(jxx::lang::jint initialCapacity)
         : elementData(), size_(0) {
         if (initialCapacity < 0) {
             throw IllegalArgumentException();
@@ -48,7 +48,7 @@ public:
         if (c == nullptr) {
             throw NullPointerException();
         }
-        const jint n = c->size();
+        const jxx::lang::jint n = c->size();
         elementData = jxx::Ptr<JxxArray<jxx::Ptr<E>>>(new JxxArray<jxx::Ptr<E>>(n > 0 ? n : DEFAULT_CAPACITY));
         auto it = c->iteratorExtends();
         while (it->hasNext()) {
@@ -71,27 +71,27 @@ public:
         }
     }
 
-    virtual jint size() override {
+    virtual jxx::lang::jint size() override {
         return size_;
     }
 
-    virtual jbool isEmpty() override {
+    virtual jxx::lang::jbool isEmpty() override {
         return size_ == 0;
     }
 
-    virtual jbool contains(jxx::Ptr<jxx::lang::Object> o) override {
+    virtual jxx::lang::jbool contains(jxx::Ptr<jxx::lang::Object> o) override {
         return indexOf(o) >= 0;
     }
 
-    virtual jint indexOf(jxx::Ptr<jxx::lang::Object> o) override {
+    virtual jxx::lang::jint indexOf(jxx::Ptr<jxx::lang::Object> o) override {
         if (o == nullptr) {
-            for (jint i = 0; i < size_; ++i) {
+            for (jxx::lang::jint i = 0; i < size_; ++i) {
                 if (elementData->get(i) == nullptr) {
                     return i;
                 }
             }
         } else {
-            for (jint i = 0; i < size_; ++i) {
+            for (jxx::lang::jint i = 0; i < size_; ++i) {
                 auto e = elementData->get(i);
                 if (e != nullptr && o->equals(jxx::lang::ptr_static_cast<jxx::lang::Object>(e))) {
                     return i;
@@ -101,15 +101,15 @@ public:
         return -1;
     }
 
-    virtual jint lastIndexOf(jxx::Ptr<jxx::lang::Object> o) override {
+    virtual jxx::lang::jint lastIndexOf(jxx::Ptr<jxx::lang::Object> o) override {
         if (o == nullptr) {
-            for (jint i = size_ - 1; i >= 0; --i) {
+            for (jxx::lang::jint i = size_ - 1; i >= 0; --i) {
                 if (elementData->get(i) == nullptr) {
                     return i;
                 }
             }
         } else {
-            for (jint i = size_ - 1; i >= 0; --i) {
+            for (jxx::lang::jint i = size_ - 1; i >= 0; --i) {
                 auto e = elementData->get(i);
                 if (e != nullptr && o->equals(jxx::lang::ptr_static_cast<jxx::lang::Object>(e))) {
                     return i;
@@ -121,7 +121,7 @@ public:
 
     virtual jxx::Ptr<jxx::lang::Object> clone() {
         jxx::Ptr<ArrayList<E>> cloned(new ArrayList<E>(size_));
-        for (jint i = 0; i < size_; ++i) {
+        for (jxx::lang::jint i = 0; i < size_; ++i) {
             cloned->elementData->set(i, elementData->get(i));
         }
         cloned->size_ = size_;
@@ -131,32 +131,32 @@ public:
     virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>>> toArray() override {
         auto a = jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>>>(
             new JxxArray<jxx::Ptr<jxx::lang::Object>>(size_));
-        for (jint i = 0; i < size_; ++i) {
+        for (jxx::lang::jint i = 0; i < size_; ++i) {
             a->set(i, elementData->get(i));
         }
         return a;
     }
 
-    virtual jxx::Ptr<E> get(jint index) override {
+    virtual jxx::Ptr<E> get(jxx::lang::jint index) override {
         rangeCheck(index);
         return elementData->get(index);
     }
 
-    virtual jxx::Ptr<E> set(jint index, jxx::Ptr<E> element) override {
+    virtual jxx::Ptr<E> set(jxx::lang::jint index, const jxx::Ptr<E> element) override {
         rangeCheck(index);
         jxx::Ptr<E> oldValue = elementData->get(index);
         elementData->set(index, element);
         return oldValue;
     }
 
-    virtual jbool add(jxx::Ptr<E> e) override {
+    virtual jxx::lang::jbool add(const jxx::Ptr<E> e) override {
         ensureCapacityInternal(size_ + 1);
         elementData->set(size_++, e);
         ++this->modCount;
         return true;
     }
 
-    virtual void add(jint index, jxx::Ptr<E> element) override {
+    virtual void add(jxx::lang::jint index, const jxx::Ptr<E> element) override {
         rangeCheckForAdd(index);
         ensureCapacityInternal(size_ + 1);
         shiftRight(index, 1);
@@ -165,7 +165,7 @@ public:
         ++this->modCount;
     }
 
-    virtual jxx::Ptr<E> remove(jint index) override {
+    virtual jxx::Ptr<E> remove(jxx::lang::jint index) override {
         rangeCheck(index);
         ++this->modCount;
         jxx::Ptr<E> oldValue = elementData->get(index);
@@ -175,8 +175,8 @@ public:
         return oldValue;
     }
 
-    virtual jbool remove(jxx::Ptr<jxx::lang::Object> o) override {
-        jint i = indexOf(o);
+    virtual jxx::lang::jbool remove(jxx::Ptr<jxx::lang::Object> o) override {
+        jxx::lang::jint i = indexOf(o);
         if (i >= 0) {
             remove(i);
             return true;
@@ -186,22 +186,22 @@ public:
 
     virtual void clear() override {
         ++this->modCount;
-        for (jint i = 0; i < size_; ++i) {
+        for (jxx::lang::jint i = 0; i < size_; ++i) {
             elementData->set(i, nullptr);
         }
         size_ = 0;
     }
 
-    virtual jbool addAll(jxx::Ptr<wildcard::CollectionExtends<E>> c) override {
+    virtual jxx::lang::jbool addAll(jxx::Ptr<wildcard::CollectionExtends<E>> c) override {
         return addAll(size_, c);
     }
 
-    virtual jbool addAll(jint index, jxx::Ptr<wildcard::CollectionExtends<E>> c) override {
+    virtual jxx::lang::jbool addAll(jxx::lang::jint index, jxx::Ptr<wildcard::CollectionExtends<E>> c) override {
         rangeCheckForAdd(index);
         if (c == nullptr) {
             throw NullPointerException();
         }
-        const jint numNew = c->size();
+        const jxx::lang::jint numNew = c->size();
         if (numNew == 0) {
             return false;
         }
@@ -224,12 +224,12 @@ public:
         return jxx::Ptr<List<E>>(new SubList<E>(jxx::Ptr<List<E>>(this), fromIndex, toIndex));
     }
 
-    virtual jbool removeIf(jxx::Ptr<function::PredicateSuper<E>> filter) override {
+    virtual jxx::lang::jbool removeIf(jxx::Ptr<function::PredicateSuper<E>> filter) override {
         if (filter == nullptr) {
             throw NullPointerException();
         }
-        jbool removed = false;
-        jint i = 0;
+        jxx::lang::jbool removed = false;
+        jxx::lang::jint i = 0;
         while (i < size_) {
             if (filter->test(elementData->get(i))) {
                 remove(i);
@@ -245,8 +245,8 @@ public:
         if (op == nullptr) {
             throw NullPointerException();
         }
-        const jint expected = this->modCount;
-        for (jint i = 0; i < size_; ++i) {
+        const jxx::lang::jint expected = this->modCount;
+        for (jxx::lang::jint i = 0; i < size_; ++i) {
             elementData->set(i, op->apply(elementData->get(i)));
         }
         if (this->modCount != expected) {
@@ -259,10 +259,10 @@ public:
         if (c == nullptr) {
             throw NullPointerException();
         }
-        const jint expected = this->modCount;
-        for (jint i = 1; i < size_; ++i) {
+        const jxx::lang::jint expected = this->modCount;
+        for (jxx::lang::jint i = 1; i < size_; ++i) {
             jxx::Ptr<E> key = elementData->get(i);
-            jint j = i - 1;
+            jxx::lang::jint j = i - 1;
             while (j >= 0 && c->compare(elementData->get(j), key) > 0) {
                 elementData->set(j + 1, elementData->get(j));
                 --j;
@@ -278,17 +278,17 @@ public:
     class ArrayListSpliterator : public virtual Spliterator<E> {
     private:
         ArrayList<E>* list;
-        jint index;
-        jint fence;
-        jint expectedModCount;
+        jxx::lang::jint index;
+        jxx::lang::jint fence;
+        jxx::lang::jint expectedModCount;
 
     public:
-        ArrayListSpliterator(ArrayList<E>* l, jint origin, jint fenceIndex, jint expected)
+        ArrayListSpliterator(ArrayList<E>* l, jxx::lang::jint origin, jxx::lang::jint fenceIndex, jxx::lang::jint expected)
             : list(l), index(origin), fence(fenceIndex), expectedModCount(expected) {}
 
         virtual ~ArrayListSpliterator() = default;
 
-        virtual jbool tryAdvance(jxx::Ptr<function::Consumer<E>> action) override {
+        virtual jxx::lang::jbool tryAdvance(jxx::Ptr<function::Consumer<E>> action) override {
             if (action == nullptr) {
                 throw NullPointerException();
             }
@@ -311,8 +311,8 @@ public:
         }
 
         virtual jxx::Ptr<Spliterator<E>> trySplit() override {
-            const jint lo = index;
-            const jint mid = lo + ((fence - lo) >> 1);
+            const jxx::lang::jint lo = index;
+            const jxx::lang::jint mid = lo + ((fence - lo) >> 1);
             if (lo >= mid) {
                 return nullptr;
             }
@@ -320,11 +320,11 @@ public:
             return jxx::Ptr<Spliterator<E>>(new ArrayListSpliterator(list, lo, mid, expectedModCount));
         }
 
-        virtual jlong estimateSize() override {
-            return static_cast<jlong>(fence - index);
+        virtual jxx::lang::jlong estimateSize() override {
+            return static_cast<jxx::lang::jlong>(fence - index);
         }
 
-        virtual jint characteristics() override {
+        virtual jxx::lang::jint characteristics() override {
             return Spliterator<E>::ORDERED | Spliterator<E>::SIZED | Spliterator<E>::SUBSIZED;
         }
 
@@ -346,12 +346,12 @@ protected:
             throw IndexOutOfBoundsException();
         }
         ++this->modCount;
-        const jint numMoved = size_ - toIndex;
-        for (jint i = 0; i < numMoved; ++i) {
+        const jxx::lang::jint numMoved = size_ - toIndex;
+        for (jxx::lang::jint i = 0; i < numMoved; ++i) {
             elementData->set(fromIndex + i, elementData->get(toIndex + i));
         }
-        const jint newSize = size_ - (toIndex - fromIndex);
-        for (jint i = newSize; i < size_; ++i) {
+        const jxx::lang::jint newSize = size_ - (toIndex - fromIndex);
+        for (jxx::lang::jint i = newSize; i < size_; ++i) {
             elementData->set(i, nullptr);
         }
         size_ = newSize;
@@ -368,8 +368,8 @@ private:
     }
 
     void grow(jint minCapacity) {
-        jint oldCapacity = elementData->length();
-        jint newCapacity = oldCapacity + (oldCapacity >> 1);
+        jxx::lang::jint oldCapacity = elementData->length();
+        jxx::lang::jint newCapacity = oldCapacity + (oldCapacity >> 1);
         if (newCapacity < minCapacity) {
             newCapacity = minCapacity;
         }
@@ -382,32 +382,32 @@ private:
 
     jxx::Ptr<JxxArray<jxx::Ptr<E>>> copyArray(jint newCapacity) {
         auto newData = jxx::Ptr<JxxArray<jxx::Ptr<E>>>(new JxxArray<jxx::Ptr<E>>(newCapacity));
-        const jint limit = (size_ < newCapacity) ? size_ : newCapacity;
-        for (jint i = 0; i < limit; ++i) {
+        const jxx::lang::jint limit = (size_ < newCapacity) ? size_ : newCapacity;
+        for (jxx::lang::jint i = 0; i < limit; ++i) {
             newData->set(i, elementData->get(i));
         }
         return newData;
     }
 
-    void shiftRight(jint index, jint count) {
-        for (jint i = size_ - 1; i >= index; --i) {
+    void shiftRight(jxx::lang::jint index, jxx::lang::jint count) {
+        for (jxx::lang::jint i = size_ - 1; i >= index; --i) {
             elementData->set(i + count, elementData->get(i));
         }
     }
 
-    void shiftLeft(jint fromIndex, jint count) {
-        for (jint i = fromIndex; i < size_; ++i) {
+    void shiftLeft(jxx::lang::jint fromIndex, jxx::lang::jint count) {
+        for (jxx::lang::jint i = fromIndex; i < size_; ++i) {
             elementData->set(i - count, elementData->get(i));
         }
     }
 
-    void rangeCheck(jint index) {
+    void rangeCheck(jxx::lang::jint index) {
         if (index < 0 || index >= size_) {
             throw IndexOutOfBoundsException();
         }
     }
 
-    void rangeCheckForAdd(jint index) {
+    void rangeCheckForAdd(jxx::lang::jint index) {
         if (index < 0 || index > size_) {
             throw IndexOutOfBoundsException();
         }

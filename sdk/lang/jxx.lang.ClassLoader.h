@@ -125,7 +125,7 @@ private:
 
     // resource store: name -> bytes
     mutable std::mutex resourceMutex_;
-    std::unordered_map<std::string, jxx::Ptr<jxx::lang::ByteArray>> resources_;
+    std::unordered_map<std::string, jxx::Ptr<jxx::lang::ByteArrayType>> resources_;
 
     // assertion status
     jbool defaultAssertionStatus_ = false;

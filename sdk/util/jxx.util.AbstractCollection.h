@@ -1,5 +1,6 @@
 #pragma once
 
+#include "lang/jxx.lang.Object.h"
 #include "util/jxx.util.Collection.h"
 #include "util/jxx.util.Iterator.h"
 
@@ -25,11 +26,11 @@ public:
         return false;
     }
 
-    virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>>> toArray() override {
-        const jint sz = this->size();
-        auto result = jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>>>(new JxxArray<jxx::Ptr<jxx::lang::Object>>(sz));
+    virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> toArray() override {
+        const jxx::lang::jint sz = this->size();
+        auto result = jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>(new JxxArray<jxx::Ptr<jxx::lang::Object>>(sz));
         auto it = this->iterator();
-        jint i = 0;
+        jxx::lang::jint i = 0;
         while (it->hasNext()) result->set(i++, jxx::lang::ptr_static_cast<jxx::lang::Object>(it->next()));
         return result;
     }

@@ -23,8 +23,9 @@ jxx::lang::ByteArray ModifiedUTF::encode(const std::u16string& s){
 		out.push_back((uint8_t)(0x80|((c>>6)&0x3F))); out.push_back((uint8_t)(0x80|(c&0x3F)));
 	}
 	} 
-	
-	return jxx::NEW<jxx::lang::ByteArrayType>(out.data());
+	auto byteArray = jxx::NEW<jxx::lang::ByteArrayType>(out.size());
+	std::copy(out.begin(), out.end(), byteArray->data());
+	return byteArray;
 }
 std::u16string ModifiedUTF::decode(const jxx::lang::ByteArray bytes)
 {

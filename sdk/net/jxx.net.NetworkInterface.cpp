@@ -365,8 +365,8 @@ namespace jxx::net
     jxx::Ptr<jxx::util::List<jxx::Ptr<InterfaceAddress>>> NetworkInterface::getInterfaceAddresses() const
     {
         auto list = jxx::NEW<jxx::util::ArrayList<jxx::Ptr<InterfaceAddress>>>();
-        for (const auto& x : interfaceAddresses_)
-            list->add(x);
+        for (const auto x : interfaceAddresses_)
+            list->add(x->getAddress());
         return list;
     }
 

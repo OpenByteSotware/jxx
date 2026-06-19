@@ -12,7 +12,7 @@ namespace jxx::nio
 {
     class ByteBuffer : public Buffer
     {
-    protected:
+    public:
         ByteBuffer(std::shared_ptr<std::vector<jxx::lang::jbyte>> storage,
                    jxx::lang::jint offset,
                    jxx::lang::jint capacity,
@@ -20,7 +20,6 @@ namespace jxx::nio
                    jxx::lang::jbool direct,
                    jxx::Ptr<ByteOrder> order);
 
-    public:
         ~ByteBuffer() override = default;
 
     public:

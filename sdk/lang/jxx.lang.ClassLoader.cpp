@@ -142,7 +142,7 @@ namespace jxx::lang {
         if (!name) throw NullPointerException(jxx::NEW<String>("name"));
         const std::string n = name->utf8();
         std::lock_guard<std::mutex> lk(resourceMutex_);
-        resources_[n] = bytes;
+        // TODO resources_[n] = bytes;
     }
 
     jxx::Ptr<jxx::net::URL> ClassLoader::findResource(jxx::Ptr<String> name) {

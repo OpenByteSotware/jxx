@@ -52,6 +52,11 @@ namespace jxx::net
                jxx::lang::jint port,
                jxx::Ptr<InetAddress> localAddr,
                jxx::lang::jint localPort);
+        Socket(internal::NativeSocket handle,
+            jxx::Ptr<InetAddress> remoteAddr,
+            jxx::lang::jint remotePort,
+            jxx::Ptr<InetAddress> localAddr,
+            jxx::lang::jint localPort);
         ~Socket() override;
 
     public:
@@ -112,11 +117,7 @@ namespace jxx::net
 
     private:
         friend class ServerSocket;
-        Socket(internal::NativeSocket handle,
-               jxx::Ptr<InetAddress> remoteAddr,
-               jxx::lang::jint remotePort,
-               jxx::Ptr<InetAddress> localAddr,
-               jxx::lang::jint localPort);
+        
         void ensureCreated_(jxx::lang::jbool stream);
         void setSockOptBool_(jxx::lang::jint level,
                              jxx::lang::jint name,

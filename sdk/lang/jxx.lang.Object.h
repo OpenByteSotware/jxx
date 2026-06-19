@@ -219,7 +219,7 @@ namespace jxx {
     // N-Dimensional Array Wrapper
     // =====================================================
 
-    template <typename T, std::uint32_t N>
+    template <typename T, jxx::lang::jint N>
     class JxxArray {
     public:
         template <typename... Dims,

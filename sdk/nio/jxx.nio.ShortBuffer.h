@@ -12,6 +12,11 @@ namespace jxx::nio
     class ShortBuffer final : public Buffer
     {
     public:
+        ShortBuffer(std::shared_ptr<std::vector<jxx::lang::jshort>> storage,
+            jxx::lang::jint offset,
+            jxx::lang::jint capacity,
+            jxx::lang::jbool readOnly);
+
         ~ShortBuffer() override = default;
 
         static jxx::Ptr<ShortBuffer> allocate(jxx::lang::jint capacity);
@@ -47,10 +52,7 @@ namespace jxx::nio
         jxx::lang::jbool isDirect() const override;
 
     private:
-        ShortBuffer(std::shared_ptr<std::vector<jxx::lang::jshort>> storage,
-              jxx::lang::jint offset,
-              jxx::lang::jint capacity,
-              jxx::lang::jbool readOnly);
+    
 
         jxx::Ptr<ShortBuffer> self__();
         void checkWritable_() const;

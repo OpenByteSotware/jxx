@@ -96,7 +96,7 @@ public:
             estimate_ -= j;
         }
 
-        return jxx::Ptr<jxx::util::Spliterator<E>>(jxx::NEW<ArrayRefSpliterator<E>>(a, (jxx::lang::jint)0, j, characteristics_, comparator_));
+        return jxx::Ptr<jxx::util::Spliterator<E>>(jxx::NEW<jxx::util::spliterators::ArrayRefSpliterator<E>>(a, (jxx::lang::jint)0, j, characteristics_, comparator_));
     }
 
     virtual jxx::lang::jlong estimateSize() override {

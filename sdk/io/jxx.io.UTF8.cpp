@@ -13,15 +13,18 @@ if(u>=0xD800 && u<=0xDBFF){ if(i<s.size()){
 append_utf8(out, cp); continue;} }
 append_utf8(out, 0xFFFD);} else if(u>=0xDC00 && u<=0xDFFF){
 	append_utf8(out, 0xFFFD);} else { append_utf8(out, u);} }
-return jxx::NEW<jxx::lang::ByteArrayType>(out.data(), out.size()); 
-}
+	auto arr = jxx::NEW<jxx::lang::ByteArrayType>(out.size()); 
+	std::copy(out.begin(), out.end(), arr->data());
+	return arr;
+	}
 std::u16string UTF8::decode(const jxx::lang::ByteArray bytes)
 {
 	std::u16string out; 
 	jxx::lang::jint i=0, n=bytes->length; 
 	while(i< n)
 	{ 
-		uint8_t b0= (*bytes)[i++]; uint32_t cp=0; int trail=0;
+		uint8_t b0= (*bytes)[i++];
+		uint32_t cp=0; int trail=0;
 		if((b0&0x80)==0){ cp=b0;} else if((b0&0xE0)==0xC0){ cp=b0&0x1F; trail=1;} 
 		else if((b0&0xF0)==0xE0){ cp=b0&0x0F; trail=2;} else if((b0&0xF8)==0xF0){ cp=b0&0x07; trail=3;} 
 		else { cp=0xFFFD; trail=0;} for(int t=0;t<trail;++t){ if(i>=n){ cp=0xFFFD; break;}

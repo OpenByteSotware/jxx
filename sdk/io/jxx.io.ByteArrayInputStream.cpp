@@ -1,3 +1,4 @@
+#include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "jxx.io.ByteArrayInputStream.h"
 

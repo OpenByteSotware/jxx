@@ -14,6 +14,7 @@ namespace jxx {
     namespace io {
         class Console : public jxx::lang::Object {
         public:
+            Console() = default;
             static jxx::Ptr<Console> console();
 
             jxx::Ptr<jxx::lang::String> readLine();
@@ -22,7 +23,7 @@ namespace jxx {
             jxx::Ptr<Reader> reader();
             jxx::Ptr<PrintStream> out();
         private:
-            Console() = default;
+            
         };
     }
 }
