@@ -15,7 +15,7 @@ template <typename T> class UnaryOperator;
 }
 
 template <typename E>
-class List : virtual public Collection<E> {
+class List : public virtual Collection<E> {
 public:
     virtual ~List() = default;
 

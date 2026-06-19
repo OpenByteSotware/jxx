@@ -1,5 +1,5 @@
 #pragma once
-
+#include "lang/jxx.lang.Object.h"
 #include "util/jxx.util.AbstractList.h"
 #include "util/jxx.util.List.h"
 #include "util/jxx.util.RandomAccess.h"
@@ -13,14 +13,15 @@
 #include "util/function/jxx.util.function.Consumer.h"
 #include "util/jxx.util.wildcard.CollectionExtends.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
-#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.IndexOutOfBoundsException.h"
+#include "lang/jxx.lang.NullPointerException.h"
 
 namespace jxx {
 namespace util {
 
 template <typename E>
 class ArrayList
-    : public AbstractList<E>
+    : public virtual AbstractList<E>
     , public virtual RandomAccess
     , public virtual jxx::lang::Cloneable
     , public virtual jxx::io::Serializable {
@@ -94,7 +95,7 @@ public:
         } else {
             for (jxx::lang::jint i = 0; i < size_; ++i) {
                 auto e = elementData->get(i);
-                if (e != nullptr && o->equals(jxx::lang::ptr_static_cast<jxx::lang::Object>(e))) {
+                if (e != nullptr && o->equals(jxx::CAST<jxx::lang::Object, E>(e))) {
                     return i;
                 }
             }
@@ -112,7 +113,7 @@ public:
         } else {
             for (jxx::lang::jint i = size_ - 1; i >= 0; --i) {
                 auto e = elementData->get(i);
-                if (e != nullptr && o->equals(jxx::lang::ptr_static_cast<jxx::lang::Object>(e))) {
+                if (e != nullptr && o->equals(jxx::CAST<jxx::lang::Object, E>(e))) {
                     return i;
                 }
             }
@@ -200,7 +201,7 @@ public:
     virtual jxx::lang::jbool addAll(jxx::lang::jint index, jxx::Ptr<wildcard::CollectionExtends<E>> c) override {
         rangeCheckForAdd(index);
         if (c == nullptr) {
-            throw NullPointerException();
+            throw jxx::lang::NullPointerException();
         }
         const jxx::lang::jint numNew = c->size();
         if (numNew == 0) {
@@ -209,7 +210,7 @@ public:
         ensureCapacityInternal(size_ + numNew);
         shiftRight(index, numNew);
         auto it = c->iteratorExtends();
-        jint dest = index;
+        jxx::lang::jint dest = index;
         while (it->hasNext()) {
             elementData->set(dest++, it->next());
         }
@@ -218,16 +219,16 @@ public:
         return true;
     }
 
-    virtual jxx::Ptr<List<E>> subList(jint fromIndex, jint toIndex) override {
+    virtual jxx::Ptr<List<E>> subList(jxx::lang::jint fromIndex, jxx::lang::jint toIndex) override {
         if (fromIndex < 0 || toIndex > size_ || fromIndex > toIndex) {
-            throw IndexOutOfBoundsException();
+            throw jxx::lang::IndexOutOfBoundsException();
         }
         return jxx::Ptr<List<E>>(new SubList<E>(jxx::Ptr<List<E>>(this), fromIndex, toIndex));
     }
 
     virtual jxx::lang::jbool removeIf(jxx::Ptr<function::PredicateSuper<E>> filter) override {
         if (filter == nullptr) {
-            throw NullPointerException();
+            throw jxx::lang::NullPointerException();
         }
         jxx::lang::jbool removed = false;
         jxx::lang::jint i = 0;
@@ -244,7 +245,7 @@ public:
 
     virtual void replaceAll(jxx::Ptr<function::UnaryOperator<E>> op) override {
         if (op == nullptr) {
-            throw NullPointerException();
+            throw jxx::lang::NullPointerException();
         }
         const jxx::lang::jint expected = this->modCount;
         for (jxx::lang::jint i = 0; i < size_; ++i) {
@@ -258,7 +259,7 @@ public:
 
     virtual void sort(jxx::Ptr<ComparatorSuper<E>> c) override {
         if (c == nullptr) {
-            throw NullPointerException();
+            throw jxx::lang::NullPointerException();
         }
         const jxx::lang::jint expected = this->modCount;
         for (jxx::lang::jint i = 1; i < size_; ++i) {
@@ -291,7 +292,7 @@ public:
 
         virtual jxx::lang::jbool tryAdvance(jxx::Ptr<function::Consumer<E>> action) override {
             if (action == nullptr) {
-                throw NullPointerException();
+                throw jxx::lang::NullPointerException();
             }
             if (index < fence) {
                 action->accept(list->elementData->get(index++));
@@ -303,7 +304,7 @@ public:
 
         virtual void forEachRemaining(jxx::Ptr<function::Consumer<E>> action) override {
             if (action == nullptr) {
-                throw NullPointerException();
+                throw jxx::lang::NullPointerException();
             }
             while (index < fence) {
                 action->accept(list->elementData->get(index++));
@@ -342,9 +343,9 @@ public:
     }
 
 protected:
-    virtual void removeRange(jint fromIndex, jint toIndex) override {
+    virtual void removeRange(jxx::lang::jint fromIndex, jxx::lang::jint toIndex) override {
         if (fromIndex < 0 || toIndex > size_ || fromIndex > toIndex) {
-            throw IndexOutOfBoundsException();
+            throw jxx::lang::IndexOutOfBoundsException();
         }
         ++this->modCount;
         const jxx::lang::jint numMoved = size_ - toIndex;
@@ -359,7 +360,7 @@ protected:
     }
 
 private:
-    void ensureCapacityInternal(jint minCapacity) {
+    void ensureCapacityInternal(jxx::lang::jint minCapacity) {
         if (elementData == nullptr) {
             elementData = jxx::Ptr<JxxArray<jxx::Ptr<E>>>(new JxxArray<jxx::Ptr<E>>(DEFAULT_CAPACITY));
         }
@@ -368,7 +369,7 @@ private:
         }
     }
 
-    void grow(jint minCapacity) {
+    void grow(jxx::lang::jint minCapacity) {
         jxx::lang::jint oldCapacity = elementData->length();
         jxx::lang::jint newCapacity = oldCapacity + (oldCapacity >> 1);
         if (newCapacity < minCapacity) {
@@ -381,7 +382,7 @@ private:
         ++this->modCount;
     }
 
-    jxx::Ptr<JxxArray<jxx::Ptr<E>, 1U>> copyArray(jint newCapacity) {
+    jxx::Ptr<JxxArray<jxx::Ptr<E>, 1U>> copyArray(jxx::lang::jint newCapacity) {
         auto newData = jxx::Ptr<JxxArray<jxx::Ptr<E>, 1U>>(jxx::NEW<JxxArray<jxx::Ptr<E>, 1U>>(newCapacity));
         const jxx::lang::jint limit = (size_ < newCapacity) ? size_ : newCapacity;
         for (jxx::lang::jint i = 0; i < limit; ++i) {
@@ -404,13 +405,13 @@ private:
 
     void rangeCheck(jxx::lang::jint index) {
         if (index < 0 || index >= size_) {
-            throw IndexOutOfBoundsException();
+            throw jxx::lang::IndexOutOfBoundsException();
         }
     }
 
     void rangeCheckForAdd(jxx::lang::jint index) {
         if (index < 0 || index > size_) {
-            throw IndexOutOfBoundsException();
+            throw jxx::lang::IndexOutOfBoundsException();
         }
     }
 };

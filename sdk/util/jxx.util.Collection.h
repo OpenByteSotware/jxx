@@ -15,7 +15,7 @@ template <typename E> class Spliterator;
 namespace stream { template <typename T> class Stream; }
 
 template <typename E>
-class Collection : virtual public jxx::lang::Iterable<E> {
+class Collection : public virtual jxx::lang::Iterable<E> {
 public:
     virtual ~Collection() = default;
     virtual jxx::lang::jint size() = 0;

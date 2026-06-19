@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.Object.h"
 #include "util/jxx.util.ConcurrentModificationException.h"
 #include "util/jxx.util.NoSuchElementException.h"
 #include "lang/jxx.lang.IllegalStateException.h"
@@ -11,12 +12,26 @@ namespace jxx {
 namespace util {
 
 template <typename E>
-class AbstractList : public AbstractCollection<E>, public virtual List<E> {
+class AbstractList : public virtual AbstractCollection<E>, public virtual List<E> {
 protected:
     jxx::lang::jint modCount = 0;
 
 public:
     virtual ~AbstractList() = default;
+
+    // ===== Resolve ambiguous inheritance from Collection =====
+    // These resolve to AbstractCollection's implementations
+    using AbstractCollection<E>::contains;
+    using AbstractCollection<E>::containsAll;
+    using AbstractCollection<E>::isEmpty;
+    using AbstractCollection<E>::toArray;
+    using AbstractCollection<E>::removeAll;
+    using AbstractCollection<E>::retainAll;
+    using AbstractCollection<E>::iterator;
+    using AbstractCollection<E>::add;
+    using AbstractCollection<E>::remove;
+    using AbstractCollection<E>::clear;
+    using AbstractCollection<E>::addAll;
 
     // ===== Concrete subclasses must implement =====
     virtual jxx::Ptr<E> get(jxx::lang::jint index) override = 0;
@@ -64,7 +79,7 @@ public:
         } else {
             while (it->hasNext()) {
                 auto e = it->next();
-                if (e != nullptr && o->equals(jxx::lang::ptr_static_cast<jxx::lang::Object>(e))) {
+                if (e != nullptr && o->equals(jxx::CAST<jxx::lang::Object, E>(e))) {
                     return it->previousIndex();
                 }
             }
@@ -83,7 +98,7 @@ public:
         } else {
             while (it->hasPrevious()) {
                 auto e = it->previous();
-                if (e != nullptr && o->equals(jxx::lang::ptr_static_cast<jxx::lang::Object>(e))) {
+                if (e != nullptr && o->equals(jxx::CAST<jxx::lang::Object, E>(e))) {
                     return it->nextIndex();
                 }
             }
@@ -106,7 +121,7 @@ public:
 
     // Java List equality contract: ordered element-wise equality.
     virtual jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> o) override {
-        auto c = jxx::lang::ptr_checked_cast<wildcard::CollectionAny>(o);
+        auto c = jxx::CAST<wildcard::CollectionAny, jxx::lang::Object>(o);
         if (c == nullptr) {
             return false;
         }
@@ -258,7 +273,7 @@ public:
         return jxx::Ptr<ListIterator<E>>(new ListItr(this, index));
     }
 
-    virtual jxx::Ptr<List<E>> subList(jint /*fromIndex*/, jint /*toIndex*/) override {
+    virtual jxx::Ptr<List<E>> subList(jxx::lang::jint /*fromIndex*/, jxx::lang::jint /*toIndex*/) override {
         throw jxx::lang::UnsupportedOperationException();
     }
 

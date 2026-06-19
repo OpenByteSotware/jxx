@@ -8,7 +8,7 @@ namespace jxx {
 namespace util {
 
 template <typename E>
-class AbstractCollection : public jxx::lang::Object, public virtual Collection<E> {
+class AbstractCollection : virtual public jxx::lang::Object, virtual public Collection<E> {
 public:
     virtual ~AbstractCollection() = default;
     virtual jxx::lang::jbool isEmpty() override { return this->size() == 0; }
@@ -20,7 +20,7 @@ public:
         } else {
             while (it->hasNext()) {
                 auto e = it->next();
-                if (e != nullptr && o->equals(jxx::lang::ptr_static_cast<jxx::lang::Object>(e))) return true;
+                if (e != nullptr && o->equals(jxx::CAST<jxx::lang::Object, E>(e))) return true;
             }
         }
         return false;
@@ -32,7 +32,7 @@ public:
         auto it = this->iterator();
         jxx::lang::jint i = 0;
         while (it->hasNext()) {
-            result->set(i++, jxx::lang::ptr_static_cast<jxx::lang::Object>(it->next()));
+            result->set(i++, jxx::CAST<jxx::lang::Object, E>(it->next()));
         }
         return result;
     }
@@ -48,7 +48,7 @@ public:
         } else {
             while (it->hasNext()) {
                 auto e = it->next();
-                if (e != nullptr && o->equals(jxx::lang::ptr_static_cast<jxx::lang::Object>(e))) { it->remove(); return true; }
+                if (e != nullptr && o->equals(jxx::CAST<jxx::lang::Object, E>(e))) { it->remove(); return true; }
             }
         }
         return false;
@@ -71,7 +71,7 @@ public:
         jxx::lang::jbool modified = false;
         auto it = this->iterator();
         while (it->hasNext()) {
-            if (c->containsObject(jxx::lang::ptr_static_cast<jxx::lang::Object>(it->next()))) { it->remove(); modified = true; }
+            if (c->containsObject(jxx::CAST<jxx::lang::Object, E>(it->next()))) { it->remove(); modified = true; }
         }
         return modified;
     }
@@ -80,7 +80,7 @@ public:
         jxx::lang::jbool modified = false;
         auto it = this->iterator();
         while (it->hasNext()) {
-            if (!c->containsObject(jxx::lang::ptr_static_cast<jxx::lang::Object>(it->next()))) { it->remove(); modified = true; }
+            if (!c->containsObject(jxx::CAST<jxx::lang::Object, E>(it->next()))) { it->remove(); modified = true; }
         }
         return modified;
     }
