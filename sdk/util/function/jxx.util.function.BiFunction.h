@@ -8,7 +8,7 @@ namespace util {
 namespace function {
 
 template <typename T, typename U, typename R>
-class BiFunction : virtual public jxx::lang::Object {
+class BiFunction : public jxx::lang::Object {
 public:
     virtual ~BiFunction() = default;
     virtual jxx::Ptr<R> apply(jxx::Ptr<T> t, jxx::Ptr<U> u) = 0;

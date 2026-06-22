@@ -25,9 +25,7 @@ namespace jxx::nio::charset
 
     jxx::Ptr<CharsetDecoder> CharsetDecoder::self_()
     {
-        if (thisPtr)
-            return std::static_pointer_cast<CharsetDecoder>(thisPtr);
-        return std::static_pointer_cast<CharsetDecoder>(shared_from_this());
+		return jxx::CAST<CharsetDecoder, jxx::lang::Object>(this->thisPtr);
     }
 
     jxx::Ptr<Charset> CharsetDecoder::charset() const { return cs_; }

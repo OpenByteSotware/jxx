@@ -83,9 +83,8 @@ namespace jxx::nio::channels
 
     jxx::Ptr<FileChannel> FileChannel::self_FileChannel_()
     {
-        if (thisPtr)
-            return std::static_pointer_cast<FileChannel>(thisPtr);
-        return std::static_pointer_cast<FileChannel>(shared_from_this());
+        return jxx::CAST<FileChannel>(thisPtr);
+        
     }
 
     jxx::lang::jbool FileChannel::isOpen() const { return open_; }
@@ -155,7 +154,7 @@ namespace jxx::nio::channels
             throwIAE_("negative position");
         stream_.seekg(static_cast<std::streamoff>(newPosition), std::ios::beg);
         stream_.seekp(static_cast<std::streamoff>(newPosition), std::ios::beg);
-        return std::static_pointer_cast<SeekableByteChannel>(self_FileChannel_());
+        return jxx::CAST<SeekableByteChannel, jxx::lang::Object>(self_FileChannel_());
     }
 
     jxx::lang::jlong FileChannel::size() const
@@ -180,7 +179,7 @@ namespace jxx::nio::channels
             throwIOE_("truncate failed");
         if (position() > size)
             position(size);
-        return std::static_pointer_cast<SeekableByteChannel>(self_FileChannel_());
+        return jxx::CAST<SeekableByteChannel, jxx::lang::Object>(self_FileChannel_());
     }
 
     void FileChannel::force(jxx::lang::jbool /*metaData*/)

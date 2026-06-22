@@ -143,7 +143,7 @@ namespace jxx::lang {
      * returns shared_ptr<Throwable> while preserving dynamic type.
      */
     jxx::Ptr<Throwable> Throwable::cloneThrowable() const {
-        return std::static_pointer_cast<Throwable>(clone());
+        return jxx::CAST<Throwable, jxx::lang::Object>(clone());
     }
 
 

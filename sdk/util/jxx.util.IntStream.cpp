@@ -19,4 +19,16 @@ jxx::lang::jint IntStream::size() const {
     return data_ ? (jxx::lang::jint)data_->length : 0;
 }
 
+void IntStream::writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out)
+{
+
+}
+
+void IntStream::readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) {
+
+}
+void IntStream::readObjectNoData() {
+
+}
+
 } // namespace jxx::util::stream

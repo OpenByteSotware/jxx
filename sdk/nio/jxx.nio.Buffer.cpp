@@ -41,9 +41,7 @@ namespace jxx::nio
 
     jxx::Ptr<Buffer> Buffer::self_()
     {
-        if (thisPtr)
-            return std::static_pointer_cast<Buffer>(thisPtr);
-        return std::static_pointer_cast<Buffer>(shared_from_this());
+        return jxx::CAST<Buffer, jxx::lang::Object>(this->thisPtr);
     }
 
     jxx::Ptr<Buffer> Buffer::position(jxx::lang::jint newPosition)

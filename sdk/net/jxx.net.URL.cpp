@@ -250,14 +250,14 @@ namespace jxx::net
     {
         if (!handler_)
             throw MalformedURLException("no stream handler");
-        return handler_->openConnection(std::static_pointer_cast<URL>(shared_from_this()));
+        return handler_->openConnection(jxx::CAST<URL, jxx::lang::Object>(this->thisPtr));
     }
 
     jxx::Ptr<URLConnection> URL::openConnection(jxx::Ptr<Proxy> p)
     {
         if (!handler_)
             throw MalformedURLException("no stream handler");
-        return handler_->openConnection(std::static_pointer_cast<URL>(shared_from_this()), std::move(p));
+        return handler_->openConnection(jxx::CAST<URL, jxx::lang::Object>(this->thisPtr), std::move(p));
     }
 
     jxx::Ptr<jxx::io::InputStream> URL::openStream()

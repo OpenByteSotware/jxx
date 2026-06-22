@@ -139,13 +139,13 @@ namespace jxx::net
     jxx::Ptr<jxx::lang::Object> URLConnection::getContent()
     {
         auto h = getContentHandler_();
-        return h ? h->getContent(std::static_pointer_cast<URLConnection>(shared_from_this())) : nullptr;
+        return h ? h->getContent(jxx::CAST<URLConnection, jxx::lang::Object>(this->thisPtr)) : nullptr;
     }
 
     jxx::Ptr<jxx::lang::Object> URLConnection::getContent(jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Class>, 1U>> classes)
     {
         auto h = getContentHandler_();
-        return h ? h->getContent(std::static_pointer_cast<URLConnection>(shared_from_this()), std::move(classes)) : nullptr;
+        return h ? h->getContent(jxx::CAST<URLConnection, jxx::lang::Object>(this->thisPtr), std::move(classes)) : nullptr;
     }
 
     jxx::Ptr<jxx::io::InputStream> URLConnection::getInputStream()

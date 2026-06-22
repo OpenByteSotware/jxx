@@ -6,7 +6,7 @@ namespace jxx {
 namespace util {
 
 template <typename K, typename V>
-class MapEntry : virtual public jxx::lang::Object {
+class MapEntry : public jxx::lang::Object {
 public:
     virtual ~MapEntry() = default;
     virtual jxx::Ptr<K> getKey() = 0;

@@ -26,7 +26,7 @@ PipedInputStream::PipedInputStream(jxx::Ptr<PipedOutputStream> src, jxx::lang::j
 
 void PipedInputStream::connect(jxx::Ptr<PipedOutputStream> src) {
     if (!src) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("src"));
-    src->connect(std::static_pointer_cast<PipedInputStream>(this->thisPtr));
+    src->connect(jxx::CAST<PipedInputStream, jxx::lang::Object>(this->thisPtr));
 }
 
 void PipedInputStream::receive_(jxx::lang::jint b) {

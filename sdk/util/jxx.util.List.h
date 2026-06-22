@@ -20,24 +20,24 @@ public:
     virtual ~List() = default;
 
     // ===== Collection methods redeclared for Java 8 List parity =====
-    virtual jxx::lang::jint size() override = 0;
+    virtual jxx::lang::jint size() = 0;
 
     virtual jxx::lang::jbool isEmpty() override {
         return size() == 0;
     }
 
-    virtual jxx::lang::jbool contains(jxx::Ptr<jxx::lang::Object> o) override = 0;
+    virtual jxx::lang::jbool contains(jxx::Ptr<jxx::lang::Object> o) = 0;
     virtual jxx::Ptr<ListIterator<E>> listIterator() = 0;
     virtual jxx::Ptr<ListIterator<E>> listIterator(jxx::lang::jint index) = 0;
-    virtual jxx::Ptr<Iterator<E>> iterator() override = 0;
-    virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> toArray() override = 0;
-    virtual jxx::lang::jbool add(jxx::Ptr<E> e) override = 0;
-    virtual jxx::lang::jbool remove(jxx::Ptr<jxx::lang::Object> o) override = 0;
-    virtual jxx::lang::jbool containsAll(jxx::Ptr<wildcard::CollectionAny> c) override = 0;
-    virtual jxx::lang::jbool addAll(jxx::Ptr<wildcard::CollectionExtends<E>> c) override = 0;
-    virtual jxx::lang::jbool removeAll(jxx::Ptr<wildcard::CollectionAny> c) override = 0;
-    virtual jxx::lang::jbool retainAll(jxx::Ptr<wildcard::CollectionAny> c) override = 0;
-    virtual void clear() override = 0;
+    virtual jxx::Ptr<Iterator<E>> iterator() = 0;
+    virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> toArray() = 0;
+    virtual jxx::lang::jbool add(jxx::Ptr<E> e) = 0;
+    virtual jxx::lang::jbool remove(jxx::Ptr<jxx::lang::Object> o) = 0;
+    virtual jxx::lang::jbool containsAll(jxx::Ptr<wildcard::CollectionAny> c) = 0;
+    virtual jxx::lang::jbool addAll(jxx::Ptr<wildcard::CollectionExtends<E>> c) = 0;
+    virtual jxx::lang::jbool removeAll(jxx::Ptr<wildcard::CollectionAny> c) = 0;
+    virtual jxx::lang::jbool retainAll(jxx::Ptr<wildcard::CollectionAny> c) = 0;
+    virtual void clear() = 0;
 
     // ===== List-specific methods =====
     virtual jxx::Ptr<E> get(jxx::lang::jint index) = 0;
@@ -54,22 +54,16 @@ public:
     virtual jxx::Ptr<List<E>> subList(jxx::lang::jint fromIndex, jxx::lang::jint toIndex) = 0;
 
     // Java 8 default methods
-    virtual void replaceAll(jxx::Ptr<function::UnaryOperator<E>> /*op*/) {
-        throw jxx::lang::UnsupportedOperationException();
-    }
-
+    virtual void replaceAll(jxx::Ptr<function::UnaryOperator<E>> /*op*/) = 0;
+        
     // Java: sort(Comparator<? super E>)
-    virtual void sort(jxx::Ptr<ComparatorSuper<E>> /*c*/) {
-        throw jxx::lang::UnsupportedOperationException();
-    }
-
-    virtual jxx::Ptr<Spliterator<E>> spliterator() override {
-        throw jxx::lang::UnsupportedOperationException();
-    }
+    virtual void sort(jxx::Ptr<ComparatorSuper<E>> /*c*/) = 0;
+    
+    virtual jxx::Ptr<Spliterator<E>> spliterator() = 0;
 
     // Java List contract redeclarations
-    virtual jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> o) override = 0;
-    virtual jxx::lang::jint hashCode() override = 0;
+    virtual jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> o) = 0;
+    virtual jxx::lang::jint hashCode() = 0;
 };
 
 } // namespace util

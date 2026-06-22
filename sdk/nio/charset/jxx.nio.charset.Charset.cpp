@@ -73,12 +73,12 @@ namespace jxx::nio::charset
 
     jxx::Ptr<CharsetDecoder> Charset::newDecoder()
     {
-        return std::make_shared<CharsetDecoder>(std::static_pointer_cast<Charset>(shared_from_this()));
+        return std::make_shared<CharsetDecoder>(jxx::CAST<Charset, jxx::lang::Object>(this->thisPtr));
     }
 
     jxx::Ptr<CharsetEncoder> Charset::newEncoder()
     {
-        return std::make_shared<CharsetEncoder>(std::static_pointer_cast<Charset>(shared_from_this()));
+        return std::make_shared<CharsetEncoder>(jxx::CAST<Charset, jxx::lang::Object>(this->thisPtr));
     }
 
     jxx::Ptr<jxx::lang::String> Charset::toString() const { return canonicalName_; }

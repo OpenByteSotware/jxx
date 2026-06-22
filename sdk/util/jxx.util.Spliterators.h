@@ -14,7 +14,7 @@
 namespace jxx {
 namespace util {
 
-class Spliterators : virtual public jxx::lang::Object {
+class Spliterators : public jxx::lang::Object {
 private:
     Spliterators() = default;
 

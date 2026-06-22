@@ -80,9 +80,7 @@ namespace jxx::nio
 
     jxx::Ptr<ByteBuffer> ByteBuffer::self_Byte_()
     {
-        if (thisPtr)
-            return std::static_pointer_cast<ByteBuffer>(thisPtr);
-        return std::static_pointer_cast<ByteBuffer>(shared_from_this());
+        return jxx::CAST<ByteBuffer, jxx::lang::Object>(this->thisPtr);
     }
 
     void ByteBuffer::checkWritable_() const

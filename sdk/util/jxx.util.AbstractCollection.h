@@ -8,7 +8,7 @@ namespace jxx {
 namespace util {
 
 template <typename E>
-class AbstractCollection : virtual public jxx::lang::Object, virtual public Collection<E> {
+class AbstractCollection : public jxx::lang::Object, virtual public Collection<E> {
 public:
     virtual ~AbstractCollection() = default;
     virtual jxx::lang::jbool isEmpty() override { return this->size() == 0; }

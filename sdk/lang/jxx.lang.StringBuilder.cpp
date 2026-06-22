@@ -24,7 +24,7 @@ namespace jxx::lang {
     void StringBuilder::throwIAE_(const char* msg) { throw IllegalArgumentException(jxx::NEW<String>(msg)); }
 
     jxx::Ptr<StringBuilder> StringBuilder::self_() {
-        return std::static_pointer_cast<StringBuilder>(this->thisPtr);
+        return jxx::CAST<StringBuilder, jxx::lang::Object>(this->thisPtr);
     }
 
     // ---- constructors ----
@@ -88,7 +88,7 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<CharSequence> StringBuilder::subSequence(jint start, jint end) const {
-        return std::static_pointer_cast<CharSequence>(substring(start, end));
+        return jxx::CAST<CharSequence, jxx::lang::String>(substring(start, end));
     }
 
     jxx::Ptr<String> StringBuilder::toString() const {

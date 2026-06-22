@@ -20,39 +20,38 @@ public:
     virtual ~AbstractList() = default;
 
     // ===== Resolve ambiguous inheritance from Collection =====
-    // These resolve to AbstractCollection's implementations
-    using AbstractCollection<E>::contains;
-    using AbstractCollection<E>::containsAll;
-    using AbstractCollection<E>::isEmpty;
-    using AbstractCollection<E>::toArray;
-    using AbstractCollection<E>::removeAll;
-    using AbstractCollection<E>::retainAll;
-    using AbstractCollection<E>::iterator;
-    using AbstractCollection<E>::add;
-    using AbstractCollection<E>::remove;
-    using AbstractCollection<E>::clear;
-    using AbstractCollection<E>::addAll;
+    // Explicitly override methods that List re-declares to resolve diamond inheritance ambiguity
+    virtual jxx::lang::jbool contains(jxx::Ptr<jxx::lang::Object> o) override {
+        return AbstractCollection<E>::contains(o);
+    }
 
-    // ===== Concrete subclasses must implement =====
-    virtual jxx::Ptr<E> get(jxx::lang::jint index) override = 0;
-    virtual jxx::lang::jint size() override = 0;
+    virtual jxx::lang::jbool containsAll(jxx::Ptr<wildcard::CollectionAny> c) override {
+        return AbstractCollection<E>::containsAll(c);
+    }
 
-    // ===== Optional operations =====
-    virtual jxx::Ptr<E> set(jxx::lang::jint index, jxx::Ptr<E> element) = 0;
-        
-    virtual void add(jxx::lang::jint index, jxx::Ptr<E> element) = 0;
-    
+    virtual jxx::lang::jbool isEmpty() override {
+        return AbstractCollection<E>::isEmpty();
+    }
 
-    virtual jxx::Ptr<E> remove(jxx::lang::jint index) = 0;
-    
+    virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> toArray() override {
+        return AbstractCollection<E>::toArray();
+    }
+
+    virtual jxx::lang::jbool removeAll(jxx::Ptr<wildcard::CollectionAny> c) override {
+        return AbstractCollection<E>::removeAll(c);
+    }
+
+    virtual jxx::lang::jbool retainAll(jxx::Ptr<wildcard::CollectionAny> c) override {
+        return AbstractCollection<E>::retainAll(c);
+    }
 
     virtual jxx::lang::jbool add(jxx::Ptr<E> e) override {
-        add(size(), e);
+        add(e);
         return true;
     }
 
     virtual jxx::lang::jbool addAll(jxx::Ptr<wildcard::CollectionExtends<E>> c) override {
-        return addAll(size(), c);
+        return addAll(c);
     }
 
     virtual jxx::lang::jbool addAll(jxx::lang::jint index, jxx::Ptr<wildcard::CollectionExtends<E>> c) override {

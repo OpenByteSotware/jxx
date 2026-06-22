@@ -8,7 +8,7 @@
 namespace jxx::io {
 
 jxx::Ptr<Writer> Writer::self_() {
-    return std::static_pointer_cast<Writer>(this->thisPtr);
+    return jxx::CAST<Writer, jxx::lang::Object>(this->thisPtr);
 }
 
 void Writer::checkBounds_(const jxx::lang::CharArray cbuf, jxx::lang::jint off, jxx::lang::jint len) {

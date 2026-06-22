@@ -8,7 +8,7 @@ namespace util {
 template <typename E> class Iterator;
 namespace wildcard {
 
-class CollectionAny : virtual public jxx::lang::Object {
+class CollectionAny : public jxx::lang::Object {
 public:
     virtual ~CollectionAny() = default;
     virtual jxx::lang::jint size() = 0;

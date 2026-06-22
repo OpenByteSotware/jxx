@@ -251,7 +251,7 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<jxx::lang::String> String::toString() const {
-        return jxx::CAST<jxx::lang::String>(std::static_pointer_cast<jxx::lang::String>(this->thisPtr));
+        return jxx::CAST<jxx::lang::String>(this->thisPtr);
     }
     // Comparable
     jxx::lang::jint String::compareTo(const jxx::Ptr<String> another) const {
@@ -354,18 +354,18 @@ namespace jxx::lang {
 
     jxx::lang::ByteArray String::getBytes() const {
         auto cs = Charset::defaultCharset();
-        return cs->encode(std::static_pointer_cast<String>(this->thisPtr));
+        return cs->encode(jxx::CAST<String, jxx::lang::Object>(this->thisPtr));
     }
 
     jxx::lang::ByteArray String::getBytes(jxx::Ptr<String> charsetName) const {
         if (!charsetName) throwNPE_();
         auto cs = Charset::forName(charsetName);
-        return cs->encode(std::static_pointer_cast<String>(this->thisPtr));
+        return cs->encode(jxx::CAST<String, jxx::lang::Object>(this->thisPtr));
     }
 
     jxx::lang::ByteArray String::getBytes(jxx::Ptr<Charset> charset) const {
         if (!charset) throwNPE_();
-        return charset->encode(std::static_pointer_cast<String>(this->thisPtr));
+        return charset->encode(jxx::CAST<String, jxx::lang::Object>(this->thisPtr));
     }
 
     jbool String::contentEquals(jxx::Ptr<CharSequence> cs) const {
@@ -377,7 +377,7 @@ namespace jxx::lang {
 
     jbool String::contentEquals(jxx::Ptr<StringBuffer> sb) const {
         if (!sb) return false;
-        return contentEquals(std::static_pointer_cast<CharSequence>(sb->toString()));
+        return contentEquals(jxx::CAST<CharSequence, jxx::lang::Object>(sb->toString()));
     }
 
     jbool String::equalsIgnoreCase(jxx::Ptr<String> other) const {
@@ -484,7 +484,7 @@ namespace jxx::lang {
 
     jxx::Ptr<String> String::concat(jxx::Ptr<String> str) const {
         if (!str) throwNPE_();
-        if (str->value_.empty()) return std::static_pointer_cast<String>(this->thisPtr);
+        if (str->value_.empty()) return jxx::CAST<String, jxx::lang::Object>(this->thisPtr);
         auto out = jxx::NEW<String>();
         out->value_.reserve(value_.size() + str->value_.size());
         out->value_ = value_;
@@ -531,7 +531,7 @@ namespace jxx::lang {
         if (!target || !replacement) throwNPE_();
         std::u16string t = toUtf16_(target);
         std::u16string r = toUtf16_(replacement);
-        if (t.empty()) return std::static_pointer_cast<String>(this->thisPtr);
+        if (t.empty()) return jxx::CAST<String, jxx::lang::Object>(this->thisPtr);
 
         auto out = jxx::NEW<String>();
         out->value_ = value_;
@@ -649,7 +649,7 @@ namespace jxx::lang {
         if (it != internPool_.end()) {
             if (auto existing = it->second.lock()) return existing;
         }
-        auto me = std::static_pointer_cast<String>(this->thisPtr);
+        auto me = jxx::CAST<String, jxx::lang::Object>(this->thisPtr);
         internPool_[value_] = me;
         return me;
     }

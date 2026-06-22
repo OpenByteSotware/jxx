@@ -27,8 +27,8 @@ public:
     jint hashCode() const override {
         return std::hash<int>{}(value_);
     }
-    jxx::Ptr<std::string> toString() const override {
-        return jxx::NEW<std::string>(std::to_string(value_));
+    jxx::Ptr<jxx::lang::String> toString() const override {
+        return jxx::NEW<jxx::lang::String>(std::to_string(value_));
     }
 
 protected:

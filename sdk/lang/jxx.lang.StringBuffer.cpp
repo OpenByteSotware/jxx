@@ -93,7 +93,7 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<CharSequence> StringBuffer::subSequence(jint start, jint end) const {
-        return std::static_pointer_cast<CharSequence>(substring(start, end));
+        return jxx::CAST<CharSequence, jxx::lang::String>(substring(start, end));
     }
 
     jxx::Ptr<jxx::lang::String> StringBuffer::toString() const {

@@ -26,6 +26,10 @@ public:
     // convenience
     jxx::lang::jint size() const;
 
+    virtual void writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out) override;
+    virtual void readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) override;
+    virtual void readObjectNoData() override;
+
 private:
     jxx::lang::IntArray data_;
 };

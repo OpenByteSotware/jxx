@@ -364,10 +364,11 @@ namespace jxx::net
 
     jxx::Ptr<jxx::util::List<jxx::Ptr<InterfaceAddress>>> NetworkInterface::getInterfaceAddresses() const
     {
-        auto list = jxx::NEW<jxx::util::ArrayList<jxx::Ptr<InterfaceAddress>>>();
-        for (const auto x : interfaceAddresses_)
-            list->add(x->getAddress());
-        return list;
+        auto list = jxx::NEW<jxx::util::ArrayList<InterfaceAddress>>();
+        for (const jxx::Ptr<InterfaceAddress> x : interfaceAddresses_) {
+            list->add(x);
+        }
+        return jxx::CAST<jxx::util::List<jxx::Ptr<InterfaceAddress>>, jxx::util::ArrayList<InterfaceAddress>>(list);
     }
 
     jxx::Ptr<jxx::util::Enumeration<jxx::Ptr<NetworkInterface>>> NetworkInterface::getSubInterfaces() const

@@ -73,9 +73,7 @@ namespace jxx::nio
 
     jxx::Ptr<CharBuffer> CharBuffer::self__()
     {
-        if (thisPtr)
-            return std::static_pointer_cast<CharBuffer>(thisPtr);
-        return std::static_pointer_cast<CharBuffer>(shared_from_this());
+        return jxx::CAST<CharBuffer, jxx::lang::Object>(this->thisPtr);
     }
 
     void CharBuffer::checkWritable_() const

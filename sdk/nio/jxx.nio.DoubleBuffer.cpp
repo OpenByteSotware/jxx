@@ -66,9 +66,7 @@ namespace jxx::nio
 
     jxx::Ptr<DoubleBuffer> DoubleBuffer::self__()
     {
-        if (thisPtr)
-            return std::static_pointer_cast<DoubleBuffer>(thisPtr);
-        return std::static_pointer_cast<DoubleBuffer>(shared_from_this());
+        return jxx::CAST<DoubleBuffer, jxx::lang::Object>(this->thisPtr);
     }
 
     void DoubleBuffer::checkWritable_() const
