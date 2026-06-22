@@ -28,7 +28,7 @@ public:
             throw jxx::lang::NullPointerException();
         }
         return jxx::Ptr<jxx::util::Spliterator<E>>(
-            jxx::NEW<jxx::util::spliterators::ArrayRefSpliterator<E>>(array, (jxx::lang::jint)0, (jxx::lang::jint)array->length, characteristics, comparator));
+            jxx::NEW<jxx::util::spliterators::ArrayRefSpliterator<E>>(array, (jxx::lang::jint)0, (jxx::lang::jint)array->size(), characteristics, comparator));
     }
 
     template <typename E>

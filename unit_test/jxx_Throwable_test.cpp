@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "jxx.lang.Object.h"
+#include "lang/jxx.lang.Exception.h"
 
 class ThrowableTest : public jxx::lang::Exception {
     int value_{ 0 };
@@ -11,18 +12,18 @@ public:
 
     int intValue() const noexcept { return value_; }
     
-    bool equals(const jxx::lang::Object& other) const noexcept override {
-        auto* o = dynamic_cast<const ThrowableTest*>(&other);
+    jxx::lang::jbool equals(const jxx::Ptr<Object> other) const noexcept override {
+        auto* o = dynamic_cast<const ThrowableTest*>(other.get());
         return o && value_ == o->value_;
     }
-    std::size_t hashCode() const noexcept override {
+    jxx::lang::jint hashCode() const noexcept override {
         return std::hash<int>{}(value_);
     }
-    std::string toString() const override {
-        return std::to_string(value_);
+    jxx::Ptr<jxx::lang::String> toString() const override {
+        return jxx::NEW<jxx::lang::String>(std::to_string(value_));
     }
 
-    JXX_PTR<jxx::lang::Object> cloneImpl() const override {
+    jxx::Ptr<jxx::lang::Object> cloneImpl() const override {
         return std::shared_ptr<jxx::lang::Object>(nullptr);
     }
 };
@@ -41,7 +42,7 @@ protected:
     }
 
     void throw_test() {
-        JXX_THROW(ThrowableTest, "cleanup failed");
+        throw jxx::NEW<ThrowableTest>("cleanup failed");
     }
 
     // If the constructor and destructor are not enough for setting up
@@ -66,7 +67,7 @@ TEST(TestThrowableTest, BasicAssertions) {
 }
 
 void throw_test() {
-    JXX_THROW(ThrowableTest, "cleanup failed");
+    throw jxx::NEW<ThrowableTest>("cleanup failed");
 }
 
 TEST(TestThrowableTest, ThrowException) {

@@ -87,7 +87,7 @@ public:
     }
 
     virtual jxx::lang::jint lastIndexOf(jxx::Ptr<jxx::lang::Object> o) override {
-        auto it = listIterator(size());
+        auto it = listIterator(this->size());
         if (o == nullptr) {
             while (it->hasPrevious()) {
                 if (it->previous() == nullptr) {
@@ -115,7 +115,7 @@ public:
     }
 
     virtual void clear() override {
-        removeRange(0, size());
+        removeRange(0, this->size());
     }
 
     // Java List equality contract: ordered element-wise equality.
@@ -287,7 +287,7 @@ protected:
     }
 
     void rangeCheckForAdd(jxx::lang::jint index) {
-        if (index < 0 || index > size()) {
+        if (index < 0 || index > this->size()) {
             throw jxx::lang::IndexOutOfBoundsException();
         }
     }

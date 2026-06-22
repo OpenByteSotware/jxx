@@ -1,12 +1,12 @@
-#include "net/jxx.net.URLConnection.h"
-
 #include <stdexcept>
-
 #include "net/internal/jxx.net.internal.UrlUtil.h"
 #include "net/jxx.net.ContentHandler.h"
 #include "net/jxx.net.ContentHandlerFactory.h"
 #include "net/jxx.net.FileNameMap.h"
+#include "io/jxx.io.InputStream.h"
 #include "net/jxx.net.URL.h"
+#include "net/jxx.net.URLConnection.h"
+
 
 namespace
 {
@@ -28,7 +28,10 @@ namespace
         {
 			if (!urlc)
                 return nullptr;
-            return jxx::CAST<jxx::lang::Object>(urlc->getInputStream());
+
+			jxx::Ptr<jxx::io::InputStream> inputs = urlc->getInputStream();
+            
+            return inputs->thisPtr;
         }
     };
 

@@ -1,3 +1,4 @@
+#include "lang/jxx.lang.String.h"
 #include "nio/charset/jxx.nio.charset.StandardCharsets.h"
 
 namespace jxx::nio::charset

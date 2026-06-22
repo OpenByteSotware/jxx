@@ -47,7 +47,7 @@ template <typename Source>
 class TypedEvent : public EventObject {
 public:
     explicit TypedEvent(const Source* source)
-        : EventObject(static_cast<const void*>(source)) {}
+        : EventObject(static_cast<const jxx::lang::Object*>(source)) {}
 
     const Source& getSourceTyped() const {
         return *static_cast<const Source*>(getSource());
