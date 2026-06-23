@@ -127,6 +127,18 @@ public:
     }
 
     virtual ~SubList() = default;
+    
+    virtual void replaceAll(jxx::Ptr<function::UnaryOperator<E>> op) override {
+    }
+
+    
+    virtual void sort(jxx::Ptr<ComparatorSuper<E>> c) override {
+
+    }
+
+    virtual jxx::Ptr<Spliterator<E>> spliterator() override {
+        return nullptr;
+    }
 
     virtual jxx::Ptr<E> get(jxx::lang::jint index) override {
         rangeCheck(index);

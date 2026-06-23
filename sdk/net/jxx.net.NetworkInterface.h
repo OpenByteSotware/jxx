@@ -16,7 +16,7 @@ namespace jxx::net
     class NetworkInterface final : public jxx::lang::Object
     {
     public:
-        ~NetworkInterface() override = default;
+        virtual ~NetworkInterface() override = default;
 
     public:
         static jxx::Ptr<NetworkInterface> getByName(jxx::Ptr<jxx::lang::String> name);
@@ -45,8 +45,9 @@ namespace jxx::net
         jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> other) const override;
         jxx::lang::jint hashCode() const override;
 
-    private:
+    
         NetworkInterface() = default;
+    private:
         static jxx::Ptr<NetworkInterface> fromName_(const std::string& name,
                                                     jxx::lang::jint indexHint = 0);
 
