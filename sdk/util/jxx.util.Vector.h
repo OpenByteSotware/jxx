@@ -29,8 +29,8 @@ public:
     }
 
     // ----- Collection interface -----
-    jint size() const override {
-        return this->synchronized([&]() -> jint { return (jint)data_.size(); });
+    jxx::lang::jint size() const override {
+        return this->synchronized([&]() -> jxx::lang::jint { return (jxx::lang::jint)data_.size(); });
     }
 
     jxx::Ptr<Iterator<E>> iterator() override {
@@ -41,15 +41,15 @@ public:
     }
 
     // Override add/remove/clear for efficiency and to be synchronized
-    jbool add(const E& e) override {
-        return this->synchronized([&]() -> jbool {
+    jxx::lang::jbool add(const E& e) override {
+        return this->synchronized([&]() -> jxx::lang::jbool {
             data_.push_back(e);
             return true;
         });
     }
 
-    jbool remove(const E& e) override {
-        return this->synchronized([&]() -> jbool {
+    jxx::lang::jbool remove(const E& e) override {
+        return this->synchronized([&]() -> jxx::lang::jbool {
             for (std::size_t i = 0; i < data_.size(); ++i) {
                 if (ElementEquals<E>::eq(data_[i], e)) {
                     data_.erase(data_.begin() + (std::ptrdiff_t)i);
@@ -66,8 +66,8 @@ public:
         });
     }
 
-    jbool contains(const E& e) const override {
-        return this->synchronized([&]() -> jbool {
+    jxx::lang::jbool contains(const E& e) const override {
+        return this->synchronized([&]() -> jxx::lang::jbool {
             for (const auto& x : data_) {
                 if (ElementEquals<E>::eq(x, e)) return true;
             }
@@ -79,16 +79,16 @@ public:
 
     void addElement(const E& e) { (void)add(e); }
 
-    E elementAt(jint index) const {
+    E elementAt(jxx::lang::jint index) const {
         return this->synchronized([&]() -> E {
             if (index < 0 || (std::size_t)index >= data_.size()) throw std::out_of_range("ArrayIndexOutOfBoundsException");
             return data_[(std::size_t)index];
         });
     }
 
-    E get(jint index) const { return elementAt(index); }
+    E get(jxx::lang::jint index) const { return elementAt(index); }
 
-    E set(jint index, const E& element) {
+    E set(jxx::lang::jint index, const E& element) {
         return this->synchronized([&]() -> E {
             if (index < 0 || (std::size_t)index >= data_.size()) throw std::out_of_range("ArrayIndexOutOfBoundsException");
             E old = data_[(std::size_t)index];
@@ -97,21 +97,21 @@ public:
         });
     }
 
-    void setElementAt(const E& element, jint index) { (void)set(index, element); }
+    void setElementAt(const E& element, jxx::lang::jint index) { (void)set(index, element); }
 
-    void removeElementAt(jint index) {
+    void removeElementAt(jxx::lang::jint index) {
         this->synchronized([&]() {
             if (index < 0 || (std::size_t)index >= data_.size()) throw std::out_of_range("ArrayIndexOutOfBoundsException");
             data_.erase(data_.begin() + (std::ptrdiff_t)index);
         });
     }
 
-    jbool removeElement(const E& obj) { return remove(obj); }
+    jxx::lang::jbool removeElement(const E& obj) { return remove(obj); }
 
-    jint indexOf(const E& obj) const { return indexOf(obj, 0); }
+    jxx::lang::jint indexOf(const E& obj) const { return indexOf(obj, 0); }
 
-    jint indexOf(const E& obj, jint fromIndex) const {
-        return this->synchronized([&]() -> jint {
+    jxx::lang::jint indexOf(const E& obj, jxx::lang::jint fromIndex) const {
+        return this->synchronized([&]() -> jxx::lang::jint {
             if (fromIndex < 0) fromIndex = 0;
             for (std::size_t i = (std::size_t)fromIndex; i < data_.size(); ++i) {
                 if (ElementEquals<E>::eq(data_[i], obj)) return (jint)i;
