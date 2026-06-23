@@ -38,8 +38,8 @@ private:
     using InternalSet = std::set<jxx::Ptr<E>, ElemLess>;
 
     InternalSet set_;
-    jxx::Ptr<ComparatorSuper<E>> comparator_;
-    jint modCount_;
+    jxx::Ptr<jxx::util::ComparatorSuper<E>> comparator_;
+    jxx::lang::jint modCount_;
 
 public:
     TreeSet()

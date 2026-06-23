@@ -1,7 +1,6 @@
 #pragma once
-
-#include "io/jxx.util.Collection.h"
-#include "io/jxx.lang.Exceptions.h"
+#include "lang/jxx.lang.Object.h"
+#include "util/jxx.util.Collection.h"
 
 namespace jxx { template <typename T> class Ptr; }
 

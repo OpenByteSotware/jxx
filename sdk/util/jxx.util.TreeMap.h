@@ -74,20 +74,20 @@ public:
 
     virtual ~TreeMap() = default;
 
-    virtual jint size() override { return static_cast<jint>(map_.size()); }
-    virtual jbool isEmpty() override { return map_.empty(); }
+    virtual jxx::lang::jint size() override { return static_cast<jxx::lang::jint>(map_.size()); }
+    virtual jxx::lang::jbool isEmpty() override { return map_.empty(); }
 
     virtual jxx::Ptr<ComparatorSuper<K>> comparator() {
         return comparator_;
     }
 
-    virtual jbool containsKey(jxx::Ptr<jxx::lang::Object> key) override {
+    virtual jxx::lang::jbool containsKey(jxx::Ptr<jxx::lang::Object> key) override {
         auto castKey = jxx::lang::ptr_checked_cast<K>(key);
         if (castKey == nullptr) return false;
         return map_.find(castKey) != map_.end();
     }
 
-    virtual jbool containsValue(jxx::Ptr<jxx::lang::Object> value) override {
+    virtual jxx::lang::jbool containsValue(jxx::Ptr<jxx::lang::Object> value) override {
         if (value == nullptr) {
             for (const auto& kv : map_) if (kv.second == nullptr) return true;
         } else {
@@ -259,7 +259,7 @@ public:
     }
 
 private:
-    jbool keysEqual(jxx::Ptr<K> a, jxx::Ptr<K> b) {
+    jxx::lang::jbool keysEqual(jxx::Ptr<K> a, jxx::Ptr<K> b) {
         if (a == nullptr) return b == nullptr;
         if (b == nullptr) return false;
         if (comparator_ != nullptr) {
@@ -284,21 +284,21 @@ protected:
             return it == map_->map_.end() ? nullptr : it->second;
         }
         virtual jxx::Ptr<V> setValue(jxx::Ptr<V> value) override { return map_->put(key_, value); }
-        virtual jbool equals(jxx::Ptr<jxx::lang::Object> o) override {
+        virtual jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> o) override {
             auto other = jxx::lang::ptr_checked_cast<MapEntry<K, V>>(o);
             if (other == nullptr) return false;
             auto k1 = getKey();
             auto v1 = getValue();
             auto k2 = other->getKey();
             auto v2 = other->getValue();
-            jbool keyEqual = (k1 == nullptr) ? (k2 == nullptr) : k1->equals(k2);
-            jbool valueEqual = (v1 == nullptr) ? (v2 == nullptr) : v1->equals(v2);
+            jxx::lang::jbool keyEqual = (k1 == nullptr) ? (k2 == nullptr) : k1->equals(k2);
+            jxx::lang::jbool valueEqual = (v1 == nullptr) ? (v2 == nullptr) : v1->equals(v2);
             return keyEqual && valueEqual;
         }
-        virtual jint hashCode() override {
-            jint kh = (key_ == nullptr) ? 0 : key_->hashCode();
+        virtual jxx::lang::jint hashCode() override {
+            jxx::lang::jint kh = (key_ == nullptr) ? 0 : key_->hashCode();
             auto value = getValue();
-            jint vh = (value == nullptr) ? 0 : value->hashCode();
+            jxx::lang::jint vh = (value == nullptr) ? 0 : value->hashCode();
             return kh ^ vh;
         }
     };
@@ -313,8 +313,8 @@ protected:
         typename InternalMap::iterator current_;
         typename InternalMap::iterator end_;
         jxx::Ptr<K> lastReturnedKey_;
-        jbool canRemove_;
-        jint expectedModCount_;
+        jxx::lang::jbool canRemove_;
+        jxx::lang::jint expectedModCount_;
     public:
         explicit EntryIterator(TreeMap<K, V>* map)
             : map_(map)
@@ -354,9 +354,9 @@ protected:
     public:
         explicit EntrySet(TreeMap<K, V>* map) : map_(map) {}
         virtual ~EntrySet() = default;
-        virtual jint size() override { return map_->size(); }
-        virtual jbool isEmpty() override { return map_->isEmpty(); }
-        virtual jbool contains(jxx::Ptr<jxx::lang::Object> o) override {
+        virtual jxx::lang::jint size() override { return map_->size(); }
+        virtual jxx::lang::jbool isEmpty() override { return map_->isEmpty(); }
+        virtual jxx::lang::jbool contains(jxx::Ptr<jxx::lang::Object> o) override {
             auto e = jxx::lang::ptr_checked_cast<MapEntry<K, V>>(o);
             if (e == nullptr) return false;
             auto value = map_->get(e->getKey());
@@ -369,8 +369,8 @@ protected:
         virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>>> toArray() override {
             return AbstractCollection<MapEntry<K, V>>::toArray();
         }
-        virtual jbool add(jxx::Ptr<MapEntry<K, V>> /*e*/) override { throw UnsupportedOperationException(); }
-        virtual jbool remove(jxx::Ptr<jxx::lang::Object> o) override {
+        virtual jxx::lang::jbool add(jxx::Ptr<MapEntry<K, V>> /*e*/) override { throw UnsupportedOperationException(); }
+        virtual jxx::lang::jbool remove(jxx::Ptr<jxx::lang::Object> o) override {
             auto e = jxx::lang::ptr_checked_cast<MapEntry<K, V>>(o);
             if (e == nullptr) return false;
             auto value = map_->get(e->getKey());
@@ -382,10 +382,10 @@ protected:
             map_->remove(e->getKey());
             return true;
         }
-        virtual jbool containsAll(jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<MapEntry<K, V>>::containsAll(c); }
-        virtual jbool addAll(jxx::Ptr<wildcard::CollectionExtends<MapEntry<K, V>>> /*c*/) override { throw UnsupportedOperationException(); }
-        virtual jbool removeAll(jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractSet<MapEntry<K, V>>::removeAll(c); }
-        virtual jbool retainAll(jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<MapEntry<K, V>>::retainAll(c); }
+        virtual jxx::lang::jbool containsAll(jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<MapEntry<K, V>>::containsAll(c); }
+        virtual jxx::lang::jbool addAll(jxx::Ptr<wildcard::CollectionExtends<MapEntry<K, V>>> /*c*/) override { throw UnsupportedOperationException(); }
+        virtual jxx::lang::jbool removeAll(jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractSet<MapEntry<K, V>>::removeAll(c); }
+        virtual jxx::lang::jbool retainAll(jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<MapEntry<K, V>>::retainAll(c); }
         virtual void clear() override { map_->clear(); }
     };
 };

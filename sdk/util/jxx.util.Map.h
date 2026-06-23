@@ -16,10 +16,10 @@ class Map {
 public:
     virtual ~Map() = default;
 
-    virtual jint size() = 0;
-    virtual jbool isEmpty() { return size() == 0; }
-    virtual jbool containsKey(jxx::Ptr<jxx::lang::Object> key) = 0;
-    virtual jbool containsValue(jxx::Ptr<jxx::lang::Object> value) = 0;
+    virtual jxx::lang::jint size() = 0;
+    virtual jxx::lang::jbool isEmpty() { return size() == 0; }
+    virtual jxx::lang::jbool containsKey(jxx::Ptr<jxx::lang::Object> key) = 0;
+    virtual jxx::lang::jbool containsValue(jxx::Ptr<jxx::lang::Object> value) = 0;
     virtual jxx::Ptr<V> get(jxx::Ptr<jxx::lang::Object> key) = 0;
     virtual jxx::Ptr<V> put(jxx::Ptr<K> key, jxx::Ptr<V> value) = 0;
     virtual jxx::Ptr<V> remove(jxx::Ptr<jxx::lang::Object> key) = 0;
@@ -28,8 +28,8 @@ public:
     virtual jxx::Ptr<Set<K>> keySet() = 0;
     virtual jxx::Ptr<Collection<V>> values() = 0;
     virtual jxx::Ptr<Set<MapEntry<K, V>>> entrySet() = 0;
-    virtual jbool equals(jxx::Ptr<jxx::lang::Object> o) override = 0;
-    virtual jint hashCode() override = 0;
+    virtual jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> o) override = 0;
+    virtual jxx::lang::jint hashCode() override = 0;
 
     virtual jxx::Ptr<V> getOrDefault(jxx::Ptr<jxx::lang::Object> key, jxx::Ptr<V> defaultValue) {
         jxx::Ptr<V> v = get(key);
@@ -63,7 +63,7 @@ public:
         return v;
     }
 
-    virtual jbool remove(jxx::Ptr<jxx::lang::Object> key, jxx::Ptr<jxx::lang::Object> value) {
+    virtual jxx::lang::jbool remove(jxx::Ptr<jxx::lang::Object> key, jxx::Ptr<jxx::lang::Object> value) {
         jxx::Ptr<V> cur = get(key);
         if (cur == nullptr) return false;
         if (!cur->equals(value)) return false;
@@ -71,7 +71,7 @@ public:
         return true;
     }
 
-    virtual jbool replace(jxx::Ptr<K> key, jxx::Ptr<V> oldValue, jxx::Ptr<V> newValue) {
+    virtual jxx::lang::jbool replace(jxx::Ptr<K> key, jxx::Ptr<V> oldValue, jxx::Ptr<V> newValue) {
         jxx::Ptr<V> cur = get(key);
         if (cur == nullptr || !cur->equals(oldValue)) return false;
         put(key, newValue);
