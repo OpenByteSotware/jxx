@@ -13,7 +13,7 @@ namespace jxx::net
         InterfaceAddress(jxx::Ptr<InetAddress> address,
                          jxx::Ptr<InetAddress> broadcast,
                          jxx::lang::jshort prefixLength);
-        ~InterfaceAddress() override = default;
+        virtual ~InterfaceAddress() override = default;
 
     public:
         jxx::Ptr<InetAddress> getAddress() const;

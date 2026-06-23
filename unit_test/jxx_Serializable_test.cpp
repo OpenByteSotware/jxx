@@ -18,38 +18,38 @@ public:
     int age() const noexcept { return age_; }
 
     // Object API
-    bool equals(const jxx::lang::Object& other) const noexcept override {
+    jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object> other) const noexcept override {
         if (this->same(other)) return true;
-        auto* o = dynamic_cast<const Person*>(&other);
+        auto* o = dynamic_cast<const Person*>(other.get());
         return o && age_ == o->age_ && name_ == o->name_;
     }
 
     // Java-like custom serialization hooks
-    virtual void writeObject(class jxx::io::ObjectOutputStream& out) const override {
+    virtual void writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out) override {
     
     }
     
-    virtual void readObject(class jxx::io::ObjectInputStream& in, std::uint64_t storedUid) override {
+    virtual void readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) override {
     
     }
 
-    virtual std::shared_ptr<Object> clone() const override {
+    virtual jxx::Ptr<jxx::lang::Object> clone() const override {
         return jxx::NEW<Person>(this->name_, this->age_);
     }
 
-    std::size_t hashCode() const noexcept override {
+    jxx::lang::jint hashCode() const noexcept override {
         std::size_t h1 = std::hash<std::string>{}(name_);
         std::size_t h2 = std::hash<int>{}(age_);
         return h1 ^ (h2 + 0x9e3779b97f4a7c15ULL + (h1 << 6) + (h1 >> 2));
     }
 
-    std::string toString() const override {
-        return "Person{name=" + name_ + ", age=" + std::to_string(age_) + "}";
+    jxx::Ptr<jxx::lang::String> toString() const override {
+        return jxx::NEW<jxx::lang::String>("Person{name=" + name_ + ", age=" + std::to_string(age_) + "}");
     }
 
 protected:
     // Implement cloneImpl for deep copy, Ojbect uses this for C++ to mimic java like clone
-    virtual std::shared_ptr<Object> cloneImpl() const override {
+    virtual jxx::Ptr<jxx::lang::Object> cloneImpl() const override {
         return jxx::NEW<Person>(this->name_, this->age_);
     }
     /*

@@ -32,7 +32,7 @@ public:
         auto it = this->iterator();
         jxx::lang::jint i = 0;
         while (it->hasNext()) {
-            result->set(i++, jxx::CAST<jxx::lang::Object, E>(it->next()));
+            (*result)(i++) = jxx::CAST<jxx::lang::Object, E>(it->next());
         }
         return result;
     }

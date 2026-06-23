@@ -61,7 +61,8 @@ public:
         auto it = c->iteratorExtends();
         jxx::lang::jint i = index;
         while (it->hasNext()) {
-            add(i++, it->next());
+            add(it->next());
+            i++;
             modified = true;
         }
         return modified;
@@ -105,10 +106,18 @@ public:
         return -1;
     }
 
+    virtual jxx::Ptr<E> remove(jxx::lang::jint index) override {
+        
+        auto it = listIterator(index);
+        auto oldValue = it->next();
+        it->remove();
+		return oldValue;
+    }
+
     virtual jxx::lang::jbool remove(jxx::Ptr<jxx::lang::Object> o) override {
         jxx::lang::jint i = indexOf(o);
         if (i >= 0) {
-            remove(i);
+            this->remove(i);
             return true;
         }
         return false;
@@ -252,7 +261,7 @@ public:
         virtual void add(jxx::Ptr<E> e) override {
             this->checkForComodification();
             const jxx::lang::jint i = this->cursor;
-            this->list->add(i, e);
+            this->list->add(e);
             this->cursor = i + 1;
             this->lastRet = -1;
             this->expectedModCount = this->list->modCount;
