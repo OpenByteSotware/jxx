@@ -112,7 +112,7 @@ public:
         public:
             explicit KeyIterator(jxx::Ptr<Iterator<MapEntry<K, V>>> inner) : inner_(inner) {}
             virtual ~KeyIterator() = default;
-            virtual jbool hasNext() override { return inner_->hasNext(); }
+            virtual jxx::lang::jbool hasNext() override { return inner_->hasNext(); }
             virtual jxx::Ptr<K> next() override { return inner_->next()->getKey(); }
             virtual void remove() override { inner_->remove(); }
         };

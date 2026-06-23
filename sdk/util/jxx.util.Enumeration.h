@@ -1,17 +1,17 @@
 #pragma once
-#include "lang/jxx_types.h"
 
-namespace jxx::util {
+#include "lang/jxx.lang.Object.h"
 
-/**
- * Java 8 parity: java.util.Enumeration<E>
- * Interface => does NOT inherit Object.
- */
-template <class E>
-struct Enumeration {
+namespace jxx {
+namespace util {
+
+template <typename E>
+class Enumeration  {
+public:
     virtual ~Enumeration() = default;
     virtual jxx::lang::jbool hasMoreElements() = 0;
-    virtual E nextElement() = 0;
+    virtual jxx::Ptr<E> nextElement() = 0;
 };
 
-} // namespace jxx::util
+} // namespace util
+} // namespace jxx

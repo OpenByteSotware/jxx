@@ -2,11 +2,13 @@
 
 #include <unordered_map>
 #include <utility>
-
+#include "lang/jxx.lang.Object.h"
+#include "util/jxx.util.MapEntry.h"
 #include "util/jxx.util.AbstractMap.h"
 #include "lang/jxx.lang.Cloneable.h"
 #include "io/jxx.io.Serializable.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
+#include "util/jxx.util.Set.h"
 
 namespace jxx {
 namespace util {
@@ -34,14 +36,14 @@ protected:
 
     using InternalMap = std::unordered_map<jxx::Ptr<K>, jxx::Ptr<V>, KeyHash, KeyEq>;
 
-    static constexpr jint DEFAULT_INITIAL_CAPACITY = 16;
-    static constexpr jfloat DEFAULT_LOAD_FACTOR = 0.75f;
+    static constexpr jxx::lang::jint DEFAULT_INITIAL_CAPACITY = 16;
+    static constexpr jxx::lang::jfloat DEFAULT_LOAD_FACTOR = 0.75f;
 
     InternalMap map_;
-    jfloat loadFactor_;
-    jint threshold_;
-    jint modCount_;
-    jxx::Ptr<Set<MapEntry<K, V>>> entrySetView_;
+    jxx::lang::jfloat loadFactor_;
+    jxx::lang::jint threshold_;
+    jxx::lang::jint modCount_;
+    jxx::Ptr<jxx::util::Set<jxx::util::MapEntry<K, V>>> entrySetView_;
 
 public:
     HashMap()
@@ -177,7 +179,7 @@ protected:
         }
     }
 
-    class EntryView : public virtual MapEntry<K, V> {
+    class EntryView : public virtual jxx::util::MapEntry<K, V> {
     private:
         HashMap<K, V>* map_;
         jxx::Ptr<K> key_;

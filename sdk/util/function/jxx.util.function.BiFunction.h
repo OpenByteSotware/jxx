@@ -15,7 +15,7 @@ public:
 
     template <typename V>
     jxx::Ptr<BiFunction<T, U, V>> andThen(jxx::Ptr<Function<R, V>> /*after*/) {
-        throw UnsupportedOperationException();
+        throw jxx::lang::UnsupportedOperationException();
     }
 };
 

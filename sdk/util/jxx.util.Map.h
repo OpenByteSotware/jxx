@@ -28,8 +28,8 @@ public:
     virtual jxx::Ptr<Set<K>> keySet() = 0;
     virtual jxx::Ptr<Collection<V>> values() = 0;
     virtual jxx::Ptr<Set<MapEntry<K, V>>> entrySet() = 0;
-    virtual jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> o) override = 0;
-    virtual jxx::lang::jint hashCode() override = 0;
+    virtual jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> o) = 0;
+    virtual jxx::lang::jint hashCode() = 0;
 
     virtual jxx::Ptr<V> getOrDefault(jxx::Ptr<jxx::lang::Object> key, jxx::Ptr<V> defaultValue) {
         jxx::Ptr<V> v = get(key);
@@ -38,7 +38,7 @@ public:
     }
 
     virtual void forEach(jxx::Ptr<function::BiConsumer<K, V>> action) {
-        if (action == nullptr) throw NullPointerException();
+        if (action == nullptr) throw jxx::lang::NullPointerException();
         auto es = entrySet();
         auto it = es->iterator();
         while (it->hasNext()) {
@@ -48,7 +48,7 @@ public:
     }
 
     virtual void replaceAll(jxx::Ptr<function::BiFunction<K, V, V>> function) {
-        if (function == nullptr) throw NullPointerException();
+        if (function == nullptr) throw jxx::lang::NullPointerException();
         auto es = entrySet();
         auto it = es->iterator();
         while (it->hasNext()) {
@@ -85,7 +85,7 @@ public:
     }
 
     virtual jxx::Ptr<V> computeIfAbsent(jxx::Ptr<K> key, jxx::Ptr<function::Function<K, V>> mappingFunction) {
-        if (mappingFunction == nullptr) throw NullPointerException();
+        if (mappingFunction == nullptr) throw jxx::lang::NullPointerException();
         jxx::Ptr<V> v = get(key);
         if (v == nullptr) {
             jxx::Ptr<V> newValue = mappingFunction->apply(key);
@@ -98,7 +98,7 @@ public:
     }
 
     virtual jxx::Ptr<V> computeIfPresent(jxx::Ptr<K> key, jxx::Ptr<function::BiFunction<K, V, V>> remappingFunction) {
-        if (remappingFunction == nullptr) throw NullPointerException();
+        if (remappingFunction == nullptr) throw jxx::lang::NullPointerException();
         jxx::Ptr<V> oldValue = get(key);
         if (oldValue != nullptr) {
             jxx::Ptr<V> newValue = remappingFunction->apply(key, oldValue);
@@ -112,7 +112,7 @@ public:
     }
 
     virtual jxx::Ptr<V> compute(jxx::Ptr<K> key, jxx::Ptr<function::BiFunction<K, V, V>> remappingFunction) {
-        if (remappingFunction == nullptr) throw NullPointerException();
+        if (remappingFunction == nullptr) throw jxx::lang::NullPointerException();
         jxx::Ptr<V> oldValue = get(key);
         jxx::Ptr<V> newValue = remappingFunction->apply(key, oldValue);
         if (newValue == nullptr) {
@@ -124,7 +124,7 @@ public:
     }
 
     virtual jxx::Ptr<V> merge(jxx::Ptr<K> key, jxx::Ptr<V> value, jxx::Ptr<function::BiFunction<V, V, V>> remappingFunction) {
-        if (value == nullptr || remappingFunction == nullptr) throw NullPointerException();
+        if (value == nullptr || remappingFunction == nullptr) throw jxx::lang::NullPointerException();
         jxx::Ptr<V> oldValue = get(key);
         jxx::Ptr<V> newValue = (oldValue == nullptr) ? value : remappingFunction->apply(oldValue, value);
         if (newValue == nullptr) {

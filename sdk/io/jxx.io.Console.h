@@ -10,6 +10,12 @@
 #include "io/jxx.io.BufferedReader.h"
 #include "lang/jxx.lang.Object.h"
 
+namespace jxx {
+    namespace io {
+        class PrintStream;
+    }
+}
+
 namespace jxx { 
     namespace io {
         class Console : public jxx::lang::Object {

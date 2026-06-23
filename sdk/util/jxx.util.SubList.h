@@ -5,7 +5,7 @@
 #include "util/jxx.util.RandomAccess.h"
 #include "util/jxx.util.ListIterator.h"
 #include "util/jxx.util.ConcurrentModificationException.h"
-#include "lang/jxx.lang.NoSuchElementException.h"
+#include "util/jxx.util.NoSuchElementException.h"
 #include "lang/jxx.lang.IllegalStateException.h"
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
 #include "lang/jxx.lang.NullPointerException.h"

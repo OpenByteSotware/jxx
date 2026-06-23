@@ -325,7 +325,7 @@ protected:
             , expectedModCount_(map->modCount_) {
         }
         virtual ~EntryIterator() = default;
-        virtual jbool hasNext() override { return current_ != end_; }
+        virtual jxx::lang::jbool hasNext() override { return current_ != end_; }
         virtual jxx::Ptr<MapEntry<K, V>> next() override {
             checkForComodification();
             if (current_ == end_) throw NoSuchElementException();

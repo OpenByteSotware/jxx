@@ -17,6 +17,8 @@
 #include "util/jxx.util.Map.h"
 #include "util/jxx.util.MapEntry.h"
 #include "util/jxx.util.Set.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
+#include "util/jxx.util.NoSuchElementException.h"
 
 namespace jxx {
 namespace util {
@@ -68,7 +70,7 @@ private:
         const auto h = objectHash(keyObj);
         auto& bucket = buckets_[bucketIndexFor(h, buckets_.size())];
         for (auto& entry : bucket) {
-            if (entry.hash == h && objEquals(jxx::lang::ptr_static_cast<jxx::lang::Object>(entry.key), keyObj)) return &entry;
+            if (entry.hash == h && objEquals(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(entry.key), keyObj)) return &entry;
         }
         return nullptr;
     }
@@ -78,13 +80,13 @@ private:
         const auto h = objectHash(keyObj);
         const auto& bucket = buckets_[bucketIndexFor(h, buckets_.size())];
         for (const auto& entry : bucket) {
-            if (entry.hash == h && objEquals(jxx::lang::ptr_static_cast<jxx::lang::Object>(entry.key), keyObj)) return &entry;
+            if (entry.hash == h && objEquals(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(entry.key), keyObj)) return &entry;
         }
         return nullptr;
     }
 
     inline void insertNewUnlocked(jxx::Ptr<K> key, jxx::Ptr<V> value) {
-        const auto h = objectHash(jxx::lang::ptr_static_cast<jxx::lang::Object>(key));
+        const auto h = objectHash(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(key));
         buckets_[bucketIndexFor(h, buckets_.size())].push_back(EntryRecord{h, key, value});
         ++count_;
     }
@@ -107,7 +109,7 @@ private:
             return static_cast<jxx::lang::jbool>(index_ < snapshot_.size());
         }
         virtual jxx::Ptr<E> next() override {
-            if (index_ >= snapshot_.size()) throw NoSuchElementException();
+            if (index_ >= snapshot_.size()) throw jxx::util::NoSuchElementException();
             return snapshot_[index_++];
         }
     };
@@ -140,7 +142,7 @@ private:
         virtual ~EntryView() = default;
         virtual jxx::Ptr<K> getKey() override { return key_; }
         virtual jxx::Ptr<V> getValue() override {
-            return owner_->get(jxx::lang::ptr_static_cast<jxx::lang::Object>(key_));
+            return owner_->get(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(key_));
         }
         virtual jxx::Ptr<V> setValue(jxx::Ptr<V> value) override {
             return owner_->put(key_, value);
@@ -156,7 +158,7 @@ private:
         virtual jxx::lang::jint size() override { return owner_->size(); }
         virtual jxx::lang::jbool contains(jxx::Ptr<jxx::lang::Object> o) override { return owner_->containsKey(o); }
         virtual jxx::Ptr<Iterator<K>> iterator() override { return owner_->snapshotKeyIterator(); }
-        virtual jxx::lang::jbool add(jxx::Ptr<K> /*e*/) override { throw UnsupportedOperationException(); }
+        virtual jxx::lang::jbool add(jxx::Ptr<K> /*e*/) override { throw jxx::lang::UnsupportedOperationException(); }
         virtual jxx::lang::jbool remove(jxx::Ptr<jxx::lang::Object> o) override {
             if (!owner_->containsKey(o)) return static_cast<jxx::lang::jbool>(false);
             owner_->remove(o);
@@ -174,7 +176,7 @@ private:
         virtual jxx::lang::jint size() override { return owner_->size(); }
         virtual jxx::lang::jbool contains(jxx::Ptr<jxx::lang::Object> o) override { return owner_->containsValue(o); }
         virtual jxx::Ptr<Iterator<V>> iterator() override { return owner_->snapshotValueIterator(); }
-        virtual jxx::lang::jbool add(jxx::Ptr<V> /*e*/) override { throw UnsupportedOperationException(); }
+        virtual jxx::lang::jbool add(jxx::Ptr<V> /*e*/) override { throw jxx::lang::UnsupportedOperationException(); }
         virtual jxx::lang::jbool remove(jxx::Ptr<jxx::lang::Object> o) override {
             return owner_->removeValueFirst(o);
         }
@@ -189,18 +191,19 @@ private:
         virtual ~EntrySetView() = default;
         virtual jxx::lang::jint size() override { return owner_->size(); }
         virtual jxx::lang::jbool contains(jxx::Ptr<jxx::lang::Object> o) override {
-            auto e = jxx::lang::ptr_checked_cast<MapEntry<K, V>>(o);
+            auto e = jxx::CAST<MapEntry<K, V>, jxx::lang::Object>(o);
             if (e == nullptr) return static_cast<jxx::lang::jbool>(false);
-            auto v = owner_->get(jxx::lang::ptr_static_cast<jxx::lang::Object>(e->getKey()));
-            if (v == nullptr && !owner_->containsKey(jxx::lang::ptr_static_cast<jxx::lang::Object>(e->getKey()))) {
+            auto v = owner_->get(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(e->getKey()));
+            if (v == nullptr && !owner_->containsKey(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(e->getKey()))) {
                 return static_cast<jxx::lang::jbool>(false);
             }
-            return objEquals(jxx::lang::ptr_static_cast<jxx::lang::Object>(v), jxx::lang::ptr_static_cast<jxx::lang::Object>(e->getValue()));
+            return objEquals(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(v),
+                jxx::CAST<jxx::lang::Object, jxx::lang::Object>(e->getValue()));
         }
         virtual jxx::Ptr<Iterator<MapEntry<K, V>>> iterator() override { return owner_->snapshotEntryIterator(); }
-        virtual jxx::lang::jbool add(jxx::Ptr<MapEntry<K, V>> /*e*/) override { throw UnsupportedOperationException(); }
+        virtual jxx::lang::jbool add(jxx::Ptr<MapEntry<K, V>> /*e*/) override { throw jxx::lang::UnsupportedOperationException(); }
         virtual jxx::lang::jbool remove(jxx::Ptr<jxx::lang::Object> o) override {
-            auto e = jxx::lang::ptr_checked_cast<MapEntry<K, V>>(o);
+            auto e = jxx::CAST<MapEntry<K, V>, jxx::lang::Object>(o);
             if (e == nullptr) return static_cast<jxx::lang::jbool>(false);
             return owner_->removeEq(e->getKey(), e->getValue());
         }
@@ -221,7 +224,7 @@ public:
         , count_(0)
         , threshold_(0)
         , loadFactor_(DEFAULT_LOAD_FACTOR) {
-        if (initialCapacity < 0) throw IllegalArgumentException();
+        if (initialCapacity < 0) throw jxx::lang::IllegalArgumentException();
         recomputeThreshold();
     }
 
@@ -230,7 +233,7 @@ public:
         , count_(0)
         , threshold_(0)
         , loadFactor_(loadFactor) {
-        if (initialCapacity < 0 || !(loadFactor > 0.0f)) throw IllegalArgumentException();
+        if (initialCapacity < 0 || !(loadFactor > 0.0f)) throw jxx::lang::IllegalArgumentException();
         recomputeThreshold();
     }
 
@@ -239,7 +242,7 @@ public:
         , count_(0)
         , threshold_(0)
         , loadFactor_(DEFAULT_LOAD_FACTOR) {
-        if (t == nullptr) throw NullPointerException();
+        if (t == nullptr) throw jxx::lang::NullPointerException();
         recomputeThreshold();
         putAll(t);
     }
@@ -267,11 +270,11 @@ public:
     }
 
     virtual jxx::lang::jbool containsValue(jxx::Ptr<jxx::lang::Object> value) override {
-        if (value == nullptr) throw NullPointerException();
+        if (value == nullptr) throw jxx::lang::NullPointerException();
         return this->synchronized([&]() -> jxx::lang::jbool {
             for (const auto& bucket : buckets_) {
                 for (const auto& entry : bucket) {
-                    if (objEquals(jxx::lang::ptr_static_cast<jxx::lang::Object>(entry.value), value)) {
+                    if (objEquals(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(entry.value), value)) {
                         return static_cast<jxx::lang::jbool>(true);
                     }
                 }
@@ -294,9 +297,9 @@ public:
     }
 
     virtual jxx::Ptr<V> put(jxx::Ptr<K> key, jxx::Ptr<V> value) override {
-        if (key == nullptr || value == nullptr) throw NullPointerException();
+        if (key == nullptr || value == nullptr) throw jxx::lang::NullPointerException();
         return this->synchronized([&]() -> jxx::Ptr<V> {
-            auto* entry = findEntryUnlocked(jxx::lang::ptr_static_cast<jxx::lang::Object>(key));
+            auto* entry = findEntryUnlocked(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(key));
             if (entry != nullptr) {
                 auto old = entry->value;
                 entry->value = value;
@@ -314,7 +317,7 @@ public:
             const auto h = objectHash(key);
             auto& bucket = buckets_[bucketIndexFor(h, buckets_.size())];
             for (auto it = bucket.begin(); it != bucket.end(); ++it) {
-                if (it->hash == h && objEquals(jxx::lang::ptr_static_cast<jxx::lang::Object>(it->key), key)) {
+                if (it->hash == h && objEquals(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(it->key), key)) {
                     auto old = it->value;
                     bucket.erase(it);
                     --count_;
@@ -326,7 +329,7 @@ public:
     }
 
     virtual void putAll(jxx::Ptr<Map<K, V>> t) override {
-        if (t == nullptr) throw NullPointerException();
+        if (t == nullptr) throw jxx::lang::NullPointerException();
         auto it = t->entrySet()->iterator();
         while (it->hasNext()) {
             auto e = it->next();
@@ -342,7 +345,8 @@ public:
     }
 
     virtual jxx::Ptr<jxx::lang::Object> clone() {
-        auto copy = jxx::Ptr<Hashtable<K, V>>(new Hashtable<K, V>(static_cast<jxx::lang::jint>(buckets_.size()), loadFactor_));
+        auto copy = jxx::Ptr<Hashtable<K, V>>(jxx::NEW<Hashtable<K, V>>(static_cast<jxx::lang::jint>(buckets_.size()), 
+            loadFactor_));
         this->synchronized([&]() -> void {
             for (const auto& bucket : buckets_) {
                 for (const auto& entry : bucket) {
@@ -354,15 +358,15 @@ public:
     }
 
     virtual jxx::Ptr<Set<K>> keySet() override {
-        return jxx::Ptr<Set<K>>(new KeySetView(this));
+        return jxx::Ptr<Set<K>>(jxx::NEW<KeySetView>(this));
     }
 
     virtual jxx::Ptr<Collection<V>> values() override {
-        return jxx::Ptr<Collection<V>>(new ValuesView(this));
+        return jxx::Ptr<Collection<V>>(jxx::NEW<ValuesView>(this));
     }
 
     virtual jxx::Ptr<Set<MapEntry<K, V>>> entrySet() override {
-        return jxx::Ptr<Set<MapEntry<K, V>>>(new EntrySetView(this));
+        return jxx::Ptr<Set<MapEntry<K, V>>>(jxx::NEW<EntrySetView>(this));
     }
 
     virtual jxx::Ptr<V> getOrDefault(jxx::Ptr<jxx::lang::Object> key, jxx::Ptr<V> defaultValue) {
@@ -371,9 +375,9 @@ public:
     }
 
     virtual jxx::Ptr<V> putIfAbsent(jxx::Ptr<K> key, jxx::Ptr<V> value) {
-        if (key == nullptr || value == nullptr) throw NullPointerException();
+        if (key == nullptr || value == nullptr) throw jxx::lang::NullPointerException();
         return this->synchronized([&]() -> jxx::Ptr<V> {
-            auto* entry = findEntryUnlocked(jxx::lang::ptr_static_cast<jxx::lang::Object>(key));
+            auto* entry = findEntryUnlocked(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(key));
             if (entry != nullptr) return entry->value;
             ensureCapacityForInsertUnlocked();
             insertNewUnlocked(key, value);
@@ -387,8 +391,8 @@ public:
             const auto h = objectHash(key);
             auto& bucket = buckets_[bucketIndexFor(h, buckets_.size())];
             for (auto it = bucket.begin(); it != bucket.end(); ++it) {
-                if (it->hash == h && objEquals(jxx::lang::ptr_static_cast<jxx::lang::Object>(it->key), key)
-                    && objEquals(jxx::lang::ptr_static_cast<jxx::lang::Object>(it->value), value)) {
+                if (it->hash == h && objEquals(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(it->key), key)
+                    && objEquals(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(it->value), value)) {
                     bucket.erase(it);
                     --count_;
                     return static_cast<jxx::lang::jbool>(true);
@@ -399,11 +403,12 @@ public:
     }
 
     virtual jxx::lang::jbool replace(jxx::Ptr<K> key, jxx::Ptr<V> oldValue, jxx::Ptr<V> newValue) {
-        if (key == nullptr || oldValue == nullptr || newValue == nullptr) throw NullPointerException();
+        if (key == nullptr || oldValue == nullptr || newValue == nullptr) throw jxx::lang::NullPointerException();
         return this->synchronized([&]() -> jxx::lang::jbool {
-            auto* entry = findEntryUnlocked(jxx::lang::ptr_static_cast<jxx::lang::Object>(key));
+            auto* entry = findEntryUnlocked(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(key));
             if (entry == nullptr) return static_cast<jxx::lang::jbool>(false);
-            if (!objEquals(jxx::lang::ptr_static_cast<jxx::lang::Object>(entry->value), jxx::lang::ptr_static_cast<jxx::lang::Object>(oldValue))) {
+            if (!objEquals(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(entry->value), 
+                jxx::CAST<jxx::lang::Object, jxx::lang::Object>(oldValue))) {
                 return static_cast<jxx::lang::jbool>(false);
             }
             entry->value = newValue;
@@ -412,9 +417,9 @@ public:
     }
 
     virtual jxx::Ptr<V> replace(jxx::Ptr<K> key, jxx::Ptr<V> value) {
-        if (key == nullptr || value == nullptr) throw NullPointerException();
+        if (key == nullptr || value == nullptr) throw jxx::lang::NullPointerException();
         return this->synchronized([&]() -> jxx::Ptr<V> {
-            auto* entry = findEntryUnlocked(jxx::lang::ptr_static_cast<jxx::lang::Object>(key));
+            auto* entry = findEntryUnlocked(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(key));
             if (entry == nullptr) return nullptr;
             auto old = entry->value;
             entry->value = value;
@@ -495,7 +500,7 @@ private:
         return this->synchronized([&]() -> jxx::lang::jbool {
             for (auto& bucket : buckets_) {
                 for (auto it = bucket.begin(); it != bucket.end(); ++it) {
-                    if (objEquals(jxx::lang::ptr_static_cast<jxx::lang::Object>(it->value), value)) {
+                    if (objEquals(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(it->value), value)) {
                         bucket.erase(it);
                         --count_;
                         return static_cast<jxx::lang::jbool>(true);
@@ -508,7 +513,8 @@ private:
 
     jxx::lang::jbool removeEq(jxx::Ptr<K> key, jxx::Ptr<V> value) {
         if (key == nullptr || value == nullptr) return static_cast<jxx::lang::jbool>(false);
-        return remove(jxx::lang::ptr_static_cast<jxx::lang::Object>(key), jxx::lang::ptr_static_cast<jxx::lang::Object>(value));
+        return remove(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(key), 
+            jxx::CAST<jxx::lang::Object, jxx::lang::Object>(value));
     }
 };
 

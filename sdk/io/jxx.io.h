@@ -21,7 +21,7 @@
 #include "jxx.io.InputStream.h"
 #include "jxx.io.InputStreamReader.h"
 #include "jxx.io.IOException.h"
-#include "jxx.io.PrintWrite.h"
+#include "jxx.io.PrintWriter.h"
 //#include "jxx.io.PushbackInputStrea.h"
 //#include "jxx.io.SequenceInputStrea.h"
 #include "jxx.io.ModifiedUTF.h"

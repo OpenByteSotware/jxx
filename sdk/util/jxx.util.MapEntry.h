@@ -12,8 +12,8 @@ public:
     virtual jxx::Ptr<K> getKey() = 0;
     virtual jxx::Ptr<V> getValue() = 0;
     virtual jxx::Ptr<V> setValue(jxx::Ptr<V> value) = 0;
-    virtual jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> o) override = 0;
-    virtual jxx::lang::jint hashCode() override = 0;
+    virtual jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> o) = 0;
+    virtual jxx::lang::jint hashCode() = 0;
 };
 
 } // namespace util
