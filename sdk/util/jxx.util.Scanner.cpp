@@ -666,7 +666,7 @@ jxx::lang::jbool Scanner::hasNextShort() {
 jxx::lang::jbool Scanner::hasNextShort(jxx::lang::jint radix) {
     ensureOpen();
     if (radix < 2 || radix > 36) {
-        throw jxx::lang::IllegalArgumentException();
+        throw jxx::lang::IllegalArgumentException("radix out of range: 2-36");
     }
     std::size_t start = 0;
     std::size_t end = 0;
@@ -682,7 +682,7 @@ jxx::lang::jshort Scanner::nextShort() {
 jxx::lang::jshort Scanner::nextShort(jxx::lang::jint radix) {
     ensureOpen();
     if (radix < 2 || radix > 36) {
-        throw jxx::lang::IllegalArgumentException();
+        throw jxx::lang::IllegalArgumentException("radix out of range: 2-36");
     }
     auto token = next();
     jxx::lang::jshort value = 0;
@@ -699,7 +699,7 @@ jxx::lang::jbool Scanner::hasNextInt() {
 jxx::lang::jbool Scanner::hasNextInt(jxx::lang::jint radix) {
     ensureOpen();
     if (radix < 2 || radix > 36) {
-        throw jxx::lang::IllegalArgumentException();
+        throw jxx::lang::IllegalArgumentException("radix out of range: 2-36");
     }
     std::size_t start = 0;
     std::size_t end = 0;
@@ -715,7 +715,7 @@ jxx::lang::jint Scanner::nextInt() {
 jxx::lang::jint Scanner::nextInt(jxx::lang::jint radix) {
     ensureOpen();
     if (radix < 2 || radix > 36) {
-        throw jxx::lang::IllegalArgumentException();
+        throw jxx::lang::IllegalArgumentException("radix out of range: 2-36");
     }
     auto token = next();
     jxx::lang::jint value = 0;
@@ -732,7 +732,7 @@ jxx::lang::jbool Scanner::hasNextLong() {
 jxx::lang::jbool Scanner::hasNextLong(jxx::lang::jint radix) {
     ensureOpen();
     if (radix < 2 || radix > 36) {
-        throw jxx::lang::IllegalArgumentException();
+        throw jxx::lang::IllegalArgumentException("radix out of range: 2-36");
     }
     std::size_t start = 0;
     std::size_t end = 0;
@@ -748,7 +748,7 @@ jxx::lang::jlong Scanner::nextLong() {
 jxx::lang::jlong Scanner::nextLong(jxx::lang::jint radix) {
     ensureOpen();
     if (radix < 2 || radix > 36) {
-        throw jxx::lang::IllegalArgumentException();
+        throw jxx::lang::IllegalArgumentException("radix out of range: 2-36");
     }
     auto token = next();
     jxx::lang::jlong value = 0;
@@ -825,7 +825,7 @@ jxx::Ptr<jxx::lang::String> Scanner::findInLine(jxx::Ptr<jxx::lang::String> patt
 jxx::Ptr<jxx::lang::String> Scanner::findWithinHorizon(jxx::Ptr<regex::Pattern> pattern, jxx::lang::jint horizon) {
     ensureOpen();
     if (horizon < 0) {
-        throw jxx::lang::IllegalArgumentException();
+        throw jxx::lang::IllegalArgumentException("radix out of range: 2-36");
     }
     const std::size_t limit = (horizon == 0)
         ? sourceUtf8_.size()

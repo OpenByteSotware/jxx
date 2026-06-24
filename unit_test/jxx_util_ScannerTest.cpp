@@ -7,6 +7,7 @@
 #include "util/jxx.util.Scanner.h"
 #include "util/regex/jxx.util.regex.Pattern.h"
 #include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
 
 namespace {
 

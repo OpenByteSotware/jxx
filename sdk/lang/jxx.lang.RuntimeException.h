@@ -10,9 +10,7 @@ namespace jxx::lang {
         using jxx::lang::Exception::Exception;
         
     protected:
-        std::shared_ptr<jxx::lang::Object> cloneImpl() const override {
-            return jxx::NEW<RuntimeException>(*this);
-        }
+        JXX_OBJECT_CLONE(RuntimeException)
         const char* typeName() const noexcept override { return "RuntimeException"; }
     };
 

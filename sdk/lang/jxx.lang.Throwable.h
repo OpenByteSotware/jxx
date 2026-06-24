@@ -46,8 +46,9 @@ namespace jxx::lang {
         /**
          * Java parity knobs (Throwable has a protected constructor in Java that can disable these):
          *   - enableSuppression: if false, addSuppressed is a no-op
-         *   - writableStackTrace: if false, stack trace is empty and fillInStackTrace is a no-op
-         */
+         *  - writableStackTrace: if false, stack trace is empty and fillInStackTrace is a no-op
+         */        
+
         explicit Throwable(jxx::Ptr<String> message = jxx::NEW<String>(""),
             jxx::Ptr<Throwable> cause = nullptr,
             bool enableSuppression = true,
@@ -63,6 +64,7 @@ namespace jxx::lang {
             bool enableSuppression = true,
             bool writableStackTrace = true);
 
+        Throwable(const jxx::Ptr<Throwable> other);
         // Copy constructor
         Throwable(const Throwable& other);
         
@@ -137,13 +139,7 @@ namespace jxx::lang {
          */
         const char* what() const noexcept override;
 
-        // ---- Cloning ----
-        /**
-         * IMPORTANT: shared_ptr is not covariant, so this must match Object::clone().
-         * All Throwable-derived exceptions should implement this using the macro below.
-         */
-        jxx::Ptr<jxx::lang::Object> cloneImpl() const override = 0;
-
+        
         /**
          * Typed helper for exception cause wrapping:
          * returns shared_ptr<Throwable> while preserving dynamic type.
@@ -151,6 +147,14 @@ namespace jxx::lang {
         jxx::Ptr<Throwable> cloneThrowable() const;
 
     protected:
+
+        // ---- Cloning ----
+        /**
+         * IMPORTANT: shared_ptr is not covariant, so this must match Object::clone().
+         * All Throwable-derived exceptions should implement this using the macro below.
+         */
+        jxx::Ptr<jxx::lang::Object> cloneImpl() const override;
+
         /**
          * Override in derived exceptions for exact Java naming.
          * If you want max Java parity, return fully-qualified names like:

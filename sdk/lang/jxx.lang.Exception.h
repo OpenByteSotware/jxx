@@ -8,8 +8,9 @@ namespace jxx::lang {
     class Exception : public jxx::lang::Throwable {
     public:
         using jxx::lang::Throwable::Throwable;
-        JXX_OBJECT_CLONE(jxx::lang::Exception)
+        
     protected:
+        JXX_OBJECT_CLONE(jxx::lang::Exception)
         const char* typeName() const noexcept override { return "Exception"; }
     };
 

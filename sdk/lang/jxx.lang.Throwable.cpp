@@ -208,9 +208,21 @@ namespace jxx::lang {
         return jxx::CAST<Throwable, jxx::lang::Object>(clone());
     }
 
+    Throwable::Throwable(const jxx::Ptr<Throwable> other) {
+        if (other) {
+            message_ = other->message_;
+            cause_ = other->cause_;
+            enableSuppression_ = other->enableSuppression_;
+            writableStackTrace_ = other->writableStackTrace_;
+        }
+    }
+
 
  const char* Throwable::typeName() const noexcept { return "Throwable"; }
 
+ jxx::Ptr<jxx::lang::Object> Throwable::cloneImpl() const {
+        return jxx::NEW<Throwable>(jxx::CAST<Throwable>(this->thisPtr));
+ }
 
 void Throwable::addSuppressed(const jxx::Ptr<Throwable> ex) {
     if (!enableSuppression_) {
@@ -220,7 +232,7 @@ void Throwable::addSuppressed(const jxx::Ptr<Throwable> ex) {
         throw NullPointerException("Cannot suppress null exception");
     }
     if (ex.get() == this) {
-        throw IllegalArgumentException("Self-suppression not permitted");
+       throw IllegalArgumentException("Self-suppression not permitted");
     }
     suppressed_.push_back(ex);
 }
