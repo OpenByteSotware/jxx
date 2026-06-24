@@ -125,6 +125,26 @@ public:
     virtual jxx::Ptr<Scanner> skip(jxx::Ptr<jxx::lang::String> pattern);
 
     virtual jxx::Ptr<regex::MatchResult> match();
+
+    jxx::lang::jbool hasNextFloat();
+
+    jxx::lang::jfloat nextFloat();
+
+
+    jxx::lang::jbool hasNextByte();
+
+    jxx::lang::jbool hasNextByte(jxx::lang::jint radix);
+    jxx::lang::jbyte nextByte();
+
+    jxx::lang::jbyte nextByte(jxx::lang::jint radix);
+
+    jxx::lang::jbool hasNextShort();
+
+    jxx::lang::jbool hasNextShort(jxx::lang::jint radix);
+
+    jxx::lang::jshort nextShort();
+
+    jxx::lang::jshort nextShort(jxx::lang::jint radix);
 };
 
 } // namespace util

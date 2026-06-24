@@ -47,6 +47,68 @@ namespace jxx::lang {
         }
     }
 
+    // Copy constructor
+    Throwable::Throwable(const Throwable& other)
+        : Object(other),
+        std::exception(other),
+        message_(other.message_),
+        cause_(other.cause_),
+        enableSuppression_(other.enableSuppression_),
+        writableStackTrace_(other.writableStackTrace_),
+        suppressed_(other.suppressed_),
+        stack_(other.stack_),
+        cachedWhat_(other.cachedWhat_),
+        cachedToString_(other.cachedToString_) {
+    }
+
+    // Move constructor
+    Throwable::Throwable(Throwable&& other) noexcept
+        : Object(std::move(other)),
+        std::exception(std::move(other)),
+        message_(std::move(other.message_)),
+        cause_(std::move(other.cause_)),
+        enableSuppression_(other.enableSuppression_),
+        writableStackTrace_(other.writableStackTrace_),
+        suppressed_(std::move(other.suppressed_)),
+        stack_(std::move(other.stack_)),
+        cachedWhat_(std::move(other.cachedWhat_)),
+        cachedToString_(std::move(other.cachedToString_)) {
+    }
+
+    // Copy assignment
+    Throwable& Throwable::operator=(const Throwable& other) {
+        if (this != &other) {
+            Object::operator=(other);
+            std::exception::operator=(other);
+            message_ = other.message_;
+            cause_ = other.cause_;
+            enableSuppression_ = other.enableSuppression_;
+            writableStackTrace_ = other.writableStackTrace_;
+            suppressed_ = other.suppressed_;
+            stack_ = other.stack_;
+            cachedWhat_ = other.cachedWhat_;
+            cachedToString_ = other.cachedToString_;
+        }
+        return *this;
+    }
+
+    // Move assignment
+    Throwable& Throwable::operator=(Throwable&& other) noexcept {
+        if (this != &other) {
+            Object::operator=(std::move(other));
+            std::exception::operator=(std::move(other));
+            message_ = std::move(other.message_);
+            cause_ = std::move(other.cause_);
+            enableSuppression_ = other.enableSuppression_;
+            writableStackTrace_ = other.writableStackTrace_;
+            suppressed_ = std::move(other.suppressed_);
+            stack_ = std::move(other.stack_);
+            cachedWhat_ = std::move(other.cachedWhat_);
+            cachedToString_ = std::move(other.cachedToString_);
+        }
+        return *this;
+    }
+
     // ---- Java-like message/cause API ----
     const jxx::Ptr<String>& Throwable::getMessage() const { return message_; }
     jxx::Ptr<Throwable> Throwable::getCause() const { return cause_; }

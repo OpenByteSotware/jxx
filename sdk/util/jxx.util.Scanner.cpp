@@ -1,9 +1,16 @@
 
+#include <algorithm>
+#include <cctype>
+#include <cstdlib>
+#include <limits>
+#include <regex>
+#include <string>
+#include <utility>
+#include <vector>
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "util/jxx.util.NoSuchElementException.h"
 #include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "util/jxx.util.Scanner.h"
-
 
 namespace jxx {
 namespace util {
@@ -139,6 +146,36 @@ static jxx::lang::jbool tryParseInt(
     return static_cast<jxx::lang::jbool>(true);
 }
 
+static jxx::lang::jbool tryParseShort(
+    jxx::Ptr<jxx::lang::String> token,
+    jxx::lang::jint radix,
+    jxx::lang::jshort& out) {
+    jxx::lang::jint value = 0;
+    if (!tryParseInt(token, radix, value)) {
+        return static_cast<jxx::lang::jbool>(false);
+    }
+    if (value < std::numeric_limits<short>::min() || value > std::numeric_limits<short>::max()) {
+        return static_cast<jxx::lang::jbool>(false);
+    }
+    out = static_cast<jxx::lang::jshort>(value);
+    return static_cast<jxx::lang::jbool>(true);
+}
+
+static jxx::lang::jbool tryParseByte(
+    jxx::Ptr<jxx::lang::String> token,
+    jxx::lang::jint radix,
+    jxx::lang::jbyte& out) {
+    jxx::lang::jshort value = 0;
+    if (!tryParseShort(token, radix, value)) {
+        return static_cast<jxx::lang::jbool>(false);
+    }
+    if (value < std::numeric_limits<signed char>::min() || value > std::numeric_limits<signed char>::max()) {
+        return static_cast<jxx::lang::jbool>(false);
+    }
+    out = static_cast<jxx::lang::jbyte>(value);
+    return static_cast<jxx::lang::jbool>(true);
+}
+
 static jxx::lang::jbool tryParseDouble(jxx::Ptr<jxx::lang::String> token, jxx::lang::jdouble& out) {
     if (token == nullptr) return static_cast<jxx::lang::jbool>(false);
     try {
@@ -151,6 +188,18 @@ static jxx::lang::jbool tryParseDouble(jxx::Ptr<jxx::lang::String> token, jxx::l
     } catch (...) {
         return static_cast<jxx::lang::jbool>(false);
     }
+}
+
+static jxx::lang::jbool tryParseFloat(jxx::Ptr<jxx::lang::String> token, jxx::lang::jfloat& out) {
+    jxx::lang::jdouble value = 0.0;
+    if (!tryParseDouble(token, value)) {
+        return static_cast<jxx::lang::jbool>(false);
+    }
+    if (value < -std::numeric_limits<float>::max() || value > std::numeric_limits<float>::max()) {
+        return static_cast<jxx::lang::jbool>(false);
+    }
+    out = static_cast<jxx::lang::jfloat>(value);
+    return static_cast<jxx::lang::jbool>(true);
 }
 
 static jxx::lang::jbool tryParseBoolean(jxx::Ptr<jxx::lang::String> token, jxx::lang::jbool& out) {
@@ -419,7 +468,7 @@ void Scanner::close() {
         if (sourceReader_ != nullptr) sourceReader_->close();
         if (sourceInputStream_ != nullptr) sourceInputStream_->close();
     } catch (...) {
-        // Stage 3 still keeps best-effort close semantics.
+        // Stage 4 still keeps best-effort close semantics.
     }
     closed_ = static_cast<jxx::lang::jbool>(true);
 }
@@ -577,6 +626,72 @@ jxx::lang::jbool Scanner::nextBoolean() {
     return value;
 }
 
+jxx::lang::jbool Scanner::hasNextByte() {
+    return hasNextByte(radix_);
+}
+
+jxx::lang::jbool Scanner::hasNextByte(jxx::lang::jint radix) {
+    ensureOpen();
+    if (radix < 2 || radix > 36) {
+        throw jxx::lang::IllegalArgumentException();
+    }
+    std::size_t start = 0;
+    std::size_t end = 0;
+    if (!locateNextToken(position_, start, end)) return static_cast<jxx::lang::jbool>(false);
+    jxx::lang::jbyte value = 0;
+    return tryParseByte(tokenString(start, end), radix, value);
+}
+
+jxx::lang::jbyte Scanner::nextByte() {
+    return nextByte(radix_);
+}
+
+jxx::lang::jbyte Scanner::nextByte(jxx::lang::jint radix) {
+    ensureOpen();
+    if (radix < 2 || radix > 36) {
+        throw jxx::lang::IllegalArgumentException();
+    }
+    auto token = next();
+    jxx::lang::jbyte value = 0;
+    if (!tryParseByte(token, radix, value)) {
+        throw InputMismatchException();
+    }
+    return value;
+}
+
+jxx::lang::jbool Scanner::hasNextShort() {
+    return hasNextShort(radix_);
+}
+
+jxx::lang::jbool Scanner::hasNextShort(jxx::lang::jint radix) {
+    ensureOpen();
+    if (radix < 2 || radix > 36) {
+        throw jxx::lang::IllegalArgumentException();
+    }
+    std::size_t start = 0;
+    std::size_t end = 0;
+    if (!locateNextToken(position_, start, end)) return static_cast<jxx::lang::jbool>(false);
+    jxx::lang::jshort value = 0;
+    return tryParseShort(tokenString(start, end), radix, value);
+}
+
+jxx::lang::jshort Scanner::nextShort() {
+    return nextShort(radix_);
+}
+
+jxx::lang::jshort Scanner::nextShort(jxx::lang::jint radix) {
+    ensureOpen();
+    if (radix < 2 || radix > 36) {
+        throw jxx::lang::IllegalArgumentException();
+    }
+    auto token = next();
+    jxx::lang::jshort value = 0;
+    if (!tryParseShort(token, radix, value)) {
+        throw InputMismatchException();
+    }
+    return value;
+}
+
 jxx::lang::jbool Scanner::hasNextInt() {
     return hasNextInt(radix_);
 }
@@ -638,6 +753,25 @@ jxx::lang::jlong Scanner::nextLong(jxx::lang::jint radix) {
     auto token = next();
     jxx::lang::jlong value = 0;
     if (!tryParseLong(token, radix, value)) {
+        throw InputMismatchException();
+    }
+    return value;
+}
+
+jxx::lang::jbool Scanner::hasNextFloat() {
+    ensureOpen();
+    std::size_t start = 0;
+    std::size_t end = 0;
+    if (!locateNextToken(position_, start, end)) return static_cast<jxx::lang::jbool>(false);
+    jxx::lang::jfloat value = 0.0f;
+    return tryParseFloat(tokenString(start, end), value);
+}
+
+jxx::lang::jfloat Scanner::nextFloat() {
+    ensureOpen();
+    auto token = next();
+    jxx::lang::jfloat value = 0.0f;
+    if (!tryParseFloat(token, value)) {
         throw InputMismatchException();
     }
     return value;

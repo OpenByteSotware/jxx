@@ -63,6 +63,18 @@ namespace jxx::lang {
             bool enableSuppression = true,
             bool writableStackTrace = true);
 
+        // Copy constructor
+        Throwable(const Throwable& other);
+        
+        // Move constructor
+        Throwable(Throwable&& other) noexcept;
+        
+        // Copy assignment
+        Throwable& operator=(const Throwable& other);
+        
+        // Move assignment
+        Throwable& operator=(Throwable&& other) noexcept;
+
         virtual ~Throwable() = default;
 
         // ---- Java-like message/cause API ----
