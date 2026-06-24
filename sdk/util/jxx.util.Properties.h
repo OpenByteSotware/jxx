@@ -11,7 +11,7 @@
 namespace jxx {
 namespace util {
 
-class Properties : public virtual Hashtable<jxx::lang::Object, jxx::lang::Object> {
+class Properties : public virtual jxx::util::Hashtable<jxx::lang::Object, jxx::lang::Object> {
 protected:
     jxx::Ptr<Properties> defaults;
 

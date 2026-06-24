@@ -19,13 +19,15 @@
 #include "util/jxx.util.Set.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "util/jxx.util.NoSuchElementException.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 
 namespace jxx {
 namespace util {
 
 template <typename K, typename V>
 class Hashtable
-    : public virtual Dictionary<K, V>
+    : public Dictionary<K, V>
     , public virtual Map<K, V>
     , public virtual jxx::lang::Cloneable
     , public virtual jxx::io::Serializable {
@@ -152,6 +154,19 @@ private:
         virtual jxx::Ptr<V> setValue(jxx::Ptr<V> value) override {
             return owner_->put(key_, value);
         }
+
+        virtual jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> o) override {
+            if (o == nullptr) return static_cast<jxx::lang::jbool>(false);
+            auto e = jxx::CAST<MapEntry<K, V>, jxx::lang::Object>(o);
+            if (e == nullptr) return static_cast<jxx::lang::jbool>(false);
+            return static_cast<jxx::lang::jbool>(objEquals(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(key_), jxx::CAST<jxx::lang::Object, jxx::lang::Object>(e->getKey())) &&
+                objEquals(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(getValue()), jxx::CAST<jxx::lang::Object, jxx::lang::Object>(e->getValue())));
+		}
+
+        virtual jxx::lang::jint hashCode() override {
+            return objectHash(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(key_)) ^
+                objectHash(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(getValue()));
+		}
     };
 
     class KeySetView : public virtual Set<K> {
@@ -170,6 +185,38 @@ private:
             return static_cast<jxx::lang::jbool>(true);
         }
         virtual void clear() override { owner_->clear(); }
+
+        virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> toArray() override {
+            return nullptr;
+        }
+
+        virtual jxx::lang::jbool containsAll(jxx::Ptr<wildcard::CollectionAny> c) override {
+            if (c == nullptr) throw jxx::lang::NullPointerException();
+            auto it = c->iteratorObject();
+            while (it->hasNext()) {
+                auto e = jxx::CAST<MapEntry<K, V>, jxx::lang::Object>(it->next());
+                if (!contains(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(e))) return static_cast<jxx::lang::jbool>(false);
+            }
+            return static_cast<jxx::lang::jbool>(true);
+        }
+        virtual jxx::lang::jbool addAll(jxx::Ptr<wildcard::CollectionExtends<K>> c) override {
+            throw jxx::lang::UnsupportedOperationException();
+        }
+        virtual jxx::lang::jbool retainAll(jxx::Ptr<wildcard::CollectionAny> c) override {
+            throw jxx::lang::UnsupportedOperationException();
+        }
+        virtual jxx::lang::jbool removeAll(jxx::Ptr<wildcard::CollectionAny> c) override {
+            throw jxx::lang::UnsupportedOperationException();
+        }
+        virtual jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> o) override {
+            throw jxx::lang::UnsupportedOperationException();
+        }
+        virtual jxx::lang::jint hashCode() override {
+            throw jxx::lang::UnsupportedOperationException();
+        }
+        virtual jxx::Ptr<Spliterator<K>> spliterator() override {
+            throw jxx::lang::UnsupportedOperationException();
+        }
     };
 
     class ValuesView : public virtual Collection<V> {
@@ -186,6 +233,36 @@ private:
             return owner_->removeValueFirst(o);
         }
         virtual void clear() override { owner_->clear(); }
+        virtual jxx::Ptr<JxxArray<jxx::Ptr<V>, 1U>> toArray() override {
+            const jxx::lang::jint sz = this->size();
+            auto result = jxx::Ptr<JxxArray<jxx::Ptr<V>, 1U>>(jxx::NEW<JxxArray<jxx::Ptr<V>, 1U>>(sz));
+            auto it = this->iterator();
+            jxx::lang::jint i = 0;
+            while (it->hasNext()) {
+                (*result)(i++) = it->next();
+            }
+            return result;
+        }
+               
+        virtual jxx::lang::jbool containsAll(jxx::Ptr<wildcard::CollectionAny> c) override {
+            if (c == nullptr) throw jxx::lang::NullPointerException();
+            auto it = c->iteratorObject();
+            while (it->hasNext()) {
+                auto e = jxx::CAST<jxx::lang::Object, jxx::lang::Object>(it->next());
+                if (!contains(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(e))) return
+                    static_cast<jxx::lang::jbool>(false);
+            }
+            return static_cast<jxx::lang::jbool>(true);
+		}
+        virtual jxx::lang::jbool addAll(jxx::Ptr<wildcard::CollectionExtends<V>> c) override {
+			throw jxx::lang::UnsupportedOperationException();
+        }
+        virtual jxx::lang::jbool removeAll(jxx::Ptr<wildcard::CollectionAny> c) override {
+            throw jxx::lang::UnsupportedOperationException();
+        }
+        virtual jxx::lang::jbool retainAll(jxx::Ptr<wildcard::CollectionAny> c) override {
+            throw jxx::lang::UnsupportedOperationException(); }
+       
     };
 
     class EntrySetView : public virtual Set<MapEntry<K, V>> {
@@ -213,6 +290,38 @@ private:
             return owner_->removeEq(e->getKey(), e->getValue());
         }
         virtual void clear() override { owner_->clear(); }
+         
+        virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> toArray() override {
+            return nullptr;
+		}        
+       
+        virtual jxx::lang::jbool containsAll(jxx::Ptr<wildcard::CollectionAny> c) override {
+            if (c == nullptr) throw jxx::lang::NullPointerException();
+            auto it = c->iteratorObject();
+            while (it->hasNext()) {
+                auto e = jxx::CAST<MapEntry<K, V>, jxx::lang::Object>(it->next());
+                if (!contains(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(e))) return static_cast<jxx::lang::jbool>(false);
+            }
+            return static_cast<jxx::lang::jbool>(true);
+		}
+        virtual jxx::lang::jbool addAll(jxx::Ptr<wildcard::CollectionExtends<MapEntry<K, V>>> c) override {
+            throw jxx::lang::UnsupportedOperationException();
+		}
+        virtual jxx::lang::jbool retainAll(jxx::Ptr<wildcard::CollectionAny> c) override {
+            throw jxx::lang::UnsupportedOperationException();
+        }
+        virtual jxx::lang::jbool removeAll(jxx::Ptr<wildcard::CollectionAny> c) override {
+            throw jxx::lang::UnsupportedOperationException();
+        }
+        virtual jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> o) override {
+            throw jxx::lang::UnsupportedOperationException();
+        }
+        virtual jxx::lang::jint hashCode() override {
+            throw jxx::lang::UnsupportedOperationException();
+        }
+        virtual jxx::Ptr<Spliterator<MapEntry<K, V>>> spliterator() override {
+            throw jxx::lang::UnsupportedOperationException();
+        }
     };
 
 public:
@@ -253,10 +362,71 @@ public:
     }
 
     virtual ~Hashtable() = default;
-
+    
     virtual jxx::lang::jint size() override {
         return this->synchronized([&]() -> jxx::lang::jint { return count_; });
     }
+
+    virtual jxx::lang::jint hashCode() override {
+        return (jxx::lang::jint)this;
+	}
+
+    virtual void writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out)override {
+        if (out == nullptr) throw jxx::lang::NullPointerException();
+        this->synchronized([&]() {
+            out->writeInt(count_);
+            for (const auto& bucket : buckets_) {
+                for (const auto& entry : bucket) {
+                    out->writeObject(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(entry.key));
+                    out->writeObject(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(entry.value));
+                }
+            }
+        });
+	}
+    virtual void readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) override {
+        if (in == nullptr) throw jxx::lang::NullPointerException();
+        this->synchronized([&]() {
+            count_ = in->readInt();
+            for (jxx::lang::jint i = 0; i < count_; ++i) {
+                auto key = jxx::CAST<K, jxx::lang::Object>(in->readObject());
+                auto value = jxx::CAST<V, jxx::lang::Object>(in->readObject());
+                put(key, value);
+            }
+			});
+
+    }
+
+    virtual void readObjectNoData() override {
+        this->synchronized([&]() {
+            buckets_.clear();
+            buckets_.resize(static_cast<std::size_t>(DEFAULT_INITIAL_CAPACITY));
+            count_ = 0;
+            loadFactor_ = DEFAULT_LOAD_FACTOR;
+            recomputeThreshold();
+        });
+	}
+
+    virtual jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> o) override {
+        if (o == nullptr) return static_cast<jxx::lang::jbool>(false);
+        if (this == o.get()) return static_cast<jxx::lang::jbool>(true);
+        auto m = jxx::CAST<Map<K, V>, jxx::lang::Object>(o);
+        if (m == nullptr) return static_cast<jxx::lang::jbool>(false);
+        return this->synchronized([&]() -> jxx::lang::jbool {
+            if (count_ != m->size()) return static_cast<jxx::lang::jbool>(false);
+            auto it = m->entrySet()->iterator();
+            while (it->hasNext()) {
+                auto e = it->next();
+                auto key = e->getKey();
+                auto value = e->getValue();
+                auto v = get(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(key));
+                if (!objEquals(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(v),
+                    jxx::CAST<jxx::lang::Object, jxx::lang::Object>(value))) {
+                    return static_cast<jxx::lang::jbool>(false);
+                }
+            }
+            return static_cast<jxx::lang::jbool>(true);
+        });
+	}
 
     virtual jxx::lang::jbool isEmpty() override {
         return this->synchronized([&]() -> jxx::lang::jbool { return static_cast<jxx::lang::jbool>(count_ == 0); });
@@ -433,6 +603,8 @@ public:
     }
 
 protected:
+    virtual jxx::Ptr<jxx::lang::Object> cloneImpl() const override { throw jxx::lang::UnsupportedOperationException(); }
+
     virtual void rehash() {
         const std::size_t newCap = buckets_.size() * 2U + 1U;
         std::vector<std::vector<EntryRecord>> newBuckets(newCap);
@@ -472,7 +644,7 @@ private:
             out.reserve(static_cast<std::size_t>(count_));
             for (const auto& bucket : buckets_) {
                 for (const auto& entry : bucket) {
-                    out.push_back(jxx::Ptr<MapEntry<K, V>>(new EntryView(this, entry.key)));
+                    out.push_back(jxx::Ptr<MapEntry<K, V>>(jxx::NEW<EntryView>(this, entry.key)));
                 }
             }
             return out;

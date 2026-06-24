@@ -7,7 +7,7 @@ namespace jxx {
 namespace util {
 
 template <typename K, typename V>
-class Dictionary : virtual public jxx::lang::Object {
+class Dictionary : public jxx::lang::Object {
 public:
     virtual ~Dictionary() = default;
     virtual jxx::lang::jint size() = 0;
