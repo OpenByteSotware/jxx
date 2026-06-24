@@ -32,6 +32,7 @@
 #include "util/jxx.util.ArrayList.h"
 #include "util/jxx.util.VectorEnumeration.h"
 #include "net/jxx.net.NetworkInterface.h"
+#include "net/jxx.net.InetAddress.h"
 
 namespace
 {

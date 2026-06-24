@@ -45,7 +45,7 @@ private:
                 throw jxx::util::ConcurrentModificationException();
             }
             if (!hasNext()) {
-                throw jxx::lang::NoSuchElementException();
+                throw jxx::util::NoSuchElementException();
             }
             lastRet_ = cursor_++;
             return rootIterator_->next();
@@ -60,7 +60,7 @@ private:
                 throw jxx::util::ConcurrentModificationException();
             }
             if (!hasPrevious()) {
-                throw jxx::lang::NoSuchElementException();
+                throw jxx::util::NoSuchElementException();
             }
             cursor_--;
             lastRet_ = cursor_;
