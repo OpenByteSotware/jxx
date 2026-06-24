@@ -112,6 +112,11 @@ private:
             if (index_ >= snapshot_.size()) throw jxx::util::NoSuchElementException();
             return snapshot_[index_++];
         }
+
+        virtual void remove() override {
+            throw jxx::lang::UnsupportedOperationException();
+        }
+
     };
 
     template <typename E>

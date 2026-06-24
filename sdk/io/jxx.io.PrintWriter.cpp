@@ -4,8 +4,8 @@
 #include "lang/jxx.lang.String.h"
 #include <sstream>
 namespace jxx { namespace io {
-PrintWriter::PrintWriter(std::shared_ptr<Writer> w, bool autoFlush_) : out(std::move(w)), autoFlush(autoFlush_) {}
-PrintWriter::PrintWriter(std::shared_ptr<OutputStream> os, bool autoFlush_, const std::string& charset) : 
+PrintWriter::PrintWriter(jxx::Ptr<Writer> w, bool autoFlush_) : out(std::move(w)), autoFlush(autoFlush_) {}
+PrintWriter::PrintWriter(jxx::Ptr<OutputStream> os, bool autoFlush_, const std::string& charset) : 
 	out(jxx::NEW<OutputStreamWriter>(std::move(os), jxx::NEW<jxx::lang::String>(charset))), autoFlush(autoFlush_) {}
 void PrintWriter::flush(){ try{ out->flush(); } catch(...){ setError(); } }
 void PrintWriter::close(){ try{ out->close(); } catch(...){ setError(); } }

@@ -395,6 +395,6 @@ namespace jxx {
             return std::static_pointer_cast<To>(ptr);   // upcast (Derived -> Base)
         else
             return std::dynamic_pointer_cast<To>(ptr);  // downcast / unrelated
-    }
+    } 
 
 } // namespace jxx::lang
