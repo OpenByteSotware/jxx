@@ -4,11 +4,11 @@
 #include <utility>
 #include <vector>
 
-#include "io/jxx.util.regex.Matcher.h"
-#include "io/jxx.util.regex.Pattern.h"
-#include "io/jxx.util.regex.PatternSyntaxException.h"
-#include "io/jxx.lang.IllegalArgumentException.h"
-#include "io/jxx.lang.NullPointerException.h"
+#include "util/regex/jxx.util.regex.Matcher.h"
+#include "util/regex/jxx.util.regex.Pattern.h"
+#include "util/regex/jxx.util.regex.PatternSyntaxException.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.NullPointerException.h"
 
 namespace jxx {
 namespace util {
@@ -57,13 +57,13 @@ static jxx::Ptr<jxx::lang::String> toStringPtr(jxx::Ptr<jxx::lang::CharSequence>
         throw jxx::lang::NullPointerException();
     }
     auto asString = jxx::CAST<jxx::lang::String>(seq);
-    return asString != nullptr ? asString : seq->toString();
+    return asString;
 }
 
 static jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> vectorToStringArray(const std::vector<jxx::Ptr<jxx::lang::String>>& items) {
     auto arr = std::make_shared<jxx::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>>(static_cast<jxx::lang::jint>(items.size()));
     for (jxx::lang::jint i = 0; i < static_cast<jxx::lang::jint>(items.size()); ++i) {
-        (*arr)[i] = items[static_cast<std::size_t>(i)];
+        (*arr)(i) = items[static_cast<std::size_t>(i)];
     }
     return arr;
 }

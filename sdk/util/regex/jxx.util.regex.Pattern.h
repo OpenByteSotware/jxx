@@ -16,7 +16,7 @@ namespace regex {
 class Matcher;
 class PatternSyntaxException;
 
-class Pattern final : public virtual jxx::lang::Object, public virtual jxx::io::Serializable {
+class Pattern final : public jxx::lang::Object, public virtual jxx::io::Serializable {
 public:
     static constexpr jxx::lang::jint UNIX_LINES = 0x01;
     static constexpr jxx::lang::jint CASE_INSENSITIVE = 0x02;
