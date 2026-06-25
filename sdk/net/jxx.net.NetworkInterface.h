@@ -25,11 +25,11 @@ namespace jxx::net
         static jxx::Ptr<NetworkInterface> getByName(jxx::Ptr<jxx::lang::String> name);
         static jxx::Ptr<NetworkInterface> getByIndex(jxx::lang::jint index);
         static jxx::Ptr<NetworkInterface> getByInetAddress(jxx::Ptr<InetAddress> addr);
-        static jxx::Ptr<jxx::util::Enumeration<jxx::Ptr<NetworkInterface>>> getNetworkInterfaces();
+        static jxx::Ptr<jxx::util::Enumeration<NetworkInterface>> getNetworkInterfaces();
 
-        jxx::Ptr<jxx::util::Enumeration<jxx::Ptr<InetAddress>>> getInetAddresses() const;
+        jxx::Ptr<jxx::util::Enumeration<InetAddress>> getInetAddresses() const;
         jxx::Ptr<jxx::util::List<jxx::Ptr<InterfaceAddress>>> getInterfaceAddresses() const;
-        jxx::Ptr<jxx::util::Enumeration<jxx::Ptr<NetworkInterface>>> getSubInterfaces() const;
+        jxx::Ptr<jxx::util::Enumeration<NetworkInterface>> getSubInterfaces() const;
         jxx::Ptr<NetworkInterface> getParent() const;
 
         jxx::Ptr<jxx::lang::String> getName() const;

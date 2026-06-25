@@ -25,7 +25,7 @@ namespace jxx::util
             return index_ < items_.size();
         }
 
-        T nextElement() override
+        jxx::Ptr<T> nextElement() override
         {
             if (index_ >= items_.size())
                 throw std::runtime_error("no more elements");

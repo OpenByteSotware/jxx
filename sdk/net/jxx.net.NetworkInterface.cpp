@@ -271,9 +271,9 @@ namespace jxx::net
         return out;
     }
 
-    jxx::Ptr<jxx::util::Enumeration<jxx::Ptr<InetAddress>>> NetworkInterface::getInetAddresses() const
+    jxx::Ptr<jxx::util::Enumeration<InetAddress>> NetworkInterface::getInetAddresses() const
     {
-        return jxx::NEW<jxx::util::VectorEnumeration<jxx::Ptr<InetAddress>>>(inetAddresses_);
+        return jxx::NEW<jxx::util::VectorEnumeration<InetAddress>>(inetAddresses_);
     }
 
     jxx::Ptr<NetworkInterface> NetworkInterface::getByName(jxx::Ptr<jxx::lang::String> name)
@@ -336,7 +336,7 @@ namespace jxx::net
         return nullptr;
     }
 
-    jxx::Ptr<jxx::util::Enumeration<jxx::Ptr<NetworkInterface>>> NetworkInterface::getNetworkInterfaces()
+    jxx::Ptr<jxx::util::Enumeration<NetworkInterface>> NetworkInterface::getNetworkInterfaces()
     {
         std::map<std::string, jxx::Ptr<NetworkInterface>> map;
 
@@ -378,7 +378,7 @@ namespace jxx::net
         std::vector<jxx::Ptr<NetworkInterface>> items;
         for (const auto& kv : map)
             items.push_back(kv.second);
-        return jxx::NEW<jxx::util::VectorEnumeration<jxx::Ptr<NetworkInterface>>>(std::move(items));
+        return jxx::NEW<jxx::util::VectorEnumeration<NetworkInterface>>(std::move(items));
     }
 
     
@@ -392,9 +392,9 @@ namespace jxx::net
         return jxx::CAST<jxx::util::List<jxx::Ptr<InterfaceAddress>>, jxx::util::ArrayList<InterfaceAddress>>(list);
     }
 
-    jxx::Ptr<jxx::util::Enumeration<jxx::Ptr<NetworkInterface>>> NetworkInterface::getSubInterfaces() const
+    jxx::Ptr<jxx::util::Enumeration<NetworkInterface>> NetworkInterface::getSubInterfaces() const
     {
-        return jxx::NEW<jxx::util::VectorEnumeration<jxx::Ptr<NetworkInterface>>>(std::vector<jxx::Ptr<NetworkInterface>>{});
+        return jxx::NEW<jxx::util::VectorEnumeration<NetworkInterface>>(std::vector<jxx::Ptr<NetworkInterface>>{});
     }
 
  

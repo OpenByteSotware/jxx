@@ -49,14 +49,14 @@ public:
     static jxx::Ptr<ClassLoader> getSystemClassLoader();
 
     static jxx::Ptr<jxx::net::URL> getSystemResource(jxx::Ptr<String> name);
-    static jxx::Ptr<jxx::util::Enumeration<jxx::Ptr<jxx::net::URL>>> getSystemResources(jxx::Ptr<String> name);
+    static jxx::Ptr<jxx::util::Enumeration<jxx::net::URL>> getSystemResources(jxx::Ptr<String> name);
     static jxx::Ptr<jxx::io::InputStream> getSystemResourceAsStream(jxx::Ptr<String> name);
 
     jxx::Ptr<ClassAny> loadClass(jxx::Ptr<String> name);
     virtual jxx::Ptr<ClassAny> loadClass(jxx::Ptr<String> name, jbool resolve);
 
     virtual jxx::Ptr<jxx::net::URL> getResource(jxx::Ptr<String> name);
-    virtual jxx::Ptr<jxx::util::Enumeration<jxx::Ptr<jxx::net::URL>>> getResources(jxx::Ptr<String> name);
+    virtual jxx::Ptr<jxx::util::Enumeration<jxx::net::URL>> getResources(jxx::Ptr<String> name);
     virtual jxx::Ptr<jxx::io::InputStream> getResourceAsStream(jxx::Ptr<String> name);
 
     // Assertions (Java 8)
@@ -92,7 +92,7 @@ protected:
 
     // Resource hooks
     virtual jxx::Ptr<jxx::net::URL> findResource(jxx::Ptr<String> name);
-    virtual jxx::Ptr<jxx::util::Enumeration<jxx::Ptr<jxx::net::URL>>> findResources(jxx::Ptr<String> name);
+    virtual jxx::Ptr<jxx::util::Enumeration<jxx::net::URL>> findResources(jxx::Ptr<String> name);
 
     // System class lookup (bootstrap-ish). In JXX we forward to ClassAny registry.
     virtual jxx::Ptr<ClassAny> findSystemClass(jxx::Ptr<String> name);
@@ -152,7 +152,7 @@ private:
     // Enumeration implementation for getResources()
     class VectorUrlEnumeration final
         : public Object
-        , public jxx::util::Enumeration<jxx::Ptr<jxx::net::URL>>
+        , public jxx::util::Enumeration<jxx::net::URL>
     {
     public:
         explicit VectorUrlEnumeration(std::vector<jxx::Ptr<jxx::net::URL>> items);

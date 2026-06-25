@@ -43,7 +43,7 @@ namespace jxx::lang {
     jxx::Ptr<jxx::net::URL> ClassLoader::getSystemResource(jxx::Ptr<String> name) {
         return getSystemClassLoader()->getResource(name);
     }
-    jxx::Ptr<jxx::util::Enumeration<jxx::Ptr<jxx::net::URL>>> ClassLoader::getSystemResources(jxx::Ptr<String> name) {
+    jxx::Ptr<jxx::util::Enumeration<jxx::net::URL>> ClassLoader::getSystemResources(jxx::Ptr<String> name) {
         return getSystemClassLoader()->getResources(name);
     }
     jxx::Ptr<jxx::io::InputStream> ClassLoader::getSystemResourceAsStream(jxx::Ptr<String> name) {
@@ -155,7 +155,7 @@ namespace jxx::lang {
         return jxx::NEW<jxx::net::URL>(jxx::NEW<String>(spec.c_str()));
     }
 
-    jxx::Ptr<jxx::util::Enumeration<jxx::Ptr<jxx::net::URL>>> ClassLoader::findResources(jxx::Ptr<String> name) {
+    jxx::Ptr<jxx::util::Enumeration<jxx::net::URL>> ClassLoader::findResources(jxx::Ptr<String> name) {
         std::vector<jxx::Ptr<jxx::net::URL>> v;
         if (auto u = findResource(name)) v.push_back(u);
         return jxx::NEW<VectorUrlEnumeration>(std::move(v));
@@ -169,13 +169,13 @@ namespace jxx::lang {
         return findResource(name);
     }
 
-    jxx::Ptr<jxx::util::Enumeration<jxx::Ptr<jxx::net::URL>>> ClassLoader::getResources(jxx::Ptr<String> name) {
+    jxx::Ptr<jxx::util::Enumeration<jxx::net::URL>> ClassLoader::getResources(jxx::Ptr<String> name) {
         if (!name) throw NullPointerException(jxx::NEW<String>("name"));
 
         std::vector<jxx::Ptr<jxx::net::URL>> all;
         if (parent_) {
             auto pe = parent_->getResources(name);
-            if (pe) while (pe->hasMoreElements()) all.push_back(pe->nextElement());
+            if (pe) while (pe->hasMoreElements()) all.push_back((*pe)->nextElement());
         }
         auto le = findResources(name);
         if (le) while (le->hasMoreElements()) all.push_back(le->nextElement());

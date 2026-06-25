@@ -1,12 +1,12 @@
 #include <regex>
 #include <string>
 
-#include "io/jxx.util.regex.Matcher.h"
-#include "io/jxx.util.regex.Pattern.h"
-#include "io/jxx.lang.IllegalArgumentException.h"
-#include "io/jxx.lang.IllegalStateException.h"
-#include "io/jxx.lang.IndexOutOfBoundsException.h"
-#include "io/jxx.lang.NullPointerException.h"
+#include "util/regex/jxx.util.regex.Matcher.h"
+#include "util/regex/jxx.util.regex.Pattern.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.IllegalStateException.h"
+#include "lang/jxx.lang.IndexOutOfBoundsException.h"
+#include "lang/jxx.lang.NullPointerException.h"
 
 namespace jxx {
 namespace util {
@@ -18,7 +18,7 @@ static jxx::Ptr<jxx::lang::String> toStringPtr(jxx::Ptr<jxx::lang::CharSequence>
         throw jxx::lang::NullPointerException();
     }
     auto asString = jxx::CAST<jxx::lang::String>(seq);
-    return asString != nullptr ? asString : seq->toString();
+    return asString;
 }
 
 static std::string escapeReplacement(const std::string& s) {
