@@ -12,7 +12,7 @@ namespace jxx::util
     class VectorEnumeration final : public Enumeration<T>
     {
     public:
-        explicit VectorEnumeration(std::vector<T> items)
+        explicit VectorEnumeration(std::vector<jxx::Ptr<T>> items)
             : items_(std::move(items))
         {
         }
@@ -33,7 +33,7 @@ namespace jxx::util
         }
 
     private:
-        std::vector<T> items_;
+        std::vector<jxx::Ptr<T>> items_;
         std::size_t index_ = 0;
     };
 }

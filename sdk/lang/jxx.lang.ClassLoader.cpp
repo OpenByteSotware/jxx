@@ -175,7 +175,7 @@ namespace jxx::lang {
         std::vector<jxx::Ptr<jxx::net::URL>> all;
         if (parent_) {
             auto pe = parent_->getResources(name);
-            if (pe) while (pe->hasMoreElements()) all.push_back((*pe)->nextElement());
+            if (pe) while (pe->hasMoreElements()) all.push_back(pe->nextElement());
         }
         auto le = findResources(name);
         if (le) while (le->hasMoreElements()) all.push_back(le->nextElement());

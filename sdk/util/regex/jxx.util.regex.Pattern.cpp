@@ -94,10 +94,7 @@ jxx::Ptr<Pattern> Pattern::compile(jxx::Ptr<jxx::lang::String> regex, jxx::lang:
         std::regex native(compiledPattern, toSyntaxFlags(flags));
         return std::make_shared<Pattern>(regex, flags, std::move(compiledPattern), std::move(native));
     } catch (const std::regex_error& ex) {
-        throw PatternSyntaxException(
-            std::make_shared<jxx::lang::String>(ex.what()),
-            regex,
-            static_cast<jxx::lang::jint>(-1));
+        throw jxx::util::regex::PatternSyntaxException(ex.what());            
     }
 }
 
