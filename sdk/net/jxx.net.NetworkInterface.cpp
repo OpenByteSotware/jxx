@@ -25,14 +25,15 @@
 #endif
 #endif
 
+#include "lang/jxx.lang.String.h"
 #include "net/internal/jxx.net.internal.NetPlatform.h"
 #include "net/jxx.net.Inet4Address.h"
 #include "net/jxx.net.Inet6Address.h"
 #include "net/jxx.net.InterfaceAddress.h"
 #include "util/jxx.util.ArrayList.h"
 #include "util/jxx.util.VectorEnumeration.h"
-#include "net/jxx.net.NetworkInterface.h"
 #include "net/jxx.net.InetAddress.h"
+#include "net/jxx.net.NetworkInterface.h"
 
 namespace
 {
@@ -114,6 +115,23 @@ namespace
 
 namespace jxx::net
 {
+    jxx::Ptr<NetworkInterface> NetworkInterface::getParent() const { return nullptr; }
+    jxx::Ptr<jxx::lang::String> NetworkInterface::getName() const { return name_; }
+    jxx::Ptr<jxx::lang::String> NetworkInterface::getDisplayName() const { return displayName_; }
+    jxx::lang::jint NetworkInterface::getIndex() const noexcept { return index_; }
+    jxx::lang::jbool NetworkInterface::isUp() const { return isUp_; }
+    jxx::lang::jbool NetworkInterface::isLoopback() const { return isLoopback_; }
+    jxx::lang::jbool NetworkInterface::isPointToPoint() const { return isPtP_; }
+    jxx::lang::jbool NetworkInterface::supportsMulticast() const { return supportsMulticast_; }
+    jxx::lang::jbool NetworkInterface::isVirtual() const { return isVirtual_; }
+    jxx::lang::jint NetworkInterface::getMTU() const { return mtu_; }
+    jxx::lang::ByteArray NetworkInterface::getHardwareAddress() const { return hardwareAddr_; }
+
+    jxx::Ptr<jxx::lang::String> NetworkInterface::toString() const
+    {
+        return jxx::NEW<jxx::lang::String>(name_ ? name_->utf8() : std::string());
+    }
+
     jxx::Ptr<NetworkInterface> NetworkInterface::fromName_(const std::string& name,
                                                            jxx::lang::jint indexHint)
     {
@@ -253,6 +271,11 @@ namespace jxx::net
         return out;
     }
 
+    jxx::Ptr<jxx::util::Enumeration<jxx::Ptr<InetAddress>>> NetworkInterface::getInetAddresses() const
+    {
+        return jxx::NEW<jxx::util::VectorEnumeration<jxx::Ptr<InetAddress>>>(inetAddresses_);
+    }
+
     jxx::Ptr<NetworkInterface> NetworkInterface::getByName(jxx::Ptr<jxx::lang::String> name)
     {
         if (!name)
@@ -358,10 +381,7 @@ namespace jxx::net
         return jxx::NEW<jxx::util::VectorEnumeration<jxx::Ptr<NetworkInterface>>>(std::move(items));
     }
 
-    jxx::Ptr<jxx::util::Enumeration<jxx::Ptr<InetAddress>>> NetworkInterface::getInetAddresses() const
-    {
-        return jxx::NEW<jxx::util::VectorEnumeration<jxx::Ptr<InetAddress>>>(inetAddresses_);
-    }
+    
 
     jxx::Ptr<jxx::util::List<jxx::Ptr<InterfaceAddress>>> NetworkInterface::getInterfaceAddresses() const
     {
@@ -377,23 +397,7 @@ namespace jxx::net
         return jxx::NEW<jxx::util::VectorEnumeration<jxx::Ptr<NetworkInterface>>>(std::vector<jxx::Ptr<NetworkInterface>>{});
     }
 
-    jxx::Ptr<NetworkInterface> NetworkInterface::getParent() const { return nullptr; }
-    jxx::Ptr<jxx::lang::String> NetworkInterface::getName() const { return name_; }
-    jxx::Ptr<jxx::lang::String> NetworkInterface::getDisplayName() const { return displayName_; }
-    jxx::lang::jint NetworkInterface::getIndex() const noexcept { return index_; }
-    jxx::lang::jbool NetworkInterface::isUp() const { return isUp_; }
-    jxx::lang::jbool NetworkInterface::isLoopback() const { return isLoopback_; }
-    jxx::lang::jbool NetworkInterface::isPointToPoint() const { return isPtP_; }
-    jxx::lang::jbool NetworkInterface::supportsMulticast() const { return supportsMulticast_; }
-    jxx::lang::jbool NetworkInterface::isVirtual() const { return isVirtual_; }
-    jxx::lang::jint NetworkInterface::getMTU() const { return mtu_; }
-    jxx::lang::ByteArray NetworkInterface::getHardwareAddress() const { return hardwareAddr_; }
-
-    jxx::Ptr<jxx::lang::String> NetworkInterface::toString() const
-    {
-        return jxx::NEW<jxx::lang::String>(name_ ? name_->utf8() : std::string());
-    }
-
+ 
     jxx::lang::jbool NetworkInterface::equals(jxx::Ptr<jxx::lang::Object> other) const
     {
         auto o = std::dynamic_pointer_cast<NetworkInterface>(other);

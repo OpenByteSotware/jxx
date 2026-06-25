@@ -1,6 +1,6 @@
-#include "net/jxx.net.InterfaceAddress.h"
-
+#include "lang/jxx.lang.String.h"
 #include "net/jxx.net.InetAddress.h"
+#include "net/jxx.net.InterfaceAddress.h"
 
 namespace jxx::net
 {

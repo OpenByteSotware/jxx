@@ -8,8 +8,9 @@ namespace jxx::lang {
 class InstantiationException : public ReflectiveOperationException {
 public:
     using ReflectiveOperationException::ReflectiveOperationException;
-    JXX_OBJECT_CLONE(InstantiationException)
+    
 protected:
+    JXX_OBJECT_CLONE(InstantiationException)
     const char* typeName() const noexcept override { return "InstantiationException"; }
 };
 

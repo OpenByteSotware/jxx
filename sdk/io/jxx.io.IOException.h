@@ -8,9 +8,10 @@ namespace jxx::io {
     class IOException : public jxx::lang::Exception {
     public:
         using jxx::lang::Exception::Exception;
-        JXX_OBJECT_CLONE(IOException)
+        
 
     protected:
+        JXX_OBJECT_CLONE(IOException)
         const char* typeName() const noexcept override { return "IOException"; }   
     };
 

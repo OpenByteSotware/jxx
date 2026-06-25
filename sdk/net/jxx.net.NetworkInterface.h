@@ -2,11 +2,14 @@
 
 #include <vector>
 
-#include "lang/jxx_types.h"
 #include "lang/jxx.lang.Object.h"
-#include "lang/jxx.lang.String.h"
 #include "util/jxx.util.Enumeration.h"
 #include "util/jxx.util.List.h"
+
+namespace jxx::lang 
+{
+    class String;
+}
 
 namespace jxx::net
 {

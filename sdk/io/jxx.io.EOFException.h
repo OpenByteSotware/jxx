@@ -6,8 +6,9 @@ namespace jxx {
 		class EOFException : public IOException {
 		public:
 			using jxx::io::IOException::IOException;
-			JXX_OBJECT_CLONE(EOFException)
+			
 		protected:
+			JXX_OBJECT_CLONE(EOFException)
 			const char* typeName() const noexcept override { return "EOFException"; }
 		};
 	}

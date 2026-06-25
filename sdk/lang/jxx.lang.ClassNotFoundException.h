@@ -8,8 +8,9 @@ namespace jxx::lang {
     class ClassNotFoundException : public jxx::lang::ReflectiveOperationException {
     public:
         using ReflectiveOperationException::ReflectiveOperationException;
-        JXX_OBJECT_CLONE(jxx::lang::ClassNotFoundException)
+        
     protected:
+        JXX_OBJECT_CLONE(ClassNotFoundException)
         const char* typeName() const noexcept override { return "ClassNotFoundException"; }
     };
 

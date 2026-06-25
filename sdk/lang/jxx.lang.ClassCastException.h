@@ -8,8 +8,9 @@ namespace jxx::lang {
 class ClassCastException : public jxx::lang::RuntimeException {
 public:
     using jxx::lang::RuntimeException::RuntimeException;
-    JXX_OBJECT_CLONE(jxx::lang::ClassCastException)
+    
 protected:
+    JXX_OBJECT_CLONE(ClassCastException)
     const char* typeName() const noexcept override { return "ClassCastException"; }
 };
 

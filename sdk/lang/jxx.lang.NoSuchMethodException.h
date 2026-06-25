@@ -8,8 +8,9 @@ namespace jxx::lang {
 class NoSuchMethodException : public ReflectiveOperationException {
 public:
     using ReflectiveOperationException::ReflectiveOperationException;
-    JXX_OBJECT_CLONE(NoSuchMethodException)
+    
 protected:
+    JXX_OBJECT_CLONE(NoSuchMethodException)
     const char* typeName() const noexcept override { return "NoSuchMethodException"; }
 };
 

@@ -1,5 +1,3 @@
-#include "net/jxx.net.InetAddress.h"
-
 #if defined(_WIN32)
     #ifndef NOMINMAX
         #define NOMINMAX
@@ -22,6 +20,8 @@
 #include "net/jxx.net.Inet4Address.h"
 #include "net/jxx.net.Inet6Address.h"
 #include "net/jxx.net.UnknownHostException.h"
+#include "lang/jxx.lang.String.h"
+#include "net/jxx.net.InetAddress.h"
 
 namespace
 {

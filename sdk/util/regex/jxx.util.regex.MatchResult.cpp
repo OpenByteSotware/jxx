@@ -1,4 +1,4 @@
-#include "io/jxx.util.regex.MatchResult.h"
+#include "util/regex/jxx.util.regex.MatchResult.h"
 
 namespace jxx {
 namespace util {

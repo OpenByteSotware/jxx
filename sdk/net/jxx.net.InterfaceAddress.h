@@ -3,6 +3,10 @@
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.Object.h"
 
+namespace jxx::lang {
+    class String;
+}
+
 namespace jxx::net
 {
     class InetAddress;

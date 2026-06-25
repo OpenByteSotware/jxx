@@ -10,8 +10,9 @@ namespace regex {
 class PatternSyntaxException final : public virtual jxx::lang::IllegalArgumentException {
 public:
     using IllegalArgumentException::IllegalArgumentException;
-    JXX_OBJECT_CLONE(PatternSyntaxException)
+    
 protected:
+    JXX_OBJECT_CLONE(PatternSyntaxException)
     const char* typeName() const noexcept override { return "PatternSyntaxException"; }
 };
 

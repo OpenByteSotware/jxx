@@ -8,8 +8,9 @@ namespace jxx::lang {
     class NullPointerException : public RuntimeException {
     public:
         using RuntimeException::RuntimeException;
-        JXX_OBJECT_CLONE(NullPointerException)
+        
     protected:
+        JXX_OBJECT_CLONE(NullPointerException)
         const char* typeName() const noexcept override { return "NullPointerException"; }
     };
 
