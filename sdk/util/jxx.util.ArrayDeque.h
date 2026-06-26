@@ -2,14 +2,11 @@
 
 #include <deque>
 
-#include "io/jxx.util.AbstractQueue.h"
-#include "io/jxx.util.Deque.h"
-#include "io/jxx.lang.Cloneable.h"
+#include "util/jxx.util.AbstractQueue.h"
+#include "util/jxx.util.Deque.h"
+#include "lang/jxx.lang.Cloneable.h"
 #include "io/jxx.io.Serializable.h"
-#include "io/jxx.lang.Casts.h"
-#include "io/jxx.lang.Exceptions.h"
-
-namespace jxx { template <typename T> class Ptr; }
+#include "lang/jxx.lang.Exceptions.h"
 
 namespace jxx {
 namespace util {

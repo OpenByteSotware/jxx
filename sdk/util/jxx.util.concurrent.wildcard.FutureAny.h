@@ -1,9 +1,7 @@
 #pragma once
 
-#include "io/jxx.lang.Object.h"
-#include "io/jxx.util.concurrent.TimeUnit.h"
-
-namespace jxx { template <typename T> class Ptr; }
+#include "lang/jxx.lang.Object.h"
+#include "util/jxx.util.concurrent.TimeUnit.h"
 
 namespace jxx {
 namespace util {

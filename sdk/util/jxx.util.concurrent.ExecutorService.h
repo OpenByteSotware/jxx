@@ -1,15 +1,12 @@
 #pragma once
 
-#include "io/jxx.lang.Object.h"
-#include "io/jxx.lang.Runnable.h"
-#include "io/jxx.lang.Exceptions.h"
-#include "io/jxx.util.concurrent.Executor.h"
-#include "io/jxx.util.concurrent.Callable.h"
-#include "io/jxx.util.concurrent.Future.h"
-#include "io/jxx.util.concurrent.TimeUnit.h"
-#include "io/jxx.util.concurrent.wildcard.FutureAny.h"
-
-namespace jxx { template <typename T> class Ptr; }
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.Exceptions.h"
+#include "util/jxx.util.concurrent.Executor.h"
+#include "util/jxx.util.concurrent.Callable.h"
+#include "util/jxx.util.concurrent.Future.h"
+#include "util/jxx.util.concurrent.TimeUnit.h"
+#include "util/jxx.util.concurrent.wildcard.FutureAny.h"
 
 namespace jxx {
 namespace util {

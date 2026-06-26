@@ -1,9 +1,7 @@
 #pragma once
 
-#include "io/jxx.lang.Object.h"
-#include "io/jxx.lang.Runnable.h"
-
-namespace jxx { template <typename T> class Ptr; }
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.Thread.h"
 
 namespace jxx {
 namespace util {

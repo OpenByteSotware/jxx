@@ -4,7 +4,7 @@
 #include "lang/jxx.lang.Object.h"
 #include "util/jxx.util.Iterator.h"
 
-namespace jxx { template <typename T> class Ptr; }
+
 
 namespace jxx {
 namespace util {
@@ -43,8 +43,8 @@ public:
         return removeFirstOccurrence(o);
     }
 
-    virtual jxx::lang::jbool contains(jxx::Ptr<jxx::lang::Object> o) override = 0;
-    virtual jxx::Ptr<Iterator<E>> iterator() override = 0;
+    virtual jxx::lang::jbool contains(jxx::Ptr<jxx::lang::Object> o) = 0;
+    virtual jxx::Ptr<Iterator<E>> iterator() = 0;
     virtual jxx::Ptr<Iterator<E>> descendingIterator() = 0;
 };
 

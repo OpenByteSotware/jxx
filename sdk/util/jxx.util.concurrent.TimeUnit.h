@@ -2,10 +2,8 @@
 
 #include <limits>
 
-#include "io/jxx.lang.Object.h"
-#include "io/jxx.lang.Exceptions.h"
-
-namespace jxx { template <typename T> class Ptr; }
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.Exceptions.h"
 
 namespace jxx {
 namespace util {

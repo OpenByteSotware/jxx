@@ -2,8 +2,6 @@
 #include "lang/jxx.lang.Object.h"
 #include "util/jxx.util.Collection.h"
 
-namespace jxx { template <typename T> class Ptr; }
-
 namespace jxx {
 namespace util {
 

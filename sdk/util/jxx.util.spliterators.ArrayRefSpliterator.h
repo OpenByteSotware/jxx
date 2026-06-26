@@ -46,7 +46,7 @@ public:
             throw jxx::lang::NullPointerException();
         }
         if (index_ < fence_) {
-            action->accept(array_(index_));
+            action->accept((*array_)[index_]);
             index_++;
             return true;
         }
