@@ -2,8 +2,8 @@
 
 namespace jxx::net
 {
-    jxx::Ptr<StandardProtocolFamily> StandardProtocolFamily::INET = std::make_shared<StandardProtocolFamily>(std::make_shared<jxx::lang::String>("INET"));
-    jxx::Ptr<StandardProtocolFamily> StandardProtocolFamily::INET6 = std::make_shared<StandardProtocolFamily>(std::make_shared<jxx::lang::String>("INET6"));
+    jxx::Ptr<StandardProtocolFamily> StandardProtocolFamily::INET = jxx::NEW<StandardProtocolFamily>(jxx::NEW<jxx::lang::String>("INET"));
+    jxx::Ptr<StandardProtocolFamily> StandardProtocolFamily::INET6 = jxx::NEW<StandardProtocolFamily>(jxx::NEW<jxx::lang::String>("INET6"));
 
     StandardProtocolFamily::StandardProtocolFamily(jxx::Ptr<jxx::lang::String> name)
         : name_(std::move(name))

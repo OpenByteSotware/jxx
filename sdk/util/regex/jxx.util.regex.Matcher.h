@@ -14,7 +14,7 @@ namespace regex {
 
 class Pattern;
 
-class Matcher final : public virtual jxx::lang::Object, public virtual MatchResult {
+class Matcher final : public jxx::lang::Object {
 private:
     jxx::Ptr<Pattern> pattern_;
     jxx::Ptr<jxx::lang::String> input_;
@@ -38,13 +38,13 @@ public:
     jxx::lang::jbool find();
     jxx::lang::jbool find(jxx::lang::jint start);
 
-    virtual jxx::lang::jint start() override;
-    virtual jxx::lang::jint start(jxx::lang::jint group) override;
-    virtual jxx::lang::jint end() override;
-    virtual jxx::lang::jint end(jxx::lang::jint group) override;
-    virtual jxx::Ptr<jxx::lang::String> group() override;
-    virtual jxx::Ptr<jxx::lang::String> group(jxx::lang::jint group) override;
-    virtual jxx::lang::jint groupCount() override;
+    virtual jxx::lang::jint start();
+    virtual jxx::lang::jint start(jxx::lang::jint group);
+    virtual jxx::lang::jint end();
+    virtual jxx::lang::jint end(jxx::lang::jint group);
+    virtual jxx::Ptr<jxx::lang::String> group();
+    virtual jxx::Ptr<jxx::lang::String> group(jxx::lang::jint group);
+    virtual jxx::lang::jint groupCount();
 
     jxx::Ptr<jxx::lang::String> replaceAll(jxx::Ptr<jxx::lang::String> replacement);
     jxx::Ptr<jxx::lang::String> replaceFirst(jxx::Ptr<jxx::lang::String> replacement);

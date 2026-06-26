@@ -21,7 +21,7 @@ namespace
 
     inline jxx::Ptr<jxx::lang::String> S_(const std::string& s)
     {
-        return s.empty() ? nullptr : std::make_shared<jxx::lang::String>(s);
+        return s.empty() ? nullptr : jxx::NEW<jxx::lang::String>(s);
     }
 
     class BasicURLConnection final : public jxx::net::URLConnection
@@ -47,7 +47,7 @@ namespace
             connect();
             if (filePath_.empty())
                 throw std::runtime_error("no backing file");
-            return std::make_shared<jxx::io::FileInputStream>(std::make_shared<jxx::lang::String>(filePath_));
+            return jxx::NEW<jxx::io::FileInputStream>(jxx::NEW<jxx::lang::String>(filePath_));
         }
 
     private:
@@ -60,7 +60,7 @@ namespace
         explicit BasicHttpURLConnection(jxx::Ptr<jxx::net::URL> url)
             : HttpURLConnection(std::move(url))
         {
-            responseMessage_ = std::make_shared<jxx::lang::String>("HTTP transport not yet implemented in Bundle B");
+            responseMessage_ = jxx::NEW<jxx::lang::String>("HTTP transport not yet implemented in Bundle B");
         }
 
         void connect() override
@@ -113,28 +113,28 @@ namespace
             if (proto == "file")
             {
                 auto path = u->getPath();
-                auto decoded = path ? jxx::net::URLDecoder::decode(path, std::make_shared<jxx::lang::String>("UTF-8")) : nullptr;
+                auto decoded = path ? jxx::net::URLDecoder::decode(path, jxx::NEW<jxx::lang::String>("UTF-8")) : nullptr;
                 std::string p = decoded ? decoded->utf8() : std::string();
             #if defined(_WIN32)
                 if (p.size() >= 3 && p[0] == '/' && std::isalpha(static_cast<unsigned char>(p[1])) && p[2] == ':')
                     p = p.substr(1);
             #endif
-                const auto type = jxx::net::URLConnection::guessContentTypeFromName(std::make_shared<jxx::lang::String>(p));
-                return std::make_shared<BasicURLConnection>(u, p, type ? type->utf8() : std::string());
+                const auto type = jxx::net::URLConnection::guessContentTypeFromName(jxx::NEW<jxx::lang::String>(p));
+                return jxx::NEW<BasicURLConnection>(u, p, type ? type->utf8() : std::string());
             }
             if (proto == "http" || proto == "https")
-                return std::make_shared<BasicHttpURLConnection>(u);
+                return jxx::NEW<BasicHttpURLConnection>(u);
             if (proto == "jar")
             {
                 auto spec = u->toExternalForm()->utf8();
                 const auto bang = spec.find("!/");
                 if (bang == std::string::npos)
-                    return std::make_shared<BasicJarURLConnection>(u, nullptr, nullptr);
-                auto jarUrl = std::make_shared<jxx::net::URL>(std::make_shared<jxx::lang::String>(spec.substr(4, bang - 4)));
-                auto entry = std::make_shared<jxx::lang::String>(spec.substr(bang + 2));
-                return std::make_shared<BasicJarURLConnection>(u, jarUrl, entry);
+                    return jxx::NEW<BasicJarURLConnection>(u, nullptr, nullptr);
+                auto jarUrl = jxx::NEW<jxx::net::URL>(jxx::NEW<jxx::lang::String>(spec.substr(4, bang - 4)));
+                auto entry = jxx::NEW<jxx::lang::String>(spec.substr(bang + 2));
+                return jxx::NEW<BasicJarURLConnection>(u, jarUrl, entry);
             }
-            return std::make_shared<BasicURLConnection>(u, std::string(), std::string());
+            return jxx::NEW<BasicURLConnection>(u, std::string(), std::string());
         }
 
         jxx::lang::jint getDefaultPort() const override
@@ -176,7 +176,7 @@ namespace jxx::net
         if (port >= 0)
             spec += ":" + std::to_string(port);
         spec += (file ? file->utf8() : std::string());
-        parse_(nullptr, std::make_shared<jxx::lang::String>(spec), nullptr);
+        parse_(nullptr, jxx::NEW<jxx::lang::String>(spec), nullptr);
     }
 
     URL::URL(jxx::Ptr<jxx::lang::String> protocol,
@@ -199,7 +199,7 @@ namespace jxx::net
             if (h)
                 return h;
         }
-        return std::make_shared<DefaultURLStreamHandler>(protocol ? protocol->utf8() : std::string());
+        return jxx::NEW<DefaultURLStreamHandler>(protocol ? protocol->utf8() : std::string());
     }
 
     void URL::parse_(jxx::Ptr<URL> context,
@@ -213,7 +213,7 @@ namespace jxx::net
         if (parsed.scheme.empty() && context)
         {
             const auto base = std::dynamic_pointer_cast<URI>(context->toURI());
-            const auto rel = std::make_shared<URI>(spec);
+            const auto rel = jxx::NEW<URI>(spec);
             parsed = internal::parseUriLike(base->resolve(rel)->toString()->utf8());
         }
         if (parsed.scheme.empty())
@@ -237,13 +237,13 @@ namespace jxx::net
     jxx::lang::jint URL::getDefaultPort() const { return handler_ ? handler_->getDefaultPort() : internal::defaultPortForScheme(protocol_ ? protocol_->utf8() : std::string()); }
     jxx::Ptr<jxx::lang::String> URL::getPath() const { return path_; }
     jxx::Ptr<jxx::lang::String> URL::getQuery() const { return query_; }
-    jxx::Ptr<jxx::lang::String> URL::getFile() const { return std::make_shared<jxx::lang::String>((path_ ? path_->utf8() : std::string()) + (query_ ? std::string("?") + query_->utf8() : std::string())); }
+    jxx::Ptr<jxx::lang::String> URL::getFile() const { return jxx::NEW<jxx::lang::String>((path_ ? path_->utf8() : std::string()) + (query_ ? std::string("?") + query_->utf8() : std::string())); }
     jxx::Ptr<jxx::lang::String> URL::getRef() const { return ref_; }
     jxx::Ptr<jxx::lang::String> URL::getUserInfo() const { return userInfo_; }
 
     jxx::Ptr<URI> URL::toURI() const
     {
-        return std::make_shared<URI>(toExternalForm());
+        return jxx::NEW<URI>(toExternalForm());
     }
 
     jxx::Ptr<URLConnection> URL::openConnection()
@@ -296,7 +296,7 @@ namespace jxx::net
         p.path = path_ ? path_->utf8() : std::string();
         p.query = query_ ? query_->utf8() : std::string();
         p.fragment = ref_ ? ref_->utf8() : std::string();
-        return std::make_shared<jxx::lang::String>(internal::rebuildUri(p));
+        return jxx::NEW<jxx::lang::String>(internal::rebuildUri(p));
     }
 
     jxx::Ptr<jxx::lang::String> URL::toString() const { return toExternalForm(); }

@@ -68,7 +68,7 @@ public:
     virtual void write(jxx::lang::jint c) override { text_.push_back(static_cast<char16_t>(c)); }
     virtual void flush() override { flushed_ = true; }
     virtual void close() override {}
-    std::string utf8() const { return std::make_shared<String>(text_)->utf8(); }
+    std::string utf8() const { return jxx::NEW<String>(text_)->utf8(); }
     bool flushed() const { return flushed_; }
 };
 
@@ -103,7 +103,7 @@ protected:
 };
 
 TEST_F(PropertiesTest, SetAndGetProperty) {
-    auto p = std::make_shared<Properties>();
+    auto p = jxx::NEW<Properties>();
     p->setProperty(S("alpha"), S("1"));
     ExpectStringEq(p->getProperty(S("alpha")), "1");
     ExpectStringEq(p->getProperty(S("missing"), S("fallback")), "fallback");

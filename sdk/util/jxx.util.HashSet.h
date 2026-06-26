@@ -100,10 +100,10 @@ public:
     }
 
     virtual jbool contains(jxx::Ptr<jxx::lang::Object> o) override {
-        return set_.find(jxx::lang::ptr_checked_cast<E>(o)) != set_.end();
+        return set_.find(jxx::CAST<E, jxx::lang::Object>(o)) != set_.end();
     }
 
-    class HashSetIterator : public virtual Iterator<E> {
+    class HashSetIterator : public virtual jxx::util::Iterator<E> {
     private:
         HashSet<E>* setOwner_;
         typename InternalSet::iterator current_;
@@ -183,7 +183,7 @@ public:
     }
 
     virtual jbool remove(jxx::Ptr<jxx::lang::Object> o) override {
-        auto castElem = jxx::lang::ptr_checked_cast<E>(o);
+        auto castElem = jxx::CAST<E, jxx::lang::Object>(o);
         auto it = set_.find(castElem);
         if (it == set_.end()) {
             return false;

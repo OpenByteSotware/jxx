@@ -19,9 +19,9 @@ namespace
 
 namespace jxx::nio::channels
 {
-    jxx::Ptr<FileChannel::MapMode> FileChannel::MapMode::READ_ONLY = std::make_shared<FileChannel::MapMode>(std::make_shared<jxx::lang::String>("READ_ONLY"));
-    jxx::Ptr<FileChannel::MapMode> FileChannel::MapMode::READ_WRITE = std::make_shared<FileChannel::MapMode>(std::make_shared<jxx::lang::String>("READ_WRITE"));
-    jxx::Ptr<FileChannel::MapMode> FileChannel::MapMode::PRIVATE_ = std::make_shared<FileChannel::MapMode>(std::make_shared<jxx::lang::String>("PRIVATE"));
+    jxx::Ptr<FileChannel::MapMode> FileChannel::MapMode::READ_ONLY = jxx::NEW<FileChannel::MapMode>(jxx::NEW<jxx::lang::String>("READ_ONLY"));
+    jxx::Ptr<FileChannel::MapMode> FileChannel::MapMode::READ_WRITE = jxx::NEW<FileChannel::MapMode>(jxx::NEW<jxx::lang::String>("READ_WRITE"));
+    jxx::Ptr<FileChannel::MapMode> FileChannel::MapMode::PRIVATE_ = jxx::NEW<FileChannel::MapMode>(jxx::NEW<jxx::lang::String>("PRIVATE"));
 
     FileChannel::MapMode::MapMode(jxx::Ptr<jxx::lang::String> name) : name_(std::move(name)) {}
     jxx::Ptr<jxx::lang::String> FileChannel::MapMode::toString() const { return name_; }

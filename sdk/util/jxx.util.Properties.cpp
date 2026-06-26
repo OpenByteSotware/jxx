@@ -231,7 +231,7 @@ static std::u16string formatDateLine() {
 #endif
     std::ostringstream oss;
     oss << '#' << std::put_time(&tmv, "%a %b %d %H:%M:%S %Y");
-    return std::make_shared<jxx::lang::String>(oss.str())->utf16();
+    return jxx::NEW<jxx::lang::String>(oss.str())->utf16();
 }
 
 static std::u16string readAllFromReader(jxx::Ptr<jxx::io::Reader> reader) {
@@ -261,7 +261,7 @@ static std::u16string readAllFromInputStreamUtf8(jxx::Ptr<jxx::io::InputStream> 
         if (b < 0) break;
         bytes.push_back(static_cast<char>(static_cast<unsigned char>(b & 0xFF)));
     }
-    return std::make_shared<jxx::lang::String>(bytes)->utf16();
+    return jxx::NEW<jxx::lang::String>(bytes)->utf16();
 }
 
 static std::vector<std::u16string> toLogicalLines(const std::u16string& text) {
@@ -336,8 +336,8 @@ static void loadIntoProperties(Properties* props, const std::u16string& text) {
         const std::u16string keyRaw = line.substr(start, keyEnd - start);
         const std::u16string valueRaw = (valueStart <= line.size()) ? line.substr(valueStart) : std::u16string();
         props->setProperty(
-            std::make_shared<jxx::lang::String>(loadConvert(keyRaw)),
-            std::make_shared<jxx::lang::String>(loadConvert(valueRaw)));
+            jxx::NEW<jxx::lang::String>(loadConvert(keyRaw)),
+            jxx::NEW<jxx::lang::String>(loadConvert(valueRaw)));
     }
 }
 
@@ -354,8 +354,8 @@ static void writeCommentsToWriter(jxx::Ptr<jxx::io::Writer> writer, jxx::Ptr<jxx
     for (std::size_t i = 0; i < text.size(); ++i) {
         char16_t c = text[i];
         if (c == u'\r' || c == u'\n') {
-            writer->write(std::make_shared<jxx::lang::String>(line));
-            writer->write(std::make_shared<jxx::lang::String>(u"\n"));
+            writer->write(jxx::NEW<jxx::lang::String>(line));
+            writer->write(jxx::NEW<jxx::lang::String>(u"\n"));
             line.assign(1, u'#');
             if (c == u'\r' && i + 1 < text.size() && text[i + 1] == u'\n') ++i;
             continue;
@@ -370,8 +370,8 @@ static void writeCommentsToWriter(jxx::Ptr<jxx::io::Writer> writer, jxx::Ptr<jxx
             line.push_back(c);
         }
     }
-    writer->write(std::make_shared<jxx::lang::String>(line));
-    writer->write(std::make_shared<jxx::lang::String>(u"\n"));
+    writer->write(jxx::NEW<jxx::lang::String>(line));
+    writer->write(jxx::NEW<jxx::lang::String>(u"\n"));
 }
 
 static void writeAsciiToOutputStream(jxx::Ptr<jxx::io::OutputStream> out, const std::u16string& text) {
@@ -544,7 +544,7 @@ static void loadXmlIntoProperties(Properties* props, const std::u16string& xml) 
         skipXmlWs(xml, pos);
         requireToken(xml, pos, u">");
         const std::u16string valueEsc = parseUntil(xml, pos, u"</entry>");
-        props->setProperty(std::make_shared<jxx::lang::String>(xmlUnescape(keyEsc)), std::make_shared<jxx::lang::String>(xmlUnescape(valueEsc)));
+        props->setProperty(jxx::NEW<jxx::lang::String>(xmlUnescape(keyEsc)), jxx::NEW<jxx::lang::String>(xmlUnescape(valueEsc)));
         skipXmlWs(xml, pos);
     }
     requireToken(xml, pos, u"</properties>");
@@ -555,7 +555,7 @@ static void loadXmlIntoProperties(Properties* props, const std::u16string& xml) 
 }
 
 static void writeXmlDocument(Properties* props, jxx::Ptr<jxx::io::OutputStream> os, jxx::Ptr<jxx::lang::String> comment, jxx::Ptr<jxx::lang::String> encoding) {
-    const auto enc = (encoding == nullptr) ? std::make_shared<jxx::lang::String>("UTF-8") : encoding;
+    const auto enc = (encoding == nullptr) ? jxx::NEW<jxx::lang::String>("UTF-8") : encoding;
     const auto encUtf16 = enc->utf16();
     const auto encUtf8 = enc->utf8();
     if (!(encUtf8 == "UTF-8" || encUtf8 == "UTF8" || encUtf8 == "utf-8" || encUtf8 == "utf8")) {
@@ -667,7 +667,7 @@ void Properties::list(jxx::Ptr<jxx::io::PrintStream> out) {
     if (out == nullptr) {
         throw jxx::lang::NullPointerException();
     }
-    out->println(std::make_shared<jxx::lang::String>("-- listing properties --"));
+    out->println(jxx::NEW<jxx::lang::String>("-- listing properties --"));
     auto names = propertyNames();
     while (names->hasMoreElements()) {
         auto keyObj = names->nextElement();
@@ -676,7 +676,7 @@ void Properties::list(jxx::Ptr<jxx::io::PrintStream> out) {
         if (keyStr == nullptr || valueStr == nullptr) {
             continue;
         }
-        out->println(std::make_shared<jxx::lang::String>(keyStr->utf16() + u"=" + abbreviateForList(valueStr->utf16())));
+        out->println(jxx::NEW<jxx::lang::String>(keyStr->utf16() + u"=" + abbreviateForList(valueStr->utf16())));
     }
 }
 
@@ -723,8 +723,8 @@ void Properties::store(jxx::Ptr<jxx::io::Writer> writer, jxx::Ptr<jxx::lang::Str
         throw jxx::lang::NullPointerException();
     }
     writeCommentsToWriter(writer, comments);
-    writer->write(std::make_shared<jxx::lang::String>(formatDateLine()));
-    writer->write(std::make_shared<jxx::lang::String>(u"\n"));
+    writer->write(jxx::NEW<jxx::lang::String>(formatDateLine()));
+    writer->write(jxx::NEW<jxx::lang::String>(u"\n"));
     auto e = this->keys();
     while (e->hasMoreElements()) {
         auto keyObj = jxx::CAST<jxx::lang::Object>(e->nextElement());
@@ -769,14 +769,14 @@ void Properties::storeToXML(jxx::Ptr<jxx::io::OutputStream> os, jxx::Ptr<jxx::la
     if (os == nullptr) {
         throw jxx::lang::NullPointerException();
     }
-    writeXmlDocument(this, os, comment, std::make_shared<jxx::lang::String>("UTF-8"));
+    writeXmlDocument(this, os, comment, jxx::NEW<jxx::lang::String>("UTF-8"));
 }
 
 void Properties::storeToXML(jxx::Ptr<jxx::io::OutputStream> os, jxx::Ptr<jxx::lang::String> comment, jxx::Ptr<jxx::lang::String> encoding) {
     if (os == nullptr) {
         throw jxx::lang::NullPointerException();
     }
-    writeXmlDocument(this, os, comment, encoding == nullptr ? std::make_shared<jxx::lang::String>("UTF-8") : encoding);
+    writeXmlDocument(this, os, comment, encoding == nullptr ? jxx::NEW<jxx::lang::String>("UTF-8") : encoding);
 }
 
 } // namespace util

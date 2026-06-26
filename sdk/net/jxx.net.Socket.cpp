@@ -76,14 +76,14 @@ namespace
             std::memcpy(bytes.data(), &sa->sin6_addr, 16);
             char buf[INET6_ADDRSTRLEN] = {0};
             ::inet_ntop(AF_INET6, &sa->sin6_addr, buf, sizeof(buf));
-            return std::make_shared<jxx::net::Inet6Address>(nullptr, std::make_shared<jxx::lang::String>(std::string(buf)), bytes, static_cast<jxx::lang::jint>(sa->sin6_scope_id), nullptr);
+            return jxx::NEW<jxx::net::Inet6Address>(nullptr, jxx::NEW<jxx::lang::String>(std::string(buf)), bytes, static_cast<jxx::lang::jint>(sa->sin6_scope_id), nullptr);
         }
         auto* sa = reinterpret_cast<const sockaddr_in*>(&ss);
         std::vector<jxx::lang::jbyte> bytes(4);
         std::memcpy(bytes.data(), &sa->sin_addr, 4);
         char buf[INET_ADDRSTRLEN] = {0};
         ::inet_ntop(AF_INET, &sa->sin_addr, buf, sizeof(buf));
-        return std::make_shared<jxx::net::Inet4Address>(nullptr, std::make_shared<jxx::lang::String>(std::string(buf)), bytes);
+        return jxx::NEW<jxx::net::Inet4Address>(nullptr, jxx::NEW<jxx::lang::String>(std::string(buf)), bytes);
     }
 
     inline jxx::lang::jint portFromSockaddr_(const sockaddr_storage& ss)
@@ -97,7 +97,7 @@ namespace
 namespace jxx::net
 {
     Socket::Socket()
-        : state_(std::make_shared<internal::NativeSocketState>())
+        : state_(jxx::NEW<internal::NativeSocketState>())
     {
     }
 
@@ -117,7 +117,7 @@ namespace jxx::net
                    jxx::lang::jint port)
         : Socket()
     {
-        connect(std::make_shared<InetSocketAddress>(std::move(address), port));
+        connect(jxx::NEW<InetSocketAddress>(std::move(address), port));
     }
 
     Socket::Socket(jxx::Ptr<jxx::lang::String> host,
@@ -134,8 +134,8 @@ namespace jxx::net
                    jxx::lang::jint localPort)
         : Socket()
     {
-        bind(std::make_shared<InetSocketAddress>(std::move(localAddr), localPort));
-        connect(std::make_shared<InetSocketAddress>(std::move(address), port));
+        bind(jxx::NEW<InetSocketAddress>(std::move(localAddr), localPort));
+        connect(jxx::NEW<InetSocketAddress>(std::move(address), port));
     }
 
     Socket::Socket(internal::NativeSocket handle,
@@ -143,7 +143,7 @@ namespace jxx::net
                    jxx::lang::jint remotePort,
                    jxx::Ptr<InetAddress> localAddr,
                    jxx::lang::jint localPort)
-        : state_(std::make_shared<internal::NativeSocketState>()),
+        : state_(jxx::NEW<internal::NativeSocketState>()),
           remoteAddr_(std::move(remoteAddr)),
           remotePort_(remotePort),
           localAddr_(std::move(localAddr)),
@@ -167,7 +167,7 @@ namespace jxx::net
     void Socket::ensureCreated_(jxx::lang::jbool /*stream*/)
     {
         if (!state_)
-            state_ = std::make_shared<internal::NativeSocketState>();
+            state_ = jxx::NEW<internal::NativeSocketState>();
         if (state_->socket != internal::kInvalidSocket)
             return;
         internal::ensureNetworkInitialized();
@@ -246,12 +246,12 @@ namespace jxx::net
 
     jxx::Ptr<SocketAddress> Socket::getRemoteSocketAddress() const
     {
-        return connected_ ? std::make_shared<InetSocketAddress>(remoteAddr_, remotePort_) : nullptr;
+        return connected_ ? jxx::NEW<InetSocketAddress>(remoteAddr_, remotePort_) : nullptr;
     }
 
     jxx::Ptr<SocketAddress> Socket::getLocalSocketAddress() const
     {
-        return bound_ ? std::make_shared<InetSocketAddress>(localAddr_, localPort_) : nullptr;
+        return bound_ ? jxx::NEW<InetSocketAddress>(localAddr_, localPort_) : nullptr;
     }
 
     jxx::Ptr<jxx::nio::channels::SocketChannel> Socket::getChannel() const { return nullptr; }
@@ -259,13 +259,13 @@ namespace jxx::net
     jxx::Ptr<jxx::io::InputStream> Socket::getInputStream()
     {
         ensureCreated_(true);
-        return std::make_shared<internal::NativeSocketInputStream>(state_);
+        return jxx::NEW<internal::NativeSocketInputStream>(state_);
     }
 
     jxx::Ptr<jxx::io::OutputStream> Socket::getOutputStream()
     {
         ensureCreated_(true);
-        return std::make_shared<internal::NativeSocketOutputStream>(state_);
+        return jxx::NEW<internal::NativeSocketOutputStream>(state_);
     }
 
     void Socket::setSockOptBool_(jxx::lang::jint level,
@@ -417,8 +417,8 @@ namespace jxx::net
     jxx::Ptr<jxx::lang::String> Socket::toString() const
     {
         if (!connected_)
-            return std::make_shared<jxx::lang::String>("Socket[unconnected]");
-        return std::make_shared<jxx::lang::String>(
+            return jxx::NEW<jxx::lang::String>("Socket[unconnected]");
+        return jxx::NEW<jxx::lang::String>(
             std::string("Socket[addr=") + (remoteAddr_ ? remoteAddr_->getHostAddress()->utf8() : std::string()) +
             ",port=" + std::to_string(remotePort_) +
             ",localport=" + std::to_string(localPort_) + "]");

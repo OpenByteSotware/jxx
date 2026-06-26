@@ -4,6 +4,8 @@
 #include <utility>
 #include <vector>
 
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "io/jxx.io.ObjectInputStream.h"
 #include "util/regex/jxx.util.regex.Matcher.h"
 #include "util/regex/jxx.util.regex.Pattern.h"
 #include "util/regex/jxx.util.regex.PatternSyntaxException.h"
@@ -61,7 +63,7 @@ static jxx::Ptr<jxx::lang::String> toStringPtr(jxx::Ptr<jxx::lang::CharSequence>
 }
 
 static jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> vectorToStringArray(const std::vector<jxx::Ptr<jxx::lang::String>>& items) {
-    auto arr = std::make_shared<jxx::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>>(static_cast<jxx::lang::jint>(items.size()));
+    auto arr = jxx::NEW<jxx::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>>(static_cast<jxx::lang::jint>(items.size()));
     for (jxx::lang::jint i = 0; i < static_cast<jxx::lang::jint>(items.size()); ++i) {
         (*arr)(i) = items[static_cast<std::size_t>(i)];
     }
@@ -92,7 +94,7 @@ jxx::Ptr<Pattern> Pattern::compile(jxx::Ptr<jxx::lang::String> regex, jxx::lang:
     try {
         std::string compiledPattern = compilePatternUtf8(regex, flags);
         std::regex native(compiledPattern, toSyntaxFlags(flags));
-        return std::make_shared<Pattern>(regex, flags, std::move(compiledPattern), std::move(native));
+        return jxx::NEW<Pattern>(regex, flags, std::move(compiledPattern), std::move(native));
     } catch (const std::regex_error& ex) {
         throw jxx::util::regex::PatternSyntaxException(ex.what());            
     }
@@ -106,7 +108,7 @@ jxx::lang::jbool Pattern::matches(
 }
 
 jxx::Ptr<Matcher> Pattern::matcher(jxx::Ptr<jxx::lang::CharSequence> input) {
-    return std::make_shared<Matcher>(jxx::CAST<Pattern>(jxx::CAST<jxx::lang::Object>(shared_from_this())), input);
+    return jxx::NEW<Matcher>(jxx::CAST<Pattern>(jxx::CAST<jxx::lang::Object>(shared_from_this())), input);
 }
 
 jxx::Ptr<jxx::lang::String> Pattern::pattern() const {
@@ -133,10 +135,10 @@ jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> Pattern::split(
     for (; it != end; ++it) {
         if (limit > 0 && static_cast<jxx::lang::jint>(parts.size()) == limit - 1) {
             std::string rest = in.substr(static_cast<std::size_t>(it->first - in.begin()));
-            parts.push_back(std::make_shared<jxx::lang::String>(rest));
+            parts.push_back(jxx::NEW<jxx::lang::String>(rest));
             return vectorToStringArray(parts);
         }
-        parts.push_back(std::make_shared<jxx::lang::String>(it->str()));
+        parts.push_back(jxx::NEW<jxx::lang::String>(it->str()));
     }
     if (limit == 0) {
         while (!parts.empty() && parts.back() != nullptr && parts.back()->utf8().empty()) {
@@ -150,7 +152,7 @@ jxx::Ptr<jxx::lang::String> Pattern::quote(jxx::Ptr<jxx::lang::String> s) {
     if (s == nullptr) {
         throw jxx::lang::NullPointerException();
     }
-    return std::make_shared<jxx::lang::String>(escapeRegexLiteral(s->utf8()));
+    return jxx::NEW<jxx::lang::String>(escapeRegexLiteral(s->utf8()));
 }
 
 jxx::Ptr<jxx::lang::String> Pattern::toString() const {
@@ -163,6 +165,27 @@ const std::regex& Pattern::nativeRegex() const {
 
 const std::string& Pattern::nativePatternUtf8() const {
     return compiledPatternUtf8_;
+}
+
+void Pattern::writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out) {
+    if (out == nullptr) {
+        throw jxx::lang::NullPointerException();
+    }
+    out->writeObject(regex_);
+	out->writeInt(flags_);
+}
+
+void Pattern::readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) {
+    if (in == nullptr) {
+        throw jxx::lang::NullPointerException();
+    }
+    regex_ = jxx::CAST<jxx::lang::String, jxx::lang::Object>(in->readObject());
+    flags_ = in->readInt();
+    compiledPatternUtf8_ = compilePatternUtf8(regex_, flags_);
+    compiled_ = std::regex(compiledPatternUtf8_, toSyntaxFlags(flags_));
+}
+void Pattern::readObjectNoData() {
+    throw jxx::lang::RuntimeException("No data available for deserialization");
 }
 
 } // namespace regex

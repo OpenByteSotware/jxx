@@ -27,7 +27,7 @@ private:
             if (comp_ != nullptr) {
                 return comp_->compare(a, b) < 0;
             }
-            auto comparable = jxx::lang::ptr_checked_cast<jxx::lang::Comparable<E>>(a);
+            auto comparable = jxx::CAST<jxx::lang::Comparable<E>, jxx::lang::Object>(a);
             if (comparable == nullptr) {
                 throw ClassCastException();
             }
@@ -89,7 +89,7 @@ public:
     }
 
     virtual jbool contains(jxx::Ptr<jxx::lang::Object> o) override {
-        auto castElem = jxx::lang::ptr_checked_cast<E>(o);
+        auto castElem = jxx::CAST<E, jxx::lang::Object>(o);
         if (castElem == nullptr) {
             return false;
         }
@@ -178,7 +178,7 @@ public:
     }
 
     virtual jbool remove(jxx::Ptr<jxx::lang::Object> o) override {
-        auto castElem = jxx::lang::ptr_checked_cast<E>(o);
+        auto castElem = jxx::CAST<E, jxx::lang::Object>(o);
         if (castElem == nullptr) {
             return false;
         }
@@ -341,7 +341,7 @@ private:
         if (comparator_ != nullptr) {
             return comparator_->compare(a, b) == 0;
         }
-        auto comparable = jxx::lang::ptr_checked_cast<jxx::lang::Comparable<E>>(a);
+        auto comparable = jxx::CAST<jxx::lang::Comparable<E>, jxx::lang::Object>(a);
         if (comparable == nullptr) {
             throw ClassCastException();
         }

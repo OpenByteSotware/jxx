@@ -189,7 +189,7 @@ public:
     }
 
     virtual jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> o) override {
-        auto m = jxx::lang::ptr_checked_cast<Map<K, V>>(o);
+        auto m = jxx::CAST<Map<K, V>, jxx::lang::Object>(o);
         if (m == nullptr) return false;
         if (m->size() != this->size()) return false;
         auto it = this->entrySet()->iterator();

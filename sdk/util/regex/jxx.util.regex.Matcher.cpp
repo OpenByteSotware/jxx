@@ -154,7 +154,7 @@ jxx::Ptr<jxx::lang::String> Matcher::group(jxx::lang::jint group) {
     if (!lastMatch_[static_cast<std::size_t>(group)].matched) {
         return nullptr;
     }
-    return std::make_shared<jxx::lang::String>(lastMatch_[static_cast<std::size_t>(group)].str());
+    return jxx::NEW<jxx::lang::String>(lastMatch_[static_cast<std::size_t>(group)].str());
 }
 
 jxx::lang::jint Matcher::groupCount() {
@@ -165,7 +165,7 @@ jxx::Ptr<jxx::lang::String> Matcher::replaceAll(jxx::Ptr<jxx::lang::String> repl
     if (replacement == nullptr) {
         throw jxx::lang::NullPointerException();
     }
-    return std::make_shared<jxx::lang::String>(
+    return jxx::NEW<jxx::lang::String>(
         std::regex_replace(inputUtf8_, pattern_->nativeRegex(), replacement->utf8()));
 }
 
@@ -173,7 +173,7 @@ jxx::Ptr<jxx::lang::String> Matcher::replaceFirst(jxx::Ptr<jxx::lang::String> re
     if (replacement == nullptr) {
         throw jxx::lang::NullPointerException();
     }
-    return std::make_shared<jxx::lang::String>(
+    return jxx::NEW<jxx::lang::String>(
         std::regex_replace(
             inputUtf8_,
             pattern_->nativeRegex(),
@@ -185,7 +185,7 @@ jxx::Ptr<jxx::lang::String> Matcher::quoteReplacement(jxx::Ptr<jxx::lang::String
     if (s == nullptr) {
         throw jxx::lang::NullPointerException();
     }
-    return std::make_shared<jxx::lang::String>(escapeReplacement(s->utf8()));
+    return jxx::NEW<jxx::lang::String>(escapeReplacement(s->utf8()));
 }
 
 } // namespace regex

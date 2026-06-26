@@ -119,7 +119,7 @@ jxx::Ptr<TimeZone> TimeZone::getTimeZone(jxx::Ptr<jxx::lang::String> id) {
 
     std::lock_guard<std::mutex> lk(g_lock);
     auto it = g_zoneCache.find(zid);
-    if (it != g_zoneCache.end()) return std::make_shared<TzdbTimeZone>(it->second);
+    if (it != g_zoneCache.end()) return jxx::NEW<TzdbTimeZone>(it->second);
 
     Zone z;
     std::string path = base_dir() + "/" + zid;
@@ -173,13 +173,13 @@ jxx::Ptr<TimeZone> TimeZone::getDefault() {
                         if (absStr.rfind(baseStr + "/", 0) == 0) {
                             std::string zoneId = absStr.substr(baseStr.size() + 1);
                             auto it2 = g_zoneCache.find(zoneId);
-                            if (it2 != g_zoneCache.end()) return std::make_shared<TzdbTimeZone>(it2->second);
+                            if (it2 != g_zoneCache.end()) return jxx::NEW<TzdbTimeZone>(it2->second);
 
                             Zone z;
                             std::string p = base + "/" + zoneId;
                             if (load_zone_file(p, zoneId, z)) {
                                 g_zoneCache.emplace(zoneId, z);
-                                return std::make_shared<TzdbTimeZone>(z);
+                                return jxx::NEW<TzdbTimeZone>(z);
                             }
                         }
                     }
@@ -191,12 +191,12 @@ jxx::Ptr<TimeZone> TimeZone::getDefault() {
         {
             const std::string key = "@etc_localtime";
             auto it = g_zoneCache.find(key);
-            if (it != g_zoneCache.end()) return std::make_shared<TzdbTimeZone>(it->second);
+            if (it != g_zoneCache.end()) return jxx::NEW<TzdbTimeZone>(it->second);
 
             Zone z;
             if (load_zone_file(etcLocal.string(), "localtime", z)) {
                 g_zoneCache.emplace(key, z);
-                return std::make_shared<TzdbTimeZone>(z);
+                return jxx::NEW<TzdbTimeZone>(z);
             }
         }
     }

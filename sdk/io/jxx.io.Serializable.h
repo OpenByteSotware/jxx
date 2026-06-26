@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.Object.h"
 
 namespace jxx::io {
 	class ObjectOutputStream;

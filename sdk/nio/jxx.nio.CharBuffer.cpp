@@ -34,8 +34,8 @@ namespace jxx::nio
     {
         if (capacity < 0)
             throwIAE_("capacity < 0");
-        auto storage = std::make_shared<std::vector<jxx::lang::jchar>>(static_cast<std::size_t>(capacity));
-        return std::shared_ptr<CharBuffer>(new CharBuffer(storage, 0, capacity, false));
+        auto storage = jxx::NEW<std::vector<jxx::lang::jchar>>(static_cast<std::size_t>(capacity));
+        return jxx::NEW<CharBuffer>(storage, 0, capacity, false);
     }
 
     jxx::Ptr<CharBuffer> CharBuffer::wrap(const jxx::lang::CharArray array)

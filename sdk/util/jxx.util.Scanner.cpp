@@ -59,7 +59,7 @@ public:
 };
 
 static jxx::Ptr<jxx::lang::String> defaultDelimiterPattern() {
-    return std::make_shared<jxx::lang::String>("\\s+");
+    return jxx::NEW<jxx::lang::String>("\\s+");
 }
 
 static std::u16string readAllFromReader(jxx::Ptr<jxx::io::Reader> reader) {
@@ -91,18 +91,18 @@ static jxx::Ptr<jxx::lang::String> decodeBytes(
     jxx::Ptr<jxx::lang::String> charsetName) {
 
     if (charsetName == nullptr) {
-        return std::make_shared<jxx::lang::String>(bytesToString(bytes));
+        return jxx::NEW<jxx::lang::String>(bytesToString(bytes));
     }
 
     const std::string charset = charsetName->utf8();
     if (charset == "UTF-8" || charset == "UTF8" || charset == "utf-8" || charset == "utf8") {
-        return std::make_shared<jxx::lang::String>(bytesToString(bytes));
+        return jxx::NEW<jxx::lang::String>(bytesToString(bytes));
     }
     if (charset == "ISO-8859-1" || charset == "iso-8859-1" || charset == "LATIN1" || charset == "latin1") {
         std::u16string text;
         text.reserve(bytes.size());
         for (unsigned char b : bytes) text.push_back(static_cast<char16_t>(b));
-        return std::make_shared<jxx::lang::String>(text);
+        return jxx::NEW<jxx::lang::String>(text);
     }
     throw jxx::lang::IllegalArgumentException();
 }
@@ -234,7 +234,7 @@ static jxx::Ptr<regex::MatchResult> snapshotForTokenMatch(
         return nullptr;
     }
 
-    tokenTextOut = std::make_shared<jxx::lang::String>(m.str());
+    tokenTextOut = jxx::NEW<jxx::lang::String>(m.str());
     std::vector<jxx::lang::jint> starts;
     std::vector<jxx::lang::jint> ends;
     std::vector<jxx::Ptr<jxx::lang::String>> groups;
@@ -253,10 +253,10 @@ static jxx::Ptr<regex::MatchResult> snapshotForTokenMatch(
         const auto subgroupEnd = static_cast<jxx::lang::jint>(absoluteTokenStart + static_cast<std::size_t>(m.position(i) + m.length(i)));
         starts.push_back(subgroupStart);
         ends.push_back(subgroupEnd);
-        groups.push_back(std::make_shared<jxx::lang::String>(m.str(i)));
+        groups.push_back(jxx::NEW<jxx::lang::String>(m.str(i)));
     }
 
-    return std::make_shared<SnapshotMatchResult>(std::move(starts), std::move(ends), std::move(groups));
+    return jxx::NEW<SnapshotMatchResult>(std::move(starts), std::move(ends), std::move(groups));
 }
 
 } // anonymous namespace
@@ -291,7 +291,7 @@ Scanner::Scanner(jxx::Ptr<jxx::io::InputStream> source, jxx::Ptr<jxx::lang::Stri
 }
 
 Scanner::Scanner(jxx::Ptr<jxx::io::Reader> source)
-    : Scanner(std::make_shared<jxx::lang::String>(readAllFromReader(source))) {
+    : Scanner(jxx::NEW<jxx::lang::String>(readAllFromReader(source))) {
     if (source == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -384,7 +384,7 @@ jxx::lang::jbool Scanner::locateLine(std::size_t from, std::size_t& lineStart, s
 }
 
 jxx::Ptr<jxx::lang::String> Scanner::tokenString(std::size_t start, std::size_t end) const {
-    return std::make_shared<jxx::lang::String>(sourceUtf8_.substr(start, end - start));
+    return jxx::NEW<jxx::lang::String>(sourceUtf8_.substr(start, end - start));
 }
 
 jxx::Ptr<regex::MatchResult> Scanner::performRegexSearch(
@@ -417,7 +417,7 @@ jxx::Ptr<regex::MatchResult> Scanner::performRegexSearch(
 
     matchStart = searchStart + static_cast<std::size_t>(m.position());
     matchEnd = matchStart + static_cast<std::size_t>(m.length());
-    matchText = std::make_shared<jxx::lang::String>(m.str());
+    matchText = jxx::NEW<jxx::lang::String>(m.str());
 
     std::vector<jxx::lang::jint> starts;
     std::vector<jxx::lang::jint> ends;
@@ -437,10 +437,10 @@ jxx::Ptr<regex::MatchResult> Scanner::performRegexSearch(
         const jxx::lang::jint subgroupEnd = static_cast<jxx::lang::jint>(searchStart + m.position(i) + m.length(i));
         starts.push_back(subgroupStart);
         ends.push_back(subgroupEnd);
-        groups.push_back(std::make_shared<jxx::lang::String>(m.str(i)));
+        groups.push_back(jxx::NEW<jxx::lang::String>(m.str(i)));
     }
 
-    return std::make_shared<SnapshotMatchResult>(std::move(starts), std::move(ends), std::move(groups));
+    return jxx::NEW<SnapshotMatchResult>(std::move(starts), std::move(ends), std::move(groups));
 }
 
 jxx::lang::jbool Scanner::matchTokenAtCurrentPosition(
@@ -604,7 +604,7 @@ jxx::Ptr<jxx::lang::String> Scanner::nextLine() {
     }
     position_ = lineEnd + newlineWidth;
     clearMatchResult();
-    return std::make_shared<jxx::lang::String>(sourceUtf8_.substr(lineStart, lineEnd - lineStart));
+    return jxx::NEW<jxx::lang::String>(sourceUtf8_.substr(lineStart, lineEnd - lineStart));
 }
 
 jxx::lang::jbool Scanner::hasNextBoolean() {

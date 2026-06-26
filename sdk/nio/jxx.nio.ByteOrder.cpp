@@ -12,8 +12,8 @@ namespace
 
 namespace jxx::nio
 {
-    jxx::Ptr<ByteOrder> ByteOrder::BIG_ENDIAN = std::make_shared<ByteOrder>(std::make_shared<jxx::lang::String>("BIG_ENDIAN"));
-    jxx::Ptr<ByteOrder> ByteOrder::LITTLE_ENDIAN = std::make_shared<ByteOrder>(std::make_shared<jxx::lang::String>("LITTLE_ENDIAN"));
+    jxx::Ptr<ByteOrder> ByteOrder::BIG_ENDIAN = jxx::NEW<ByteOrder>(jxx::NEW<jxx::lang::String>("BIG_ENDIAN"));
+    jxx::Ptr<ByteOrder> ByteOrder::LITTLE_ENDIAN = jxx::NEW<ByteOrder>(jxx::NEW<jxx::lang::String>("LITTLE_ENDIAN"));
 
     ByteOrder::ByteOrder(jxx::Ptr<jxx::lang::String> name)
         : name_(std::move(name))

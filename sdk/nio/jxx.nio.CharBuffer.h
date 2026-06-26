@@ -49,7 +49,11 @@ namespace jxx::nio
         jxx::lang::jbool isDirect() const override;
         jxx::Ptr<jxx::lang::String> toString() const override;
 
-    private:
+    protected:
+        // Add friend declarations to allow construction
+        template<class _Ty, class... _Types>
+        friend void std::_Construct_in_place(_Ty&, _Types&&...);
+        
         CharBuffer(std::shared_ptr<std::vector<jxx::lang::jchar>> storage,
               jxx::lang::jint offset,
               jxx::lang::jint capacity,

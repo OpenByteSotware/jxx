@@ -29,6 +29,6 @@ namespace jxx::net
             msg += " at index " + std::to_string(index_);
         if (input_)
             msg += ": " + input_->utf8();
-        return std::make_shared<jxx::lang::String>(msg);
+        return jxx::NEW<jxx::lang::String>(msg);
     }
 }

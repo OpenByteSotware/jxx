@@ -13,7 +13,7 @@ namespace spliterators {
 template <typename E>
 class ArrayRefSpliterator : public virtual jxx::util::Spliterator<E> {
 private:
-    jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<E>, 1U>> array_;
+    jxx::Ptr<jxx::JxxArray<jxx::Ptr<E>, 1U>> array_;
     jxx::lang::jint index_;
     jxx::lang::jint fence_;
     jxx::lang::jint characteristics_;
@@ -21,7 +21,7 @@ private:
 
 public:
     ArrayRefSpliterator(
-        jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<E>, 1U>> array,
+        jxx::Ptr<jxx::JxxArray<jxx::Ptr<E>, 1U>> array,
         jxx::lang::jint origin,
         jxx::lang::jint fence,
         jxx::lang::jint characteristics,
@@ -46,7 +46,7 @@ public:
             throw jxx::lang::NullPointerException();
         }
         if (index_ < fence_) {
-            action->accept((*array_)[index_]);
+            action->accept(array_(index_));
             index_++;
             return true;
         }

@@ -2,9 +2,9 @@
 
 namespace jxx::nio::charset
 {
-    jxx::Ptr<CodingErrorAction> CodingErrorAction::IGNORE = std::make_shared<CodingErrorAction>(std::make_shared<jxx::lang::String>("IGNORE"));
-    jxx::Ptr<CodingErrorAction> CodingErrorAction::REPLACE = std::make_shared<CodingErrorAction>(std::make_shared<jxx::lang::String>("REPLACE"));
-    jxx::Ptr<CodingErrorAction> CodingErrorAction::REPORT = std::make_shared<CodingErrorAction>(std::make_shared<jxx::lang::String>("REPORT"));
+    jxx::Ptr<CodingErrorAction> CodingErrorAction::IGNORE = jxx::NEW<CodingErrorAction>(jxx::NEW<jxx::lang::String>("IGNORE"));
+    jxx::Ptr<CodingErrorAction> CodingErrorAction::REPLACE = jxx::NEW<CodingErrorAction>(jxx::NEW<jxx::lang::String>("REPLACE"));
+    jxx::Ptr<CodingErrorAction> CodingErrorAction::REPORT = jxx::NEW<CodingErrorAction>(jxx::NEW<jxx::lang::String>("REPORT"));
 
     CodingErrorAction::CodingErrorAction(jxx::Ptr<jxx::lang::String> name) : name_(std::move(name)) {}
     jxx::Ptr<jxx::lang::String> CodingErrorAction::toString() const { return name_; }

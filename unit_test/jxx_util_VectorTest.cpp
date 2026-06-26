@@ -22,7 +22,7 @@ using jxx::lang::String;
 using jxx::util::Vector;
 
 static Ptr<String> S(const char* value) {
-    return std::make_shared<String>(value);
+    return jxx::NEW<String>(value);
 }
 
 TEST(VectorTest, InheritanceMatchesJavaShape) {

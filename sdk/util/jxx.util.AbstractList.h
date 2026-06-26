@@ -12,7 +12,7 @@ namespace jxx {
 namespace util {
 
 template <typename E>
-class AbstractList : public virtual AbstractCollection<E>, public virtual List<E> {
+class AbstractList : public AbstractCollection<E>, public virtual List<E> {
 protected:
     jxx::lang::jint modCount = 0;
 

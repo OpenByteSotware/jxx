@@ -62,7 +62,7 @@ namespace jxx::nio::charset
 
     jxx::Ptr<Charset> Charset::defaultCharset()
     {
-        return forName(std::make_shared<jxx::lang::String>("UTF-8"));
+        return forName(jxx::NEW<jxx::lang::String>("UTF-8"));
     }
 
     jxx::Ptr<jxx::lang::String> Charset::name() const { return canonicalName_; }
@@ -73,12 +73,12 @@ namespace jxx::nio::charset
 
     jxx::Ptr<CharsetDecoder> Charset::newDecoder()
     {
-        return std::make_shared<CharsetDecoder>(jxx::CAST<Charset, jxx::lang::Object>(this->thisPtr));
+        return jxx::NEW<CharsetDecoder>(jxx::CAST<Charset, jxx::lang::Object>(this->thisPtr));
     }
 
     jxx::Ptr<CharsetEncoder> Charset::newEncoder()
     {
-        return std::make_shared<CharsetEncoder>(jxx::CAST<Charset, jxx::lang::Object>(this->thisPtr));
+        return jxx::NEW<CharsetEncoder>(jxx::CAST<Charset, jxx::lang::Object>(this->thisPtr));
     }
 
     jxx::Ptr<jxx::lang::String> Charset::toString() const { return canonicalName_; }

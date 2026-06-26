@@ -28,7 +28,7 @@ private:
             if (comp_ != nullptr) {
                 return comp_->compare(a, b) < 0;
             }
-            auto comparable = jxx::lang::ptr_checked_cast<jxx::lang::Comparable<K>>(a);
+            auto comparable = jxx::CAST<jxx::lang::Comparable<K>, jxx::lang::Object>(a);
             if (comparable == nullptr) {
                 throw ClassCastException();
             }
@@ -82,7 +82,7 @@ public:
     }
 
     virtual jxx::lang::jbool containsKey(jxx::Ptr<jxx::lang::Object> key) override {
-        auto castKey = jxx::lang::ptr_checked_cast<K>(key);
+        auto castKey = jxx::CAST<K, jxx::lang::Object>(key);
         if (castKey == nullptr) return false;
         return map_.find(castKey) != map_.end();
     }
@@ -99,7 +99,7 @@ public:
     }
 
     virtual jxx::Ptr<V> get(jxx::Ptr<jxx::lang::Object> key) override {
-        auto castKey = jxx::lang::ptr_checked_cast<K>(key);
+        auto castKey = jxx::CAST<K, jxx::lang::Object>(key);
         if (castKey == nullptr) return nullptr;
         auto it = map_.find(castKey);
         if (it == map_.end()) return nullptr;
@@ -120,7 +120,7 @@ public:
     }
 
     virtual jxx::Ptr<V> remove(jxx::Ptr<jxx::lang::Object> key) override {
-        auto castKey = jxx::lang::ptr_checked_cast<K>(key);
+        auto castKey = jxx::CAST<K, jxx::lang::Object>(key);
         if (castKey == nullptr) return nullptr;
         auto it = map_.find(castKey);
         if (it == map_.end()) return nullptr;
@@ -265,7 +265,7 @@ private:
         if (comparator_ != nullptr) {
             return comparator_->compare(a, b) == 0;
         }
-        auto comparable = jxx::lang::ptr_checked_cast<jxx::lang::Comparable<K>>(a);
+        auto comparable = jxx::CAST<jxx::lang::Comparable<K>, jxx::lang::Object>(a);
         if (comparable == nullptr) throw ClassCastException();
         return comparable->compareTo(b) == 0;
     }
@@ -285,7 +285,7 @@ protected:
         }
         virtual jxx::Ptr<V> setValue(jxx::Ptr<V> value) override { return map_->put(key_, value); }
         virtual jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> o) override {
-            auto other = jxx::lang::ptr_checked_cast<MapEntry<K, V>>(o);
+            auto other = jxx::CAST<MapEntry<K, V>, jxx::lang::Object>(o);
             if (other == nullptr) return false;
             auto k1 = getKey();
             auto v1 = getValue();
@@ -357,7 +357,7 @@ protected:
         virtual jxx::lang::jint size() override { return map_->size(); }
         virtual jxx::lang::jbool isEmpty() override { return map_->isEmpty(); }
         virtual jxx::lang::jbool contains(jxx::Ptr<jxx::lang::Object> o) override {
-            auto e = jxx::lang::ptr_checked_cast<MapEntry<K, V>>(o);
+            auto e = jxx::CAST<MapEntry<K, V>, jxx::lang::Object>(o);
             if (e == nullptr) return false;
             auto value = map_->get(e->getKey());
             if (value == nullptr) return e->getValue() == nullptr && map_->containsKey(e->getKey());
@@ -371,7 +371,7 @@ protected:
         }
         virtual jxx::lang::jbool add(jxx::Ptr<MapEntry<K, V>> /*e*/) override { throw UnsupportedOperationException(); }
         virtual jxx::lang::jbool remove(jxx::Ptr<jxx::lang::Object> o) override {
-            auto e = jxx::lang::ptr_checked_cast<MapEntry<K, V>>(o);
+            auto e = jxx::CAST<MapEntry<K, V>, jxx::lang::Object>(o);
             if (e == nullptr) return false;
             auto value = map_->get(e->getKey());
             if (value == nullptr) {

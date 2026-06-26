@@ -74,14 +74,14 @@ namespace
             std::memcpy(bytes.data(), &sa->sin6_addr, 16);
             char buf[INET6_ADDRSTRLEN] = {0};
             ::inet_ntop(AF_INET6, &sa->sin6_addr, buf, sizeof(buf));
-            return std::make_shared<jxx::net::Inet6Address>(nullptr, std::make_shared<jxx::lang::String>(std::string(buf)), bytes, static_cast<jxx::lang::jint>(sa->sin6_scope_id), nullptr);
+            return jxx::NEW<jxx::net::Inet6Address>(nullptr, jxx::NEW<jxx::lang::String>(std::string(buf)), bytes, static_cast<jxx::lang::jint>(sa->sin6_scope_id), nullptr);
         }
         auto* sa = reinterpret_cast<const sockaddr_in*>(&ss);
         std::vector<jxx::lang::jbyte> bytes(4);
         std::memcpy(bytes.data(), &sa->sin_addr, 4);
         char buf[INET_ADDRSTRLEN] = {0};
         ::inet_ntop(AF_INET, &sa->sin_addr, buf, sizeof(buf));
-        return std::make_shared<jxx::net::Inet4Address>(nullptr, std::make_shared<jxx::lang::String>(std::string(buf)), bytes);
+        return jxx::NEW<jxx::net::Inet4Address>(nullptr, jxx::NEW<jxx::lang::String>(std::string(buf)), bytes);
     }
 
     inline jxx::lang::jint portFromSockaddr_(const sockaddr_storage& ss)
@@ -95,7 +95,7 @@ namespace
 namespace jxx::net
 {
     ServerSocket::ServerSocket()
-        : state_(std::make_shared<internal::NativeSocketState>())
+        : state_(jxx::NEW<internal::NativeSocketState>())
     {
     }
 
@@ -115,7 +115,7 @@ namespace jxx::net
                                jxx::Ptr<InetAddress> bindAddr)
         : ServerSocket()
     {
-        bind(std::make_shared<InetSocketAddress>(std::move(bindAddr), port), backlog);
+        bind(jxx::NEW<InetSocketAddress>(std::move(bindAddr), port), backlog);
     }
 
     ServerSocket::~ServerSocket()
@@ -131,7 +131,7 @@ namespace jxx::net
     void ServerSocket::ensureCreated_()
     {
         if (!state_)
-            state_ = std::make_shared<internal::NativeSocketState>();
+            state_ = jxx::NEW<internal::NativeSocketState>();
         if (state_->socket != internal::kInvalidSocket)
             return;
         internal::ensureNetworkInitialized();
@@ -187,7 +187,7 @@ namespace jxx::net
     jxx::lang::jint ServerSocket::getLocalPort() const noexcept { return localPort_; }
     jxx::Ptr<SocketAddress> ServerSocket::getLocalSocketAddress() const
     {
-        return bound_ ? std::make_shared<InetSocketAddress>(localAddr_, localPort_) : nullptr;
+        return bound_ ? jxx::NEW<InetSocketAddress>(localAddr_, localPort_) : nullptr;
     }
 
     jxx::Ptr<Socket> ServerSocket::accept()
@@ -203,7 +203,7 @@ namespace jxx::net
         socklen_t llen = sizeof(local);
         ::getsockname(s, reinterpret_cast<sockaddr*>(&local), &llen);
 
-        return std::make_shared<Socket>(
+        return jxx::NEW<Socket>(
             s,
             fromSockaddr_(remote),
             portFromSockaddr_(remote),
@@ -291,8 +291,8 @@ namespace jxx::net
     jxx::Ptr<jxx::lang::String> ServerSocket::toString() const
     {
         if (!bound_)
-            return std::make_shared<jxx::lang::String>("ServerSocket[unbound]");
-        return std::make_shared<jxx::lang::String>(
+            return jxx::NEW<jxx::lang::String>("ServerSocket[unbound]");
+        return jxx::NEW<jxx::lang::String>(
             std::string("ServerSocket[addr=") + (localAddr_ ? localAddr_->getHostAddress()->utf8() : std::string()) +
             ",localport=" + std::to_string(localPort_) + "]");
     }

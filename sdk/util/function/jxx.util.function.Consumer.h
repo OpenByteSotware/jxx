@@ -1,5 +1,6 @@
 #pragma once
 
+#include "lang/jxx.lang.Object.h"
 #include "util/function/jxx.util.function.ConsumerSuper.h"
 #include "lang/jxx.lang.NullPointerException.h"
 

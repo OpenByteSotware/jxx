@@ -9,6 +9,11 @@
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 
+namespace jxx::io {
+    class ObjectOutputStream;
+	class ObjectInputStream;
+}
+
 namespace jxx {
 namespace util {
 namespace regex {
@@ -34,6 +39,8 @@ private:
     std::string compiledPatternUtf8_;
     std::regex compiled_;
 
+    template<class _Ty, class... _Types>
+    friend void std::_Construct_in_place(_Ty&, _Types&&...);
     Pattern(
         jxx::Ptr<jxx::lang::String> regex,
         jxx::lang::jint flags,
@@ -64,6 +71,10 @@ public:
 
     const std::regex& nativeRegex() const;
     const std::string& nativePatternUtf8() const;
+
+    virtual void writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out) override;
+    virtual void readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) override;
+    virtual void readObjectNoData() override;
 };
 
 } // namespace regex

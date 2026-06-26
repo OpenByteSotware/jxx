@@ -1210,7 +1210,7 @@ namespace jxx::util
 
     jxx::Ptr<jxx::lang::String> Formatter::toString() const
     {
-        return std::make_shared<jxx::lang::String>(buffer_);
+        return jxx::NEW<jxx::lang::String>(buffer_);
     }
 }
 

@@ -16,7 +16,7 @@ public:
 
     virtual jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> o) override {
         if (o == nullptr) return false;
-        auto other = jxx::lang::ptr_checked_cast<wildcard::CollectionAny>(o);
+        auto other = jxx::CAST<wildcard::CollectionAny, jxx::lang::Object>(o);
         if (other == nullptr) return false;
         if (other->size() != this->size()) return false;
         try {

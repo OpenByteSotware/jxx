@@ -25,7 +25,7 @@ namespace util {
 
 template <typename E>
 class Vector
-    : public virtual AbstractList<E>
+    : public AbstractList<E>
     , public virtual jxx::io::Serializable
     , public virtual jxx::lang::Cloneable
     , public virtual RandomAccess {
@@ -153,6 +153,32 @@ public:
 
     virtual ~Vector() = default;
 
+    // Serializable contract required by the provided jxx::io::Serializable interface.
+    // Stream API signatures were not provided, so these are intentionally conservative.
+    virtual void writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out) override {
+        this->synchronized([&]() {
+            if (out == nullptr) {
+                throw jxx::lang::NullPointerException();
+            }
+            throw jxx::lang::UnsupportedOperationException();
+        });
+    }
+
+    virtual void readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) override {
+        this->synchronized([&]() {
+            if (in == nullptr) {
+                throw jxx::lang::NullPointerException();
+            }
+            throw jxx::lang::UnsupportedOperationException();
+        });
+    }
+
+    virtual void readObjectNoData() override {
+        this->synchronized([&]() {
+            throw jxx::lang::UnsupportedOperationException();
+        });
+    }
+
     virtual void trimToSize() {
         this->synchronized([&]() {
             elements_.shrink_to_fit();
@@ -187,42 +213,30 @@ public:
     }
 
     virtual jxx::lang::jint capacity() {
-        return this->synchronized([&]() -> jxx::lang::jint {
-            return capacity_;
-        });
+        return this->synchronized([&]() -> jxx::lang::jint { return capacity_; });
     }
 
     virtual jxx::lang::jint size() override {
-        return this->synchronized([&]() -> jxx::lang::jint {
-            return static_cast<jxx::lang::jint>(elements_.size());
-        });
+        return this->synchronized([&]() -> jxx::lang::jint { return static_cast<jxx::lang::jint>(elements_.size()); });
     }
 
     virtual jxx::lang::jbool isEmpty() override {
-        return this->synchronized([&]() -> jxx::lang::jbool {
-            return static_cast<jxx::lang::jbool>(elements_.empty());
-        });
+        return this->synchronized([&]() -> jxx::lang::jbool { return static_cast<jxx::lang::jbool>(elements_.empty()); });
     }
 
     virtual jxx::Ptr<Enumeration<E>> elements() {
         return this->synchronized([&]() -> jxx::Ptr<Enumeration<E>> {
-            return std::make_shared<VectorEnumeration>(jxx::Ptr<Vector<E>>(this, [](Vector<E>*) {}));
+            return jxx::NEW<VectorEnumeration>(jxx::Ptr<Vector<E>>(this, [](Vector<E>*) {}));
         });
     }
 
-    virtual jxx::lang::jint indexOf(jxx::Ptr<jxx::lang::Object> o) override {
-        return indexOf(o, 0);
-    }
+    virtual jxx::lang::jint indexOf(jxx::Ptr<jxx::lang::Object> o) override { return indexOf(o, 0); }
 
     virtual jxx::lang::jint indexOf(jxx::Ptr<jxx::lang::Object> o, jxx::lang::jint index) {
         return this->synchronized([&]() -> jxx::lang::jint {
-            if (index < 0) {
-                index = 0;
-            }
+            if (index < 0) index = 0;
             for (std::size_t i = static_cast<std::size_t>(index); i < elements_.size(); ++i) {
-                if (ptrEqualsObject(elements_[i], o)) {
-                    return static_cast<jxx::lang::jint>(i);
-                }
+                if (ptrEqualsObject(elements_[i], o)) return static_cast<jxx::lang::jint>(i);
             }
             return static_cast<jxx::lang::jint>(-1);
         });
@@ -236,124 +250,73 @@ public:
 
     virtual jxx::lang::jint lastIndexOf(jxx::Ptr<jxx::lang::Object> o, jxx::lang::jint index) {
         return this->synchronized([&]() -> jxx::lang::jint {
-            if (elements_.empty()) {
-                return static_cast<jxx::lang::jint>(-1);
-            }
-            if (index >= static_cast<jxx::lang::jint>(elements_.size())) {
-                throw jxx::lang::ArrayIndexOutOfBoundsException();
-            }
+            if (elements_.empty()) return static_cast<jxx::lang::jint>(-1);
+            if (index >= static_cast<jxx::lang::jint>(elements_.size())) throw jxx::lang::ArrayIndexOutOfBoundsException();
             for (jxx::lang::jint i = index; i >= 0; --i) {
-                if (ptrEqualsObject(elements_[static_cast<std::size_t>(i)], o)) {
-                    return i;
-                }
+                if (ptrEqualsObject(elements_[static_cast<std::size_t>(i)], o)) return i;
             }
             return static_cast<jxx::lang::jint>(-1);
         });
     }
 
     virtual jxx::Ptr<E> elementAt(jxx::lang::jint index) {
-        return this->synchronized([&]() -> jxx::Ptr<E> {
-            rangeCheck(index);
-            return elements_[static_cast<std::size_t>(index)];
-        });
+        return this->synchronized([&]() -> jxx::Ptr<E> { rangeCheck(index); return elements_[static_cast<std::size_t>(index)]; });
     }
 
     virtual jxx::Ptr<E> firstElement() {
         return this->synchronized([&]() -> jxx::Ptr<E> {
-            if (elements_.empty()) {
-                throw jxx::util::NoSuchElementException();
-            }
+            if (elements_.empty()) throw jxx::util::NoSuchElementException();
             return elements_.front();
         });
     }
 
     virtual jxx::Ptr<E> lastElement() {
         return this->synchronized([&]() -> jxx::Ptr<E> {
-            if (elements_.empty()) {
-                throw jxx::util::NoSuchElementException();
-            }
+            if (elements_.empty()) throw jxx::util::NoSuchElementException();
             return elements_.back();
         });
     }
 
     virtual void setElementAt(jxx::Ptr<E> obj, jxx::lang::jint index) {
-        this->synchronized([&]() {
-            rangeCheck(index);
-            elements_[static_cast<std::size_t>(index)] = obj;
-        });
+        this->synchronized([&]() { rangeCheck(index); elements_[static_cast<std::size_t>(index)] = obj; });
     }
 
     virtual void removeElementAt(jxx::lang::jint index) {
-        this->synchronized([&]() {
-            rangeCheck(index);
-            elements_.erase(elements_.begin() + static_cast<long>(index));
-            ++this->modCount;
-        });
+        this->synchronized([&]() { rangeCheck(index); elements_.erase(elements_.begin() + static_cast<long>(index)); ++this->modCount; });
     }
 
     virtual void insertElementAt(jxx::Ptr<E> obj, jxx::lang::jint index) {
-        this->synchronized([&]() {
-            rangeCheckForAddLocal(index);
-            ensureCapacityUnlocked(static_cast<jxx::lang::jint>(elements_.size()) + 1);
-            elements_.insert(elements_.begin() + static_cast<long>(index), obj);
-            ++this->modCount;
-        });
+        this->synchronized([&]() { rangeCheckForAddLocal(index); ensureCapacityUnlocked(static_cast<jxx::lang::jint>(elements_.size()) + 1); elements_.insert(elements_.begin() + static_cast<long>(index), obj); ++this->modCount; });
     }
 
     virtual void addElement(jxx::Ptr<E> obj) {
-        this->synchronized([&]() {
-            ensureCapacityUnlocked(static_cast<jxx::lang::jint>(elements_.size()) + 1);
-            elements_.push_back(obj);
-            ++this->modCount;
-        });
+        this->synchronized([&]() { ensureCapacityUnlocked(static_cast<jxx::lang::jint>(elements_.size()) + 1); elements_.push_back(obj); ++this->modCount; });
     }
 
     virtual jxx::lang::jbool removeElement(jxx::Ptr<jxx::lang::Object> obj) {
         return this->synchronized([&]() -> jxx::lang::jbool {
             const auto idx = indexOf(obj, 0);
-            if (idx < 0) {
-                return static_cast<jxx::lang::jbool>(false);
-            }
+            if (idx < 0) return static_cast<jxx::lang::jbool>(false);
             elements_.erase(elements_.begin() + static_cast<long>(idx));
             ++this->modCount;
             return static_cast<jxx::lang::jbool>(true);
         });
     }
 
-    virtual void removeAllElements() {
-        clear();
-    }
+    virtual void removeAllElements() { clear(); }
 
-    virtual jxx::Ptr<E> get(jxx::lang::jint index) override {
-        return elementAt(index);
-    }
+    virtual jxx::Ptr<E> get(jxx::lang::jint index) override { return elementAt(index); }
 
     virtual jxx::Ptr<E> set(jxx::lang::jint index, jxx::Ptr<E> element) override {
-        return this->synchronized([&]() -> jxx::Ptr<E> {
-            rangeCheck(index);
-            auto old = elements_[static_cast<std::size_t>(index)];
-            elements_[static_cast<std::size_t>(index)] = element;
-            return old;
-        });
+        return this->synchronized([&]() -> jxx::Ptr<E> { rangeCheck(index); auto old = elements_[static_cast<std::size_t>(index)]; elements_[static_cast<std::size_t>(index)] = element; return old; });
     }
 
-    virtual jxx::lang::jbool add(jxx::Ptr<E> e) override {
-        addElement(e);
-        return static_cast<jxx::lang::jbool>(true);
-    }
+    virtual jxx::lang::jbool add(jxx::Ptr<E> e) override { addElement(e); return static_cast<jxx::lang::jbool>(true); }
 
-    virtual void add(jxx::lang::jint index, jxx::Ptr<E> element) override {
-        insertElementAt(element, index);
-    }
+    virtual void add(jxx::lang::jint index, jxx::Ptr<E> element) override { insertElementAt(element, index); }
 
     virtual jxx::Ptr<E> remove(jxx::lang::jint index) override {
-        return this->synchronized([&]() -> jxx::Ptr<E> {
-            rangeCheck(index);
-            auto old = elements_[static_cast<std::size_t>(index)];
-            elements_.erase(elements_.begin() + static_cast<long>(index));
-            ++this->modCount;
-            return old;
-        });
+        return this->synchronized([&]() -> jxx::Ptr<E> { rangeCheck(index); auto old = elements_[static_cast<std::size_t>(index)]; elements_.erase(elements_.begin() + static_cast<long>(index)); ++this->modCount; return old; });
     }
 
     virtual void clear() override {
@@ -366,9 +329,7 @@ public:
     }
 
     virtual jxx::lang::jbool addAll(jxx::Ptr<wildcard::CollectionExtends<E>> c) override {
-        if (c == nullptr) {
-            throw jxx::lang::NullPointerException();
-        }
+        if (c == nullptr) throw jxx::lang::NullPointerException();
         return this->synchronized([&]() -> jxx::lang::jbool {
             auto it = c->iteratorExtends();
             jxx::lang::jbool modified = static_cast<jxx::lang::jbool>(false);
@@ -377,27 +338,19 @@ public:
                 elements_.push_back(it->next());
                 modified = static_cast<jxx::lang::jbool>(true);
             }
-            if (modified) {
-                ++this->modCount;
-            }
+            if (modified) ++this->modCount;
             return modified;
         });
     }
 
     virtual jxx::lang::jbool addAll(jxx::lang::jint index, jxx::Ptr<wildcard::CollectionExtends<E>> c) override {
-        if (c == nullptr) {
-            throw jxx::lang::NullPointerException();
-        }
+        if (c == nullptr) throw jxx::lang::NullPointerException();
         return this->synchronized([&]() -> jxx::lang::jbool {
             rangeCheckForAddLocal(index);
             auto it = c->iteratorExtends();
             std::vector<jxx::Ptr<E>> incoming;
-            while (it->hasNext()) {
-                incoming.push_back(it->next());
-            }
-            if (incoming.empty()) {
-                return static_cast<jxx::lang::jbool>(false);
-            }
+            while (it->hasNext()) incoming.push_back(it->next());
+            if (incoming.empty()) return static_cast<jxx::lang::jbool>(false);
             ensureCapacityUnlocked(static_cast<jxx::lang::jint>(elements_.size() + incoming.size()));
             elements_.insert(elements_.begin() + static_cast<long>(index), incoming.begin(), incoming.end());
             ++this->modCount;
@@ -406,98 +359,64 @@ public:
     }
 
     virtual jxx::lang::jbool containsAll(jxx::Ptr<wildcard::CollectionAny> c) override {
-        if (c == nullptr) {
-            throw jxx::lang::NullPointerException();
-        }
+        if (c == nullptr) throw jxx::lang::NullPointerException();
         auto it = c->iteratorObject();
         while (it->hasNext()) {
-            if (!this->contains(it->next())) {
-                return static_cast<jxx::lang::jbool>(false);
-            }
+            if (!this->contains(it->next())) return static_cast<jxx::lang::jbool>(false);
         }
         return static_cast<jxx::lang::jbool>(true);
     }
 
-    virtual jxx::lang::jbool remove(jxx::Ptr<jxx::lang::Object> o) override {
-        return removeElement(o);
-    }
+    virtual jxx::lang::jbool remove(jxx::Ptr<jxx::lang::Object> o) override { return removeElement(o); }
 
     virtual jxx::lang::jbool removeAll(jxx::Ptr<wildcard::CollectionAny> c) override {
-        if (c == nullptr) {
-            throw jxx::lang::NullPointerException();
-        }
+        if (c == nullptr) throw jxx::lang::NullPointerException();
         return this->synchronized([&]() -> jxx::lang::jbool {
             std::vector<jxx::Ptr<jxx::lang::Object>> removeSet;
             auto it = c->iteratorObject();
-            while (it->hasNext()) {
-                removeSet.push_back(it->next());
-            }
-            if (removeSet.empty()) {
-                return static_cast<jxx::lang::jbool>(false);
-            }
+            while (it->hasNext()) removeSet.push_back(it->next());
+            if (removeSet.empty()) return static_cast<jxx::lang::jbool>(false);
             std::vector<jxx::Ptr<E>> retained;
             retained.reserve(elements_.size());
             jxx::lang::jbool modified = static_cast<jxx::lang::jbool>(false);
             for (const auto& item : elements_) {
                 jxx::lang::jbool found = static_cast<jxx::lang::jbool>(false);
                 for (const auto& probe : removeSet) {
-                    if (ptrEqualsObject(item, probe)) {
-                        found = static_cast<jxx::lang::jbool>(true);
-                        break;
-                    }
+                    if (ptrEqualsObject(item, probe)) { found = static_cast<jxx::lang::jbool>(true); break; }
                 }
-                if (found) {
-                    modified = static_cast<jxx::lang::jbool>(true);
-                } else {
-                    retained.push_back(item);
-                }
+                if (found) modified = static_cast<jxx::lang::jbool>(true);
+                else retained.push_back(item);
             }
-            if (modified) {
-                elements_.swap(retained);
-                ++this->modCount;
-            }
+            if (modified) { elements_.swap(retained); ++this->modCount; }
             return modified;
         });
     }
 
     virtual jxx::lang::jbool retainAll(jxx::Ptr<wildcard::CollectionAny> c) override {
-        if (c == nullptr) {
-            throw jxx::lang::NullPointerException();
-        }
+        if (c == nullptr) throw jxx::lang::NullPointerException();
         return this->synchronized([&]() -> jxx::lang::jbool {
             std::vector<jxx::Ptr<jxx::lang::Object>> keepSet;
             auto it = c->iteratorObject();
-            while (it->hasNext()) {
-                keepSet.push_back(it->next());
-            }
+            while (it->hasNext()) keepSet.push_back(it->next());
             std::vector<jxx::Ptr<E>> retained;
             retained.reserve(elements_.size());
             jxx::lang::jbool modified = static_cast<jxx::lang::jbool>(false);
             for (const auto& item : elements_) {
                 jxx::lang::jbool found = static_cast<jxx::lang::jbool>(false);
                 for (const auto& probe : keepSet) {
-                    if (ptrEqualsObject(item, probe)) {
-                        found = static_cast<jxx::lang::jbool>(true);
-                        break;
-                    }
+                    if (ptrEqualsObject(item, probe)) { found = static_cast<jxx::lang::jbool>(true); break; }
                 }
-                if (found) {
-                    retained.push_back(item);
-                } else {
-                    modified = static_cast<jxx::lang::jbool>(true);
-                }
+                if (found) retained.push_back(item);
+                else modified = static_cast<jxx::lang::jbool>(true);
             }
-            if (modified) {
-                elements_.swap(retained);
-                ++this->modCount;
-            }
+            if (modified) { elements_.swap(retained); ++this->modCount; }
             return modified;
         });
     }
 
     virtual jxx::Ptr<jxx::lang::Object> cloneImpl() const override {
         return this->synchronized([&]() -> jxx::Ptr<jxx::lang::Object> {
-            auto copy = std::make_shared<Vector<E>>(capacity_, capacityIncrement_);
+            auto copy = jxx::NEW<Vector<E>>(capacity_, capacityIncrement_);
             copy->elements_ = elements_;
             copy->capacity_ = capacity_;
             return jxx::CAST<jxx::lang::Object>(copy);
@@ -509,15 +428,28 @@ public:
             std::ostringstream oss;
             oss << "[";
             for (std::size_t i = 0; i < elements_.size(); ++i) {
-                if (i != 0) {
-                    oss << ", ";
-                }
+                if (i != 0) oss << ", ";
                 oss << ptrToString(elements_[i]);
             }
             oss << "]";
-            return std::make_shared<jxx::lang::String>(oss.str());
+            return jxx::NEW<jxx::lang::String>(oss.str());
         });
     }
+
+    virtual jxx::Ptr<List<E>> subList(jxx::lang::jint fromIndex, jxx::lang::jint toIndex) override {
+    }
+
+    // Java 8 default methods
+    virtual void replaceAll(jxx::Ptr<function::UnaryOperator<E>> op) override {}
+
+    // Java: sort(Comparator<? super E>)
+    virtual void sort(jxx::Ptr<ComparatorSuper<E>> /*c*/) override {}
+
+    virtual jxx::Ptr<Spliterator<E>> spliterator() override {}
+
+    // Java List contract redeclarations
+    virtual jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> o) override {}
+    virtual jxx::lang::jint hashCode() override { return 0; }
 };
 
 } // namespace util

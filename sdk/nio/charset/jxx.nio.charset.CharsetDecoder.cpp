@@ -17,7 +17,7 @@ namespace jxx::nio::charset
         : cs_(std::move(cs)),
           malformedAction_(CodingErrorAction::REPORT),
           unmappableAction_(CodingErrorAction::REPORT),
-          replacement_(std::make_shared<jxx::lang::String>("?"))
+          replacement_(jxx::NEW<jxx::lang::String>("?"))
     {
         if (!cs_)
             throwIAE_("null charset");

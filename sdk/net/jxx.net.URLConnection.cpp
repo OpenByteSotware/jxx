@@ -17,7 +17,7 @@ namespace
         {
             if (!fileName)
                 return nullptr;
-            return std::make_shared<jxx::lang::String>(jxx::net::internal::extensionToMime(fileName->utf8()));
+            return jxx::NEW<jxx::lang::String>(jxx::net::internal::extensionToMime(fileName->utf8()));
         }
     };
 
@@ -35,9 +35,9 @@ namespace
         }
     };
 
-    jxx::Ptr<jxx::net::FileNameMap> g_fileNameMap = std::make_shared<SimpleFileNameMap>();
+    jxx::Ptr<jxx::net::FileNameMap> g_fileNameMap = jxx::NEW<SimpleFileNameMap>();
     jxx::Ptr<jxx::net::ContentHandlerFactory> g_contentHandlerFactory;
-    jxx::Ptr<jxx::net::ContentHandler> g_defaultContentHandler = std::make_shared<StreamContentHandler>();
+    jxx::Ptr<jxx::net::ContentHandler> g_defaultContentHandler = jxx::NEW<StreamContentHandler>();
 }
 
 namespace jxx::net
@@ -63,10 +63,10 @@ namespace jxx::net
 
     jxx::Ptr<URL> URLConnection::getURL() const { return url_; }
 
-    jxx::lang::jint URLConnection::getContentLength() const { return getHeaderFieldInt(std::make_shared<jxx::lang::String>("content-length"), -1); }
-    jxx::lang::jlong URLConnection::getContentLengthLong() const { return getHeaderFieldLong(std::make_shared<jxx::lang::String>("content-length"), -1); }
-    jxx::Ptr<jxx::lang::String> URLConnection::getContentType() const { return getHeaderField(std::make_shared<jxx::lang::String>("content-type")); }
-    jxx::Ptr<jxx::lang::String> URLConnection::getContentEncoding() const { return getHeaderField(std::make_shared<jxx::lang::String>("content-encoding")); }
+    jxx::lang::jint URLConnection::getContentLength() const { return getHeaderFieldInt(jxx::NEW<jxx::lang::String>("content-length"), -1); }
+    jxx::lang::jlong URLConnection::getContentLengthLong() const { return getHeaderFieldLong(jxx::NEW<jxx::lang::String>("content-length"), -1); }
+    jxx::Ptr<jxx::lang::String> URLConnection::getContentType() const { return getHeaderField(jxx::NEW<jxx::lang::String>("content-type")); }
+    jxx::Ptr<jxx::lang::String> URLConnection::getContentEncoding() const { return getHeaderField(jxx::NEW<jxx::lang::String>("content-encoding")); }
     jxx::lang::jlong URLConnection::getExpiration() const { return 0; }
     jxx::lang::jlong URLConnection::getDate() const { return 0; }
     jxx::lang::jlong URLConnection::getLastModified() const { return 0; }
@@ -78,7 +78,7 @@ namespace jxx::net
         const auto it = headerFields_.find(name->utf8());
         if (it == headerFields_.end())
             return nullptr;
-        return std::make_shared<jxx::lang::String>(it->second);
+        return jxx::NEW<jxx::lang::String>(it->second);
     }
 
     jxx::Ptr<jxx::lang::String> URLConnection::getHeaderField(jxx::lang::jint n) const
@@ -87,7 +87,7 @@ namespace jxx::net
             return nullptr;
         auto it = headerFields_.begin();
         std::advance(it, n);
-        return std::make_shared<jxx::lang::String>(it->second);
+        return jxx::NEW<jxx::lang::String>(it->second);
     }
 
     jxx::Ptr<jxx::lang::String> URLConnection::getHeaderFieldKey(jxx::lang::jint n) const
@@ -96,7 +96,7 @@ namespace jxx::net
             return nullptr;
         auto it = headerFields_.begin();
         std::advance(it, n);
-        return std::make_shared<jxx::lang::String>(it->first);
+        return jxx::NEW<jxx::lang::String>(it->first);
     }
 
     jxx::lang::jlong URLConnection::getHeaderFieldDate(jxx::Ptr<jxx::lang::String> name,
@@ -197,6 +197,6 @@ namespace jxx::net
         if (!key)
             return nullptr;
         const auto it = requestProps_.find(key->utf8());
-        return (it == requestProps_.end()) ? nullptr : std::make_shared<jxx::lang::String>(it->second);
+        return (it == requestProps_.end()) ? nullptr : jxx::NEW<jxx::lang::String>(it->second);
     }
 }

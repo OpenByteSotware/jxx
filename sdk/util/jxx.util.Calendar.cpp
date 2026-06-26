@@ -55,7 +55,7 @@ Calendar::Calendar() {
 }
 
 jxx::Ptr<Calendar> Calendar::getInstance() {
-    return std::make_shared<Calendar>();
+    return jxx::NEW<Calendar>();
 }
 
 jxx::lang::jlong Calendar::getTimeInMillis() const { return millis_; }

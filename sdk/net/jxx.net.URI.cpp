@@ -10,7 +10,7 @@ namespace
 {
     inline jxx::Ptr<jxx::lang::String> S_(const std::string& s)
     {
-        return s.empty() ? nullptr : std::make_shared<jxx::lang::String>(s);
+        return s.empty() ? nullptr : jxx::NEW<jxx::lang::String>(s);
     }
 }
 
@@ -42,7 +42,7 @@ namespace jxx::net
           query_(std::move(query)),
           fragment_(std::move(fragment))
     {
-        schemeSpecificPart_ = std::make_shared<jxx::lang::String>((authority_ ? std::string("//") + authority_->utf8() : std::string()) + (path_ ? path_->utf8() : std::string()) + (query_ ? std::string("?") + query_->utf8() : std::string()));
+        schemeSpecificPart_ = jxx::NEW<jxx::lang::String>((authority_ ? std::string("//") + authority_->utf8() : std::string()) + (path_ ? path_->utf8() : std::string()) + (query_ ? std::string("?") + query_->utf8() : std::string()));
     }
 
     URI::URI(jxx::Ptr<jxx::lang::String> scheme,
@@ -75,14 +75,14 @@ namespace jxx::net
             authority += host_->utf8();
         if (port_ >= 0)
             authority += ":" + std::to_string(port_);
-        authority_ = authority.empty() ? nullptr : std::make_shared<jxx::lang::String>(authority);
-        schemeSpecificPart_ = std::make_shared<jxx::lang::String>((authority_ ? std::string("//") + authority_->utf8() : std::string()) + (path_ ? path_->utf8() : std::string()) + (query_ ? std::string("?") + query_->utf8() : std::string()));
+        authority_ = authority.empty() ? nullptr : jxx::NEW<jxx::lang::String>(authority);
+        schemeSpecificPart_ = jxx::NEW<jxx::lang::String>((authority_ ? std::string("//") + authority_->utf8() : std::string()) + (path_ ? path_->utf8() : std::string()) + (query_ ? std::string("?") + query_->utf8() : std::string()));
     }
 
     void URI::parse_(jxx::Ptr<jxx::lang::String> spec)
     {
         if (!spec)
-            throw URISyntaxException(nullptr, std::make_shared<jxx::lang::String>("null URI"));
+            throw URISyntaxException(nullptr, jxx::NEW<jxx::lang::String>("null URI"));
         const auto p = internal::parseUriLike(spec->utf8());
         scheme_ = S_(p.scheme);
         schemeSpecificPart_ = S_(p.schemeSpecificPart);
@@ -98,7 +98,7 @@ namespace jxx::net
 
     jxx::Ptr<URI> URI::create(jxx::Ptr<jxx::lang::String> str)
     {
-        return std::make_shared<URI>(std::move(str));
+        return jxx::NEW<URI>(std::move(str));
     }
 
     jxx::lang::jbool URI::isAbsolute() const { return scheme_ != nullptr; }
@@ -123,9 +123,9 @@ namespace jxx::net
     jxx::Ptr<URI> URI::normalize() const
     {
         if (!path_)
-            return std::make_shared<URI>(toString());
-        auto u = std::make_shared<URI>(toString());
-        u->path_ = std::make_shared<jxx::lang::String>(internal::normalizePath(path_->utf8()));
+            return jxx::NEW<URI>(toString());
+        auto u = jxx::NEW<URI>(toString());
+        u->path_ = jxx::NEW<jxx::lang::String>(internal::normalizePath(path_->utf8()));
         const auto p = internal::parseUriLike(u->toString()->utf8());
         u->schemeSpecificPart_ = S_(p.schemeSpecificPart);
         return u;
@@ -134,24 +134,24 @@ namespace jxx::net
     jxx::Ptr<URI> URI::resolve(jxx::Ptr<URI> uri) const
     {
         if (!uri)
-            return std::make_shared<URI>(toString());
+            return jxx::NEW<URI>(toString());
         if (uri->isAbsolute())
             return uri;
 
-        auto u = std::make_shared<URI>(toString());
+        auto u = jxx::NEW<URI>(toString());
         if (uri->path_ && !uri->path_->utf8().empty())
-            u->path_ = std::make_shared<jxx::lang::String>(internal::resolvePath(path_ ? path_->utf8() : std::string(), uri->path_->utf8()));
+            u->path_ = jxx::NEW<jxx::lang::String>(internal::resolvePath(path_ ? path_->utf8() : std::string(), uri->path_->utf8()));
         if (uri->query_)
             u->query_ = uri->query_;
         if (uri->fragment_)
             u->fragment_ = uri->fragment_;
         const auto rebuilt = u->toString();
-        return std::make_shared<URI>(rebuilt);
+        return jxx::NEW<URI>(rebuilt);
     }
 
     jxx::Ptr<URI> URI::resolve(jxx::Ptr<jxx::lang::String> str) const
     {
-        return resolve(std::make_shared<URI>(std::move(str)));
+        return resolve(jxx::NEW<URI>(std::move(str)));
     }
 
     jxx::Ptr<URI> URI::relativize(jxx::Ptr<URI> uri) const
@@ -165,17 +165,17 @@ namespace jxx::net
         const std::string childPath = uri->path_ ? uri->path_->utf8() : std::string();
         if (childPath.rfind(basePath, 0) != 0)
             return uri;
-        return std::make_shared<URI>(std::make_shared<jxx::lang::String>(childPath.substr(basePath.size())));
+        return jxx::NEW<URI>(jxx::NEW<jxx::lang::String>(childPath.substr(basePath.size())));
     }
 
     jxx::Ptr<URI> URI::parseServerAuthority() const
     {
-        return std::make_shared<URI>(toString());
+        return jxx::NEW<URI>(toString());
     }
 
     jxx::Ptr<URL> URI::toURL() const
     {
-        return std::make_shared<URL>(toString());
+        return jxx::NEW<URL>(toString());
     }
 
     jxx::Ptr<jxx::lang::String> URI::toASCIIString() const { return toString(); }
@@ -193,7 +193,7 @@ namespace jxx::net
         p.query = query_ ? query_->utf8() : std::string();
         p.fragment = fragment_ ? fragment_->utf8() : std::string();
         p.opaque = opaque_;
-        return std::make_shared<jxx::lang::String>(internal::rebuildUri(p));
+        return jxx::NEW<jxx::lang::String>(internal::rebuildUri(p));
     }
 
     jxx::lang::jbool URI::equals(jxx::Ptr<jxx::lang::Object> other) const
