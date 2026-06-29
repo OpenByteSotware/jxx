@@ -1,46 +1,58 @@
 #pragma once
 
-#include <vector>
-
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.String.h"
 #include "net/jxx.net.InetAddress.h"
 
-namespace jxx::net
-{
-    class Inet6Address final : public InetAddress
-    {
-    public:
+namespace jxx::net {
+
+    class NetworkInterface;
+
+    class Inet6Address final : public InetAddress {
+    private:
+
+    private:
+        jxx::lang::ByteArray address_;
+        jxx::lang::jint scopeId_ = 0;
+        jxx::Ptr<NetworkInterface> scopedIf_;
+
+    private:
         Inet6Address(jxx::Ptr<jxx::lang::String> hostName,
-                     jxx::Ptr<jxx::lang::String> hostAddress,
-                     const std::vector<jxx::lang::jbyte>& bytes,
-                     jxx::lang::jint scopeId,
-                     jxx::Ptr<NetworkInterface> scopedIf);
-        ~Inet6Address() override = default;
+            jxx::Ptr<jxx::lang::String> hostAddress,
+            jxx::lang::ByteArray bytes,
+            jxx::lang::jint scopeId,
+            jxx::Ptr<NetworkInterface> scopedIf);
 
     public:
-        static jxx::Ptr<Inet6Address> getByAddress(jxx::Ptr<jxx::lang::String> host,
-                                                   const jxx::lang::ByteArray addr,
-                                                   jxx::lang::jint scopeId);
-        static jxx::Ptr<Inet6Address> getByAddress(jxx::Ptr<jxx::lang::String> host,
-                                                   const jxx::lang::ByteArray addr,
-                                                   jxx::Ptr<NetworkInterface> nif);
+        virtual ~Inet6Address() override = default;
+
+        static jxx::Ptr<Inet6Address> getByAddress(
+            jxx::Ptr<jxx::lang::String> host,
+            jxx::lang::ByteArray addr,
+            jxx::lang::jint scopeId);
+
+        static jxx::Ptr<Inet6Address> getByAddress(
+            jxx::Ptr<jxx::lang::String> host,
+            jxx::lang::ByteArray addr,
+            jxx::Ptr<NetworkInterface> nif);
+
+        virtual jxx::lang::ByteArray getAddress() const override;
 
         jxx::lang::jint getScopeId() const noexcept;
         jxx::Ptr<NetworkInterface> getScopedInterface() const;
         jxx::lang::jbool isIPv4CompatibleAddress() const;
 
-        jxx::lang::jbool isMulticastAddress() const override;
-        jxx::lang::jbool isAnyLocalAddress() const override;
-        jxx::lang::jbool isLoopbackAddress() const override;
-        jxx::lang::jbool isLinkLocalAddress() const override;
-        jxx::lang::jbool isSiteLocalAddress() const override;
-        jxx::lang::jbool isMCGlobal() const override;
-        jxx::lang::jbool isMCNodeLocal() const override;
-        jxx::lang::jbool isMCLinkLocal() const override;
-        jxx::lang::jbool isMCSiteLocal() const override;
-        jxx::lang::jbool isMCOrgLocal() const override;
-
-    private:
-        jxx::lang::jint scopeId_ = 0;
-        jxx::Ptr<NetworkInterface> scopedIf_;
+        virtual jxx::lang::jbool isMulticastAddress() const override;
+        virtual jxx::lang::jbool isAnyLocalAddress() const override;
+        virtual jxx::lang::jbool isLoopbackAddress() const override;
+        virtual jxx::lang::jbool isLinkLocalAddress() const override;
+        virtual jxx::lang::jbool isSiteLocalAddress() const override;
+        virtual jxx::lang::jbool isMCGlobal() const override;
+        virtual jxx::lang::jbool isMCNodeLocal() const override;
+        virtual jxx::lang::jbool isMCLinkLocal() const override;
+        virtual jxx::lang::jbool isMCSiteLocal() const override;
+        virtual jxx::lang::jbool isMCOrgLocal() const override;
     };
-}
+
+} // namespace jxx::net

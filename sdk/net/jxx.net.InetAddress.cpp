@@ -76,15 +76,14 @@ namespace
 namespace jxx::net
 {
     InetAddress::InetAddress(jxx::Ptr<jxx::lang::String> hostName,
-                             jxx::Ptr<jxx::lang::String> hostAddress,
-                             const std::vector<jxx::lang::jbyte>& bytes,
-                             jxx::lang::jint family)
+        jxx::Ptr<jxx::lang::String> hostAddress,
+        jxx::lang::ByteArray bytes,
+        jxx::lang::jint family)
         : hostName_(std::move(hostName)),
-          hostAddress_(std::move(hostAddress)),
-          bytes_(bytes),
-          family_(family)
-    {
-    }
+        hostAddress_(std::move(hostAddress)),
+        bytes_(bytes),
+        family_(family)
+    {}
 
     jxx::Ptr<InetAddress> InetAddress::getByAddress(const jxx::lang::ByteArray addr)
     {
@@ -92,7 +91,7 @@ namespace jxx::net
     }
 
     jxx::Ptr<InetAddress> InetAddress::getByAddress(jxx::Ptr<jxx::lang::String> host,
-                                                    const jxx::lang::ByteArray addr)
+        const jxx::lang::ByteArray addr)
     {
         auto bytes = fromByteArray_(addr);
         if (bytes.size() == 4)
@@ -123,11 +122,11 @@ namespace jxx::net
         const int rc = ::getaddrinfo(name.empty() ? nullptr : name.c_str(), nullptr, &hints, &result);
         if (rc != 0 || !result)
         {
-        #if defined(_WIN32)
+#if defined(_WIN32)
             throw UnknownHostException("getaddrinfo failed");
-        #else
+#else
             throw UnknownHostException(gai_strerror(rc));
-        #endif
+#endif
         }
 
         std::vector<jxx::Ptr<InetAddress>> addrs;
@@ -173,7 +172,7 @@ namespace jxx::net
     jxx::Ptr<InetAddress> InetAddress::getLocalHost()
     {
         internal::ensureNetworkInitialized();
-        char name[256] = {0};
+        char name[256] = { 0 };
         if (::gethostname(name, sizeof(name) - 1) != 0)
             throw UnknownHostException("gethostname failed");
         return getByName(jxx::NEW<jxx::lang::String>(std::string(name)));
@@ -181,7 +180,7 @@ namespace jxx::net
 
     jxx::Ptr<jxx::lang::String> InetAddress::getHostName() const { return hostName_ ? hostName_ : hostAddress_; }
     jxx::Ptr<jxx::lang::String> InetAddress::getCanonicalHostName() const { return getHostName(); }
-    jxx::lang::ByteArray InetAddress::getAddress() const { return toByteArray_(bytes_); }
+    jxx::lang::ByteArray InetAddress::getAddress() const { return bytes_; }
     jxx::Ptr<jxx::lang::String> InetAddress::getHostAddress() const { return hostAddress_; }
 
     jxx::lang::jbool InetAddress::isMulticastAddress() const { return false; }
@@ -214,11 +213,10 @@ namespace jxx::net
     jxx::lang::jint InetAddress::hashCode() const
     {
         jxx::lang::jint h = 1;
-        for (auto b : bytes_)
-            h = 31 * h + b;
+        for (jxx::lang::jint i = 0; i < static_cast<jxx::lang::jint>(bytes_->length); ++i)
+            h = 31 * h + (*bytes_)[i];
         return h + family_;
     }
 
     jxx::lang::jint InetAddress::familyValue_() const noexcept { return family_; }
-    const std::vector<jxx::lang::jbyte>& InetAddress::rawBytes_() const noexcept { return bytes_; }
 }

@@ -11,12 +11,7 @@
 namespace jxx {
 namespace util {
 
-template <typename E>
-class TreeSet
-    : public AbstractSet<E>
-    , public virtual jxx::lang::Cloneable
-    , public virtual jxx::io::Serializable {
-private:
+    template <typename E>
     struct ElemLess {
         jxx::Ptr<ComparatorSuper<E>> comp_;
 
@@ -34,6 +29,14 @@ private:
             return comparable->compareTo(b) < 0;
         }
     };
+
+template <typename E>
+class TreeSet
+    : public AbstractSet<E>
+    , public virtual jxx::lang::Cloneable
+    , public virtual jxx::io::Serializable {
+private:
+    
 
     using InternalSet = std::set<jxx::Ptr<E>, ElemLess>;
 

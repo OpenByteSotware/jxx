@@ -1,6 +1,11 @@
 #pragma once
 
 #include <vector>
+#if defined(_WIN32)
+#include <winsock2.h>
+#else
+#include <arpa/inet.h>
+#endif
 
 #include "net/jxx.net.InetAddress.h"
 
@@ -11,7 +16,7 @@ namespace jxx::net
     public:
         Inet4Address(jxx::Ptr<jxx::lang::String> hostName,
                      jxx::Ptr<jxx::lang::String> hostAddress,
-                     const std::vector<jxx::lang::jbyte>& bytes);
+                     jxx::lang::ByteArray bytes);
         ~Inet4Address() override = default;
 
     public:
