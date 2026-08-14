@@ -3,7 +3,7 @@
 
 using namespace jxx::lang;
 
-class ArrayListIntTest : public jxx::util::ArrayList<int> {
+class ArrayListIntTest : public jxx::util::ArrayList<jint> {
     int value_{ 0 };
     bool runThread_{ true };
 public:

@@ -3,12 +3,13 @@
 #include "lang/jxx.lang.Object.h"
 #include "util/jxx.util.Collection.h"
 #include "util/jxx.util.Iterator.h"
+#include "lang/jxx.lang.Iterable.h"
 
 namespace jxx {
 namespace util {
 
 template <typename E>
-class AbstractCollection : public jxx::lang::Object, virtual public Collection<E> {
+class AbstractCollection : public jxx::lang::Object, virtual public Collection<E>, virtual public Iterable<E> {
 public:
     virtual ~AbstractCollection() = default;
     virtual jxx::lang::jbool isEmpty() override { return this->size() == 0; }

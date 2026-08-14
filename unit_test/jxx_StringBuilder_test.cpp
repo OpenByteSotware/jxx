@@ -14,7 +14,7 @@ using jxx::lang::String;
 
 TEST(StringBuilderTest, ConstructReserveAndEmpty) {
     auto b = jxx::NEW<StringBuilder>(128);
-    EXPECT_TRUE(b->empty());
+    EXPECT_TRUE(b->empty() == true);
     EXPECT_EQ(b->size(), 0u);
     // Capacity is allowed to exceed request, but must be >= requested.
     EXPECT_GE(b.capacity(), 128u);
@@ -25,8 +25,8 @@ TEST(StringBuilderTest, ConstructReserveAndEmpty) {
 
 TEST(StringBuilderTest, AppendStringsCharsAndToString) {
     StringBuilder b;
-    const std::string name = "Alice";
-    b.append("Hello").append(',').append(' ').append(name).append_line();
+    String name = "Alice";
+    b.append("Hello")->append(',')->append(' ')->append(name)->append_line();
 
     EXPECT_EQ(b.str(), std::string("Hello, Alice\n"));
     EXPECT_FALSE(b.empty());
