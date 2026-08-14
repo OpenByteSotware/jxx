@@ -8,7 +8,7 @@ namespace jxx {
 namespace util {
 
 template <typename K, typename V>
-class AbstractMap : public virtual Map<K, V> {
+class AbstractMap : public Object, public virtual Map<K, V> {
 protected:
     jxx::Ptr<Set<K>> keySetView;
     jxx::Ptr<Collection<V>> valuesView;

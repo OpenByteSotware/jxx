@@ -14,9 +14,9 @@ namespace jxx::net
     class Inet4Address final : public InetAddress
     {
     public:
-        Inet4Address(jxx::Ptr<jxx::lang::String> hostName,
-                     jxx::Ptr<jxx::lang::String> hostAddress,
-                     jxx::lang::ByteArray bytes);
+        Inet4Address(const jxx::Ptr<jxx::lang::String> hostName,
+                     const jxx::Ptr<jxx::lang::String> hostAddress,
+                     const jxx::lang::ByteArray bytes);
         ~Inet4Address() override = default;
 
     public:

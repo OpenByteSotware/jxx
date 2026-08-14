@@ -17,10 +17,10 @@ namespace jxx::net {
         jxx::lang::jint scopeId_ = 0;
         jxx::Ptr<NetworkInterface> scopedIf_;
 
-    private:
-        Inet6Address(jxx::Ptr<jxx::lang::String> hostName,
-            jxx::Ptr<jxx::lang::String> hostAddress,
-            jxx::lang::ByteArray bytes,
+    public:
+        Inet6Address(const jxx::Ptr<jxx::lang::String> hostName,
+            const jxx::Ptr<jxx::lang::String> hostAddress,
+            const jxx::lang::ByteArray bytes,
             jxx::lang::jint scopeId,
             jxx::Ptr<NetworkInterface> scopedIf);
 

@@ -11,7 +11,7 @@ namespace jxx::net {
     class Inet6Address;
     class NetworkInterface;
 
-    class InetAddress : public virtual jxx::lang::Object {
+    class InetAddress : public jxx::lang::Object {
     public:
         using InetAddressArray = jxx::JxxArray<jxx::Ptr<InetAddress>, 1U>;
 

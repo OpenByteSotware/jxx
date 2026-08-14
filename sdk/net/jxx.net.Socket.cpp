@@ -83,7 +83,7 @@ namespace
         std::memcpy(bytes.data(), &sa->sin_addr, 4);
         char buf[INET_ADDRSTRLEN] = {0};
         ::inet_ntop(AF_INET, &sa->sin_addr, buf, sizeof(buf));
-        return jxx::NEW<jxx::net::Inet4Address>(nullptr, jxx::NEW<jxx::lang::String>(std::string(buf)), bytes);
+        return jxx::NEW<jxx::net::Inet4Address>(nullptr, jxx::NEW<jxx::lang::String>(buf), jxx::NEW<jxx::lang::ByteArray>(bytes));
     }
 
     inline jxx::lang::jint portFromSockaddr_(const sockaddr_storage& ss)

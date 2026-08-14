@@ -65,10 +65,11 @@ namespace
                                                        int family)
     {
         auto printable = jxx::NEW<jxx::lang::String>(toPrintable_(bytes, family));
+        auto byteArray = toByteArray_(bytes);
         if (family == AF_INET)
-            return jxx::NEW<jxx::net::Inet4Address>(host, printable, bytes);
+            return jxx::NEW<jxx::net::Inet4Address>(host, printable, byteArray);
         if (family == AF_INET6)
-            return jxx::NEW<jxx::net::Inet6Address>(host, printable, bytes, 0, nullptr);
+            return jxx::NEW<jxx::net::Inet6Address>(host, printable, byteArray, 0, nullptr);
         throw jxx::net::UnknownHostException("unsupported address family");
     }
 }
@@ -95,9 +96,9 @@ namespace jxx::net
     {
         auto bytes = fromByteArray_(addr);
         if (bytes.size() == 4)
-            return jxx::NEW<Inet4Address>(host, jxx::NEW<jxx::lang::String>(toPrintable_(bytes, AF_INET)), bytes);
+            return jxx::NEW<Inet4Address>(host, jxx::NEW<jxx::lang::String>(toPrintable_(bytes, AF_INET)), addr);
         if (bytes.size() == 16)
-            return jxx::NEW<Inet6Address>(host, jxx::NEW<jxx::lang::String>(toPrintable_(bytes, AF_INET6)), bytes, 0, nullptr);
+            return jxx::NEW<Inet6Address>(host, jxx::NEW<jxx::lang::String>(toPrintable_(bytes, AF_INET6)), addr, 0, nullptr);
         throw UnknownHostException("invalid address length");
     }
 

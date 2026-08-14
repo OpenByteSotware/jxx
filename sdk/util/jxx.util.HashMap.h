@@ -1,303 +1,681 @@
 #pragma once
 
+#include <cmath>
+#include <cstddef>
+#include <memory>
 #include <unordered_map>
-#include <utility>
-#include "lang/jxx.lang.Object.h"
-#include "util/jxx.util.MapEntry.h"
-#include "util/jxx.util.AbstractMap.h"
-#include "lang/jxx.lang.Cloneable.h"
+#include <vector>
+
 #include "io/jxx.io.Serializable.h"
-#include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.Cloneable.h"
+#include "lang/jxx.lang.Exceptions.h"
+#include "lang/jxx.lang.Object.h"
+#include "util/jxx.util.AbstractMap.h"
+#include "util/jxx.util.AbstractSet.h"
+#include "util/jxx.util.ConcurrentModificationException.h"
+#include "util/jxx.util.Iterator.h"
+#include "util/jxx.util.Map.h"
+#include "util/jxx.util.MapEntry.h"
+#include "util/jxx.util.NoSuchElementException.h"
 #include "util/jxx.util.Set.h"
 
 namespace jxx {
-namespace util {
+    namespace util {
 
-template <typename K, typename V>
-class HashMap
-    : public AbstractMap<K, V>
-    , public virtual jxx::lang::Cloneable
-    , public virtual jxx::io::Serializable {
-protected:
-    struct KeyHash {
-        std::size_t operator()(const jxx::Ptr<K>& key) const {
-            if (key == nullptr) return 0u;
-            return static_cast<std::size_t>(key->hashCode());
-        }
-    };
+        template <typename K, typename V>
+        class HashMap
+            : public virtual AbstractMap<K, V>
+            , public virtual jxx::lang::Cloneable
+            , public virtual jxx::io::Serializable {
+        private:
+            struct KeyHash {
+                std::size_t operator()(const jxx::Ptr<K>& key) const {
+                    if (key == nullptr) {
+                        return 0u;
+                    }
 
-    struct KeyEq {
-        bool operator()(const jxx::Ptr<K>& a, const jxx::Ptr<K>& b) const {
-            if (a == nullptr) return b == nullptr;
-            if (b == nullptr) return false;
-            return a->equals(b);
-        }
-    };
+                    auto object = jxx::CAST<jxx::lang::Object>(key);
+                    if (object == nullptr) {
+                        return reinterpret_cast<std::size_t>(key.get());
+                    }
 
-    using InternalMap = std::unordered_map<jxx::Ptr<K>, jxx::Ptr<V>, KeyHash, KeyEq>;
+                    return static_cast<std::size_t>(object->hashCode());
+                }
+            };
 
-    static constexpr jxx::lang::jint DEFAULT_INITIAL_CAPACITY = 16;
-    static constexpr jxx::lang::jfloat DEFAULT_LOAD_FACTOR = 0.75f;
+            struct KeyEq {
+                bool operator()(
+                    const jxx::Ptr<K>& left,
+                    const jxx::Ptr<K>& right) const {
 
-    InternalMap map_;
-    jxx::lang::jfloat loadFactor_;
-    jxx::lang::jint threshold_;
-    jxx::lang::jint modCount_;
-    jxx::Ptr<jxx::util::Set<jxx::util::MapEntry<K, V>>> entrySetView_;
+                    if (left == nullptr || right == nullptr) {
+                        return left == right;
+                    }
 
-public:
-    HashMap()
-        : map_()
-        , loadFactor_(DEFAULT_LOAD_FACTOR)
-        , threshold_(DEFAULT_INITIAL_CAPACITY)
-        , modCount_(0)
-        , entrySetView_(nullptr) {
-        map_.reserve(static_cast<std::size_t>(DEFAULT_INITIAL_CAPACITY));
-    }
+                    auto leftObject =
+                        jxx::CAST<jxx::lang::Object>(left);
 
-    explicit HashMap(jint initialCapacity)
-        : map_()
-        , loadFactor_(DEFAULT_LOAD_FACTOR)
-        , threshold_(initialCapacity > 0 ? initialCapacity : 0)
-        , modCount_(0)
-        , entrySetView_(nullptr) {
-        if (initialCapacity < 0) throw jxx::lang::IllegalArgumentException("cannot be less than zero");
-        map_.reserve(static_cast<std::size_t>(initialCapacity));
-    }
+                    if (leftObject == nullptr) {
+                        return left.get() == right.get();
+                    }
 
-    HashMap(jint initialCapacity, jfloat loadFactor)
-        : map_()
-        , loadFactor_(loadFactor)
-        , threshold_(initialCapacity > 0 ? initialCapacity : 0)
-        , modCount_(0)
-        , entrySetView_(nullptr) {
-        if (initialCapacity < 0) throw jxx::lang::IllegalArgumentException("cannot be less than zero");
-        if (!(loadFactor > 0.0f) || loadFactor != loadFactor) throw IllegalArgumentException();
-        map_.reserve(static_cast<std::size_t>(initialCapacity));
-    }
+                    return leftObject->equals(
+                        jxx::CAST<jxx::lang::Object>(right));
+                }
+            };
 
-    explicit HashMap(jxx::Ptr<Map<K, V>> m)
-        : HashMap() {
-        if (m == nullptr) throw jxx::lang::NullPointerException();
-        putAll(m);
-    }
+            using InternalMap = std::unordered_map<
+                jxx::Ptr<K>,
+                jxx::Ptr<V>,
+                KeyHash,
+                KeyEq>;
 
-    virtual ~HashMap() = default;
+            static constexpr jxx::lang::jint DEFAULT_INITIAL_CAPACITY = 16;
+            static constexpr jxx::lang::jfloat DEFAULT_LOAD_FACTOR = 0.75f;
 
-    virtual jxx::lang::jint size() override { return static_cast<jxx::lang::jint>(map_.size()); }
-    virtual jxx::lang::jbool isEmpty() override { return map_.empty(); }
+            InternalMap map_;
+            jxx::lang::jfloat loadFactor_;
+            jxx::lang::jint modCount_;
 
-    virtual jxx::lang::jbool containsKey(jxx::Ptr<jxx::lang::Object> key) override {
-        return map_.find(jxx::CAST<K, jxx::lang::Object>(key)) != map_.end();
-    }
+            jxx::Ptr<Set<MapEntry<K, V>>> entrySetView_;
 
-    virtual jxx::lang::jbool containsValue(jxx::Ptr<jxx::lang::Object> value) override {
-        if (value == nullptr) {
-            for (const auto& kv : map_) if (kv.second == nullptr) return true;
-        } else {
-            for (const auto& kv : map_) {
-                if (kv.second != nullptr && value->equals(jxx::lang::ptr_static_cast<jxx::lang::Object>(kv.second))) return true;
+            static jxx::Ptr<K> castObjectToKey(
+                jxx::Ptr<jxx::lang::Object> object) {
+
+                return jxx::CAST<K>(object);
             }
-        }
-        return false;
-    }
 
-    virtual jxx::Ptr<V> get(jxx::Ptr<jxx::lang::Object> key) override {
-        auto castKey = jxx::CAST<K, jxx::lang::Object>(key);
-        auto it = map_.find(castKey);
-        if (it == map_.end()) return nullptr;
-        afterNodeAccess(castKey);
-        return it->second;
-    }
+            static jxx::lang::jbool objectEquals(
+                jxx::Ptr<jxx::lang::Object> left,
+                jxx::Ptr<jxx::lang::Object> right) {
 
-    virtual jxx::Ptr<V> put(jxx::Ptr<K> key, jxx::Ptr<V> value) override {
-        auto it = map_.find(key);
-        if (it == map_.end()) {
-            map_.emplace(key, value);
-            ++modCount_;
-            afterNodeInsertion(key, true);
-            resizeIfNeeded();
-            return nullptr;
-        }
-        jxx::Ptr<V> oldValue = it->second;
-        it->second = value;
-        afterNodeAccess(key);
-        return oldValue;
-    }
+                if (left == nullptr || right == nullptr) {
+                    return static_cast<jxx::lang::jbool>(left == right);
+                }
 
-    virtual jxx::Ptr<V> remove(jxx::Ptr<jxx::lang::Object> key) override {
-        auto castKey = jxx::CAST<K, jxx::lang::Object>(key);
-        auto it = map_.find(castKey);
-        if (it == map_.end()) return nullptr;
-        jxx::Ptr<V> oldValue = it->second;
-        map_.erase(it);
-        ++modCount_;
-        afterNodeRemoval(castKey);
-        return oldValue;
-    }
-
-    virtual void putAll(jxx::Ptr<Map<K, V>> m) override {
-        if (m == nullptr) throw NullPointerException();
-        auto it = m->entrySet()->iterator();
-        while (it->hasNext()) {
-            auto e = it->next();
-            put(e->getKey(), e->getValue());
-        }
-    }
-
-    virtual void clear() override {
-        if (!map_.empty()) {
-            map_.clear();
-            ++modCount_;
-            afterClear();
-        }
-    }
-
-    virtual jxx::Ptr<Set<MapEntry<K, V>>> entrySet() override {
-        if (entrySetView_ == nullptr) entrySetView_ = createEntrySetView();
-        return entrySetView_;
-    }
-
-    virtual jxx::Ptr<jxx::lang::Object> clone() {
-        jxx::Ptr<HashMap<K, V>> cloned(new HashMap<K, V>(static_cast<jint>(map_.size()), loadFactor_));
-        for (const auto& kv : map_) cloned->map_.emplace(kv.first, kv.second);
-        cloned->threshold_ = threshold_;
-        return cloned;
-    }
-
-protected:
-    virtual void afterNodeAccess(jxx::Ptr<K> /*key*/) {}
-    virtual void afterNodeInsertion(jxx::Ptr<K> /*key*/, jbool /*isNewKey*/) {}
-    virtual void afterNodeRemoval(jxx::Ptr<K> /*key*/) {}
-    virtual void afterClear() {}
-
-    void resizeIfNeeded() {
-        if (size() > threshold_) {
-            jint newThreshold = threshold_ <= 0 ? DEFAULT_INITIAL_CAPACITY : threshold_ << 1;
-            threshold_ = newThreshold;
-            map_.reserve(static_cast<std::size_t>(newThreshold));
-        }
-    }
-
-    class EntryView : public virtual jxx::util::MapEntry<K, V> {
-    private:
-        HashMap<K, V>* map_;
-        jxx::Ptr<K> key_;
-    public:
-        EntryView(HashMap<K, V>* map, jxx::Ptr<K> key) : map_(map), key_(key) {}
-        virtual ~EntryView() = default;
-        virtual jxx::Ptr<K> getKey() override { return key_; }
-        virtual jxx::Ptr<V> getValue() override { return map_->get(key_); }
-        virtual jxx::Ptr<V> setValue(jxx::Ptr<V> value) override { return map_->put(key_, value); }
-        virtual jbool equals(jxx::Ptr<jxx::lang::Object> o) override {
-            auto other = jxx::CAST<MapEntry<K, V>, jxx::lang::Object>(o);
-            if (other == nullptr) return false;
-            auto k1 = getKey();
-            auto v1 = getValue();
-            auto k2 = other->getKey();
-            auto v2 = other->getValue();
-            jbool keyEqual = (k1 == nullptr) ? (k2 == nullptr) : k1->equals(k2);
-            jbool valueEqual = (v1 == nullptr) ? (v2 == nullptr) : v1->equals(v2);
-            return keyEqual && valueEqual;
-        }
-        virtual jint hashCode() override {
-            jint kh = (key_ == nullptr) ? 0 : key_->hashCode();
-            jxx::Ptr<V> value = getValue();
-            jint vh = (value == nullptr) ? 0 : value->hashCode();
-            return kh ^ vh;
-        }
-    };
-
-    virtual jxx::Ptr<MapEntry<K, V>> makeEntryView(jxx::Ptr<K> key) {
-        return jxx::Ptr<MapEntry<K, V>>(new EntryView(this, key));
-    }
-
-    class EntryIterator : public virtual Iterator<MapEntry<K, V>> {
-    protected:
-        HashMap<K, V>* map_;
-        typename InternalMap::iterator current_;
-        typename InternalMap::iterator end_;
-        jxx::Ptr<K> lastReturnedKey_;
-        jbool canRemove_;
-        jint expectedModCount_;
-    public:
-        explicit EntryIterator(HashMap<K, V>* map)
-            : map_(map)
-            , current_(map->map_.begin())
-            , end_(map->map_.end())
-            , lastReturnedKey_(nullptr)
-            , canRemove_(false)
-            , expectedModCount_(map->modCount_) {}
-        virtual ~EntryIterator() = default;
-        virtual jbool hasNext() override { return current_ != end_; }
-        virtual jxx::Ptr<MapEntry<K, V>> next() override {
-            checkForComodification();
-            if (current_ == end_) throw NoSuchElementException();
-            jxx::Ptr<K> key = current_->first;
-            ++current_;
-            lastReturnedKey_ = key;
-            canRemove_ = true;
-            return map_->makeEntryView(key);
-        }
-        virtual void remove() override {
-            if (!canRemove_) throw IllegalStateException();
-            checkForComodification();
-            map_->remove(lastReturnedKey_);
-            expectedModCount_ = map_->modCount_;
-            canRemove_ = false;
-            lastReturnedKey_ = nullptr;
-        }
-    protected:
-        void checkForComodification() {
-            if (map_->modCount_ != expectedModCount_) throw ConcurrentModificationException();
-        }
-    };
-
-    class EntrySet : public AbstractSet<MapEntry<K, V>> {
-    protected:
-        HashMap<K, V>* map_;
-    public:
-        explicit EntrySet(HashMap<K, V>* map) : map_(map) {}
-        virtual ~EntrySet() = default;
-        virtual jint size() override { return map_->size(); }
-        virtual jbool isEmpty() override { return map_->isEmpty(); }
-        virtual jbool contains(jxx::Ptr<jxx::lang::Object> o) override {
-            auto e = jxx::CAST<MapEntry<K, V>, jxx::lang::Object>(o);
-            if (e == nullptr) return false;
-            auto value = map_->get(e->getKey());
-            if (value == nullptr) return e->getValue() == nullptr && map_->containsKey(e->getKey());
-            return value->equals(e->getValue());
-        }
-        virtual jxx::Ptr<Iterator<MapEntry<K, V>>> iterator() override {
-            return jxx::Ptr<Iterator<MapEntry<K, V>>>(new EntryIterator(map_));
-        }
-        virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>>> toArray() override {
-            return AbstractCollection<MapEntry<K, V>>::toArray();
-        }
-        virtual jbool add(jxx::Ptr<MapEntry<K, V>> /*e*/) override { throw UnsupportedOperationException(); }
-        virtual jbool remove(jxx::Ptr<jxx::lang::Object> o) override {
-            auto e = jxx::CAST<MapEntry<K, V>, jxx::lang::Object>(o);
-            if (e == nullptr) return false;
-            auto value = map_->get(e->getKey());
-            if (value == nullptr) {
-                if (!(e->getValue() == nullptr && map_->containsKey(e->getKey()))) return false;
-            } else if (!value->equals(e->getValue())) {
-                return false;
+                return left->equals(right);
             }
-            map_->remove(e->getKey());
-            return true;
-        }
-        virtual jbool containsAll(jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<MapEntry<K, V>>::containsAll(c); }
-        virtual jbool addAll(jxx::Ptr<wildcard::CollectionExtends<MapEntry<K, V>>> /*c*/) override { throw UnsupportedOperationException(); }
-        virtual jbool removeAll(jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractSet<MapEntry<K, V>>::removeAll(c); }
-        virtual jbool retainAll(jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<MapEntry<K, V>>::retainAll(c); }
-        virtual void clear() override { map_->clear(); }
-    };
 
-    virtual jxx::Ptr<Set<MapEntry<K, V>>> createEntrySetView() {
-        return jxx::Ptr<Set<MapEntry<K, V>>>(new EntrySet(this));
-    }
-};
+        protected:
+            virtual void afterNodeAccess(jxx::Ptr<K> /*key*/) {}
 
-} // namespace util
+            virtual void afterNodeInsertion(
+                jxx::Ptr<K> /*key*/,
+                jxx::lang::jbool /*isNewKey*/) {}
+
+            virtual void afterNodeRemoval(jxx::Ptr<K> /*key*/) {}
+
+            virtual void afterClear() {}
+
+        public:
+            HashMap()
+                : map_()
+                , loadFactor_(DEFAULT_LOAD_FACTOR)
+                , modCount_(0)
+                , entrySetView_(nullptr) {
+
+                map_.max_load_factor(
+                    static_cast<float>(loadFactor_));
+
+                map_.reserve(
+                    static_cast<std::size_t>(
+                        DEFAULT_INITIAL_CAPACITY));
+            }
+
+            explicit HashMap(jxx::lang::jint initialCapacity)
+                : HashMap(
+                    initialCapacity,
+                    DEFAULT_LOAD_FACTOR) {}
+
+            HashMap(
+                jxx::lang::jint initialCapacity,
+                jxx::lang::jfloat loadFactor)
+                : map_()
+                , loadFactor_(loadFactor)
+                , modCount_(0)
+                , entrySetView_(nullptr) {
+
+                if (initialCapacity < 0) {
+                    throw jxx::lang::IllegalArgumentException();
+                }
+
+                if (!(loadFactor > 0.0f) ||
+                    std::isnan(static_cast<double>(loadFactor))) {
+
+                    throw jxx::lang::IllegalArgumentException();
+                }
+
+                map_.max_load_factor(
+                    static_cast<float>(loadFactor_));
+
+                map_.reserve(
+                    static_cast<std::size_t>(
+                        initialCapacity));
+            }
+
+            explicit HashMap(jxx::Ptr<Map<K, V>> source)
+                : HashMap() {
+
+                if (source == nullptr) {
+                    throw jxx::lang::NullPointerException();
+                }
+
+                putAll(source);
+            }
+
+            virtual ~HashMap() = default;
+
+            /*
+             * Your Serializable interface is pure virtual rather than
+             * Java's marker-only interface. These methods make HashMap
+             * concrete without inventing ObjectStream APIs.
+             */
+            virtual void writeObject(
+                jxx::Ptr<jxx::io::ObjectOutputStream> out) override {
+
+                if (out == nullptr) {
+                    throw jxx::lang::NullPointerException();
+                }
+
+                throw jxx::lang::UnsupportedOperationException();
+            }
+
+            virtual void readObject(
+                jxx::Ptr<jxx::io::ObjectInputStream> in) override {
+
+                if (in == nullptr) {
+                    throw jxx::lang::NullPointerException();
+                }
+
+                throw jxx::lang::UnsupportedOperationException();
+            }
+
+            virtual void readObjectNoData() override {
+                throw jxx::lang::UnsupportedOperationException();
+            }
+
+            virtual jxx::lang::jint size() override {
+                return static_cast<jxx::lang::jint>(
+                    map_.size());
+            }
+
+            virtual jxx::lang::jbool isEmpty() override {
+                return static_cast<jxx::lang::jbool>(
+                    map_.empty());
+            }
+
+            virtual jxx::lang::jbool containsKey(
+                jxx::Ptr<jxx::lang::Object> key) override {
+
+                if (key == nullptr) {
+                    return static_cast<jxx::lang::jbool>(
+                        map_.find(nullptr) != map_.end());
+                }
+
+                auto castKey = castObjectToKey(key);
+                if (castKey == nullptr) {
+                    return static_cast<jxx::lang::jbool>(false);
+                }
+
+                return static_cast<jxx::lang::jbool>(
+                    map_.find(castKey) != map_.end());
+            }
+
+            virtual jxx::lang::jbool containsValue(
+                jxx::Ptr<jxx::lang::Object> value) override {
+
+                for (const auto& pair : map_) {
+                    auto mappedValue =
+                        jxx::CAST<jxx::lang::Object>(
+                            pair.second);
+
+                    if (objectEquals(mappedValue, value)) {
+                        return static_cast<jxx::lang::jbool>(true);
+                    }
+                }
+
+                return static_cast<jxx::lang::jbool>(false);
+            }
+
+            virtual jxx::Ptr<V> get(
+                jxx::Ptr<jxx::lang::Object> key) override {
+
+                jxx::Ptr<K> castKey = nullptr;
+
+                if (key != nullptr) {
+                    castKey = castObjectToKey(key);
+
+                    if (castKey == nullptr) {
+                        return nullptr;
+                    }
+                }
+
+                auto found = map_.find(castKey);
+                if (found == map_.end()) {
+                    return nullptr;
+                }
+
+                afterNodeAccess(castKey);
+                return found->second;
+            }
+
+            virtual jxx::Ptr<V> put(
+                jxx::Ptr<K> key,
+                jxx::Ptr<V> value) override {
+
+                auto found = map_.find(key);
+
+                if (found == map_.end()) {
+                    map_.emplace(key, value);
+                    ++modCount_;
+
+                    afterNodeInsertion(
+                        key,
+                        static_cast<jxx::lang::jbool>(true));
+
+                    return nullptr;
+                }
+
+                auto previous = found->second;
+                found->second = value;
+
+                afterNodeAccess(key);
+                return previous;
+            }
+
+            virtual jxx::Ptr<V> remove(
+                jxx::Ptr<jxx::lang::Object> key) override {
+
+                jxx::Ptr<K> castKey = nullptr;
+
+                if (key != nullptr) {
+                    castKey = castObjectToKey(key);
+
+                    if (castKey == nullptr) {
+                        return nullptr;
+                    }
+                }
+
+                auto found = map_.find(castKey);
+                if (found == map_.end()) {
+                    return nullptr;
+                }
+
+                auto previous = found->second;
+
+                map_.erase(found);
+                ++modCount_;
+
+                afterNodeRemoval(castKey);
+                return previous;
+            }
+
+            virtual void putAll(
+                jxx::Ptr<Map<K, V>> source) override {
+
+                if (source == nullptr) {
+                    throw jxx::lang::NullPointerException();
+                }
+
+                auto entries = source->entrySet();
+                if (entries == nullptr) {
+                    return;
+                }
+
+                auto iterator = entries->iterator();
+
+                while (iterator->hasNext()) {
+                    auto entry = iterator->next();
+
+                    if (entry != nullptr) {
+                        put(
+                            entry->getKey(),
+                            entry->getValue());
+                    }
+                }
+            }
+
+            virtual void clear() override {
+                if (map_.empty()) {
+                    return;
+                }
+
+                map_.clear();
+                ++modCount_;
+
+                afterClear();
+            }
+
+        protected:
+            class EntryView final
+                : public virtual MapEntry<K, V> {
+            private:
+                HashMap<K, V>* owner_;
+                jxx::Ptr<K> key_;
+
+            public:
+                EntryView(
+                    HashMap<K, V>* owner,
+                    jxx::Ptr<K> key)
+                    : owner_(owner)
+                    , key_(key) {}
+
+                virtual ~EntryView() = default;
+
+                virtual jxx::Ptr<K> getKey() override {
+                    return key_;
+                }
+
+                virtual jxx::Ptr<V> getValue() override {
+                    return owner_->get(
+                        jxx::CAST<jxx::lang::Object>(key_));
+                }
+
+                virtual jxx::Ptr<V> setValue(
+                    jxx::Ptr<V> value) override {
+
+                    return owner_->put(key_, value);
+                }
+
+                /*
+                 * If your MapEntry interface declares equals/hashCode
+                 * without const, remove const from these two functions.
+                 */
+                virtual jxx::lang::jbool equals(
+                    jxx::Ptr<jxx::lang::Object> object) const override {
+
+                    auto other =
+                        jxx::CAST<MapEntry<K, V>>(object);
+
+                    if (other == nullptr) {
+                        return static_cast<jxx::lang::jbool>(false);
+                    }
+
+                    auto thisKey =
+                        jxx::CAST<jxx::lang::Object>(key_);
+
+                    auto otherKey =
+                        jxx::CAST<jxx::lang::Object>(
+                            other->getKey());
+
+                    auto thisValue =
+                        jxx::CAST<jxx::lang::Object>(
+                            const_cast<EntryView*>(this)->getValue());
+
+                    auto otherValue =
+                        jxx::CAST<jxx::lang::Object>(
+                            other->getValue());
+
+                    return static_cast<jxx::lang::jbool>(
+                        objectEquals(thisKey, otherKey) &&
+                        objectEquals(thisValue, otherValue));
+                }
+
+                virtual jxx::lang::jint hashCode() const override {
+                    auto keyObject =
+                        jxx::CAST<jxx::lang::Object>(key_);
+
+                    auto valueObject =
+                        jxx::CAST<jxx::lang::Object>(
+                            const_cast<EntryView*>(this)->getValue());
+
+                    const jxx::lang::jint keyHash =
+                        keyObject == nullptr
+                        ? 0
+                        : keyObject->hashCode();
+
+                    const jxx::lang::jint valueHash =
+                        valueObject == nullptr
+                        ? 0
+                        : valueObject->hashCode();
+
+                    return keyHash ^ valueHash;
+                }
+
+                virtual jxx::Ptr<jxx::lang::String> toString() override {
+                    auto keyObject =
+                        jxx::CAST<jxx::lang::Object>(key_);
+
+                    auto valueObject =
+                        jxx::CAST<jxx::lang::Object>(
+                            getValue());
+
+                    const std::string keyText =
+                        keyObject == nullptr
+                        ? "null"
+                        : keyObject->toString()->utf8();
+
+                    const std::string valueText =
+                        valueObject == nullptr
+                        ? "null"
+                        : valueObject->toString()->utf8();
+
+                    return std::make_shared<jxx::lang::String>(
+                        keyText + "=" + valueText);
+                }
+            };
+
+            virtual jxx::Ptr<MapEntry<K, V>> makeEntryView(
+                jxx::Ptr<K> key) {
+
+                return jxx::Ptr<MapEntry<K, V>>(
+                    new EntryView(this, key));
+            }
+
+            class EntryIterator final
+                : public virtual Iterator<MapEntry<K, V>> {
+            private:
+                HashMap<K, V>* owner_;
+
+                /*
+                 * Snapshot only the keys. This avoids exposing STL and avoids
+                 * storing unordered_map iterators across map mutations.
+                 */
+                std::vector<jxx::Ptr<K>> keys_;
+                std::size_t cursor_;
+
+                jxx::Ptr<K> lastReturnedKey_;
+                jxx::lang::jbool canRemove_;
+                jxx::lang::jint expectedModCount_;
+
+                void checkForComodification() const {
+                    if (owner_->modCount_ != expectedModCount_) {
+                        throw jxx::util::ConcurrentModificationException();
+                    }
+                }
+
+            public:
+                explicit EntryIterator(HashMap<K, V>* owner)
+                    : owner_(owner)
+                    , keys_()
+                    , cursor_(0)
+                    , lastReturnedKey_(nullptr)
+                    , canRemove_(
+                        static_cast<jxx::lang::jbool>(false))
+                    , expectedModCount_(owner->modCount_) {
+
+                    keys_.reserve(owner_->map_.size());
+
+                    for (const auto& pair : owner_->map_) {
+                        keys_.push_back(pair.first);
+                    }
+                }
+
+                virtual ~EntryIterator() = default;
+
+                virtual jxx::lang::jbool hasNext() override {
+                    return static_cast<jxx::lang::jbool>(
+                        cursor_ < keys_.size());
+                }
+
+                virtual jxx::Ptr<MapEntry<K, V>> next() override {
+                    checkForComodification();
+
+                    if (cursor_ >= keys_.size()) {
+                        throw jxx::util::NoSuchElementException();
+                    }
+
+                    lastReturnedKey_ = keys_[cursor_++];
+                    canRemove_ =
+                        static_cast<jxx::lang::jbool>(true);
+
+                    return owner_->makeEntryView(
+                        lastReturnedKey_);
+                }
+
+                virtual void remove() override {
+                    if (!canRemove_) {
+                        throw jxx::lang::IllegalStateException();
+                    }
+
+                    checkForComodification();
+
+                    owner_->remove(
+                        jxx::CAST<jxx::lang::Object>(
+                            lastReturnedKey_));
+
+                    expectedModCount_ = owner_->modCount_;
+
+                    lastReturnedKey_ = nullptr;
+                    canRemove_ =
+                        static_cast<jxx::lang::jbool>(false);
+                }
+            };
+
+            class EntrySet final
+                : public virtual AbstractSet<MapEntry<K, V>> {
+            private:
+                HashMap<K, V>* owner_;
+
+            public:
+                explicit EntrySet(HashMap<K, V>* owner)
+                    : owner_(owner) {}
+
+                virtual ~EntrySet() = default;
+
+                virtual jxx::lang::jint size() override {
+                    return owner_->size();
+                }
+
+                virtual jxx::lang::jbool isEmpty() override {
+                    return owner_->isEmpty();
+                }
+
+                virtual jxx::lang::jbool contains(
+                    jxx::Ptr<jxx::lang::Object> object) override {
+
+                    auto entry =
+                        jxx::CAST<MapEntry<K, V>>(object);
+
+                    if (entry == nullptr) {
+                        return static_cast<jxx::lang::jbool>(false);
+                    }
+
+                    auto keyObject =
+                        jxx::CAST<jxx::lang::Object>(
+                            entry->getKey());
+
+                    if (!owner_->containsKey(keyObject)) {
+                        return static_cast<jxx::lang::jbool>(false);
+                    }
+
+                    auto currentValue =
+                        jxx::CAST<jxx::lang::Object>(
+                            owner_->get(keyObject));
+
+                    auto expectedValue =
+                        jxx::CAST<jxx::lang::Object>(
+                            entry->getValue());
+
+                    return objectEquals(
+                        currentValue,
+                        expectedValue);
+                }
+
+                virtual jxx::Ptr<Iterator<MapEntry<K, V>>>
+                    iterator() override {
+
+                    return jxx::Ptr<Iterator<MapEntry<K, V>>>(
+                        new EntryIterator(owner_));
+                }
+
+                virtual jxx::lang::jbool add(
+                    jxx::Ptr<MapEntry<K, V>> /*entry*/) override {
+
+                    throw jxx::lang::UnsupportedOperationException();
+                }
+
+                virtual jxx::lang::jbool remove(
+                    jxx::Ptr<jxx::lang::Object> object) override {
+
+                    auto entry =
+                        jxx::CAST<MapEntry<K, V>>(object);
+
+                    if (entry == nullptr) {
+                        return static_cast<jxx::lang::jbool>(false);
+                    }
+
+                    auto keyObject =
+                        jxx::CAST<jxx::lang::Object>(
+                            entry->getKey());
+
+                    if (!contains(object)) {
+                        return static_cast<jxx::lang::jbool>(false);
+                    }
+
+                    owner_->remove(keyObject);
+                    return static_cast<jxx::lang::jbool>(true);
+                }
+
+                virtual void clear() override {
+                    owner_->clear();
+                }
+
+                /*
+                 * containsAll/removeAll/retainAll/toArray are inherited from
+                 * AbstractSet/AbstractCollection. Do not re-declare them here
+                 * unless your exact base class leaves them pure virtual.
+                 */
+            };
+
+            virtual jxx::Ptr<Set<MapEntry<K, V>>>
+                createEntrySetView() {
+
+                return jxx::Ptr<Set<MapEntry<K, V>>>(
+                    new EntrySet(this));
+            }
+
+        public:
+            virtual jxx::Ptr<Set<MapEntry<K, V>>>
+                entrySet() override {
+
+                if (entrySetView_ == nullptr) {
+                    entrySetView_ = createEntrySetView();
+                }
+
+                return entrySetView_;
+            }
+
+            virtual jxx::Ptr<jxx::lang::Object> clone() {
+                auto cloned =
+                    jxx::Ptr<HashMap<K, V>>(
+                        new HashMap<K, V>(
+                            static_cast<jxx::lang::jint>(
+                                map_.size()),
+                            loadFactor_));
+
+                for (const auto& pair : map_) {
+                    cloned->map_.emplace(
+                        pair.first,
+                        pair.second);
+                }
+
+                cloned->modCount_ = 0;
+                cloned->entrySetView_ = nullptr;
+
+                return jxx::CAST<jxx::lang::Object>(cloned);
+            }
+        };
+
+    } // namespace util
 } // namespace jxx

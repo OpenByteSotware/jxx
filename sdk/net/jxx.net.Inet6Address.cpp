@@ -32,9 +32,9 @@ namespace jxx::net {
 
     } // anonymous namespace
 
-    Inet6Address::Inet6Address(jxx::Ptr<jxx::lang::String> hostName,
-        jxx::Ptr<jxx::lang::String> hostAddress,
-        jxx::lang::ByteArray bytes,
+    Inet6Address::Inet6Address(const jxx::Ptr<jxx::lang::String> hostName,
+        const jxx::Ptr<jxx::lang::String> hostAddress,
+        const jxx::lang::ByteArray bytes,
         jxx::lang::jint scopeId,
         jxx::Ptr<NetworkInterface> scopedIf)
         : InetAddress(hostName, hostAddress, bytes, 10)
