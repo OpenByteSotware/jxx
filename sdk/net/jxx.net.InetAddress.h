@@ -16,9 +16,9 @@ namespace jxx::net {
         using InetAddressArray = jxx::JxxArray<jxx::Ptr<InetAddress>, 1U>;
 
     protected:
-        InetAddress(jxx::Ptr<jxx::lang::String> hostName,
-            jxx::Ptr<jxx::lang::String> hostAddress,
-            jxx::lang::ByteArray bytes,
+        InetAddress(const jxx::Ptr<jxx::lang::String> hostName,
+            const jxx::Ptr<jxx::lang::String> hostAddress,
+            const jxx::lang::ByteArray bytes,
             jxx::lang::jint family);
 
     public:

@@ -62,7 +62,7 @@ namespace
             auto bytes = copyAddr4_(sa);
             char buf[INET_ADDRSTRLEN] = {0};
             ::inet_ntop(AF_INET, bytes.data(), buf, sizeof(buf));
-            return jxx::NEW<jxx::net::Inet4Address>(nullptr, jxx::NEW<jxx::lang::String>(std::string(buf)), jxx::NEW<jxx::lang::ByteArray>(bytes));
+            return jxx::NEW<jxx::net::Inet4Address>(nullptr, jxx::NEW<jxx::lang::String>(buf), jxx::NEW<jxx::lang::ByteArrayType>(bytes));
         }
         if (addr.lpSockaddr->sa_family == AF_INET6)
         {
@@ -70,7 +70,7 @@ namespace
             auto bytes = copyAddr6_(sa);
             char buf[INET6_ADDRSTRLEN] = {0};
             ::inet_ntop(AF_INET6, bytes.data(), buf, sizeof(buf));
-            return jxx::NEW<jxx::net::Inet6Address>(nullptr, jxx::NEW<jxx::lang::String>(std::string(buf)), jxx::NEW<jxx::lang::ByteArray>(bytes), static_cast<jxx::lang::jint>(sa->sin6_scope_id), nullptr);
+            return jxx::NEW<jxx::net::Inet6Address>(nullptr, jxx::NEW<jxx::lang::String>(buf), jxx::NEW<jxx::lang::ByteArrayType>(bytes), static_cast<jxx::lang::jint>(sa->sin6_scope_id), nullptr);
         }
         return nullptr;
     }
@@ -98,7 +98,7 @@ namespace
             auto bytes = copyAddr4_(reinterpret_cast<sockaddr_in*>(sa));
             char buf[INET_ADDRSTRLEN] = {0};
             ::inet_ntop(AF_INET, bytes.data(), buf, sizeof(buf));
-            return jxx::NEW<jxx::net::Inet4Address>(nullptr, jxx::NEW<jxx::lang::String>(std::string(buf)), bytes);
+            return jxx::NEW<jxx::net::Inet4Address>(nullptr, jxx::NEW<jxx::lang::String>(std::string(buf)), jxx::NEW<jxx::lang::ByteArray>(bytes));
         }
         if (sa->sa_family == AF_INET6)
         {

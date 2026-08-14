@@ -76,9 +76,9 @@ namespace
 
 namespace jxx::net
 {
-    InetAddress::InetAddress(jxx::Ptr<jxx::lang::String> hostName,
-        jxx::Ptr<jxx::lang::String> hostAddress,
-        jxx::lang::ByteArray bytes,
+    InetAddress::InetAddress(const jxx::Ptr<jxx::lang::String> hostName,
+        const jxx::Ptr<jxx::lang::String> hostAddress,
+        const jxx::lang::ByteArray bytes,
         jxx::lang::jint family)
         : hostName_(std::move(hostName)),
         hostAddress_(std::move(hostAddress)),

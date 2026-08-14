@@ -110,6 +110,32 @@ namespace jxx::lang {
             return *this;
         }
 
+        // From std::vector<T> by const reference.
+// Copies all vector elements into this JxxArray.
+        explicit JxxArray(const std::vector<T>& values)
+            : JxxArray(checked_size_(values.size())) {
+
+            if (!values.empty()) {
+                std::copy(
+                    values.begin(),
+                    values.end(),
+                    data_.get());
+            }
+        }
+
+        // From std::vector<T> rvalue.
+        // Elements are moved when T supports useful move assignment.
+        explicit JxxArray(std::vector<T>&& values)
+            : JxxArray(checked_size_(values.size())) {
+
+            if (!values.empty()) {
+                std::move(
+                    values.begin(),
+                    values.end(),
+                    data_.get());
+            }
+        }
+
         // ---- Java-exact element access ----
         // Java indexes are signed int; negative must throw.
         reference operator[](jint i) {
@@ -257,6 +283,18 @@ namespace jxx::lang {
             if (length == capacity_) {
                 grow_to_(length ? length + 1 : size_type{ 1 });
             }
+        }
+
+        static size_type checked_size_(std::size_t size) {
+            if (size >
+                static_cast<std::size_t>(
+                    std::numeric_limits<size_type>::max())) {
+
+                throw std::length_error(
+                    "std::vector is too large for JxxArray");
+            }
+
+            return static_cast<size_type>(size);
         }
     };
 

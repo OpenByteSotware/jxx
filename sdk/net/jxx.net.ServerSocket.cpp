@@ -74,14 +74,14 @@ namespace
             std::memcpy(bytes.data(), &sa->sin6_addr, 16);
             char buf[INET6_ADDRSTRLEN] = {0};
             ::inet_ntop(AF_INET6, &sa->sin6_addr, buf, sizeof(buf));
-            return jxx::NEW<jxx::net::Inet6Address>(nullptr, jxx::NEW<jxx::lang::String>(std::string(buf)), bytes, static_cast<jxx::lang::jint>(sa->sin6_scope_id), nullptr);
+            return jxx::NEW<jxx::net::Inet6Address>(nullptr, jxx::NEW<jxx::lang::String>(std::string(buf)), jxx::NEW<jxx::lang::ByteArrayType>(bytes), static_cast<jxx::lang::jint>(sa->sin6_scope_id), nullptr);
         }
         auto* sa = reinterpret_cast<const sockaddr_in*>(&ss);
         std::vector<jxx::lang::jbyte> bytes(4);
         std::memcpy(bytes.data(), &sa->sin_addr, 4);
         char buf[INET_ADDRSTRLEN] = {0};
         ::inet_ntop(AF_INET, &sa->sin_addr, buf, sizeof(buf));
-        return jxx::NEW<jxx::net::Inet4Address>(nullptr, jxx::NEW<jxx::lang::String>(std::string(buf)), jxx::NEW<jxx::lang::ByteArray>(bytes));
+        return jxx::NEW<jxx::net::Inet4Address>(nullptr, jxx::NEW<jxx::lang::String>(std::string(buf)), jxx::NEW<jxx::lang::ByteArrayType>(bytes));
     }
 
     inline jxx::lang::jint portFromSockaddr_(const sockaddr_storage& ss)
