@@ -5,7 +5,7 @@
 using namespace jxx::lang;
 
 TEST(PercentEdges, ScalingAndAlternateFlag) {
-    jxx::util::Formatter f; f.setLocale("en_US.UTF-8");
+    jxx::util::Formatter f; f..setLocale("en_US.UTF-8");
     // Default scales by 100
     EXPECT_NE(std::string::npos, f.format("%p", { 0.0 }).toStdString().find("0%"));
     EXPECT_NE(std::string::npos, f.format("%p", { 1.0 }).toStdString().find("100"));

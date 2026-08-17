@@ -1,62 +1,189 @@
 #pragma once
 
-#include "util/jxx.util.AbstractCollection.h"
-#include "util/jxx.util.Set.h"
-#include "util/jxx.util.Iterator.h"
-#include "util/jxx.util.wildcard.CollectionAny.h"
+#include "lang/jxx.lang.ClassCastException.h"
 #include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.Object.h"
 
-namespace jxx {
-namespace util {
+#include "util/jxx.util.AbstractCollection.h"
+#include "util/jxx.util.Iterator.h"
+#include "util/jxx.util.Set.h"
+#include "util/jxx.util.wildcard.CollectionAny.h"
 
-template <typename E>
-class AbstractSet : public AbstractCollection<E>, public virtual Set<E> {
-public:
-    virtual ~AbstractSet() = default;
+namespace jxx::util {
 
-    virtual jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> o) override {
-        if (o == nullptr) return false;
-        auto other = jxx::CAST<wildcard::CollectionAny, jxx::lang::Object>(o);
-        if (other == nullptr) return false;
-        if (other->size() != this->size()) return false;
-        try {
-            return this->containsAll(other);
-        } catch (...) {
-            return false;
+    template <typename E>
+    class AbstractSet
+        : public virtual AbstractCollection<E>
+        , public virtual Set<E> {
+    public:
+        virtual ~AbstractSet() = default;
+
+        /*
+         * Explicit final overriders resolve the C++ multiple-inheritance
+         * convergence while preserving the public Java Set interface.
+         */
+
+        virtual jxx::lang::jbool isEmpty() override {
+            return AbstractCollection<E>::isEmpty();
         }
-    }
 
-    virtual jxx::lang::jint hashCode() override {
-        jxx::lang::jint h = 0;
-        auto it = this->iterator();
-        while (it->hasNext()) {
-            auto e = it->next();
-            if (e != nullptr) h += e->hashCode();
+        virtual jxx::lang::jbool contains(
+            jxx::Ptr<jxx::lang::Object> object) override {
+
+            return AbstractCollection<E>::contains(object);
         }
-        return h;
-    }
 
-    virtual jxx::lang::jbool removeAll(jxx::Ptr<wildcard::CollectionAny> c) override {
-        if (c == nullptr) throw jxx::lang::NullPointerException();
-        jxx::lang::jbool modified = false;
-        if (this->size() > c->size()) {
-            auto it = c->iteratorObject();
-            while (it->hasNext()) {
-                if (this->remove(it->next())) modified = true;
+        virtual jxx::lang::ObjectArray
+            toArray() override {
+
+            return AbstractCollection<E>::toArray();
+        }
+
+        virtual jxx::lang::jbool add(
+            jxx::Ptr<E> element) override {
+
+            return AbstractCollection<E>::add(element);
+        }
+
+        virtual jxx::lang::jbool remove(
+            jxx::Ptr<jxx::lang::Object> object) override {
+
+            return AbstractCollection<E>::remove(object);
+        }
+
+        virtual jxx::lang::jbool containsAll(
+            jxx::Ptr<wildcard::CollectionAny> collection)
+            override {
+
+            return AbstractCollection<E>::containsAll(
+                collection);
+        }
+
+        virtual jxx::lang::jbool addAll(
+            jxx::Ptr<wildcard::CollectionExtends<E>>
+            collection) override {
+
+            return AbstractCollection<E>::addAll(
+                collection);
+        }
+
+        virtual jxx::lang::jbool retainAll(
+            jxx::Ptr<wildcard::CollectionAny> collection)
+            override {
+
+            return AbstractCollection<E>::retainAll(
+                collection);
+        }
+
+        virtual void clear() override {
+            AbstractCollection<E>::clear();
+        }
+
+        virtual jxx::lang::jbool equals(
+            jxx::Ptr<jxx::lang::Object> object)
+            const override {
+
+            if (object == nullptr) {
+                return static_cast<jxx::lang::jbool>(false);
             }
-        } else {
-            auto it = this->iterator();
-            while (it->hasNext()) {
-                auto e = it->next();
-                if (c->containsObject(jxx::lang::ptr_static_cast<jxx::lang::Object>(e))) {
-                    it->remove();
-                    modified = true;
+
+            auto other =
+                jxx::CAST<wildcard::CollectionAny>(object);
+
+            if (other == nullptr) {
+                return static_cast<jxx::lang::jbool>(false);
+            }
+
+            auto self =
+                const_cast<AbstractSet<E>*>(this);
+
+            if (other->size() != self->size()) {
+                return static_cast<jxx::lang::jbool>(false);
+            }
+
+            try {
+                return self->containsAll(other);
+            }
+            catch (const jxx::lang::ClassCastException&) {
+                return static_cast<jxx::lang::jbool>(false);
+            }
+            catch (const jxx::lang::NullPointerException&) {
+                return static_cast<jxx::lang::jbool>(false);
+            }
+        }
+
+        virtual jxx::lang::jint hashCode()
+            const override {
+
+            jxx::lang::jint hash = 0;
+
+            auto self =
+                const_cast<AbstractSet<E>*>(this);
+
+            auto iterator = self->iterator();
+
+            while (iterator->hasNext()) {
+                auto element = iterator->next();
+
+                if (element == nullptr) {
+                    continue;
+                }
+
+                auto object =
+                    jxx::CAST<jxx::lang::Object>(
+                        element);
+
+                if (object != nullptr) {
+                    hash += object->hashCode();
                 }
             }
-        }
-        return modified;
-    }
-};
 
-} // namespace util
-} // namespace jxx
+            return hash;
+        }
+
+        virtual jxx::lang::jbool removeAll(
+            jxx::Ptr<wildcard::CollectionAny> collection)
+            override {
+
+            if (collection == nullptr) {
+                throw jxx::lang::NullPointerException();
+            }
+
+            jxx::lang::jbool modified =
+                static_cast<jxx::lang::jbool>(false);
+
+            if (this->size() > collection->size()) {
+                auto iterator =
+                    collection->iteratorObject();
+
+                while (iterator->hasNext()) {
+                    if (this->remove(iterator->next())) {
+                        modified =
+                            static_cast<jxx::lang::jbool>(true);
+                    }
+                }
+            }
+            else {
+                auto iterator = this->iterator();
+
+                while (iterator->hasNext()) {
+                    auto element = iterator->next();
+
+                    auto object =
+                        jxx::CAST<jxx::lang::Object>(
+                            element);
+
+                    if (collection->containsObject(object)) {
+                        iterator->remove();
+
+                        modified =
+                            static_cast<jxx::lang::jbool>(true);
+                    }
+                }
+            }
+
+            return modified;
+        }
+    };
+
+} // namespace jxx::util

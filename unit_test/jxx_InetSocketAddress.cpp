@@ -1,214 +1,614 @@
-#include <gtest/gtest.h>
-#include <unordered_set>
-#include <vector>
-#include <cstring>
-#include "jxx.h"
+#include <memory>
+#include <string>
+#include <type_traits>
 
-// Helper to detect if IPv6 is likely available on the host for testing.
-static bool ipv6_available() {
-#if defined(_WIN32)
-    // Minimal heuristic: on Windows, assume IPv6 is available on modern systems
-    return true;
-#else
-    // Try to create an IPv6 socket (not a perfect test, but good heuristic)
-    int s = ::socket(AF_INET6, SOCK_STREAM, 0);
-    if (s >= 0) {
-        ::close(s);
-        return true;
-    }
-    return false;
-#endif
-}
+#include <gtest/gtest.h>
+
+#include "lang/jxx.lang.Exceptions.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
+
+#include "net/jxx.net.InetAddress.h"
+#include "net/jxx.net.InetSocketAddress.h"
+#include "net/jxx.net.SocketAddress.h"
 
 namespace {
 
+    using jxx::lang::Object;
+    using jxx::lang::String;
+    using jxx::lang::jbool;
+    using jxx::lang::jint;
+
+    using jxx::net::InetAddress;
     using jxx::net::InetSocketAddress;
+    using jxx::net::SocketAddress;
 
-    TEST(InetSocketAddress, DefaultCtorIsUnresolved) {
-        InetSocketAddress a;
-        EXPECT_TRUE(a.isUnresolved());
-        EXPECT_EQ(a.port(), 0);
-        EXPECT_EQ(a.family(), AF_UNSPEC);
-        EXPECT_EQ(a.sockaddrPtr(), nullptr);
-        EXPECT_EQ(a.sockaddrLen(), 0);
-        EXPECT_FALSE(a.toString().empty()); // " :0"
+    static jxx::Ptr<String> S(const char* value) {
+        return jxx::NEW<String>(value);
     }
 
-    TEST(InetSocketAddress, CreateUnresolvedKeepsHostAndPort) {
-        auto a = InetSocketAddress::createUnresolved("example.com", 443);
-        EXPECT_TRUE(a.isUnresolved());
-        EXPECT_EQ(a.hostString(), "example.com");
-        EXPECT_EQ(a.port(), 443);
-        EXPECT_EQ(a.family(), AF_UNSPEC);
-        EXPECT_EQ(a.sockaddrPtr(), nullptr);
-        EXPECT_EQ(a.sockaddrLen(), 0);
-
-        // toString unresolved format: "host:port"
-        EXPECT_EQ(a.toString(), "example.com:443");
+    static jxx::Ptr<String> S(const std::string& value) {
+        return jxx::NEW<String>(value);
     }
 
-    TEST(InetSocketAddress, FromNumericIPv4ResolvesWithoutDNS) {
-        auto a = InetSocketAddress::fromNumericIP("127.0.0.1", 8080);
-        EXPECT_FALSE(a.isUnresolved());
-        EXPECT_EQ(a.port(), 8080);
-        EXPECT_EQ(a.family(), AF_INET);
-        ASSERT_NE(a.sockaddrPtr(), nullptr);
-        EXPECT_GT(a.sockaddrLen(), 0);
-        EXPECT_EQ(a.ipString(), "127.0.0.1");
-        EXPECT_EQ(a.toString(), "127.0.0.1:8080");
+    static std::string textOf(
+        const jxx::Ptr<String>& value) {
+
+        return value == nullptr
+            ? std::string()
+            : value->utf8();
     }
 
-    TEST(InetSocketAddress, FromNumericIPv6ResolvesWithoutDNS) {
-        if (!ipv6_available()) GTEST_SKIP() << "IPv6 not available on this host";
-        auto a = InetSocketAddress::fromNumericIP("::1", 8080);
-        EXPECT_FALSE(a.isUnresolved());
-        EXPECT_EQ(a.port(), 8080);
-        EXPECT_EQ(a.family(), AF_INET6);
-        ASSERT_NE(a.sockaddrPtr(), nullptr);
-        EXPECT_GT(a.sockaddrLen(), 0);
-        EXPECT_EQ(a.ipString(), "::1");
+    static jxx::Ptr<Object> asObject(
+        const jxx::Ptr<InetSocketAddress>& address) {
 
-        // IPv6 toString uses brackets
-        EXPECT_EQ(a.toString(), "[::1]:8080");
+        return jxx::CAST<Object>(address);
     }
 
-    TEST(InetSocketAddress, ConstructWithHostBestEffortResolve) {
-        // "localhost" should resolve on virtually all systems
-        InetSocketAddress a("localhost", 9090 /*port*/, false /*deferResolve*/);
-        // Allow either resolved or unresolved depending on system configuration,
-        // but try to resolve explicitly after construction and check it works.
-        (void)a.resolve();
+    /*
+     * Type hierarchy
+     */
 
-        // After resolve(), most systems should succeed
-        // We'll accept unresolved if system is extremely restricted, but assert fields coherently.
-        EXPECT_EQ(a.port(), 9090);
-        if (!a.isUnresolved()) {
-            EXPECT_TRUE(a.family() == AF_INET || a.family() == AF_INET6);
-            EXPECT_NE(a.sockaddrPtr(), nullptr);
-            EXPECT_GT(a.sockaddrLen(), 0);
-            // toString prints numeric + port; IPv6 is bracketed.
-            auto s = a.toString();
-            EXPECT_NE(s.find(":9090"), std::string::npos);
-        }
+    TEST(InetSocketAddressTest, ExtendsSocketAddress) {
+        static_assert(
+            std::is_base_of_v<
+            SocketAddress,
+            InetSocketAddress>,
+            "InetSocketAddress must extend SocketAddress");
+
+        static_assert(
+            std::is_base_of_v<
+            Object,
+            InetSocketAddress>,
+            "InetSocketAddress must transitively extend Object");
+
+        SUCCEED();
     }
 
-    TEST(InetSocketAddress, ResolveFailureKeepsUnresolved) {
-        InetSocketAddress a("nonexistent-hostname.invalid-tld-xyz", 1234);
-        // If constructor’s best-effort didn't resolve, calling resolve should also fail
-        bool ok = a.resolve();
-        EXPECT_FALSE(ok);
-        EXPECT_TRUE(a.isUnresolved());
-        EXPECT_EQ(a.hostString(), "nonexistent-hostname.invalid-tld-xyz");
-        EXPECT_EQ(a.port(), 1234);
-        EXPECT_EQ(a.family(), AF_UNSPEC);
-        EXPECT_EQ(a.sockaddrPtr(), nullptr);
-        EXPECT_EQ(a.sockaddrLen(), 0);
-        EXPECT_EQ(a.toString(), "nonexistent-hostname.invalid-tld-xyz:1234");
+    /*
+     * Port-only constructor
+     */
+
+    TEST(InetSocketAddressTest, PortOnlyConstructorStoresPort) {
+        auto socketAddress =
+            jxx::NEW<InetSocketAddress>(
+                static_cast<jint>(8080));
+
+        ASSERT_NE(socketAddress, nullptr);
+        EXPECT_EQ(socketAddress->getPort(), 8080);
+        EXPECT_FALSE(socketAddress->isUnresolved());
     }
 
-    TEST(InetSocketAddress, ParseHostPortIPv4) {
-        std::string host;
-        uint16_t port = 0;
-        ASSERT_TRUE(InetSocketAddress::parseHostPort("example.com:443", host, port));
-        EXPECT_EQ(host, "example.com");
-        EXPECT_EQ(port, 443);
+    TEST(InetSocketAddressTest, PortOnlyConstructorCreatesWildcardAddress) {
+        auto socketAddress =
+            jxx::NEW<InetSocketAddress>(
+                static_cast<jint>(8080));
 
-        ASSERT_TRUE(InetSocketAddress::parseHostPort("127.0.0.1:80", host, port));
-        EXPECT_EQ(host, "127.0.0.1");
-        EXPECT_EQ(port, 80);
+        auto address = socketAddress->getAddress();
 
-        // invalid
-        EXPECT_FALSE(InetSocketAddress::parseHostPort("noport", host, port));
-        EXPECT_FALSE(InetSocketAddress::parseHostPort("too:many:colons", host, port));
-        EXPECT_FALSE(InetSocketAddress::parseHostPort("host:70000", host, port)); // out of range
+        ASSERT_NE(address, nullptr);
+        EXPECT_TRUE(address->isAnyLocalAddress());
     }
 
-    TEST(InetSocketAddress, ParseHostPortIPv6Bracketed) {
-        std::string host;
-        uint16_t port = 0;
-
-        ASSERT_TRUE(InetSocketAddress::parseHostPort("[::1]:8080", host, port));
-        EXPECT_EQ(host, "::1");
-        EXPECT_EQ(port, 8080);
-
-        ASSERT_TRUE(InetSocketAddress::parseHostPort("[2001:db8::1]:443", host, port));
-        EXPECT_EQ(host, "2001:db8::1");
-        EXPECT_EQ(port, 443);
-
-        // invalid bracket usage
-        EXPECT_FALSE(InetSocketAddress::parseHostPort("[::1", host, port));
-        //EXPECT_FALSE(InetSocketAddress::parseHostPort("::1]:80", host, port));
-        EXPECT_FALSE(InetSocketAddress::parseHostPort("[::1]:", host, port));
+    TEST(InetSocketAddressTest, PortOnlyConstructorRejectsNegativePort) {
+        EXPECT_THROW(
+            jxx::NEW<InetSocketAddress>(
+                static_cast<jint>(-1)),
+            jxx::lang::IllegalArgumentException);
     }
 
-    TEST(InetSocketAddress, EqualityAndHashUnresolved) {
-        auto a = InetSocketAddress::createUnresolved("example.com", 443);
-        auto b = InetSocketAddress::createUnresolved("example.com", 443);
-        auto c = InetSocketAddress::createUnresolved("example.com", 80);
-        auto d = InetSocketAddress::createUnresolved("EXAMPLE.com", 443); // case-sensitive comparison
-
-        EXPECT_TRUE(a == b);
-        EXPECT_FALSE(a == c);
-        EXPECT_FALSE(a == d);
-
-        std::unordered_set<InetSocketAddress, InetSocketAddress::Hasher> set;
-        set.insert(a);
-        EXPECT_EQ(set.count(b), 1U);
-        EXPECT_EQ(set.count(c), 0U);
-        EXPECT_EQ(set.count(d), 0U);
+    TEST(InetSocketAddressTest, PortOnlyConstructorRejectsPortAbove65535) {
+        EXPECT_THROW(
+            jxx::NEW<InetSocketAddress>(
+                static_cast<jint>(65536)),
+            jxx::lang::IllegalArgumentException);
     }
 
-    TEST(InetSocketAddress, EqualityAndHashResolved) {
-        auto a = InetSocketAddress::fromNumericIP("127.0.0.1", 12345);
-        auto b = InetSocketAddress::fromNumericIP("127.0.0.1", 12345);
-        auto c = InetSocketAddress::fromNumericIP("127.0.0.1", 54321);
-        auto d = InetSocketAddress::fromNumericIP("127.0.0.2", 12345);
+    TEST(InetSocketAddressTest, PortOnlyConstructorAcceptsZero) {
+        auto socketAddress =
+            jxx::NEW<InetSocketAddress>(
+                static_cast<jint>(0));
 
-        ASSERT_FALSE(a.isUnresolved());
-        EXPECT_TRUE(a == b);
-        EXPECT_FALSE(a == c);
-        EXPECT_FALSE(a == d);
-
-        std::unordered_set<InetSocketAddress, InetSocketAddress::Hasher> set;
-        set.insert(a);
-        EXPECT_EQ(set.count(b), 1U);
-        EXPECT_EQ(set.count(c), 0U);
-        EXPECT_EQ(set.count(d), 0U);
+        ASSERT_NE(socketAddress, nullptr);
+        EXPECT_EQ(socketAddress->getPort(), 0);
     }
 
-    TEST(InetSocketAddress, SockaddrRoundTripFromSockaddr) {
-        auto a = InetSocketAddress::fromNumericIP("127.0.0.1", 5555);
-        ASSERT_FALSE(a.isUnresolved());
-        ASSERT_NE(a.sockaddrPtr(), nullptr);
+    TEST(InetSocketAddressTest, PortOnlyConstructorAccepts65535) {
+        auto socketAddress =
+            jxx::NEW<InetSocketAddress>(
+                static_cast<jint>(65535));
 
-        // Create a new object from the raw sockaddr
-        auto* sa = a.sockaddrPtr();
-        auto  sl = a.sockaddrLen();
-        auto b = InetSocketAddress::fromSockaddr(sa, sl);
-
-        EXPECT_FALSE(b.isUnresolved());
-        EXPECT_EQ(a.family(), b.family());
-        EXPECT_EQ(a.port(), b.port());
-        EXPECT_EQ(a.ipString(), b.ipString());
-        EXPECT_EQ(a, b);
+        ASSERT_NE(socketAddress, nullptr);
+        EXPECT_EQ(socketAddress->getPort(), 65535);
     }
 
-    TEST(InetSocketAddress, ToStringFormatsCorrectly) {
-        // unresolved
-        {
-            auto a = InetSocketAddress::createUnresolved("host.name", 77);
-            EXPECT_EQ(a.toString(), "host.name:77");
-        }
-        // IPv4 resolved
-        {
-            auto a = InetSocketAddress::fromNumericIP("192.0.2.1", 8080);
-            EXPECT_EQ(a.toString(), "192.0.2.1:8080");
-        }
-        // IPv6 bracketed
-        if (ipv6_available()) {
-            auto a = InetSocketAddress::fromNumericIP("2001:db8::1", 9090);
-            EXPECT_EQ(a.toString(), "[2001:db8::1]:9090");
-        }
+    /*
+     * InetAddress constructor
+     */
+
+    TEST(InetSocketAddressTest, InetAddressConstructorStoresAddressAndPort) {
+        auto loopback =
+            InetAddress::getLoopbackAddress();
+
+        ASSERT_NE(loopback, nullptr);
+
+        auto socketAddress =
+            jxx::NEW<InetSocketAddress>(
+                loopback,
+                static_cast<jint>(4321));
+
+        ASSERT_NE(socketAddress, nullptr);
+        EXPECT_EQ(socketAddress->getPort(), 4321);
+        EXPECT_FALSE(socketAddress->isUnresolved());
+
+        auto storedAddress =
+            socketAddress->getAddress();
+
+        ASSERT_NE(storedAddress, nullptr);
+        EXPECT_TRUE(storedAddress->equals(loopback));
+    }
+
+    TEST(InetSocketAddressTest, InetAddressConstructorWithNullUsesWildcardAddress) {
+        jxx::Ptr<InetAddress> nullAddress = nullptr;
+
+        auto socketAddress =
+            jxx::NEW<InetSocketAddress>(
+                nullAddress,
+                static_cast<jint>(1234));
+
+        ASSERT_NE(socketAddress, nullptr);
+        EXPECT_FALSE(socketAddress->isUnresolved());
+
+        auto storedAddress =
+            socketAddress->getAddress();
+
+        ASSERT_NE(storedAddress, nullptr);
+        EXPECT_TRUE(storedAddress->isAnyLocalAddress());
+    }
+
+    TEST(InetSocketAddressTest, InetAddressConstructorRejectsNegativePort) {
+        auto loopback =
+            InetAddress::getLoopbackAddress();
+
+        EXPECT_THROW(
+            jxx::NEW<InetSocketAddress>(
+                loopback,
+                static_cast<jint>(-1)),
+            jxx::lang::IllegalArgumentException);
+    }
+
+    TEST(InetSocketAddressTest, InetAddressConstructorRejectsPortAbove65535) {
+        auto loopback =
+            InetAddress::getLoopbackAddress();
+
+        EXPECT_THROW(
+            jxx::NEW<InetSocketAddress>(
+                loopback,
+                static_cast<jint>(65536)),
+            jxx::lang::IllegalArgumentException);
+    }
+
+    /*
+     * Hostname constructor
+     */
+
+    TEST(InetSocketAddressTest, NumericHostnameConstructorStoresPort) {
+        auto socketAddress =
+            jxx::NEW<InetSocketAddress>(
+                S("127.0.0.1"),
+                static_cast<jint>(9090));
+
+        ASSERT_NE(socketAddress, nullptr);
+        EXPECT_EQ(socketAddress->getPort(), 9090);
+    }
+
+    TEST(InetSocketAddressTest, NumericHostnameResolvesAddress) {
+        auto socketAddress =
+            jxx::NEW<InetSocketAddress>(
+                S("127.0.0.1"),
+                static_cast<jint>(9090));
+
+        ASSERT_NE(socketAddress, nullptr);
+        EXPECT_FALSE(socketAddress->isUnresolved());
+
+        auto address =
+            socketAddress->getAddress();
+
+        ASSERT_NE(address, nullptr);
+
+        EXPECT_TRUE(
+            address->isLoopbackAddress());
+    }
+
+    TEST(InetSocketAddressTest, NumericHostnamePreservesHostString) {
+        auto socketAddress =
+            jxx::NEW<InetSocketAddress>(
+                S("127.0.0.1"),
+                static_cast<jint>(9090));
+
+        auto hostString =
+            socketAddress->getHostString();
+
+        ASSERT_NE(hostString, nullptr);
+        EXPECT_EQ(hostString->utf8(), "127.0.0.1");
+    }
+
+    TEST(InetSocketAddressTest, HostnameConstructorRejectsNullHostname) {
+        jxx::Ptr<String> nullHost = nullptr;
+
+        EXPECT_THROW(
+            jxx::NEW<InetSocketAddress>(
+                nullHost,
+                static_cast<jint>(8080)),
+            jxx::lang::IllegalArgumentException);
+    }
+
+    TEST(InetSocketAddressTest, HostnameConstructorRejectsInvalidPort) {
+        EXPECT_THROW(
+            jxx::NEW<InetSocketAddress>(
+                S("127.0.0.1"),
+                static_cast<jint>(-1)),
+            jxx::lang::IllegalArgumentException);
+
+        EXPECT_THROW(
+            jxx::NEW<InetSocketAddress>(
+                S("127.0.0.1"),
+                static_cast<jint>(65536)),
+            jxx::lang::IllegalArgumentException);
+    }
+
+    /*
+     * createUnresolved
+     */
+
+    TEST(InetSocketAddressTest, CreateUnresolvedStoresHostnameAndPort) {
+        auto socketAddress =
+            InetSocketAddress::createUnresolved(
+                S("unresolved.example.invalid"),
+                static_cast<jint>(8443));
+
+        ASSERT_NE(socketAddress, nullptr);
+
+        EXPECT_EQ(socketAddress->getPort(), 8443);
+        EXPECT_TRUE(socketAddress->isUnresolved());
+        EXPECT_EQ(socketAddress->getAddress(), nullptr);
+
+        EXPECT_EQ(
+            textOf(socketAddress->getHostName()),
+            "unresolved.example.invalid");
+
+        EXPECT_EQ(
+            textOf(socketAddress->getHostString()),
+            "unresolved.example.invalid");
+    }
+
+    TEST(InetSocketAddressTest, CreateUnresolvedDoesNotPerformDnsLookup) {
+        auto socketAddress =
+            InetSocketAddress::createUnresolved(
+                S("this-host-does-not-need-to-exist.invalid"),
+                static_cast<jint>(80));
+
+        ASSERT_NE(socketAddress, nullptr);
+        EXPECT_TRUE(socketAddress->isUnresolved());
+        EXPECT_EQ(socketAddress->getAddress(), nullptr);
+    }
+
+    TEST(InetSocketAddressTest, CreateUnresolvedRejectsNullHost) {
+        jxx::Ptr<String> nullHost = nullptr;
+
+        EXPECT_THROW(
+            InetSocketAddress::createUnresolved(
+                nullHost,
+                static_cast<jint>(80)),
+            jxx::lang::IllegalArgumentException);
+    }
+
+    TEST(InetSocketAddressTest, CreateUnresolvedRejectsNegativePort) {
+        EXPECT_THROW(
+            InetSocketAddress::createUnresolved(
+                S("example.invalid"),
+                static_cast<jint>(-1)),
+            jxx::lang::IllegalArgumentException);
+    }
+
+    TEST(InetSocketAddressTest, CreateUnresolvedRejectsPortAbove65535) {
+        EXPECT_THROW(
+            InetSocketAddress::createUnresolved(
+                S("example.invalid"),
+                static_cast<jint>(65536)),
+            jxx::lang::IllegalArgumentException);
+    }
+
+    /*
+     * Hostname and host-string behavior
+     */
+
+    TEST(InetSocketAddressTest, UnresolvedGetHostNameReturnsOriginalHost) {
+        auto socketAddress =
+            InetSocketAddress::createUnresolved(
+                S("device.example.invalid"),
+                static_cast<jint>(1234));
+
+        auto hostname =
+            socketAddress->getHostName();
+
+        ASSERT_NE(hostname, nullptr);
+        EXPECT_EQ(
+            hostname->utf8(),
+            "device.example.invalid");
+    }
+
+    TEST(InetSocketAddressTest, UnresolvedGetHostStringReturnsOriginalHost) {
+        auto socketAddress =
+            InetSocketAddress::createUnresolved(
+                S("device.example.invalid"),
+                static_cast<jint>(1234));
+
+        auto hostString =
+            socketAddress->getHostString();
+
+        ASSERT_NE(hostString, nullptr);
+        EXPECT_EQ(
+            hostString->utf8(),
+            "device.example.invalid");
+    }
+
+    TEST(InetSocketAddressTest, ResolvedGetHostStringReturnsUsefulText) {
+        auto loopback =
+            InetAddress::getLoopbackAddress();
+
+        ASSERT_NE(loopback, nullptr);
+
+        auto socketAddress =
+            jxx::NEW<InetSocketAddress>(
+                loopback,
+                static_cast<jint>(1234));
+
+        auto hostString =
+            socketAddress->getHostString();
+
+        ASSERT_NE(hostString, nullptr);
+        EXPECT_FALSE(hostString->isEmpty());
+    }
+
+    /*
+     * Equality
+     */
+
+    TEST(InetSocketAddressTest, SameResolvedAddressAndPortAreEqual) {
+        auto loopback =
+            InetAddress::getLoopbackAddress();
+
+        ASSERT_NE(loopback, nullptr);
+
+        auto left =
+            jxx::NEW<InetSocketAddress>(
+                loopback,
+                static_cast<jint>(8080));
+
+        auto right =
+            jxx::NEW<InetSocketAddress>(
+                loopback,
+                static_cast<jint>(8080));
+
+        EXPECT_TRUE(
+            left->equals(asObject(right)));
+
+        EXPECT_TRUE(
+            right->equals(asObject(left)));
+    }
+
+    TEST(InetSocketAddressTest, DifferentPortsAreNotEqual) {
+        auto loopback =
+            InetAddress::getLoopbackAddress();
+
+        auto left =
+            jxx::NEW<InetSocketAddress>(
+                loopback,
+                static_cast<jint>(8080));
+
+        auto right =
+            jxx::NEW<InetSocketAddress>(
+                loopback,
+                static_cast<jint>(8081));
+
+        EXPECT_FALSE(
+            left->equals(asObject(right)));
+    }
+
+    TEST(InetSocketAddressTest, SameUnresolvedHostAndPortAreEqualIgnoringCase) {
+        auto left =
+            InetSocketAddress::createUnresolved(
+                S("DEVICE.EXAMPLE.INVALID"),
+                static_cast<jint>(8080));
+
+        auto right =
+            InetSocketAddress::createUnresolved(
+                S("device.example.invalid"),
+                static_cast<jint>(8080));
+
+        EXPECT_TRUE(
+            left->equals(asObject(right)));
+
+        EXPECT_TRUE(
+            right->equals(asObject(left)));
+    }
+
+    TEST(InetSocketAddressTest, DifferentUnresolvedHostsAreNotEqual) {
+        auto left =
+            InetSocketAddress::createUnresolved(
+                S("device-one.example.invalid"),
+                static_cast<jint>(8080));
+
+        auto right =
+            InetSocketAddress::createUnresolved(
+                S("device-two.example.invalid"),
+                static_cast<jint>(8080));
+
+        EXPECT_FALSE(
+            left->equals(asObject(right)));
+    }
+
+    TEST(InetSocketAddressTest, UnresolvedAddressesWithDifferentPortsAreNotEqual) {
+        auto left =
+            InetSocketAddress::createUnresolved(
+                S("device.example.invalid"),
+                static_cast<jint>(8080));
+
+        auto right =
+            InetSocketAddress::createUnresolved(
+                S("device.example.invalid"),
+                static_cast<jint>(8081));
+
+        EXPECT_FALSE(
+            left->equals(asObject(right)));
+    }
+
+    TEST(InetSocketAddressTest, ResolvedAndUnresolvedAddressesAreNotEqual) {
+        auto resolved =
+            jxx::NEW<InetSocketAddress>(
+                S("127.0.0.1"),
+                static_cast<jint>(8080));
+
+        auto unresolved =
+            InetSocketAddress::createUnresolved(
+                S("127.0.0.1"),
+                static_cast<jint>(8080));
+
+        EXPECT_FALSE(
+            resolved->equals(asObject(unresolved)));
+
+        EXPECT_FALSE(
+            unresolved->equals(asObject(resolved)));
+    }
+
+    TEST(InetSocketAddressTest, DoesNotEqualNull) {
+        auto socketAddress =
+            InetSocketAddress::createUnresolved(
+                S("example.invalid"),
+                static_cast<jint>(8080));
+
+        EXPECT_FALSE(
+            socketAddress->equals(nullptr));
+    }
+
+    TEST(InetSocketAddressTest, DoesNotEqualDifferentObjectType) {
+        auto socketAddress =
+            InetSocketAddress::createUnresolved(
+                S("example.invalid"),
+                static_cast<jint>(8080));
+
+        jxx::Ptr<Object> differentObject =
+            jxx::CAST<Object>(S("not-an-address"));
+
+        EXPECT_FALSE(
+            socketAddress->equals(differentObject));
+    }
+
+    /*
+     * hashCode
+     */
+
+    TEST(InetSocketAddressTest, EqualResolvedAddressesHaveSameHashCode) {
+        auto loopback =
+            InetAddress::getLoopbackAddress();
+
+        auto left =
+            jxx::NEW<InetSocketAddress>(
+                loopback,
+                static_cast<jint>(8080));
+
+        auto right =
+            jxx::NEW<InetSocketAddress>(
+                loopback,
+                static_cast<jint>(8080));
+
+        ASSERT_TRUE(
+            left->equals(asObject(right)));
+
+        EXPECT_EQ(
+            left->hashCode(),
+            right->hashCode());
+    }
+
+    TEST(InetSocketAddressTest, EqualUnresolvedAddressesHaveSameHashCode) {
+        auto left =
+            InetSocketAddress::createUnresolved(
+                S("DEVICE.EXAMPLE.INVALID"),
+                static_cast<jint>(8080));
+
+        auto right =
+            InetSocketAddress::createUnresolved(
+                S("device.example.invalid"),
+                static_cast<jint>(8080));
+
+        ASSERT_TRUE(
+            left->equals(asObject(right)));
+
+        EXPECT_EQ(
+            left->hashCode(),
+            right->hashCode());
+    }
+
+    TEST(InetSocketAddressTest, HashCodeIsStable) {
+        auto socketAddress =
+            InetSocketAddress::createUnresolved(
+                S("device.example.invalid"),
+                static_cast<jint>(8080));
+
+        const jint first =
+            socketAddress->hashCode();
+
+        const jint second =
+            socketAddress->hashCode();
+
+        EXPECT_EQ(first, second);
+    }
+
+    /*
+     * toString
+     */
+
+    TEST(InetSocketAddressTest, UnresolvedToStringContainsHostnameAndPort) {
+        auto socketAddress =
+            InetSocketAddress::createUnresolved(
+                S("device.example.invalid"),
+                static_cast<jint>(8443));
+
+        auto result =
+            socketAddress->toString();
+
+        ASSERT_NE(result, nullptr);
+
+        const std::string text =
+            result->utf8();
+
+        EXPECT_NE(
+            text.find("device.example.invalid"),
+            std::string::npos);
+
+        EXPECT_NE(
+            text.find("8443"),
+            std::string::npos);
+    }
+
+    TEST(InetSocketAddressTest, ResolvedToStringContainsPort) {
+        auto loopback =
+            InetAddress::getLoopbackAddress();
+
+        auto socketAddress =
+            jxx::NEW<InetSocketAddress>(
+                loopback,
+                static_cast<jint>(4321));
+
+        auto result =
+            socketAddress->toString();
+
+        ASSERT_NE(result, nullptr);
+
+        EXPECT_NE(
+            result->utf8().find("4321"),
+            std::string::npos);
     }
 
 } // namespace

@@ -79,8 +79,8 @@ namespace jxx::lang {
     }
 
     // Identity check (reference equality)
-    bool Object::same(const jxx::Ptr<Object other) const {
-        return this == other;
+    bool Object::same(const jxx::Ptr<Object> other) const {
+        return thisPtr == other;
     }
 
     void Object::wait() {
