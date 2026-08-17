@@ -143,7 +143,7 @@ public:
         return jxx::Ptr<Iterator<E>>(new DescendingIteratorImpl(this));
     }
 
-    virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>>> toArray() override {
+    virtual jxx::lang::ObjectArray toArray() override {
         auto result = jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>>>(new JxxArray<jxx::Ptr<jxx::lang::Object>>(size()));
         for (jxx::lang::jint i = 0; i < size(); ++i) {
             result->set(i, jxx::lang::ptr_static_cast<jxx::lang::Object>(data_[static_cast<std::size_t>(i)]));

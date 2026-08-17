@@ -1,29 +1,62 @@
-
 #pragma once
-#include <random>
-#include "lang/jxx.lang.h"
 
-namespace jxx { namespace util {
+#include <atomic>
+#include <cstdint>
+#include <mutex>
 
-class Random {
-public:
-    Random() : rng_(std::random_device{}()) {}
-    explicit Random(long long seed) : rng_(static_cast<std::mt19937_64::result_type>(seed)) {}
+#include "io/jxx.io.Serializable.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx_types.h"
 
-    int nextInt() { return static_cast<int>(dist32_(rng_)); }
-    int nextInt(int bound) { std::uniform_int_distribution<int> d(0, bound-1); return d(rng_); }
-    long long nextLong() { return static_cast<long long>(dist64_(rng_)); }
-    bool nextBoolean() { std::bernoulli_distribution d(0.5); return d(rng_); }
-    double nextDouble() { std::uniform_real_distribution<double> d(0.0, 1.0); return d(rng_); }
+namespace jxx::util {
 
-    void nextBytes(jxx::lang::ByteArray& b) {
-        for (size_t i=0;i<b.size();++i) b[i] = static_cast<std::uint8_t>(dist32_(rng_) & 0xFF);
-    }
-
+/**
+ * C++17/JXX implementation of java.util.Random (Java 8 core API).
+ *
+ * Uses Java's specified 48-bit linear-congruential generator.
+ * Public Java reference types use jxx::Ptr<T>; STL is private only.
+ */
+class Random : public jxx::lang::Object,
+               public virtual jxx::io::Serializable {
 private:
-    std::mt19937_64 rng_;
-    std::uniform_int_distribution<std::uint32_t> dist32_;
-    std::uniform_int_distribution<std::uint64_t> dist64_;
+    static constexpr std::uint64_t MULTIPLIER = 0x5DEECE66DULL;
+    static constexpr std::uint64_t ADDEND = 0xBULL;
+    static constexpr std::uint64_t MASK = (1ULL << 48U) - 1ULL;
+    static constexpr jxx::lang::jdouble DOUBLE_UNIT = 1.0 / 9007199254740992.0; // 2^-53
+
+    std::atomic<std::uint64_t> seed_;
+
+    mutable std::mutex gaussianMutex_;
+    jxx::lang::jdouble nextNextGaussian_ = 0.0;
+    jxx::lang::jbool haveNextNextGaussian_ = false;
+
+    static std::uint64_t initialScramble_(jxx::lang::jlong seed) noexcept;
+    static jxx::lang::jlong defaultSeed_() noexcept;
+
+public:
+    Random();
+    explicit Random(jxx::lang::jlong seed);
+    virtual ~Random() = default;
+
+    virtual void setSeed(jxx::lang::jlong seed);
+
+protected:
+    virtual jxx::lang::jint next(jxx::lang::jint bits);
+
+public:
+    virtual void nextBytes(jxx::lang::ByteArray bytes);
+    virtual jxx::lang::jint nextInt();
+    virtual jxx::lang::jint nextInt(jxx::lang::jint bound);
+    virtual jxx::lang::jlong nextLong();
+    virtual jxx::lang::jbool nextBoolean();
+    virtual jxx::lang::jfloat nextFloat();
+    virtual jxx::lang::jdouble nextDouble();
+    virtual jxx::lang::jdouble nextGaussian();
+
+    virtual void writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out) override;
+    virtual void readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) override;
+    virtual void readObjectNoData() override;
 };
 
-}} // namespace jxx::util
+} // namespace jxx::util

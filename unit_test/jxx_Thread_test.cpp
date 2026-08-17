@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "jxx.h"
+#include "lang/jxx.lang.Thread.h"
 
 using namespace jxx::lang;
 

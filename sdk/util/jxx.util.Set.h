@@ -18,7 +18,7 @@ public:
     virtual jxx::lang::jbool isEmpty() override { return size() == 0; }
     virtual jxx::lang::jbool contains(jxx::Ptr<jxx::lang::Object> o) = 0;
     virtual jxx::Ptr<Iterator<E>> iterator() = 0;
-    virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>,1>> toArray() = 0;
+    virtual jxx::lang::ObjectArray toArray() = 0;
     virtual jxx::lang::jbool add(jxx::Ptr<E> e) = 0;
     virtual jxx::lang::jbool remove(jxx::Ptr<jxx::lang::Object> o) = 0;
     virtual jxx::lang::jbool containsAll(jxx::Ptr<wildcard::CollectionAny> c) = 0;

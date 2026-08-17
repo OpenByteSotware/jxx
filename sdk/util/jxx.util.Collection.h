@@ -8,7 +8,7 @@
 namespace jxx::util {
     template <typename E>
     class Collection
-        : public virtual jxx::lang::Iterable<E>, public virtual jxx::lang::Iterable<E> {
+        : public virtual jxx::lang::Iterable<E> {
     public:
         virtual ~Collection() = default;
 

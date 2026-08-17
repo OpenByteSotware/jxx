@@ -123,7 +123,7 @@ public:
         virtual jxx::lang::jbool isEmpty() override { return map_->isEmpty(); }
         virtual jxx::lang::jbool contains(jxx::Ptr<jxx::lang::Object> o) override { return map_->containsKey(o); }
         virtual jxx::Ptr<Iterator<K>> iterator() override { return jxx::Ptr<Iterator<K>>(new KeyIterator(map_->entrySet()->iterator())); }
-        virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1>> toArray() override { return AbstractCollection<K>::toArray(); }
+        virtual jxx::lang::ObjectArray toArray() override { return AbstractCollection<K>::toArray(); }
         virtual jxx::lang::jbool add(jxx::Ptr<K> /*e*/) override { throw UnsupportedOperationException(); }
         virtual jxx::lang::jbool remove(jxx::Ptr<jxx::lang::Object> o) override { return map_->remove(o) != nullptr; }
         virtual jxx::lang::jbool containsAll(jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<K>::containsAll(c); }
@@ -153,7 +153,7 @@ public:
         virtual jxx::lang::jbool isEmpty() override { return map_->isEmpty(); }
         virtual jxx::lang::jbool contains(jxx::Ptr<jxx::lang::Object> o) override { return map_->containsValue(o); }
         virtual jxx::Ptr<Iterator<V>> iterator() override { return jxx::Ptr<Iterator<V>>(new ValueIterator(map_->entrySet()->iterator())); }
-        virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1>> toArray() override { return AbstractCollection<V>::toArray(); }
+        virtual jxx::lang::ObjectArray toArray() override { return AbstractCollection<V>::toArray(); }
         virtual jxx::lang::jbool add(jxx::Ptr<V> /*e*/) override { throw UnsupportedOperationException(); }
         virtual jxx::lang::jbool remove(jxx::Ptr<jxx::lang::Object> o) override {
             auto it = map_->entrySet()->iterator();

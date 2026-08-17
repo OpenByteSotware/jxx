@@ -1,293 +1,852 @@
-#include <gtest/gtest.h>
+#include <memory>
+#include <set>
 #include <string>
+#include <type_traits>
 #include <vector>
-#include <optional>
-#include <algorithm>
-#include "jxx.h" 
 
-using jxx::util::Map;
-using jxx::util::TreeMap;
-using namespace std;
+#include <gtest/gtest.h>
 
-// A small helper for readability
-template <typename T>
-static inline bool optEq(const std::optional<T>& a, const std::optional<T>& b) {
-    return a.has_value() == b.has_value() && (!a.has_value() || *a == *b);
-}
+#include "io/jxx.io.Serializable.h"
 
-TEST(TreeMap_Basics, EmptyOnConstruct) {
-    TreeMap<std::string, int> tm;
-    Map<std::string, int>* m = &tm;
+#include "lang/jxx.lang.Cloneable.h"
+#include "lang/jxx.lang.Exceptions.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
 
-    EXPECT_TRUE(m->isEmpty());
-    EXPECT_TRUE(m->empty());
-    EXPECT_EQ(m->size(), 0u);
+#include "util/jxx.util.AbstractMap.h"
+#include "util/jxx.util.ComparatorSuper.h"
+#include "util/jxx.util.ConcurrentModificationException.h"
+#include "util/jxx.util.Iterator.h"
+#include "util/jxx.util.MapEntry.h"
+#include "util/jxx.util.NoSuchElementException.h"
+#include "util/jxx.util.Set.h"
+#include "util/jxx.util.TreeMap.h"
 
-    // firstKey/lastKey should throw on empty
-    EXPECT_THROW(tm.firstKey(), std::out_of_range);
-    EXPECT_THROW(tm.lastKey(), std::out_of_range);
-}
+namespace {
 
-TEST(TreeMap_Crud, PutGetRemove_WithNullValues) {
-    TreeMap<std::string, int> tm;
-    Map<std::string, int>* m = &tm;
+    using jxx::lang::Object;
+    using jxx::lang::String;
+    using jxx::lang::jbool;
+    using jxx::lang::jint;
 
-    // put returns previous (null for new)
-    auto prevA = m->put("alpha", 1);
-    EXPECT_FALSE(prevA.has_value());
-    EXPECT_EQ(*m->get("alpha"), 1);
+    using jxx::util::AbstractMap;
+    using jxx::util::ComparatorSuper;
+    using jxx::util::Iterator;
+    using jxx::util::MapEntry;
+    using jxx::util::Set;
+    using jxx::util::TreeMap;
 
-    // Put null value (present-null)
-    auto prevB = m->put("bravo", std::nullopt);
-    EXPECT_FALSE(prevB.has_value());
+    using StringTreeMap = TreeMap<String, String>;
 
-    // get returns nullopt for BOTH absent and present-null (Java ambiguity)
-    auto vBravo = m->get("bravo");
-    EXPECT_FALSE(vBravo.has_value());      // present-null
-    auto vZed = m->get("zed");
-    EXPECT_FALSE(vZed.has_value());        // absent
-
-    // Overwrite existing value
-    auto prevA2 = m->put("alpha", 3);
-    ASSERT_TRUE(prevA2.has_value());
-    EXPECT_EQ(*prevA2, 1);
-    EXPECT_EQ(*m->get("alpha"), 3);
-
-    // remove returns previous value (or null)
-    auto removedAlpha = m->remove("alpha");
-    ASSERT_TRUE(removedAlpha.has_value());
-    EXPECT_EQ(*removedAlpha, 3);
-    EXPECT_FALSE(m->containsKey("alpha"));
-
-    // remove absent returns null
-    auto removedNo = m->remove("missing");
-    EXPECT_FALSE(removedNo.has_value());
-}
-
-TEST(TreeMap_Contains, ContainsKeyContainsValue) {
-    TreeMap<std::string, int> tm;
-    Map<std::string, int>* m = &tm;
-
-    m->put("a", 1);
-    m->put("b", std::nullopt);
-    m->put("c", 3);
-
-    EXPECT_TRUE(m->containsKey("a"));
-    EXPECT_TRUE(m->containsKey("b"));
-    EXPECT_FALSE(m->containsKey("z"));
-
-    // containsValue runs O(n). We expect it to match std::optional equality.
-    EXPECT_TRUE(m->containsValue(std::optional<int>{1}));
-    EXPECT_TRUE(m->containsValue(std::optional<int>{})); // present-null exists at "b"
-    EXPECT_FALSE(m->containsValue(std::optional<int>{2}));
-}
-
-TEST(TreeMap_Navigation, FirstLastAndNeighbors) {
-    TreeMap<std::string, int> tm;
-    Map<std::string, int>* m = &tm;
-
-    m->put("alpha", 1);
-    m->put("bravo", 2);
-    m->put("charlie", 3);
-
-    EXPECT_EQ(tm.firstKey(), "alpha");
-    EXPECT_EQ(tm.lastKey(), "charlie");
-
-    // lowerKey: greatest key < k
-    EXPECT_EQ(tm.lowerKey("bravo"), std::optional<std::string>{"alpha"});
-    EXPECT_EQ(tm.lowerKey("alpha"), std::nullopt);
-
-    // floorKey: greatest key <= k
-    EXPECT_EQ(tm.floorKey("bravo"), std::optional<std::string>{"bravo"});
-    EXPECT_EQ(tm.floorKey("aardvark"), std::nullopt);
-
-    // ceilingKey: smallest key >= k
-    EXPECT_EQ(tm.ceilingKey("beta"), std::optional<std::string>{"bravo"});
-    EXPECT_EQ(tm.ceilingKey("charlie"), std::optional<std::string>{"charlie"});
-    EXPECT_EQ(tm.ceilingKey("zzz"), std::nullopt);
-
-    // higherKey: smallest key > k
-    EXPECT_EQ(tm.higherKey("bravo"), std::optional<std::string>{"charlie"});
-    EXPECT_EQ(tm.higherKey("charlie"), std::nullopt);
-}
-
-TEST(TreeMap_Views, KeySetValuesEntrySetMaterialized) {
-    TreeMap<std::string, int> tm;
-    Map<std::string, int>* m = &tm;
-
-    m->put("bravo", 2);
-    m->put("alpha", 1);
-    m->put("charlie", std::nullopt);
-
-    // Keys should be sorted ascending
-    auto keys = m->keySet();
-    ASSERT_EQ(keys.size(), 3u);
-    EXPECT_EQ(keys[0], "alpha");
-    EXPECT_EQ(keys[1], "bravo");
-    EXPECT_EQ(keys[2], "charlie");
-
-    // Values reflect current mapping order (by key)
-    auto vals = m->values();
-    ASSERT_EQ(vals.size(), 3u);
-    ASSERT_TRUE(vals[0].has_value());
-    EXPECT_EQ(*vals[0], 1);
-    ASSERT_TRUE(vals[1].has_value());
-    EXPECT_EQ(*vals[1], 2);
-    EXPECT_FALSE(vals[2].has_value()); // null
-
-    // Entry set mirrors
-    auto entries = m->entrySet();
-    ASSERT_EQ(entries.size(), 3u);
-    //EXPECT_EQ(entries[0].first, "alpha");
-    //EXPECT_TRUE(entries[0].second.has_value());
-    //EXPECT_EQ(*entries[0].second, 1);
-
-    // Entries/materialized vector is a snapshot — modifying map later won't mutate vector
-    auto snap = m->entrySet();
-    m->put("delta", 4);
-    EXPECT_EQ(snap.size(), 3u);     // unchanged
-}
-
-TEST(Map_Defaults, GetOrDefaultPutIfAbsentReplaceRemoveKV) {
-    TreeMap<std::string, int> tm;
-    Map<std::string, int>* m = &tm;
-
-    // getOrDefault: return default if key absent; if present (even null) return get(key)
-    EXPECT_TRUE(optEq(m->getOrDefault("none", std::optional<int>{7}), std::optional<int>{7}));
-
-    m->put("p", std::nullopt);
-    EXPECT_FALSE(m->getOrDefault("p", std::optional<int>{9}).has_value()); // present-null → null
-
-    // putIfAbsent: if absent, insert & return null; if present, return current without changing it
-    auto r1 = m->putIfAbsent("q", 1);
-    EXPECT_FALSE(r1.has_value());                      // previously absent
-    EXPECT_TRUE(optEq(m->get("q"), std::optional<int>{1}));
-
-    auto r2 = m->putIfAbsent("q", 2);
-    EXPECT_TRUE(optEq(r2, std::optional<int>{1}));     // previous value returned
-    EXPECT_TRUE(optEq(m->get("q"), std::optional<int>{1})); // unchanged
-
-    // replace(k, v): only if present
-    auto r3 = m->replace("q", 3);
-    EXPECT_TRUE(optEq(r3, std::optional<int>{1}));
-    EXPECT_TRUE(optEq(m->get("q"), std::optional<int>{3}));
-
-    auto r4 = m->replace("absent", 42);
-    EXPECT_FALSE(r4.has_value());                      // not present
-
-    // replace(k, oldV, newV): conditional
-    bool ok1 = m->replace("q", std::optional<int>{2}, 9);
-    EXPECT_FALSE(ok1);
-    bool ok2 = m->replace("q", std::optional<int>{3}, 9);
-    EXPECT_TRUE(ok2);
-    EXPECT_TRUE(optEq(m->get("q"), std::optional<int>{9}));
-
-    // remove(k, v): conditional
-    bool remNo = m->remove("q", std::optional<int>{3}); // current is 9
-    EXPECT_FALSE(remNo);
-    bool remYes = m->remove("q", std::optional<int>{9});
-    EXPECT_TRUE(remYes);
-    EXPECT_FALSE(m->containsKey("q"));
-}
-
-TEST(Map_ComputeFamily, ComputeIfAbsentPresentComputeMerge) {
-    TreeMap<std::string, int> tm;
-    Map<std::string, int>* m = &tm;
-
-    // computeIfAbsent: absent → call; null result means "do not insert"
-    auto a1 = m->computeIfAbsent("a", [](const std::string& k) {
-        return std::optional<int>{10};
-        });
-    EXPECT_TRUE(optEq(a1, std::optional<int>{10}));
-    EXPECT_TRUE(optEq(m->get("a"), std::optional<int>{10}));
-
-    auto a2 = m->computeIfAbsent("b", [](const std::string& k) {
-        return std::optional<int>{}; // null → no insert
-        });
-    EXPECT_FALSE(a2.has_value());
-    EXPECT_FALSE(m->containsKey("b"));
-
-    // computeIfPresent: only if present; null result → remove
-    auto c1 = m->computeIfPresent("a", [](const std::string& k, const std::optional<int>& curr) {
-        // increment if present
-        if (curr) return std::optional<int>{*curr + 1};
-        return std::optional<int>{}; // would remove if invoked
-        });
-    EXPECT_TRUE(optEq(c1, std::optional<int>{11}));
-    EXPECT_TRUE(optEq(m->get("a"), std::optional<int>{11}));
-
-    auto c2 = m->computeIfPresent("missing", [](const std::string&, const std::optional<int>&) {
-        return std::optional<int>{42};
-        });
-    EXPECT_FALSE(c2.has_value()); // not present → no call, returns null
-
-    // compute: always called; null result removes mapping if present
-    auto d1 = m->compute("a", [](const std::string& k, const std::optional<int>& curr) {
-        return std::optional<int>{}; // remove
-        });
-    EXPECT_FALSE(d1.has_value());
-    EXPECT_FALSE(m->containsKey("a"));
-
-    auto d2 = m->compute("x", [](const std::string& k, const std::optional<int>& curr) {
-        // absent → curr == null; create 5
-        return std::optional<int>{5};
-        });
-    EXPECT_TRUE(optEq(d2, std::optional<int>{5}));
-    EXPECT_TRUE(optEq(m->get("x"), std::optional<int>{5}));
-
-    // merge: if absent, put value (non-null only). If present, apply remapper.
-    auto mg1 = m->merge("x", std::optional<int>{10},
-        [](const std::optional<int>& existing, const std::optional<int>& value) {
-            return std::optional<int>{*existing + *value};
-        });
-    EXPECT_TRUE(optEq(mg1, std::optional<int>{15}));
-    EXPECT_TRUE(optEq(m->get("x"), std::optional<int>{15}));
-
-    // merge with null result → remove key
-    auto mg2 = m->merge("x", std::optional<int>{1},
-        [](const std::optional<int>& existing, const std::optional<int>& value) {
-            return std::optional<int>{}; // signals remove
-        });
-    EXPECT_FALSE(mg2.has_value());
-    EXPECT_FALSE(m->containsKey("x"));
-
-    // merge absent with null value → no-op (consistent with the provided Map::merge)
-    auto mg3 = m->merge("y", std::optional<int>{}, [](auto&, auto&) {
-        return std::optional<int>{999};
-        });
-    EXPECT_FALSE(mg3.has_value());
-    EXPECT_FALSE(m->containsKey("y"));
-}
-
-struct CaseInsensitiveLess {
-    bool operator()(const std::string& a, const std::string& b) const {
-        const auto n = min(a.size(), b.size());
-        for (std::size_t i = 0; i < n; ++i) {
-            unsigned char ca = static_cast<unsigned char>(std::tolower(a[i]));
-            unsigned char cb = static_cast<unsigned char>(std::tolower(b[i]));
-            if (ca < cb) return true;
-            if (ca > cb) return false;
-        }
-        return a.size() < b.size();
+    static jxx::Ptr<String> S(const char* value) {
+        return jxx::NEW<String>(value);
     }
-};
 
-TEST(TreeMap_Comparator, CaseInsensitiveOrdering) {
-    TreeMap<std::string, int, CaseInsensitiveLess> tm;
-    Map<std::string, int>* m = &tm;
+    static jxx::Ptr<String> S(const std::string& value) {
+        return jxx::NEW<String>(value);
+    }
 
-    m->put("Alpha", 1);
-    m->put("bravo", 2);
-    m->put("CHARLIE", 3);
+    static jxx::Ptr<Object> asObject(
+        const jxx::Ptr<String>& value) {
 
-    // Ordering should be case-insensitive
-    auto keys = m->keySet();
-    ASSERT_EQ(keys.size(), 3u);
-    EXPECT_EQ(keys[0], "Alpha");
-    EXPECT_EQ(keys[1], "bravo");
-    EXPECT_EQ(keys[2], "CHARLIE");
+        return jxx::CAST<Object>(value);
+    }
 
-    // Navigational ops should honor comparator too
-    EXPECT_EQ(tm.floorKey("bravo"), std::optional<std::string>{"bravo"});
-    EXPECT_EQ(tm.ceilingKey("beta"), std::optional<std::string>{"bravo"});
-}
+    static jxx::Ptr<Object> asObject(
+        const jxx::Ptr<StringTreeMap>& value) {
+
+        return jxx::CAST<Object>(value);
+    }
+
+    static std::string textOf(
+        const jxx::Ptr<String>& value) {
+
+        return value == nullptr
+            ? std::string()
+            : value->utf8();
+    }
+
+    static std::vector<std::string> collectEntryKeys(
+        const jxx::Ptr<StringTreeMap>& map) {
+
+        std::vector<std::string> result;
+
+        auto entrySet = map->entrySet();
+
+        if (entrySet == nullptr) {
+            return result;
+        }
+
+        auto iterator = entrySet->iterator();
+
+        while (iterator->hasNext()) {
+            auto entry = iterator->next();
+
+            if (entry != nullptr &&
+                entry->getKey() != nullptr) {
+
+                result.push_back(
+                    entry->getKey()->utf8());
+            }
+        }
+
+        return result;
+    }
+
+    /*
+     * Custom reverse comparator used to verify ComparatorSuper<K>.
+     *
+     * Update const qualifiers if ComparatorSuper::compare() differs
+     * in your local runtime.
+     */
+    class ReverseStringComparator final
+        : public virtual ComparatorSuper<String> {
+    public:
+        virtual ~ReverseStringComparator() = default;
+
+        virtual jint compareSuper(
+            jxx::Ptr<String> left,
+            jxx::Ptr<String> right) override {
+
+            if (left == nullptr ||
+                right == nullptr) {
+
+                throw jxx::lang::NullPointerException();
+            }
+
+            return right->compareTo(left);
+        }
+    };
+
+    /*
+     * Type hierarchy
+     */
+
+    TEST(TreeMapTest, ImplementsExpectedHierarchy) {
+        static_assert(
+            std::is_base_of_v<
+            AbstractMap<String, String>,
+            StringTreeMap>,
+            "TreeMap<K,V> must extend AbstractMap<K,V>");
+
+        static_assert(
+            std::is_base_of_v<
+            jxx::lang::Cloneable,
+            StringTreeMap>,
+            "TreeMap<K,V> must implement Cloneable");
+
+        static_assert(
+            std::is_base_of_v<
+            jxx::io::Serializable,
+            StringTreeMap>,
+            "TreeMap<K,V> must implement Serializable");
+
+        SUCCEED();
+    }
+
+    /*
+     * Constructors
+     */
+
+    TEST(TreeMapTest, DefaultConstructorCreatesEmptyMap) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        ASSERT_NE(map, nullptr);
+        EXPECT_EQ(map->size(), 0);
+        EXPECT_TRUE(map->isEmpty());
+        EXPECT_EQ(map->comparator(), nullptr);
+    }
+
+    TEST(TreeMapTest, ComparatorConstructorCreatesEmptyMap) {
+        auto comparator =
+            jxx::NEW<ReverseStringComparator>();
+
+        auto map =
+            jxx::NEW<StringTreeMap>(comparator);
+
+        ASSERT_NE(map, nullptr);
+        EXPECT_TRUE(map->isEmpty());
+        EXPECT_EQ(
+            map->comparator().get(),
+            comparator.get());
+    }
+
+    TEST(TreeMapTest, TreeMapCopyConstructorCopiesMappings) {
+        auto source = jxx::NEW<StringTreeMap>();
+
+        source->put(S("one"), S("1"));
+        source->put(S("two"), S("2"));
+
+        auto copy =
+            jxx::NEW<StringTreeMap>(source);
+
+        ASSERT_NE(copy, nullptr);
+        EXPECT_NE(copy.get(), source.get());
+        EXPECT_EQ(copy->size(), 2);
+
+        EXPECT_EQ(
+            textOf(copy->get(asObject(S("one")))),
+            "1");
+
+        EXPECT_EQ(
+            textOf(copy->get(asObject(S("two")))),
+            "2");
+    }
+
+    TEST(TreeMapTest, NullTreeMapCopyConstructorThrows) {
+        jxx::Ptr<StringTreeMap> source = nullptr;
+
+        EXPECT_THROW(
+            jxx::NEW<StringTreeMap>(source),
+            jxx::lang::NullPointerException);
+    }
+
+    /*
+     * Basic put and get operations
+     */
+
+    TEST(TreeMapTest, PutAddsMapping) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        auto previous =
+            map->put(S("key"), S("value"));
+
+        EXPECT_EQ(previous, nullptr);
+        EXPECT_EQ(map->size(), 1);
+        EXPECT_FALSE(map->isEmpty());
+
+        EXPECT_EQ(
+            textOf(map->get(asObject(S("key")))),
+            "value");
+    }
+
+    TEST(TreeMapTest, PutReplacesExistingValue) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("key"), S("old"));
+
+        auto previous =
+            map->put(S("key"), S("new"));
+
+        ASSERT_NE(previous, nullptr);
+        EXPECT_EQ(previous->utf8(), "old");
+        EXPECT_EQ(map->size(), 1);
+
+        EXPECT_EQ(
+            textOf(map->get(asObject(S("key")))),
+            "new");
+    }
+
+    TEST(TreeMapTest, PutUsesComparisonInsteadOfPointerIdentity) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        auto firstKey = S("same-key");
+        auto secondKey = S("same-key");
+
+        ASSERT_NE(firstKey.get(), secondKey.get());
+        ASSERT_EQ(firstKey->compareTo(secondKey), 0);
+
+        EXPECT_EQ(
+            map->put(firstKey, S("first")),
+            nullptr);
+
+        auto previous =
+            map->put(secondKey, S("second"));
+
+        ASSERT_NE(previous, nullptr);
+        EXPECT_EQ(previous->utf8(), "first");
+        EXPECT_EQ(map->size(), 1);
+
+        EXPECT_EQ(
+            textOf(map->get(asObject(firstKey))),
+            "second");
+    }
+
+    TEST(TreeMapTest, PutRejectsNullKey) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        EXPECT_THROW(
+            map->put(nullptr, S("value")),
+            jxx::lang::NullPointerException);
+    }
+
+    TEST(TreeMapTest, PutAllowsNullValueInCurrentImplementation) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        EXPECT_EQ(
+            map->put(S("key"), nullptr),
+            nullptr);
+
+        EXPECT_TRUE(
+            map->containsKey(asObject(S("key"))));
+
+        EXPECT_EQ(
+            map->get(asObject(S("key"))),
+            nullptr);
+    }
+
+    TEST(TreeMapTest, GetMissingKeyReturnsNull) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        EXPECT_EQ(
+            map->get(asObject(S("missing"))),
+            nullptr);
+    }
+
+    TEST(TreeMapTest, GetNullKeyReturnsNullInCurrentImplementation) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        EXPECT_EQ(map->get(nullptr), nullptr);
+    }
+
+    /*
+     * containsKey and containsValue
+     */
+
+    TEST(TreeMapTest, ContainsKeyFindsStoredKey) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("alpha"), S("value"));
+
+        EXPECT_TRUE(
+            map->containsKey(
+                asObject(S("alpha"))));
+
+        EXPECT_FALSE(
+            map->containsKey(
+                asObject(S("missing"))));
+    }
+
+    TEST(TreeMapTest, ContainsKeyUsesNaturalComparison) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        auto insertedKey = S("logical-key");
+        auto lookupKey = S("logical-key");
+
+        map->put(insertedKey, S("value"));
+
+        EXPECT_TRUE(
+            map->containsKey(
+                asObject(lookupKey)));
+    }
+
+    TEST(TreeMapTest, ContainsValueFindsStoredValue) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("key"), S("value"));
+
+        EXPECT_TRUE(
+            map->containsValue(
+                asObject(S("value"))));
+
+        EXPECT_FALSE(
+            map->containsValue(
+                asObject(S("missing"))));
+    }
+
+    TEST(TreeMapTest, ContainsValueUsesEquals) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        auto insertedValue = S("equal-value");
+        auto lookupValue = S("equal-value");
+
+        ASSERT_NE(
+            insertedValue.get(),
+            lookupValue.get());
+
+        map->put(S("key"), insertedValue);
+
+        EXPECT_TRUE(
+            map->containsValue(
+                asObject(lookupValue)));
+    }
+
+    TEST(TreeMapTest, ContainsValueSupportsNullValue) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("key"), nullptr);
+
+        EXPECT_TRUE(map->containsValue(nullptr));
+    }
+
+    /*
+     * remove and clear
+     */
+
+    TEST(TreeMapTest, RemoveExistingKeyReturnsOldValue) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("key"), S("value"));
+
+        auto removed =
+            map->remove(asObject(S("key")));
+
+        ASSERT_NE(removed, nullptr);
+        EXPECT_EQ(removed->utf8(), "value");
+        EXPECT_TRUE(map->isEmpty());
+    }
+
+    TEST(TreeMapTest, RemoveMissingKeyReturnsNull) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        EXPECT_EQ(
+            map->remove(asObject(S("missing"))),
+            nullptr);
+    }
+
+    TEST(TreeMapTest, RemoveNullKeyReturnsNullInCurrentImplementation) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        EXPECT_EQ(map->remove(nullptr), nullptr);
+    }
+
+    TEST(TreeMapTest, ClearRemovesAllMappings) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("one"), S("1"));
+        map->put(S("two"), S("2"));
+        map->put(S("three"), S("3"));
+
+        ASSERT_EQ(map->size(), 3);
+
+        map->clear();
+
+        EXPECT_EQ(map->size(), 0);
+        EXPECT_TRUE(map->isEmpty());
+    }
+
+    TEST(TreeMapTest, ClearEmptyMapIsSafe) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        EXPECT_NO_THROW(map->clear());
+        EXPECT_TRUE(map->isEmpty());
+    }
+
+    /*
+     * Natural ordering
+     */
+
+    TEST(TreeMapTest, EntryIterationUsesNaturalKeyOrder) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("delta"), S("4"));
+        map->put(S("alpha"), S("1"));
+        map->put(S("charlie"), S("3"));
+        map->put(S("bravo"), S("2"));
+
+        const auto keys =
+            collectEntryKeys(map);
+
+        ASSERT_EQ(keys.size(), 4U);
+
+        EXPECT_EQ(keys[0], "alpha");
+        EXPECT_EQ(keys[1], "bravo");
+        EXPECT_EQ(keys[2], "charlie");
+        EXPECT_EQ(keys[3], "delta");
+    }
+
+    TEST(TreeMapTest, FirstAndLastKeyUseNaturalOrdering) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("delta"), S("4"));
+        map->put(S("alpha"), S("1"));
+        map->put(S("charlie"), S("3"));
+
+        ASSERT_NE(map->firstKey(), nullptr);
+        ASSERT_NE(map->lastKey(), nullptr);
+
+        EXPECT_EQ(
+            map->firstKey()->utf8(),
+            "alpha");
+
+        EXPECT_EQ(
+            map->lastKey()->utf8(),
+            "delta");
+    }
+
+    TEST(TreeMapTest, FirstKeyOnEmptyMapThrows) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        EXPECT_THROW(
+            map->firstKey(),
+            jxx::util::NoSuchElementException);
+    }
+
+    TEST(TreeMapTest, LastKeyOnEmptyMapThrows) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        EXPECT_THROW(
+            map->lastKey(),
+            jxx::util::NoSuchElementException);
+    }
+
+    /*
+     * Custom comparator
+     */
+
+    TEST(TreeMapTest, CustomComparatorChangesOrdering) {
+        auto comparator =
+            jxx::NEW<ReverseStringComparator>();
+
+        auto map =
+            jxx::NEW<StringTreeMap>(comparator);
+
+        map->put(S("alpha"), S("1"));
+        map->put(S("charlie"), S("3"));
+        map->put(S("bravo"), S("2"));
+
+        EXPECT_EQ(
+            map->firstKey()->utf8(),
+            "charlie");
+
+        EXPECT_EQ(
+            map->lastKey()->utf8(),
+            "alpha");
+
+        const auto keys =
+            collectEntryKeys(map);
+
+        ASSERT_EQ(keys.size(), 3U);
+
+        EXPECT_EQ(keys[0], "charlie");
+        EXPECT_EQ(keys[1], "bravo");
+        EXPECT_EQ(keys[2], "alpha");
+    }
+
+    TEST(TreeMapTest, ComparatorMethodReturnsConfiguredComparator) {
+        auto comparator =
+            jxx::NEW<ReverseStringComparator>();
+
+        auto map =
+            jxx::NEW<StringTreeMap>(comparator);
+
+        ASSERT_NE(map->comparator(), nullptr);
+
+        EXPECT_EQ(
+            map->comparator().get(),
+            comparator.get());
+    }
+
+    /*
+     * firstEntry and lastEntry
+     */
+
+    TEST(TreeMapTest, FirstEntryReturnsLowestMapping) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("bravo"), S("2"));
+        map->put(S("alpha"), S("1"));
+        map->put(S("charlie"), S("3"));
+
+        auto entry = map->firstEntry();
+
+        ASSERT_NE(entry, nullptr);
+        ASSERT_NE(entry->getKey(), nullptr);
+        ASSERT_NE(entry->getValue(), nullptr);
+
+        EXPECT_EQ(entry->getKey()->utf8(), "alpha");
+        EXPECT_EQ(entry->getValue()->utf8(), "1");
+    }
+
+    TEST(TreeMapTest, LastEntryReturnsHighestMapping) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("bravo"), S("2"));
+        map->put(S("alpha"), S("1"));
+        map->put(S("charlie"), S("3"));
+
+        auto entry = map->lastEntry();
+
+        ASSERT_NE(entry, nullptr);
+        ASSERT_NE(entry->getKey(), nullptr);
+        ASSERT_NE(entry->getValue(), nullptr);
+
+        EXPECT_EQ(entry->getKey()->utf8(), "charlie");
+        EXPECT_EQ(entry->getValue()->utf8(), "3");
+    }
+
+    TEST(TreeMapTest, FirstAndLastEntryReturnNullWhenEmpty) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        EXPECT_EQ(map->firstEntry(), nullptr);
+        EXPECT_EQ(map->lastEntry(), nullptr);
+    }
+
+    TEST(TreeMapTest, EntrySetValueUpdatesMap) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("key"), S("old"));
+
+        auto entry = map->firstEntry();
+
+        ASSERT_NE(entry, nullptr);
+
+        auto previous =
+            entry->setValue(S("new"));
+
+        ASSERT_NE(previous, nullptr);
+        EXPECT_EQ(previous->utf8(), "old");
+
+        EXPECT_EQ(
+            textOf(map->get(asObject(S("key")))),
+            "new");
+    }
+
+    /*
+     * Navigational key operations
+     */
+
+    TEST(TreeMapTest, LowerKeyReturnsStrictlyLowerKey) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("a"), S("1"));
+        map->put(S("c"), S("3"));
+        map->put(S("e"), S("5"));
+
+        EXPECT_EQ(map->lowerKey(S("a")), nullptr);
+
+        ASSERT_NE(map->lowerKey(S("c")), nullptr);
+        EXPECT_EQ(map->lowerKey(S("c"))->utf8(), "a");
+
+        ASSERT_NE(map->lowerKey(S("d")), nullptr);
+        EXPECT_EQ(map->lowerKey(S("d"))->utf8(), "c");
+
+        ASSERT_NE(map->lowerKey(S("z")), nullptr);
+        EXPECT_EQ(map->lowerKey(S("z"))->utf8(), "e");
+    }
+
+    TEST(TreeMapTest, FloorKeyReturnsEqualOrLowerKey) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("a"), S("1"));
+        map->put(S("c"), S("3"));
+        map->put(S("e"), S("5"));
+
+        EXPECT_EQ(map->floorKey(S("0")), nullptr);
+
+        ASSERT_NE(map->floorKey(S("c")), nullptr);
+        EXPECT_EQ(map->floorKey(S("c"))->utf8(), "c");
+
+        ASSERT_NE(map->floorKey(S("d")), nullptr);
+        EXPECT_EQ(map->floorKey(S("d"))->utf8(), "c");
+    }
+
+    TEST(TreeMapTest, CeilingKeyReturnsEqualOrHigherKey) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("a"), S("1"));
+        map->put(S("c"), S("3"));
+        map->put(S("e"), S("5"));
+
+        ASSERT_NE(map->ceilingKey(S("c")), nullptr);
+        EXPECT_EQ(map->ceilingKey(S("c"))->utf8(), "c");
+
+        ASSERT_NE(map->ceilingKey(S("d")), nullptr);
+        EXPECT_EQ(map->ceilingKey(S("d"))->utf8(), "e");
+
+        EXPECT_EQ(map->ceilingKey(S("z")), nullptr);
+    }
+
+    TEST(TreeMapTest, HigherKeyReturnsStrictlyHigherKey) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("a"), S("1"));
+        map->put(S("c"), S("3"));
+        map->put(S("e"), S("5"));
+
+        ASSERT_NE(map->higherKey(S("a")), nullptr);
+        EXPECT_EQ(map->higherKey(S("a"))->utf8(), "c");
+
+        ASSERT_NE(map->higherKey(S("d")), nullptr);
+        EXPECT_EQ(map->higherKey(S("d"))->utf8(), "e");
+
+        EXPECT_EQ(map->higherKey(S("e")), nullptr);
+    }
+
+    TEST(TreeMapTest, NavigationOperationsRejectNullKey) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("a"), S("1"));
+
+        EXPECT_THROW(
+            map->lowerKey(nullptr),
+            jxx::lang::NullPointerException);
+
+        EXPECT_THROW(
+            map->floorKey(nullptr),
+            jxx::lang::NullPointerException);
+
+        EXPECT_THROW(
+            map->ceilingKey(nullptr),
+            jxx::lang::NullPointerException);
+
+        EXPECT_THROW(
+            map->higherKey(nullptr),
+            jxx::lang::NullPointerException);
+    }
+
+    /*
+     * Navigational entry operations
+     */
+
+    TEST(TreeMapTest, LowerEntryReturnsExpectedMapping) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("a"), S("1"));
+        map->put(S("c"), S("3"));
+        map->put(S("e"), S("5"));
+
+        auto entry = map->lowerEntry(S("d"));
+
+        ASSERT_NE(entry, nullptr);
+        EXPECT_EQ(entry->getKey()->utf8(), "c");
+        EXPECT_EQ(entry->getValue()->utf8(), "3");
+    }
+
+    TEST(TreeMapTest, FloorEntryReturnsExpectedMapping) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("a"), S("1"));
+        map->put(S("c"), S("3"));
+        map->put(S("e"), S("5"));
+
+        auto entry = map->floorEntry(S("c"));
+
+        ASSERT_NE(entry, nullptr);
+        EXPECT_EQ(entry->getKey()->utf8(), "c");
+        EXPECT_EQ(entry->getValue()->utf8(), "3");
+    }
+
+    TEST(TreeMapTest, CeilingEntryReturnsExpectedMapping) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("a"), S("1"));
+        map->put(S("c"), S("3"));
+        map->put(S("e"), S("5"));
+
+        auto entry = map->ceilingEntry(S("d"));
+
+        ASSERT_NE(entry, nullptr);
+        EXPECT_EQ(entry->getKey()->utf8(), "e");
+        EXPECT_EQ(entry->getValue()->utf8(), "5");
+    }
+
+    TEST(TreeMapTest, HigherEntryReturnsExpectedMapping) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("a"), S("1"));
+        map->put(S("c"), S("3"));
+        map->put(S("e"), S("5"));
+
+        auto entry = map->higherEntry(S("c"));
+
+        ASSERT_NE(entry, nullptr);
+        EXPECT_EQ(entry->getKey()->utf8(), "e");
+        EXPECT_EQ(entry->getValue()->utf8(), "5");
+    }
+
+    /*
+     * Poll operations
+     */
+
+    TEST(TreeMapTest, PollFirstEntryRemovesLowestMapping) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("b"), S("2"));
+        map->put(S("a"), S("1"));
+        map->put(S("c"), S("3"));
+
+        auto entry = map->pollFirstEntry();
+
+        ASSERT_NE(entry, nullptr);
+        ASSERT_NE(entry->getKey(), nullptr);
+
+        EXPECT_EQ(entry->getKey()->utf8(), "a");
+
+        /*
+         * Java TreeMap returns an immutable snapshot entry whose value
+         * remains available after the mapping is removed.
+         *
+         * This assertion will fail with the current live EntryView design,
+         * because getValue() looks the key up after it has been erased.
+         */
+        ASSERT_NE(entry->getValue(), nullptr);
+        EXPECT_EQ(entry->getValue()->utf8(), "1");
+
+        EXPECT_EQ(map->size(), 2);
+        EXPECT_FALSE(
+            map->containsKey(asObject(S("a"))));
+    }
+
+    TEST(TreeMapTest, PollLastEntryRemovesHighestMapping) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("b"), S("2"));
+        map->put(S("a"), S("1"));
+        map->put(S("c"), S("3"));
+
+        auto entry = map->pollLastEntry();
+
+        ASSERT_NE(entry, nullptr);
+        ASSERT_NE(entry->getKey(), nullptr);
+
+        EXPECT_EQ(entry->getKey()->utf8(), "c");
+
+        /*
+         * This requires a detached snapshot entry for Java parity.
+         */
+        ASSERT_NE(entry->getValue(), nullptr);
+        EXPECT_EQ(entry->getValue()->utf8(), "3");
+
+        EXPECT_EQ(map->size(), 2);
+        EXPECT_FALSE(
+            map->containsKey(asObject(S("c"))));
+    }
+
+    TEST(TreeMapTest, PollEntriesReturnNullWhenEmpty) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        EXPECT_EQ(map->pollFirstEntry(), nullptr);
+        EXPECT_EQ(map->pollLastEntry(), nullptr);
+    }
+
+    /*
+     * Entry-set iteration
+     */
+
+    TEST(TreeMapTest, EntrySetIteratorTraversesMappingsInOrder) {
+        auto map = jxx::NEW<StringTreeMap>();
+
+        map->put(S("c"), S("3"));
+        map->put(S("a"), S("1"));
+        map->put(S("b"), S("2"));
+
+        auto iterator =
+            map->entrySet()->iterator();
+
+        ASSERT_TRUE(iterator->hasNext());
+
+        auto first = iterator->next();
+
+        ASSERT_NE(first, nullptr);
+        ASSERT_NE(first->getKey(), nullptr);
+        EXPECT_EQ(first->getKey()->utf8(), "a");
+
+        ASSERT_TRUE(iterator->hasNext());
+
+        auto second = iterator->next();
+
+        ASSERT_NE(second, nullptr);
+        EXPECT_EQ(second->getKey()->utf8(), "b");
+
+        ASSERT_TRUE(iterator->hasNext());
+
+        auto third = iterator->next();
+
+        ASSERT_NE(third, nullptr);
+        EXPECT_EQ(third->getKey()->utf8(), "c");
+
+        EXPECT_FALSE(iterator->hasNext());
+    }
+
+    TEST(TreeMapTest, EntryIteratorThrowsWhenExhausted

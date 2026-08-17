@@ -143,7 +143,7 @@ public:
         return cloned;
     }
 
-    virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> toArray() override {
+    virtual jxx::lang::ObjectArray toArray() override {
         auto a = jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>(jxx::NEW<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>(size_));
         for (jxx::lang::jint i = 0; i < size_; ++i) {
             (*a)(i) = (*elementData)(i);
@@ -238,7 +238,7 @@ public:
         return jxx::Ptr<List<E>>(jxx::NEW<SubList<E>>(jxx::Ptr<List<E>>(this), fromIndex, toIndex));
     }
 
-    virtual jxx::lang::jbool removeIf(jxx::Ptr<function::PredicateSuper<E>> filter) override {
+    virtual jxx::lang::jbool removeIf(jxx::Ptr<function::PredicateSuper<E>> filter) {
         if (filter == nullptr) {
             throw jxx::lang::NullPointerException();
         }

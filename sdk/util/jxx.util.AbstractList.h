@@ -33,7 +33,7 @@ public:
         return AbstractCollection<E>::isEmpty();
     }
 
-    virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> toArray() override {
+    virtual jxx::lang::ObjectArray toArray() override {
         return AbstractCollection<E>::toArray();
     }
 

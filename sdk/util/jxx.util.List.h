@@ -30,7 +30,7 @@ public:
     virtual jxx::Ptr<ListIterator<E>> listIterator() = 0;
     virtual jxx::Ptr<ListIterator<E>> listIterator(jxx::lang::jint index) = 0;
     virtual jxx::Ptr<Iterator<E>> iterator() = 0;
-    virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> toArray() = 0;
+    virtual jxx::lang::ObjectArray toArray() = 0;
     virtual jxx::lang::jbool add(jxx::Ptr<E> e) = 0;
     virtual jxx::lang::jbool remove(jxx::Ptr<jxx::lang::Object> o) = 0;
     virtual jxx::lang::jbool containsAll(jxx::Ptr<wildcard::CollectionAny> c) = 0;

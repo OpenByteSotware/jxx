@@ -40,7 +40,7 @@ private:
 
     InternalMap map_;
     jxx::Ptr<ComparatorSuper<K>> comparator_;
-    jint modCount_;
+    jxx::lang::jint modCount_;
     jxx::Ptr<Set<MapEntry<K, V>>> entrySetView_;
 
 public:

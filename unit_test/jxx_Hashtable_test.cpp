@@ -1,302 +1,1279 @@
-#include <gtest/gtest.h>
-#include <string>
-#include <vector>
-#include <optional>
-#include <thread>
 #include <atomic>
-#include <unordered_set>
-#include "jxx.h"
+#include <limits>
+#include <memory>
+#include <set>
+#include <string>
+#include <thread>
+#include <type_traits>
+#include <vector>
 
-using jxx::util::Dictionary;
-using jxx::util::Map;
-using jxx::util::Hashtable;
+#include <gtest/gtest.h>
 
-template <typename T>
-static inline bool optEq(const std::optional<T>& a, const std::optional<T>& b) {
-    return a.has_value() == b.has_value() && (!a.has_value() || *a == *b);
-}
+#include "io/jxx.io.Serializable.h"
 
-TEST(Hashtable_Basics, ConstructSizeAndClear) {
-    Hashtable<std::string, int> ht;
-    Map<std::string, int>* m = &ht;
-    Dictionary<std::string, int>* d = &ht;
+#include "lang/jxx.lang.Cloneable.h"
+#include "lang/jxx.lang.Exceptions.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
 
-    EXPECT_TRUE(m->isEmpty());
-    EXPECT_EQ(m->size(), 0u);
-    EXPECT_TRUE(d->keys().empty());
-    EXPECT_TRUE(d->elements().empty());
+#include "util/jxx.util.Collection.h"
+#include "util/jxx.util.Dictionary.h"
+#include "util/jxx.util.Enumeration.h"
+#include "util/jxx.util.Hashtable.h"
+#include "util/jxx.util.Iterator.h"
+#include "util/jxx.util.Map.h"
+#include "util/jxx.util.MapEntry.h"
+#include "util/jxx.util.NoSuchElementException.h"
+#include "util/jxx.util.Set.h"
 
-    m->put("a", 1);
-    m->put("b", 2);
-    EXPECT_FALSE(m->isEmpty());
-    EXPECT_EQ(m->size(), 2u);
+namespace {
 
-    m->clear();
-    EXPECT_TRUE(m->isEmpty());
-    EXPECT_EQ(m->size(), 0u);
-    EXPECT_TRUE(d->keys().empty());
-}
+    using jxx::lang::Object;
+    using jxx::lang::String;
+    using jxx::lang::jbool;
+    using jxx::lang::jfloat;
+    using jxx::lang::jint;
 
-TEST(Hashtable_Crud, PutGetRemove_NoNullsAllowed) {
-    Hashtable<std::string, int> ht;
-    Map<std::string, int>* m = &ht;
+    using jxx::util::Collection;
+    using jxx::util::Dictionary;
+    using jxx::util::Enumeration;
+    using jxx::util::Hashtable;
+    using jxx::util::Iterator;
+    using jxx::util::Map;
+    using jxx::util::MapEntry;
+    using jxx::util::Set;
 
-    // put returns previous or null
-    auto prevA = m->put("alpha", std::optional<int>{1});
-    EXPECT_FALSE(prevA.has_value());
-    EXPECT_TRUE(optEq(m->get("alpha"), std::optional<int>{1}));
+    using StringHashtable =
+        Hashtable<String, String>;
 
-    // overwrite returns previous
-    auto prevA2 = m->put("alpha", std::optional<int>{3});
-    ASSERT_TRUE(prevA2.has_value());
-    EXPECT_EQ(*prevA2, 1);
-    EXPECT_TRUE(optEq(m->get("alpha"), std::optional<int>{3}));
-
-    // remove returns previous (or null)
-    auto removed = m->remove("alpha");
-    ASSERT_TRUE(removed.has_value());
-    EXPECT_EQ(*removed, 3);
-    EXPECT_FALSE(m->containsKey("alpha"));
-
-    auto removedAbsent = m->remove("alpha");
-    EXPECT_FALSE(removedAbsent.has_value());
-
-    // Null values are forbidden (Hashtable semantics)
-    EXPECT_THROW(m->put("n", std::optional<int>{}), std::invalid_argument);
-}
-
-TEST(Hashtable_Contains, ContainsKeyContainsValueAndLegacyContains) {
-    Hashtable<std::string, int> ht;
-    Map<std::string, int>* m = &ht;
-
-    m->put("a", std::optional<int>{1});
-    m->put("b", std::optional<int>{2});
-    EXPECT_TRUE(m->containsKey("a"));
-    EXPECT_FALSE(m->containsKey("z"));
-
-    EXPECT_TRUE(m->containsValue(std::optional<int>{1}));
-    EXPECT_FALSE(m->containsValue(std::optional<int>{3}));
-    EXPECT_FALSE(m->containsValue(std::optional<int>{})); // null not stored in Hashtable
-
-    // Legacy alias via Hashtable::contains
-    EXPECT_TRUE(ht.contains(std::optional<int>{2}));
-    EXPECT_FALSE(ht.contains(std::optional<int>{}));
-}
-
-TEST(Hashtable_Views, KeySetValuesEntrySetAndDictionaryViewsAreSnapshots) {
-    Hashtable<std::string, int> ht;
-    Map<std::string, int>* m = &ht;
-    Dictionary<std::string, int>* d = &ht;
-
-    m->put("x", 10);
-    m->put("y", 20);
-
-    auto keysSnapshot = m->keySet();
-    auto valuesSnapshot = m->values();
-    auto entriesSnapshot = m->entrySet();
-
-    // Sizes
-    ASSERT_EQ(keysSnapshot.size(), 2u);
-    ASSERT_EQ(valuesSnapshot.size(), 2u);
-    ASSERT_EQ(entriesSnapshot.size(), 2u);
-
-    // Dictionary snapshots
-    auto dkeys = d->keys();
-    auto delems = d->elements();
-    ASSERT_EQ(dkeys.size(), 2u);
-    ASSERT_EQ(delems.size(), 2u);
-
-    // Modify the map after snapshot; snapshots remain unchanged
-    m->put("z", 30);
-    EXPECT_EQ(keysSnapshot.size(), 2u);
-    EXPECT_EQ(valuesSnapshot.size(), 2u);
-    EXPECT_EQ(entriesSnapshot.size(), 2u);
-    EXPECT_EQ(dkeys.size(), 2u);
-    EXPECT_EQ(delems.size(), 2u);
-
-    // Entry snapshots don't mutate the map
-    auto e0 = entriesSnapshot[0];
-    auto prev = e0.setValue(std::optional<int>{999}); // changes the snapshot only
-    // Map values unchanged
-    auto now = m->get(e0.getKey());
-    EXPECT_FALSE(optEq(now, e0.getValue())); // snapshot differs from map
-}
-
-TEST(Hashtable_Defaults, GetOrDefaultPutIfAbsentReplaceRemoveKV) {
-    Hashtable<std::string, int> ht;
-    Map<std::string, int>* m = &ht;
-
-    // getOrDefault when absent
-    auto dflt = m->getOrDefault("none", std::optional<int>{7});
-    EXPECT_TRUE(optEq(dflt, std::optional<int>{7}));
-
-    // putIfAbsent
-    auto r1 = m->putIfAbsent("q", std::optional<int>{1});
-    EXPECT_FALSE(r1.has_value());
-    EXPECT_TRUE(optEq(m->get("q"), std::optional<int>{1}));
-
-    // Not absent → return current without changing
-    auto r2 = m->putIfAbsent("q", std::optional<int>{2});
-    EXPECT_TRUE(optEq(r2, std::optional<int>{1}));
-    EXPECT_TRUE(optEq(m->get("q"), std::optional<int>{1}));
-
-    // replace(k, v)
-    auto r3 = m->replace("q", std::optional<int>{3});
-    EXPECT_TRUE(optEq(r3, std::optional<int>{1}));
-    EXPECT_TRUE(optEq(m->get("q"), std::optional<int>{3}));
-
-    // replace(k, oldV, newV)
-    bool ok1 = m->replace("q", std::optional<int>{1}, std::optional<int>{9});
-    EXPECT_FALSE(ok1);
-    bool ok2 = m->replace("q", std::optional<int>{3}, std::optional<int>{9});
-    EXPECT_TRUE(ok2);
-    EXPECT_TRUE(optEq(m->get("q"), std::optional<int>{9}));
-
-    // remove(k, v)
-    bool remNo = m->remove("q", std::optional<int>{3}); // mismatch
-    EXPECT_FALSE(remNo);
-    bool remYes = m->remove("q", std::optional<int>{9});
-    EXPECT_TRUE(remYes);
-    EXPECT_FALSE(m->containsKey("q"));
-
-    // Null values are forbidden in replace/putIfAbsent
-    EXPECT_THROW(m->replace("absent", std::optional<int>{}), std::invalid_argument);
-    EXPECT_THROW(m->putIfAbsent("new", std::optional<int>{}), std::invalid_argument);
-}
-
-TEST(Hashtable_ComputeFamily, ComputeIfAbsentPresentComputeMerge) {
-    Hashtable<std::string, int> ht;
-    Map<std::string, int>* m = &ht;
-
-    // computeIfAbsent: absent → compute; if null → no insert
-    auto a1 = m->computeIfAbsent("a",
-        [](const std::string&) { return std::optional<int>{10}; }
-    );
-    EXPECT_TRUE(optEq(a1, std::optional<int>{10}));
-    EXPECT_TRUE(optEq(m->get("a"), std::optional<int>{10}));
-
-    auto a2 = m->computeIfAbsent("b",
-        [](const std::string&) { return std::optional<int>{}; } // null → no insert
-    );
-    EXPECT_FALSE(a2.has_value());
-    EXPECT_FALSE(m->containsKey("b"));
-
-    // computeIfPresent: only if present; null result → remove
-    auto c1 = m->computeIfPresent("a",
-        [](const std::string&, const std::optional<int>& cur) -> std::optional<int> {
-            if (cur) return std::optional<int>{*cur + 1};
-            return std::optional<int>{}; // would remove if invoked
-        }
-    );
-    EXPECT_TRUE(optEq(c1, std::optional<int>{11}));
-    EXPECT_TRUE(optEq(m->get("a"), std::optional<int>{11}));
-
-    auto c2 = m->computeIfPresent("missing",
-        [](const std::string&, const std::optional<int>&) {
-            return std::optional<int>{42};
-        }
-    );
-    EXPECT_FALSE(c2.has_value()); // not present
-
-    // compute: always called; null result removes mapping if present
-    auto d1 = m->compute("a",
-        [](const std::string&, const std::optional<int>&) { return std::optional<int>{}; }
-    );
-    EXPECT_FALSE(d1.has_value());
-    EXPECT_FALSE(m->containsKey("a"));
-
-    auto d2 = m->compute("x",
-        [](const std::string&, const std::optional<int>& cur) {
-            // absent → cur == null; create 5
-            (void)cur;
-            return std::optional<int>{5};
-        }
-    );
-    EXPECT_TRUE(optEq(d2, std::optional<int>{5}));
-    EXPECT_TRUE(optEq(m->get("x"), std::optional<int>{5}));
-
-    // merge: if absent, put value; else apply remapper; null result → remove
-    auto mg1 = m->merge("x", std::optional<int>{10},
-        [](const std::optional<int>& existing, const std::optional<int>& value) {
-            return std::optional<int>{*existing + *value};
-        });
-    EXPECT_TRUE(optEq(mg1, std::optional<int>{15}));
-    EXPECT_TRUE(optEq(m->get("x"), std::optional<int>{15}));
-
-    auto mg2 = m->merge("x", std::optional<int>{1},
-        [](const std::optional<int>&, const std::optional<int>&) {
-            return std::optional<int>{}; // remove
-        });
-    EXPECT_FALSE(mg2.has_value());
-    EXPECT_FALSE(m->containsKey("x"));
-
-    // merge with null value is forbidden for Hashtable
-    EXPECT_THROW(m->merge("y", std::optional<int>{},
-        [](const std::optional<int>&, const std::optional<int>&) {
-            return std::optional<int>{1};
-        }), std::invalid_argument);
-}
-
-TEST(Hashtable_Copying, PutAllCopiesFromMapEntrySet) {
-    Hashtable<std::string, int> htA;
-    Hashtable<std::string, int> htB;
-
-    Map<std::string, int>* mA = &htA;
-    Map<std::string, int>* mB = &htB;
-
-    mA->put("a", 1);
-    mA->put("b", 2);
-
-    // Use Hashtable's synchronized putAll
-    htB.putAll(htA);
-
-    EXPECT_TRUE(optEq(mB->get("a"), std::optional<int>{1}));
-    EXPECT_TRUE(optEq(mB->get("b"), std::optional<int>{2}));
-    EXPECT_EQ(mB->size(), 2u);
-}
-
-TEST(Hashtable_Capacity, LoadFactorAndReserve) {
-    Hashtable<std::string, int> ht;
-
-    // basic sanity — operations shouldn't throw
-    ht.setLoadFactor(0.5f);
-    EXPECT_GT(ht.loadFactor(), 0.0f);
-
-    ht.ensureCapacity(1000); // reserve
-    // No direct way to assert capacity; just ensure no throw and still usable
-    auto prev = ht.put("k", 1);
-    EXPECT_FALSE(prev.has_value());
-    EXPECT_TRUE(optEq(ht.get("k"), std::optional<int>{1}));
-
-    // Invalid load factor
-    EXPECT_THROW(ht.setLoadFactor(0.0f), std::invalid_argument);
-    EXPECT_THROW(ht.setLoadFactor(-1.0f), std::invalid_argument);
-}
-
-TEST(Hashtable_Threading, ConcurrentPutsAndGetsAreSynchronized) {
-    Hashtable<std::string, int> ht;
-    Map<std::string, int>* m = &ht;
-
-    const int threads = 8;
-    const int perThread = 1000;
-
-    std::vector<std::thread> workers;
-    workers.reserve(threads);
-
-    // Each thread writes a disjoint range of keys and performs reads.
-    for (int t = 0; t < threads; ++t) {
-        workers.emplace_back([&, t] {
-            for (int i = 0; i < perThread; ++i) {
-                std::string key = "k" + std::to_string(t) + "_" + std::to_string(i);
-                m->put(key, std::optional<int>{i});
-                auto v = m->get(key);
-                ASSERT_TRUE(v.has_value());
-                ASSERT_EQ(*v, i);
-            }
-            });
+    static jxx::Ptr<String> S(const char* value) {
+        return jxx::NEW<String>(value);
     }
-    for (auto& th : workers) th.join();
 
-    // Verify size (best-effort; in Hashtable there are no deletes in this test).
-    EXPECT_EQ(m->size(), static_cast<std::size_t>(threads * perThread));
-}
+    static jxx::Ptr<String> S(const std::string& value) {
+        return jxx::NEW<String>(value);
+    }
+
+    static jxx::Ptr<Object> asObject(
+        const jxx::Ptr<String>& value) {
+
+        return jxx::CAST<Object>(value);
+    }
+
+    static jxx::Ptr<Object> asObject(
+        const jxx::Ptr<StringHashtable>& value) {
+
+        return jxx::CAST<Object>(value);
+    }
+
+    static std::string textOf(
+        const jxx::Ptr<String>& value) {
+
+        return value == nullptr
+            ? std::string()
+            : value->utf8();
+    }
+
+    static std::set<std::string> collectKeys(
+        const jxx::Ptr<StringHashtable>& table) {
+
+        std::set<std::string> result;
+
+        auto enumeration = table->keys();
+
+        while (enumeration->hasMoreElements()) {
+            auto key = enumeration->nextElement();
+
+            if (key != nullptr) {
+                result.insert(key->utf8());
+            }
+        }
+
+        return result;
+    }
+
+    static std::multiset<std::string> collectValues(
+        const jxx::Ptr<StringHashtable>& table) {
+
+        std::multiset<std::string> result;
+
+        auto enumeration = table->elements();
+
+        while (enumeration->hasMoreElements()) {
+            auto value = enumeration->nextElement();
+
+            if (value != nullptr) {
+                result.insert(value->utf8());
+            }
+        }
+
+        return result;
+    }
+
+    /*
+     * Type hierarchy
+     */
+
+    TEST(HashtableTest, MatchesJxxJavaHierarchy) {
+        static_assert(
+            std::is_base_of_v<
+            Dictionary<String, String>,
+            StringHashtable>,
+            "Hashtable<K,V> must extend Dictionary<K,V>");
+
+        static_assert(
+            std::is_base_of_v<
+            Map<String, String>,
+            StringHashtable>,
+            "Hashtable<K,V> must implement Map<K,V>");
+
+        static_assert(
+            std::is_base_of_v<
+            jxx::lang::Cloneable,
+            StringHashtable>,
+            "Hashtable<K,V> must implement Cloneable");
+
+        static_assert(
+            std::is_base_of_v<
+            jxx::io::Serializable,
+            StringHashtable>,
+            "Hashtable<K,V> must implement Serializable");
+
+        SUCCEED();
+    }
+
+    /*
+     * Constructors
+     */
+
+    TEST(HashtableTest, DefaultConstructorCreatesEmptyTable) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        ASSERT_NE(table, nullptr);
+        EXPECT_EQ(table->size(), 0);
+        EXPECT_TRUE(table->isEmpty());
+    }
+
+    TEST(HashtableTest, InitialCapacityConstructorCreatesEmptyTable) {
+        auto table =
+            jxx::NEW<StringHashtable>(
+                static_cast<jint>(32));
+
+        ASSERT_NE(table, nullptr);
+        EXPECT_EQ(table->size(), 0);
+        EXPECT_TRUE(table->isEmpty());
+    }
+
+    TEST(HashtableTest, ZeroInitialCapacityIsAccepted) {
+        auto table =
+            jxx::NEW<StringHashtable>(
+                static_cast<jint>(0));
+
+        ASSERT_NE(table, nullptr);
+        EXPECT_TRUE(table->isEmpty());
+
+        EXPECT_EQ(
+            table->put(S("key"), S("value")),
+            nullptr);
+
+        EXPECT_EQ(table->size(), 1);
+    }
+
+    TEST(HashtableTest, NegativeInitialCapacityThrows) {
+        EXPECT_THROW(
+            jxx::NEW<StringHashtable>(
+                static_cast<jint>(-1)),
+            jxx::lang::IllegalArgumentException);
+    }
+
+    TEST(HashtableTest, CapacityAndLoadFactorConstructorWorks) {
+        auto table =
+            jxx::NEW<StringHashtable>(
+                static_cast<jint>(17),
+                static_cast<float>(0.50f));
+
+        ASSERT_NE(table, nullptr);
+        EXPECT_TRUE(table->isEmpty());
+
+        EXPECT_EQ(
+            table->put(S("key"), S("value")),
+            nullptr);
+    }
+
+    TEST(HashtableTest, ZeroLoadFactorThrows) {
+        EXPECT_THROW(
+            jxx::NEW<StringHashtable>(
+                static_cast<jint>(11),
+                0.0f),
+            jxx::lang::IllegalArgumentException);
+    }
+
+    TEST(HashtableTest, NegativeLoadFactorThrows) {
+        EXPECT_THROW(
+            jxx::NEW<StringHashtable>(
+                static_cast<jint>(11),
+                -0.75f),
+            jxx::lang::IllegalArgumentException);
+    }
+
+    TEST(HashtableTest, NaNLoadFactorThrowsForJavaParity) {
+        const float nanValue =
+            std::numeric_limits<float>::quiet_NaN();
+
+        /*
+         * Java rejects NaN because !(loadFactor > 0) is true.
+         */
+        EXPECT_THROW(
+            jxx::NEW<StringHashtable>(
+                static_cast<jint>(11),
+                nanValue),
+            jxx::lang::IllegalArgumentException);
+    }
+
+    /*
+     * put/get
+     */
+
+    TEST(HashtableTest, PutAddsNewMapping) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        auto previous =
+            table->put(S("key"), S("value"));
+
+        EXPECT_EQ(previous, nullptr);
+        EXPECT_EQ(table->size(), 1);
+        EXPECT_FALSE(table->isEmpty());
+
+        EXPECT_EQ(
+            textOf(table->get(asObject(S("key")))),
+            "value");
+    }
+
+    TEST(HashtableTest, PutReplacesExistingMapping) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("key"), S("first"));
+
+        auto previous =
+            table->put(S("key"), S("second"));
+
+        ASSERT_NE(previous, nullptr);
+        EXPECT_EQ(previous->utf8(), "first");
+        EXPECT_EQ(table->size(), 1);
+
+        EXPECT_EQ(
+            textOf(table->get(asObject(S("key")))),
+            "second");
+    }
+
+    TEST(HashtableTest, PutUsesEqualsAndHashCodeForKeys) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        auto insertedKey = S("same-key");
+        auto lookupKey = S("same-key");
+
+        ASSERT_NE(insertedKey.get(), lookupKey.get());
+        ASSERT_TRUE(insertedKey->equals(lookupKey));
+
+        table->put(insertedKey, S("value"));
+
+        EXPECT_EQ(
+            textOf(table->get(asObject(lookupKey))),
+            "value");
+    }
+
+    TEST(HashtableTest, PutNullKeyThrows) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        EXPECT_THROW(
+            table->put(nullptr, S("value")),
+            jxx::lang::NullPointerException);
+    }
+
+    TEST(HashtableTest, PutNullValueThrows) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        EXPECT_THROW(
+            table->put(S("key"), nullptr),
+            jxx::lang::NullPointerException);
+    }
+
+    TEST(HashtableTest, GetMissingKeyReturnsNull) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        EXPECT_EQ(
+            table->get(asObject(S("missing"))),
+            nullptr);
+    }
+
+    TEST(HashtableTest, GetNullKeyReturnsNullInCurrentImplementation) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        EXPECT_EQ(table->get(nullptr), nullptr);
+    }
+
+    /*
+     * containsKey / containsValue / contains
+     */
+
+    TEST(HashtableTest, ContainsKeyFindsStoredKey) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("key"), S("value"));
+
+        EXPECT_TRUE(
+            table->containsKey(
+                asObject(S("key"))));
+
+        EXPECT_FALSE(
+            table->containsKey(
+                asObject(S("missing"))));
+    }
+
+    TEST(HashtableTest, ContainsKeyUsesLogicalEquality) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        auto first = S("equal-key");
+        auto second = S("equal-key");
+
+        table->put(first, S("value"));
+
+        EXPECT_TRUE(
+            table->containsKey(
+                asObject(second)));
+    }
+
+    TEST(HashtableTest, ContainsValueFindsStoredValue) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("key"), S("value"));
+
+        EXPECT_TRUE(
+            table->containsValue(
+                asObject(S("value"))));
+
+        EXPECT_FALSE(
+            table->containsValue(
+                asObject(S("missing"))));
+    }
+
+    TEST(HashtableTest, ContainsDelegatesToContainsValue) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("key"), S("value"));
+
+        EXPECT_TRUE(
+            table->contains(
+                asObject(S("value"))));
+
+        EXPECT_FALSE(
+            table->contains(
+                asObject(S("key"))));
+    }
+
+    TEST(HashtableTest, ContainsValueNullThrows) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        EXPECT_THROW(
+            table->containsValue(nullptr),
+            jxx::lang::NullPointerException);
+    }
+
+    /*
+     * remove
+     */
+
+    TEST(HashtableTest, RemoveExistingMappingReturnsOldValue) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("key"), S("value"));
+
+        auto removed =
+            table->remove(
+                asObject(S("key")));
+
+        ASSERT_NE(removed, nullptr);
+        EXPECT_EQ(removed->utf8(), "value");
+
+        EXPECT_EQ(table->size(), 0);
+        EXPECT_FALSE(
+            table->containsKey(
+                asObject(S("key"))));
+    }
+
+    TEST(HashtableTest, RemoveMissingKeyReturnsNull) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        EXPECT_EQ(
+            table->remove(
+                asObject(S("missing"))),
+            nullptr);
+    }
+
+    TEST(HashtableTest, RemoveNullKeyReturnsNull) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        EXPECT_EQ(table->remove(nullptr), nullptr);
+    }
+
+    TEST(HashtableTest, ConditionalRemoveRequiresMatchingValue) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("key"), S("value"));
+
+        EXPECT_FALSE(
+            table->remove(
+                asObject(S("key")),
+                asObject(S("wrong"))));
+
+        EXPECT_TRUE(
+            table->containsKey(
+                asObject(S("key"))));
+
+        EXPECT_TRUE(
+            table->remove(
+                asObject(S("key")),
+                asObject(S("value"))));
+
+        EXPECT_FALSE(
+            table->containsKey(
+                asObject(S("key"))));
+    }
+
+    TEST(HashtableTest, ConditionalRemoveNullArgumentsReturnFalse) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        EXPECT_FALSE(
+            table->remove(
+                nullptr,
+                asObject(S("value"))));
+
+        EXPECT_FALSE(
+            table->remove(
+                asObject(S("key")),
+                nullptr));
+    }
+
+    /*
+     * clear
+     */
+
+    TEST(HashtableTest, ClearRemovesAllMappings) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("one"), S("1"));
+        table->put(S("two"), S("2"));
+        table->put(S("three"), S("3"));
+
+        ASSERT_EQ(table->size(), 3);
+
+        table->clear();
+
+        EXPECT_EQ(table->size(), 0);
+        EXPECT_TRUE(table->isEmpty());
+
+        EXPECT_EQ(
+            table->get(asObject(S("one"))),
+            nullptr);
+    }
+
+    TEST(HashtableTest, ClearEmptyTableIsSafe) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        EXPECT_NO_THROW(table->clear());
+        EXPECT_TRUE(table->isEmpty());
+    }
+
+    /*
+     * Rehash behavior
+     */
+
+    TEST(HashtableTest, RehashPreservesMappings) {
+        /*
+         * A capacity of one with a 0.75 load factor forces frequent rehashing.
+         */
+        auto table =
+            jxx::NEW<StringHashtable>(
+                static_cast<jint>(1),
+                0.75f);
+
+        for (jint i = 0; i < 100; ++i) {
+            table->put(
+                S("key-" + std::to_string(i)),
+                S("value-" + std::to_string(i)));
+        }
+
+        EXPECT_EQ(table->size(), 100);
+
+        for (jint i = 0; i < 100; ++i) {
+            auto value = table->get(
+                asObject(
+                    S("key-" + std::to_string(i))));
+
+            ASSERT_NE(value, nullptr);
+            EXPECT_EQ(
+                value->utf8(),
+                "value-" + std::to_string(i));
+        }
+    }
+
+    /*
+     * getOrDefault / putIfAbsent
+     */
+
+    TEST(HashtableTest, GetOrDefaultReturnsStoredValue) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("key"), S("value"));
+
+        auto result = table->getOrDefault(
+            asObject(S("key")),
+            S("default"));
+
+        ASSERT_NE(result, nullptr);
+        EXPECT_EQ(result->utf8(), "value");
+    }
+
+    TEST(HashtableTest, GetOrDefaultReturnsDefaultForMissingKey) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        auto result = table->getOrDefault(
+            asObject(S("missing")),
+            S("default"));
+
+        ASSERT_NE(result, nullptr);
+        EXPECT_EQ(result->utf8(), "default");
+    }
+
+    TEST(HashtableTest, PutIfAbsentAddsMissingMapping) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        auto previous =
+            table->putIfAbsent(
+                S("key"),
+                S("value"));
+
+        EXPECT_EQ(previous, nullptr);
+
+        EXPECT_EQ(
+            textOf(table->get(asObject(S("key")))),
+            "value");
+    }
+
+    TEST(HashtableTest, PutIfAbsentDoesNotReplaceExistingValue) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("key"), S("first"));
+
+        auto previous =
+            table->putIfAbsent(
+                S("key"),
+                S("second"));
+
+        ASSERT_NE(previous, nullptr);
+        EXPECT_EQ(previous->utf8(), "first");
+
+        EXPECT_EQ(
+            textOf(table->get(asObject(S("key")))),
+            "first");
+    }
+
+    TEST(HashtableTest, PutIfAbsentRejectsNullKeyAndValue) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        EXPECT_THROW(
+            table->putIfAbsent(
+                nullptr,
+                S("value")),
+            jxx::lang::NullPointerException);
+
+        EXPECT_THROW(
+            table->putIfAbsent(
+                S("key"),
+                nullptr),
+            jxx::lang::NullPointerException);
+    }
+
+    /*
+     * replace
+     */
+
+    TEST(HashtableTest, ReplaceExistingValueReturnsOldValue) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("key"), S("old"));
+
+        auto previous =
+            table->replace(
+                S("key"),
+                S("new"));
+
+        ASSERT_NE(previous, nullptr);
+        EXPECT_EQ(previous->utf8(), "old");
+
+        EXPECT_EQ(
+            textOf(table->get(asObject(S("key")))),
+            "new");
+    }
+
+    TEST(HashtableTest, ReplaceMissingKeyReturnsNull) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        EXPECT_EQ(
+            table->replace(
+                S("missing"),
+                S("value")),
+            nullptr);
+    }
+
+    TEST(HashtableTest, ConditionalReplaceRequiresMatchingOldValue) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("key"), S("old"));
+
+        EXPECT_FALSE(
+            table->replace(
+                S("key"),
+                S("wrong"),
+                S("new")));
+
+        EXPECT_EQ(
+            textOf(table->get(asObject(S("key")))),
+            "old");
+
+        EXPECT_TRUE(
+            table->replace(
+                S("key"),
+                S("old"),
+                S("new")));
+
+        EXPECT_EQ(
+            textOf(table->get(asObject(S("key")))),
+            "new");
+    }
+
+    TEST(HashtableTest, ReplaceRejectsNullArguments) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        EXPECT_THROW(
+            table->replace(
+                nullptr,
+                S("value")),
+            jxx::lang::NullPointerException);
+
+        EXPECT_THROW(
+            table->replace(
+                S("key"),
+                nullptr),
+            jxx::lang::NullPointerException);
+
+        EXPECT_THROW(
+            table->replace(
+                nullptr,
+                S("old"),
+                S("new")),
+            jxx::lang::NullPointerException);
+
+        EXPECT_THROW(
+            table->replace(
+                S("key"),
+                nullptr,
+                S("new")),
+            jxx::lang::NullPointerException);
+
+        EXPECT_THROW(
+            table->replace(
+                S("key"),
+                S("old"),
+                nullptr),
+            jxx::lang::NullPointerException);
+    }
+
+    /*
+     * Enumerations
+     */
+
+    TEST(HashtableTest, KeysEnumerationReturnsAllKeys) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("one"), S("1"));
+        table->put(S("two"), S("2"));
+        table->put(S("three"), S("3"));
+
+        const auto keys = collectKeys(table);
+
+        EXPECT_EQ(keys.size(), 3U);
+        EXPECT_EQ(keys.count("one"), 1U);
+        EXPECT_EQ(keys.count("two"), 1U);
+        EXPECT_EQ(keys.count("three"), 1U);
+    }
+
+    TEST(HashtableTest, ElementsEnumerationReturnsAllValues) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("one"), S("shared"));
+        table->put(S("two"), S("shared"));
+        table->put(S("three"), S("different"));
+
+        const auto values = collectValues(table);
+
+        EXPECT_EQ(values.size(), 3U);
+        EXPECT_EQ(values.count("shared"), 2U);
+        EXPECT_EQ(values.count("different"), 1U);
+    }
+
+    TEST(HashtableTest, EmptyEnumerationsHaveNoElements) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        auto keys = table->keys();
+        auto values = table->elements();
+
+        ASSERT_NE(keys, nullptr);
+        ASSERT_NE(values, nullptr);
+
+        EXPECT_FALSE(keys->hasMoreElements());
+        EXPECT_FALSE(values->hasMoreElements());
+    }
+
+    TEST(HashtableTest, EnumerationThrowsWhenExhausted) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("key"), S("value"));
+
+        auto keys = table->keys();
+
+        ASSERT_TRUE(keys->hasMoreElements());
+        ASSERT_NE(keys->nextElement(), nullptr);
+        EXPECT_FALSE(keys->hasMoreElements());
+
+        EXPECT_THROW(
+            keys->nextElement(),
+            jxx::util::NoSuchElementException);
+    }
+
+    TEST(HashtableTest, EnumerationIsSnapshotBased) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("one"), S("1"));
+        table->put(S("two"), S("2"));
+
+        auto keys = table->keys();
+
+        /*
+         * The implementation snapshots before returning the Enumeration.
+         */
+        table->put(S("three"), S("3"));
+
+        jint count = 0;
+
+        while (keys->hasMoreElements()) {
+            keys->nextElement();
+            ++count;
+        }
+
+        EXPECT_EQ(count, 2);
+        EXPECT_EQ(table->size(), 3);
+    }
+
+    /*
+     * Key-set view
+     */
+
+    TEST(HashtableTest, KeySetReflectsTableSize) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("one"), S("1"));
+        table->put(S("two"), S("2"));
+
+        auto keys = table->keySet();
+
+        ASSERT_NE(keys, nullptr);
+        EXPECT_EQ(keys->size(), 2);
+
+        EXPECT_TRUE(
+            keys->contains(
+                asObject(S("one"))));
+
+        EXPECT_FALSE(
+            keys->contains(
+                asObject(S("missing"))));
+    }
+
+    TEST(HashtableTest, KeySetRemoveRemovesMapping) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("one"), S("1"));
+        table->put(S("two"), S("2"));
+
+        auto keys = table->keySet();
+
+        EXPECT_TRUE(
+            keys->remove(
+                asObject(S("one"))));
+
+        EXPECT_EQ(table->size(), 1);
+
+        EXPECT_FALSE(
+            table->containsKey(
+                asObject(S("one"))));
+    }
+
+    TEST(HashtableTest, KeySetClearClearsTable) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("one"), S("1"));
+        table->put(S("two"), S("2"));
+
+        auto keys = table->keySet();
+
+        keys->clear();
+
+        EXPECT_TRUE(table->isEmpty());
+        EXPECT_EQ(keys->size(), 0);
+    }
+
+    TEST(HashtableTest, KeySetAddIsUnsupported) {
+        auto table = jxx::NEW<StringHashtable>();
+        auto keys = table->keySet();
+
+        EXPECT_THROW(
+            keys->add(S("unsupported")),
+            jxx::lang::UnsupportedOperationException);
+    }
+
+    TEST(HashtableTest, KeySetIteratorIsSnapshotBased) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("one"), S("1"));
+        table->put(S("two"), S("2"));
+
+        auto iterator =
+            table->keySet()->iterator();
+
+        table->put(S("three"), S("3"));
+
+        jint count = 0;
+
+        while (iterator->hasNext()) {
+            iterator->next();
+            ++count;
+        }
+
+        EXPECT_EQ(count, 2);
+    }
+
+    TEST(HashtableTest, KeySetIteratorRemoveIsUnsupported) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("one"), S("1"));
+
+        auto iterator =
+            table->keySet()->iterator();
+
+        ASSERT_TRUE(iterator->hasNext());
+        iterator->next();
+
+        EXPECT_THROW(
+            iterator->remove(),
+            jxx::lang::UnsupportedOperationException);
+    }
+
+    /*
+     * Values view
+     */
+
+    TEST(HashtableTest, ValuesViewReflectsTableSize) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("one"), S("shared"));
+        table->put(S("two"), S("shared"));
+        table->put(S("three"), S("different"));
+
+        auto values = table->values();
+
+        ASSERT_NE(values, nullptr);
+        EXPECT_EQ(values->size(), 3);
+
+        EXPECT_TRUE(
+            values->contains(
+                asObject(S("shared"))));
+
+        EXPECT_FALSE(
+            values->contains(
+                asObject(S("missing"))));
+    }
+
+    TEST(HashtableTest, ValuesRemoveRemovesOneMatchingMapping) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("one"), S("shared"));
+        table->put(S("two"), S("shared"));
+        table->put(S("three"), S("different"));
+
+        auto values = table->values();
+
+        EXPECT_TRUE(
+            values->remove(
+                asObject(S("shared"))));
+
+        EXPECT_EQ(table->size(), 2);
+
+        /*
+         * Only one matching value should be removed.
+         */
+        EXPECT_TRUE(
+            table->containsValue(
+                asObject(S("shared"))));
+    }
+
+    TEST(HashtableTest, ValuesClearClearsTable) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("one"), S("1"));
+        table->put(S("two"), S("2"));
+
+        auto values = table->values();
+
+        values->clear();
+
+        EXPECT_TRUE(table->isEmpty());
+    }
+
+    TEST(HashtableTest, ValuesAddIsUnsupported) {
+        auto table = jxx::NEW<StringHashtable>();
+        auto values = table->values();
+
+        EXPECT_THROW(
+            values->add(S("unsupported")),
+            jxx::lang::UnsupportedOperationException);
+    }
+
+    /*
+     * Entry-set view
+     */
+
+    TEST(HashtableTest, EntrySetReflectsTableSize) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("one"), S("1"));
+        table->put(S("two"), S("2"));
+
+        auto entries = table->entrySet();
+
+        ASSERT_NE(entries, nullptr);
+        EXPECT_EQ(entries->size(), 2);
+    }
+
+    TEST(HashtableTest, EntryIteratorReturnsMapEntries) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("key"), S("value"));
+
+        auto iterator =
+            table->entrySet()->iterator();
+
+        ASSERT_TRUE(iterator->hasNext());
+
+        auto entry = iterator->next();
+
+        ASSERT_NE(entry, nullptr);
+        ASSERT_NE(entry->getKey(), nullptr);
+        ASSERT_NE(entry->getValue(), nullptr);
+
+        EXPECT_EQ(entry->getKey()->utf8(), "key");
+        EXPECT_EQ(entry->getValue()->utf8(), "value");
+    }
+
+    TEST(HashtableTest, EntrySetValueUpdatesTable) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("key"), S("old"));
+
+        auto iterator =
+            table->entrySet()->iterator();
+
+        auto entry = iterator->next();
+
+        auto previous =
+            entry->setValue(S("new"));
+
+        ASSERT_NE(previous, nullptr);
+        EXPECT_EQ(previous->utf8(), "old");
+
+        EXPECT_EQ(
+            textOf(table->get(asObject(S("key")))),
+            "new");
+    }
+
+    TEST(HashtableTest, EntrySetAddIsUnsupported) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("key"), S("value"));
+
+        auto iterator =
+            table->entrySet()->iterator();
+
+        auto entry = iterator->next();
+
+        EXPECT_THROW(
+            table->entrySet()->add(entry),
+            jxx::lang::UnsupportedOperationException);
+    }
+
+    /*
+     * clone
+     */
+
+    TEST(HashtableTest, CloneReturnsSeparateHashtable) {
+        auto original =
+            jxx::NEW<StringHashtable>();
+
+        original->put(S("one"), S("1"));
+        original->put(S("two"), S("2"));
+
+        auto clonedObject =
+            original->clone();
+
+        ASSERT_NE(clonedObject, nullptr);
+
+        auto cloned =
+            jxx::CAST<StringHashtable>(
+                clonedObject);
+
+        ASSERT_NE(cloned, nullptr);
+        EXPECT_NE(cloned.get(), original.get());
+        EXPECT_EQ(cloned->size(), original->size());
+
+        EXPECT_EQ(
+            textOf(cloned->get(asObject(S("one")))),
+            "1");
+
+        EXPECT_EQ(
+            textOf(cloned->get(asObject(S("two")))),
+            "2");
+    }
+
+    TEST(HashtableTest, CloneHasIndependentStorage) {
+        auto original =
+            jxx::NEW<StringHashtable>();
+
+        original->put(S("one"), S("1"));
+        original->put(S("two"), S("2"));
+
+        auto cloned =
+            jxx::CAST<StringHashtable>(
+                original->clone());
+
+        ASSERT_NE(cloned, nullptr);
+
+        cloned->put(S("three"), S("3"));
+        cloned->remove(asObject(S("one")));
+
+        EXPECT_EQ(original->size(), 2);
+        EXPECT_EQ(cloned->size(), 2);
+
+        EXPECT_TRUE(
+            original->containsKey(
+                asObject(S("one"))));
+
+        EXPECT_FALSE(
+            original->containsKey(
+                asObject(S("three"))));
+
+        EXPECT_FALSE(
+            cloned->containsKey(
+                asObject(S("one"))));
+
+        EXPECT_TRUE(
+            cloned->containsKey(
+                asObject(S("three"))));
+    }
+
+    TEST(HashtableTest, CloneSharesKeyAndValueReferences) {
+        auto original =
+            jxx::NEW<StringHashtable>();
+
+        auto key = S("key");
+        auto value = S("value");
+
+        original->put(key, value);
+
+        auto cloned =
+            jxx::CAST<StringHashtable>(
+                original->clone());
+
+        ASSERT_NE(cloned, nullptr);
+
+        auto clonedValue =
+            cloned->get(asObject(key));
+
+        EXPECT_EQ(clonedValue.get(), value.get());
+    }
+
+    /*
+     * equals and hashCode parity checks
+     */
+
+    TEST(HashtableTest, HashtableEqualsItself) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("key"), S("value"));
+
+        EXPECT_TRUE(
+            table->equals(asObject(table)));
+    }
+
+    TEST(HashtableTest, EqualTablesShouldCompareEqual) {
+        auto left = jxx::NEW<StringHashtable>();
+        auto right = jxx::NEW<StringHashtable>();
+
+        left->put(S("one"), S("1"));
+        left->put(S("two"), S("2"));
+
+        right->put(S("two"), S("2"));
+        right->put(S("one"), S("1"));
+
+        EXPECT_TRUE(
+            left->equals(asObject(right)));
+
+        EXPECT_TRUE(
+            right->equals(asObject(left)));
+    }
+
+    TEST(HashtableTest, TablesWithDifferentValuesAreNotEqual) {
+        auto left = jxx::NEW<StringHashtable>();
+        auto right = jxx::NEW<StringHashtable>();
+
+        left->put(S("key"), S("left"));
+        right->put(S("key"), S("right"));
+
+        EXPECT_FALSE(
+            left->equals(asObject(right)));
+    }
+
+    TEST(HashtableTest, TablesWithDifferentKeysAreNotEqual) {
+        auto left = jxx::NEW<StringHashtable>();
+        auto right = jxx::NEW<StringHashtable>();
+
+        left->put(S("left-key"), S("value"));
+        right->put(S("right-key"), S("value"));
+
+        EXPECT_FALSE(
+            left->equals(asObject(right)));
+    }
+
+    TEST(HashtableTest, HashtableDoesNotEqualNull) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        EXPECT_FALSE(table->equals(nullptr));
+    }
+
+    TEST(HashtableTest, EqualTablesMustHaveSameHashCode) {
+        auto left = jxx::NEW<StringHashtable>();
+        auto right = jxx::NEW<StringHashtable>();
+
+        left->put(S("one"), S("1"));
+        left->put(S("two"), S("2"));
+
+        right->put(S("two"), S("2"));
+        right->put(S("one"), S("1"));
+
+        ASSERT_TRUE(
+            left->equals(asObject(right)));
+
+        /*
+         * This test will fail with the current implementation:
+         *
+         *     return (jint)this;
+         *
+         * Java Map hashCode must be based on entry hash codes, not the
+         * object's memory address.
+         */
+        EXPECT_EQ(
+            left->hashCode(),
+            right->hashCode());
+    }
+
+    /*
+     * Thread-safety smoke test
+     */
+
+    TEST(HashtableTest, ConcurrentPutOperationsDoNotLoseMappings) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        constexpr int threadCount = 4;
+        constexpr int entriesPerThread = 100;
+
+        std::vector<std::thread> threads;
+
+        for (int threadIndex = 0;
+            threadIndex < threadCount;
+            ++threadIndex) {
+
+            threads.push_back(std::thread(
+                [table, threadIndex, entriesPerThread]() {
+                   for (int i = 0;
+                        i < entriesPerThread;
+                        ++i) {
+
+                       const std::string key =
+                           "thread-" +
+                           std::to_string(threadIndex) +
+                           "-key-" +
+                           std::to_string(i);
+
+                       const std::string value =
+                           "value-" +
+                           std::to_string(i);
+
+                       table->put(
+                           S(key),
+                           S(value));
+                   }
+                }));
+        }
+
+        for (auto& thread : threads) {
+            thread.join();
+        }
+
+        EXPECT_EQ(
+            table->size(),
+            threadCount* entriesPerThread);
+    }
+
+    /*
+     * Serializable argument validation
+     */
+
+    TEST(HashtableTest, WriteObjectNullStreamThrows) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        EXPECT_THROW(
+            table->writeObject(nullptr),
+            jxx::lang::NullPointerException);
+    }
+
+    TEST(HashtableTest, ReadObjectNullStreamThrows) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        EXPECT_THROW(
+            table->readObject(nullptr),
+            jxx::lang::NullPointerException);
+    }
+
+    TEST(HashtableTest, ReadObjectNoDataClearsTable) {
+        auto table = jxx::NEW<StringHashtable>();
+
+        table->put(S("one"), S("1"));
+        table->put(S("two"), S("2"));
+
+        ASSERT_EQ(table->size(), 2);
+
+        table->readObjectNoData();
+
+        EXPECT_EQ(table->size(), 0);
+        EXPECT_TRUE(table->isEmpty());
+    }
+
+} // namespace
