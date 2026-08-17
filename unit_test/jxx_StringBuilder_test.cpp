@@ -1,191 +1,794 @@
-﻿#include <gtest/gtest.h>
-#include <thread>
-#include <vector>
-#include <numeric>
-#include <limits>
+﻿#include <memory>
 #include <string>
-#include <cstring>
+#include <type_traits>
+#include <gtest/gtest.h>
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.Appendable.h"
+#include "lang/jxx.lang.CharSequence.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.StringBuilder.h"
-#include "util/jxx.util.Vector.h"
+#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.NegativeArraySizeException.h"
+namespace {
 
-using jxx::lang::StringBuilder;
-using jxx::util::Vector;
-using jxx::lang::String;
+    using jxx::lang::CharArray;
+    using jxx::lang::CharArrayType;
+    using jxx::lang::CharSequence;
+    using jxx::lang::String;
+    using jxx::lang::StringBuilder;
+    using jxx::lang::jbool;
+    using jxx::lang::jchar;
+    using jxx::lang::jdouble;
+    using jxx::lang::jfloat;
+    using jxx::lang::jint;
+    using jxx::lang::jlong;
 
-TEST(StringBuilderTest, ConstructReserveAndEmpty) {
-    auto b = jxx::NEW<StringBuilder>(128);
-    EXPECT_TRUE(b->empty() == true);
-    EXPECT_EQ(b->size(), 0u);
-    // Capacity is allowed to exceed request, but must be >= requested.
-    EXPECT_GE(b.capacity(), 128u);
+    static jxx::Ptr<String> S(const char* value) {
+        return jxx::NEW<String>(std::string(value));
+    }
 
-    b.reserve(256);
-    EXPECT_GE(b.capacity(), 256u);
-}
+    static jxx::Ptr<String> S(const std::string& value) {
+        return jxx::NEW<String>(value);
+    }
 
-TEST(StringBuilderTest, AppendStringsCharsAndToString) {
-    StringBuilder b;
-    String name = "Alice";
-    b.append("Hello")->append(',')->append(' ')->append(name)->append_line();
+    static std::string textOf(
+        const jxx::Ptr<StringBuilder>& builder) {
 
-    EXPECT_EQ(b.str(), std::string("Hello, Alice\n"));
-    EXPECT_FALSE(b.empty());
-}
+        if (builder == nullptr) {
+            return {};
+        }
 
-TEST(StringBuilderTest, OperatorShiftChain) {
-    StringBuilder b;
-    b << "val=" << 42 << ", ok=" << true << ", hex=";
-    b.append(255, 16);  // hex lowercase expected from to_chars
-    EXPECT_EQ(b.str(), "val=42, ok=true, hex=ff");
-}
+        auto value = builder->toString();
 
-TEST(StringBuilderTest, InsertReplaceErase) {
-    StringBuilder b;
-    b.append("Hello, ").append("Alice");
+        if (value == nullptr) {
+            return {};
+        }
 
-    // Insert "Ms. " after "Hello, "
-    b.insert(7, "Ms. ");
-    EXPECT_EQ(b.str(), "Hello, Ms. Alice");
+        return value->utf8();
+    }
 
-    // Replace "Hello" -> "Hi"
-    b.replace(0, 5, "Hi");
-    EXPECT_EQ(b.str(), "Hi, Ms. Alice");
+    static CharArray chars(
+        std::initializer_list<jchar> values) {
 
-    // Erase "Ms. "
-    // Current: "Hi, Ms. Alice"
-    //          0123456789.....
-    // "Ms. " spans [4, 8)
-    b.erase(4, 8);
-    EXPECT_EQ(b.str(), "Hi, Alice");
+        auto result =
+            jxx::NEW<CharArrayType>(
+                static_cast<CharArrayType::size_type>(
+                    values.size()));
 
-    // Replace to the end (end is exclusive)
-    b.replace(4, b.size(), "Bob");
-    EXPECT_EQ(b.str(), "Hi, Bob");
-}
+        jint index = 0;
 
-TEST(StringBuilderTest, RemovePrefixSuffix) {
-    StringBuilder b;
-    b.append("xyz123xyz");
-    b.remove_prefix(3);
-    EXPECT_EQ(b.str(), "123xyz");
-    b.remove_suffix(3);
-    EXPECT_EQ(b.str(), "123");
-}
+        for (const auto value : values) {
+            (*result)[index++] = value;
+        }
 
-TEST(StringBuilderTest, SetLengthTruncateAndPadWithNul) {
-    StringBuilder b;
-    b.append("abc");
-    b.set_length(2);  // truncate
-    EXPECT_EQ(b.size(), 2u);
-    EXPECT_EQ(b.str(), "ab");
+        return result;
+    }
 
-    // Extend with default pad '\0'
-    b.set_length(5);
-    EXPECT_EQ(b.size(), 5u);
-    // Verify the new bytes are NULs
-    auto s = b.str();
-    ASSERT_EQ(s.size(), 5u);
-    EXPECT_EQ(s[0], 'a');
-    EXPECT_EQ(s[1], 'b');
-    EXPECT_EQ(s[2], '\0');
-    EXPECT_EQ(s[3], '\0');
-    EXPECT_EQ(s[4], '\0');
+    static CharArray chars(const char16_t* value) {
+        if (value == nullptr) {
+            return nullptr;
+        }
 
-    // Extend further with a visible pad character
-    b.set_length(7, 'x');
-    auto s2 = b.str();
-    ASSERT_EQ(s2.size(), 7u);
-    EXPECT_EQ(s2[5], 'x');
-    EXPECT_EQ(s2[6], 'x');
-}
+        std::size_t length = 0;
 
-TEST(StringBuilderTest, CharAtAndSetCharAt) {
-    StringBuilder b;
-    b.append("abc");
-    EXPECT_EQ(b.char_at(1), 'b');
-    b.set_char_at(1, 'Z');
-    EXPECT_EQ(b.char_at(1), 'Z');
-    EXPECT_EQ(b.str(), "aZc");
-}
+        while (value[length] != u'\0') {
+            ++length;
+        }
 
-TEST(StringBuilderTest, SubseqAndView) {
-    StringBuilder b;
-    b.append("abcdef");
-    auto v = b.view();
-    EXPECT_EQ(v, std::string_view("abcdef"));
+        auto result =
+            jxx::NEW<CharArrayType>(
+                static_cast<CharArrayType::size_type>(
+                    length));
 
-    auto sub = b.subseq(2, 3); // "cde"
-    EXPECT_EQ(sub, std::string_view("cde"));
+        for (std::size_t i = 0; i < length; ++i) {
+            (*result)[static_cast<jint>(i)] =
+                static_cast<jchar>(value[i]);
+        }
 
-    // Bounds are guarded by asserts in debug builds; we only test valid ranges here.
-}
+        return result;
+    }
 
-TEST(StringBuilderTest, IntegersVariousBases) {
-    StringBuilder b;
-    b.append(-123).append(' ');
-    b.append(255, 16).append(' ');  // hex -> "ff"
-    b.append(10, 8).append(' ');    // oct -> "12"
-    b.append(255, 2);               // binary small value -> "11111111"
+    /*
+     * Constructors
+     */
 
-    EXPECT_EQ(b.str(), "-123 ff 12 11111111");
-}
+    TEST(StringBuilderTest, DefaultConstructorCreatesEmptyBuilder) {
+        auto builder = jxx::NEW<StringBuilder>();
 
-TEST(StringBuilderTest, FloatingAppendPortableCases) {
-    StringBuilder b;
+        ASSERT_NE(builder, nullptr);
+        EXPECT_EQ(builder->length(), 0);
+        EXPECT_TRUE(textOf(builder).empty());
 
-    // Precision 0 => no decimal point printed (portable across locales for these cases).
-    b.append(42.0, 0);
-    b.append(' ');
-    b.append(1000.0f, 0);
-    b.append(' ');
-    b.append(1.0, 0, /*scientific=*/true); // "1e+00" with precision 0
-    EXPECT_EQ(b.str(), "42 1000 1e+00");
-}
+        // Java 8 StringBuilder default capacity is 16.
+        EXPECT_GE(builder->capacity(), 16);
+    }
 
-TEST(StringBuilderTest, AppendLineConvenience) {
-    StringBuilder b;
-    b.append_line("first");
-    b.append_line();
-    b.append_line("third");
-    EXPECT_EQ(b.str(), std::string("first\n\nthird\n"));
-}
+    TEST(StringBuilderTest, CapacityConstructorUsesRequestedCapacity) {
+        auto builder = jxx::NEW<StringBuilder>(32);
 
-TEST(StringBuilderTest, ReplaceEndExclusive) {
-    StringBuilder b;
-    b.append("0123456789");
-    // replace [2, 5) with "X" -> "01X56789"
-    b.replace(2, 5, "X");
-    EXPECT_EQ(b.str(), "01X56789");
-}
+        EXPECT_EQ(builder->length(), 0);
+        EXPECT_GE(builder->capacity(), 32);
+    }
 
-TEST(StringBuilderTest, JoinUtilityWorks) {
+    TEST(StringBuilderTest, NegativeCapacityThrows) {
+        EXPECT_THROW(
+            jxx::NEW<StringBuilder>(-1),
+            jxx::lang::NegativeArraySizeException);
+    }
 
-    String n { "test" };
- 
-    Vector<String> words { "alpha", "beta", "gamma" };
-    auto j = jxx::lang::join(words.begin(), words.end(), ", ");
-    //TODO fix
-    //EXPECT_EQ(j, "alpha, beta, gamma");
- 
-       // std::vector<int> nums{ 1, 2, 3 };
-       // auto j = sb::join(nums.begin(), nums.end(), " | ");
-       // EXPECT_EQ(j, "1 | 2 | 3");
+    TEST(StringBuilderTest, StringConstructorCopiesString) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("hello"));
 
-}
+        EXPECT_EQ(builder->length(), 5);
+        EXPECT_EQ(textOf(builder), "hello");
 
-TEST(StringBuilderTest, ClearAndShrinkToFit) {
-    StringBuilder b(256);
-    b.append("data");
-    EXPECT_FALSE(b.empty());
-    b.clear();
-    EXPECT_TRUE(b.empty());
-    EXPECT_EQ(b.size(), 0u);
+        // Java capacity is string length plus 16.
+        EXPECT_GE(builder->capacity(), 21);
+    }
 
-    // shrink_to_fit is non-binding but should not throw or corrupt state
-    auto cap_before = b.capacity();
-    b.shrink_to_fit();
-    // We cannot assert exact capacity behavior across libstdc++/libc++,
-    // but at minimum, state remains valid.
-    EXPECT_EQ(b.size(), 0u);
-    (void)cap_before;
+    TEST(StringBuilderTest, CharSequenceConstructorCopiesSequence) {
+        jxx::Ptr<CharSequence> sequence =
+            jxx::CAST<CharSequence>(
+                S("sequence"));
+
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                sequence);
+
+        EXPECT_EQ(builder->length(), 8);
+        EXPECT_EQ(textOf(builder), "sequence");
+    }
+
+    /*
+     * Append operations
+     */
+
+    TEST(StringBuilderTest, AppendString) {
+        auto builder = jxx::NEW<StringBuilder>();
+
+        auto returned = builder->append(S("hello"));
+
+        EXPECT_EQ(returned.get(), builder.get());
+        EXPECT_EQ(textOf(builder), "hello");
+    }
+
+    TEST(StringBuilderTest, AppendNullStringUsesJavaNullText) {
+        auto builder = jxx::NEW<StringBuilder>();
+
+        jxx::Ptr<String> nullString = nullptr;
+        builder->append(nullString);
+
+        EXPECT_EQ(textOf(builder), "null");
+    }
+
+    TEST(StringBuilderTest, AppendBooleanValues) {
+        auto builder = jxx::NEW<StringBuilder>();
+
+        builder->append(static_cast<jbool>(true));
+        builder->append(S(","));
+        builder->append(static_cast<jbool>(false));
+
+        EXPECT_EQ(textOf(builder), "true,false");
+    }
+
+    TEST(StringBuilderTest, AppendCharacter) {
+        auto builder = jxx::NEW<StringBuilder>();
+
+        auto appendable =
+            builder->append(
+                static_cast<jchar>(u'A'));
+
+        ASSERT_NE(appendable, nullptr);
+        EXPECT_EQ(textOf(builder), "A");
+    }
+
+    TEST(StringBuilderTest, AppendSBCharacterReturnsBuilder) {
+        auto builder = jxx::NEW<StringBuilder>();
+
+        auto returned =
+            builder->appendSB(
+                static_cast<jchar>(u'X'));
+
+        EXPECT_EQ(returned.get(), builder.get());
+        EXPECT_EQ(textOf(builder), "X");
+    }
+
+    TEST(StringBuilderTest, AppendIntegerTypes) {
+        auto builder = jxx::NEW<StringBuilder>();
+
+        builder->append(static_cast<jint>(-42));
+        builder->append(S(","));
+        builder->append(static_cast<jlong>(1234567890LL));
+
+        EXPECT_EQ(
+            textOf(builder),
+            "-42,1234567890");
+    }
+
+    TEST(StringBuilderTest, AppendFloatingPointTypes) {
+        auto builder = jxx::NEW<StringBuilder>();
+
+        builder->append(static_cast<jfloat>(1.5f));
+        builder->append(S(","));
+        builder->append(static_cast<jdouble>(2.25));
+
+        const std::string result = textOf(builder);
+
+        EXPECT_NE(result.find("1.5"), std::string::npos);
+        EXPECT_NE(result.find("2.25"), std::string::npos);
+    }
+
+    TEST(StringBuilderTest, AppendCharArray) {
+        auto builder = jxx::NEW<StringBuilder>();
+        auto value = chars(u"hello");
+
+        builder->append(value);
+
+        EXPECT_EQ(textOf(builder), "hello");
+    }
+
+    TEST(StringBuilderTest, AppendCharArrayRange) {
+        auto builder = jxx::NEW<StringBuilder>();
+        auto value = chars(u"012345");
+
+        builder->append(value, 2, 3);
+
+        EXPECT_EQ(textOf(builder), "234");
+    }
+
+    TEST(StringBuilderTest, AppendCharSequenceRange) {
+        auto builder = jxx::NEW<StringBuilder>();
+
+        jxx::Ptr<CharSequence> sequence =
+            jxx::CAST<CharSequence>(
+                S("012345"));
+
+        builder->appendSB(sequence, 1, 5);
+
+        EXPECT_EQ(textOf(builder), "1234");
+    }
+
+    TEST(StringBuilderTest, RepeatedAppendReturnsSameBuilder) {
+        auto builder = jxx::NEW<StringBuilder>();
+
+        auto first = builder->append(S("a"));
+        auto second = builder->append(S("b"));
+        auto third = builder->append(static_cast<jint>(3));
+
+        EXPECT_EQ(first.get(), builder.get());
+        EXPECT_EQ(second.get(), builder.get());
+        EXPECT_EQ(third.get(), builder.get());
+        EXPECT_EQ(textOf(builder), "ab3");
+    }
+
+    /*
+     * Length and capacity
+     */
+
+    TEST(StringBuilderTest, EnsureCapacityDoesNotChangeContent) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("text"));
+
+        const jint oldLength = builder->length();
+
+        builder->ensureCapacity(100);
+
+        EXPECT_GE(builder->capacity(), 100);
+        EXPECT_EQ(builder->length(), oldLength);
+        EXPECT_EQ(textOf(builder), "text");
+    }
+
+    TEST(StringBuilderTest, EnsureCapacityDoesNotShrink) {
+        auto builder = jxx::NEW<StringBuilder>(64);
+
+        const jint oldCapacity = builder->capacity();
+
+        builder->ensureCapacity(8);
+
+        EXPECT_EQ(builder->capacity(), oldCapacity);
+    }
+
+    TEST(StringBuilderTest, TrimToSizeRetainsContent) {
+        auto builder = jxx::NEW<StringBuilder>(128);
+
+        builder->append(S("short"));
+        builder->trimToSize();
+
+        EXPECT_EQ(textOf(builder), "short");
+        EXPECT_EQ(builder->length(), 5);
+        EXPECT_GE(builder->capacity(), builder->length());
+    }
+
+    TEST(StringBuilderTest, SetLengthCanTruncateBuilder) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("abcdef"));
+
+        builder->setLength(3);
+
+        EXPECT_EQ(builder->length(), 3);
+        EXPECT_EQ(textOf(builder), "abc");
+    }
+
+    TEST(StringBuilderTest, SetLengthCanExtendWithNullCharacters) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("abc"));
+
+        builder->setLength(5);
+
+        EXPECT_EQ(builder->length(), 5);
+        EXPECT_EQ(builder->charAt(0), static_cast<jchar>(u'a'));
+        EXPECT_EQ(builder->charAt(1), static_cast<jchar>(u'b'));
+        EXPECT_EQ(builder->charAt(2), static_cast<jchar>(u'c'));
+        EXPECT_EQ(builder->charAt(3), static_cast<jchar>(u'\0'));
+        EXPECT_EQ(builder->charAt(4), static_cast<jchar>(u'\0'));
+    }
+
+    TEST(StringBuilderTest, NegativeSetLengthThrows) {
+        auto builder = jxx::NEW<StringBuilder>();
+
+        EXPECT_ANY_THROW(
+            builder->setLength(-1));
+    }
+
+    /*
+     * Character access
+     */
+
+    TEST(StringBuilderTest, CharAtReturnsExpectedCharacters) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("hello"));
+
+        EXPECT_EQ(
+            builder->charAt(0),
+            static_cast<jchar>(u'h'));
+
+        EXPECT_EQ(
+            builder->charAt(4),
+            static_cast<jchar>(u'o'));
+    }
+
+    TEST(StringBuilderTest, CharAtRejectsInvalidIndexes) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("abc"));
+
+        EXPECT_ANY_THROW(builder->charAt(-1));
+        EXPECT_ANY_THROW(builder->charAt(3));
+    }
+
+    TEST(StringBuilderTest, SetCharAtReplacesCharacter) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("hello"));
+
+        builder->setCharAt(
+            1,
+            static_cast<jchar>(u'a'));
+
+        EXPECT_EQ(textOf(builder), "hallo");
+    }
+
+    TEST(StringBuilderTest, SetCharAtRejectsInvalidIndexes) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("abc"));
+
+        EXPECT_ANY_THROW(
+            builder->setCharAt(
+                -1,
+                static_cast<jchar>(u'x')));
+
+        EXPECT_ANY_THROW(
+            builder->setCharAt(
+                3,
+                static_cast<jchar>(u'x')));
+    }
+
+    /*
+     * Delete, replace, and reverse
+     */
+
+    TEST(StringBuilderTest, DeleteRemovesSpecifiedRange) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("0123456789"));
+
+        auto returned =
+            builder->delete_(2, 7);
+
+        EXPECT_EQ(returned.get(), builder.get());
+        EXPECT_EQ(textOf(builder), "01789");
+    }
+
+    TEST(StringBuilderTest, DeleteAllowsEndBeyondLength) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("abcdef"));
+
+        builder->delete_(3, 100);
+
+        EXPECT_EQ(textOf(builder), "abc");
+    }
+
+    TEST(StringBuilderTest, DeleteCharAtRemovesOneCharacter) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("abcd"));
+
+        auto returned =
+            builder->deleteCharAt(1);
+
+        EXPECT_EQ(returned.get(), builder.get());
+        EXPECT_EQ(textOf(builder), "acd");
+    }
+
+    TEST(StringBuilderTest, ReplaceChangesSpecifiedRange) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("hello world"));
+
+        auto returned =
+            builder->replace(
+                6,
+                11,
+                S("JXX"));
+
+        EXPECT_EQ(returned.get(), builder.get());
+        EXPECT_EQ(textOf(builder), "hello JXX");
+    }
+
+    TEST(StringBuilderTest, ReverseReversesCharacters) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("abcdef"));
+
+        auto returned = builder->reverse();
+
+        EXPECT_EQ(returned.get(), builder.get());
+        EXPECT_EQ(textOf(builder), "fedcba");
+    }
+
+    /*
+     * Insert operations
+     */
+
+    TEST(StringBuilderTest, InsertString) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("ac"));
+
+        auto returned =
+            builder->insert(
+                1,
+                S("b"));
+
+        EXPECT_EQ(returned.get(), builder.get());
+        EXPECT_EQ(textOf(builder), "abc");
+    }
+
+    TEST(StringBuilderTest, InsertNullStringUsesJavaNullText) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("ab"));
+
+        jxx::Ptr<String> nullString = nullptr;
+
+        builder->insert(
+            1,
+            nullString);
+
+        EXPECT_EQ(textOf(builder), "anullb");
+    }
+
+    TEST(StringBuilderTest, InsertCharacter) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("ac"));
+
+        builder->insert(
+            1,
+            static_cast<jchar>(u'b'));
+
+        EXPECT_EQ(textOf(builder), "abc");
+    }
+
+    TEST(StringBuilderTest, InsertBoolean) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("value="));
+
+        builder->insert(
+            builder->length(),
+            static_cast<jbool>(true));
+
+        EXPECT_EQ(textOf(builder), "value=true");
+    }
+
+    TEST(StringBuilderTest, InsertInteger) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("AB"));
+
+        builder->insert(
+            1,
+            static_cast<jint>(123));
+
+        EXPECT_EQ(textOf(builder), "A123B");
+    }
+
+    TEST(StringBuilderTest, InsertCharArray) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("ad"));
+
+        auto value = chars(u"bc");
+
+        builder->insert(1, value);
+
+        EXPECT_EQ(textOf(builder), "abcd");
+    }
+
+    TEST(StringBuilderTest, InsertCharArrayRange) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("ad"));
+
+        auto value = chars(u"012345");
+
+        builder->insert(
+            1,
+            value,
+            2,
+            2);
+
+        EXPECT_EQ(textOf(builder), "a23d");
+    }
+
+    TEST(StringBuilderTest, InsertCharSequenceRange) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("ad"));
+
+        jxx::Ptr<CharSequence> sequence =
+            jxx::CAST<CharSequence>(
+                S("012345"));
+
+        builder->insert(
+            1,
+            sequence,
+            2,
+            4);
+
+        EXPECT_EQ(textOf(builder), "a23d");
+    }
+
+    TEST(StringBuilderTest, InsertRejectsInvalidOffset) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("abc"));
+
+        EXPECT_ANY_THROW(
+            builder->insert(
+                -1,
+                S("x")));
+
+        EXPECT_ANY_THROW(
+            builder->insert(
+                4,
+                S("x")));
+    }
+
+    /*
+     * getChars
+     */
+
+    TEST(StringBuilderTest, GetCharsCopiesRequestedRange) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("abcdef"));
+
+        auto destination =
+            jxx::NEW<CharArrayType>(8);
+
+        destination->fill(
+            static_cast<jchar>(u'_'));
+
+        builder->getChars(
+            1,
+            4,
+            destination,
+            2);
+
+        EXPECT_EQ(
+            (*destination)[0],
+            static_cast<jchar>(u'_'));
+
+        EXPECT_EQ(
+            (*destination)[1],
+            static_cast<jchar>(u'_'));
+
+        EXPECT_EQ(
+            (*destination)[2],
+            static_cast<jchar>(u'b'));
+
+        EXPECT_EQ(
+            (*destination)[3],
+            static_cast<jchar>(u'c'));
+
+        EXPECT_EQ(
+            (*destination)[4],
+            static_cast<jchar>(u'd'));
+
+        EXPECT_EQ(
+            (*destination)[5],
+            static_cast<jchar>(u'_'));
+    }
+
+    TEST(StringBuilderTest, GetCharsRejectsInvalidSourceRange) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("abc"));
+
+        auto destination =
+            jxx::NEW<CharArrayType>(3);
+
+        EXPECT_ANY_THROW(
+            builder->getChars(
+                -1,
+                2,
+                destination,
+                0));
+
+        EXPECT_ANY_THROW(
+            builder->getChars(
+                2,
+                1,
+                destination,
+                0));
+
+        EXPECT_ANY_THROW(
+            builder->getChars(
+                0,
+                4,
+                destination,
+                0));
+    }
+
+    TEST(StringBuilderTest, GetCharsRejectsDestinationOverflow) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("abcdef"));
+
+        auto destination =
+            jxx::NEW<CharArrayType>(2);
+
+        EXPECT_ANY_THROW(
+            builder->getChars(
+                0,
+                3,
+                destination,
+                0));
+    }
+
+    /*
+     * Search functions
+     */
+
+    TEST(StringBuilderTest, IndexOfFindsFirstOccurrence) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("one two one"));
+
+        EXPECT_EQ(
+            builder->indexOf(S("one")),
+            0);
+
+        EXPECT_EQ(
+            builder->indexOf(S("two")),
+            4);
+
+        EXPECT_EQ(
+            builder->indexOf(S("missing")),
+            -1);
+    }
+
+    TEST(StringBuilderTest, IndexOfHonorsFromIndex) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("one two one"));
+
+        EXPECT_EQ(
+            builder->indexOf(
+                S("one"),
+                1),
+            8);
+    }
+
+    TEST(StringBuilderTest, LastIndexOfFindsLastOccurrence) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("one two one"));
+
+        EXPECT_EQ(
+            builder->lastIndexOf(
+                S("one")),
+            8);
+
+        EXPECT_EQ(
+            builder->lastIndexOf(
+                S("missing")),
+            -1);
+    }
+
+    TEST(StringBuilderTest, LastIndexOfHonorsFromIndex) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("one two one"));
+
+        EXPECT_EQ(
+            builder->lastIndexOf(
+                S("one"),
+                7),
+            0);
+    }
+
+    /*
+     * Substring and CharSequence behavior
+     */
+
+    TEST(StringBuilderTest, SubstringFromIndexReturnsSuffix) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("abcdef"));
+
+        auto result =
+            builder->substring(2);
+
+        ASSERT_NE(result, nullptr);
+        EXPECT_EQ(result->utf8(), "cdef");
+    }
+
+    TEST(StringBuilderTest, SubstringRangeReturnsExpectedText) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("abcdef"));
+
+        auto result =
+            builder->substring(
+                1,
+                4);
+
+        ASSERT_NE(result, nullptr);
+        EXPECT_EQ(result->utf8(), "bcd");
+    }
+
+    TEST(StringBuilderTest, SubSequenceReturnsStringCompatibleSequence) {
+        auto builder =
+            jxx::NEW<StringBuilder>(
+                S("abcdef"));
+
+        auto sequence =
+            builder->subSequence(
+                1,
+                4);
+
+        ASSERT_NE(sequence, nullptr);
+        EXPECT_EQ(sequence->length(), 3);
+        EXPECT_EQ(
+            sequence->charAt(0),
+            static_cast<jchar>(u'b'));
+        EXPECT_EQ(
+            sequence->charAt(1),
+            static_cast<jchar>(u'c'));
+        EXPECT_EQ(
+            sequence->charAt(2),
+            static_cast<jchar>(u'd'));
+    }
 }

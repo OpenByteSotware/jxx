@@ -9,6 +9,16 @@
 #include "io/jxx.io.Serializable.h"
 
 namespace jxx {
+    namespace io {
+		class PrintStream;
+		class PrintWriter;
+		class Reader;
+		class InputStream;
+		class OutputStream;
+		class Writer;
+    }
+}
+namespace jxx {
 namespace util {
 
 class Properties : public virtual jxx::util::Hashtable<jxx::lang::Object, jxx::lang::Object> {

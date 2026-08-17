@@ -102,7 +102,7 @@ namespace jxx::lang {
         virtual jxx::Ptr<jxx::lang::String> toString() const;
 
         // Identity check (reference equality)
-        virtual bool same(const Object& other) const;
+        virtual bool same(const jxx::Ptr<Object> other) const;
 
         template <typename Rep, typename Period>
         bool wait_for(const std::chrono::duration<Rep, Period>& d) {

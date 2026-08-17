@@ -366,7 +366,7 @@ protected:
         virtual jxx::Ptr<Iterator<MapEntry<K, V>>> iterator() override {
             return jxx::Ptr<Iterator<MapEntry<K, V>>>(new EntryIterator(map_));
         }
-        virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>>> toArray() override {
+        virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1>> toArray() override {
             return AbstractCollection<MapEntry<K, V>>::toArray();
         }
         virtual jxx::lang::jbool add(jxx::Ptr<MapEntry<K, V>> /*e*/) override { throw UnsupportedOperationException(); }

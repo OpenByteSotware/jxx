@@ -1,6 +1,4 @@
 #pragma once
-#ifndef __JXX_LINKEDLIST__
-#define __JXX_LINKEDLIST__
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
@@ -13,6 +11,7 @@
 #include <vector>
 #include <iterator>
 #include "util/jxx.util.AbstractSequentialList.h"
+#include "lang/jxx.lang.Cloneable.h"
 
 // ====================== Java-like exceptions ======================
 struct index_out_of_bounds_error : std::out_of_range {
@@ -28,40 +27,7 @@ struct concurrent_modification_error : std::runtime_error {
     explicit concurrent_modification_error(const char* msg) : std::runtime_error(msg) {}
 };
 
-template <typename T>
-struct Deque {
-    virtual ~Deque() = default;
-
-    // addFirst/Last (unbounded → always succeeds)
-    virtual void addFirst(const T& e) = 0;
-    virtual void addFirst(T&& e) = 0;
-    virtual void addLast(const T& e) = 0;
-    virtual void addLast(T&& e) = 0;
-
-    // offerFirst/Last: boolean (always true here)
-    virtual bool offerFirst(const T& e) = 0;
-    virtual bool offerFirst(T&& e) = 0;
-    virtual bool offerLast(const T& e) = 0;
-    virtual bool offerLast(T&& e) = 0;
-
-    // removeFirst/Last: throws if empty
-    virtual T removeFirstRet() = 0;
-    virtual T removeLastRet() = 0;
-
-    // pollFirst/Last: empty optional if empty
-    virtual std::optional<T> pollFirst() = 0;
-    virtual std::optional<T> pollLast() = 0;
-
-    // Accessors
-    virtual const T& getFirst() const = 0;
-    virtual const T& getLast() const = 0;
-
-    // Stack ops
-    virtual void push(const T& e) = 0;
-    virtual void push(T&& e) = 0;
-    virtual T popRet() = 0;
-};
-
+namespace jxx::util {}
 // ====================== LinkedList (Java 8 surface) ======================
 template <typename T>
 class LinkedList
@@ -690,8 +656,8 @@ public:
     Spliterator spliterator() { return Spliterator(this); }
 
     // =============== Clone (shallow) ===============
-    std::unique_ptr<Cloneable> clone_base() const override {
-        return std::unique_ptr<Cloneable>(new LinkedList<T>(*this));
+    std::unique_ptr<jxx::lang::Cloneable> clone_base() const override {
+        return std::unique_ptr<jxx::lang::Cloneable>(new LinkedList<T>(*this));
     }
     std::unique_ptr<LinkedList<T>> clone() const {
         return std::unique_ptr<LinkedList<T>>(new LinkedList<T>(*this));
@@ -779,7 +745,4 @@ public:
     const_std_iterator cbegin() const { return const_std_iterator(first_); }
     const_std_iterator cend()   const { return const_std_iterator(nullptr); }
 };
-
 }
-
-#endif

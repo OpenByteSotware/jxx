@@ -1,190 +1,462 @@
 #pragma once
 
+#include <cstddef>
 #include <list>
+#include <memory>
 #include <unordered_map>
+#include <vector>
+
+#include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.Object.h"
+
+#include "util/jxx.util.ConcurrentModificationException.h"
 #include "util/jxx.util.HashMap.h"
+#include "util/jxx.util.Iterator.h"
+#include "util/jxx.util.Map.h"
+#include "util/jxx.util.MapEntry.h"
+#include "util/jxx.util.NoSuchElementException.h"
+#include "util/jxx.util.Set.h"
 
 namespace jxx {
-namespace util {
+    namespace util {
 
-template <typename K, typename V>
-class LinkedHashMap : public HashMap<K, V> {
-private:
-    using OrderList = std::list<jxx::Ptr<K>>;
-    using OrderIndexMap = std::unordered_map<jxx::Ptr<K>, typename OrderList::iterator, typename HashMap<K, V>::KeyHash, typename HashMap<K, V>::KeyEq>;
+        template <typename K, typename V>
+        class LinkedHashMap
+            : public HashMap<K, V> {
+        private:
+            struct OrderKeyHash {
+                std::size_t operator()(
+                    const jxx::Ptr<K>& key) const {
 
-    OrderList order_;
-    OrderIndexMap orderIndex_;
-    jxx::lang::jbool accessOrder_;
+                    if (key == nullptr) {
+                        return 0u;
+                    }
 
-public:
-    LinkedHashMap()
-        : HashMap<K, V>()
-        , order_()
-        , orderIndex_()
-        , accessOrder_(false) {
-    }
+                    auto object =
+                        jxx::CAST<jxx::lang::Object>(key);
 
-    explicit LinkedHashMap(jxx::lang::jint initialCapacity)
-        : HashMap<K, V>(initialCapacity)
-        , order_()
-        , orderIndex_()
-        , accessOrder_(false) {
-    }
+                    if (object == nullptr) {
+                        return reinterpret_cast<std::size_t>(
+                            key.get());
+                    }
 
-    LinkedHashMap(jxx::lang::jint initialCapacity, jxx::lang::jfloat loadFactor)
-        : HashMap<K, V>(initialCapacity, loadFactor)
-        , order_()
-        , orderIndex_()
-        , accessOrder_(false) {
-    }
+                    return static_cast<std::size_t>(
+                        object->hashCode());
+                }
+            };
 
-    LinkedHashMap(jxx::lang::jint initialCapacity, jxx::lang::jfloat loadFactor, jxx::lang::jbool accessOrder)
-        : HashMap<K, V>(initialCapacity, loadFactor)
-        , order_()
-        , orderIndex_()
-        , accessOrder_(accessOrder) {
-    }
+            struct OrderKeyEqual {
+                bool operator()(
+                    const jxx::Ptr<K>& left,
+                    const jxx::Ptr<K>& right) const {
 
-    explicit LinkedHashMap(jxx::Ptr<Map<K, V>> m)
-        : LinkedHashMap() {
-        if (m == nullptr) throw NullPointerException();
-        this->putAll(m);
-    }
+                    if (left == nullptr || right == nullptr) {
+                        return left == right;
+                    }
 
-    virtual ~LinkedHashMap() = default;
+                    auto leftObject =
+                        jxx::CAST<jxx::lang::Object>(left);
 
-    // Java hook: protected boolean removeEldestEntry(Map.Entry<K,V> eldest)
-    virtual jxx::lang::jbool removeEldestEntry(jxx::Ptr<MapEntry<K, V>> /*eldest*/) {
-        return false;
-    }
+                    if (leftObject == nullptr) {
+                        return left.get() == right.get();
+                    }
 
-    virtual jxx::Ptr<jxx::lang::Object> clone() {
-        jxx::Ptr<LinkedHashMap<K, V>> cloned(new LinkedHashMap<K, V>(static_cast<jint>(this->map_.size()), this->loadFactor_, accessOrder_));
-        for (const auto& key : order_) {
-            cloned->put(key, this->map_.at(key));
-        }
-        return cloned;
-    }
+                    return leftObject->equals(
+                        jxx::CAST<jxx::lang::Object>(
+                            right));
+                }
+            };
 
-protected:
-    virtual void afterNodeAccess(jxx::Ptr<K> key) override {
-        if (!accessOrder_) return;
-        auto idx = orderIndex_.find(key);
-        if (idx == orderIndex_.end()) return;
-        auto it = idx->second;
-        auto backIt = order_.end();
-        if (!order_.empty()) {
-            --backIt;
-            if (it == backIt) return;
-        }
-        order_.erase(it);
-        order_.push_back(key);
-        auto tailIt = order_.end();
-        --tailIt;
-        idx->second = tailIt;
-        ++this->modCount_;
-    }
+            using OrderList =
+                std::list<jxx::Ptr<K>>;
 
-    virtual void afterNodeInsertion(jxx::Ptr<K> key, jbool isNewKey) override {
-        if (isNewKey) {
-            order_.push_back(key);
-            auto tailIt = order_.end();
-            --tailIt;
-            orderIndex_[key] = tailIt;
+            using OrderIterator =
+                typename OrderList::iterator;
 
-            if (!order_.empty()) {
-                auto eldestKey = order_.front();
-                auto eldest = this->makeEntryView(eldestKey);
-                if (removeEldestEntry(eldest)) {
-                    this->remove(eldestKey);
+            using OrderIndexMap =
+                std::unordered_map<
+                jxx::Ptr<K>,
+                OrderIterator,
+                OrderKeyHash,
+                OrderKeyEqual>;
+
+            OrderList order_;
+            OrderIndexMap orderIndex_;
+            jxx::lang::jbool accessOrder_;
+
+            void appendOrderKey_(jxx::Ptr<K> key) {
+                order_.push_back(key);
+
+                auto tail = order_.end();
+                --tail;
+
+                orderIndex_.emplace(key, tail);
+            }
+
+            void removeOrderKey_(jxx::Ptr<K> key) {
+                auto found = orderIndex_.find(key);
+
+                if (found == orderIndex_.end()) {
+                    return;
+                }
+
+                order_.erase(found->second);
+                orderIndex_.erase(found);
+            }
+
+            jxx::lang::jbool moveOrderKeyToEnd_(
+                jxx::Ptr<K> key) {
+
+                auto found = orderIndex_.find(key);
+
+                if (found == orderIndex_.end()) {
+                    return static_cast<jxx::lang::jbool>(
+                        false);
+                }
+
+                if (order_.empty()) {
+                    return static_cast<jxx::lang::jbool>(
+                        false);
+                }
+
+                auto tail = order_.end();
+                --tail;
+
+                if (found->second == tail) {
+                    return static_cast<jxx::lang::jbool>(
+                        false);
+                }
+
+                /*
+                 * splice moves the list node without copying the key.
+                 * Iterators to the moved element remain valid.
+                 */
+                order_.splice(
+                    order_.end(),
+                    order_,
+                    found->second);
+
+                auto newTail = order_.end();
+                --newTail;
+
+                found->second = newTail;
+
+                return static_cast<jxx::lang::jbool>(
+                    true);
+            }
+
+        public:
+            LinkedHashMap()
+                : HashMap<K, V>()
+                , order_()
+                , orderIndex_()
+                , accessOrder_(
+                    static_cast<jxx::lang::jbool>(
+                        false)) {}
+
+            explicit LinkedHashMap(
+                jxx::lang::jint initialCapacity)
+                : HashMap<K, V>(initialCapacity)
+                , order_()
+                , orderIndex_()
+                , accessOrder_(
+                    static_cast<jxx::lang::jbool>(
+                        false)) {
+
+                if (initialCapacity > 0) {
+                    orderIndex_.reserve(
+                        static_cast<std::size_t>(
+                            initialCapacity));
                 }
             }
-        }
-    }
 
-    virtual void afterNodeRemoval(jxx::Ptr<K> key) override {
-        auto idx = orderIndex_.find(key);
-        if (idx != orderIndex_.end()) {
-            order_.erase(idx->second);
-            orderIndex_.erase(idx);
-        }
-    }
+            LinkedHashMap(
+                jxx::lang::jint initialCapacity,
+                jxx::lang::jfloat loadFactor)
+                : HashMap<K, V>(
+                    initialCapacity,
+                    loadFactor)
+                , order_()
+                , orderIndex_()
+                , accessOrder_(
+                    static_cast<jxx::lang::jbool>(
+                        false)) {
 
-    virtual void afterClear() override {
-        order_.clear();
-        orderIndex_.clear();
-    }
+                if (initialCapacity > 0) {
+                    orderIndex_.reserve(
+                        static_cast<std::size_t>(
+                            initialCapacity));
+                }
+            }
 
-    class LinkedEntryIterator : public virtual Iterator<MapEntry<K, V>> {
-    private:
-        LinkedHashMap<K, V>* map_;
-        typename OrderList::iterator current_;
-        typename OrderList::iterator end_;
-        jxx::Ptr<K> lastReturnedKey_;
-        jbool canRemove_;
-        jint expectedModCount_;
-    public:
-        explicit LinkedEntryIterator(LinkedHashMap<K, V>* map)
-            : map_(map)
-            , current_(map->order_.begin())
-            , end_(map->order_.end())
-            , lastReturnedKey_(nullptr)
-            , canRemove_(false)
-            , expectedModCount_(map->modCount_) {
-        }
+            LinkedHashMap(
+                jxx::lang::jint initialCapacity,
+                jxx::lang::jfloat loadFactor,
+                jxx::lang::jbool accessOrder)
+                : HashMap<K, V>(
+                    initialCapacity,
+                    loadFactor)
+                , order_()
+                , orderIndex_()
+                , accessOrder_(accessOrder) {
 
-        virtual ~LinkedEntryIterator() = default;
+                if (initialCapacity > 0) {
+                    orderIndex_.reserve(
+                        static_cast<std::size_t>(
+                            initialCapacity));
+                }
+            }
 
-        virtual jbool hasNext() override {
-            return current_ != end_;
-        }
+            explicit LinkedHashMap(
+                jxx::Ptr<Map<K, V>> source)
+                : LinkedHashMap() {
 
-        virtual jxx::Ptr<MapEntry<K, V>> next() override {
-            checkForComodification();
-            if (current_ == end_) throw NoSuchElementException();
-            lastReturnedKey_ = *current_;
-            ++current_;
-            canRemove_ = true;
-            return map_->makeEntryView(lastReturnedKey_);
-        }
+                if (source == nullptr) {
+                    throw jxx::lang::NullPointerException();
+                }
 
-        virtual void remove() override {
-            if (!canRemove_) throw IllegalStateException();
-            checkForComodification();
-            map_->remove(lastReturnedKey_);
-            expectedModCount_ = map_->modCount_;
-            canRemove_ = false;
-            lastReturnedKey_ = nullptr;
-        }
+                this->putAll(source);
+            }
 
-    private:
-        void checkForComodification() {
-            if (map_->modCount_ != expectedModCount_) throw ConcurrentModificationException();
-        }
-    };
+            virtual ~LinkedHashMap() = default;
 
-    class LinkedEntrySet : public HashMap<K, V>::EntrySet {
-    private:
-        LinkedHashMap<K, V>* linkedMap_;
-    public:
-        explicit LinkedEntrySet(LinkedHashMap<K, V>* map)
-            : HashMap<K, V>::EntrySet(map)
-            , linkedMap_(map) {
-        }
+        protected:
+            /*
+             * Java 8:
+             * protected boolean removeEldestEntry(
+             *     Map.Entry<K,V> eldest)
+             */
+            virtual jxx::lang::jbool removeEldestEntry(
+                jxx::Ptr<MapEntry<K, V>>
+            /* eldest */) {
 
-        virtual ~LinkedEntrySet() = default;
+                return static_cast<jxx::lang::jbool>(
+                    false);
+            }
 
-        virtual jxx::Ptr<Iterator<MapEntry<K, V>>> iterator() override {
-            return jxx::Ptr<Iterator<MapEntry<K, V>>>(new LinkedEntryIterator(linkedMap_));
-        }
-    };
+            virtual void afterNodeAccess(
+                jxx::Ptr<K> key) override {
 
-    virtual jxx::Ptr<Set<MapEntry<K, V>>> createEntrySetView() override {
-        return jxx::Ptr<Set<MapEntry<K, V>>>(new LinkedEntrySet(this));
-    }
-};
+                if (!accessOrder_) {
+                    return;
+                }
 
-} // namespace util
+                if (moveOrderKeyToEnd_(key)) {
+                    /*
+                     * Java LinkedHashMap considers an access-order
+                     * reordering a structural modification.
+                     */
+                    this->incrementModificationCount_();
+                }
+            }
+
+            virtual void afterNodeInsertion(
+                jxx::Ptr<K> key,
+                jxx::lang::jbool isNewKey) override {
+
+                if (!isNewKey) {
+                    return;
+                }
+
+                appendOrderKey_(key);
+
+                if (order_.empty()) {
+                    return;
+                }
+
+                auto eldestKey = order_.front();
+
+                auto eldestEntry =
+                    this->makeEntryView(eldestKey);
+
+                if (removeEldestEntry(eldestEntry)) {
+                    this->remove(
+                        jxx::CAST<jxx::lang::Object>(
+                            eldestKey));
+                }
+            }
+
+            virtual void afterNodeRemoval(
+                jxx::Ptr<K> key) override {
+
+                removeOrderKey_(key);
+            }
+
+            virtual void afterClear() override {
+                order_.clear();
+                orderIndex_.clear();
+            }
+
+            class LinkedEntryIterator final
+                : public virtual Iterator<MapEntry<K, V>> {
+            private:
+                LinkedHashMap<K, V>* owner_;
+
+                /*
+                 * Keep a snapshot of Java/JXX key references.
+                 * No STL type is exposed publicly.
+                 */
+                std::vector<jxx::Ptr<K>> keys_;
+                std::size_t cursor_;
+
+                jxx::Ptr<K> lastReturnedKey_;
+                jxx::lang::jbool canRemove_;
+                jxx::lang::jint expectedModCount_;
+
+                void checkForComodification() const {
+                    if (owner_->modificationCount_() !=
+                        expectedModCount_) {
+
+                        throw jxx::util::
+                            ConcurrentModificationException();
+                    }
+                }
+
+            public:
+                explicit LinkedEntryIterator(
+                    LinkedHashMap<K, V>* owner)
+                    : owner_(owner)
+                    , keys_()
+                    , cursor_(0)
+                    , lastReturnedKey_(nullptr)
+                    , canRemove_(
+                        static_cast<jxx::lang::jbool>(
+                            false))
+                    , expectedModCount_(
+                        owner->modificationCount_()) {
+
+                    keys_.reserve(owner_->order_.size());
+
+                    for (const auto& key : owner_->order_) {
+                        keys_.push_back(key);
+                    }
+                }
+
+                virtual ~LinkedEntryIterator() = default;
+
+                virtual jxx::lang::jbool hasNext()
+                    override {
+
+                    return static_cast<jxx::lang::jbool>(
+                        cursor_ < keys_.size());
+                }
+
+                virtual jxx::Ptr<MapEntry<K, V>>
+                    next() override {
+
+                    checkForComodification();
+
+                    if (cursor_ >= keys_.size()) {
+                        throw jxx::util::
+                            NoSuchElementException();
+                    }
+
+                    lastReturnedKey_ =
+                        keys_[cursor_++];
+
+                    canRemove_ =
+                        static_cast<jxx::lang::jbool>(
+                            true);
+
+                    return owner_->makeEntryView(
+                        lastReturnedKey_);
+                }
+
+                virtual void remove() override {
+                    if (!canRemove_) {
+                        throw jxx::lang::
+                            IllegalStateException();
+                    }
+
+                    checkForComodification();
+
+                    owner_->remove(
+                        jxx::CAST<jxx::lang::Object>(
+                            lastReturnedKey_));
+
+                    expectedModCount_ =
+                        owner_->modificationCount_();
+
+                    lastReturnedKey_ = nullptr;
+
+                    canRemove_ =
+                        static_cast<jxx::lang::jbool>(
+                            false);
+                }
+            };
+
+            class LinkedEntrySet
+                : public HashMap<K, V>::EntrySet {
+            private:
+                LinkedHashMap<K, V>* owner_;
+
+            public:
+                explicit LinkedEntrySet(
+                    LinkedHashMap<K, V>* owner)
+                    : HashMap<K, V>::EntrySet(owner)
+                    , owner_(owner) {}
+
+                virtual ~LinkedEntrySet() = default;
+
+                virtual jxx::Ptr<
+                    Iterator<MapEntry<K, V>>>
+                    iterator() override {
+
+                    return jxx::Ptr<
+                        Iterator<MapEntry<K, V>>>(
+                            new LinkedEntryIterator(
+                                owner_));
+                }
+            };
+
+            virtual jxx::Ptr<
+                Set<MapEntry<K, V>>>
+                createEntrySetView() override {
+
+                return jxx::Ptr<
+                    Set<MapEntry<K, V>>>(
+                        new LinkedEntrySet(this));
+            }
+
+        public:
+            virtual jxx::Ptr<jxx::lang::Object>
+                clone() {
+
+                auto cloned =
+                    jxx::Ptr<LinkedHashMap<K, V>>(
+                        new LinkedHashMap<K, V>(
+                            this->size(),
+                            this->loadFactorValue_(),
+                            accessOrder_));
+
+                /*
+                 * Use the base public API instead of directly
+                 * accessing HashMap's private unordered_map.
+                 *
+                 * Temporarily disable access-order behavior while
+                 * reading values from this map so clone() does not
+                 * reorder the source map.
+                 */
+                const jxx::lang::jbool savedAccessOrder =
+                    accessOrder_;
+
+                accessOrder_ =
+                    static_cast<jxx::lang::jbool>(false);
+
+                for (const auto& key : order_) {
+                    auto value = this->get(
+                        jxx::CAST<jxx::lang::Object>(
+                            key));
+
+                    cloned->put(key, value);
+                }
+
+                accessOrder_ = savedAccessOrder;
+
+                return jxx::CAST<jxx::lang::Object>(
+                    cloned);
+            }
+        };
+
+    } // namespace util
 } // namespace jxx

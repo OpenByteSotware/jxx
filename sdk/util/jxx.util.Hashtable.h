@@ -195,7 +195,7 @@ private:
             auto it = c->iteratorObject();
             while (it->hasNext()) {
                 auto e = jxx::CAST<MapEntry<K, V>, jxx::lang::Object>(it->next());
-                if (!contains(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(e))) return static_cast<jxx::lang::jbool>(false);
+                if (!contains(jxx::CAST<jxx::lang::Object>(e))) return static_cast<jxx::lang::jbool>(false);
             }
             return static_cast<jxx::lang::jbool>(true);
         }
@@ -300,7 +300,7 @@ private:
             auto it = c->iteratorObject();
             while (it->hasNext()) {
                 auto e = jxx::CAST<MapEntry<K, V>, jxx::lang::Object>(it->next());
-                if (!contains(jxx::CAST<jxx::lang::Object, jxx::lang::Object>(e))) return static_cast<jxx::lang::jbool>(false);
+                if (!contains(jxx::CAST<jxx::lang::Object>(e))) return static_cast<jxx::lang::jbool>(false);
             }
             return static_cast<jxx::lang::jbool>(true);
 		}

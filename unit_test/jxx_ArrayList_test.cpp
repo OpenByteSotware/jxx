@@ -44,13 +44,13 @@ TEST(TestArrayListTest, BasicAssertions) {
     auto t = jxx::NEW<ArrayListIntTest>();
     int val = 5;
     ASSERT_TRUE(t->isEmpty());
-    t->add(5);
+    t->add((jint)5);
     ASSERT_FALSE(t->isEmpty());
-    EXPECT_EQ(t->at(0), 5);
+    EXPECT_EQ(*t(0), 5);
     t->add(10);
-    EXPECT_EQ(t->at(1), 10);
+    EXPECT_EQ(*t(1), 10);
     t->add(15);
-    EXPECT_EQ(t->at(2), 15);
+    EXPECT_EQ(*t(2), 15);
     EXPECT_EQ(t->size(), 3);
 
 }

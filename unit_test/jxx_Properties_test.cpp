@@ -1,230 +1,684 @@
-#include <gtest/gtest.h>
+#include <memory>
+#include <set>
 #include <string>
+#include <type_traits>
 #include <vector>
-#include <unordered_set>
-#include <optional>
-#include <sstream>
-#include <thread>
 
-#include "jxx.h"
+#include <gtest/gtest.h>
 
-using jxx::util::Dictionary;
-using jxx::util::Map;
-using jxx::util::Properties;
+#include "lang/jxx.lang.Exceptions.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
 
-template <typename T>
-static inline bool optEq(const std::optional<T>& a, const std::optional<T>& b) {
-    return a.has_value() == b.has_value() && (!a.has_value() || *a == *b);
-}
+#include "util/jxx.util.Enumeration.h"
+#include "util/jxx.util.Hashtable.h"
+#include "util/jxx.util.Iterator.h"
+#include "util/jxx.util.Properties.h"
+#include "util/jxx.util.Set.h"
+#include "lang/jxx.lang.NullPointerException.h"
+#include "io/jxx.io.Writer.h"
+#include "io/jxx.io.Reader.h"
 
-TEST(Properties_Defaults, LookupAndOverride) {
-    Properties defaults;
-    defaults.setProperty("host", "localhost");
-    defaults.setProperty("port", "8080");
-    defaults.setProperty("lang", "en");
-    defaults.setProperty("arrow", "\xE2\x86\x92"); // UTF-8 for U+2192 (→), just for later checking
+namespace {
 
-    Properties props(&defaults);
-    props.setProperty("user", "james");
-    props.setProperty("port", "9090"); // override default
+    using jxx::lang::Object;
+    using jxx::lang::String;
+    using jxx::util::Enumeration;
+    using jxx::util::Iterator;
+    using jxx::util::Properties;
+    using jxx::util::Set;
 
-    // Direct lookups
-    EXPECT_EQ(props.getProperty("host"), "localhost"); // from defaults
-    EXPECT_EQ(props.getProperty("port"), "9090");      // overridden
-    EXPECT_EQ(props.getProperty("user"), "james");     // from self
-    EXPECT_EQ(props.getProperty("missing"), "");       // no default => empty string
-    EXPECT_EQ(props.getProperty("missing", "release"), "release");
-
-    // Optional form
-    auto u = props.getPropertyOpt("user");
-    ASSERT_TRUE(u.has_value());
-    EXPECT_EQ(*u, "james");
-
-    auto m = props.getPropertyOpt("missing");
-    EXPECT_FALSE(m.has_value());
-
-    // propertyNames: union across this + defaults
-    auto names = props.propertyNames();
-    std::unordered_set<std::string> nameSet(names.begin(), names.end());
-    EXPECT_TRUE(nameSet.count("host"));
-    EXPECT_TRUE(nameSet.count("port"));
-    EXPECT_TRUE(nameSet.count("user"));
-    EXPECT_TRUE(nameSet.count("lang"));
-    EXPECT_TRUE(nameSet.count("arrow"));
-}
-
-TEST(Properties_SetProperty, PreviousValueIsReturned) {
-    Properties p;
-    auto prev1 = p.setProperty("name", "Test");
-    EXPECT_FALSE(prev1.has_value());
-
-    auto prev2 = p.setProperty("name", "NewTest");
-    ASSERT_TRUE(prev2.has_value());
-    EXPECT_EQ(*prev2, "Test");
-
-    // Through Hashtable/Map interface get()
-    Map<std::string, std::string>* m = &p;
-    auto got = m->get("name");
-    ASSERT_TRUE(got.has_value());
-    EXPECT_EQ(*got, "NewTest");
-}
-
-TEST(Properties_StringPropertyNames, UnionAndUniqueness) {
-    Properties defaults;
-    defaults.setProperty("a", "1");
-    defaults.setProperty("b", "2");
-
-    Properties p(&defaults);
-    p.setProperty("b", "22"); // shadow
-    p.setProperty("c", "3");
-
-    auto set = p.stringPropertyNames();
-    EXPECT_EQ(set.count("a"), 1u);
-    EXPECT_EQ(set.count("b"), 1u);
-    EXPECT_EQ(set.count("c"), 1u);
-
-    auto vec = p.stringPropertyNamesVector();
-    std::unordered_set<std::string> vset(vec.begin(), vec.end());
-    EXPECT_EQ(vset.size(), 3u);
-    EXPECT_TRUE(vset.count("a"));
-    EXPECT_TRUE(vset.count("b"));
-    EXPECT_TRUE(vset.count("c"));
-}
-
-TEST(Properties_IO, LoadParsesCommentsSeparatorsEscapesContinuations) {
-    // Test input exercising:
-    // - Comments (#, !)
-    // - Separators (=, :, and whitespace)
-    // - Escaped key char ':' and escaped spaces in value
-    // - Unicode escape \u2192 and newline \n
-    // - Line continuation with trailing backslash
-    std::istringstream in(
-        "# Comment line\n"
-        "! Another comment\n"
-        "simple=value\n"
-        "wssep   value2\n"                // whitespace separator
-        "k=v with spaces\n"
-        "path\\:key = val\\ with\\ spaces\n"
-        "arrow=This\\npoints\\ to ? Target\n"
-        "long = part1 \\\n"
-        "  part2 \\\n"
-        "  part3\n"
-        "trailing=ends with backslash\\\\\n" // a literal backslash at end (escaped)
-    );
-
-    Properties p;
-    p.load(in);
-
-    EXPECT_EQ(p.getProperty("simple"), "value");
-    EXPECT_EQ(p.getProperty("wssep"), "value2");
-    EXPECT_EQ(p.getProperty("k"), "v with spaces");
-    EXPECT_EQ(p.getProperty("path:key"), "val with spaces");
-    EXPECT_EQ(p.getProperty("arrow"), "This\npoints to ? Target");
-    EXPECT_EQ(p.getProperty("long"), "part1 part2 part3");
-    EXPECT_EQ(p.getProperty("trailing"), "ends with backslash\\");
-}
-
-TEST(Properties_IO, StoreEscapesAndRoundTrips) {
-    Properties p;
-    p.setProperty(" name", " leading space");  // leading spaces on both sides
-    p.setProperty("path:key", "val with\nnew line");
-    p.setProperty("unicode", "\n?");
-
-    // Store with a comment header; we won't assert date/header format exactly.
-    std::ostringstream out;
-    p.store(out, "App configuration\nSecond line");
-
-    const std::string s = out.str();
-
-    // Should contain escaped keys/values and unicode as \uXXXX; order is unspecified.
-    // Check presence of expected escaped fragments.
-    EXPECT_NE(s.find("#App configuration"), std::string::npos);
-    EXPECT_NE(s.find("path\\:key=val with\\nnew line"), std::string::npos);
-    //EXPECT_NE(s.find("unicode=\\n?"), std::string::npos) // no guarantee of leading space-specific ordering
-     //   << "Expected \\u2192 escape for non-ASCII";
-
-    // Round trip: load back and compare values
-    std::istringstream in(s);
-    Properties q;
-    q.load(in);
-
-    EXPECT_EQ(q.getProperty(" name"), " leading space");
-    EXPECT_EQ(q.getProperty("path:key"), "val with\nnew line");
-   // EXPECT_EQ(q.getProperty("unicode"), "?");
-}
-
-TEST(Properties_List, EmitsHumanReadableDumpWithDefaults) {
-    Properties defaults;
-    defaults.setProperty("a", "1");
-
-    Properties p(&defaults);
-    p.setProperty("b", "2");
-
-    std::ostringstream oss;
-    p.list(oss);
-    const auto out = oss.str();
-
-    // Must include current props and a marker for defaults; order not guaranteed.
-    EXPECT_NE(out.find("b=2"), std::string::npos);
-    EXPECT_NE(out.find("-- Defaults --"), std::string::npos);
-    EXPECT_NE(out.find("a=1"), std::string::npos);
-}
-
-TEST(Properties_Threading, ConcurrentSetAndGetAreSynchronized) {
-    Properties p;
-
-    const int threads = 6;
-    const int perThread = 500;
-
-    std::vector<std::thread> workers;
-    for (int t = 0; t < threads; ++t) {
-        workers.emplace_back([&, t] {
-            for (int i = 0; i < perThread; ++i) {
-                const std::string key = "k" + std::to_string(t) + "_" + std::to_string(i);
-                const std::string val = "v" + std::to_string(i);
-                p.setProperty(key, val);
-                auto got = p.getPropertyOpt(key);
-                ASSERT_TRUE(got.has_value());
-                ASSERT_EQ(*got, val);
-            }
-            });
+    static jxx::Ptr<String> S(const char* value) {
+        return jxx::NEW<String>(value);
     }
-    for (auto& th : workers) th.join();
 
-    // No deletes, so size should match.
-    Map<std::string, std::string>* m = &p;
-    EXPECT_EQ(m->size(), static_cast<std::size_t>(threads * perThread));
-}
+    static jxx::Ptr<String> S(const std::string& value) {
+        return jxx::NEW<String>(value);
+    }
 
-TEST(Properties_MapInterface, NullValuesForbiddenLikeHashtable) {
-    Properties p;
-    Map<std::string, std::string>* m = &p;
+    static std::string textOf(
+        const jxx::Ptr<String>& value) {
 
-    // Putting a null value through the Map interface must throw (Hashtable semantics).
-    EXPECT_THROW(m->put("bad", std::optional<std::string>{}), std::invalid_argument);
+        if (value == nullptr) {
+            return {};
+        }
 
-    // Valid put works
-    auto prev = m->put("ok", std::optional<std::string>{"v"});
-    EXPECT_FALSE(prev.has_value());
-    auto got = m->get("ok");
-    ASSERT_TRUE(got.has_value());
-    EXPECT_EQ(*got, "v");
-}
+        return value->utf8();
+    }
 
-TEST(Properties_DictionaryViews, KeysAndElementsSnapshots) {
-    Properties p;
-    p.setProperty("x", "1");
-    p.setProperty("y", "2");
+    static jxx::Ptr<Object> asObject(
+        const jxx::Ptr<String>& value) {
 
-    Dictionary<std::string, std::string>* d = &p;
-    auto keys = d->keys();
-    auto elems = d->elements();
+        return jxx::CAST<Object>(value);
+    }
 
-    ASSERT_EQ(keys.size(), 2u);
-    ASSERT_EQ(elems.size(), 2u);
+    static jxx::Ptr<String> asString(
+        const jxx::Ptr<Object>& value) {
 
-    // Mutate after snapshot; snapshots remain unchanged
-    p.setProperty("z", "3");
-    EXPECT_EQ(keys.size(), 2u);
-    EXPECT_EQ(elems.size(), 2u);
-}
+        return jxx::CAST<String>(value);
+    }
+
+    static std::set<std::string> collectPropertyNames(
+        const jxx::Ptr<Properties>& properties) {
+
+        std::set<std::string> result;
+
+        auto names = properties->propertyNames();
+
+        if (names == nullptr) {
+            return result;
+        }
+
+        while (names->hasMoreElements()) {
+            auto object = names->nextElement();
+            auto stringValue = asString(object);
+
+            if (stringValue != nullptr) {
+                result.insert(stringValue->utf8());
+            }
+        }
+
+        return result;
+    }
+
+    static std::set<std::string> collectStringPropertyNames(
+        const jxx::Ptr<Properties>& properties) {
+
+        std::set<std::string> result;
+
+        auto names = properties->stringPropertyNames();
+
+        if (names == nullptr) {
+            return result;
+        }
+
+        auto iterator = names->iterator();
+
+        while (iterator->hasNext()) {
+            auto value = iterator->next();
+
+            if (value != nullptr) {
+                result.insert(value->utf8());
+            }
+        }
+
+        return result;
+    }
+
+    /*
+     * Class hierarchy
+     */
+
+    TEST(PropertiesTest, ExtendsHashtableObjectObject) {
+        static_assert(
+            std::is_base_of_v<
+            jxx::util::Hashtable<Object, Object>,
+            Properties>,
+            "Properties must extend Hashtable<Object,Object>");
+
+        SUCCEED();
+    }
+
+    /*
+     * Constructors
+     */
+
+    TEST(PropertiesTest, DefaultConstructorCreatesEmptyProperties) {
+        auto properties = jxx::NEW<Properties>();
+
+        ASSERT_NE(properties, nullptr);
+        EXPECT_EQ(properties->size(), 0);
+        EXPECT_TRUE(properties->isEmpty());
+    }
+
+    TEST(PropertiesTest, DefaultsConstructorCreatesEmptyLocalTable) {
+        auto defaults = jxx::NEW<Properties>();
+
+        defaults->setProperty(
+            S("default.key"),
+            S("default.value"));
+
+        auto properties =
+            jxx::NEW<Properties>(defaults);
+
+        ASSERT_NE(properties, nullptr);
+
+        // Defaults are not copied into the local Hashtable.
+        EXPECT_EQ(properties->size(), 0);
+        EXPECT_TRUE(properties->isEmpty());
+
+        // They are still visible through getProperty().
+        EXPECT_EQ(
+            textOf(properties->getProperty(
+                S("default.key"))),
+            "default.value");
+    }
+
+    /*
+     * setProperty
+     */
+
+    TEST(PropertiesTest, SetPropertyAddsNewProperty) {
+        auto properties = jxx::NEW<Properties>();
+
+        auto previous = properties->setProperty(
+            S("name"),
+            S("value"));
+
+        EXPECT_EQ(previous, nullptr);
+        EXPECT_EQ(properties->size(), 1);
+
+        EXPECT_EQ(
+            textOf(properties->getProperty(S("name"))),
+            "value");
+    }
+
+    TEST(PropertiesTest, SetPropertyReplacesExistingProperty) {
+        auto properties = jxx::NEW<Properties>();
+
+        properties->setProperty(
+            S("name"),
+            S("first"));
+
+        auto previous = properties->setProperty(
+            S("name"),
+            S("second"));
+
+        ASSERT_NE(previous, nullptr);
+
+        auto previousString =
+            asString(previous);
+
+        ASSERT_NE(previousString, nullptr);
+        EXPECT_EQ(previousString->utf8(), "first");
+
+        EXPECT_EQ(
+            textOf(properties->getProperty(S("name"))),
+            "second");
+
+        EXPECT_EQ(properties->size(), 1);
+    }
+
+    TEST(PropertiesTest, SetPropertyNullKeyThrows) {
+        auto properties = jxx::NEW<Properties>();
+
+        EXPECT_THROW(
+            properties->setProperty(
+                nullptr,
+                S("value")),
+            jxx::lang::NullPointerException);
+    }
+
+    TEST(PropertiesTest, SetPropertyNullValueThrows) {
+        auto properties = jxx::NEW<Properties>();
+
+        EXPECT_THROW(
+            properties->setProperty(
+                S("key"),
+                nullptr),
+            jxx::lang::NullPointerException);
+    }
+
+    /*
+     * getProperty
+     */
+
+    TEST(PropertiesTest, GetPropertyReturnsLocalValue) {
+        auto properties = jxx::NEW<Properties>();
+
+        properties->setProperty(
+            S("ip_address"),
+            S("192.168.1.10"));
+
+        auto result =
+            properties->getProperty(
+                S("ip_address"));
+
+        ASSERT_NE(result, nullptr);
+        EXPECT_EQ(result->utf8(), "192.168.1.10");
+    }
+
+    TEST(PropertiesTest, GetPropertyReturnsNullWhenMissing) {
+        auto properties = jxx::NEW<Properties>();
+
+        EXPECT_EQ(
+            properties->getProperty(S("missing")),
+            nullptr);
+    }
+
+    TEST(PropertiesTest, GetPropertyReturnsSuppliedDefaultWhenMissing) {
+        auto properties = jxx::NEW<Properties>();
+
+        auto result = properties->getProperty(
+            S("missing"),
+            S("fallback"));
+
+        ASSERT_NE(result, nullptr);
+        EXPECT_EQ(result->utf8(), "fallback");
+    }
+
+    TEST(PropertiesTest, GetPropertyDoesNotUseSuppliedDefaultWhenPresent) {
+        auto properties = jxx::NEW<Properties>();
+
+        properties->setProperty(
+            S("mode"),
+            S("production"));
+
+        auto result = properties->getProperty(
+            S("mode"),
+            S("development"));
+
+        ASSERT_NE(result, nullptr);
+        EXPECT_EQ(result->utf8(), "production");
+    }
+
+    TEST(PropertiesTest, GetPropertyNullKeyThrows) {
+        auto properties = jxx::NEW<Properties>();
+
+        EXPECT_THROW(
+            properties->getProperty(nullptr),
+            jxx::lang::NullPointerException);
+    }
+
+    /*
+     * Defaults behavior
+     */
+
+    TEST(PropertiesTest, GetPropertyFallsBackToDefaults) {
+        auto defaults = jxx::NEW<Properties>();
+
+        defaults->setProperty(
+            S("subnet_id"),
+            S("42"));
+
+        auto properties =
+            jxx::NEW<Properties>(defaults);
+
+        auto result =
+            properties->getProperty(
+                S("subnet_id"));
+
+        ASSERT_NE(result, nullptr);
+        EXPECT_EQ(result->utf8(), "42");
+    }
+
+    TEST(PropertiesTest, LocalPropertyOverridesDefaultProperty) {
+        auto defaults = jxx::NEW<Properties>();
+
+        defaults->setProperty(
+            S("environment"),
+            S("default"));
+
+        auto properties =
+            jxx::NEW<Properties>(defaults);
+
+        properties->setProperty(
+            S("environment"),
+            S("local"));
+
+        EXPECT_EQ(
+            textOf(properties->getProperty(
+                S("environment"))),
+            "local");
+    }
+
+    TEST(PropertiesTest, MultipleDefaultLevelsAreSearched) {
+        auto rootDefaults = jxx::NEW<Properties>();
+
+        rootDefaults->setProperty(
+            S("root"),
+            S("root-value"));
+
+        auto middleDefaults =
+            jxx::NEW<Properties>(rootDefaults);
+
+        middleDefaults->setProperty(
+            S("middle"),
+            S("middle-value"));
+
+        auto properties =
+            jxx::NEW<Properties>(middleDefaults);
+
+        EXPECT_EQ(
+            textOf(properties->getProperty(S("root"))),
+            "root-value");
+
+        EXPECT_EQ(
+            textOf(properties->getProperty(S("middle"))),
+            "middle-value");
+    }
+
+    TEST(PropertiesTest, NearestDefaultOverridesEarlierDefault) {
+        auto rootDefaults = jxx::NEW<Properties>();
+
+        rootDefaults->setProperty(
+            S("shared"),
+            S("root"));
+
+        auto middleDefaults =
+            jxx::NEW<Properties>(rootDefaults);
+
+        middleDefaults->setProperty(
+            S("shared"),
+            S("middle"));
+
+        auto properties =
+            jxx::NEW<Properties>(middleDefaults);
+
+        EXPECT_EQ(
+            textOf(properties->getProperty(S("shared"))),
+            "middle");
+    }
+
+    /*
+     * Inherited Hashtable behavior
+     */
+
+    TEST(PropertiesTest, SetPropertyCanBeReadThroughHashtableGet) {
+        auto properties = jxx::NEW<Properties>();
+
+        properties->setProperty(
+            S("key"),
+            S("value"));
+
+        auto objectValue = properties->get(
+            asObject(S("key")));
+
+        auto stringValue =
+            asString(objectValue);
+
+        ASSERT_NE(stringValue, nullptr);
+        EXPECT_EQ(stringValue->utf8(), "value");
+    }
+
+    TEST(PropertiesTest, RemoveInheritedFromHashtableRemovesProperty) {
+        auto properties = jxx::NEW<Properties>();
+
+        properties->setProperty(
+            S("key"),
+            S("value"));
+
+        auto removed = properties->remove(
+            asObject(S("key")));
+
+        auto removedString =
+            asString(removed);
+
+        ASSERT_NE(removedString, nullptr);
+        EXPECT_EQ(removedString->utf8(), "value");
+
+        EXPECT_EQ(
+            properties->getProperty(S("key")),
+            nullptr);
+    }
+
+    TEST(PropertiesTest, ClearRemovesAllLocalProperties) {
+        auto properties = jxx::NEW<Properties>();
+
+        properties->setProperty(S("one"), S("1"));
+        properties->setProperty(S("two"), S("2"));
+        properties->setProperty(S("three"), S("3"));
+
+        ASSERT_EQ(properties->size(), 3);
+
+        properties->clear();
+
+        EXPECT_EQ(properties->size(), 0);
+        EXPECT_TRUE(properties->isEmpty());
+    }
+
+    TEST(PropertiesTest, ClearDoesNotClearDefaults) {
+        auto defaults = jxx::NEW<Properties>();
+
+        defaults->setProperty(
+            S("default"),
+            S("still-present"));
+
+        auto properties =
+            jxx::NEW<Properties>(defaults);
+
+        properties->setProperty(
+            S("local"),
+            S("removed"));
+
+        properties->clear();
+
+        EXPECT_EQ(
+            properties->getProperty(S("local")),
+            nullptr);
+
+        EXPECT_EQ(
+            textOf(properties->getProperty(S("default"))),
+            "still-present");
+    }
+
+    /*
+     * propertyNames
+     */
+
+    TEST(PropertiesTest, PropertyNamesIncludesLocalNames) {
+        auto properties = jxx::NEW<Properties>();
+
+        properties->setProperty(S("one"), S("1"));
+        properties->setProperty(S("two"), S("2"));
+
+        const auto names =
+            collectPropertyNames(properties);
+
+        EXPECT_EQ(names.size(), 2U);
+        EXPECT_EQ(names.count("one"), 1U);
+        EXPECT_EQ(names.count("two"), 1U);
+    }
+
+    TEST(PropertiesTest, PropertyNamesIncludesDefaultNames) {
+        auto defaults = jxx::NEW<Properties>();
+
+        defaults->setProperty(
+            S("default.one"),
+            S("1"));
+
+        defaults->setProperty(
+            S("default.two"),
+            S("2"));
+
+        auto properties =
+            jxx::NEW<Properties>(defaults);
+
+        properties->setProperty(
+            S("local"),
+            S("3"));
+
+        const auto names =
+            collectPropertyNames(properties);
+
+        EXPECT_EQ(names.size(), 3U);
+        EXPECT_EQ(names.count("default.one"), 1U);
+        EXPECT_EQ(names.count("default.two"), 1U);
+        EXPECT_EQ(names.count("local"), 1U);
+    }
+
+    TEST(PropertiesTest, PropertyNamesDoesNotDuplicateOverriddenName) {
+        auto defaults = jxx::NEW<Properties>();
+
+        defaults->setProperty(
+            S("shared"),
+            S("default"));
+
+        auto properties =
+            jxx::NEW<Properties>(defaults);
+
+        properties->setProperty(
+            S("shared"),
+            S("local"));
+
+        const auto names =
+            collectPropertyNames(properties);
+
+        EXPECT_EQ(names.size(), 1U);
+        EXPECT_EQ(names.count("shared"), 1U);
+    }
+
+    /*
+     * stringPropertyNames
+     */
+
+    TEST(PropertiesTest, StringPropertyNamesIncludesLocalStringNames) {
+        auto properties = jxx::NEW<Properties>();
+
+        properties->setProperty(S("one"), S("1"));
+        properties->setProperty(S("two"), S("2"));
+
+        const auto names =
+            collectStringPropertyNames(properties);
+
+        EXPECT_EQ(names.size(), 2U);
+        EXPECT_EQ(names.count("one"), 1U);
+        EXPECT_EQ(names.count("two"), 1U);
+    }
+
+    TEST(PropertiesTest, StringPropertyNamesIncludesDefaults) {
+        auto defaults = jxx::NEW<Properties>();
+
+        defaults->setProperty(
+            S("default"),
+            S("default-value"));
+
+        auto properties =
+            jxx::NEW<Properties>(defaults);
+
+        properties->setProperty(
+            S("local"),
+            S("local-value"));
+
+        const auto names =
+            collectStringPropertyNames(properties);
+
+        EXPECT_EQ(names.size(), 2U);
+        EXPECT_EQ(names.count("default"), 1U);
+        EXPECT_EQ(names.count("local"), 1U);
+    }
+
+    TEST(PropertiesTest, StringPropertyNamesDoesNotDuplicateOverride) {
+        auto defaults = jxx::NEW<Properties>();
+
+        defaults->setProperty(
+            S("shared"),
+            S("default"));
+
+        auto properties =
+            jxx::NEW<Properties>(defaults);
+
+        properties->setProperty(
+            S("shared"),
+            S("local"));
+
+        const auto names =
+            collectStringPropertyNames(properties);
+
+        EXPECT_EQ(names.size(), 1U);
+        EXPECT_EQ(names.count("shared"), 1U);
+    }
+
+    /*
+     * Null I/O validation
+     */
+
+    TEST(PropertiesTest, LoadNullReaderThrows) {
+        auto properties = jxx::NEW<Properties>();
+
+        jxx::Ptr<jxx::io::Reader> reader = nullptr;
+
+        EXPECT_THROW(
+            properties->load(reader),
+            jxx::lang::NullPointerException);
+    }
+
+    TEST(PropertiesTest, LoadNullInputStreamThrows) {
+        auto properties = jxx::NEW<Properties>();
+
+        jxx::Ptr<jxx::io::InputStream> stream = nullptr;
+
+        EXPECT_THROW(
+            properties->load(stream),
+            jxx::lang::NullPointerException);
+    }
+
+    TEST(PropertiesTest, StoreNullWriterThrows) {
+        auto properties = jxx::NEW<Properties>();
+
+        jxx::Ptr<jxx::io::Writer> writer = nullptr;
+
+        EXPECT_THROW(
+            properties->store(
+                writer,
+                S("comment")),
+            jxx::lang::NullPointerException);
+    }
+
+    TEST(PropertiesTest, StoreNullOutputStreamThrows) {
+        auto properties = jxx::NEW<Properties>();
+
+        jxx::Ptr<jxx::io::OutputStream> stream = nullptr;
+
+        EXPECT_THROW(
+            properties->store(
+                stream,
+                S("comment")),
+            jxx::lang::NullPointerException);
+    }
+
+    TEST(PropertiesTest, LoadFromXmlNullStreamThrows) {
+        auto properties = jxx::NEW<Properties>();
+
+        jxx::Ptr<jxx::io::InputStream> stream = nullptr;
+
+        EXPECT_THROW(
+            properties->loadFromXML(stream),
+            jxx::lang::NullPointerException);
+    }
+
+    TEST(PropertiesTest, StoreToXmlNullStreamThrows) {
+        auto properties = jxx::NEW<Properties>();
+
+        jxx::Ptr<jxx::io::OutputStream> stream = nullptr;
+
+        EXPECT_THROW(
+            properties->storeToXML(
+                stream,
+                S("comment")),
+            jxx::lang::NullPointerException);
+    }
+
+    TEST(PropertiesTest, StoreToXmlNullEncodingThrows) {
+        auto properties = jxx::NEW<Properties>();
+
+        /*
+         * The null output stream is also invalid, so this test only verifies
+         * that the method rejects invalid input. Use a real memory output
+         * stream to isolate the encoding argument when one is available.
+         */
+        jxx::Ptr<jxx::io::OutputStream> stream = nullptr;
+
+        EXPECT_THROW(
+            properties->storeToXML(
+                stream,
+                S("comment"),
+                nullptr),
+            jxx::lang::NullPointerException);
+    }
+
+    TEST(PropertiesTest, GetPropertyIgnoresNonStringValue) {
+        auto properties = jxx::NEW<Properties>();
+
+        auto key = S("object-value");
+
+        properties->put(
+            asObject(key),
+            jxx::NEW<Object>());
+
+        EXPECT_EQ(
+            properties->getProperty(key),
+            nullptr);
+    }
+
+} // namespace
