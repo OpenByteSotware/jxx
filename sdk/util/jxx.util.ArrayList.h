@@ -33,7 +33,7 @@ private:
 
 public:
     ArrayList()
-        : elementData(new JxxArray<jxx::Ptr<E>, 1U>(DEFAULT_CAPACITY)), size_(0) {
+        : elementData(jxx::NEW<JxxArray<jxx::Ptr<E>, 1U>>(DEFAULT_CAPACITY)), size_(0) {
     }
 
     explicit ArrayList(jxx::lang::jint initialCapacity)
@@ -146,7 +146,7 @@ public:
     virtual jxx::lang::ObjectArray toArray() override {
         auto a = jxx::NEW<jxx::lang::ObjectArrayType>(jxx::NEW<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>(size_));
         for (jxx::lang::jint i = 0; i < size_; ++i) {
-            (*a)(i) = (*elementData)(i);
+            a->at(i) = (*elementData)(i);
         }
         return a;
     }

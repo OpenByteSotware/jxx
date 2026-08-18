@@ -347,7 +347,7 @@ namespace jxx {
             }
 
         protected:
-            class EntryView final
+            class EntryView
                 : public virtual MapEntry<K, V> {
             private:
                 HashMap<K, V>* owner_;
@@ -462,7 +462,7 @@ namespace jxx {
                     new EntryView(this, key));
             }
 
-            class EntryIterator final
+            class EntryIterator
                 : public virtual Iterator<MapEntry<K, V>> {
             private:
                 HashMap<K, V>* owner_;
@@ -542,7 +542,7 @@ namespace jxx {
                 }
             };
 
-            class EntrySet final
+            class EntrySet
                 : public virtual AbstractSet<MapEntry<K, V>> {
             private:
                 HashMap<K, V>* owner_;

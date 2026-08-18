@@ -542,6 +542,7 @@ namespace jxx::lang {
     using FloatArrayType = jxx::lang::JxxArray<jxx::lang::jfloat, 1>;
     using DoubleArrayType = jxx::lang::JxxArray<jxx::lang::jdouble, 1>;
     using ObjectArrayType = jxx::lang::JxxArray<jxx::Ptr<jxx::lang::Object>, 1>;
+	using BooleanArrayType = jxx::lang::JxxArray<jxx::lang::jbool, 1>;
    
     using ByteArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jbyte, 1>>;
     using CharArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jchar, 1>>;
@@ -551,6 +552,7 @@ namespace jxx::lang {
     using FloatArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jfloat, 1>>;
     using DoubleArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jdouble, 1>>;
     using ObjectArray = jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::Object>, 1>>;
+    using BooleanArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jbool, 1>>;
 
     using ByteArray2D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jbyte, 2>>;
     using CharArray2D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jchar, 2>>;
@@ -560,6 +562,7 @@ namespace jxx::lang {
     using FloatArray2D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jfloat, 2>>;
     using DoubleArray2D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jdouble, 2>>;
     using ObjectArray2D = jxx::Ptr<jxx::lang::JxxArray < jxx::Ptr<jxx::lang::Object>, 2>>;
+    using BooleanArray2D = jxx::Ptr<jxx::lang::JxxArray < jxx::lang::jbool, 2>>;
 
     using ByteArray3D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jbyte, 3>>;
     using CharArray3D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jchar, 3>>;
@@ -569,6 +572,7 @@ namespace jxx::lang {
     using FloatArray3D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jfloat, 3>>;
     using DoubleArray3D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jdouble, 3>>;
     using ObjectArray3D = jxx::Ptr<jxx::lang::JxxArray < jxx::Ptr<jxx::lang::Object>, 3>>;
+    using BooleanArray3D = jxx::Ptr<jxx::lang::JxxArray < jxx::lang::jbool, 3>>;
 
 
 } // namespace jxx::lang

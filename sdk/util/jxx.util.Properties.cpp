@@ -99,10 +99,10 @@ public:
         throw jxx::lang::UnsupportedOperationException();
     }   
           
-    virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> toArray() override {
-        auto array = jxx::NEW<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>(values_.size());
+    virtual jxx::lang::ObjectArray toArray() override {
+        auto array = jxx::NEW<jxx::lang::ObjectArrayType>(values_.size());
         for (std::size_t i = 0; i < values_.size(); ++i) {
-            (*array)(i) = jxx::CAST<jxx::lang::Object, jxx::lang::Object>(values_[i]);
+            array->at(i) = jxx::CAST<jxx::lang::Object>(values_[i]);
         }
         return array;
 	}

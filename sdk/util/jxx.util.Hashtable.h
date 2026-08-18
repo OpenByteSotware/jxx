@@ -141,10 +141,10 @@ private:
 
     class EntryView : public virtual MapEntry<K, V> {
     private:
-        Hashtable<K, V>* owner_;
+        jxx::Ptr<Hashtable<K, V>> owner_;
         jxx::Ptr<K> key_;
     public:
-        EntryView(Hashtable<K, V>* owner, jxx::Ptr<K> key)
+        EntryView(jxx::Ptr<Hashtable<K, V>> owner, jxx::Ptr<K> key)
             : owner_(owner), key_(key) {}
         virtual ~EntryView() = default;
         virtual jxx::Ptr<K> getKey() override { return key_; }
@@ -171,9 +171,9 @@ private:
 
     class KeySetView : public virtual Set<K> {
     private:
-        Hashtable<K, V>* owner_;
+        jxx::Ptr<Hashtable<K, V>> owner_;
     public:
-        explicit KeySetView(Hashtable<K, V>* owner) : owner_(owner) {}
+        explicit KeySetView(jxx::Ptr<Hashtable<K, V>> owner) : owner_(owner) {}
         virtual ~KeySetView() = default;
         virtual jxx::lang::jint size() override { return owner_->size(); }
         virtual jxx::lang::jbool contains(jxx::Ptr<jxx::lang::Object> o) override { return owner_->containsKey(o); }
@@ -219,11 +219,11 @@ private:
         }
     };
 
-    class ValuesView : public virtual Collection<V> {
+    class ValuesView : public jxx::lang::Object, public virtual Collection<V> {
     private:
-        Hashtable<K, V>* owner_;
+        jxx::Ptr<Hashtable<K, V>> owner_;
     public:
-        explicit ValuesView(Hashtable<K, V>* owner) : owner_(owner) {}
+        explicit ValuesView(jxx::Ptr<Hashtable<K, V>> owner) : owner_(owner) {}
         virtual ~ValuesView() = default;
         virtual jxx::lang::jint size() override { return owner_->size(); }
         virtual jxx::lang::jbool contains(jxx::Ptr<jxx::lang::Object> o) override { return owner_->containsValue(o); }
@@ -234,12 +234,12 @@ private:
         }
         virtual void clear() override { owner_->clear(); }
         virtual jxx::lang::ObjectArray toArray() override {
-            const jxx::lang::jint sz = this->size();
+            const jxx::lang::jint sz = size();
             auto result = jxx::NEW<jxx::lang::ObjectArrayType>(jxx::NEW<JxxArray<jxx::Ptr<V>, 1U>>(sz));
-            auto it = this->iterator();
+            auto it = iterator();
             jxx::lang::jint i = 0;
             while (it->hasNext()) {
-                (*result)(i++) = it->next();
+                result->at(i++) = it->next();
             }
             return result;
         }
@@ -262,14 +262,18 @@ private:
         }
         virtual jxx::lang::jbool retainAll(jxx::Ptr<wildcard::CollectionAny> c) override {
             throw jxx::lang::UnsupportedOperationException(); }
+
+        virtual jxx::lang::jbool isEmpty() override {
+            return static_cast<jxx::lang::jbool>(size() == 0);
+		}
        
     };
 
     class EntrySetView : public virtual Set<MapEntry<K, V>> {
     private:
-        Hashtable<K, V>* owner_;
+        jxx::Ptr<Hashtable<K, V>> owner_;
     public:
-        explicit EntrySetView(Hashtable<K, V>* owner) : owner_(owner) {}
+        explicit EntrySetView(jxx::Ptr<Hashtable<K, V>> owner) : owner_(owner) {}
         virtual ~EntrySetView() = default;
         virtual jxx::lang::jint size() override { return owner_->size(); }
         virtual jxx::lang::jbool contains(jxx::Ptr<jxx::lang::Object> o) override {
@@ -533,15 +537,15 @@ public:
     }
 
     virtual jxx::Ptr<Set<K>> keySet() override {
-        return jxx::Ptr<Set<K>>(jxx::NEW<KeySetView>(this));
+        return jxx::Ptr<Set<K>>(jxx::NEW<KeySetView>(this->thisPtr));
     }
 
     virtual jxx::Ptr<Collection<V>> values() override {
-        return jxx::Ptr<Collection<V>>(jxx::NEW<ValuesView>(this));
+        return jxx::Ptr<Collection<V>>(jxx::NEW<ValuesView>(this->thisPtr));
     }
 
     virtual jxx::Ptr<Set<MapEntry<K, V>>> entrySet() override {
-        return jxx::Ptr<Set<MapEntry<K, V>>>(jxx::NEW<EntrySetView>(this));
+        return jxx::Ptr<Set<MapEntry<K, V>>>(jxx::NEW<EntrySetView>(this->thisPtr));
     }
 
     virtual jxx::Ptr<V> getOrDefault(jxx::Ptr<jxx::lang::Object> key, jxx::Ptr<V> defaultValue) {
@@ -644,7 +648,7 @@ private:
             out.reserve(static_cast<std::size_t>(count_));
             for (const auto& bucket : buckets_) {
                 for (const auto& entry : bucket) {
-                    out.push_back(jxx::Ptr<MapEntry<K, V>>(jxx::NEW<EntryView>(this, entry.key)));
+                    out.push_back(jxx::Ptr<MapEntry<K, V>>(jxx::NEW<EntryView>(this->thisPtr, entry.key)));
                 }
             }
             return out;

@@ -19,7 +19,7 @@ namespace jxx::util {
         virtual jxx::lang::jbool contains(
             jxx::Ptr<jxx::lang::Object> object) = 0;
 
-        virtual jxx::Ptr<Iterator<E>> iterator() override = 0;
+        virtual jxx::Ptr<Iterator<E>> iterator() = 0;
 
         virtual jxx::lang::ObjectArray toArray() = 0;
 
