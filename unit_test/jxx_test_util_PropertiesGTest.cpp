@@ -6,15 +6,15 @@
 
 #include <gtest/gtest.h>
 
-#include "io/jxx.util.Properties.h"
+#include "util/jxx.util.Properties.h"
 #include "io/jxx.io.InputStream.h"
 #include "io/jxx.io.OutputStream.h"
 #include "io/jxx.io.PrintStream.h"
 #include "io/jxx.io.PrintWriter.h"
 #include "io/jxx.io.Reader.h"
 #include "io/jxx.io.Writer.h"
-#include "io/jxx.lang.Exceptions.h"
-#include "io/jxx.lang.String.h"
+#include "lang/jxx.lang.Exceptions.h"
+#include "lang/jxx.lang.String.h"
 
 namespace {
 

@@ -46,7 +46,7 @@ int main() {
     {
         std::cout << "=== Hashtable MT: Low contention (disjoint keys) ===\n";
         Hashtable<std::string,int> ht;
-        ht.ensureCapacity(N);
+        //ht.ensureCapacity(N);
 
         SpinBarrier barrier(threads);
         BenchTimer t;

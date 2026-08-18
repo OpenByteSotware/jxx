@@ -18,7 +18,6 @@
 #include "util/jxx.util.Iterator.h"
 #include "util/jxx.util.NoSuchElementException.h"
 
-namespace {
 
     using jxx::lang::Object;
     using jxx::lang::String;

@@ -235,7 +235,7 @@ private:
         virtual void clear() override { owner_->clear(); }
         virtual jxx::lang::ObjectArray toArray() override {
             const jxx::lang::jint sz = this->size();
-            auto result = jxx::Ptr<JxxArray<jxx::Ptr<V>, 1U>>(jxx::NEW<JxxArray<jxx::Ptr<V>, 1U>>(sz));
+            auto result = jxx::NEW<jxx::lang::ObjectArrayType>(jxx::NEW<JxxArray<jxx::Ptr<V>, 1U>>(sz));
             auto it = this->iterator();
             jxx::lang::jint i = 0;
             while (it->hasNext()) {

@@ -474,26 +474,18 @@ namespace jxx {
                 return modified;
             }
 
-            virtual jxx::Ptr<jxx::lang::Object>
-                clone() {
+            virtual jxx::Ptr<jxx::lang::Object> clone()
+            {
+                auto cloned = jxx::NEW<HashSet<E>(static_cast<jxx::lang::jint>(set_.size()), loadFactor_));
 
-                auto cloned =
-                    jxx::Ptr<HashSet<E>>(
-                        new HashSet<E>(
-                            static_cast<jxx::lang::jint>(
-                                set_.size()),
-                            loadFactor_));
+                    for (const auto& element : set_)
+                    {
+                        cloned->set_.insert(element);
+                    }
 
-                for (const auto& element : set_) {
-                    cloned->set_.insert(element);
-                }
-
-                cloned->modCount_ = 0;
-
-                return jxx::CAST<jxx::lang::Object>(
-                    cloned);
+                    cloned->modCount_ = 0;
+                    return jxx::CAST<jxx::lang::Object>(cloned);
             }
         };
-
-    } // namespace util
-} // namespace jxx
+    }
+}

@@ -2,7 +2,7 @@
 #include <locale>
 #include "jxx.lang.String.h"
 #include "jxx.lang.FormatArg.h"
-#include "jxx.lang.Formatter.h"
+//#include "jxx.lang.Formatter.h"
 
 using namespace jxx::lang;
 

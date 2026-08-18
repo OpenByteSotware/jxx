@@ -144,7 +144,7 @@ public:
     }
 
     virtual jxx::lang::ObjectArray toArray() override {
-        auto a = jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>(jxx::NEW<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>(size_));
+        auto a = jxx::NEW<jxx::lang::ObjectArrayType>(jxx::NEW<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>(size_));
         for (jxx::lang::jint i = 0; i < size_; ++i) {
             (*a)(i) = (*elementData)(i);
         }

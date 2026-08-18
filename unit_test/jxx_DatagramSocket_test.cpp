@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include "jxx.h"
+#include "lang/jxx.lang.Runnable.h"
 
 using jxx::net::DatagramPacket;
 using jxx::net::DatagramSocket;
