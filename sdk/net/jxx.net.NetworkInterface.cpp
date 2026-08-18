@@ -38,16 +38,16 @@
 namespace
 {
 #if defined(_WIN32)
-    inline std::vector<jxx::lang::jbyte> copyAddr4_(const SOCKADDR_IN* sa)
+    inline std::array<jxx::lang::jbyte, 4> copyAddr4_(const SOCKADDR_IN* sa)
     {
-        std::vector<jxx::lang::jbyte> bytes(4);
+        std::array<jxx::lang::jbyte, 4> bytes{};
         std::memcpy(bytes.data(), &sa->sin_addr, 4);
         return bytes;
     }
 
-    inline std::vector<jxx::lang::jbyte> copyAddr6_(const SOCKADDR_IN6* sa)
+    inline std::array<jxx::lang::jbyte, 16> copyAddr6_(const SOCKADDR_IN6* sa)
     {
-        std::vector<jxx::lang::jbyte> bytes(16);
+        std::array<jxx::lang::jbyte, 16> bytes{};
         std::memcpy(bytes.data(), &sa->sin6_addr, 16);
         return bytes;
     }
