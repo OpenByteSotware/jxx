@@ -28,7 +28,7 @@ namespace jxx::net
         static jxx::Ptr<jxx::util::Enumeration<NetworkInterface>> getNetworkInterfaces();
 
         jxx::Ptr<jxx::util::Enumeration<InetAddress>> getInetAddresses() const;
-        jxx::Ptr<jxx::util::List<jxx::Ptr<InterfaceAddress>>> getInterfaceAddresses() const;
+        jxx::Ptr<jxx::util::List<InterfaceAddress>>  getInterfaceAddresses() const;
         jxx::Ptr<jxx::util::Enumeration<NetworkInterface>> getSubInterfaces() const;
         jxx::Ptr<NetworkInterface> getParent() const;
 
