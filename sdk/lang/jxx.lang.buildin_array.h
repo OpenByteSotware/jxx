@@ -522,17 +522,20 @@ namespace jxx::lang {
         explicit JxxArray(const std::array<Integer, Rank>& dimensions)
             : JxxArray(validateDimensions_(dimensions), RectangularTag{}) {}
 
-        // Rectangular allocation from one integral argument per dimension.
-        template <
-            typename... Dimensions,
+        template <typename... Dimensions,
             std::enable_if_t<
             sizeof...(Dimensions) == Rank &&
-            (std::is_integral_v<
-                std::remove_cv_t<std::remove_reference_t<Dimensions>>> &&
-                ...),
+            std::conjunction_v<
+            std::is_integral<
+            std::remove_cv_t<
+            std::remove_reference_t<
+            Dimensions>>>...>,
             int> = 0>
-        explicit JxxArray(Dimensions... dimensions)
-            : JxxArray(makeDimensions_(dimensions...)) {}
+            explicit JxxArray(
+                Dimensions... dimensions)
+            : JxxArray(
+                makeDimensions_(
+                    dimensions...)) {}
 
         // Nested Java-style initializer with non-null rows.
         JxxArray(InitList values)

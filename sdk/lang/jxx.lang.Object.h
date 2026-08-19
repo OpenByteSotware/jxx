@@ -270,66 +270,142 @@ namespace jxx {
         std::shared_ptr<T> data_;
     };
 
-    // =====================================================
-    // Auto-detect jxx::NEW
-    // =====================================================
+        namespace detail {
 
-    namespace detail {
-        // Helper to detect if T has a thisPtr member without requiring complete type
-        template <typename T, typename = void>
-        struct has_this_ptr : std::false_type {};
-        
-        template <typename T>
-        struct has_this_ptr<T, std::void_t<decltype(std::declval<T>().thisPtr)>> 
-            : std::true_type {};
-    }
+            /*
+             * Detects whether T exposes a writable thisPtr member.
+             */
+            template <typename T, typename = void>
+            struct has_this_ptr
+                : std::false_type {};
 
-    // Case 1: Fixed-size arrays (T[N])
-    template <typename T,
-        typename = std::enable_if_t<std::is_array_v<T>&& std::extent_v<T> != 0>>
+            template <typename T>
+            struct has_this_ptr<
+                T,
+                std::void_t<
+                decltype(
+                    std::declval<T&>().thisPtr)>>
+                : std::true_type {
+            };
+
+            /*
+             * Applies JXX Object initialization after construction.
+             */
+            template <typename T>
+            void initialize_object(
+                const std::shared_ptr<T>& object) {
+
+                if constexpr (has_this_ptr<T>::value) {
+                    object->thisPtr = object;
+                }
+            }
+
+        } // namespace detail
+
+        /*
+         * =====================================================================
+         * Case 1: Fixed-size native C++ array type
+         *
+         * Usage:
+         *
+         *     auto value = jxx::NEW<int[10]>();
+         *
+         * Return type:
+         *
+         *     std::shared_ptr<std::array<int, 10>>
+         *
+         * This is native C++ convenience behavior. It is not JxxArray.
+         * =====================================================================
+         */
+        template <
+            typename T,
+            std::enable_if_t<
+            std::is_array_v<T> &&
+            (std::extent_v<T> != 0U),
+            int> = 0>
         auto NEW() {
-        using ElementType = std::remove_extent_t<T>;
-        constexpr std::size_t N = std::extent_v<T>;
-        return std::make_shared<std::array<ElementType, N>>();
-    }
 
-    // Case 2: Dynamic arrays (T[])
-    template <typename T,
-        typename = std::enable_if_t<std::is_array_v<T>&& std::extent_v<T> == 0>>
-        auto NEW(std::size_t size) {
-        return std::make_shared<std::remove_extent_t<T>[]>(size);
-    }
+            using ElementType =
+                std::remove_extent_t<T>;
 
-    // Case 3: Fully dynamic N-D arrays
-    // Enabled if: more than 1 integer arg OR (1 integer arg and T is not a class)
-    template <typename T, typename... Dims,
-        typename = std::enable_if_t<!std::is_array_v<T> &&
-        (sizeof...(Dims) > 1 ||
-            (!std::is_class_v<T> && sizeof...(Dims) == 1)) &&
-        std::conjunction_v<std::is_integral<Dims>...>>>
-        auto NEW(Dims... dims) {
-        constexpr std::size_t N = sizeof...(Dims);
-        return JxxArray<T, N>(dims...);
-    }
+            constexpr std::size_t Count =
+                std::extent_v<T>;
 
-    // Case 4: Single object (default or with args)
-    // Enabled if: no args OR args not all integers OR T is a class
-    template <typename T, typename... Args,
-        typename = std::enable_if_t<!std::is_array_v<T> &&
-        (sizeof...(Args) == 0 ||
-            !std::conjunction_v<std::is_integral<Args>...> ||
-            std::is_class_v<T>)>>
-        std::shared_ptr<T> NEW(Args&&... args) {
-        auto obj = std::make_shared<T>(std::forward<Args>(args)...);
-
-        // if its an Object, set thisPtr for safe shared_from_this in clone() and getClass()
-        // Check for thisPtr member instead of is_base_of to avoid requiring complete type definition
-        if constexpr (detail::has_this_ptr<T>::value) {
-            obj->thisPtr = obj;
+            return std::make_shared<
+                std::array<
+                ElementType,
+                Count>>();
         }
 
-        return obj;
-    }
+        /*
+         * =====================================================================
+         * Case 2: Dynamic native C++ array type
+         *
+         * Usage:
+         *
+         *     auto value = jxx::NEW<int[]>(10);
+         *
+         * C++17 does not support:
+         *
+         *     std::make_shared<int[]>(10)
+         *
+         * so shared_ptr<T[]> is constructed directly.
+         *
+         * This is native C++ convenience behavior. For Java arrays, prefer
+         * JxxArray<T, Rank>.
+         * =====================================================================
+         */
+        template <
+            typename T,
+            std::enable_if_t<
+            std::is_array_v<T> &&
+            (std::extent_v<T> == 0U),
+            int> = 0>
+        auto NEW(
+            std::size_t size) {
+
+            using ElementType =
+                std::remove_extent_t<T>;
+
+            return std::shared_ptr<ElementType[]>(
+                new ElementType,
+                std::default_delete<ElementType[]>());
+        }
+
+        /*
+         * =====================================================================
+         * Case 3: Normal object construction
+         *
+         * This handles:
+         *
+         *     jxx::NEW<Vector<E>>(capacity, increment)
+         *     jxx::NEW<String>("value")
+         *     jxx::NEW<IntArrayType>(10)
+         *     jxx::NEW<IntArray2DType>(2, 3)
+         *     jxx::NEW<IntArray3DType>(2, 3, 4)
+         *
+         * JxxArray is a class, so its dimensional constructors work naturally
+         * through this overload. No special multidimensional NEW overload is
+         * required.
+         * =====================================================================
+         */
+        template <
+            typename T,
+            typename... Args,
+            std::enable_if_t<
+            !std::is_array_v<T>,
+            int> = 0>
+        std::shared_ptr<T> NEW(
+            Args&&... args) {            
+
+            auto object =
+                std::make_shared<T>(
+                    std::forward<Args>(args)...);
+
+            detail::initialize_object(object);
+
+            return object;
+        }
 
 #ifndef CAST_PTR
 #define CAST_PTR(Type, ptr) std::dynamic_pointer_cast<const Type>(ptr)

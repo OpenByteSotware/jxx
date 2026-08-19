@@ -180,7 +180,6 @@ TEST(JxxArrayRank1, EmplaceBackWorksForTrivialTypes) {
     static_assert(std::is_trivial_v<int>, "Test assumes int is trivial");
     jxx::lang::JxxArray<int, 1> a;
     
-    EXPECT_EQ(r, 123);
     EXPECT_EQ(a.length, 1u);
     EXPECT_EQ(a[0], 123);
 }

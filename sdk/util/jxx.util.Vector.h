@@ -34,7 +34,7 @@ private:
     jxx::lang::jint capacityIncrement_;
     jxx::lang::jint capacity_;
 
-    static std::string ptrToString(const jxx::Ptr<E>& value) {
+    static std::string ptrToString(const jxx::Ptr<E> value) {
         if (value == nullptr) {
             return "null";
         }
@@ -46,7 +46,7 @@ private:
         return asString == nullptr ? std::string("null") : asString->utf8();
     }
 
-    static jxx::lang::jbool ptrEqualsObject(const jxx::Ptr<E>& a, const jxx::Ptr<jxx::lang::Object>& b) {
+    static jxx::lang::jbool ptrEqualsObject(const jxx::Ptr<E> a, const jxx::Ptr<jxx::lang::Object> b) {
         if (a == nullptr && b == nullptr) {
             return static_cast<jxx::lang::jbool>(true);
         }
@@ -94,7 +94,7 @@ private:
         }
     }
 
-    class VectorEnumeration final : public virtual Enumeration<E> {
+    class VectorEnumeration final : public Object, public virtual Enumeration<E> {
     private:
         jxx::Ptr<Vector<E>> owner_;
         mutable jxx::lang::jint cursor_;
@@ -226,7 +226,7 @@ public:
 
     virtual jxx::Ptr<Enumeration<E>> elements() {
         return this->synchronized([&]() -> jxx::Ptr<Enumeration<E>> {
-            return jxx::NEW<Vector>(jxx::Ptr<Vector<E>>(this, [](Vector<E>*) {}));
+            return jxx::CAST<jxx::Ptr<Enumeration<E>>>(jxx::NEW<VectorEnumeration>(jxx::CAST<Vector<E>((thisPtr))));
         });
     }
 
