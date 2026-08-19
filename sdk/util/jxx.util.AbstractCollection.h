@@ -14,7 +14,7 @@ namespace jxx {
 
         template <typename E>
         class AbstractCollection
-            : public virtual jxx::lang::Object
+            : public jxx::lang::Object
             , public virtual Collection<E> {
         public:
             AbstractCollection() = default;

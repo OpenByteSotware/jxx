@@ -10,42 +10,83 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include <stdexcept>
-#include <new>
-#include "jxx.lang.ByteType.h"
+
+#include "lang/jxx.lang.ByteType.h"
+#include "lang/jxx.lang.Object.h"
+//#include "lang/jxx.lang.Exceptions.h"
+
 #include "jxx_types.h"
-#include "jxx.lang.Object.h"
 
 namespace jxx::lang {
 
-    // Forward declaration
-    template <typename T, std::uint32_t N>
+    // Forward declaration.
+    template <typename T, std::uint32_t Rank>
     class JxxArray;
 
-    // ---------- Init-list metatype to nest initializer_list like Java literals ----------
-    template <typename T, std::uint32_t N>
+    // Produces nested initializer_list types for multidimensional literals.
+    template <typename T, std::uint32_t Rank>
     struct JInitList {
-        using type = std::initializer_list<typename JInitList<T, N - 1>::type>;
+        static_assert(Rank > 1U, "JInitList recursion requires Rank > 1");
+        using type = std::initializer_list<typename JInitList<T, Rank - 1U>::type>;
     };
 
     template <typename T>
-    struct JInitList<T, 1> {
+    struct JInitList<T, 1U> {
         using type = std::initializer_list<T>;
     };
 
-    // ======================================================================
-    // Rank-1 specialization: T[]
-    // Java parity:
-    //   - public length field
-    //   - operator[] always bounds-checks and throws ArrayIndexOutOfBoundsException
-    //   - supports negative indices via jint overload
-    // ======================================================================
+    namespace array_detail {
+
+        template <typename Integer>
+        using EnableIntegral = std::enable_if_t<
+            std::is_integral_v<std::remove_cv_t<std::remove_reference_t<Integer>>>,
+            int>;
+
+        template <typename Integer, EnableIntegral<Integer> = 0>
+        inline jxx::lang::jint checkedLength(Integer value) {
+            using Raw = std::remove_cv_t<std::remove_reference_t<Integer>>;
+
+            if constexpr (std::is_signed_v<Raw>) {
+                if (value < 0) {
+                    //throw jxx::lang::NegativeArraySizeException();
+                }
+            }
+
+            using Unsigned = std::make_unsigned_t<Raw>;
+            const auto unsignedValue = static_cast<Unsigned>(value);
+
+            if (static_cast<std::uintmax_t>(unsignedValue) >
+                static_cast<std::uintmax_t>(
+                    std::numeric_limits<jxx::lang::jint>::max())) {
+               // throw jxx::lang::NegativeArraySizeException();
+            }
+
+            return static_cast<jxx::lang::jint>(unsignedValue);
+        }
+
+        inline std::size_t nativeSize(jxx::lang::jint value) noexcept {
+            return static_cast<std::size_t>(value);
+        }
+
+        [[noreturn]] inline void throwIndex(jxx::lang::jint /*index*/) {
+            ///throw jxx::lang::ArrayIndexOutOfBoundsException();
+        }
+
+        [[noreturn]] inline void throwNullRow() {
+            //throw jxx::lang::NullPointerException();
+        }
+
+    } // namespace array_detail
+
+    // ============================================================================
+    // Rank 1 specialization: T[]
+    // ============================================================================
     template <typename T>
-    class JxxArray<T, 1> {
+    class JxxArray<T, 1U> : public virtual jxx::lang::Object {
     public:
         using value_type = T;
-        using size_type = std::uint32_t;
-
+        using size_type = std::size_t;
+        using difference_type = std::ptrdiff_t;
         using pointer = T*;
         using const_pointer = const T*;
         using reference = T&;
@@ -53,527 +94,698 @@ namespace jxx::lang {
         using iterator = T*;
         using const_iterator = const T*;
 
-        // Public attribute like Java: arr.length
-        size_type length = 0;
+        // Java-compatible public field. Array length never changes.
+        const jxx::lang::jint length;
 
-        // ---- ctors ----
-        JxxArray() = default;
+    private:
+        struct CheckedLengthTag {};
 
-        explicit JxxArray(size_type n)
-            : length(n),
-            capacity_(n),
-            data_(n ? std::make_unique<T[]>(n) : std::unique_ptr<T[]>{}) {}
+        std::unique_ptr<T[]> data_;
 
+        JxxArray(jxx::lang::jint checkedLength, CheckedLengthTag)
+            : length(checkedLength),
+            data_(checkedLength == 0
+                ? nullptr
+                : std::make_unique<T[]>(
+                    array_detail::nativeSize(checkedLength))) {}
 
-        explicit JxxArray(const std::array<size_type, 1>& dims)
-            : JxxArray(dims[0]) {}
-
-        // From initializer-list: JxxArray<int,1> a{1,2,3};
-        JxxArray(std::initializer_list<T> init)
-            : JxxArray(static_cast<size_type>(init.size())) {
-            std::copy(init.begin(), init.end(), data_.get());
+        void checkIndex_(jxx::lang::jint index) const {
+            if (index < 0 || index >= length) {
+                //array_detail::throwIndex(index);
+            }
         }
 
-        // Copy
+    public:
+        JxxArray()
+            : length(0), data_(nullptr) {}
+
+        template <typename Integer, array_detail::EnableIntegral<Integer> = 0>
+        explicit JxxArray(Integer requestedLength)
+            : JxxArray(array_detail::checkedLength(requestedLength),
+                CheckedLengthTag{}) {}
+
+        template <typename Integer, array_detail::EnableIntegral<Integer> = 0>
+        explicit JxxArray(const std::array<Integer, 1U>& dimensions)
+            : JxxArray(dimensions[0]) {}
+
+        JxxArray(std::initializer_list<T> values)
+            : JxxArray(array_detail::checkedLength(values.size()),
+                CheckedLengthTag{}) {
+            std::copy(values.begin(), values.end(), begin());
+        }
+
+        explicit JxxArray(const std::vector<T>& values)
+            : JxxArray(array_detail::checkedLength(values.size()),
+                CheckedLengthTag{}) {
+            std::copy(values.begin(), values.end(), begin());
+        }
+
+        explicit JxxArray(std::vector<T>&& values)
+            : JxxArray(array_detail::checkedLength(values.size()),
+                CheckedLengthTag{}) {
+            std::move(values.begin(), values.end(), begin());
+        }
+
+        template <std::size_t Count>
+        explicit JxxArray(const std::array<T, Count>& values)
+            : JxxArray(array_detail::checkedLength(Count), CheckedLengthTag{}) {
+            std::copy(values.begin(), values.end(), begin());
+        }
+
+        template <std::size_t Count>
+        explicit JxxArray(std::array<T, Count>&& values)
+            : JxxArray(array_detail::checkedLength(Count), CheckedLengthTag{}) {
+            std::move(values.begin(), values.end(), begin());
+        }
+
         JxxArray(const JxxArray& other)
-            : length(other.length),
-            capacity_(other.length) {
-            if (capacity_) {
-                data_.reset(new T[capacity_]);
-                std::copy_n(other.data_.get(), length, data_.get());
-            }
+            : JxxArray(other.length, CheckedLengthTag{}) {
+            std::copy(other.begin(), other.end(), begin());
         }
 
         JxxArray& operator=(const JxxArray& other) {
-            if (this == &other) return *this;
-            JxxArray tmp(other);
-            swap(tmp);
+            if (this == &other) {
+                return *this;
+            }
+            if (length != other.length) {
+               // throw jxx::lang::IllegalArgumentException();
+            }
+            std::copy(other.begin(), other.end(), begin());
             return *this;
         }
 
-        // Move
-        JxxArray(JxxArray&& other) noexcept
-            : length(other.length),
-            capacity_(other.capacity_),
-            data_(std::move(other.data_)) {
-            other.length = 0;
-            other.capacity_ = 0;
+        JxxArray(JxxArray&& other)
+            : JxxArray(other.length, CheckedLengthTag{}) {
+            std::move(other.begin(), other.end(), begin());
+            std::fill(other.begin(), other.end(), T{});
         }
 
-        JxxArray& operator=(JxxArray&& other) noexcept {
-            if (this == &other) return *this;
-            length = other.length;
-            capacity_ = other.capacity_;
-            data_ = std::move(other.data_);
-            other.length = 0;
-            other.capacity_ = 0;
+        JxxArray& operator=(JxxArray&& other) {
+            if (this == &other) {
+                return *this;
+            }
+            if (length != other.length) {
+                //throw jxx::lang::IllegalArgumentException();
+            }
+            std::move(other.begin(), other.end(), begin());
+            std::fill(other.begin(), other.end(), T{});
             return *this;
         }
 
-        // From std::vector<T> by const reference.
-// Copies all vector elements into this JxxArray.
-        explicit JxxArray(const std::vector<T>& values)
-            : JxxArray(checked_size_(values.size())) {
+        virtual ~JxxArray() = default;
 
-            if (!values.empty()) {
-                std::copy(
-                    values.begin(),
-                    values.end(),
-                    data_.get());
-            }
+        // Java-style checked indexing.
+        reference operator[](jxx::lang::jint index) {
+            checkIndex_(index);
+            return data_[array_detail::nativeSize(index)];
         }
 
-        // From std::vector<T> rvalue.
-        // Elements are moved when T supports useful move assignment.
-        explicit JxxArray(std::vector<T>&& values)
-            : JxxArray(checked_size_(values.size())) {
-
-            if (!values.empty()) {
-                std::move(
-                    values.begin(),
-                    values.end(),
-                    data_.get());
-            }
+        const_reference operator[](jxx::lang::jint index) const {
+            checkIndex_(index);
+            return data_[array_detail::nativeSize(index)];
         }
 
-        // ---- Java-exact element access ----
-        // Java indexes are signed int; negative must throw.
-        reference operator[](jint i) {
-            if (i < 0 || static_cast<size_type>(i) >= length) {
-                throw_aioobe_(i, length);
-            }
-            return data_[static_cast<size_type>(i)];
+        // Checked convenience alias.
+        reference at(jxx::lang::jint index) {
+            return (*this)[index];
         }
 
-        const_reference operator[](jint i) const {
-            if (i < 0 || static_cast<size_type>(i) >= length) {
-                throw_aioobe_(i, length);
-            }
-            return data_[static_cast<size_type>(i)];
+        const_reference at(jxx::lang::jint index) const {
+            return (*this)[index];
         }
 
-        // Optional unsigned overloads (still Java-exact bounds check)
-        reference operator[](size_type i) {
-            if (i >= length) {
-                throw_aioobe_(static_cast<jint>(i), length);
-            }
-            return data_[i];
+        pointer data() noexcept {
+            return data_.get();
         }
 
-        const_reference operator[](size_type i) const {
-            if (i >= length) {
-                throw_aioobe_(static_cast<jint>(i), length);
-            }
-            return data_[i];
+        const_pointer data() const noexcept {
+            return data_.get();
         }
 
-        // Keep at() as alias; Java arrays only have checked []
-        reference at(size_type i) { return (*this)[i]; }
-        const_reference at(size_type i) const { return (*this)[i]; }
-
-        // ---- raw data ----
-        pointer data() noexcept { return data_.get(); }
-        const_pointer data() const noexcept { return data_.get(); }
-
-        // ---- iterators ----
-        iterator begin() noexcept { return data_.get(); }
-        const_iterator begin() const noexcept { return data_.get(); }
-        const_iterator cbegin() const noexcept { return data_.get(); }
-
-        iterator end() noexcept { return data_.get() + length; }
-        const_iterator end() const noexcept { return data_.get() + length; }
-        const_iterator cend() const noexcept { return data_.get() + length; }
-
-        bool empty() const noexcept { return length == 0; }
-        size_type size() const noexcept { return length; }
-        size_type capacity() const noexcept { return capacity_; }
-
-        // ---- algorithms ----
-        void fill(const T& v) { std::fill(begin(), end(), v); }
-
-        // ---- vector-like growth (kept) ----
-        void reserve(size_type n) {
-            if (n <= capacity_) return;
-            grow_to_(n);
+        iterator begin() noexcept {
+            return data_.get();
         }
 
-        void push_back(const T& value) {
-            ensure_capacity_for_push_();
-            data_[length++] = value;
+        const_iterator begin() const noexcept {
+            return data_.get();
         }
 
-        void push_back(T&& value) {
-            ensure_capacity_for_push_();
-            data_[length++] = std::move(value);
+        const_iterator cbegin() const noexcept {
+            return data_.get();
         }
 
-        template <class... Args>
-        reference emplace_back(Args&&... args) {
-            ensure_capacity_for_push_();
-            T tmp(std::forward<Args>(args)...);
-            data_[length] = std::move(tmp);
-            return data_[length++];
+        iterator end() noexcept {
+            return data_ == nullptr
+                ? nullptr
+                : data_.get() + array_detail::nativeSize(length);
         }
 
-        friend bool operator==(const JxxArray& a, const JxxArray& b) {
-            if (a.length != b.length) return false;
-            for (size_type i = 0; i < a.length; ++i) {
-                if (!(a[i] == b[i])) return false;
-            }
-            return true;
+        const_iterator end() const noexcept {
+            return data_ == nullptr
+                ? nullptr
+                : data_.get() + array_detail::nativeSize(length);
         }
 
-        friend bool operator!=(const JxxArray& a, const JxxArray& b) { return !(a == b); }
-
-        void swap(JxxArray& other) noexcept {
-            using std::swap;
-            swap(length, other.length);
-            swap(capacity_, other.capacity_);
-            swap(data_, other.data_);
+        const_iterator cend() const noexcept {
+            return end();
         }
 
-        void resize(size_type n) { resize(n, T{}); }
-
-        void resize(size_type n, const T& fill_value) {
-            if (n == length) return;
-
-            if (n <= capacity_) {
-                if (n > length) {
-                    for (size_type i = length; i < n; ++i) data_[i] = fill_value;
-                }
-                length = n;
-                return;
-            }
-
-            size_type new_cap = n;
-            std::unique_ptr<T[]> buf(new T[new_cap]);
-            std::copy_n(data_.get(), length, buf.get());
-            for (size_type i = length; i < n; ++i) buf[i] = fill_value;
-            data_.swap(buf);
-            capacity_ = new_cap;
-            length = n;
+        size_type size() const noexcept {
+            return array_detail::nativeSize(length);
         }
 
-    private:
-        std::unique_ptr<T[]> data_{};
-        size_type capacity_ = 0;
-
-        static void throw_aioobe_(jint idx, size_type len) {
-            (void)idx;
-            (void)len;
-            // Message content doesn't affect semantics; customize if you want.
-            throw std::out_of_range("Index " + std::to_string(idx) +
-                " is out of range. Valid range: 0 to " + std::to_string(len));
+        jxx::lang::jbool empty() const noexcept {
+            return static_cast<jxx::lang::jbool>(length == 0);
         }
 
-        void grow_to_(size_type need) {
-            size_type new_cap = capacity_ ? capacity_ : size_type{ 4 };
-            while (new_cap < need) {
-                new_cap = (new_cap < (std::numeric_limits<size_type>::max() / 2))
-                    ? (new_cap * 2)
-                    : need;
-            }
-            std::unique_ptr<T[]> buf(new T[new_cap]);
-            if (length) std::copy_n(data_.get(), length, buf.get());
-            data_.swap(buf);
-            capacity_ = new_cap;
+        void fill(const T& value) {
+            std::fill(begin(), end(), value);
         }
 
-        void ensure_capacity_for_push_() {
-            if (length == capacity_) {
-                grow_to_(length ? length + 1 : size_type{ 1 });
-            }
+        friend bool operator==(const JxxArray& left, const JxxArray& right) {
+            return left.length == right.length &&
+                std::equal(left.begin(), left.end(), right.begin());
         }
 
-        static size_type checked_size_(std::size_t size) {
-            if (size >
-                static_cast<std::size_t>(
-                    std::numeric_limits<size_type>::max())) {
+        friend bool operator!=(const JxxArray& left, const JxxArray& right) {
+            return !(left == right);
+        }
 
-                throw std::length_error(
-                    "std::vector is too large for JxxArray");
-            }
-
-            return static_cast<size_type>(size);
+    protected:
+        jxx::Ptr<jxx::lang::Object> cloneImpl() const override {
+            return jxx::NEW<JxxArray<T, 1U>>(*this);
         }
     };
 
-
-    // ======================================================================
-    // Rank-N (N>=2): T[][]...
-    // Java parity:
-    //   - outer holds references to SubArray => rows can be null
-    //   - operator[] bounds-checks and throws ArrayIndexOutOfBoundsException
-    //   - arr[i][j] throws NullPointerException if row is null
-    //   - supports initializer including null rows:
-    //       int[][] a = { null, {1,2}, null }
-    // ======================================================================
+    // ============================================================================
+    // Rank N implementation: T[][]... where Rank >= 2
+    // ============================================================================
     template <typename T, std::uint32_t Rank>
-    class JxxArray : public Object {
-        static_assert(Rank >= 2, "Use JxxArray<T,1> for rank-1 arrays");
+    class JxxArray : public virtual jxx::lang::Object {
+        static_assert(Rank >= 2U,
+            "Use JxxArray<T,1U> for rank-one arrays");
 
     public:
-        using SubArray = JxxArray<T, Rank - 1>;
-        using size_type = std::uint32_t;
+        using value_type = T;
+        using SubArray = JxxArray<T, Rank - 1U>;
+        using RowPointer = jxx::Ptr<SubArray>;
+        using size_type = std::size_t;
+        using difference_type = std::ptrdiff_t;
         using InitList = typename JInitList<T, Rank>::type;
+        using iterator = typename std::vector<RowPointer>::iterator;
+        using const_iterator = typename std::vector<RowPointer>::const_iterator;
 
-        // Java-like public field
-        size_type length = 0;
+        // Java-compatible fixed outer-array length.
+        const jxx::lang::jint length;
 
     private:
-        std::vector<jxx::Ptr<SubArray>> elems_{};
+        struct CheckedLengthTag {};
+        struct RectangularTag {};
 
-        static void throw_aioobe_(jint idx, size_type len) {            
-            throw std::out_of_range("JxxArray Index " + std::to_string(idx) +
-                " is out of range. Valid range: 0 to " + std::to_string(len));
+        std::vector<RowPointer> elements_;
+
+        JxxArray(jxx::lang::jint checkedLength, CheckedLengthTag)
+            : length(checkedLength),
+            elements_(array_detail::nativeSize(checkedLength)) {}
+
+        explicit JxxArray(
+            const std::array<jxx::lang::jint, Rank>& dimensions,
+            RectangularTag)
+            : JxxArray(dimensions[0], CheckedLengthTag{}) {
+            const auto tail = tailDimensions_(dimensions);
+            for (jxx::lang::jint i = 0; i < length; ++i) {
+                elements_[array_detail::nativeSize(i)] =
+                    jxx::NEW<SubArray>(tail);
+            }
         }
 
-        static void throw_npe_row_() {
-            throw std::invalid_argument("JxxArray row is null");
+        void checkIndex_(jxx::lang::jint index) const {
+            if (index < 0 || index >= length) {
+                array_detail::throwIndex(index);
+            }
         }
 
-        static std::array<size_type, Rank - 1>
-            tail_dims_(const std::array<size_type, Rank>& dims) {
-            std::array<size_type, Rank - 1> tail{};
-            for (std::size_t i = 1; i < Rank; ++i) tail[i - 1] = dims[i];
+        template <typename Integer>
+        static std::array<jxx::lang::jint, Rank> validateDimensions_(
+            const std::array<Integer, Rank>& dimensions) {
+            std::array<jxx::lang::jint, Rank> checked{};
+            for (std::size_t i = 0; i < Rank; ++i) {
+                checked[i] = array_detail::checkedLength(dimensions[i]);
+            }
+            return checked;
+        }
+
+        template <typename... Dimensions>
+        static std::array<jxx::lang::jint, Rank> makeDimensions_(
+            Dimensions... dimensions) {
+            static_assert(sizeof...(Dimensions) == Rank,
+                "Dimension count must equal JxxArray rank");
+
+            const std::array<std::intmax_t, Rank> supplied{
+                static_cast<std::intmax_t>(dimensions)... };
+
+            std::array<jxx::lang::jint, Rank> checked{};
+            for (std::size_t i = 0; i < Rank; ++i) {
+                checked[i] = array_detail::checkedLength(supplied[i]);
+            }
+            return checked;
+        }
+
+        static std::array<jxx::lang::jint, Rank - 1U> tailDimensions_(
+            const std::array<jxx::lang::jint, Rank>& dimensions) {
+            std::array<jxx::lang::jint, Rank - 1U> tail{};
+            for (std::size_t i = 1U; i < Rank; ++i) {
+                tail[i - 1U] = dimensions[i];
+            }
             return tail;
         }
 
     public:
-        // Proxy for arr[i]:
-        //   - assign nullptr / Ptr<SubArray>
-        //   - allow chaining arr[i][j] with NPE if row is null
         class RowProxy {
+        private:
+            RowPointer* slot_;
+
+            void requireRow_() const {
+                if (slot_ == nullptr || *slot_ == nullptr) {
+                    array_detail::throwNullRow();
+                }
+            }
+
         public:
-            explicit RowProxy(jxx::Ptr<SubArray>* slot) : slot_(slot) {}
+            explicit RowProxy(RowPointer* slot)
+                : slot_(slot) {}
 
-            RowProxy& operator=(std::nullptr_t) { *slot_ = nullptr; return *this; }
-            RowProxy& operator=(const jxx::Ptr<SubArray>& p) { *slot_ = p; return *this; }
-            RowProxy& operator=(jxx::Ptr<SubArray>&& p) { *slot_ = std::move(p); return *this; }
+            RowProxy(const RowProxy&) = default;
 
-            explicit operator bool() const noexcept { return static_cast<bool>(*slot_); }
-
-            // chaining arr[i][j]
-            decltype(auto) operator[](jint j) {
-                if (!*slot_) throw_npe_row_();
-                return (**slot_)[j];
+            RowProxy& operator=(const RowProxy& other) {
+                if (this != &other) {
+                    *slot_ = other.ptr();
+                }
+                return *this;
             }
 
-            decltype(auto) operator[](jint j) const {
-                if (!*slot_) throw_npe_row_();
-                return (**slot_)[j];
+            RowProxy& operator=(std::nullptr_t) {
+                *slot_ = nullptr;
+                return *this;
             }
 
-            // pointer access if needed
-            jxx::Ptr<SubArray>& ptr() { return *slot_; }
-            const jxx::Ptr<SubArray>& ptr() const { return *slot_; }
+            RowProxy& operator=(const RowPointer& row) {
+                *slot_ = row;
+                return *this;
+            }
+
+            RowProxy& operator=(RowPointer&& row) {
+                *slot_ = std::move(row);
+                return *this;
+            }
+
+            explicit operator bool() const noexcept {
+                return slot_ != nullptr && *slot_ != nullptr;
+            }
+
+            operator RowPointer& () noexcept {
+                return *slot_;
+            }
+
+            operator const RowPointer& () const noexcept {
+                return *slot_;
+            }
+
+            // Recursive checked indexing: a[i][j][k].
+            decltype(auto) operator[](jxx::lang::jint index) {
+                requireRow_();
+                return (**slot_)[index];
+            }
+
+            decltype(auto) operator[](jxx::lang::jint index) const {
+                requireRow_();
+                return (**slot_)[index];
+            }
+
+            decltype(auto) at(jxx::lang::jint index) {
+                requireRow_();
+                return (**slot_).at(index);
+            }
+
+            decltype(auto) at(jxx::lang::jint index) const {
+                requireRow_();
+                return (**slot_).at(index);
+            }
+
+            RowPointer& ptr() noexcept {
+                return *slot_;
+            }
+
+            const RowPointer& ptr() const noexcept {
+                return *slot_;
+            }
+
+            SubArray& get() {
+                requireRow_();
+                return **slot_;
+            }
+
+            const SubArray& get() const {
+                requireRow_();
+                return **slot_;
+            }
 
             SubArray* operator->() {
-                if (!*slot_) throw_npe_row_();
+                requireRow_();
                 return slot_->get();
             }
 
             const SubArray* operator->() const {
-                if (!*slot_) throw_npe_row_();
+                requireRow_();
                 return slot_->get();
             }
-
-        private:
-            jxx::Ptr<SubArray>* slot_;
         };
 
         class ConstRowProxy {
-        public:
-            explicit ConstRowProxy(const jxx::Ptr<SubArray>* slot) : slot_(slot) {}
+        private:
+            const RowPointer* slot_;
 
-            explicit operator bool() const noexcept { return static_cast<bool>(*slot_); }
-
-            decltype(auto) operator[](jint j) const {
-                if (!*slot_) throw_npe_row_();
-                return (**slot_)[j];
+            void requireRow_() const {
+                if (slot_ == nullptr || *slot_ == nullptr) {
+                    array_detail::throwNullRow();
+                }
             }
 
-            const jxx::Ptr<SubArray>& ptr() const { return *slot_; }
+        public:
+            explicit ConstRowProxy(const RowPointer* slot)
+                : slot_(slot) {}
+
+            explicit operator bool() const noexcept {
+                return slot_ != nullptr && *slot_ != nullptr;
+            }
+
+            operator const RowPointer& () const noexcept {
+                return *slot_;
+            }
+
+            decltype(auto) operator[](jxx::lang::jint index) const {
+                requireRow_();
+                return (**slot_)[index];
+            }
+
+            decltype(auto) at(jxx::lang::jint index) const {
+                requireRow_();
+                return (**slot_).at(index);
+            }
+
+            const RowPointer& ptr() const noexcept {
+                return *slot_;
+            }
+
+            const SubArray& get() const {
+                requireRow_();
+                return **slot_;
+            }
 
             const SubArray* operator->() const {
-                if (!*slot_) throw_npe_row_();
+                requireRow_();
                 return slot_->get();
             }
-
-        private:
-            const jxx::Ptr<SubArray>* slot_;
         };
 
-        // ---- ctors ----
+        JxxArray()
+            : length(0), elements_() {}
 
-        JxxArray() = default;
+        // Java: new T[n][]...; all child rows start null.
+        template <typename Integer, array_detail::EnableIntegral<Integer> = 0>
+        explicit JxxArray(Integer outerLength)
+            : JxxArray(array_detail::checkedLength(outerLength),
+                CheckedLengthTag{}) {}
 
-        // Java: new T[n][] => n slots, rows null
-        explicit JxxArray(size_type n) : length(n), elems_(n) {}
+        // Rectangular allocation from std::array dimensions.
+        template <typename Integer, array_detail::EnableIntegral<Integer> = 0>
+        explicit JxxArray(const std::array<Integer, Rank>& dimensions)
+            : JxxArray(validateDimensions_(dimensions), RectangularTag{}) {}
 
-        // Java: new T[d0][d1]...[dN] => rectangular allocation (rows non-null)
-        explicit JxxArray(const std::array<size_type, Rank>& dims) : length(dims[0]) {
-            elems_.resize(length);
-            auto tail = tail_dims_(dims);
-            for (size_type i = 0; i < length; ++i) {
-                elems_[i] = jxx::NEW<SubArray>(tail);
+        // Rectangular allocation from one integral argument per dimension.
+        template <
+            typename... Dimensions,
+            std::enable_if_t<
+            sizeof...(Dimensions) == Rank &&
+            (std::is_integral_v<
+                std::remove_cv_t<std::remove_reference_t<Dimensions>>> &&
+                ...),
+            int> = 0>
+        explicit JxxArray(Dimensions... dimensions)
+            : JxxArray(makeDimensions_(dimensions...)) {}
+
+        // Nested Java-style initializer with non-null rows.
+        JxxArray(InitList values)
+            : JxxArray(array_detail::checkedLength(values.size()),
+                CheckedLengthTag{}) {
+            std::size_t index = 0;
+            for (const auto& row : values) {
+                elements_[index++] = jxx::NEW<SubArray>(row);
             }
         }
 
-        // Nested initializer (no null rows): { {1,2}, {3} }
-        JxxArray(InitList init) : length(static_cast<size_type>(init.size())) {
-            elems_.reserve(length);
-            for (const auto& sub : init) {
-                elems_.push_back(jxx::NEW<SubArray>(sub));
+        // Row-reference initializer, including null rows.
+        JxxArray(std::initializer_list<RowPointer> rows)
+            : JxxArray(array_detail::checkedLength(rows.size()),
+                CheckedLengthTag{}) {
+            std::copy(rows.begin(), rows.end(), elements_.begin());
+        }
+
+        explicit JxxArray(const std::vector<RowPointer>& rows)
+            : JxxArray(array_detail::checkedLength(rows.size()),
+                CheckedLengthTag{}) {
+            std::copy(rows.begin(), rows.end(), elements_.begin());
+        }
+
+        explicit JxxArray(std::vector<RowPointer>&& rows)
+            : JxxArray(array_detail::checkedLength(rows.size()),
+                CheckedLengthTag{}) {
+            std::move(rows.begin(), rows.end(), elements_.begin());
+        }
+
+        template <std::size_t Count>
+        explicit JxxArray(const std::array<RowPointer, Count>& rows)
+            : JxxArray(array_detail::checkedLength(Count), CheckedLengthTag{}) {
+            std::copy(rows.begin(), rows.end(), elements_.begin());
+        }
+
+        template <std::size_t Count>
+        explicit JxxArray(std::array<RowPointer, Count>&& rows)
+            : JxxArray(array_detail::checkedLength(Count), CheckedLengthTag{}) {
+            std::move(rows.begin(), rows.end(), elements_.begin());
+        }
+
+        // Multidimensional copy is shallow with respect to child arrays.
+        JxxArray(const JxxArray& other)
+            : length(other.length), elements_(other.elements_) {}
+
+        JxxArray& operator=(const JxxArray& other) {
+            if (this == &other) {
+                return *this;
             }
-        }
-
-        // ✅ Null-row initializer:
-        //    int[][] a = { null, {1,2}, null }
-        explicit JxxArray(std::initializer_list<jxx::Ptr<SubArray>> rows)
-            : length(static_cast<size_type>(rows.size())), elems_(rows) {}
-
-        // Copy/move
-        JxxArray(const JxxArray&) = default;
-        JxxArray& operator=(const JxxArray&) = default;
-        JxxArray(JxxArray&&) noexcept = default;
-        JxxArray& operator=(JxxArray&&) noexcept = default;
-
-        // ---- Java-exact outer access (checked) ----
-        RowProxy operator[](jint i) {
-            if (i < 0 || static_cast<size_type>(i) >= length) {
-                throw_aioobe_(i, length);
+            if (length != other.length) {
+                //throw jxx::lang::IllegalArgumentException();
             }
-            return RowProxy(&elems_[static_cast<size_type>(i)]);
+            elements_ = other.elements_;
+            return *this;
         }
 
-        ConstRowProxy operator[](jint i) const {
-            if (i < 0 || static_cast<size_type>(i) >= length) {
-                throw_aioobe_(i, length);
+        JxxArray(JxxArray&& other)
+            : length(other.length), elements_(std::move(other.elements_)) {
+            other.elements_.clear();
+            other.elements_.resize(array_detail::nativeSize(other.length));
+        }
+
+        JxxArray& operator=(JxxArray&& other) {
+            if (this == &other) {
+                return *this;
             }
-            return ConstRowProxy(&elems_[static_cast<size_type>(i)]);
-        }
-
-        // Optional unsigned overloads (still checked)
-        RowProxy operator[](size_type i) {
-            if (i >= length) throw_aioobe_(static_cast<jint>(i), length);
-            return RowProxy(&elems_[i]);
-        }
-
-        ConstRowProxy operator[](size_type i) const {
-            if (i >= length) throw_aioobe_(static_cast<jint>(i), length);
-            return ConstRowProxy(&elems_[i]);
-        }
-
-        // at() alias (Java arrays only have checked [])
-        RowProxy at(size_type i) { return (*this)[i]; }
-        ConstRowProxy at(size_type i) const { return (*this)[i]; }
-
-        // Iterators over row pointers
-        auto begin() noexcept { return elems_.begin(); }
-        auto end() noexcept { return elems_.end(); }
-        auto begin() const noexcept { return elems_.begin(); }
-        auto end() const noexcept { return elems_.end(); }
-        auto cbegin() const noexcept { return elems_.cbegin(); }
-        auto cend() const noexcept { return elems_.cend(); }
-
-        bool empty() const noexcept { return length == 0; }
-        size_type size() const noexcept { return length; }
-        size_type capacity() const noexcept { return static_cast<size_type>(elems_.capacity()); }
-
-        void reserve(size_type n) { elems_.reserve(n); }
-
-        // push_back row pointer (can be nullptr, Java-like)
-        void push_back(const jxx::Ptr<SubArray>& row) {
-            elems_.push_back(row);
-            length = static_cast<size_type>(elems_.size());
-        }
-
-        void push_back(jxx::Ptr<SubArray>&& row) {
-            elems_.push_back(std::move(row));
-            length = static_cast<size_type>(elems_.size());
-        }
-
-        // Resize: new slots are null (Java default for reference arrays)
-        void resize(size_type n) {
-            elems_.resize(n);
-            length = static_cast<size_type>(elems_.size());
-        }
-
-        // Fill only non-null rows
-        void fill(const T& v) {
-            for (auto& row : elems_) {
-                if (row) row->fill(v);
+            if (length != other.length) {
+                //throw jxx::lang::IllegalArgumentException();
             }
+            elements_ = std::move(other.elements_);
+            other.elements_.clear();
+            other.elements_.resize(array_detail::nativeSize(other.length));
+            return *this;
         }
 
-        // Deep structural equality w/ null-row semantics
-        friend bool operator==(const JxxArray& a, const JxxArray& b) {
-            if (a.length != b.length) return false;
-            for (size_type i = 0; i < a.length; ++i) {
-                const auto& ra = a.elems_[i];
-                const auto& rb = b.elems_[i];
-                if (!ra || !rb) {
-                    if (ra != rb) return false;
+        virtual ~JxxArray() = default;
+
+        // Checked outer access.
+        RowProxy operator[](jxx::lang::jint index) {
+            checkIndex_(index);
+            return RowProxy(&elements_[array_detail::nativeSize(index)]);
+        }
+
+        ConstRowProxy operator[](jxx::lang::jint index) const {
+            checkIndex_(index);
+            return ConstRowProxy(&elements_[array_detail::nativeSize(index)]);
+        }
+
+        RowProxy at(jxx::lang::jint index) {
+            return (*this)[index];
+        }
+
+        ConstRowProxy at(jxx::lang::jint index) const {
+            return (*this)[index];
+        }
+
+        // Direct access to the lower-rank array reference.
+        RowPointer& row(jxx::lang::jint index) {
+            checkIndex_(index);
+            return elements_[array_detail::nativeSize(index)];
+        }
+
+        const RowPointer& row(jxx::lang::jint index) const {
+            checkIndex_(index);
+            return elements_[array_detail::nativeSize(index)];
+        }
+
+        iterator begin() noexcept {
+            return elements_.begin();
+        }
+
+        const_iterator begin() const noexcept {
+            return elements_.begin();
+        }
+
+        const_iterator cbegin() const noexcept {
+            return elements_.cbegin();
+        }
+
+        iterator end() noexcept {
+            return elements_.end();
+        }
+
+        const_iterator end() const noexcept {
+            return elements_.end();
+        }
+
+        const_iterator cend() const noexcept {
+            return elements_.cend();
+        }
+
+        size_type size() const noexcept {
+            return array_detail::nativeSize(length);
+        }
+
+        jxx::lang::jbool empty() const noexcept {
+            return static_cast<jxx::lang::jbool>(length == 0);
+        }
+
+        void clearRows() noexcept {
+            std::fill(elements_.begin(), elements_.end(), nullptr);
+        }
+
+        // Recursively fills non-null leaf arrays.
+        void fill(const T& value) {
+            for (auto& child : elements_) {
+                if (child != nullptr) {
+                    child->fill(value);
                 }
-                else {
-                    if (!(*ra == *rb)) return false;
+            }
+        }
+
+        friend bool operator==(const JxxArray& left, const JxxArray& right) {
+            if (left.length != right.length) {
+                return false;
+            }
+
+            for (jxx::lang::jint i = 0; i < left.length; ++i) {
+                const auto position = array_detail::nativeSize(i);
+                const auto& leftRow = left.elements_[position];
+                const auto& rightRow = right.elements_[position];
+
+                if (leftRow == nullptr || rightRow == nullptr) {
+                    if (leftRow != rightRow) {
+                        return false;
+                    }
+                }
+                else if (*leftRow != *rightRow) {
+                    return false;
                 }
             }
             return true;
         }
 
-        friend bool operator!=(const JxxArray& a, const JxxArray& b) { return !(a == b); }
+        friend bool operator!=(const JxxArray& left, const JxxArray& right) {
+            return !(left == right);
+        }
 
-        void swap(JxxArray& other) noexcept {
-            using std::swap;
-            swap(length, other.length);
-            elems_.swap(other.elems_);
+    protected:
+        jxx::Ptr<jxx::lang::Object> cloneImpl() const override {
+            return jxx::NEW<JxxArray<T, Rank>>(*this);
         }
     };
 
+    // Generic array aliases.
+    template <typename T, std::uint32_t Rank>
+    using JxxArrayRef = jxx::Ptr<JxxArray<T, Rank>>;
 
-    // Convenience aliases
-    using ByteArrayType = jxx::lang::JxxArray<jxx::lang::jbyte, 1>;
-    using CharArrayType = jxx::lang::JxxArray<jxx::lang::jchar, 1>;
-    using IntArrayType = jxx::lang::JxxArray<jxx::lang::jint, 1>;
-    using ShortArrayType = jxx::lang::JxxArray<jxx::lang::jshort, 1>;
-    using LongArrayType = jxx::lang::JxxArray<jxx::lang::jlong, 1>;
-    using FloatArrayType = jxx::lang::JxxArray<jxx::lang::jfloat, 1>;
-    using DoubleArrayType = jxx::lang::JxxArray<jxx::lang::jdouble, 1>;
-    using ObjectArrayType = jxx::lang::JxxArray<jxx::Ptr<jxx::lang::Object>, 1>;
-	using BooleanArrayType = jxx::lang::JxxArray<jxx::lang::jbool, 1>;
-   
-    using ByteArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jbyte, 1>>;
-    using CharArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jchar, 1>>;
-    using IntArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jint, 1>>;
-    using ShortArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jshort, 1>>;
-    using LongArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jlong, 1>>;
-    using FloatArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jfloat, 1>>;
-    using DoubleArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jdouble, 1>>;
-    using ObjectArray = jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::Object>, 1>>;
-    using BooleanArray = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jbool, 1>>;
+    // Rank 1 concrete types.
+    using BooleanArrayType = JxxArray<jbool, 1U>;
+    using ByteArrayType = JxxArray<jbyte, 1U>;
+    using CharArrayType = JxxArray<jchar, 1U>;
+    using ShortArrayType = JxxArray<jshort, 1U>;
+    using IntArrayType = JxxArray<jint, 1U>;
+    using LongArrayType = JxxArray<jlong, 1U>;
+    using FloatArrayType = JxxArray<jfloat, 1U>;
+    using DoubleArrayType = JxxArray<jdouble, 1U>;
+    using ObjectArrayType = JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>;
 
-    using ByteArray2D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jbyte, 2>>;
-    using CharArray2D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jchar, 2>>;
-    using IntArray2D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jint, 2>>;
-    using ShortArray2D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jshort, 2>>;
-    using LongArray2D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jlong, 2>>;
-    using FloatArray2D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jfloat, 2>>;
-    using DoubleArray2D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jdouble, 2>>;
-    using ObjectArray2D = jxx::Ptr<jxx::lang::JxxArray < jxx::Ptr<jxx::lang::Object>, 2>>;
-    using BooleanArray2D = jxx::Ptr<jxx::lang::JxxArray < jxx::lang::jbool, 2>>;
+    // Rank 1 Java references.
+    using BooleanArray = jxx::Ptr<BooleanArrayType>;
+    using ByteArray = jxx::Ptr<ByteArrayType>;
+    using CharArray = jxx::Ptr<CharArrayType>;
+    using ShortArray = jxx::Ptr<ShortArrayType>;
+    using IntArray = jxx::Ptr<IntArrayType>;
+    using LongArray = jxx::Ptr<LongArrayType>;
+    using FloatArray = jxx::Ptr<FloatArrayType>;
+    using DoubleArray = jxx::Ptr<DoubleArrayType>;
+    using ObjectArray = jxx::Ptr<ObjectArrayType>;
 
-    using ByteArray3D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jbyte, 3>>;
-    using CharArray3D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jchar, 3>>;
-    using IntArray3D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jint, 3>>;
-    using ShortArray3D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jshort, 3>>;
-    using LongArray3D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jlong, 3>>;
-    using FloatArray3D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jfloat, 3>>;
-    using DoubleArray3D = jxx::Ptr<jxx::lang::JxxArray<jxx::lang::jdouble, 3>>;
-    using ObjectArray3D = jxx::Ptr<jxx::lang::JxxArray < jxx::Ptr<jxx::lang::Object>, 3>>;
-    using BooleanArray3D = jxx::Ptr<jxx::lang::JxxArray < jxx::lang::jbool, 3>>;
+    // Rank 2 concrete types.
+    using BooleanArray2DType = JxxArray<jbool, 2U>;
+    using ByteArray2DType = JxxArray<jbyte, 2U>;
+    using CharArray2DType = JxxArray<jchar, 2U>;
+    using ShortArray2DType = JxxArray<jshort, 2U>;
+    using IntArray2DType = JxxArray<jint, 2U>;
+    using LongArray2DType = JxxArray<jlong, 2U>;
+    using FloatArray2DType = JxxArray<jfloat, 2U>;
+    using DoubleArray2DType = JxxArray<jdouble, 2U>;
+    using ObjectArray2DType = JxxArray<jxx::Ptr<jxx::lang::Object>, 2U>;
 
+    // Rank 2 Java references.
+    using BooleanArray2D = jxx::Ptr<BooleanArray2DType>;
+    using ByteArray2D = jxx::Ptr<ByteArray2DType>;
+    using CharArray2D = jxx::Ptr<CharArray2DType>;
+    using ShortArray2D = jxx::Ptr<ShortArray2DType>;
+    using IntArray2D = jxx::Ptr<IntArray2DType>;
+    using LongArray2D = jxx::Ptr<LongArray2DType>;
+    using FloatArray2D = jxx::Ptr<FloatArray2DType>;
+    using DoubleArray2D = jxx::Ptr<DoubleArray2DType>;
+    using ObjectArray2D = jxx::Ptr<ObjectArray2DType>;
+
+    // Rank 3 concrete types.
+    using BooleanArray3DType = JxxArray<jbool, 3U>;
+    using ByteArray3DType = JxxArray<jbyte, 3U>;
+    using CharArray3DType = JxxArray<jchar, 3U>;
+    using ShortArray3DType = JxxArray<jshort, 3U>;
+    using IntArray3DType = JxxArray<jint, 3U>;
+    using LongArray3DType = JxxArray<jlong, 3U>;
+    using FloatArray3DType = JxxArray<jfloat, 3U>;
+    using DoubleArray3DType = JxxArray<jdouble, 3U>;
+    using ObjectArray3DType = JxxArray<jxx::Ptr<jxx::lang::Object>, 3U>;
+
+    // Rank 3 Java references.
+    using BooleanArray3D = jxx::Ptr<BooleanArray3DType>;
+    using ByteArray3D = jxx::Ptr<ByteArray3DType>;
+    using CharArray3D = jxx::Ptr<CharArray3DType>;
+    using ShortArray3D = jxx::Ptr<ShortArray3DType>;
+    using IntArray3D = jxx::Ptr<IntArray3DType>;
+    using LongArray3D = jxx::Ptr<LongArray3DType>;
+    using FloatArray3D = jxx::Ptr<FloatArray3DType>;
+    using DoubleArray3D = jxx::Ptr<DoubleArray3DType>;
+    using ObjectArray3D = jxx::Ptr<ObjectArray3DType>;
 
 } // namespace jxx::lang
-

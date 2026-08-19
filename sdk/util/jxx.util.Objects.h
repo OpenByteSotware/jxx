@@ -1,7 +1,7 @@
 
 #pragma once
 #include <sstream>
-#include "jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.NullPointerException.h"
 
 namespace jxx { namespace util {
 

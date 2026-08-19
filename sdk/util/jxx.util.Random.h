@@ -36,7 +36,7 @@ private:
 
 public:
     Random();
-    explicit Random(jxx::lang::jlong seed);
+    Random(jxx::lang::jlong seed);
     virtual ~Random() = default;
 
     virtual void setSeed(jxx::lang::jlong seed);

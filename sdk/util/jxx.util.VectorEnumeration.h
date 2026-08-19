@@ -5,11 +5,12 @@
 
 #include "lang/jxx_types.h"
 #include "util/jxx.util.Enumeration.h"
+#include "lang/jxx.lang.Object.h"
 
 namespace jxx::util
 {
     template<typename T>
-    class VectorEnumeration final : public Enumeration<T>
+    class VectorEnumeration final : public jxx::lang::Object, public virtual Enumeration<T>
     {
     public:
         explicit VectorEnumeration(std::vector<jxx::Ptr<T>> items)

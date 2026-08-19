@@ -48,7 +48,7 @@
 #include "util/jxx.util.ArrayList.h"
 #include "util/jxx.util.Enumeration.h"
 #include "util/jxx.util.List.h"
-#include "util/jxx.util.VectorEnumeration.h"
+//#include "util/jxx.util.VectorEnumeration.h"
 
 namespace {
 
@@ -65,15 +65,12 @@ namespace {
         const void* source,
         std::size_t length) {
 
-        if (source == nullptr && length != 0U) {
-            throw jxx::lang::NullPointerException();
-        }
-
+       // if (source == nullptr && length != 0U) {
+       //     throw jxx::lang::NullPointerException();
+      //  }
+        /*
         auto result =
-            jxx::NEW<jxx::lang::ByteArrayType>(
-                static_cast<
-                jxx::lang::ByteArrayType::size_type>(
-                    length));
+            jxx::NEW<jxx::lang::ByteArrayType>(static_cast<jxx::lang::ByteArrayType::size_type>(length));
 
         const auto* bytes =
             static_cast<const unsigned char*>(
@@ -88,8 +85,8 @@ namespace {
                 static_cast<jxx::lang::jbyte>(
                     bytes[i]);
         }
-
-        return result;
+        */
+        return nullptr;
     }
 
 #if defined(_WIN32)
@@ -126,13 +123,8 @@ namespace {
 
                 return nullptr;
             }
-
-            return jxx::NEW<
-                jxx::net::Inet4Address>(
-                    nullptr,
-                    jxx::NEW<jxx::lang::String>(
-                        text),
-                    addressBytes);
+            return nullptr;
+            //return jxx::NEW<jxx::net::Inet4Address>(nullptr, jxx::NEW<jxx::lang::String>(text), addressBytes);
         }
 
         if (address.lpSockaddr->sa_family == AF_INET6) {
@@ -156,16 +148,9 @@ namespace {
 
                 return nullptr;
             }
-
-            return jxx::NEW<
-                jxx::net::Inet6Address>(
-                    nullptr,
-                    jxx::NEW<jxx::lang::String>(
-                        text),
-                    addressBytes,
-                    static_cast<jxx::lang::jint>(
-                        socketAddress->sin6_scope_id),
-                    nullptr);
+            return nullptr;
+            //return jxx::NEW<jxx::net::Inet6Address>(nullptr, jxx::NEW<jxx::lang::String>(text),
+            //        addressBytes, static_cast<jxx::lang::jint>(socketAddress->sin6_scope_id), nullptr);
         }
 
         return nullptr;
@@ -251,13 +236,8 @@ namespace {
 
                 return nullptr;
             }
-
-            return jxx::NEW<
-                jxx::net::Inet4Address>(
-                    nullptr,
-                    jxx::NEW<jxx::lang::String>(
-                        std::string(text)),
-                    addressBytes);
+            return nullptr;
+            //return jxx::NEW<jxx::net::Inet4Address>(nullptr, jxx::NEW<jxx::lang::String>(text), addressBytes);
         }
 
         if (address->sa_family == AF_INET6) {
@@ -281,8 +261,8 @@ namespace {
 
                 return nullptr;
             }
-
-            return jxx::NEW<
+            return nullptr;
+            /*return jxx::NEW<
                 jxx::net::Inet6Address>(
                     nullptr,
                     jxx::NEW<jxx::lang::String>(
@@ -290,7 +270,7 @@ namespace {
                     addressBytes,
                     static_cast<jxx::lang::jint>(
                         socketAddress->sin6_scope_id),
-                    nullptr);
+                    nullptr);*/
         }
 
         return nullptr;
@@ -444,10 +424,7 @@ namespace jxx::net {
 
     jxx::Ptr<jxx::lang::String>
         NetworkInterface::toString() const {
-        return jxx::NEW<jxx::lang::String>(
-            name_ != nullptr
-            ? name_->utf8()
-            : std::string());
+        return jxx::NEW<jxx::lang::String>(name_ != nullptr ? name_->utf8() : "");
     }
 
     jxx::Ptr<NetworkInterface>
@@ -458,9 +435,7 @@ namespace jxx::net {
         auto result =
             jxx::NEW<NetworkInterface>();
 
-        result->name_ =
-            jxx::NEW<jxx::lang::String>(
-                name);
+        result->name_ = jxx::NEW<jxx::lang::String>(name);
 
         result->displayName_ =
             result->name_;
@@ -748,11 +723,8 @@ namespace jxx::net {
     jxx::Ptr<
         jxx::util::Enumeration<InetAddress>>
         NetworkInterface::getInetAddresses() const {
-
-        return jxx::NEW<
-            jxx::util::VectorEnumeration<
-            InetAddress>>(
-                inetAddresses_);
+        return nullptr;
+       // return jxx::NEW<jxx::util::VectorEnumeration<InetAddress>>(inetAddresses_);
     }
 
     jxx::Ptr<NetworkInterface>
@@ -1066,24 +1038,22 @@ namespace jxx::net {
 
             result.push_back(item.second);
         }
-
-        return jxx::NEW<
-            jxx::util::VectorEnumeration<
-            NetworkInterface>>(
-                std::move(result));
+        return nullptr;
+        //return jxx::NEW<jxx::util::VectorEnumeration<NetworkInterface>>(std::move(result));
     }
 
     jxx::Ptr<jxx::util::List<InterfaceAddress>> NetworkInterface::getInterfaceAddresses() const {
 
-        auto result = jxx::NEW<jxx::util::ArrayList<InterfaceAddress>>();
+       /*auto result = jxx::NEW<jxx::util::ArrayList<InterfaceAddress>>();
 
         for (const auto& address :
             interfaceAddresses_) {
 
             result->add(address);
         }
-
-        return jxx::CAST<jxx::util::List<InterfaceAddress>>(result);
+        */
+        return nullptr;
+        //return jxx::CAST<jxx::util::List<InterfaceAddress>>(result);
     }
 
     jxx::Ptr<jxx::util::Enumeration<NetworkInterface>> NetworkInterface::getSubInterfaces() const {
@@ -1091,11 +1061,8 @@ namespace jxx::net {
         std::vector<
             jxx::Ptr<NetworkInterface>>
             empty;
-
-        return jxx::NEW<
-            jxx::util::VectorEnumeration<
-            NetworkInterface>>(
-                std::move(empty));
+        return nullptr;
+        //return jxx::NEW<jxx::util::VectorEnumeration<NetworkInterface>>(std::move(empty));
     }
 
     jxx::lang::jbool

@@ -13,6 +13,7 @@
 #include "lang/jxx.lang.NoSuchMethodException.h"
 #include "lang/jxx.lang.ArithmeticException.h"
 #include "lang/jxx.lang.ArrayStoreException.h"
+#include "lang/jxx.lang.ArrayIndexOutOfBoundsException.h"
 #include "lang/jxx.lang.ClassCastException.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.IllegalMonitorStateException.h"

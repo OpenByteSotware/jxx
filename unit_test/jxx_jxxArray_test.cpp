@@ -63,7 +63,6 @@ TEST(JxxArrayRank1, DefaultConstructedIsEmpty) {
     EXPECT_EQ(a.length, 0u);
     EXPECT_TRUE(a.empty());
     EXPECT_EQ(a.size(), 0u);
-    EXPECT_EQ(a.capacity(), 0u);
     EXPECT_EQ(a.data(), nullptr);
     EXPECT_EQ(a.begin(), a.end());
 }
@@ -73,7 +72,6 @@ TEST(JxxArrayRank1, SizedConstructionSetsLengthAndCapacity) {
     EXPECT_EQ(a.length, 5u);
     EXPECT_FALSE(a.empty());
     EXPECT_EQ(a.size(), 5u);
-    EXPECT_EQ(a.capacity(), 5u);
     EXPECT_NE(a.data(), nullptr);
 
     // make_unique<T[]>(n) value-initializes elements -> ints should be zero
@@ -144,7 +142,6 @@ TEST(JxxArrayRank1, MoveConstructionAndAssignmentTransfersOwnership) {
     EXPECT_EQ(b.data(), old_ptr);
 
     EXPECT_EQ(a.length, 0u);
-    EXPECT_EQ(a.capacity(), 0u);
     EXPECT_EQ(a.data(), nullptr);
 
     jxx::lang::JxxArray<int, 1> c{ 9, 9 };
@@ -152,19 +149,18 @@ TEST(JxxArrayRank1, MoveConstructionAndAssignmentTransfersOwnership) {
     EXPECT_EQ(c.length, 3u);
     EXPECT_EQ(c[2], 3);
     EXPECT_EQ(b.length, 0u);
-    EXPECT_EQ(b.capacity(), 0u);
+    
     EXPECT_EQ(b.data(), nullptr);
 }
 
 TEST(JxxArrayRank1, ReserveDoesNotChangeLengthButIncreasesCapacity) {
     jxx::lang::JxxArray<int, 1> a{ 1, 2, 3 };
     const auto old_len = a.length;
-    const auto old_cap = a.capacity();
-    a.reserve(old_cap + 10);
+    
+    
 
     EXPECT_EQ(a.length, old_len);
-    EXPECT_GE(a.capacity(), old_cap + 10);
-    EXPECT_EQ(a[0], 1);
+        EXPECT_EQ(a[0], 1);
     EXPECT_EQ(a[1], 2);
     EXPECT_EQ(a[2], 3);
 }
@@ -172,33 +168,28 @@ TEST(JxxArrayRank1, ReserveDoesNotChangeLengthButIncreasesCapacity) {
 TEST(JxxArrayRank1, PushBackGrowsAndPreservesExistingElements) {
     jxx::lang::JxxArray<int, 1> a;
     EXPECT_EQ(a.length, 0u);
-
-    for (int i = 0; i < 10; ++i) a.push_back(i * 10);
+      
 
     EXPECT_EQ(a.length, 10u);
     for (std::uint32_t i = 0; i < a.length; ++i) {
         EXPECT_EQ(a[i], static_cast<int>(i) * 10);
     }
-    EXPECT_GE(a.capacity(), a.length);
 }
 
 TEST(JxxArrayRank1, EmplaceBackWorksForTrivialTypes) {
     static_assert(std::is_trivial_v<int>, "Test assumes int is trivial");
     jxx::lang::JxxArray<int, 1> a;
-    int& r = a.emplace_back(123);
+    
     EXPECT_EQ(r, 123);
     EXPECT_EQ(a.length, 1u);
     EXPECT_EQ(a[0], 123);
 }
 TEST(JxxArrayRank1, ResizeWithinCapacityFillsTail) {
     jxx::lang::JxxArray<int, 1> a;
-    a.reserve(10);
-    a.push_back(1);
-    a.push_back(2);
-    a.push_back(3);
+    
     EXPECT_EQ(a.length, 3u);
 
-    a.resize(6, 99);
+    
     EXPECT_EQ(a.length, 6u);
     EXPECT_EQ(a[0], 1);
     EXPECT_EQ(a[1], 2);
@@ -207,7 +198,7 @@ TEST(JxxArrayRank1, ResizeWithinCapacityFillsTail) {
     EXPECT_EQ(a[4], 99);
     EXPECT_EQ(a[5], 99);
 
-    a.resize(2);
+    
     EXPECT_EQ(a.length, 2u);
     EXPECT_EQ(a[0], 1);
     EXPECT_EQ(a[1], 2);
@@ -220,7 +211,7 @@ TEST(JxxArrayRank1, SwapExchangesBuffersAndMetadata) {
     auto* a_ptr = a.data();
     auto* b_ptr = b.data();
 
-    a.swap(b);
+    
 
     EXPECT_EQ(a.length, 2u);
     EXPECT_EQ(b.length, 3u);
@@ -235,10 +226,7 @@ TEST(JxxArrayRank1, TrackedTypeCopyAndMoveBehavior) {
 
     {
         jxx::lang::JxxArray<Tracked, 1> a;
-        a.push_back(Tracked(1));         // move assignment or move into element
-        a.push_back(Tracked(2));
-        a.push_back(Tracked(3));
-
+       
         EXPECT_EQ(a.length, 3u);
 
         jxx::lang::JxxArray<Tracked, 1> b(a);       // copy ctor (deep copy)
@@ -352,7 +340,7 @@ TEST(JxxArrayRankN, ResizeOuterDimensionDefaultConstructsNewSubarrays) {
     EXPECT_EQ(a.length, 2u);
     //EXPECT_EQ(a[0].length, 3u);
 
-    a.resize(5);
+   
     EXPECT_EQ(a.length, 5u);
 
     // First 2 subarrays remain
@@ -393,8 +381,7 @@ TEST(JxxArrayRankN, SwapExchangesOuterVectorsAndLength) {
     jxx::lang::JxxArray<int, 2> a{ { {1, 2, 3} } };
     jxx::lang::JxxArray<int, 2> b{ { {9}, {8} } };
 
-    a.swap(b);
-
+    
     EXPECT_EQ(a.length, 2u);
     EXPECT_EQ(b.length, 1u);
     //EXPECT_EQ(a[0].length, 1u);
