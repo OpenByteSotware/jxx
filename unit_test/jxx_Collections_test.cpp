@@ -5,10 +5,19 @@
 #include <vector>
 #include <numeric> // iota
 #include <functional> // greater
-#include "jxx.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx_types.h"
+#include "io/jxx.io.Serializable.h"
+#include "lang/jxx.lang.CharSequence.h"
+#include "lang/jxx.lang.Comparable.h"
+#include "util/jxx.util.Collections.h"
+#include "jxx_memory_detect.h"
 
 using namespace jxx::util;
-
+/*
+* 
 // ---------- Helpers ----------
 template <typename T>
 static bool IsPermutation(const std::vector<T>& a, const std::vector<T>& b) {

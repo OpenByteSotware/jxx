@@ -1,5 +1,13 @@
 #include <gtest/gtest.h>
-#include "jxx.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx_types.h"
+#include "io/jxx.io.Serializable.h"
+#include "lang/jxx.lang.CharSequence.h"
+#include "lang/jxx.lang.Comparable.h"
+#include "jxx_memory_detect.h"
+#include "lang/jxx.lang.Runnable.h"
 #include "lang/jxx.lang.Thread.h"
 
 using namespace jxx::lang;

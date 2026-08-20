@@ -7,7 +7,6 @@
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
-
 #include "net/jxx.net.InetAddress.h"
 #include "net/jxx.net.InetSocketAddress.h"
 #include "net/jxx.net.SocketAddress.h"

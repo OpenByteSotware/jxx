@@ -261,7 +261,7 @@ static jxx::Ptr<regex::MatchResult> snapshotForTokenMatch(
 
 } // anonymous namespace
 
-Scanner::Scanner(jxx::Ptr<jxx::lang::String> source)
+Scanner::Scanner(const jxx::Ptr<jxx::lang::String> source)
     : source_(source)
     , sourceUtf8_(source == nullptr ? std::string() : source->utf8())
     , position_(0)
@@ -278,11 +278,11 @@ Scanner::Scanner(jxx::Ptr<jxx::lang::String> source)
     }
 }
 
-Scanner::Scanner(jxx::Ptr<jxx::io::InputStream> source)
+Scanner::Scanner(const jxx::Ptr<jxx::io::InputStream> source)
     : Scanner(source, nullptr) {
 }
 
-Scanner::Scanner(jxx::Ptr<jxx::io::InputStream> source, jxx::Ptr<jxx::lang::String> charsetName)
+Scanner::Scanner(const jxx::Ptr<jxx::io::InputStream> source, const jxx::Ptr<jxx::lang::String> charsetName)
     : Scanner(decodeBytes(readAllBytes(source), charsetName)) {
     if (source == nullptr) {
         throw jxx::lang::NullPointerException();
@@ -290,7 +290,7 @@ Scanner::Scanner(jxx::Ptr<jxx::io::InputStream> source, jxx::Ptr<jxx::lang::Stri
     sourceInputStream_ = source;
 }
 
-Scanner::Scanner(jxx::Ptr<jxx::io::Reader> source)
+Scanner::Scanner(const jxx::Ptr<jxx::io::Reader> source)
     : Scanner(jxx::NEW<jxx::lang::String>(readAllFromReader(source))) {
     if (source == nullptr) {
         throw jxx::lang::NullPointerException();

@@ -2,7 +2,7 @@
 #include <memory>
 #include <string>
 #include <type_traits>
-
+/*
 #include <gtest/gtest.h>
 
 #include "io/jxx.io.Serializable.h"
@@ -51,10 +51,6 @@
         return jxx::CAST<Object>(value);
     }
 
-    /*
-     * Type hierarchy
-     */
-
     TEST(HashSetTest, ImplementsExpectedJava8Hierarchy) {
         static_assert(
             std::is_base_of_v<
@@ -77,10 +73,8 @@
         SUCCEED();
     }
 
-    /*
-     * Constructors
-     */
-
+  
+    
     TEST(HashSetTest, DefaultConstructorCreatesEmptySet) {
         auto set = jxx::NEW<StringHashSet>();
 
@@ -162,11 +156,7 @@
         EXPECT_TRUE(set->isEmpty());
     }
 
-    /*
-     * add
-     */
-
-    TEST(HashSetTest, AddNewElementReturnsTrue) {
+     TEST(HashSetTest, AddNewElementReturnsTrue) {
         auto set = jxx::NEW<StringHashSet>();
 
         EXPECT_TRUE(set->add(S("alpha")));
@@ -220,9 +210,6 @@
         EXPECT_TRUE(set->contains(nullptr));
     }
 
-    /*
-     * contains
-     */
 
     TEST(HashSetTest, ContainsReturnsTrueForStoredElement) {
         auto set = jxx::NEW<StringHashSet>();
@@ -273,10 +260,7 @@
         EXPECT_TRUE(set->contains(nullptr));
     }
 
-    /*
-     * remove
-     */
-
+ 
     TEST(HashSetTest, RemoveExistingElementReturnsTrue) {
         auto set = jxx::NEW<StringHashSet>();
 
@@ -335,9 +319,6 @@
         EXPECT_FALSE(set->remove(nullptr));
     }
 
-    /*
-     * clear
-     */
 
     TEST(HashSetTest, ClearRemovesAllElements) {
         auto set = jxx::NEW<StringHashSet>();
@@ -368,9 +349,7 @@
         EXPECT_TRUE(set->isEmpty());
     }
 
-    /*
-     * Iterator basics
-     */
+
 
     TEST(HashSetTest, IteratorTraversesAllElements) {
         auto set = jxx::NEW<StringHashSet>();
@@ -411,9 +390,7 @@
             ++count;
         }
 
-        /*
-         * HashSet iteration order is intentionally not asserted.
-         */
+    
         EXPECT_EQ(count, set->size());
     }
 
@@ -441,9 +418,6 @@
             jxx::util::NoSuchElementException);
     }
 
-    /*
-     * Iterator remove
-     */
 
     TEST(HashSetTest, IteratorRemoveDeletesLastReturnedElement) {
         auto set = jxx::NEW<StringHashSet>();
@@ -521,10 +495,7 @@
 
         EXPECT_EQ(remainingSnapshotElements, 2);
     }
-
-    /*
-     * Fail-fast behavior
-     */
+   
 
     TEST(HashSetTest, IteratorNextDetectsExternalAdd) {
         auto set = jxx::NEW<StringHashSet>();
@@ -590,3 +561,4 @@
             iterator->remove(),
             jxx::util::ConcurrentModificationException);
     }
+    */

@@ -8,14 +8,11 @@
 #include <vector>
 
 #include <gtest/gtest.h>
-
 #include "io/jxx.io.Serializable.h"
-
 #include "lang/jxx.lang.Cloneable.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
-
 #include "util/jxx.util.Collection.h"
 #include "util/jxx.util.Dictionary.h"
 #include "util/jxx.util.Enumeration.h"

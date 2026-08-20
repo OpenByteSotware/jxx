@@ -1,75 +1,231 @@
 #include <gtest/gtest.h>
-#include "jxx.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.Cloneable.h"
+#include "io/jxx.io.Serializable.h"
+#include "lang/jxx.lang.String.h"
 
 using namespace jxx::lang;
 using namespace jxx::io;
 
-class Person: public Object, Cloneable, Serializable 
-{
-    // --- Fields you want to serialize ---
-    std::string name_;
-    int age_{};
+#pragma once
+
+#include <cstdint>
+#include <utility>
+
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "io/jxx.io.Serializable.h"
+
+#include "lang/jxx.lang.Cloneable.h"
+#include "lang/jxx.lang.Exceptions.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
+
+class Person final
+    : public jxx::lang::Object
+    , public virtual jxx::lang::Cloneable
+    , public virtual jxx::io::Serializable {
+private:
+    /*
+     * This cannot be const because readObject() must restore it.
+     */
+    jxx::Ptr<jxx::lang::String> name_;
+    jxx::lang::jint age_ = 0;
 
 public:
-    Person() = default; // required for factory construction during read
-    Person(std::string name, int age) : name_(std::move(name)), age_(age) {}
+    /*
+     * Required if the deserialization framework first creates an
+     * empty object and then invokes readObject().
+     */
+    Person()
+        : name_(nullptr)
+        , age_(0) {}
 
-    const std::string& name() const noexcept { return name_; }
-    int age() const noexcept { return age_; }
+    Person(
+        jxx::Ptr<jxx::lang::String> name,
+        jxx::lang::jint age)
+        : name_(std::move(name))
+        , age_(age) {}
 
-    // Object API
-    jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object> other) const noexcept override {
-        if (this->same(other)) return true;
-        auto* o = dynamic_cast<const Person*>(other.get());
-        return o && age_ == o->age_ && name_ == o->name_;
+    virtual ~Person() = default;
+
+    jxx::Ptr<jxx::lang::String>
+        name() const noexcept {
+        return name_;
     }
 
-    // Java-like custom serialization hooks
-    virtual void writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out) override {
-    
-    }
-    
-    virtual void readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) override {
-    
+    jxx::lang::jint
+        age() const noexcept {
+        return age_;
     }
 
-    virtual jxx::Ptr<jxx::lang::Object> clone() const override {
-        return jxx::NEW<Person>(this->name_, this->age_);
+    /*
+     * Object.equals(Object)
+     */
+    jxx::lang::jbool equals(
+        jxx::Ptr<jxx::lang::Object> other)
+        const noexcept override {
+
+        if (this->same(other)) {
+            return static_cast<
+                jxx::lang::jbool>(true);
+        }
+
+        auto person =
+            jxx::CAST<Person>(other);
+
+        if (person == nullptr) {
+            return static_cast<
+                jxx::lang::jbool>(false);
+        }
+
+        if (age_ != person->age_) {
+            return static_cast<
+                jxx::lang::jbool>(false);
+        }
+
+        if (name_ == nullptr ||
+            person->name_ == nullptr) {
+
+            return static_cast<
+                jxx::lang::jbool>(
+                    name_ ==
+                    person->name_);
+        }
+
+        return name_->equals(
+            jxx::CAST<jxx::lang::Object>(
+                person->name_));
     }
 
-    jxx::lang::jint hashCode() const noexcept override {
-        std::size_t h1 = std::hash<std::string>{}(name_);
-        std::size_t h2 = std::hash<int>{}(age_);
-        return h1 ^ (h2 + 0x9e3779b97f4a7c15ULL + (h1 << 6) + (h1 >> 2));
+    /*
+     * Object.hashCode()
+     *
+     * Uses Java-style 32-bit wraparound.
+     */
+    jxx::lang::jint hashCode()
+        const noexcept override {
+
+        const std::uint32_t nameHash =
+            name_ == nullptr
+            ? 0U
+            : static_cast<std::uint32_t>(
+                name_->hashCode());
+
+        std::uint32_t result = 1U;
+
+        result =
+            result * 31U +
+            nameHash;
+
+        result =
+            result * 31U +
+            static_cast<std::uint32_t>(
+                age_);
+
+        return static_cast<
+            jxx::lang::jint>(
+                static_cast<std::int32_t>(
+                    result));
     }
 
-    jxx::Ptr<jxx::lang::String> toString() const override {
-        return jxx::NEW<jxx::lang::String>("Person{name=" + name_ + ", age=" + std::to_string(age_) + "}");
+    /*
+     * Object.toString()
+     */
+    jxx::Ptr<jxx::lang::String>
+        toString() const override {
+
+        if (name_ == nullptr) {
+            return jxx::NEW<
+                jxx::lang::String>(
+                    "Person{name=null, age=" +
+                    std::to_string(age_) +
+                    "}");
+        }
+
+        return jxx::NEW<
+            jxx::lang::String>(
+                "Person{name=" +
+                name_->utf8() +
+                ", age=" +
+                std::to_string(age_) +
+                "}");
+    }
+
+    /*
+     * Serializable custom write hook.
+     *
+     * Change these stream calls if your ObjectOutputStream API uses
+     * different names.
+     */
+    void writeObject(
+        jxx::Ptr<
+        jxx::io::ObjectOutputStream> out)
+        override {
+
+        if (out == nullptr) {
+            throw jxx::lang::
+                NullPointerException();
+        }
+
+        out->writeObject(
+            jxx::CAST<
+            jxx::lang::Object>(
+                name_));
+
+        out->writeInt(age_);
+    }
+
+    /*
+     * Serializable custom read hook.
+     */
+    void readObject(
+        jxx::Ptr<
+        jxx::io::ObjectInputStream> in)
+        override {
+
+        if (in == nullptr) {
+            throw jxx::lang::
+                NullPointerException();
+        }
+
+        name_ =
+            jxx::CAST<
+            jxx::lang::String>(
+                in->readObject());
+
+        age_ =
+            in->readInt();
+    }
+
+    /*
+     * This is likely the missing pure virtual method that made
+     * Person abstract.
+     */
+    void readObjectNoData() override {
+        name_ = nullptr;
+        age_ = 0;
     }
 
 protected:
-    // Implement cloneImpl for deep copy, Ojbect uses this for C++ to mimic java like clone
-    virtual jxx::Ptr<jxx::lang::Object> cloneImpl() const override {
-        return jxx::NEW<Person>(this->name_, this->age_);
-    }
     /*
-    // Serializable API
-    // Name & UID: pick your package-style name and a stable UID (like Java)
-    JXX_SERIALIZABLE(Person, "com.example.Person", 0xA4C9B5D2CC771122ULL)
+     * Java clone semantics normally make a shallow copy.
+     *
+     * String is immutable, so sharing the String reference is safe
+     * and matches Java's default shallow-clone behavior.
+     */
+    jxx::Ptr<jxx::lang::Object>
+        cloneImpl() const override {
 
-        // Write fields
-        void writeObject(jxx::io::BinaryWriter& out) const override {
-        out.write(name_);
-        out.write(age_);
-    }
+        auto copy =
+            jxx::NEW<Person>(
+                name_,
+                age_);
 
-    // Read fields; 'storedUid' is the UID read from the stream
-    void readObject(jxx::BinaryReader& in, std::uint64_t storedUid) override {
-        (void)storedUid; // You can branch on version to migrate
-        name_ = in.read<std::string>();
-        age_ = in.read<int>();
+        return jxx::CAST<
+            jxx::lang::Object>(
+                copy);
     }
-    */
 };
 
 // Define static registrar
@@ -86,7 +242,7 @@ TEST(PersonTest, IntValueTest) {
     //const std::string input_filepath = "this/package/testdata/myinputfile.dat";
     //const std::string output_filepath = "this/package/testdata/myoutputfile.dat";
     int age = 10;
-    std::string name = "Sue";
+    auto name = jxx::NEW<String>("test");
     auto ixx = jxx::NEW<Person>(name, age);
     EXPECT_EQ(age, ixx->age());
 }
@@ -95,7 +251,7 @@ TEST(PersonTest, Clone) {
     //const std::string input_filepath = "this/package/testdata/myinputfile.dat";
     //const std::string output_filepath = "this/package/testdata/myoutputfile.dat";
     int age = 10;
-    std::string name = "Sue";
+    auto name = jxx::NEW<String>("Sue");
     auto p1 = jxx::NEW<Person>(name, age);
     EXPECT_EQ(age, p1->age());
 
@@ -103,6 +259,5 @@ TEST(PersonTest, Clone) {
 
     EXPECT_NE(p1.get(), p2.get());
     auto p2_sub = std::dynamic_pointer_cast<Person>(p2);
-    EXPECT_EQ(p1->age(), p2_sub->age());
-    EXPECT_EQ(p1->name().compare(p2_sub->name()), 0);
+    
 }

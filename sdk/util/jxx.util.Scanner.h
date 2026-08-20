@@ -67,10 +67,10 @@ private:
         jxx::Ptr<regex::MatchResult>& snapshot) const;
 
 public:
-    explicit Scanner(jxx::Ptr<jxx::lang::String> source);
-    explicit Scanner(jxx::Ptr<jxx::io::InputStream> source);
-    Scanner(jxx::Ptr<jxx::io::InputStream> source, jxx::Ptr<jxx::lang::String> charsetName);
-    explicit Scanner(jxx::Ptr<jxx::io::Reader> source);
+    explicit Scanner(const jxx::Ptr<jxx::lang::String> source);
+    explicit Scanner(const jxx::Ptr<jxx::io::InputStream> source);
+    Scanner(const jxx::Ptr<jxx::io::InputStream> source, const jxx::Ptr<jxx::lang::String> charsetName);
+    explicit Scanner(const jxx::Ptr<jxx::io::Reader> source);
     virtual ~Scanner() = default;
 
     virtual void close() override;

@@ -13,7 +13,7 @@ namespace jxx::util {
 
     template <typename E>
     class AbstractSet
-        : public virtual AbstractCollection<E>
+        : public AbstractCollection<E>
         , public virtual Set<E> {
     public:
         virtual ~AbstractSet() = default;

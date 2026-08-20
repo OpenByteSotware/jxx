@@ -1,5 +1,11 @@
 #include <gtest/gtest.h>
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx_types.h"
+#include "io/jxx.io.Serializable.h"
+#include "lang/jxx.lang.CharSequence.h"
+#include "lang/jxx.lang.Comparable.h"
 #include "jxx_memory_detect.h"
 
 using namespace jxx::lang;
@@ -28,7 +34,9 @@ public:
         return std::hash<int>{}(value_);
     }
     jxx::Ptr<jxx::lang::String> toString() const override {
-        return jxx::NEW<jxx::lang::String>(std::to_string(value_));
+		const std::string str = std::to_string(value_);
+		auto newStr = jxx::NEW<jxx::lang::String>(str);
+        return newStr;
     }
 
 protected:

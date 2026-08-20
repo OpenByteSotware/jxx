@@ -21,7 +21,7 @@ namespace util {
 
 template <typename E>
 class ArrayList
-    : public virtual AbstractList<E>
+    : public AbstractList<E>
     , public virtual RandomAccess
     , public virtual jxx::lang::Cloneable
     , public virtual jxx::io::Serializable {
@@ -144,7 +144,7 @@ public:
     }
 
     virtual jxx::lang::ObjectArray toArray() override {
-        auto a = jxx::NEW<jxx::lang::ObjectArrayType>(jxx::NEW<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>(size_));
+        auto a = jxx::NEW<jxx::lang::ObjectArrayType>(size_);
         for (jxx::lang::jint i = 0; i < size_; ++i) {
             a->at(i) = (*elementData)(i);
         }

@@ -1,12 +1,17 @@
 #include <gtest/gtest.h>
 #include <cstddef>       // std::byte, std::to_integer
-#include "jxx.h" // Your ByteNDArray implementation
-#include <cstddef>   // std::byte, std::to_integer
 #include <random>
 #include <map>
 #include <tuple>
 #include <string>
-#include "jxx.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx_types.h"
+#include "io/jxx.io.Serializable.h"
+#include "lang/jxx.lang.CharSequence.h"
+#include "lang/jxx.lang.Comparable.h"
+#include "jxx_memory_detect.h"
 
 using namespace std;
 using namespace jxx::lang;

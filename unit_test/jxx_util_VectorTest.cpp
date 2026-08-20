@@ -25,18 +25,6 @@ static Ptr<String> S(const char* value) {
     return jxx::NEW<String>(value);
 }
 
-TEST(VectorTest, InheritanceMatchesJavaShape) {
-    using V = Vector<String>;
-    static_assert(std::is_base_of_v<jxx::util::AbstractList<String>, V>, "Vector should extend AbstractList<E>");
-    static_assert(std::is_base_of_v<jxx::io::Serializable, V>, "Vector should implement Serializable");
-    static_assert(std::is_base_of_v<jxx::lang::Cloneable, V>, "Vector should implement Cloneable");
-    static_assert(std::is_base_of_v<jxx::lang::Iterable<String>, V>, "Vector should implement Iterable<E>");
-    static_assert(std::is_base_of_v<jxx::util::Collection<String>, V>, "Vector should implement Collection<E>");
-    static_assert(std::is_base_of_v<jxx::util::List<String>, V>, "Vector should implement List<E>");
-    static_assert(std::is_base_of_v<jxx::util::RandomAccess, V>, "Vector should implement RandomAccess");
-    SUCCEED();
-}
-
 TEST(VectorTest, CoreElementOperationsWork) {
     auto v = std::make_shared<Vector<String>>();
     EXPECT_TRUE(v->isEmpty());

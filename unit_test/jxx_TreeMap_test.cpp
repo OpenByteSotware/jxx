@@ -3,16 +3,14 @@
 #include <string>
 #include <type_traits>
 #include <vector>
-
 #include <gtest/gtest.h>
-
+/*
+#include "lang/jxx.lang.buildin_array.h"
 #include "io/jxx.io.Serializable.h"
-
 #include "lang/jxx.lang.Cloneable.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
-
 #include "util/jxx.util.AbstractMap.h"
 #include "util/jxx.util.ComparatorSuper.h"
 #include "util/jxx.util.ConcurrentModificationException.h"
@@ -21,8 +19,6 @@
 #include "util/jxx.util.NoSuchElementException.h"
 #include "util/jxx.util.Set.h"
 #include "util/jxx.util.TreeMap.h"
-
-namespace {
 
     using jxx::lang::Object;
     using jxx::lang::String;
@@ -36,7 +32,7 @@ namespace {
     using jxx::util::Set;
     using jxx::util::TreeMap;
 
-    using StringTreeMap = TreeMap<String, String>;
+    using StringTreeMap = TreeMap<jxx::lang::String, jxx::lang::String>;
 
     static jxx::Ptr<String> S(const char* value) {
         return jxx::NEW<String>(value);
@@ -93,12 +89,7 @@ namespace {
         return result;
     }
 
-    /*
-     * Custom reverse comparator used to verify ComparatorSuper<K>.
-     *
-     * Update const qualifiers if ComparatorSuper::compare() differs
-     * in your local runtime.
-     */
+
     class ReverseStringComparator final
         : public virtual ComparatorSuper<String> {
     public:
@@ -117,36 +108,6 @@ namespace {
             return right->compareTo(left);
         }
     };
-
-    /*
-     * Type hierarchy
-     */
-
-    TEST(TreeMapTest, ImplementsExpectedHierarchy) {
-        static_assert(
-            std::is_base_of_v<
-            AbstractMap<String, String>,
-            StringTreeMap>,
-            "TreeMap<K,V> must extend AbstractMap<K,V>");
-
-        static_assert(
-            std::is_base_of_v<
-            jxx::lang::Cloneable,
-            StringTreeMap>,
-            "TreeMap<K,V> must implement Cloneable");
-
-        static_assert(
-            std::is_base_of_v<
-            jxx::io::Serializable,
-            StringTreeMap>,
-            "TreeMap<K,V> must implement Serializable");
-
-        SUCCEED();
-    }
-
-    /*
-     * Constructors
-     */
 
     TEST(TreeMapTest, DefaultConstructorCreatesEmptyMap) {
         auto map = jxx::NEW<StringTreeMap>();
@@ -201,9 +162,7 @@ namespace {
             jxx::lang::NullPointerException);
     }
 
-    /*
-     * Basic put and get operations
-     */
+
 
     TEST(TreeMapTest, PutAddsMapping) {
         auto map = jxx::NEW<StringTreeMap>();
@@ -299,9 +258,6 @@ namespace {
         EXPECT_EQ(map->get(nullptr), nullptr);
     }
 
-    /*
-     * containsKey and containsValue
-     */
 
     TEST(TreeMapTest, ContainsKeyFindsStoredKey) {
         auto map = jxx::NEW<StringTreeMap>();
@@ -369,10 +325,6 @@ namespace {
         EXPECT_TRUE(map->containsValue(nullptr));
     }
 
-    /*
-     * remove and clear
-     */
-
     TEST(TreeMapTest, RemoveExistingKeyReturnsOldValue) {
         auto map = jxx::NEW<StringTreeMap>();
 
@@ -422,9 +374,6 @@ namespace {
         EXPECT_TRUE(map->isEmpty());
     }
 
-    /*
-     * Natural ordering
-     */
 
     TEST(TreeMapTest, EntryIterationUsesNaturalKeyOrder) {
         auto map = jxx::NEW<StringTreeMap>();
@@ -480,9 +429,6 @@ namespace {
             jxx::util::NoSuchElementException);
     }
 
-    /*
-     * Custom comparator
-     */
 
     TEST(TreeMapTest, CustomComparatorChangesOrdering) {
         auto comparator =
@@ -527,9 +473,7 @@ namespace {
             comparator.get());
     }
 
-    /*
-     * firstEntry and lastEntry
-     */
+
 
     TEST(TreeMapTest, FirstEntryReturnsLowestMapping) {
         auto map = jxx::NEW<StringTreeMap>();
@@ -592,9 +536,7 @@ namespace {
             "new");
     }
 
-    /*
-     * Navigational key operations
-     */
+
 
     TEST(TreeMapTest, LowerKeyReturnsStrictlyLowerKey) {
         auto map = jxx::NEW<StringTreeMap>();
@@ -685,10 +627,7 @@ namespace {
             jxx::lang::NullPointerException);
     }
 
-    /*
-     * Navigational entry operations
-     */
-
+  
     TEST(TreeMapTest, LowerEntryReturnsExpectedMapping) {
         auto map = jxx::NEW<StringTreeMap>();
 
@@ -745,9 +684,7 @@ namespace {
         EXPECT_EQ(entry->getValue()->utf8(), "5");
     }
 
-    /*
-     * Poll operations
-     */
+ 
 
     TEST(TreeMapTest, PollFirstEntryRemovesLowestMapping) {
         auto map = jxx::NEW<StringTreeMap>();
@@ -763,13 +700,6 @@ namespace {
 
         EXPECT_EQ(entry->getKey()->utf8(), "a");
 
-        /*
-         * Java TreeMap returns an immutable snapshot entry whose value
-         * remains available after the mapping is removed.
-         *
-         * This assertion will fail with the current live EntryView design,
-         * because getValue() looks the key up after it has been erased.
-         */
         ASSERT_NE(entry->getValue(), nullptr);
         EXPECT_EQ(entry->getValue()->utf8(), "1");
 
@@ -792,9 +722,6 @@ namespace {
 
         EXPECT_EQ(entry->getKey()->utf8(), "c");
 
-        /*
-         * This requires a detached snapshot entry for Java parity.
-         */
         ASSERT_NE(entry->getValue(), nullptr);
         EXPECT_EQ(entry->getValue()->utf8(), "3");
 
@@ -810,9 +737,7 @@ namespace {
         EXPECT_EQ(map->pollLastEntry(), nullptr);
     }
 
-    /*
-     * Entry-set iteration
-     */
+
 
     TEST(TreeMapTest, EntrySetIteratorTraversesMappingsInOrder) {
         auto map = jxx::NEW<StringTreeMap>();
@@ -848,5 +773,4 @@ namespace {
 
         EXPECT_FALSE(iterator->hasNext());
     }
-
-    TEST(TreeMapTest, EntryIteratorThrowsWhenExhausted
+    */

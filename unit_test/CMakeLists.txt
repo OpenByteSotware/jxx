@@ -57,7 +57,7 @@ target_include_directories(all_tests
 # Link GoogleTest and pthread (Linux/Unix)
 target_link_libraries(all_tests
     PRIVATE
-        GTest::gtest GTest::gmock GTest::gtest_main
+        jxxsdk GTest::gtest GTest::gmock GTest::gtest_main
 )
 
 if(UNIX AND NOT APPLE)

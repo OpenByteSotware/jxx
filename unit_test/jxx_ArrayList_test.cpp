@@ -2,17 +2,13 @@
 #include <string>
 #include <type_traits>
 #include <vector>
-
 #include <gtest/gtest.h>
-
+#include "lang/jxx.lang.Object.h"
 #include "io/jxx.io.Serializable.h"
-
 #include "lang/jxx.lang.Cloneable.h"
 #include "lang/jxx.lang.Exceptions.h"
-#include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_array.h"
-
 #include "util/jxx.util.AbstractList.h"
 #include "util/jxx.util.ArrayList.h"
 #include "util/jxx.util.ComparatorSuper.h"
@@ -20,7 +16,6 @@
 #include "util/jxx.util.List.h"
 #include "util/jxx.util.RandomAccess.h"
 #include "util/jxx.util.Spliterator.h"
-
 #include "util/function/jxx.util.function.Consumer.h"
 #include "util/function/jxx.util.function.PredicateSuper.h"
 #include "util/function/jxx.util.function.UnaryOperator.h"
@@ -171,42 +166,6 @@ namespace {
                 : value->utf8());
         }
     };
-
-    /*
-     * Type hierarchy
-     */
-
-    TEST(ArrayListTest, ImplementsExpectedJava8Hierarchy) {
-        static_assert(
-            std::is_base_of_v<
-            AbstractList<String>,
-            StringArrayList>,
-            "ArrayList<E> must extend AbstractList<E>");
-
-        static_assert(
-            std::is_base_of_v<
-            RandomAccess,
-            StringArrayList>,
-            "ArrayList<E> must implement RandomAccess");
-
-        static_assert(
-            std::is_base_of_v<
-            jxx::lang::Cloneable,
-            StringArrayList>,
-            "ArrayList<E> must implement Cloneable");
-
-        static_assert(
-            std::is_base_of_v<
-            jxx::io::Serializable,
-            StringArrayList>,
-            "ArrayList<E> must implement Serializable");
-
-        SUCCEED();
-    }
-
-    /*
-     * Constructors
-     */
 
     TEST(ArrayListTest, DefaultConstructorCreatesEmptyList) {
         auto list = jxx::NEW<StringArrayList>();

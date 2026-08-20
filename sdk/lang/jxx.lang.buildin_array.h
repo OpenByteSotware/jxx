@@ -12,10 +12,8 @@
 #include <vector>
 
 #include "lang/jxx.lang.ByteType.h"
+#include "lang/jxx_types.h"
 #include "lang/jxx.lang.Object.h"
-//#include "lang/jxx.lang.Exceptions.h"
-
-#include "jxx_types.h"
 
 namespace jxx::lang {
 

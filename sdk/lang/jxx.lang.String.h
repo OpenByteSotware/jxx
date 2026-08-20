@@ -96,8 +96,8 @@ namespace jxx::lang {
         // JXX convenience (non-Java): String(const char* utf8)
         explicit String(const char* utf8);
 
-        explicit String(const std::string& stdString);
-        explicit String(const std::u16string& stdString);
+        explicit String(const std::string stdString);
+        explicit String(const std::u16string stdString);
 
         // ---------------------------------------------------------------------
         // CharSequence

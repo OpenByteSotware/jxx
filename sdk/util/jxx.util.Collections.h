@@ -1,316 +1,486 @@
 #pragma once
-#include <vector>
+
 #include <algorithm>
-#include <functional>
-#include <stdexcept>
+#include <cstddef>
+#include <cstdint>
 #include <random>
-#include <type_traits>
-#include "jxx.util.NoSuchElementException.h"
-#include "jxx.util.ArrayList.h"
-#include "jxx.util.Random.h"
+#include <utility>
+#include <vector>
 
-namespace jxx { namespace util {
+#include "lang/jxx.lang.Comparable.h"
+#include "lang/jxx.lang.Exceptions.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.buildin_array.h"
+#include "util/jxx.util.Collection.h"
+#include "util/jxx.util.ComparatorSuper.h"
+#include "util/jxx.util.List.h"
+#include "util/jxx.util.NoSuchElementException.h"
+#include "util/jxx.util.Random.h"
 
-class Collections {
-public:
-    
-    template <typename T>
-    static void reverse(std::vector<T>& a) {
-        std::reverse(a.begin(), a.end());
-    }
+namespace jxx::util {
 
-    template <typename T, typename Cmp = std::less<T>>
-    static void sort(std::vector<T>& a, Cmp cmp = Cmp{}) {
-        std::sort(a.begin(), a.end(), cmp);
-    }
+    /**
+     * Core Java 8 java.util.Collections algorithms for JXX/C++17.
+     *
+     * Collections is a non-instantiable, non-template utility class. Java generic
+     * static methods are represented by C++ static function templates.
+     *
+     * Public APIs use JXX types only. STL containers are restricted to internal
+     * temporary storage.
+     */
+    class Collections final : public jxx::lang::Object {
+    private:
+        Collections() = delete;
 
-    template <typename T>
-    static void shuffle(std::vector<T>& a, jxx::util::Random* rng = nullptr) {
-        auto n = (int)a.size();
-        if (n <= 1) return;
-        if (rng) {
-            for (int i=n-1; i>0; --i) {
-                int j = rng->nextInt(i+1);
-                std::swap(a[(size_t)i], a[(size_t)j]);
+        template <typename T>
+        static jxx::lang::jint compareNatural_(
+            const jxx::Ptr<T>& left,
+            const jxx::Ptr<T>& right) {
+
+            if (left == nullptr || right == nullptr) {
+                throw jxx::lang::NullPointerException();
             }
-        } else {
-            std::random_device rd; std::mt19937 gen(rd());
-            for (int i=n-1; i>0; --i) {
-                std::uniform_int_distribution<int> d(0, i);
-                int j = d(gen);
-                std::swap(a[(size_t)i], a[(size_t)j]);
+
+            auto comparable = jxx::CAST<jxx::lang::Comparable<T>>(left);
+            if (comparable == nullptr) {
+                throw jxx::lang::ClassCastException();
+            }
+
+            return comparable->compareTo(right);
+        }
+
+        template <typename T>
+        static jxx::lang::jint compare_(
+            const jxx::Ptr<T>& left,
+            const jxx::Ptr<T>& right,
+            const jxx::Ptr<jxx::util::ComparatorSuper<T>>& comparator) {
+
+            if (comparator != nullptr) {
+                return comparator->compareSuper(left, right);
+            }
+
+            return compareNatural_(left, right);
+        }
+
+        static jxx::lang::jbool objectEquals_(
+            const jxx::Ptr<jxx::lang::Object>& left,
+            const jxx::Ptr<jxx::lang::Object>& right) {
+
+            if (left == nullptr || right == nullptr) {
+                return static_cast<jxx::lang::jbool>(left == right);
+            }
+
+            return left->equals(right);
+        }
+
+        template <typename T>
+        static jxx::lang::jbool elementEquals_(
+            const jxx::Ptr<T>& left,
+            const jxx::Ptr<T>& right) {
+
+            return objectEquals_(
+                jxx::CAST<jxx::lang::Object>(left),
+                jxx::CAST<jxx::lang::Object>(right));
+        }
+
+        template <typename T>
+        static jxx::lang::jbool elementEqualsObject_(
+            const jxx::Ptr<T>& left,
+            const jxx::Ptr<jxx::lang::Object>& right) {
+
+            return objectEquals_(jxx::CAST<jxx::lang::Object>(left), right);
+        }
+
+        template <typename T>
+        static void reverseRange_(
+            const jxx::Ptr<jxx::util::List<T>>& list,
+            jxx::lang::jint fromIndex,
+            jxx::lang::jint toIndex) {
+
+            --toIndex;
+            while (fromIndex < toIndex) {
+                auto left = list->get(fromIndex);
+                auto right = list->get(toIndex);
+                list->set(fromIndex, right);
+                list->set(toIndex, left);
+                ++fromIndex;
+                --toIndex;
             }
         }
-    }
 
-    template <typename T>
-    static int binarySearch(const std::vector<T>& a, const T& key) {
-        auto it = std::lower_bound(a.begin(), a.end(), key);
-        size_t pos = (size_t)std::distance(a.begin(), it);
-        if (it != a.end() && !(*it < key) && !(key < *it)) return (int)pos; // equal
-        return -(int(pos) + 1);
-    }
+    public:
+        virtual ~Collections() = default;
 
-    template <typename T, typename Cmp>
-    static int binarySearch(const std::vector<T>& a, const T& key, Cmp cmp) {
-        auto it = std::lower_bound(a.begin(), a.end(), key, cmp);
-        size_t pos = (size_t)std::distance(a.begin(), it);
-        if (it != a.end() && !cmp(*it, key) && !cmp(key, *it)) return (int)pos; // equal
-        return -(int(pos) + 1);
-    }
-
-    template <typename T>
-    static T min(const std::vector<T>& a) {
-        if (a.empty()) JXX_THROW(NoSuchElementException, "Collections::min on empty");
-        return *std::min_element(a.begin(), a.end());
-    }
-
-    template <typename T, typename Cmp>
-    static T min(const std::vector<T>& a, Cmp cmp) {
-        if (a.empty()) JXX_THROW(NoSuchElementException, "Collections::min on empty");
-        return *std::min_element(a.begin(), a.end(), cmp);
-    }
-
-    template <typename T>
-    static T max(const std::vector<T>& a) {
-        if (a.empty()) JXX_THROW(NoSuchElementException, "Collections::max on empty");
-        return *std::max_element(a.begin(), a.end());
-    }
-
-    template <typename T, typename Cmp>
-    static T max(const std::vector<T>& a, Cmp cmp) {
-        if (a.empty()) JXX_THROW(NoSuchElementException, "Collections::max on empty");
-        return *std::max_element(a.begin(), a.end(), cmp);
-    }
-
-    template <typename T>
-    static int frequency(const std::vector<T>& a, const T& o) {
-        return (int)std::count(a.begin(), a.end(), o);
-    }
-
-    template <typename T>
-    static bool disjoint(const std::vector<T>& a, const std::vector<T>& b) {
-        for (const auto& x : a) for (const auto& y : b) if (x==y) return false; return true;
-    }
-
-    template <typename T>
-    static void fill(std::vector<T>& a, const T& val) { std::fill(a.begin(), a.end(), val); }
-
-    template <typename T>
-    static void copy(std::vector<T>& dest, const std::vector<T>& src) {
-        if (dest.size() < src.size()) throw std::out_of_range("Collections::copy dest too small");
-        std::copy(src.begin(), src.end(), dest.begin());
-    }
-
-    template <typename T>
-    static void swap(std::vector<T>& a, int i, int j) {
-        if (i<0 || j<0 || (size_t)i>=a.size() || (size_t)j>=a.size()) throw std::out_of_range("Collections::swap index");
-        std::swap(a[(size_t)i], a[(size_t)j]);
-    }
-
-    template <typename T>
-    static void rotate(std::vector<T>& a, int distance) {
-        const int n = (int)a.size(); if (n==0) return;
-        int k = distance % n; if (k<0) k += n;
-        std::rotate(a.rbegin(), a.rbegin()+k, a.rend());
-    }
-
-    template <typename T>
-    static std::vector<T> nCopies(int n, const T& o) {
-        if (n < 0) throw std::out_of_range("Collections::nCopies negative n");
-        return std::vector<T>((size_t)n, o);
-    }
-
-    template <typename T>
-    static bool replaceAll(std::vector<T>& a, const T& oldVal, const T& newVal) {
-        bool modified = false;
-        for (auto& x : a) if (x == oldVal) { x = newVal; modified = true; }
-        return modified;
-    }
-
-    template <typename T>
-    static int indexOfSubList(const std::vector<T>& source, const std::vector<T>& target) {
-        if (target.empty()) return 0;
-        if (source.size() < target.size()) return -1;
-        const size_t end = source.size() - target.size();
-        for (size_t i=0; i<=end; ++i) {
-            bool match = true;
-            for (size_t j=0; j<target.size(); ++j) {
-                if (!(source[i+j] == target[j])) { match = false; break; }
+        template <typename T>
+        static void reverse(jxx::Ptr<List<T>> list) {
+            if (list == nullptr) {
+                throw jxx::lang::NullPointerException();
             }
-            if (match) return (int)i;
+            reverseRange_(list, 0, list->size());
         }
-        return -1;
-    }
 
-    template <typename T>
-    static int lastIndexOfSubList(const std::vector<T>& source, const std::vector<T>& target) {
-        if (target.empty()) return (int)source.size();
-        if (source.size() < target.size()) return -1;
-        for (size_t i = source.size() - target.size() + 1; i-- > 0; ) {
-            bool match = true;
-            for (size_t j=0; j<target.size(); ++j) {
-                if (!(source[i+j] == target[j])) { match = false; break; }
+        template <typename T>
+        static void shuffle(jxx::Ptr<List<T>> list) {
+            if (list == nullptr) {
+                throw jxx::lang::NullPointerException();
             }
-            if (match) return (int)i;
-            if (i==0) break;
+            shuffle(list, jxx::NEW<Random>());
         }
-        return -1;
-    }
 
-    // NEW: reverseOrder comparators
-    template <typename T>
-    static auto reverseOrder() {
-        return [](const T& a, const T& b){ return b < a; };
-    }
-
-    template <typename Cmp>
-    static auto reverseOrder(Cmp cmp) {
-        return [cmp](const auto& a, const auto& b){ return cmp(b, a); };
-    }
-
-    // ----- ArrayList<T> variants -----
-    template <typename T>
-    static void reverse(ArrayList<T>& list) {
-        int i=0, j=list.size()-1; while (i<j) { T tmp=list.get(i); list.set(i, list.get(j)); list.set(j, tmp); ++i; --j; }
-    }
-
-    template <typename T, typename Cmp = std::less<T>>
-    static void sort(ArrayList<T>& list, Cmp cmp = Cmp{}) {
-        std::vector<T> tmp; tmp.reserve((size_t)list.size());
-        for (int i=0;i<list.size();++i) tmp.push_back(list.get(i));
-        std::sort(tmp.begin(), tmp.end(), cmp);
-        for (int i=0;i<list.size();++i) list.set(i, tmp[(size_t)i]);
-    }
-
-    template <typename T>
-    static void shuffle(ArrayList<T>& list, jxx::util::Random* rng = nullptr) {
-        int n = list.size(); if (n<=1) return;
-        if (rng) {
-            for (int i=n-1;i>0;--i) { int j = rng->nextInt(i+1); T tmp=list.get(i); list.set(i, list.get(j)); list.set(j, tmp); }
-        } else {
-            std::random_device rd; std::mt19937 gen(rd());
-            for (int i=n-1;i>0;--i) { std::uniform_int_distribution<int> d(0,i); int j=d(gen); T tmp=list.get(i); list.set(i, list.get(j)); list.set(j, tmp); }
-        }
-    }
-
-    template <typename T>
-    static int binarySearch(const ArrayList<T>& list, const T& key) {
-        int low=0, high=list.size()-1;
-        while (low<=high) {
-            int mid=(low+high)>>1; T midVal = list.get(mid);
-            if (midVal < key) low = mid+1; else if (key < midVal) high = mid-1; else return mid;
-        }
-        return -(low + 1);
-    }
-
-    template <typename T, typename Cmp>
-    static int binarySearch(const ArrayList<T>& list, const T& key, Cmp cmp) {
-        int low=0, high=list.size()-1;
-        while (low<=high) {
-            int mid=(low+high)>>1; T midVal = list.get(mid);
-            if (cmp(midVal, key)) low = mid+1; else if (cmp(key, midVal)) high = mid-1; else return mid;
-        }
-        return -(low + 1);
-    }
-
-    template <typename T>
-    static T min(const ArrayList<T>& list) {
-        if (list.size()==0) throw NoSuchElementException("Collections::min on empty");
-        T best = list.get(0); for (int i=1;i<list.size();++i) if (list.get(i) < best) best = list.get(i); return best;
-    }
-
-    template <typename T, typename Cmp>
-    static T min(const ArrayList<T>& list, Cmp cmp) {
-        if (list.size()==0) throw NoSuchElementException("Collections::min on empty");
-        T best = list.get(0); for (int i=1;i<list.size();++i) if (cmp(list.get(i), best)) best = list.get(i); return best;
-    }
-
-    template <typename T>
-    static T max(const ArrayList<T>& list) {
-        if (list.size()==0) throw NoSuchElementException("Collections::max on empty");
-        T best = list.get(0); for (int i=1;i<list.size();++i) if (best < list.get(i)) best = list.get(i); return best;
-    }
-
-    template <typename T, typename Cmp>
-    static T max(const ArrayList<T>& list, Cmp cmp) {
-        if (list.size()==0) throw NoSuchElementException("Collections::max on empty");
-        T best = list.get(0); for (int i=1;i<list.size();++i) if (cmp(best, list.get(i))) best = list.get(i); return best;
-    }
-
-    template <typename T>
-    static int frequency(const ArrayList<T>& list, const T& o) {
-        int c=0; for (int i=0;i<list.size();++i) if (list.get(i)==o) ++c; return c;
-    }
-
-    template <typename T>
-    static bool disjoint(const ArrayList<T>& a, const ArrayList<T>& b) {
-        for (int i=0;i<a.size();++i) for (int j=0;j<b.size();++j) if (a.get(i)==b.get(j)) return false; return true;
-    }
-
-    template <typename T>
-    static void fill(ArrayList<T>& list, const T& val) { for (int i=0;i<list.size();++i) list.set(i, val); }
-
-    template <typename T>
-    static void copy(ArrayList<T>& dest, const ArrayList<T>& src) {
-        if (dest.size() < src.size()) throw std::out_of_range("Collections::copy dest too small");
-        for (int i=0;i<src.size();++i) dest.set(i, src.get(i));
-    }
-
-    template <typename T>
-    static void swap(ArrayList<T>& list, int i, int j) {
-        if (i<0 || j<0 || i>=list.size() || j>=list.size()) throw std::out_of_range("Collections::swap index");
-        T tmp=list.get(i); list.set(i, list.get(j)); list.set(j, tmp);
-    }
-
-    template <typename T>
-    static void rotate(ArrayList<T>& list, int distance) {
-        int n=list.size(); if (n==0) return; int k = distance % n; if (k<0) k += n;
-        auto rev=[&](int l,int r){ while (l<r){ T tmp=list.get(l); list.set(l, list.get(r)); list.set(r, tmp); ++l; --r; } };
-        rev(0,n-1); rev(0,k-1); rev(k,n-1);
-    }
-
-    // indexOfSubList / lastIndexOfSubList for ArrayList
-    template <typename T>
-    static int indexOfSubList(const ArrayList<T>& source, const ArrayList<T>& target) {
-        if (target.size()==0) return 0;
-        if (source.size() < target.size()) return -1;
-        int end = source.size() - target.size();
-        for (int i=0; i<=end; ++i) {
-            bool match = true;
-            for (int j=0; j<target.size(); ++j) {
-                if (!(source.get(i+j) == target.get(j))) { match = false; break; }
+        template <typename T>
+        static void shuffle(jxx::Ptr<List<T>> list, jxx::Ptr<jxx::util::Random> random) {
+            if (list == nullptr || random == nullptr) {
+                throw jxx::lang::NullPointerException();
             }
-            if (match) return i;
-        }
-        return -1;
-    }
 
-    template <typename T>
-    static int lastIndexOfSubList(const ArrayList<T>& source, const ArrayList<T>& target) {
-        if (target.size()==0) return source.size();
-        if (source.size() < target.size()) return -1;
-        for (int i = source.size() - target.size(); i >= 0; --i) {
-            bool match = true;
-            for (int j=0; j<target.size(); ++j) {
-                if (!(source.get(i+j) == target.get(j))) { match = false; break; }
+            for (jxx::lang::jint i = list->size(); i > 1; --i) {
+                const auto sourceIndex = i - 1;
+                const auto targetIndex = random->nextInt(i);
+                auto sourceValue = list->get(sourceIndex);
+                auto targetValue = list->get(targetIndex);
+                list->set(sourceIndex, targetValue);
+                list->set(targetIndex, sourceValue);
             }
-            if (match) return i;
         }
-        return -1;
-    }
 
-    // reverseOrder comparator helpers for ArrayList sorts
-    template <typename T>
-    static auto reverseOrderList() { return [](const T& a, const T& b){ return b < a; }; }
-    template <typename Cmp>
-    static auto reverseOrderList(Cmp cmp) { return [cmp](const auto& a, const auto& b){ return cmp(b, a); }; }
+        template <typename T>
+        static void sort(jxx::Ptr<List<T>> list) {
+            sort<T>(list, nullptr);
+        }
 
-    // Convenience creators
-    template <typename T>
-    static std::vector<T> emptyList() { return {}; }
-    template <typename T>
-    static std::vector<T> singletonList(const T& v) { return {v}; }
-};
+        template <typename T>
+        static void sort(
+            jxx::Ptr<List<T>> list,
+            jxx::Ptr<ComparatorSuper<T>> comparator) {
 
-}} 
+            if (list == nullptr) {
+                throw jxx::lang::NullPointerException();
+            }
+
+            const auto count = list->size();
+            std::vector<jxx::Ptr<T>> temporary;
+            temporary.reserve(static_cast<std::size_t>(count));
+
+            for (jxx::lang::jint i = 0; i < count; ++i) {
+                temporary.push_back(list->get(i));
+            }
+
+            std::stable_sort(
+                temporary.begin(),
+                temporary.end(),
+                [&](const jxx::Ptr<T>& left, const jxx::Ptr<T>& right) {
+                    return compare_(left, right, comparator) < 0;
+                });
+
+            for (jxx::lang::jint i = 0; i < count; ++i) {
+                list->set(i, temporary[static_cast<std::size_t>(i)]);
+            }
+        }
+
+        template <typename T>
+        static jxx::lang::jint binarySearch(
+            jxx::Ptr<List<T>> list,
+            jxx::Ptr<T> key) {
+
+            return binarySearch<T>(list, key, nullptr);
+        }
+
+        template <typename T>
+        static jxx::lang::jint binarySearch(
+            jxx::Ptr<List<T>> list,
+            jxx::Ptr<T> key,
+            jxx::Ptr<ComparatorSuper<T>> comparator) {
+
+            if (list == nullptr) {
+                throw jxx::lang::NullPointerException();
+            }
+
+            jxx::lang::jint low = 0;
+            jxx::lang::jint high = list->size() - 1;
+
+            while (low <= high) {
+                const auto middle = low + ((high - low) >> 1);
+                const auto comparison = compare_(list->get(middle), key, comparator);
+                if (comparison < 0) {
+                    low = middle + 1;
+                }
+                else if (comparison > 0) {
+                    high = middle - 1;
+                }
+                else {
+                    return middle;
+                }
+            }
+
+            return -(low + 1);
+        }
+
+        template <typename T>
+        static jxx::Ptr<T> min(jxx::Ptr<Collection<T>> collection) {
+            return min<T>(collection, nullptr);
+        }
+
+        template <typename T>
+        static jxx::Ptr<T> min(
+            jxx::Ptr<Collection<T>> collection,
+            jxx::Ptr<ComparatorSuper<T>> comparator) {
+
+            if (collection == nullptr) {
+                throw jxx::lang::NullPointerException();
+            }
+
+            auto iterator = collection->iterator();
+            if (!iterator->hasNext()) {
+                throw jxx::util::NoSuchElementException();
+            }
+
+            auto candidate = iterator->next();
+            while (iterator->hasNext()) {
+                auto value = iterator->next();
+                if (compare_(value, candidate, comparator) < 0) {
+                    candidate = value;
+                }
+            }
+            return candidate;
+        }
+
+        template <typename T>
+        static jxx::Ptr<T> max(jxx::Ptr<Collection<T>> collection) {
+            return max<T>(collection, nullptr);
+        }
+
+        template <typename T>
+        static jxx::Ptr<T> max(
+            jxx::Ptr<Collection<T>> collection,
+            jxx::Ptr<ComparatorSuper<T>> comparator) {
+
+            if (collection == nullptr) {
+                throw jxx::lang::NullPointerException();
+            }
+
+            auto iterator = collection->iterator();
+            if (!iterator->hasNext()) {
+                throw jxx::util::NoSuchElementException();
+            }
+
+            auto candidate = iterator->next();
+            while (iterator->hasNext()) {
+                auto value = iterator->next();
+                if (compare_(value, candidate, comparator) > 0) {
+                    candidate = value;
+                }
+            }
+            return candidate;
+        }
+
+        static jxx::lang::jint frequency(
+            jxx::Ptr<wildcard::CollectionAny> collection,
+            jxx::Ptr<jxx::lang::Object> object) {
+
+            if (collection == nullptr) {
+                throw jxx::lang::NullPointerException();
+            }
+
+            jxx::lang::jint count = 0;
+            auto iterator = collection->iteratorObject();
+            while (iterator->hasNext()) {
+                auto element = iterator->next();
+                if (objectEquals_(object, element)) {
+                    ++count;
+                }
+            }
+            return count;
+        }
+
+        static jxx::lang::jbool disjoint(
+            jxx::Ptr<wildcard::CollectionAny> first,
+            jxx::Ptr<wildcard::CollectionAny> second) {
+
+            if (first == nullptr || second == nullptr) {
+                throw jxx::lang::NullPointerException();
+            }
+
+            std::vector<jxx::Ptr<jxx::lang::Object>> secondElements;
+            auto secondIterator = second->iteratorObject();
+            while (secondIterator->hasNext()) {
+                secondElements.push_back(secondIterator->next());
+            }
+
+            auto firstIterator = first->iteratorObject();
+            while (firstIterator->hasNext()) {
+                auto value = firstIterator->next();
+                for (const auto& probe : secondElements) {
+                    if (objectEquals_(value, probe)) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        template <typename T>
+        static void fill(jxx::Ptr<List<T>> list, jxx::Ptr<T> value) {
+            if (list == nullptr) {
+                throw jxx::lang::NullPointerException();
+            }
+            for (jxx::lang::jint i = 0; i < list->size(); ++i) {
+                list->set(i, value);
+            }
+        }
+
+        template <typename T>
+        static void copy(
+            jxx::Ptr<List<T>> destination,
+            jxx::Ptr<List<T>> source) {
+
+            if (destination == nullptr || source == nullptr) {
+                throw jxx::lang::NullPointerException();
+            }
+            if (source->size() > destination->size()) {
+                throw jxx::lang::IndexOutOfBoundsException();
+            }
+            for (jxx::lang::jint i = 0; i < source->size(); ++i) {
+                destination->set(i, source->get(i));
+            }
+        }
+
+        template <typename T>
+        static void swap(
+            jxx::Ptr<List<T>> list,
+            jxx::lang::jint first,
+            jxx::lang::jint second) {
+
+            if (list == nullptr) {
+                throw jxx::lang::NullPointerException();
+            }
+            auto firstValue = list->get(first);
+            auto secondValue = list->get(second);
+            list->set(first, secondValue);
+            list->set(second, firstValue);
+        }
+
+        template <typename T>
+        static void rotate(jxx::Ptr<List<T>> list, jxx::lang::jint distance) {
+            if (list == nullptr) {
+                throw jxx::lang::NullPointerException();
+            }
+
+            const auto count = list->size();
+            if (count == 0) {
+                return;
+            }
+
+            auto normalized = distance % count;
+            if (normalized < 0) {
+                normalized += count;
+            }
+            if (normalized == 0) {
+                return;
+            }
+
+            reverseRange_(list, 0, count);
+            reverseRange_(list, 0, normalized);
+            reverseRange_(list, normalized, count);
+        }
+
+        template <typename T>
+        static jxx::lang::jbool replaceAll(
+            jxx::Ptr<List<T>> list,
+            jxx::Ptr<T> oldValue,
+            jxx::Ptr<T> newValue) {
+
+            if (list == nullptr) {
+                throw jxx::lang::NullPointerException();
+            }
+
+            jxx::lang::jbool modified = false;
+            for (jxx::lang::jint i = 0; i < list->size(); ++i) {
+                auto value = list->get(i);
+                if (elementEquals_(value, oldValue)) {
+                    list->set(i, newValue);
+                    modified = true;
+                }
+            }
+            return modified;
+        }
+
+        template <typename T>
+        static jxx::lang::jint indexOfSubList(
+            jxx::Ptr<List<T>> source,
+            jxx::Ptr<List<T>> target) {
+
+            if (source == nullptr || target == nullptr) {
+                throw jxx::lang::NullPointerException();
+            }
+
+            const auto sourceSize = source->size();
+            const auto targetSize = target->size();
+            if (targetSize == 0) return 0;
+            if (targetSize > sourceSize) return -1;
+
+            const auto lastCandidate = sourceSize - targetSize;
+            for (jxx::lang::jint i = 0; i <= lastCandidate; ++i) {
+                jxx::lang::jbool matches = true;
+                for (jxx::lang::jint j = 0; j < targetSize; ++j) {
+                    if (!elementEquals_(source->get(i + j), target->get(j))) {
+                        matches = false;
+                        break;
+                    }
+                }
+                if (matches) return i;
+            }
+            return -1;
+        }
+
+        template <typename T>
+        static jxx::lang::jint lastIndexOfSubList(
+            jxx::Ptr<List<T>> source,
+            jxx::Ptr<List<T>> target) {
+
+            if (source == nullptr || target == nullptr) {
+                throw jxx::lang::NullPointerException();
+            }
+
+            const auto sourceSize = source->size();
+            const auto targetSize = target->size();
+            if (targetSize == 0) return sourceSize;
+            if (targetSize > sourceSize) return -1;
+
+            for (jxx::lang::jint i = sourceSize - targetSize; i >= 0; --i) {
+                jxx::lang::jbool matches = true;
+                for (jxx::lang::jint j = 0; j < targetSize; ++j) {
+                    if (!elementEquals_(source->get(i + j), target->get(j))) {
+                        matches = false;
+                        break;
+                    }
+                }
+                if (matches) return i;
+            }
+            return -1;
+        }
+
+        template <typename T>
+        static jxx::lang::jbool addAll(
+            jxx::Ptr<Collection<T>> collection,
+            jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<T>, 1U>> elements) {
+
+            if (collection == nullptr || elements == nullptr) {
+                throw jxx::lang::NullPointerException();
+            }
+
+            jxx::lang::jbool modified = false;
+            for (jxx::lang::jint i = 0; i < elements->length; ++i) {
+                if (collection->add((*elements)[i])) {
+                    modified = true;
+                }
+            }
+            return modified;
+        }
+
+    protected:
+        jxx::Ptr<jxx::lang::Object> cloneImpl() const override {
+            throw jxx::lang::UnsupportedOperationException();
+        }
+    };
+
+} // namespace jxx::util

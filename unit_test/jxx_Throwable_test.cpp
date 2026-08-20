@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
-#include "jxx.lang.Object.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Exception.h"
 
 class ThrowableTest : public jxx::lang::Exception {
@@ -20,7 +21,8 @@ public:
         return std::hash<int>{}(value_);
     }
     jxx::Ptr<jxx::lang::String> toString() const override {
-        return jxx::NEW<jxx::lang::String>(std::to_string(value_));
+		const std::string str = "ThrowableTest: " + std::to_string(value_);
+        return jxx::NEW<jxx::lang::String>(str);
     }
 
     jxx::Ptr<jxx::lang::Object> cloneImpl() const override {

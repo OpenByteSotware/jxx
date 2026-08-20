@@ -154,7 +154,7 @@ namespace jxx {
 
         template <typename E>
         class HashSet
-            : public virtual AbstractSet<E>
+            : public AbstractSet<E>
             , public virtual jxx::lang::Cloneable
             , public virtual jxx::io::Serializable {
         private:
@@ -476,7 +476,7 @@ namespace jxx {
 
             virtual jxx::Ptr<jxx::lang::Object> clone()
             {
-                auto cloned = jxx::NEW<HashSet<E>(static_cast<jxx::lang::jint>(set_.size()), loadFactor_));
+                auto cloned = jxx::NEW<HashSet<E>>(static_cast<jxx::lang::jint>(set_.size()), loadFactor_);
 
                     for (const auto& element : set_)
                     {
