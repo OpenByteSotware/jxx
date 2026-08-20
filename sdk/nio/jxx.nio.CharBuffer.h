@@ -13,6 +13,14 @@ namespace jxx::nio
     class CharBuffer final : public Buffer
     {
     public:
+        // Add friend declarations to allow construction
+        template<class _Ty, class... _Types>
+        friend void std::_Construct_in_place(_Ty&, _Types&&...);
+
+        CharBuffer(std::shared_ptr<std::vector<jxx::lang::jchar>> storage,
+            jxx::lang::jint offset,
+            jxx::lang::jint capacity,
+            jxx::lang::jbool readOnly);
         ~CharBuffer() override = default;
 
         static jxx::Ptr<CharBuffer> allocate(jxx::lang::jint capacity);
@@ -50,14 +58,7 @@ namespace jxx::nio
         jxx::Ptr<jxx::lang::String> toString() const override;
 
     protected:
-        // Add friend declarations to allow construction
-        template<class _Ty, class... _Types>
-        friend void std::_Construct_in_place(_Ty&, _Types&&...);
         
-        CharBuffer(std::shared_ptr<std::vector<jxx::lang::jchar>> storage,
-              jxx::lang::jint offset,
-              jxx::lang::jint capacity,
-              jxx::lang::jbool readOnly);
 
         jxx::Ptr<CharBuffer> self__();
         void checkWritable_() const;

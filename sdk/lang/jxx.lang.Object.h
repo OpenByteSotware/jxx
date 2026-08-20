@@ -272,9 +272,6 @@ namespace jxx {
 
         namespace detail {
 
-            /*
-             * Detects whether T exposes a writable thisPtr member.
-             */
             template <typename T, typename = void>
             struct has_this_ptr
                 : std::false_type {};
@@ -288,11 +285,8 @@ namespace jxx {
                 : std::true_type {
             };
 
-            /*
-             * Applies JXX Object initialization after construction.
-             */
             template <typename T>
-            void initialize_object(
+            void initializeThisPtr(
                 const std::shared_ptr<T>& object) {
 
                 if constexpr (has_this_ptr<T>::value) {
@@ -302,107 +296,35 @@ namespace jxx {
 
         } // namespace detail
 
-        /*
-         * =====================================================================
-         * Case 1: Fixed-size native C++ array type
+        /**
+         * Constructs a JXX object.
          *
-         * Usage:
+         * This handles ordinary classes and JxxArray specializations:
          *
-         *     auto value = jxx::NEW<int[10]>();
-         *
-         * Return type:
-         *
-         *     std::shared_ptr<std::array<int, 10>>
-         *
-         * This is native C++ convenience behavior. It is not JxxArray.
-         * =====================================================================
+         *   jxx::NEW<String>("text")
+         *   jxx::NEW<Vector<E>>(capacity, increment)
+         *   jxx::NEW<IntArrayType>(10)
+         *   jxx::NEW<IntArray2DType>(2, 3)
          */
-        template <
-            typename T,
-            std::enable_if_t<
-            std::is_array_v<T> &&
-            (std::extent_v<T> != 0U),
-            int> = 0>
-        auto NEW() {
-
-            using ElementType =
-                std::remove_extent_t<T>;
-
-            constexpr std::size_t Count =
-                std::extent_v<T>;
-
-            return std::make_shared<
-                std::array<
-                ElementType,
-                Count>>();
-        }
-
-        /*
-         * =====================================================================
-         * Case 2: Dynamic native C++ array type
-         *
-         * Usage:
-         *
-         *     auto value = jxx::NEW<int[]>(10);
-         *
-         * C++17 does not support:
-         *
-         *     std::make_shared<int[]>(10)
-         *
-         * so shared_ptr<T[]> is constructed directly.
-         *
-         * This is native C++ convenience behavior. For Java arrays, prefer
-         * JxxArray<T, Rank>.
-         * =====================================================================
-         */
-        template <
-            typename T,
-            std::enable_if_t<
-            std::is_array_v<T> &&
-            (std::extent_v<T> == 0U),
-            int> = 0>
-        auto NEW(
-            std::size_t size) {
-
-            using ElementType =
-                std::remove_extent_t<T>;
-
-            return std::shared_ptr<ElementType[]>(
-                new ElementType,
-                std::default_delete<ElementType[]>());
-        }
-
-        /*
-         * =====================================================================
-         * Case 3: Normal object construction
-         *
-         * This handles:
-         *
-         *     jxx::NEW<Vector<E>>(capacity, increment)
-         *     jxx::NEW<String>("value")
-         *     jxx::NEW<IntArrayType>(10)
-         *     jxx::NEW<IntArray2DType>(2, 3)
-         *     jxx::NEW<IntArray3DType>(2, 3, 4)
-         *
-         * JxxArray is a class, so its dimensional constructors work naturally
-         * through this overload. No special multidimensional NEW overload is
-         * required.
-         * =====================================================================
-         */
-        template <
-            typename T,
-            typename... Args,
-            std::enable_if_t<
-            !std::is_array_v<T>,
-            int> = 0>
+        template <typename T, typename... Args>
         std::shared_ptr<T> NEW(
-            Args&&... args) {            
+            Args&&... args) {
+
+            static_assert(
+                !std::is_array_v<T>,
+                "jxx::NEW<T> does not accept native C++ array types. "
+                "Use JxxArray<T, Rank>.");
+
+            static_assert(
+                std::is_constructible_v<T, Args...>,
+                "jxx::NEW<T>: T is not constructible "
+                "from the supplied arguments.");
 
             auto object =
                 std::make_shared<T>(
                     std::forward<Args>(args)...);
 
-            detail::initialize_object(object);
+            detail::initializeThisPtr(object);
 
             return object;
         }

@@ -33,12 +33,6 @@ public:
     static constexpr jxx::lang::jint CANON_EQ = 0x80;
     static constexpr jxx::lang::jint UNICODE_CHARACTER_CLASS = 0x100;
 
-private:
-    jxx::Ptr<jxx::lang::String> regex_;
-    jxx::lang::jint flags_;
-    std::string compiledPatternUtf8_;
-    std::regex compiled_;
-
     template<class _Ty, class... _Types>
     friend void std::_Construct_in_place(_Ty&, _Types&&...);
     Pattern(
@@ -46,6 +40,13 @@ private:
         jxx::lang::jint flags,
         std::string compiledPatternUtf8,
         std::regex compiled);
+private:
+    jxx::Ptr<jxx::lang::String> regex_;
+    jxx::lang::jint flags_;
+    std::string compiledPatternUtf8_;
+    std::regex compiled_;
+
+ 
 
 public:
     virtual ~Pattern() = default;

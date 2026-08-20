@@ -131,3 +131,34 @@ git submodule add --name libunicode https://github.com/OpenByteSotware/libunicod
 git submodule add --name libgsl https://github.com/OpenByteSotware/GSL 3rdparty/gsl
 git submodule add --name libfmt https://github.com/OpenByteSotware/fmt 3rdparty/fmt
 
+
+
+Array type usage from java int[], boolean[], int[][][]
+
+auto bytes =
+    jxx::NEW<
+        jxx::lang::ByteArrayType>(
+            static_cast<jxx::lang::jint>(16));
+			
+			using StringArrayType =
+    jxx::lang::JxxArray<
+        jxx::Ptr<jxx::lang::String>,
+        1U>;
+
+auto strings =
+    jxx::NEW<StringArrayType>(
+        static_cast<jxx::lang::jint>(10));
+		
+		auto matrix =
+    jxx::NEW<
+        jxx::lang::IntArray2DType>(
+            2,
+            3);
+			
+			
+			auto cube =
+    jxx::NEW<
+        jxx::lang::IntArray3DType>(
+            2,
+            3,
+            4);

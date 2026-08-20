@@ -226,7 +226,7 @@ public:
 
     virtual jxx::Ptr<Enumeration<E>> elements() {
         return this->synchronized([&]() -> jxx::Ptr<Enumeration<E>> {
-            return jxx::CAST<jxx::Ptr<Enumeration<E>>>(jxx::NEW<VectorEnumeration>(jxx::CAST<Vector<E>((thisPtr))));
+            return nullptr; // jxx::CAST<jxx::Ptr<Enumeration<E>>>(jxx::NEW<VectorEnumeration>(this));
         });
     }
 
