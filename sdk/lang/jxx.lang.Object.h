@@ -119,6 +119,13 @@ namespace jxx::lang {
         // Virtual clone method
         virtual jxx::Ptr<jxx::lang::Object> clone() const;
 
+        // mimic Java 8 syncrhonized blocks: obj.synchronized([&] { ... });
+        template <typename F>
+        auto synchronized(F&& f) const -> decltype(f()) {
+            std::lock_guard<std::recursive_mutex> guard(mutex_);
+            return f();
+        }
+
     protected:
 
         virtual jxx::Ptr<jxx::lang::Object> cloneImpl() const;
@@ -128,14 +135,7 @@ namespace jxx::lang {
             static_assert(std::is_base_of<jxx::lang::Object, T>::value,
                 "T must derive from Object");
             return std::dynamic_pointer_cast<T>(thisPtr);
-        }
-
-        // mimic Java 8 syncrhonized blocks: obj.synchronized([&] { ... });
-        template <typename F>
-        auto synchronized(F&& f) const -> decltype(f()) {
-            std::lock_guard<std::recursive_mutex> guard(mutex_);
-            return f();
-        }
+        }        
 
         mutable std::mutex mtx_;
         std::condition_variable cv_;
