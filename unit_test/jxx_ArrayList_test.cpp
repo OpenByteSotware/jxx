@@ -186,9 +186,7 @@ namespace {
     }
 
     TEST(ArrayListTest, ZeroInitialCapacityIsAccepted) {
-        auto list =
-            jxx::NEW<StringArrayList>(
-                static_cast<jint>(0));
+        auto list = jxx::NEW<StringArrayList>(static_cast<jint>(0));
 
         ASSERT_NE(list, nullptr);
         EXPECT_TRUE(list->isEmpty());

@@ -72,7 +72,7 @@ TEST(VectorTest, EnumerationTraversesOwnerStateSafely) {
 }
 
 TEST(VectorTest, CloneEqualsAndHashCodeTrackContents) {
-    auto v = std::make_shared<Vector<String>>();
+    auto v = jxx::NEW<Vector<String>>();
     v->addElement(S("left"));
     v->addElement(S("right"));
 
@@ -81,16 +81,16 @@ TEST(VectorTest, CloneEqualsAndHashCodeTrackContents) {
     ASSERT_NE(cloned, nullptr);
     EXPECT_TRUE(v->equals(clonedObj));
     EXPECT_EQ(v->hashCode(), cloned->hashCode());
-    EXPECT_EQ(cloned->toString()->utf8(), std::string("left, right"));
+    EXPECT_EQ(cloned->toString()->utf8(), std::string("[left, right]"));
 }
 
 TEST(VectorTest, SynchronizeHelperGuardsConcurrentMutation) {
-    auto v = std::make_shared<Vector<String>>();
+    auto v = jxx::NEW<Vector<String>>();
     constexpr int perThread = 300;
 
     auto worker = [&](const char* prefix) {
         for (int i = 0; i < perThread; ++i) {
-            auto s = std::make_shared<String>(std::string(prefix) + std::to_string(i));
+            auto s = jxx::NEW<String>(std::string(prefix) + std::to_string(i));
             v->addElement(s);
         }
     };
