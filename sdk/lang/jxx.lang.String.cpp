@@ -642,7 +642,7 @@ namespace jxx::lang {
         for (jint i = 0; i < (jint)cps.size(); ++i) (*a)[i] = cps[(size_t)i];
         return jxx::util::IntStream::of(a);
     }
-
+    /*
     jxx::Ptr<String> String::intern() const {
         std::lock_guard<std::mutex> lk(internMutex_);
         auto it = internPool_.find(value_);
@@ -653,7 +653,7 @@ namespace jxx::lang {
         internPool_[value_] = me;
         return me;
     }
-
+    */
     // ---- static methods ----
     jxx::Ptr<String> String::valueOf(jbool b) { return jxx::NEW<String>(b ? "true" : "false"); }
     jxx::Ptr<String> String::valueOf(jchar c) {

@@ -192,7 +192,7 @@ namespace jxx::lang {
         jxx::Ptr<jxx::util::IntStream> codePoints() const;
 
         // Java: String intern()
-        jxx::Ptr<String> intern() const;
+        //jxx::Ptr<String> intern() const;
 
         // ---------------------------------------------------------------------
         // Static methods (ALL Java 8 public static methods)
@@ -242,8 +242,8 @@ namespace jxx::lang {
         mutable jxx::lang::jbool hashComputed_ = false;
 
         // Intern pool (Java-like)
-        static std::mutex internMutex_;
-        static std::unordered_map<std::u16string, std::weak_ptr<String>> internPool_;
+        //static std::mutex internMutex_;
+        //static std::unordered_map<std::u16string, std::weak_ptr<String>> internPool_;
 
         // Conversion helpers (used for regex / UTF-8 interop)
         static std::u16string utf8ToUtf16_(const std::string& s);

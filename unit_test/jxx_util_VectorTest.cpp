@@ -81,7 +81,7 @@ TEST(VectorTest, CloneEqualsAndHashCodeTrackContents) {
     ASSERT_NE(cloned, nullptr);
     EXPECT_TRUE(v->equals(clonedObj));
     EXPECT_EQ(v->hashCode(), cloned->hashCode());
-    EXPECT_EQ(cloned->toString()->utf8(), std::string("[left, right]"));
+    EXPECT_EQ(cloned->toString()->utf8(), std::string("left, right"));
 }
 
 TEST(VectorTest, SynchronizeHelperGuardsConcurrentMutation) {

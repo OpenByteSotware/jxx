@@ -674,9 +674,13 @@ namespace jxx::util {
                 });
         }
 
-        jxx::Ptr<Spliterator<E>> spliterator() override {
-            return AbstractList<E>::spliterator();
+        jxx::Ptr<Spliterator<E>>
+            spliterator() override {
+
+            throw jxx::lang::
+                UnsupportedOperationException();
         }
+
 
         jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> object) override {
             if (object == nullptr) {
