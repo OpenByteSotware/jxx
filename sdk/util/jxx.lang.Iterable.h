@@ -14,7 +14,7 @@ namespace jxx {
 namespace lang {
 
 template <typename T>
-class Iterable : virtual public Object {
+class Iterable {
 public:
     virtual ~Iterable() = default;
 

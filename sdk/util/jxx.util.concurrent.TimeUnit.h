@@ -1,149 +1,41 @@
 #pragma once
-
+#include "lang/jxx_types.h"
+#include <chrono>
 #include <limits>
-
 #include "lang/jxx.lang.Object.h"
-#include "lang/jxx.lang.Exceptions.h"
-
-namespace jxx {
-namespace util {
-namespace concurrent {
-
-class TimeUnit : virtual public jxx::lang::Object {
+namespace jxx::util::concurrent {
+class TimeUnit final : public jxx::lang::Object {
 public:
-    enum class Kind : jxx::lang::jint {
-        NANOSECONDS  = 0,
-        MICROSECONDS = 1,
-        MILLISECONDS = 2,
-        SECONDS      = 3,
-        MINUTES      = 4,
-        HOURS        = 5,
-        DAYS         = 6
-    };
-
+    enum class Kind : jxx::lang::jint { NANOSECONDS, MICROSECONDS, MILLISECONDS, SECONDS, MINUTES, HOURS, DAYS };
 private:
     Kind kind_;
-
-    static inline jxx::lang::jlong unitToNanos(Kind kind) {
-        switch (kind) {
-            case Kind::NANOSECONDS:  return static_cast<jxx::lang::jlong>(1LL);
-            case Kind::MICROSECONDS: return static_cast<jxx::lang::jlong>(1000LL);
-            case Kind::MILLISECONDS: return static_cast<jxx::lang::jlong>(1000LL * 1000LL);
-            case Kind::SECONDS:      return static_cast<jxx::lang::jlong>(1000LL * 1000LL * 1000LL);
-            case Kind::MINUTES:      return static_cast<jxx::lang::jlong>(60LL * 1000LL * 1000LL * 1000LL);
-            case Kind::HOURS:        return static_cast<jxx::lang::jlong>(60LL * 60LL * 1000LL * 1000LL * 1000LL);
-            case Kind::DAYS:         return static_cast<jxx::lang::jlong>(24LL * 60LL * 60LL * 1000LL * 1000LL * 1000LL);
-        }
-        throw IllegalStateException();
+    explicit TimeUnit(Kind kind) : kind_(kind) {}
+    static jxx::lang::jlong factor(Kind k) noexcept {
+        switch(k){case Kind::NANOSECONDS:return 1LL;case Kind::MICROSECONDS:return 1000LL;case Kind::MILLISECONDS:return 1000000LL;case Kind::SECONDS:return 1000000000LL;case Kind::MINUTES:return 60000000000LL;case Kind::HOURS:return 3600000000000LL;case Kind::DAYS:return 86400000000000LL;} return 1LL;
     }
-
-    static inline jxx::lang::jlong safeMul(jxx::lang::jlong a, jxx::lang::jlong b) {
-        if (a == 0 || b == 0) return static_cast<jxx::lang::jlong>(0);
-        if (a > 0 && b > 0 && a > (std::numeric_limits<jxx::lang::jlong>::max() / b)) {
-            return std::numeric_limits<jxx::lang::jlong>::max();
-        }
-        if (a < 0 && b < 0 && a < (std::numeric_limits<jxx::lang::jlong>::max() / b)) {
-            return std::numeric_limits<jxx::lang::jlong>::max();
-        }
-        if (a > 0 && b < 0 && b < (std::numeric_limits<jxx::lang::jlong>::min() / a)) {
-            return std::numeric_limits<jxx::lang::jlong>::min();
-        }
-        if (a < 0 && b > 0 && a < (std::numeric_limits<jxx::lang::jlong>::min() / b)) {
-            return std::numeric_limits<jxx::lang::jlong>::min();
-        }
-        return static_cast<jxx::lang::jlong>(a * b);
+    static jxx::lang::jlong saturatedMultiply(jxx::lang::jlong value,jxx::lang::jlong multiplier) noexcept {
+        if(value==0||multiplier==0)return 0;
+        const auto max=std::numeric_limits<jxx::lang::jlong>::max(); const auto min=std::numeric_limits<jxx::lang::jlong>::min();
+        if(value>0&&value>max/multiplier)return max; if(value<0&&value<min/multiplier)return min; return value*multiplier;
     }
-
-    static inline jxx::lang::jlong nanosTo(Kind target, jxx::lang::jlong nanos) {
-        const jxx::lang::jlong div = unitToNanos(target);
-        return static_cast<jxx::lang::jlong>(nanos / div);
-    }
-
-    explicit TimeUnit(Kind kind)
-        : kind_(kind) {
-    }
-
 public:
-    virtual ~TimeUnit() = default;
-
-    virtual Kind kind() const {
-        return kind_;
-    }
-
-    virtual jxx::lang::jlong convert(
-        jxx::lang::jlong sourceDuration,
-        jxx::Ptr<TimeUnit> sourceUnit) {
-        if (sourceUnit == nullptr) {
-            throw NullPointerException();
-        }
-        const jxx::lang::jlong sourceNanos = safeMul(sourceDuration, unitToNanos(sourceUnit->kind()));
-        return nanosTo(kind_, sourceNanos);
-    }
-
-    virtual jxx::lang::jlong toNanos(jxx::lang::jlong duration) {
-        return safeMul(duration, unitToNanos(kind_));
-    }
-
-    virtual jxx::lang::jlong toMicros(jxx::lang::jlong duration) {
-        return nanosTo(Kind::MICROSECONDS, toNanos(duration));
-    }
-
-    virtual jxx::lang::jlong toMillis(jxx::lang::jlong duration) {
-        return nanosTo(Kind::MILLISECONDS, toNanos(duration));
-    }
-
-    virtual jxx::lang::jlong toSeconds(jxx::lang::jlong duration) {
-        return nanosTo(Kind::SECONDS, toNanos(duration));
-    }
-
-    virtual jxx::lang::jlong toMinutes(jxx::lang::jlong duration) {
-        return nanosTo(Kind::MINUTES, toNanos(duration));
-    }
-
-    virtual jxx::lang::jlong toHours(jxx::lang::jlong duration) {
-        return nanosTo(Kind::HOURS, toNanos(duration));
-    }
-
-    virtual jxx::lang::jlong toDays(jxx::lang::jlong duration) {
-        return nanosTo(Kind::DAYS, toNanos(duration));
-    }
-
-    static jxx::Ptr<TimeUnit> NANOSECONDS() {
-        static jxx::Ptr<TimeUnit> value(new TimeUnit(Kind::NANOSECONDS));
-        return value;
-    }
-
-    static jxx::Ptr<TimeUnit> MICROSECONDS() {
-        static jxx::Ptr<TimeUnit> value(new TimeUnit(Kind::MICROSECONDS));
-        return value;
-    }
-
-    static jxx::Ptr<TimeUnit> MILLISECONDS() {
-        static jxx::Ptr<TimeUnit> value(new TimeUnit(Kind::MILLISECONDS));
-        return value;
-    }
-
-    static jxx::Ptr<TimeUnit> SECONDS() {
-        static jxx::Ptr<TimeUnit> value(new TimeUnit(Kind::SECONDS));
-        return value;
-    }
-
-    static jxx::Ptr<TimeUnit> MINUTES() {
-        static jxx::Ptr<TimeUnit> value(new TimeUnit(Kind::MINUTES));
-        return value;
-    }
-
-    static jxx::Ptr<TimeUnit> HOURS() {
-        static jxx::Ptr<TimeUnit> value(new TimeUnit(Kind::HOURS));
-        return value;
-    }
-
-    static jxx::Ptr<TimeUnit> DAYS() {
-        static jxx::Ptr<TimeUnit> value(new TimeUnit(Kind::DAYS));
-        return value;
-    }
+    static jxx::Ptr<TimeUnit> NANOSECONDS(){static auto v=jxx::Ptr<TimeUnit>(new TimeUnit(Kind::NANOSECONDS));return v;}
+    static jxx::Ptr<TimeUnit> MICROSECONDS(){static auto v=jxx::Ptr<TimeUnit>(new TimeUnit(Kind::MICROSECONDS));return v;}
+    static jxx::Ptr<TimeUnit> MILLISECONDS(){static auto v=jxx::Ptr<TimeUnit>(new TimeUnit(Kind::MILLISECONDS));return v;}
+    static jxx::Ptr<TimeUnit> SECONDS(){static auto v=jxx::Ptr<TimeUnit>(new TimeUnit(Kind::SECONDS));return v;}
+    static jxx::Ptr<TimeUnit> MINUTES(){static auto v=jxx::Ptr<TimeUnit>(new TimeUnit(Kind::MINUTES));return v;}
+    static jxx::Ptr<TimeUnit> HOURS(){static auto v=jxx::Ptr<TimeUnit>(new TimeUnit(Kind::HOURS));return v;}
+    static jxx::Ptr<TimeUnit> DAYS(){static auto v=jxx::Ptr<TimeUnit>(new TimeUnit(Kind::DAYS));return v;}
+    Kind kind() const noexcept{return kind_;}
+    jxx::lang::jlong convert(jxx::lang::jlong duration,const jxx::Ptr<TimeUnit>& source) const;
+    jxx::lang::jlong toNanos(jxx::lang::jlong d) const noexcept{return saturatedMultiply(d,factor(kind_));}
+    jxx::lang::jlong toMicros(jxx::lang::jlong d) const noexcept{return toNanos(d)/factor(Kind::MICROSECONDS);}
+    jxx::lang::jlong toMillis(jxx::lang::jlong d) const noexcept{return toNanos(d)/factor(Kind::MILLISECONDS);}
+    jxx::lang::jlong toSeconds(jxx::lang::jlong d) const noexcept{return toNanos(d)/factor(Kind::SECONDS);}
+    jxx::lang::jlong toMinutes(jxx::lang::jlong d) const noexcept{return toNanos(d)/factor(Kind::MINUTES);}
+    jxx::lang::jlong toHours(jxx::lang::jlong d) const noexcept{return toNanos(d)/factor(Kind::HOURS);}
+    jxx::lang::jlong toDays(jxx::lang::jlong d) const noexcept{return toNanos(d)/factor(Kind::DAYS);}
+    std::chrono::nanoseconds toChrono(jxx::lang::jlong d) const noexcept{return std::chrono::nanoseconds(toNanos(d));}
+protected:jxx::Ptr<jxx::lang::Object> cloneImpl() const override{return jxx::Ptr<jxx::lang::Object>(new TimeUnit(kind_));}
 };
-
-} // namespace concurrent
-} // namespace util
-} // namespace jxx
+} // namespace jxx::util::concurrent
