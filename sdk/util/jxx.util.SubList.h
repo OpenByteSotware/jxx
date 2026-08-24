@@ -92,7 +92,7 @@ private:
             expectedModCount_ = subList_->modCount;
         }
 
-        virtual void set(jxx::Ptr<E> e) override {
+        virtual void set(const jxx::Ptr<E> e) override {
             if (lastRet_ < 0) {
                 throw jxx::lang::IllegalStateException();
             }
@@ -102,7 +102,7 @@ private:
             rootIterator_->set(e);
         }
 
-        virtual void add(jxx::Ptr<E> e) override {
+        virtual void add(const jxx::Ptr<E> e) override {
             if (expectedModCount_ != subList_->modCount) {
                 throw jxx::util::ConcurrentModificationException();
             }
@@ -116,7 +116,7 @@ private:
     };
 
 public:
-    SubList(jxx::Ptr<List<E>> list, jxx::lang::jint fromIndex, jxx::lang::jint toIndex)
+    SubList(const jxx::Ptr<List<E>> list, jxx::lang::jint fromIndex, jxx::lang::jint toIndex)
         : root(list), offset_(fromIndex), size_(toIndex - fromIndex) {
         if (list == nullptr) {
             throw jxx::lang::NullPointerException();
@@ -128,11 +128,11 @@ public:
 
     virtual ~SubList() = default;
     
-    virtual void replaceAll(jxx::Ptr<function::UnaryOperator<E>> op) override {
+    virtual void replaceAll(const jxx::Ptr<function::UnaryOperator<E>> op) override {
     }
 
     
-    virtual void sort(jxx::Ptr<ComparatorSuper<E>> c) override {
+    virtual void sort(const jxx::Ptr<ComparatorSuper<E>> c) override {
 
     }
 

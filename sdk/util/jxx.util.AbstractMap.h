@@ -20,7 +20,7 @@ public:
     virtual jxx::lang::jint size() override { return entrySet()->size(); }
     virtual jxx::lang::jbool isEmpty() override { return size() == 0; }
 
-    virtual jxx::lang::jbool containsValue(jxx::Ptr<jxx::lang::Object> value) override {
+    virtual jxx::lang::jbool containsValue(const jxx::Ptr<jxx::lang::Object> value) override {
         auto it = entrySet()->iterator();
         if (value == nullptr) {
             while (it->hasNext()) if (it->next()->getValue() == nullptr) return true;
@@ -33,7 +33,7 @@ public:
         return false;
     }
 
-    virtual jxx::lang::jbool containsKey(jxx::Ptr<jxx::lang::Object> key) override {
+    virtual jxx::lang::jbool containsKey(const jxx::Ptr<jxx::lang::Object> key) override {
         auto it = entrySet()->iterator();
         if (key == nullptr) {
             while (it->hasNext()) if (it->next()->getKey() == nullptr) return true;
@@ -46,7 +46,7 @@ public:
         return false;
     }
 
-    virtual jxx::Ptr<V> get(jxx::Ptr<jxx::lang::Object> key) override {
+    virtual jxx::Ptr<V> get(const jxx::Ptr<jxx::lang::Object> key) override {
         auto it = entrySet()->iterator();
         if (key == nullptr) {
             while (it->hasNext()) {
@@ -63,11 +63,11 @@ public:
         return nullptr;
     }
 
-    virtual jxx::Ptr<V> put(jxx::Ptr<K> /*key*/, jxx::Ptr<V> /*value*/) override {
+    virtual jxx::Ptr<V> put(const jxx::Ptr<K> /*key*/, jxx::Ptr<V> /*value*/) override {
         throw UnsupportedOperationException();
     }
 
-    virtual jxx::Ptr<V> remove(jxx::Ptr<jxx::lang::Object> key) override {
+    virtual jxx::Ptr<V> remove(const jxx::Ptr<jxx::lang::Object> key) override {
         auto it = entrySet()->iterator();
         if (key == nullptr) {
             while (it->hasNext()) {
@@ -92,7 +92,7 @@ public:
         return nullptr;
     }
 
-    virtual void putAll(jxx::Ptr<Map<K, V>> m) override {
+    virtual void putAll(const jxx::Ptr<Map<K, V>> m) override {
         if (m == nullptr) throw NullPointerException();
         auto it = m->entrySet()->iterator();
         while (it->hasNext()) {
@@ -110,7 +110,7 @@ public:
         private:
             jxx::Ptr<Iterator<MapEntry<K, V>>> inner_;
         public:
-            explicit KeyIterator(jxx::Ptr<Iterator<MapEntry<K, V>>> inner) : inner_(inner) {}
+            explicit KeyIterator(const jxx::Ptr<Iterator<MapEntry<K, V>>> inner) : inner_(inner) {}
             virtual ~KeyIterator() = default;
             virtual jxx::lang::jbool hasNext() override { return inner_->hasNext(); }
             virtual jxx::Ptr<K> next() override { return inner_->next()->getKey(); }
@@ -121,15 +121,15 @@ public:
         virtual ~KeySet() = default;
         virtual jxx::lang::jint size() override { return map_->size(); }
         virtual jxx::lang::jbool isEmpty() override { return map_->isEmpty(); }
-        virtual jxx::lang::jbool contains(jxx::Ptr<jxx::lang::Object> o) override { return map_->containsKey(o); }
+        virtual jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object> o) override { return map_->containsKey(o); }
         virtual jxx::Ptr<Iterator<K>> iterator() override { return jxx::Ptr<Iterator<K>>(new KeyIterator(map_->entrySet()->iterator())); }
         virtual jxx::lang::ObjectArray toArray() override { return AbstractCollection<K>::toArray(); }
-        virtual jxx::lang::jbool add(jxx::Ptr<K> /*e*/) override { throw UnsupportedOperationException(); }
-        virtual jxx::lang::jbool remove(jxx::Ptr<jxx::lang::Object> o) override { return map_->remove(o) != nullptr; }
-        virtual jxx::lang::jbool containsAll(jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<K>::containsAll(c); }
-        virtual jxx::lang::jbool addAll(jxx::Ptr<wildcard::CollectionExtends<K>> c) override { return AbstractCollection<K>::addAll(c); }
-        virtual jxx::lang::jbool removeAll(jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractSet<K>::removeAll(c); }
-        virtual jxx::lang::jbool retainAll(jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<K>::retainAll(c); }
+        virtual jxx::lang::jbool add(const jxx::Ptr<K> /*e*/) override { throw UnsupportedOperationException(); }
+        virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object> o) override { return map_->remove(o) != nullptr; }
+        virtual jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<K>::containsAll(c); }
+        virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<K>> c) override { return AbstractCollection<K>::addAll(c); }
+        virtual jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractSet<K>::removeAll(c); }
+        virtual jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<K>::retainAll(c); }
         virtual void clear() override { map_->clear(); }
     };
 
@@ -140,7 +140,7 @@ public:
         private:
             jxx::Ptr<Iterator<MapEntry<K, V>>> inner_;
         public:
-            explicit ValueIterator(jxx::Ptr<Iterator<MapEntry<K, V>>> inner) : inner_(inner) {}
+            explicit ValueIterator(const jxx::Ptr<Iterator<MapEntry<K, V>>> inner) : inner_(inner) {}
             virtual ~ValueIterator() = default;
             virtual jxx::lang::jbool hasNext() override { return inner_->hasNext(); }
             virtual jxx::Ptr<V> next() override { return inner_->next()->getValue(); }
@@ -151,11 +151,11 @@ public:
         virtual ~Values() = default;
         virtual jxx::lang::jint size() override { return map_->size(); }
         virtual jxx::lang::jbool isEmpty() override { return map_->isEmpty(); }
-        virtual jxx::lang::jbool contains(jxx::Ptr<jxx::lang::Object> o) override { return map_->containsValue(o); }
+        virtual jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object> o) override { return map_->containsValue(o); }
         virtual jxx::Ptr<Iterator<V>> iterator() override { return jxx::Ptr<Iterator<V>>(new ValueIterator(map_->entrySet()->iterator())); }
         virtual jxx::lang::ObjectArray toArray() override { return AbstractCollection<V>::toArray(); }
-        virtual jxx::lang::jbool add(jxx::Ptr<V> /*e*/) override { throw UnsupportedOperationException(); }
-        virtual jxx::lang::jbool remove(jxx::Ptr<jxx::lang::Object> o) override {
+        virtual jxx::lang::jbool add(const jxx::Ptr<V> /*e*/) override { throw UnsupportedOperationException(); }
+        virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object> o) override {
             auto it = map_->entrySet()->iterator();
             if (o == nullptr) {
                 while (it->hasNext()) {
@@ -171,10 +171,10 @@ public:
             }
             return false;
         }
-        virtual jxx::lang::jbool containsAll(jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<V>::containsAll(c); }
-        virtual jxx::lang::jbool addAll(jxx::Ptr<wildcard::CollectionExtends<V>> c) override { return AbstractCollection<V>::addAll(c); }
-        virtual jxx::lang::jbool removeAll(jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<V>::removeAll(c); }
-        virtual jxx::lang::jbool retainAll(jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<V>::retainAll(c); }
+        virtual jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<V>::containsAll(c); }
+        virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<V>> c) override { return AbstractCollection<V>::addAll(c); }
+        virtual jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<V>::removeAll(c); }
+        virtual jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<V>::retainAll(c); }
         virtual void clear() override { map_->clear(); }
     };
 
@@ -188,7 +188,7 @@ public:
         return valuesView;
     }
 
-    virtual jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> o) override {
+    virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object> o) override {
         auto m = jxx::CAST<Map<K, V>, jxx::lang::Object>(o);
         if (m == nullptr) return false;
         if (m->size() != this->size()) return false;

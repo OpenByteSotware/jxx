@@ -199,7 +199,7 @@ namespace jxx::util {
             elements_.reserve(static_cast<std::size_t>(capacity_));
         }
 
-        explicit Vector(jxx::Ptr<wildcard::CollectionExtends<E>> collection)
+        explicit Vector(const jxx::Ptr<wildcard::CollectionExtends<E>> collection)
             : elements_(),
             capacityIncrement_(0),
             capacity_(DEFAULT_CAPACITY) {
@@ -217,14 +217,14 @@ namespace jxx::util {
 
         virtual ~Vector() = default;
 
-        void writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out) override {
+        void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) override {
             if (out == nullptr) {
                 throw jxx::lang::NullPointerException();
             }
             throw jxx::lang::UnsupportedOperationException();
         }
 
-        void readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) override {
+        void readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) override {
             if (in == nullptr) {
                 throw jxx::lang::NullPointerException();
             }
@@ -299,7 +299,7 @@ namespace jxx::util {
             return jxx::NEW<VectorEnumeration>(this);
         }
 
-        jxx::lang::jint indexOf(jxx::Ptr<jxx::lang::Object> object) override {
+        jxx::lang::jint indexOf(const jxx::Ptr<jxx::lang::Object> object) override {
             return indexOf(object, 0);
         }
 
@@ -322,7 +322,7 @@ namespace jxx::util {
                 });
         }
 
-        jxx::lang::jint lastIndexOf(jxx::Ptr<jxx::lang::Object> object) override {
+        jxx::lang::jint lastIndexOf(const jxx::Ptr<jxx::lang::Object> object) override {
             return this->synchronized([&]() -> jxx::lang::jint {
                 for (jxx::lang::jint i =
                     static_cast<jxx::lang::jint>(elements_.size()) - 1;
@@ -379,7 +379,7 @@ namespace jxx::util {
                 });
         }
 
-        void setElementAt(jxx::Ptr<E> object, jxx::lang::jint index) {
+        void setElementAt(const jxx::Ptr<E> object, jxx::lang::jint index) {
             this->synchronized([&]() {
                 rangeCheck(index);
                 elements_[static_cast<std::size_t>(index)] = object;
@@ -394,7 +394,7 @@ namespace jxx::util {
                 });
         }
 
-        void insertElementAt(jxx::Ptr<E> object, jxx::lang::jint index) {
+        void insertElementAt(const jxx::Ptr<E> object, jxx::lang::jint index) {
             this->synchronized([&]() {
                 rangeCheckForAddLocal(index);
                 ensureCapacityUnlocked(static_cast<jxx::lang::jint>(elements_.size()) + 1);
@@ -403,7 +403,7 @@ namespace jxx::util {
                 });
         }
 
-        void addElement(jxx::Ptr<E> object) {
+        void addElement(const jxx::Ptr<E> object) {
             this->synchronized([&]() {
                 ensureCapacityUnlocked(static_cast<jxx::lang::jint>(elements_.size()) + 1);
                 elements_.push_back(object);
@@ -411,7 +411,7 @@ namespace jxx::util {
                 });
         }
 
-        jxx::lang::jbool removeElement(jxx::Ptr<jxx::lang::Object> object) {
+        jxx::lang::jbool removeElement(const jxx::Ptr<jxx::lang::Object> object) {
             return this->synchronized([&]() -> jxx::lang::jbool {
                 for (auto iterator = elements_.begin(); iterator != elements_.end(); ++iterator) {
                     if (ptrEqualsObject(*iterator, object)) {
@@ -441,7 +441,7 @@ namespace jxx::util {
                 });
         }
 
-        jxx::lang::jbool add(jxx::Ptr<E> element) override {
+        jxx::lang::jbool add(const jxx::Ptr<E> element) override {
             addElement(element);
             return true;
         }
@@ -460,7 +460,7 @@ namespace jxx::util {
                 });
         }
 
-        jxx::lang::jbool remove(jxx::Ptr<jxx::lang::Object> object) override {
+        jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object> object) override {
             return removeElement(object);
         }
 
@@ -473,7 +473,7 @@ namespace jxx::util {
                 });
         }
 
-        jxx::lang::jbool addAll(jxx::Ptr<wildcard::CollectionExtends<E>> collection) override {
+        jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<E>> collection) override {
             if (collection == nullptr) {
                 throw jxx::lang::NullPointerException();
             }
@@ -524,7 +524,7 @@ namespace jxx::util {
                 });
         }
 
-        jxx::lang::jbool containsAll(jxx::Ptr<wildcard::CollectionAny> collection) override {
+        jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny> collection) override {
             if (collection == nullptr) {
                 throw jxx::lang::NullPointerException();
             }
@@ -538,7 +538,7 @@ namespace jxx::util {
             return true;
         }
 
-        jxx::lang::jbool removeAll(jxx::Ptr<wildcard::CollectionAny> collection) override {
+        jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny> collection) override {
             if (collection == nullptr) {
                 throw jxx::lang::NullPointerException();
             }
@@ -573,7 +573,7 @@ namespace jxx::util {
                 });
         }
 
-        jxx::lang::jbool retainAll(jxx::Ptr<wildcard::CollectionAny> collection) override {
+        jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny> collection) override {
             if (collection == nullptr) {
                 throw jxx::lang::NullPointerException();
             }
@@ -638,7 +638,7 @@ namespace jxx::util {
             return AbstractList<E>::subList(fromIndex, toIndex);
         }
 
-        void replaceAll(jxx::Ptr<function::UnaryOperator<E>> operation) override {
+        void replaceAll(const jxx::Ptr<function::UnaryOperator<E>> operation) override {
             if (operation == nullptr) {
                 throw jxx::lang::NullPointerException();
             }
@@ -650,7 +650,7 @@ namespace jxx::util {
                 });
         }
 
-        void sort(jxx::Ptr<ComparatorSuper<E>> comparator) override {
+        void sort(const jxx::Ptr<ComparatorSuper<E>> comparator) override {
             this->synchronized([&]() {
                 std::stable_sort(
                     elements_.begin(),
@@ -682,7 +682,7 @@ namespace jxx::util {
         }
 
 
-        jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> object) override {
+        jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object> object) override {
             if (object == nullptr) {
                 return false;
             }

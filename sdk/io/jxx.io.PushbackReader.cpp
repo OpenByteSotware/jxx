@@ -18,12 +18,12 @@ namespace
 
 namespace jxx::io
 {
-    PushbackReader::PushbackReader(jxx::Ptr<Reader> in)
+    PushbackReader::PushbackReader(const jxx::Ptr<Reader> in)
         : PushbackReader(std::move(in), 1)
     {
     }
 
-    PushbackReader::PushbackReader(jxx::Ptr<Reader> in, jxx::lang::jint size)
+    PushbackReader::PushbackReader(const jxx::Ptr<Reader> in, jxx::lang::jint size)
         : FilterReader(std::move(in))
     {
         if (size <= 0)

@@ -14,6 +14,6 @@ namespace jxx::util
         virtual ~Comparator() = default;
 
     public:
-        virtual jxx::lang::jint compare(jxx::Ptr<E> a, jxx::Ptr<E> b) const = 0;
+        virtual jxx::lang::jint compare(const jxx::Ptr<E> a, jxx::Ptr<E> b) const = 0;
     };
 }

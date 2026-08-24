@@ -17,7 +17,7 @@ jxx::Ptr<Charset> Charset::defaultCharset() {
     return cs;
 }
 
-jxx::Ptr<Charset> Charset::forName(jxx::Ptr<String> n) {
+jxx::Ptr<Charset> Charset::forName(const jxx::Ptr<String> n) {
     if (!n) throw std::invalid_argument("NullPointerException: Charset.forName(null)");
 
     std::string name = to_upper_ascii(n->utf8());
@@ -85,7 +85,7 @@ jxx::Ptr<String> Charset::decode(const jxx::lang::ByteArray bytes) const {
     return jxx::NEW<String>(u);
 }
 
-jbool Charset::equals(jxx::Ptr<Object> o) const {
+jbool Charset::equals(const jxx::Ptr<Object> o) const {
     auto other = std::dynamic_pointer_cast<Charset>(o);
     return other && other->kind_ == kind_;
 }

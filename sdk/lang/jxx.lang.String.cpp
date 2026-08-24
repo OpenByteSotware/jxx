@@ -132,7 +132,7 @@ namespace jxx::lang {
     // ---------------- Constructors ----------------
     String::String() : value_() {}
 
-    String::String(jxx::Ptr<String> original) {
+    String::String(const jxx::Ptr<String> original) {
         if (!original) throwNPE_();
         value_ = original->value_;
     }
@@ -357,30 +357,30 @@ namespace jxx::lang {
         return cs->encode(jxx::CAST<String, jxx::lang::Object>(this->thisPtr));
     }
 
-    jxx::lang::ByteArray String::getBytes(jxx::Ptr<String> charsetName) const {
+    jxx::lang::ByteArray String::getBytes(const jxx::Ptr<String> charsetName) const {
         if (!charsetName) throwNPE_();
         auto cs = Charset::forName(charsetName);
         return cs->encode(jxx::CAST<String, jxx::lang::Object>(this->thisPtr));
     }
 
-    jxx::lang::ByteArray String::getBytes(jxx::Ptr<Charset> charset) const {
+    jxx::lang::ByteArray String::getBytes(const jxx::Ptr<Charset> charset) const {
         if (!charset) throwNPE_();
         return charset->encode(jxx::CAST<String, jxx::lang::Object>(this->thisPtr));
     }
 
-    jbool String::contentEquals(jxx::Ptr<CharSequence> cs) const {
+    jbool String::contentEquals(const jxx::Ptr<CharSequence> cs) const {
         if (!cs) return false;
         if (cs->length() != length()) return false;
         for (jint i = 0; i < length(); ++i) if (cs->charAt(i) != charAt(i)) return false;
         return true;
     }
 
-    jbool String::contentEquals(jxx::Ptr<StringBuffer> sb) const {
+    jbool String::contentEquals(const jxx::Ptr<StringBuffer> sb) const {
         if (!sb) return false;
         return contentEquals(jxx::CAST<CharSequence, jxx::lang::Object>(sb->toString()));
     }
 
-    jbool String::equalsIgnoreCase(jxx::Ptr<String> other) const {
+    jbool String::equalsIgnoreCase(const jxx::Ptr<String> other) const {
         if (!other) return false;
         if (other->length() != length()) return false;
         for (jint i = 0; i < length(); ++i)
@@ -388,7 +388,7 @@ namespace jxx::lang {
         return true;
     }
 
-    jint String::compareToIgnoreCase(jxx::Ptr<String> other) const {
+    jint String::compareToIgnoreCase(const jxx::Ptr<String> other) const {
         if (!other) throwNPE_();
         size_t n = std::min(value_.size(), other->value_.size());
         for (size_t i = 0; i < n; ++i) {
@@ -418,9 +418,9 @@ namespace jxx::lang {
         return true;
     }
 
-    jbool String::startsWith(jxx::Ptr<String> prefix) const { return startsWith(prefix, 0); }
+    jbool String::startsWith(const jxx::Ptr<String> prefix) const { return startsWith(prefix, 0); }
 
-    jbool String::startsWith(jxx::Ptr<String> prefix, jint toffset) const {
+    jbool String::startsWith(const jxx::Ptr<String> prefix, jint toffset) const {
         if (!prefix) throwNPE_();
         if (toffset < 0) return false;
         if (toffset + prefix->length() > length()) return false;
@@ -429,7 +429,7 @@ namespace jxx::lang {
         return true;
     }
 
-    jbool String::endsWith(jxx::Ptr<String> suffix) const {
+    jbool String::endsWith(const jxx::Ptr<String> suffix) const {
         if (!suffix) throwNPE_();
         return startsWith(suffix, length() - suffix->length());
     }
@@ -453,9 +453,9 @@ namespace jxx::lang {
         return -1;
     }
 
-    jint String::indexOf(jxx::Ptr<String> str) const { return indexOf(str, 0); }
+    jint String::indexOf(const jxx::Ptr<String> str) const { return indexOf(str, 0); }
 
-    jint String::indexOf(jxx::Ptr<String> str, jint fromIndex) const {
+    jint String::indexOf(const jxx::Ptr<String> str, jint fromIndex) const {
         if (!str) throwNPE_();
         if (fromIndex < 0) fromIndex = 0;
         if (str->value_.empty()) return std::min(fromIndex, length());
@@ -463,9 +463,9 @@ namespace jxx::lang {
         return pos == std::u16string::npos ? -1 : (jint)pos;
     }
 
-    jint String::lastIndexOf(jxx::Ptr<String> str) const { return lastIndexOf(str, length()); }
+    jint String::lastIndexOf(const jxx::Ptr<String> str) const { return lastIndexOf(str, length()); }
 
-    jint String::lastIndexOf(jxx::Ptr<String> str, jint fromIndex) const {
+    jint String::lastIndexOf(const jxx::Ptr<String> str, jint fromIndex) const {
         if (!str) throwNPE_();
         if (str->value_.empty()) return std::min(fromIndex, length());
         if (fromIndex > length()) fromIndex = length();
@@ -482,7 +482,7 @@ namespace jxx::lang {
         return out;
     }
 
-    jxx::Ptr<String> String::concat(jxx::Ptr<String> str) const {
+    jxx::Ptr<String> String::concat(const jxx::Ptr<String> str) const {
         if (!str) throwNPE_();
         if (str->value_.empty()) return jxx::CAST<String, jxx::lang::Object>(this->thisPtr);
         auto out = jxx::NEW<String>();
@@ -499,20 +499,20 @@ namespace jxx::lang {
         return out;
     }
 
-    jbool String::matches(jxx::Ptr<String> regex) const {
+    jbool String::matches(const jxx::Ptr<String> regex) const {
         if (!regex) throwNPE_();
         std::regex re(regex->utf8());
         return std::regex_match(utf8(), re);
     }
 
-    jbool String::contains(jxx::Ptr<CharSequence> s) const {
+    jbool String::contains(const jxx::Ptr<CharSequence> s) const {
         if (!s) throwNPE_();
         auto t = toUtf16_(s);
         if (t.empty()) return true;
         return value_.find(t) != std::u16string::npos;
     }
 
-    jxx::Ptr<String> String::replaceFirst(jxx::Ptr<String> regex, jxx::Ptr<String> replacement) const {
+    jxx::Ptr<String> String::replaceFirst(const jxx::Ptr<String> regex, jxx::Ptr<String> replacement) const {
         if (!regex || !replacement) throwNPE_();
         std::regex re(regex->utf8());
         std::string out = std::regex_replace(utf8(), re, replacement->utf8(),
@@ -520,14 +520,14 @@ namespace jxx::lang {
         return jxx::NEW<String>(out.c_str());
     }
 
-    jxx::Ptr<String> String::replaceAll(jxx::Ptr<String> regex, jxx::Ptr<String> replacement) const {
+    jxx::Ptr<String> String::replaceAll(const jxx::Ptr<String> regex, jxx::Ptr<String> replacement) const {
         if (!regex || !replacement) throwNPE_();
         std::regex re(regex->utf8());
         std::string out = std::regex_replace(utf8(), re, replacement->utf8());
         return jxx::NEW<String>(out.c_str());
     }
 
-    jxx::Ptr<String> String::replace(jxx::Ptr<CharSequence> target, jxx::Ptr<CharSequence> replacement) const {
+    jxx::Ptr<String> String::replace(const jxx::Ptr<CharSequence> target, jxx::Ptr<CharSequence> replacement) const {
         if (!target || !replacement) throwNPE_();
         std::u16string t = toUtf16_(target);
         std::u16string r = toUtf16_(replacement);
@@ -543,11 +543,11 @@ namespace jxx::lang {
         return out;
     }
 
-    jxx::Ptr<JxxArray<jxx::Ptr<String>, 1>> String::split(jxx::Ptr<String> regex) const {
+    jxx::Ptr<JxxArray<jxx::Ptr<String>, 1>> String::split(const jxx::Ptr<String> regex) const {
         return split(regex, 0);
     }
 
-    jxx::Ptr<JxxArray<jxx::Ptr<String>, 1>> String::split(jxx::Ptr<String> regex, jint limit) const {
+    jxx::Ptr<JxxArray<jxx::Ptr<String>, 1>> String::split(const jxx::Ptr<String> regex, jint limit) const {
         if (!regex) throwNPE_();
         std::regex re(regex->utf8());
         std::string s = utf8();
@@ -570,7 +570,7 @@ namespace jxx::lang {
         return toLowerCase(jxx::util::Locale::getDefault());
     }
 
-    jxx::Ptr<String> String::toLowerCase(jxx::Ptr<jxx::util::Locale> locale) const {
+    jxx::Ptr<String> String::toLowerCase(const jxx::Ptr<jxx::util::Locale> locale) const {
         auto out = jxx::NEW<String>();
         out->value_ = value_;
         bool turkic = isTurkicLocale_(locale);
@@ -589,7 +589,7 @@ namespace jxx::lang {
         return toUpperCase(jxx::util::Locale::getDefault());
     }
 
-    jxx::Ptr<String> String::toUpperCase(jxx::Ptr<jxx::util::Locale> locale) const {
+    jxx::Ptr<String> String::toUpperCase(const jxx::Ptr<jxx::util::Locale> locale) const {
         auto out = jxx::NEW<String>();
         out->value_ = value_;
         bool turkic = isTurkicLocale_(locale);
@@ -665,7 +665,7 @@ namespace jxx::lang {
     jxx::Ptr<String> String::valueOf(jlong l) { return jxx::NEW<String>(std::to_string((long long)l).c_str()); }
     jxx::Ptr<String> String::valueOf(jfloat f) { std::ostringstream oss; oss.imbue(std::locale::classic()); oss << f; return jxx::NEW<String>(oss.str().c_str()); }
     jxx::Ptr<String> String::valueOf(jdouble d) { std::ostringstream oss; oss.imbue(std::locale::classic()); oss << d; return jxx::NEW<String>(oss.str().c_str()); }
-    jxx::Ptr<String> String::valueOf(jxx::Ptr<Object> obj) { return jxx::CAST<String, Object>(obj) ? obj->toString() : jxx::NEW<String>("null"); }
+    jxx::Ptr<String> String::valueOf(const jxx::Ptr<Object> obj) { return jxx::CAST<String, Object>(obj) ? obj->toString() : jxx::NEW<String>("null"); }
     jxx::Ptr<String> String::valueOf(CharArray data) { return jxx::NEW<String>(data); }
     jxx::Ptr<String> String::valueOf(CharArray data, jint offset, jint count) { return jxx::NEW<String>(data, offset, count); }
     jxx::Ptr<String> String::copyValueOf(CharArray data) { return jxx::NEW<String>(data); }
@@ -689,7 +689,7 @@ namespace jxx::lang {
         return formatter->toString();
     }   
 
-    jxx::Ptr<String> String::join(jxx::Ptr<CharSequence> delimiter, jxx::Ptr<JxxArray<jxx::Ptr<CharSequence>, 1U>> elements) {
+    jxx::Ptr<String> String::join(const jxx::Ptr<CharSequence> delimiter, jxx::Ptr<JxxArray<jxx::Ptr<CharSequence>, 1U>> elements) {
         if (!delimiter || !elements) throwNPE_();
         std::u16string delim = toUtf16_(delimiter);
 
@@ -705,7 +705,7 @@ namespace jxx::lang {
         return s;
     }
 
-    jxx::Ptr<String> String::join(jxx::Ptr<CharSequence> delimiter,
+    jxx::Ptr<String> String::join(const jxx::Ptr<CharSequence> delimiter,
         jxx::Ptr<jxx::lang::Iterable<jxx::Ptr<CharSequence>>> elements) {
 
         if (!delimiter || !elements) throwNPE_();
@@ -730,8 +730,8 @@ namespace jxx::lang {
         return s;
     }
 
-    void String::writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out) {}
-    void String::readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) {}
+    void String::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) {}
+    void String::readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) {}
     void String::readObjectNoData() {}
 
 } // namespace jxx::lang} // namespace jxx::lang

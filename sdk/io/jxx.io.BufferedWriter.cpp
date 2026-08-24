@@ -4,10 +4,10 @@ namespace jxx::io {
 
 static constexpr jxx::lang::jint DEFAULT_BUFSZ = 8192;
 
-BufferedWriter::BufferedWriter(jxx::Ptr<Writer> out)
+BufferedWriter::BufferedWriter(const jxx::Ptr<Writer> out)
     : BufferedWriter(std::move(out), DEFAULT_BUFSZ) {}
 
-BufferedWriter::BufferedWriter(jxx::Ptr<Writer> out, jxx::lang::jint sz)
+BufferedWriter::BufferedWriter(const jxx::Ptr<Writer> out, jxx::lang::jint sz)
     : out_(std::move(out)) {
     if (!out_) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("out"));
     if (sz <= 0) throw jxx::lang::IllegalArgumentException(jxx::NEW<jxx::lang::String>("sz"));
@@ -40,7 +40,7 @@ void BufferedWriter::write(const jxx::lang::CharArray cbuf, jxx::lang::jint off,
     count_ += len;
 }
 
-void BufferedWriter::write(jxx::Ptr<jxx::lang::String> str, jxx::lang::jint off, jxx::lang::jint len) {
+void BufferedWriter::write(const jxx::Ptr<jxx::lang::String> str, jxx::lang::jint off, jxx::lang::jint len) {
     Writer::checkStringBounds_(str, off, len);
     const auto& u16 = str->utf16();
     // write via temp buffer

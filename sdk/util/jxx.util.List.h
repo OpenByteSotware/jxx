@@ -26,17 +26,17 @@ public:
         return size() == 0;
     }
 
-    virtual jxx::lang::jbool contains(jxx::Ptr<jxx::lang::Object> o) = 0;
+    virtual jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object> o) = 0;
     virtual jxx::Ptr<ListIterator<E>> listIterator() = 0;
     virtual jxx::Ptr<ListIterator<E>> listIterator(jxx::lang::jint index) = 0;
     virtual jxx::Ptr<Iterator<E>> iterator() = 0;
     virtual jxx::lang::ObjectArray toArray() = 0;
-    virtual jxx::lang::jbool add(jxx::Ptr<E> e) = 0;
-    virtual jxx::lang::jbool remove(jxx::Ptr<jxx::lang::Object> o) = 0;
-    virtual jxx::lang::jbool containsAll(jxx::Ptr<wildcard::CollectionAny> c) = 0;
-    virtual jxx::lang::jbool addAll(jxx::Ptr<wildcard::CollectionExtends<E>> c) = 0;
-    virtual jxx::lang::jbool removeAll(jxx::Ptr<wildcard::CollectionAny> c) = 0;
-    virtual jxx::lang::jbool retainAll(jxx::Ptr<wildcard::CollectionAny> c) = 0;
+    virtual jxx::lang::jbool add(const jxx::Ptr<E> e) = 0;
+    virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object> o) = 0;
+    virtual jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny> c) = 0;
+    virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<E>> c) = 0;
+    virtual jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny> c) = 0;
+    virtual jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny> c) = 0;
     virtual void clear() = 0;
 
     // ===== List-specific methods =====
@@ -46,23 +46,23 @@ public:
     virtual jxx::Ptr<E> remove(jxx::lang::jint index) = 0;
 
     // Java: int indexOf(Object o), lastIndexOf(Object o)
-    virtual jxx::lang::jint indexOf(jxx::Ptr<jxx::lang::Object> o) = 0;
-    virtual jxx::lang::jint lastIndexOf(jxx::Ptr<jxx::lang::Object> o) = 0;
+    virtual jxx::lang::jint indexOf(const jxx::Ptr<jxx::lang::Object> o) = 0;
+    virtual jxx::lang::jint lastIndexOf(const jxx::Ptr<jxx::lang::Object> o) = 0;
     // Java: boolean addAll(int, Collection<? extends E>)
     virtual jxx::lang::jbool addAll(jxx::lang::jint index, jxx::Ptr<wildcard::CollectionExtends<E>> c) = 0;
 
     virtual jxx::Ptr<List<E>> subList(jxx::lang::jint fromIndex, jxx::lang::jint toIndex) = 0;
 
     // Java 8 default methods
-    virtual void replaceAll(jxx::Ptr<function::UnaryOperator<E>> /*op*/) = 0;
+    virtual void replaceAll(const jxx::Ptr<function::UnaryOperator<E>> /*op*/) = 0;
         
     // Java: sort(Comparator<? super E>)
-    virtual void sort(jxx::Ptr<ComparatorSuper<E>> /*c*/) = 0;
+    virtual void sort(const jxx::Ptr<ComparatorSuper<E>> /*c*/) = 0;
     
     virtual jxx::Ptr<Spliterator<E>> spliterator() = 0;
 
     // Java List contract redeclarations
-    virtual jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> o) = 0;
+    virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object> o) = 0;
     virtual jxx::lang::jint hashCode() = 0;
 };
 

@@ -7,7 +7,7 @@ namespace jxx::io {
 
 class BufferedReader : public Reader {
 public:
-    explicit BufferedReader(jxx::Ptr<Reader> in, jxx::lang::jint size = 8192);
+    explicit BufferedReader(const jxx::Ptr<Reader> in, jxx::lang::jint size = 8192);
 
     jxx::lang::jint read() override;
     jxx::lang::jint read(const jxx::lang::CharArray cbuf, jxx::lang::jint off, jxx::lang::jint len) override;

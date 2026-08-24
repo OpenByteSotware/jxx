@@ -8,7 +8,7 @@ namespace jxx::io {
 
 class DataInputStream final : public FilterInputStream {
 public:
-    explicit DataInputStream(jxx::Ptr<InputStream> in);
+    explicit DataInputStream(const jxx::Ptr<InputStream> in);
 
     void readFully(jxx::lang::ByteArray b);
     void readFully(jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len);

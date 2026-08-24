@@ -13,7 +13,7 @@ namespace jxx::nio::charset
         static jxx::Ptr<CoderResult> JXX_OVERFLOW;
 
     public:
-        explicit CoderResult(jxx::Ptr<jxx::lang::String> kind,
+        explicit CoderResult(const jxx::Ptr<jxx::lang::String> kind,
                              jxx::lang::jint length = 0);
         ~CoderResult() override = default;
 

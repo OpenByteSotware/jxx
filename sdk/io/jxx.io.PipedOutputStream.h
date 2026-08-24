@@ -12,9 +12,9 @@ class PipedInputStream;
 class PipedOutputStream final : public OutputStream {
 public:
     PipedOutputStream();
-    explicit PipedOutputStream(jxx::Ptr<PipedInputStream> snk);
+    explicit PipedOutputStream(const jxx::Ptr<PipedInputStream> snk);
 
-    void connect(jxx::Ptr<PipedInputStream> snk);
+    void connect(const jxx::Ptr<PipedInputStream> snk);
 
     void write(jxx::lang::jint b) override;
     void write(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) override;

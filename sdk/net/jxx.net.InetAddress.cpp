@@ -60,7 +60,7 @@ namespace
         return {};
     }
 
-    inline jxx::Ptr<jxx::net::InetAddress> createInet_(jxx::Ptr<jxx::lang::String> host,
+    inline jxx::Ptr<jxx::net::InetAddress> createInet_(const jxx::Ptr<jxx::lang::String> host,
                                                        const std::vector<jxx::lang::jbyte>& bytes,
                                                        int family)
     {
@@ -91,7 +91,7 @@ namespace jxx::net
         return getByAddress(nullptr, addr);
     }
 
-    jxx::Ptr<InetAddress> InetAddress::getByAddress(jxx::Ptr<jxx::lang::String> host,
+    jxx::Ptr<InetAddress> InetAddress::getByAddress(const jxx::Ptr<jxx::lang::String> host,
         const jxx::lang::ByteArray addr)
     {
         auto bytes = fromByteArray_(addr);
@@ -102,7 +102,7 @@ namespace jxx::net
         throw UnknownHostException("invalid address length");
     }
 
-    jxx::Ptr<InetAddress> InetAddress::getByName(jxx::Ptr<jxx::lang::String> host)
+    jxx::Ptr<InetAddress> InetAddress::getByName(const jxx::Ptr<jxx::lang::String> host)
     {
         auto all = getAllByName(host);
         if (!all || all->size() == 0)
@@ -110,7 +110,7 @@ namespace jxx::net
         return (*all)(0);
     }
 
-    jxx::Ptr<jxx::JxxArray<jxx::Ptr<InetAddress>, 1U>> InetAddress::getAllByName(jxx::Ptr<jxx::lang::String> host)
+    jxx::Ptr<jxx::JxxArray<jxx::Ptr<InetAddress>, 1U>> InetAddress::getAllByName(const jxx::Ptr<jxx::lang::String> host)
     {
         internal::ensureNetworkInitialized();
 
@@ -196,7 +196,7 @@ namespace jxx::net
     jxx::lang::jbool InetAddress::isMCOrgLocal() const { return false; }
 
     jxx::lang::jbool InetAddress::isReachable(jxx::lang::jint /*timeout*/) const { return true; }
-    jxx::lang::jbool InetAddress::isReachable(jxx::Ptr<NetworkInterface> /*netif*/, jxx::lang::jint /*ttl*/, jxx::lang::jint /*timeout*/) const { return true; }
+    jxx::lang::jbool InetAddress::isReachable(const jxx::Ptr<NetworkInterface> /*netif*/, jxx::lang::jint /*ttl*/, jxx::lang::jint /*timeout*/) const { return true; }
 
     jxx::Ptr<jxx::lang::String> InetAddress::toString() const
     {
@@ -205,7 +205,7 @@ namespace jxx::net
         return jxx::NEW<jxx::lang::String>((hn ? hn->utf8() : std::string()) + "/" + (ha ? ha->utf8() : std::string()));
     }
 
-    jxx::lang::jbool InetAddress::equals(jxx::Ptr<jxx::lang::Object> other) const
+    jxx::lang::jbool InetAddress::equals(const jxx::Ptr<jxx::lang::Object> other) const
     {
         auto a = std::dynamic_pointer_cast<InetAddress>(other);
         return a && bytes_ == a->bytes_ && family_ == a->family_;

@@ -28,7 +28,7 @@ namespace jxx::nio
         static jxx::Ptr<CharBuffer> wrap(const jxx::lang::CharArray array,
                                     jxx::lang::jint offset,
                                     jxx::lang::jint length);
-        static jxx::Ptr<CharBuffer> wrap(jxx::Ptr<jxx::lang::String> str);
+        static jxx::Ptr<CharBuffer> wrap(const jxx::Ptr<jxx::lang::String> str);
 
         jxx::lang::jchar get();
         jxx::lang::jchar get(jxx::lang::jint index) const;
@@ -43,7 +43,7 @@ namespace jxx::nio
         jxx::Ptr<CharBuffer> put(const jxx::lang::CharArray src,
                             jxx::lang::jint offset,
                             jxx::lang::jint length);
-        jxx::Ptr<CharBuffer> put(jxx::Ptr<CharBuffer> src);
+        jxx::Ptr<CharBuffer> put(const jxx::Ptr<CharBuffer> src);
 
         jxx::Ptr<CharBuffer> slice() const;
         jxx::Ptr<CharBuffer> duplicate() const;

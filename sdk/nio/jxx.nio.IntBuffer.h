@@ -33,7 +33,7 @@ namespace jxx::nio
         jxx::Ptr<IntBuffer> put(const jxx::lang::IntArray src,
                             jxx::lang::jint offset,
                             jxx::lang::jint length);
-        jxx::Ptr<IntBuffer> put(jxx::Ptr<IntBuffer> src);
+        jxx::Ptr<IntBuffer> put(const jxx::Ptr<IntBuffer> src);
 
         jxx::Ptr<IntBuffer> slice() const;
         jxx::Ptr<IntBuffer> duplicate() const;

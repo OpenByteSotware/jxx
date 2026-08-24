@@ -14,9 +14,9 @@ public:
     virtual jxx::lang::jbool isEmpty() = 0;
     virtual jxx::Ptr<jxx::util::Enumeration<K>> keys() = 0;
     virtual jxx::Ptr<jxx::util::Enumeration<V>> elements() = 0;
-    virtual jxx::Ptr<V> get(jxx::Ptr<jxx::lang::Object> key) = 0;
-    virtual jxx::Ptr<V> put(jxx::Ptr<K> key, jxx::Ptr<V> value) = 0;
-    virtual jxx::Ptr<V> remove(jxx::Ptr<jxx::lang::Object> key) = 0;
+    virtual jxx::Ptr<V> get(const jxx::Ptr<jxx::lang::Object> key) = 0;
+    virtual jxx::Ptr<V> put(const jxx::Ptr<K> key, jxx::Ptr<V> value) = 0;
+    virtual jxx::Ptr<V> remove(const jxx::Ptr<jxx::lang::Object> key) = 0;
 };
 
 } // namespace util

@@ -35,12 +35,12 @@ namespace jxx::lang {
         value_.reserve((std::size_t)capacity);
     }
 
-    StringBuilder::StringBuilder(jxx::Ptr<String> str) : value_() {
+    StringBuilder::StringBuilder(const jxx::Ptr<String> str) : value_() {
         if (!str) throwNPE_();
         value_ = str->utf16();
     }
 
-    StringBuilder::StringBuilder(jxx::Ptr<CharSequence> seq) : value_() {
+    StringBuilder::StringBuilder(const jxx::Ptr<CharSequence> seq) : value_() {
         if (!seq) throwNPE_();
         value_ = toUtf16_(seq);
     }
@@ -164,7 +164,7 @@ namespace jxx::lang {
     }
 
     // ---- utf16 helpers ----
-    std::u16string StringBuilder::toUtf16_(jxx::Ptr<CharSequence> s) {
+    std::u16string StringBuilder::toUtf16_(const jxx::Ptr<CharSequence> s) {
         if (!s) throwNPE_();
         std::u16string out;
         out.reserve((std::size_t)s->length());
@@ -279,16 +279,17 @@ namespace jxx::lang {
     jxx::Ptr<StringBuilder> StringBuilder::append(jint i) { return append(jxx::NEW<String>(std::to_string(i).c_str())); }
     jxx::Ptr<StringBuilder> StringBuilder::append(jlong lng) { return append(jxx::NEW<String>(std::to_string((long long)lng).c_str())); }
 
-    jxx::Ptr<StringBuilder> StringBuilder::append(jxx::Ptr<Object> obj) {
+    jxx::Ptr<StringBuilder> StringBuilder::append(const jxx::Ptr<Object> obj) {
         if (!obj) return append(jxx::NEW<String>("null"));
         return append(obj->toString());
     }
-    jxx::Ptr<StringBuilder> StringBuilder::append(jxx::Ptr<String> str) {
-        if (!str) str = jxx::NEW<String>("null");
-        appendUtf16_(str->utf16());
+    jxx::Ptr<StringBuilder> StringBuilder::append(const jxx::Ptr<String> str) {
+        jxx::Ptr<String> str2 = str;
+        if (!str2) str2 = jxx::NEW<String>("null");
+        appendUtf16_(str2->utf16());
         return self_();
     }
-    jxx::Ptr<StringBuilder> StringBuilder::append(jxx::Ptr<StringBuffer> sb) {
+    jxx::Ptr<StringBuilder> StringBuilder::append(const jxx::Ptr<StringBuffer> sb) {
         if (!sb) return append(jxx::NEW<String>("null"));
         return append(sb->toString());
     }
@@ -465,12 +466,12 @@ namespace jxx::lang {
         return jxx::NEW<String>(ca);
     }
 
-    void StringBuilder::writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out) {
+    void StringBuilder::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) {
         if (!out) throwNPE_();
         out->writeInt((jint)value_.size());
 		for (char16_t c : value_) out->writeChar((jchar)c);
     }
-    void StringBuilder::readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) {
+    void StringBuilder::readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) {
         if (!in) throwNPE_();
         jint size = in->readInt();
         auto ca = jxx::NEW<CharArrayType>((std::uint32_t)size);

@@ -2,7 +2,7 @@
 
 namespace jxx::net
 {
-    BasicSocketOption::BasicSocketOption(jxx::Ptr<jxx::lang::String> name)
+    BasicSocketOption::BasicSocketOption(const jxx::Ptr<jxx::lang::String> name)
         : name_(std::move(name))
     {
     }

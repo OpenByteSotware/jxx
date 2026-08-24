@@ -40,10 +40,10 @@ namespace jxx::net
         ~ServerSocket() override;
 
     public:
-        static void setSocketFactory(jxx::Ptr<SocketImplFactory> fac);
+        static void setSocketFactory(const jxx::Ptr<SocketImplFactory> fac);
 
-        void bind(jxx::Ptr<SocketAddress> endpoint);
-        void bind(jxx::Ptr<SocketAddress> endpoint,
+        void bind(const jxx::Ptr<SocketAddress> endpoint);
+        void bind(const jxx::Ptr<SocketAddress> endpoint,
                   jxx::lang::jint backlog);
         jxx::Ptr<InetAddress> getInetAddress() const;
         jxx::lang::jint getLocalPort() const noexcept;

@@ -8,7 +8,7 @@ namespace jxx::io {
 
 class FileReader final : public InputStreamReader {
 public:
-    explicit FileReader(jxx::Ptr<jxx::lang::String> fileName)
+    explicit FileReader(const jxx::Ptr<jxx::lang::String> fileName)
         : InputStreamReader(jxx::NEW<FileInputStream>(fileName), jxx::lang::Charset::defaultCharset()) {}
 };
 

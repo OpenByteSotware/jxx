@@ -28,16 +28,16 @@ namespace jxx::net
 
     public:
         virtual void create(jxx::lang::jbool stream) = 0;
-        virtual void connect(jxx::Ptr<jxx::lang::String> host,
+        virtual void connect(const jxx::Ptr<jxx::lang::String> host,
                              jxx::lang::jint port) = 0;
-        virtual void connect(jxx::Ptr<InetAddress> address,
+        virtual void connect(const jxx::Ptr<InetAddress> address,
                              jxx::lang::jint port) = 0;
-        virtual void connect(jxx::Ptr<SocketAddress> address,
+        virtual void connect(const jxx::Ptr<SocketAddress> address,
                              jxx::lang::jint timeout) = 0;
-        virtual void bind(jxx::Ptr<InetAddress> host,
+        virtual void bind(const jxx::Ptr<InetAddress> host,
                           jxx::lang::jint port) = 0;
         virtual void listen(jxx::lang::jint backlog) = 0;
-        virtual void accept(jxx::Ptr<SocketImpl> s) = 0;
+        virtual void accept(const jxx::Ptr<SocketImpl> s) = 0;
         virtual jxx::Ptr<jxx::io::InputStream> getInputStream() = 0;
         virtual jxx::Ptr<jxx::io::OutputStream> getOutputStream() = 0;
         virtual jxx::lang::jint available() = 0;

@@ -274,13 +274,13 @@ TEST_F(PropertiesTest, NullArgumentExceptions) {
     auto p = std::make_shared<Properties>();
     EXPECT_THROW(p->setProperty(nullptr, S("v")), jxx::lang::NullPointerException);
     EXPECT_THROW((void)p->getProperty(nullptr), jxx::lang::NullPointerException);
-    EXPECT_THROW(p->load(jxx::Ptr<jxx::io::Reader>()), jxx::lang::NullPointerException);
-    EXPECT_THROW(p->load(jxx::Ptr<jxx::io::InputStream>()), jxx::lang::NullPointerException);
-    EXPECT_THROW(p->store(jxx::Ptr<jxx::io::Writer>(), S("c")), jxx::lang::NullPointerException);
-    EXPECT_THROW(p->store(jxx::Ptr<jxx::io::OutputStream>(), S("c")), jxx::lang::NullPointerException);
-    EXPECT_THROW(p->list(jxx::Ptr<jxx::io::PrintWriter>()), jxx::lang::NullPointerException);
-    EXPECT_THROW(p->list(jxx::Ptr<jxx::io::PrintStream>()), jxx::lang::NullPointerException);
-    EXPECT_THROW(p->loadFromXML(jxx::Ptr<jxx::io::InputStream>()), jxx::lang::NullPointerException);
+    EXPECT_THROW(p->load(const jxx::Ptr<jxx::io::Reader>()), jxx::lang::NullPointerException);
+    EXPECT_THROW(p->load(const jxx::Ptr<jxx::io::InputStream>()), jxx::lang::NullPointerException);
+    EXPECT_THROW(p->store(const jxx::Ptr<jxx::io::Writer>(), S("c")), jxx::lang::NullPointerException);
+    EXPECT_THROW(p->store(const jxx::Ptr<jxx::io::OutputStream>(), S("c")), jxx::lang::NullPointerException);
+    EXPECT_THROW(p->list(const jxx::Ptr<jxx::io::PrintWriter>()), jxx::lang::NullPointerException);
+    EXPECT_THROW(p->list(const jxx::Ptr<jxx::io::PrintStream>()), jxx::lang::NullPointerException);
+    EXPECT_THROW(p->loadFromXML(const jxx::Ptr<jxx::io::InputStream>()), jxx::lang::NullPointerException);
 }
 
 } // anonymous namespace

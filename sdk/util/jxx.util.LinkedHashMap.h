@@ -84,7 +84,7 @@ namespace jxx {
             OrderIndexMap orderIndex_;
             jxx::lang::jbool accessOrder_;
 
-            void appendOrderKey_(jxx::Ptr<K> key) {
+            void appendOrderKey_(const jxx::Ptr<K> key) {
                 order_.push_back(key);
 
                 auto tail = order_.end();
@@ -93,7 +93,7 @@ namespace jxx {
                 orderIndex_.emplace(key, tail);
             }
 
-            void removeOrderKey_(jxx::Ptr<K> key) {
+            void removeOrderKey_(const jxx::Ptr<K> key) {
                 auto found = orderIndex_.find(key);
 
                 if (found == orderIndex_.end()) {

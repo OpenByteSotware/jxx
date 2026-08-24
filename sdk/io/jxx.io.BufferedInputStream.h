@@ -8,7 +8,7 @@ namespace jxx::io {
 
     class BufferedInputStream : public FilterInputStream {
     public:
-        explicit BufferedInputStream(jxx::Ptr<InputStream> in, jxx::lang::jint size = 8192);
+        explicit BufferedInputStream(const jxx::Ptr<InputStream> in, jxx::lang::jint size = 8192);
 
         jxx::lang::jint read() override;
 

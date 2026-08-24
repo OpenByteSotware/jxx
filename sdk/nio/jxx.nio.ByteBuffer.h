@@ -43,7 +43,7 @@ namespace jxx::nio
         jxx::Ptr<ByteBuffer> put(const jxx::lang::ByteArray src,
                                  jxx::lang::jint offset,
                                  jxx::lang::jint length);
-        jxx::Ptr<ByteBuffer> put(jxx::Ptr<ByteBuffer> src);
+        jxx::Ptr<ByteBuffer> put(const jxx::Ptr<ByteBuffer> src);
 
         jxx::Ptr<ByteBuffer> slice() const;
         jxx::Ptr<ByteBuffer> duplicate() const;
@@ -57,7 +57,7 @@ namespace jxx::nio
         jxx::lang::jbool isDirect() const override;
 
         jxx::Ptr<ByteOrder> order() const;
-        jxx::Ptr<ByteBuffer> order(jxx::Ptr<ByteOrder> order);
+        jxx::Ptr<ByteBuffer> order(const jxx::Ptr<ByteOrder> order);
 
     protected:
         jxx::Ptr<ByteBuffer> self_Byte_();

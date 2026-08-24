@@ -2,7 +2,7 @@
 
 namespace jxx::net
 {
-    SocketPermission::SocketPermission(jxx::Ptr<jxx::lang::String> host,
+    SocketPermission::SocketPermission(const jxx::Ptr<jxx::lang::String> host,
                                        jxx::Ptr<jxx::lang::String> action)
         : host_(std::move(host)),
           action_(std::move(action))
@@ -12,7 +12,7 @@ namespace jxx::net
     jxx::Ptr<jxx::lang::String> SocketPermission::getName() const { return host_; }
     jxx::Ptr<jxx::lang::String> SocketPermission::getActions() const { return action_; }
 
-    jxx::lang::jbool SocketPermission::implies(jxx::Ptr<SocketPermission> p) const
+    jxx::lang::jbool SocketPermission::implies(const jxx::Ptr<SocketPermission> p) const
     {
         return p &&
             ((!host_ && !p->host_) || (host_ && p->host_ && host_->equals(p->host_))) &&
@@ -21,7 +21,7 @@ namespace jxx::net
 
     jxx::Ptr<jxx::lang::String> SocketPermission::toString() const { return host_; }
 
-    jxx::lang::jbool SocketPermission::equals(jxx::Ptr<jxx::lang::Object> other) const
+    jxx::lang::jbool SocketPermission::equals(const jxx::Ptr<jxx::lang::Object> other) const
     {
         auto p = std::dynamic_pointer_cast<SocketPermission>(other);
         return implies(p);

@@ -22,13 +22,13 @@ namespace
 
 namespace jxx::nio::charset
 {
-    Charset::Charset(jxx::Ptr<jxx::lang::String> canonicalName,
+    Charset::Charset(const jxx::Ptr<jxx::lang::String> canonicalName,
         const jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> aliases)
         : canonicalName_(std::move(canonicalName)), aliases_(aliases)
     {
     }
 
-    jxx::lang::jbool Charset::isSupported(jxx::Ptr<jxx::lang::String> charsetName)
+    jxx::lang::jbool Charset::isSupported(const jxx::Ptr<jxx::lang::String> charsetName)
     {
         try
         {
@@ -40,7 +40,7 @@ namespace jxx::nio::charset
         }
     }
 
-    jxx::Ptr<Charset> Charset::forName(jxx::Ptr<jxx::lang::String> charsetName)
+    jxx::Ptr<Charset> Charset::forName(const jxx::Ptr<jxx::lang::String> charsetName)
     {
         if (!charsetName)
             throwIAE_("null charset name");
@@ -66,7 +66,7 @@ namespace jxx::nio::charset
     }
 
     jxx::Ptr<jxx::lang::String> Charset::name() const { return canonicalName_; }
-    jxx::lang::jbool Charset::contains(jxx::Ptr<Charset> cs) const
+    jxx::lang::jbool Charset::contains(const jxx::Ptr<Charset> cs) const
     {
         return cs && canonicalName_ && cs->canonicalName_ && canonicalName_->equals(cs->canonicalName_);
     }
@@ -82,7 +82,7 @@ namespace jxx::nio::charset
     }
 
     jxx::Ptr<jxx::lang::String> Charset::toString() const { return canonicalName_; }
-    jxx::lang::jbool Charset::equals(jxx::Ptr<jxx::lang::Object> other) const
+    jxx::lang::jbool Charset::equals(const jxx::Ptr<jxx::lang::Object> other) const
     {
         auto o = std::dynamic_pointer_cast<Charset>(other);
         return o && canonicalName_ && o->canonicalName_ && canonicalName_->equals(o->canonicalName_);

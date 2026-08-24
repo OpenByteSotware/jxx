@@ -11,9 +11,9 @@ template <typename T, typename U>
 class BiConsumer {
 public:
     virtual ~BiConsumer() = default;
-    virtual void accept(jxx::Ptr<T> t, jxx::Ptr<U> u) = 0;
+    virtual void accept(const jxx::Ptr<T> t, jxx::Ptr<U> u) = 0;
 
-    virtual jxx::Ptr<BiConsumer<T, U>> andThen(jxx::Ptr<BiConsumer<T, U>> after) {
+    virtual jxx::Ptr<BiConsumer<T, U>> andThen(const jxx::Ptr<BiConsumer<T, U>> after) {
         if (after == nullptr) throw jxx::lang::NullPointerException();
 
         class AndThenBiConsumer : public virtual BiConsumer<T, U> {
@@ -21,10 +21,10 @@ public:
             jxx::Ptr<BiConsumer<T, U>> first_;
             jxx::Ptr<BiConsumer<T, U>> second_;
         public:
-            AndThenBiConsumer(jxx::Ptr<BiConsumer<T, U>> first, jxx::Ptr<BiConsumer<T, U>> second)
+            AndThenBiConsumer(const jxx::Ptr<BiConsumer<T, U>> first, jxx::Ptr<BiConsumer<T, U>> second)
                 : first_(first), second_(second) {}
             virtual ~AndThenBiConsumer() = default;
-            virtual void accept(jxx::Ptr<T> t, jxx::Ptr<U> u) override {
+            virtual void accept(const jxx::Ptr<T> t, const jxx::Ptr<U> u) override {
                 first_->accept(t, u);
                 second_->accept(t, u);
             }

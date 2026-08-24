@@ -2,13 +2,13 @@
 
 namespace jxx::net
 {
-    HttpRetryException::HttpRetryException(jxx::Ptr<jxx::lang::String> detail,
+    HttpRetryException::HttpRetryException(const jxx::Ptr<jxx::lang::String> detail,
                                            jxx::lang::jint code)
         : HttpRetryException(std::move(detail), code, nullptr)
     {
     }
 
-    HttpRetryException::HttpRetryException(jxx::Ptr<jxx::lang::String> detail,
+    HttpRetryException::HttpRetryException(const jxx::Ptr<jxx::lang::String> detail,
                                            jxx::lang::jint code,
                                            jxx::Ptr<jxx::lang::String> location)
         : std::runtime_error(detail ? detail->utf8() : std::string("HttpRetryException")),

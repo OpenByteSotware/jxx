@@ -11,7 +11,7 @@ namespace jxx::io {
 // Java 8: java.io.DataOutputStream
 class DataOutputStream final : public FilterOutputStream {
 public:
-    explicit DataOutputStream(jxx::Ptr<OutputStream> out);
+    explicit DataOutputStream(const jxx::Ptr<OutputStream> out);
 
     void write(jxx::lang::jint b) override;
     void write(jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) override;
@@ -24,9 +24,9 @@ public:
     void writeFloat(jxx::lang::jfloat v);
     void writeDouble(jxx::lang::jdouble v);
 
-    void writeBytes(jxx::Ptr<jxx::lang::String> s);   // low 8 bits of each char
-    void writeChars(jxx::Ptr<jxx::lang::String> s);   // UTF-16BE
-    void writeUTF(jxx::Ptr<jxx::lang::String> s);     // modified UTF-8
+    void writeBytes(const jxx::Ptr<jxx::lang::String> s);   // low 8 bits of each char
+    void writeChars(const jxx::Ptr<jxx::lang::String> s);   // UTF-16BE
+    void writeUTF(const jxx::Ptr<jxx::lang::String> s);     // modified UTF-8
 
     jxx::lang::jint size() const;
 

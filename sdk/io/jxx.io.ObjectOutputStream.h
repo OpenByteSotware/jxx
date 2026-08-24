@@ -11,7 +11,7 @@ namespace jxx::io
     class ObjectOutputStream : public OutputStream, public ObjectOutput
     {
     public:
-        explicit ObjectOutputStream(jxx::Ptr<OutputStream> out);
+        explicit ObjectOutputStream(const jxx::Ptr<OutputStream> out);
         ~ObjectOutputStream() override = default;
 
     public:
@@ -30,12 +30,12 @@ namespace jxx::io
         void writeLong(jxx::lang::jlong v) override;
         void writeFloat(jxx::lang::jfloat v) override;
         void writeDouble(jxx::lang::jdouble v) override;
-        void writeBytes(jxx::Ptr<jxx::lang::String> s) override;
-        void writeChars(jxx::Ptr<jxx::lang::String> s) override;
-        void writeUTF(jxx::Ptr<jxx::lang::String> s) override;
+        void writeBytes(const jxx::Ptr<jxx::lang::String> s) override;
+        void writeChars(const jxx::Ptr<jxx::lang::String> s) override;
+        void writeUTF(const jxx::Ptr<jxx::lang::String> s) override;
 
-        virtual void writeObject(jxx::Ptr<jxx::lang::Object> obj);
-        virtual void writeUnshared(jxx::Ptr<jxx::lang::Object> obj);
+        virtual void writeObject(const jxx::Ptr<jxx::lang::Object> obj);
+        virtual void writeUnshared(const jxx::Ptr<jxx::lang::Object> obj);
 
     protected:
         jxx::Ptr<OutputStream> out_;

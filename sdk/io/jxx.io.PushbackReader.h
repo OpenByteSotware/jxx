@@ -9,8 +9,8 @@ namespace jxx::io
     class PushbackReader final : public FilterReader
     {
     public:
-        explicit PushbackReader(jxx::Ptr<Reader> in);
-        PushbackReader(jxx::Ptr<Reader> in, jxx::lang::jint size);
+        explicit PushbackReader(const jxx::Ptr<Reader> in);
+        PushbackReader(const jxx::Ptr<Reader> in, jxx::lang::jint size);
         ~PushbackReader() override = default;
 
     public:

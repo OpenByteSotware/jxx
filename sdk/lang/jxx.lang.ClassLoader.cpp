@@ -27,7 +27,7 @@ namespace jxx::lang {
         parent_ = getSystemClassLoader();
     }
 
-    ClassLoader::ClassLoader(jxx::Ptr<ClassLoader> parent)
+    ClassLoader::ClassLoader(const jxx::Ptr<ClassLoader> parent)
         : parent_(std::move(parent)) {}
 
     jxx::Ptr<ClassLoader> ClassLoader::getParent() const { return parent_; }
@@ -40,17 +40,17 @@ namespace jxx::lang {
         return sys;
     }
 
-    jxx::Ptr<jxx::net::URL> ClassLoader::getSystemResource(jxx::Ptr<String> name) {
+    jxx::Ptr<jxx::net::URL> ClassLoader::getSystemResource(const jxx::Ptr<String> name) {
         return getSystemClassLoader()->getResource(name);
     }
-    jxx::Ptr<jxx::util::Enumeration<jxx::net::URL>> ClassLoader::getSystemResources(jxx::Ptr<String> name) {
+    jxx::Ptr<jxx::util::Enumeration<jxx::net::URL>> ClassLoader::getSystemResources(const jxx::Ptr<String> name) {
         return getSystemClassLoader()->getResources(name);
     }
-    jxx::Ptr<jxx::io::InputStream> ClassLoader::getSystemResourceAsStream(jxx::Ptr<String> name) {
+    jxx::Ptr<jxx::io::InputStream> ClassLoader::getSystemResourceAsStream(const jxx::Ptr<String> name) {
         return getSystemClassLoader()->getResourceAsStream(name);
     }
 
-    jxx::Ptr<Object> ClassLoader::getClassLoadingLock(jxx::Ptr<String> className) {
+    jxx::Ptr<Object> ClassLoader::getClassLoadingLock(const jxx::Ptr<String> className) {
         if (!className) throw NullPointerException(jxx::NEW<String>("className"));
         const std::string n = className->utf8();
 
@@ -64,11 +64,11 @@ namespace jxx::lang {
         return lockObj;
     }
 
-    jxx::Ptr<ClassAny> ClassLoader::loadClass(jxx::Ptr<String> name) {
+    jxx::Ptr<ClassAny> ClassLoader::loadClass(const jxx::Ptr<String> name) {
         return loadClass(name, false);
     }
 
-    jxx::Ptr<ClassAny> ClassLoader::loadClass(jxx::Ptr<String> name, jbool resolve) {
+    jxx::Ptr<ClassAny> ClassLoader::loadClass(const jxx::Ptr<String> name, jbool resolve) {
         if (!name) throw NullPointerException(jxx::NEW<String>("name"));
         const std::string n = name->utf8();
 
@@ -117,7 +117,7 @@ namespace jxx::lang {
             });
     }
 
-    jxx::Ptr<ClassAny> ClassLoader::findLoadedClass(jxx::Ptr<String> name) {
+    jxx::Ptr<ClassAny> ClassLoader::findLoadedClass(const jxx::Ptr<String> name) {
         if (!name) throw NullPointerException(jxx::NEW<String>("name"));
         const std::string n = name->utf8();
         std::lock_guard<std::mutex> lk(loadedMutex_);
@@ -126,26 +126,26 @@ namespace jxx::lang {
         return it->second.lock();
     }
 
-    jxx::Ptr<ClassAny> ClassLoader::findSystemClass(jxx::Ptr<String> name) {
+    jxx::Ptr<ClassAny> ClassLoader::findSystemClass(const jxx::Ptr<String> name) {
         return ClassAny::forName(name);
     }
 
-    jxx::Ptr<ClassAny> ClassLoader::findClass(jxx::Ptr<String> name) {
+    jxx::Ptr<ClassAny> ClassLoader::findClass(const jxx::Ptr<String> name) {
         throw ClassNotFoundException(name);
     }
 
-    void ClassLoader::resolveClass(jxx::Ptr<ClassAny>) {
+    void ClassLoader::resolveClass(const jxx::Ptr<ClassAny>) {
         // no-op in JXX
     }
 
-    void ClassLoader::addResource(jxx::Ptr<String> name, jxx::Ptr<jxx::lang::ByteArray> bytes) {
+    void ClassLoader::addResource(const jxx::Ptr<String> name, jxx::Ptr<jxx::lang::ByteArray> bytes) {
         if (!name) throw NullPointerException(jxx::NEW<String>("name"));
         const std::string n = name->utf8();
         std::lock_guard<std::mutex> lk(resourceMutex_);
         // TODO resources_[n] = bytes;
     }
 
-    jxx::Ptr<jxx::net::URL> ClassLoader::findResource(jxx::Ptr<String> name) {
+    jxx::Ptr<jxx::net::URL> ClassLoader::findResource(const jxx::Ptr<String> name) {
         if (!name) throw NullPointerException(jxx::NEW<String>("name"));
         const std::string n = name->utf8();
         std::lock_guard<std::mutex> lk(resourceMutex_);
@@ -155,13 +155,13 @@ namespace jxx::lang {
         return jxx::NEW<jxx::net::URL>(jxx::NEW<String>(spec.c_str()));
     }
 
-    jxx::Ptr<jxx::util::Enumeration<jxx::net::URL>> ClassLoader::findResources(jxx::Ptr<String> name) {
+    jxx::Ptr<jxx::util::Enumeration<jxx::net::URL>> ClassLoader::findResources(const jxx::Ptr<String> name) {
         std::vector<jxx::Ptr<jxx::net::URL>> v;
         if (auto u = findResource(name)) v.push_back(u);
         return jxx::NEW<VectorUrlEnumeration>(std::move(v));
     }
 
-    jxx::Ptr<jxx::net::URL> ClassLoader::getResource(jxx::Ptr<String> name) {
+    jxx::Ptr<jxx::net::URL> ClassLoader::getResource(const jxx::Ptr<String> name) {
         if (!name) throw NullPointerException(jxx::NEW<String>("name"));
         if (parent_) {
             if (auto u = parent_->getResource(name)) return u;
@@ -169,7 +169,7 @@ namespace jxx::lang {
         return findResource(name);
     }
 
-    jxx::Ptr<jxx::util::Enumeration<jxx::net::URL>> ClassLoader::getResources(jxx::Ptr<String> name) {
+    jxx::Ptr<jxx::util::Enumeration<jxx::net::URL>> ClassLoader::getResources(const jxx::Ptr<String> name) {
         if (!name) throw NullPointerException(jxx::NEW<String>("name"));
 
         std::vector<jxx::Ptr<jxx::net::URL>> all;
@@ -183,7 +183,7 @@ namespace jxx::lang {
         return jxx::NEW<VectorUrlEnumeration>(std::move(all));
     }
 
-    jxx::Ptr<jxx::io::InputStream> ClassLoader::getResourceAsStream(jxx::Ptr<String> name) {
+    jxx::Ptr<jxx::io::InputStream> ClassLoader::getResourceAsStream(const jxx::Ptr<String> name) {
         if (!name) throw NullPointerException(jxx::NEW<String>("name"));
         if (parent_) {
             if (auto s = parent_->getResourceAsStream(name)) return s;
@@ -196,7 +196,7 @@ namespace jxx::lang {
     }
 
     // Packages
-    jxx::Ptr<Package> ClassLoader::definePackage(jxx::Ptr<String> name) {
+    jxx::Ptr<Package> ClassLoader::definePackage(const jxx::Ptr<String> name) {
         if (!name) throw NullPointerException(jxx::NEW<String>("name"));
         const std::string n = name->utf8();
 
@@ -209,7 +209,7 @@ namespace jxx::lang {
         return p;
     }
 
-    jxx::Ptr<Package> ClassLoader::getPackage(jxx::Ptr<String> name) {
+    jxx::Ptr<Package> ClassLoader::getPackage(const jxx::Ptr<String> name) {
         if (!name) throw NullPointerException(jxx::NEW<String>("name"));
         const std::string n = name->utf8();
         std::lock_guard<std::mutex> lk(pkgMutex_);

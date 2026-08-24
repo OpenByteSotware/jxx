@@ -17,14 +17,14 @@ void PipedInputStream::initPipe_(jxx::lang::jint pipeSize) {
 }
 
 PipedInputStream::PipedInputStream() { initPipe_(DEFAULT_PIPE_SIZE); }
-PipedInputStream::PipedInputStream(jxx::Ptr<PipedOutputStream> src) : PipedInputStream() { connect(src); }
+PipedInputStream::PipedInputStream(const jxx::Ptr<PipedOutputStream> src) : PipedInputStream() { connect(src); }
 PipedInputStream::PipedInputStream(jxx::lang::jint pipeSize) { initPipe_(pipeSize); }
-PipedInputStream::PipedInputStream(jxx::Ptr<PipedOutputStream> src, jxx::lang::jint pipeSize) {
+PipedInputStream::PipedInputStream(const jxx::Ptr<PipedOutputStream> src, jxx::lang::jint pipeSize) {
     initPipe_(pipeSize);
     connect(src);
 }
 
-void PipedInputStream::connect(jxx::Ptr<PipedOutputStream> src) {
+void PipedInputStream::connect(const jxx::Ptr<PipedOutputStream> src) {
     if (!src) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("src"));
     src->connect(jxx::CAST<PipedInputStream, jxx::lang::Object>(this->thisPtr));
 }

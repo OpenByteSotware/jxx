@@ -10,7 +10,7 @@ template <typename T>
 class PredicateSuper : public jxx::lang::Object {
 public:
     virtual ~PredicateSuper() = default;
-    virtual jxx::lang::jbool test(jxx::Ptr<T> value) = 0;
+    virtual jxx::lang::jbool test(const jxx::Ptr<T> value) = 0;
 };
 
 } // namespace function

@@ -110,8 +110,8 @@ namespace jxx::lang {
         jxx::Ptr<String> substring(jint start, jint end) const;
         jxx::Ptr<jxx::lang::String> toString() const override;
 
-        virtual void writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out) override;
-        virtual void readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) override;
+        virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) override;
+        virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) override;
         virtual void readObjectNoData() override;
 
     private:

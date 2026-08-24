@@ -38,7 +38,7 @@ namespace jxx::nio
         jxx::Ptr<ShortBuffer> put(const jxx::lang::ShortArray src,
                             jxx::lang::jint offset,
                             jxx::lang::jint length);
-        jxx::Ptr<ShortBuffer> put(jxx::Ptr<ShortBuffer> src);
+        jxx::Ptr<ShortBuffer> put(const jxx::Ptr<ShortBuffer> src);
 
         jxx::Ptr<ShortBuffer> slice() const;
         jxx::Ptr<ShortBuffer> duplicate() const;

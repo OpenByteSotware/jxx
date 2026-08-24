@@ -22,7 +22,7 @@ namespace
 
 namespace jxx::io
 {
-    FileInputStream::FileInputStream(jxx::Ptr<jxx::lang::String> name)
+    FileInputStream::FileInputStream(const jxx::Ptr<jxx::lang::String> name)
     {
         if (!name)
             throwIOE_("null file name");
@@ -30,7 +30,7 @@ namespace jxx::io
         openPath_(name->utf8());
     }
 
-    FileInputStream::FileInputStream(jxx::Ptr<File> file)
+    FileInputStream::FileInputStream(const jxx::Ptr<File> file)
     {
         if (!file)
             throwIOE_("null file");
@@ -38,7 +38,7 @@ namespace jxx::io
         openPath_(file->getPath()->utf8());
     }
 
-    FileInputStream::FileInputStream(jxx::Ptr<FileDescriptor> fdObj)
+    FileInputStream::FileInputStream(const jxx::Ptr<FileDescriptor> fdObj)
         : fd_(std::move(fdObj))
     {
         throwIOE_("FileInputStream(FileDescriptor) needs native descriptor integration");

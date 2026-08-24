@@ -16,12 +16,12 @@ namespace
 
 namespace jxx::net
 {
-    URI::URI(jxx::Ptr<jxx::lang::String> str)
+    URI::URI(const jxx::Ptr<jxx::lang::String> str)
     {
         parse_(std::move(str));
     }
 
-    URI::URI(jxx::Ptr<jxx::lang::String> scheme,
+    URI::URI(const jxx::Ptr<jxx::lang::String> scheme,
              jxx::Ptr<jxx::lang::String> ssp,
              jxx::Ptr<jxx::lang::String> fragment)
         : scheme_(std::move(scheme)),
@@ -31,7 +31,7 @@ namespace jxx::net
     {
     }
 
-    URI::URI(jxx::Ptr<jxx::lang::String> scheme,
+    URI::URI(const jxx::Ptr<jxx::lang::String> scheme,
              jxx::Ptr<jxx::lang::String> authority,
              jxx::Ptr<jxx::lang::String> path,
              jxx::Ptr<jxx::lang::String> query,
@@ -45,7 +45,7 @@ namespace jxx::net
         schemeSpecificPart_ = jxx::NEW<jxx::lang::String>((authority_ ? std::string("//") + authority_->utf8() : std::string()) + (path_ ? path_->utf8() : std::string()) + (query_ ? std::string("?") + query_->utf8() : std::string()));
     }
 
-    URI::URI(jxx::Ptr<jxx::lang::String> scheme,
+    URI::URI(const jxx::Ptr<jxx::lang::String> scheme,
              jxx::Ptr<jxx::lang::String> host,
              jxx::Ptr<jxx::lang::String> path,
              jxx::Ptr<jxx::lang::String> fragment)
@@ -53,7 +53,7 @@ namespace jxx::net
     {
     }
 
-    URI::URI(jxx::Ptr<jxx::lang::String> scheme,
+    URI::URI(const jxx::Ptr<jxx::lang::String> scheme,
              jxx::Ptr<jxx::lang::String> userInfo,
              jxx::Ptr<jxx::lang::String> host,
              jxx::lang::jint port,
@@ -79,7 +79,7 @@ namespace jxx::net
         schemeSpecificPart_ = jxx::NEW<jxx::lang::String>((authority_ ? std::string("//") + authority_->utf8() : std::string()) + (path_ ? path_->utf8() : std::string()) + (query_ ? std::string("?") + query_->utf8() : std::string()));
     }
 
-    void URI::parse_(jxx::Ptr<jxx::lang::String> spec)
+    void URI::parse_(const jxx::Ptr<jxx::lang::String> spec)
     {
         if (!spec)
             throw URISyntaxException(nullptr, jxx::NEW<jxx::lang::String>("null URI"));
@@ -96,7 +96,7 @@ namespace jxx::net
         opaque_ = p.opaque;
     }
 
-    jxx::Ptr<URI> URI::create(jxx::Ptr<jxx::lang::String> str)
+    jxx::Ptr<URI> URI::create(const jxx::Ptr<jxx::lang::String> str)
     {
         return jxx::NEW<URI>(std::move(str));
     }
@@ -131,7 +131,7 @@ namespace jxx::net
         return u;
     }
 
-    jxx::Ptr<URI> URI::resolve(jxx::Ptr<URI> uri) const
+    jxx::Ptr<URI> URI::resolve(const jxx::Ptr<URI> uri) const
     {
         if (!uri)
             return jxx::NEW<URI>(toString());
@@ -149,12 +149,12 @@ namespace jxx::net
         return jxx::NEW<URI>(rebuilt);
     }
 
-    jxx::Ptr<URI> URI::resolve(jxx::Ptr<jxx::lang::String> str) const
+    jxx::Ptr<URI> URI::resolve(const jxx::Ptr<jxx::lang::String> str) const
     {
         return resolve(jxx::NEW<URI>(std::move(str)));
     }
 
-    jxx::Ptr<URI> URI::relativize(jxx::Ptr<URI> uri) const
+    jxx::Ptr<URI> URI::relativize(const jxx::Ptr<URI> uri) const
     {
         if (!uri)
             return nullptr;
@@ -196,7 +196,7 @@ namespace jxx::net
         return jxx::NEW<jxx::lang::String>(internal::rebuildUri(p));
     }
 
-    jxx::lang::jbool URI::equals(jxx::Ptr<jxx::lang::Object> other) const
+    jxx::lang::jbool URI::equals(const jxx::Ptr<jxx::lang::Object> other) const
     {
         auto u = std::dynamic_pointer_cast<URI>(other);
         return u && toString()->equals(u->toString());
@@ -204,7 +204,7 @@ namespace jxx::net
 
     jxx::lang::jint URI::hashCode() const { return toString()->hashCode(); }
 
-    jxx::lang::jint URI::compareTo(jxx::Ptr<URI> other) const
+    jxx::lang::jint URI::compareTo(const jxx::Ptr<URI> other) const
     {
         if (!other)
             return 1;

@@ -12,7 +12,7 @@ class IllegalFormatPrecisionException : public jxx::util::IllegalFormatException
 public:
     using jxx::util::IllegalFormatException::IllegalFormatException;
 	IllegalFormatPrecisionException() = default;
-    IllegalFormatPrecisionException(jxx::Ptr<jxx::lang::String> msg)
+    IllegalFormatPrecisionException(const jxx::Ptr<jxx::lang::String> msg)
 		: jxx::util::IllegalFormatException(std::move(msg)) {}
     IllegalFormatPrecisionException(jxx::lang::jint precision)
 		: jxx::util::IllegalFormatException(jxx::NEW<jxx::lang::String>("precision: " + std::to_string(precision))) {}   

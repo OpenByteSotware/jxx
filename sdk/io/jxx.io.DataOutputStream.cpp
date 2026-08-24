@@ -6,7 +6,7 @@
 
 namespace jxx::io {
 
-DataOutputStream::DataOutputStream(jxx::Ptr<OutputStream> out)
+DataOutputStream::DataOutputStream(const jxx::Ptr<OutputStream> out)
     : FilterOutputStream(std::move(out)) {}
 
 jxx::lang::jint DataOutputStream::size() const { return written_; }
@@ -57,7 +57,7 @@ void DataOutputStream::writeDouble(jxx::lang::jdouble v) {
     writeLong(l);
 }
 
-void DataOutputStream::writeBytes(jxx::Ptr<jxx::lang::String> s) {
+void DataOutputStream::writeBytes(const jxx::Ptr<jxx::lang::String> s) {
     if (!s) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("s"));
     const auto& u16 = s->utf16();
     for (char16_t ch : u16) {
@@ -65,7 +65,7 @@ void DataOutputStream::writeBytes(jxx::Ptr<jxx::lang::String> s) {
     }
 }
 
-void DataOutputStream::writeChars(jxx::Ptr<jxx::lang::String> s) {
+void DataOutputStream::writeChars(const jxx::Ptr<jxx::lang::String> s) {
     if (!s) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("s"));
     const auto& u16 = s->utf16();
     for (char16_t ch : u16) {
@@ -90,7 +90,7 @@ static void appendModifiedUtf8(std::string& out, char16_t ch) {
     }
 }
 
-void DataOutputStream::writeUTF(jxx::Ptr<jxx::lang::String> s) {
+void DataOutputStream::writeUTF(const jxx::Ptr<jxx::lang::String> s) {
     if (!s) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("s"));
     const auto& u16 = s->utf16();
 

@@ -27,35 +27,35 @@ namespace
 
 namespace jxx::io
 {
-    FileOutputStream::FileOutputStream(jxx::Ptr<jxx::lang::String> name)
+    FileOutputStream::FileOutputStream(const jxx::Ptr<jxx::lang::String> name)
     {
         if (!name)
             throwIOE_("null file name");
         openPath_(name->utf8(), false);
     }
 
-    FileOutputStream::FileOutputStream(jxx::Ptr<jxx::lang::String> name, jxx::lang::jbool append)
+    FileOutputStream::FileOutputStream(const jxx::Ptr<jxx::lang::String> name, jxx::lang::jbool append)
     {
         if (!name)
             throwIOE_("null file name");
         openPath_(name->utf8(), append);
     }
 
-    FileOutputStream::FileOutputStream(jxx::Ptr<File> file)
+    FileOutputStream::FileOutputStream(const jxx::Ptr<File> file)
     {
         if (!file)
             throwIOE_("null file");
         openPath_(file->getPath()->utf8(), false);
     }
 
-    FileOutputStream::FileOutputStream(jxx::Ptr<File> file, jxx::lang::jbool append)
+    FileOutputStream::FileOutputStream(const jxx::Ptr<File> file, jxx::lang::jbool append)
     {
         if (!file)
             throwIOE_("null file");
         openPath_(file->getPath()->utf8(), append);
     }
 
-    FileOutputStream::FileOutputStream(jxx::Ptr<FileDescriptor> fdObj)
+    FileOutputStream::FileOutputStream(const jxx::Ptr<FileDescriptor> fdObj)
         : fd_(std::move(fdObj))
     {
         throwIOE_("FileOutputStream(FileDescriptor) needs native descriptor integration");

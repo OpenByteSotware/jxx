@@ -5,7 +5,7 @@
 
 namespace jxx::lang {
 
-    Throwable::Throwable(jxx::Ptr<String> message,
+    Throwable::Throwable(const jxx::Ptr<String> message,
         jxx::Ptr<Throwable> cause,
         bool enableSuppression,
         bool writableStackTrace)
@@ -117,7 +117,7 @@ namespace jxx::lang {
      * Java's initCause has constraints (can only be set once, cannot set self, etc.).
      * This is a permissive version; tighten if you want exact rules.
      */
-    void Throwable::initCause(jxx::Ptr<Throwable> cause) { cause_ = cause; }
+    void Throwable::initCause(const jxx::Ptr<Throwable> cause) { cause_ = cause; }
 
     /**
      * Java returns a copy of the internal array.

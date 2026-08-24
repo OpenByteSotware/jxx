@@ -63,7 +63,7 @@ void Calendar::setTimeInMillis(jxx::lang::jlong millis) { millis_ = millis; }
 
 jxx::Ptr<Date> Calendar::getTime() const { return jxx::NEW<Date>(millis_); }
 
-void Calendar::setTime(jxx::Ptr<Date> date) {
+void Calendar::setTime(const jxx::Ptr<Date> date) {
     if (!date) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("null"));
     millis_ = date->getTime();
 }
@@ -72,7 +72,7 @@ jxx::Ptr<TimeZone> Calendar::getTimeZone() const {
     return tz_ ? tz_ : TimeZone::getDefault();
 }
 
-void Calendar::setTimeZone(jxx::Ptr<TimeZone> tz) {
+void Calendar::setTimeZone(const jxx::Ptr<TimeZone> tz) {
     if (!tz) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("null"));
     tz_ = std::move(tz);
 }

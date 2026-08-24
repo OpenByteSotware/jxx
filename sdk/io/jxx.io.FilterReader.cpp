@@ -12,7 +12,7 @@ namespace
 
 namespace jxx::io
 {
-    FilterReader::FilterReader(jxx::Ptr<Reader> in)
+    FilterReader::FilterReader(const jxx::Ptr<Reader> in)
         : in_(std::move(in))
     {
         if (!in_)

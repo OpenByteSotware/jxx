@@ -35,7 +35,7 @@ public:
         data_.clear();
     }
 
-    explicit ArrayDeque(jxx::Ptr<wildcard::CollectionExtends<E>> c)
+    explicit ArrayDeque(const jxx::Ptr<wildcard::CollectionExtends<E>> c)
         : data_()
         , modCount_(0) {
         if (c == nullptr) throw NullPointerException();
@@ -52,7 +52,7 @@ public:
         return data_.empty();
     }
 
-    virtual jxx::lang::jbool contains(jxx::Ptr<jxx::lang::Object> o) override {
+    virtual jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object> o) override {
         for (const auto& e : data_) {
             if (o == nullptr) {
                 if (e == nullptr) return true;
@@ -151,33 +151,33 @@ public:
         return result;
     }
 
-    virtual jxx::lang::jbool offer(jxx::Ptr<E> e) override {
+    virtual jxx::lang::jbool offer(const jxx::Ptr<E> e) override {
         return offerLast(e);
     }
 
-    virtual jxx::lang::jbool offerFirst(jxx::Ptr<E> e) override {
+    virtual jxx::lang::jbool offerFirst(const jxx::Ptr<E> e) override {
         if (e == nullptr) throw NullPointerException();
         data_.push_front(e);
         ++modCount_;
         return true;
     }
 
-    virtual jxx::lang::jbool offerLast(jxx::Ptr<E> e) override {
+    virtual jxx::lang::jbool offerLast(const jxx::Ptr<E> e) override {
         if (e == nullptr) throw NullPointerException();
         data_.push_back(e);
         ++modCount_;
         return true;
     }
 
-    virtual void addFirst(jxx::Ptr<E> e) override {
+    virtual void addFirst(const jxx::Ptr<E> e) override {
         if (!offerFirst(e)) throw IllegalStateException();
     }
 
-    virtual void addLast(jxx::Ptr<E> e) override {
+    virtual void addLast(const jxx::Ptr<E> e) override {
         if (!offerLast(e)) throw IllegalStateException();
     }
 
-    virtual jxx::lang::jbool add(jxx::Ptr<E> e) override {
+    virtual jxx::lang::jbool add(const jxx::Ptr<E> e) override {
         return offerLast(e);
     }
 
@@ -245,7 +245,7 @@ public:
         return data_.empty() ? nullptr : data_.back();
     }
 
-    virtual jxx::lang::jbool removeFirstOccurrence(jxx::Ptr<jxx::lang::Object> o) override {
+    virtual jxx::lang::jbool removeFirstOccurrence(const jxx::Ptr<jxx::lang::Object> o) override {
         for (jxx::lang::jint i = 0; i < size(); ++i) {
             auto& e = data_[static_cast<std::size_t>(i)];
             if (o == nullptr) {
@@ -261,7 +261,7 @@ public:
         return false;
     }
 
-    virtual jxx::lang::jbool removeLastOccurrence(jxx::Ptr<jxx::lang::Object> o) override {
+    virtual jxx::lang::jbool removeLastOccurrence(const jxx::Ptr<jxx::lang::Object> o) override {
         for (jxx::lang::jint i = size() - 1; i >= 0; --i) {
             auto& e = data_[static_cast<std::size_t>(i)];
             if (o == nullptr) {
@@ -277,7 +277,7 @@ public:
         return false;
     }
 
-    virtual void push(jxx::Ptr<E> e) override {
+    virtual void push(const jxx::Ptr<E> e) override {
         addFirst(e);
     }
 
@@ -285,7 +285,7 @@ public:
         return removeFirst();
     }
 
-    virtual jxx::lang::jbool remove(jxx::Ptr<jxx::lang::Object> o) override {
+    virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object> o) override {
         return removeFirstOccurrence(o);
     }
 

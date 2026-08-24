@@ -23,9 +23,9 @@ public:
 
     virtual ~Spliterator() = default;
 
-    virtual jxx::lang::jbool tryAdvance(jxx::Ptr<jxx::util::function::Consumer<T>> action) = 0;
+    virtual jxx::lang::jbool tryAdvance(const jxx::Ptr<jxx::util::function::Consumer<T>> action) = 0;
 
-    virtual void forEachRemaining(jxx::Ptr<jxx::util::function::Consumer<T>> action) {
+    virtual void forEachRemaining(const jxx::Ptr<jxx::util::function::Consumer<T>> action) {
         if (action == nullptr) {
             throw jxx::lang::NullPointerException();
         }

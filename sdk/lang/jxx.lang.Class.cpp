@@ -32,7 +32,7 @@ namespace jxx::lang {
         return cls;
     }
 
-    jxx::Ptr<ClassAny> ClassAny::forName(jxx::Ptr<String> className) {
+    jxx::Ptr<ClassAny> ClassAny::forName(const jxx::Ptr<String> className) {
         if (!className) throw NullPointerException(jxx::NEW<String>("className"));
 
         std::string key = className->utf8();
@@ -46,7 +46,7 @@ namespace jxx::lang {
         throw ClassNotFoundException(jxx::NEW<String>(className->utf8().c_str()));
     }
 
-    jxx::Ptr<ClassAny> ClassAny::forName(jxx::Ptr<String> className, jxx::lang::jbool /*initialize*/, jxx::Ptr<ClassLoader> /*loader*/) {
+    jxx::Ptr<ClassAny> ClassAny::forName(const jxx::Ptr<String> className, jxx::lang::jbool /*initialize*/, jxx::Ptr<ClassLoader> /*loader*/) {
         // Java allows loading via specific loader and optional initialization.
         // JXX runtime typically has a single registry, so we treat as alias.
         return forName(className);
@@ -187,19 +187,19 @@ namespace jxx::lang {
         return false;
     }
 
-    jbool ClassAny::isAssignableFrom(jxx::Ptr<ClassAny> cls) const {
+    jbool ClassAny::isAssignableFrom(const jxx::Ptr<ClassAny> cls) const {
         if (!cls) throw NullPointerException(jxx::NEW<String>("cls"));
         return isAssignableFromImpl_(*this, *cls);
     }
 
-    jbool ClassAny::isInstance(jxx::Ptr<Object> obj) const {
+    jbool ClassAny::isInstance(const jxx::Ptr<Object> obj) const {
         if (!obj) return false;
         auto oc = obj->getClass();
         if (!oc) return false;
         return this->isAssignableFrom(oc);
     }
 
-    jxx::Ptr<Object> ClassAny::cast(jxx::Ptr<Object> obj) const {
+    jxx::Ptr<Object> ClassAny::cast(const jxx::Ptr<Object> obj) const {
         if (!obj) return nullptr;
         if (isInstance(obj)) return obj;
 
@@ -260,7 +260,7 @@ namespace jxx::lang {
         return std::string("[L") + component.meta_.binaryName + ";";
     }
 
-    jxx::Ptr<ClassAny> ClassAny::arrayOf(jxx::Ptr<ClassAny> component) {
+    jxx::Ptr<ClassAny> ClassAny::arrayOf(const jxx::Ptr<ClassAny> component) {
         if (!component) throw NullPointerException(jxx::NEW<String>("component"));
 
         std::string name = arrayBinaryName_(*component);
@@ -304,8 +304,8 @@ namespace jxx::lang {
     jxx::Ptr<JxxArray<jxx::Ptr<Field>, 1>> ClassAny::getDeclaredFields() const {
         return jxx::NEW<JxxArray<jxx::Ptr<Field>, 1>>(0);
     }
-    jxx::Ptr<Field> ClassAny::getField(jxx::Ptr<String> /*name*/) const { return nullptr; }
-    jxx::Ptr<Field> ClassAny::getDeclaredField(jxx::Ptr<String> /*name*/) const { return nullptr; }
+    jxx::Ptr<Field> ClassAny::getField(const jxx::Ptr<String> /*name*/) const { return nullptr; }
+    jxx::Ptr<Field> ClassAny::getDeclaredField(const jxx::Ptr<String> /*name*/) const { return nullptr; }
 
     jxx::Ptr<JxxArray<jxx::Ptr<Method>, 1>> ClassAny::getMethods() const {
         return jxx::NEW<JxxArray<jxx::Ptr<Method>, 1>>(0);
@@ -313,8 +313,8 @@ namespace jxx::lang {
     jxx::Ptr<JxxArray<jxx::Ptr<Method>, 1>> ClassAny::getDeclaredMethods() const {
         return jxx::NEW<JxxArray<jxx::Ptr<Method>, 1>>(0);
     }
-    jxx::Ptr<Method> ClassAny::getMethod(jxx::Ptr<String> /*name*/, jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> /*pt*/) const { return nullptr; }
-    jxx::Ptr<Method> ClassAny::getDeclaredMethod(jxx::Ptr<String> /*name*/, jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> /*pt*/) const { return nullptr; }
+    jxx::Ptr<Method> ClassAny::getMethod(const jxx::Ptr<String> /*name*/, jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> /*pt*/) const { return nullptr; }
+    jxx::Ptr<Method> ClassAny::getDeclaredMethod(const jxx::Ptr<String> /*name*/, jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> /*pt*/) const { return nullptr; }
 
     jxx::Ptr<JxxArray<jxx::Ptr<Constructor>, 1>> ClassAny::getConstructors() const {
         return jxx::NEW<JxxArray<jxx::Ptr<Constructor>, 1>>(0);
@@ -322,8 +322,8 @@ namespace jxx::lang {
     jxx::Ptr<JxxArray<jxx::Ptr<Constructor>, 1>> ClassAny::getDeclaredConstructors() const {
         return jxx::NEW<JxxArray<jxx::Ptr<Constructor>, 1>>(0);
     }
-    jxx::Ptr<Constructor> ClassAny::getConstructor(jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> /*pt*/) const { return nullptr; }
-    jxx::Ptr<Constructor> ClassAny::getDeclaredConstructor(jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> /*pt*/) const { return nullptr; }
+    jxx::Ptr<Constructor> ClassAny::getConstructor(const jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> /*pt*/) const { return nullptr; }
+    jxx::Ptr<Constructor> ClassAny::getDeclaredConstructor(const jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> /*pt*/) const { return nullptr; }
 
     jxx::Ptr<JxxArray<jxx::Ptr<Annotation>, 1>> ClassAny::getAnnotations() const {
         return jxx::NEW<JxxArray<jxx::Ptr<Annotation>, 1>>(0);
@@ -335,10 +335,10 @@ namespace jxx::lang {
     jxx::Ptr<Package> ClassAny::getPackage() const { return nullptr; }
     jxx::Ptr<ClassLoader> ClassAny::getClassLoader() const { return nullptr; }
 
-    void ClassAny::writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out) {
+    void ClassAny::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) {
     }
     
-        void ClassAny::readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) {
+        void ClassAny::readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) {
 
     }
         void ClassAny::readObjectNoData() {

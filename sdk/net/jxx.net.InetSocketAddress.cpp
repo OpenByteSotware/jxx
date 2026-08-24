@@ -11,13 +11,13 @@ namespace jxx::net
     {
     }
 
-    InetSocketAddress::InetSocketAddress(jxx::Ptr<InetAddress> addr,
+    InetSocketAddress::InetSocketAddress(const jxx::Ptr<InetAddress> addr,
                                          jxx::lang::jint port)
         : InetSocketAddress(std::move(addr), nullptr, port, false)
     {
     }
 
-    InetSocketAddress::InetSocketAddress(jxx::Ptr<jxx::lang::String> hostname,
+    InetSocketAddress::InetSocketAddress(const jxx::Ptr<jxx::lang::String> hostname,
                                          jxx::lang::jint port)
         : InetSocketAddress(nullptr, std::move(hostname), port, false)
     {
@@ -34,7 +34,7 @@ namespace jxx::net
         }
     }
 
-    InetSocketAddress::InetSocketAddress(jxx::Ptr<InetAddress> addr,
+    InetSocketAddress::InetSocketAddress(const jxx::Ptr<InetAddress> addr,
                                          jxx::Ptr<jxx::lang::String> host,
                                          jxx::lang::jint port,
                                          jxx::lang::jbool unresolved)
@@ -47,7 +47,7 @@ namespace jxx::net
             throw std::invalid_argument("port out of range");
     }
 
-    jxx::Ptr<InetSocketAddress> InetSocketAddress::createUnresolved(jxx::Ptr<jxx::lang::String> host,
+    jxx::Ptr<InetSocketAddress> InetSocketAddress::createUnresolved(const jxx::Ptr<jxx::lang::String> host,
                                                                     jxx::lang::jint port)
     {
         return std::shared_ptr<InetSocketAddress>(new InetSocketAddress(nullptr, std::move(host), port, true));
@@ -65,7 +65,7 @@ namespace jxx::net
         return jxx::NEW<jxx::lang::String>((host ? host->utf8() : std::string()) + ":" + std::to_string(port_));
     }
 
-    jxx::lang::jbool InetSocketAddress::equals(jxx::Ptr<jxx::lang::Object> other) const
+    jxx::lang::jbool InetSocketAddress::equals(const jxx::Ptr<jxx::lang::Object> other) const
     {
         auto o = std::dynamic_pointer_cast<InetSocketAddress>(other);
         if (!o || port_ != o->port_ || unresolved_ != o->unresolved_)

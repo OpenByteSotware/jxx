@@ -14,7 +14,7 @@ namespace jxx::net
     class InterfaceAddress final : public jxx::lang::Object
     {
     public:
-        InterfaceAddress(jxx::Ptr<InetAddress> address,
+        InterfaceAddress(const jxx::Ptr<InetAddress> address,
                          jxx::Ptr<InetAddress> broadcast,
                          jxx::lang::jshort prefixLength);
         virtual ~InterfaceAddress() override = default;

@@ -97,13 +97,13 @@ namespace jxx {
             }
 
         protected:
-            virtual void afterNodeAccess(jxx::Ptr<K> /*key*/) {}
+            virtual void afterNodeAccess(const jxx::Ptr<K> /*key*/) {}
 
             virtual void afterNodeInsertion(
                 jxx::Ptr<K> /*key*/,
                 jxx::lang::jbool /*isNewKey*/) {}
 
-            virtual void afterNodeRemoval(jxx::Ptr<K> /*key*/) {}
+            virtual void afterNodeRemoval(const jxx::Ptr<K> /*key*/) {}
 
             virtual void afterClear() {}
 
@@ -153,7 +153,7 @@ namespace jxx {
                         initialCapacity));
             }
 
-            explicit HashMap(jxx::Ptr<Map<K, V>> source)
+            explicit HashMap(const jxx::Ptr<Map<K, V>> source)
                 : HashMap() {
 
                 if (source == nullptr) {

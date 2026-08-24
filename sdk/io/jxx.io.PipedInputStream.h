@@ -16,11 +16,11 @@ class PipedOutputStream;
 class PipedInputStream final : public InputStream {
 public:
     PipedInputStream();
-    explicit PipedInputStream(jxx::Ptr<PipedOutputStream> src);
+    explicit PipedInputStream(const jxx::Ptr<PipedOutputStream> src);
     explicit PipedInputStream(jxx::lang::jint pipeSize);
-    PipedInputStream(jxx::Ptr<PipedOutputStream> src, jxx::lang::jint pipeSize);
+    PipedInputStream(const jxx::Ptr<PipedOutputStream> src, jxx::lang::jint pipeSize);
 
-    void connect(jxx::Ptr<PipedOutputStream> src);
+    void connect(const jxx::Ptr<PipedOutputStream> src);
 
     jxx::lang::jint read() override;
     jxx::lang::jint read(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) override;

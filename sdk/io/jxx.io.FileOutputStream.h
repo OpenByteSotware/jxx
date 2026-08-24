@@ -13,11 +13,11 @@ namespace jxx::io
     class FileOutputStream final : public OutputStream
     {
     public:
-        explicit FileOutputStream(jxx::Ptr<jxx::lang::String> name);
-        FileOutputStream(jxx::Ptr<jxx::lang::String> name, jxx::lang::jbool append);
-        explicit FileOutputStream(jxx::Ptr<File> file);
-        FileOutputStream(jxx::Ptr<File> file, jxx::lang::jbool append);
-        explicit FileOutputStream(jxx::Ptr<FileDescriptor> fdObj);
+        explicit FileOutputStream(const jxx::Ptr<jxx::lang::String> name);
+        FileOutputStream(const jxx::Ptr<jxx::lang::String> name, jxx::lang::jbool append);
+        explicit FileOutputStream(const jxx::Ptr<File> file);
+        FileOutputStream(const jxx::Ptr<File> file, jxx::lang::jbool append);
+        explicit FileOutputStream(const jxx::Ptr<FileDescriptor> fdObj);
 
         ~FileOutputStream() override;
 

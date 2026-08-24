@@ -11,7 +11,7 @@ class Predicate : public virtual PredicateSuper<T> {
 public:
     virtual ~Predicate() = default;
 
-    virtual jxx::Ptr<Predicate<T>> and_(jxx::Ptr<PredicateSuper<T>> other) {
+    virtual jxx::Ptr<Predicate<T>> and_(const jxx::Ptr<PredicateSuper<T>> other) {
         if (other == nullptr) {
             throw NullPointerException();
         }
@@ -22,17 +22,17 @@ public:
             jxx::Ptr<PredicateSuper<T>> b_;
 
         public:
-            AndPredicate(jxx::Ptr<PredicateSuper<T>> a, jxx::Ptr<PredicateSuper<T>> b)
+            AndPredicate(const jxx::Ptr<PredicateSuper<T>> a, jxx::Ptr<PredicateSuper<T>> b)
                 : a_(a), b_(b) {}
 
             virtual ~AndPredicate() = default;
 
-            virtual jbool test(jxx::Ptr<T> value) override {
+            virtual jbool test(const jxx::Ptr<T> value) override {
                 return a_->test(value) && b_->test(value);
             }
         };
 
-        return jxx::Ptr<Predicate<T>>(new AndPredicate(jxx::Ptr<PredicateSuper<T>>(this), other));
+        return jxx::Ptr<Predicate<T>>(new AndPredicate(const jxx::Ptr<PredicateSuper<T>>(this), other));
     }
 
     virtual jxx::Ptr<Predicate<T>> negate() {
@@ -41,20 +41,20 @@ public:
             jxx::Ptr<PredicateSuper<T>> inner_;
 
         public:
-            explicit NegatePredicate(jxx::Ptr<PredicateSuper<T>> inner)
+            explicit NegatePredicate(const jxx::Ptr<PredicateSuper<T>> inner)
                 : inner_(inner) {}
 
             virtual ~NegatePredicate() = default;
 
-            virtual jbool test(jxx::Ptr<T> value) override {
+            virtual jbool test(const jxx::Ptr<T> value) override {
                 return !inner_->test(value);
             }
         };
 
-        return jxx::Ptr<Predicate<T>>(new NegatePredicate(jxx::Ptr<PredicateSuper<T>>(this)));
+        return jxx::Ptr<Predicate<T>>(new NegatePredicate(const jxx::Ptr<PredicateSuper<T>>(this)));
     }
 
-    virtual jxx::Ptr<Predicate<T>> or_(jxx::Ptr<PredicateSuper<T>> other) {
+    virtual jxx::Ptr<Predicate<T>> or_(const jxx::Ptr<PredicateSuper<T>> other) {
         if (other == nullptr) {
             throw NullPointerException();
         }
@@ -65,17 +65,17 @@ public:
             jxx::Ptr<PredicateSuper<T>> b_;
 
         public:
-            OrPredicate(jxx::Ptr<PredicateSuper<T>> a, jxx::Ptr<PredicateSuper<T>> b)
+            OrPredicate(const jxx::Ptr<PredicateSuper<T>> a, jxx::Ptr<PredicateSuper<T>> b)
                 : a_(a), b_(b) {}
 
             virtual ~OrPredicate() = default;
 
-            virtual jbool test(jxx::Ptr<T> value) override {
+            virtual jbool test(const jxx::Ptr<T> value) override {
                 return a_->test(value) || b_->test(value);
             }
         };
 
-        return jxx::Ptr<Predicate<T>>(new OrPredicate(jxx::Ptr<PredicateSuper<T>>(this), other));
+        return jxx::Ptr<Predicate<T>>(new OrPredicate(const jxx::Ptr<PredicateSuper<T>>(this), other));
     }
 };
 

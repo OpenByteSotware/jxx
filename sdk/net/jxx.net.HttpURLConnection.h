@@ -7,7 +7,7 @@ namespace jxx::net
     class HttpURLConnection : public URLConnection
     {
     protected:
-        explicit HttpURLConnection(jxx::Ptr<URL> url);
+        explicit HttpURLConnection(const jxx::Ptr<URL> url);
 
     public:
         ~HttpURLConnection() override = default;
@@ -19,7 +19,7 @@ namespace jxx::net
         void setInstanceFollowRedirects(jxx::lang::jbool followRedirects);
         jxx::lang::jbool getInstanceFollowRedirects() const noexcept;
 
-        void setRequestMethod(jxx::Ptr<jxx::lang::String> method);
+        void setRequestMethod(const jxx::Ptr<jxx::lang::String> method);
         jxx::Ptr<jxx::lang::String> getRequestMethod() const;
 
         virtual jxx::lang::jint getResponseCode() const;

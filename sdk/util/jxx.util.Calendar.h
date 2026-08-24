@@ -28,10 +28,10 @@ public:
     void setTimeInMillis(jxx::lang::jlong millis);
 
     jxx::Ptr<Date> getTime() const;
-    void setTime(jxx::Ptr<Date> date);
+    void setTime(const jxx::Ptr<Date> date);
 
     jxx::Ptr<TimeZone> getTimeZone() const;
-    void setTimeZone(jxx::Ptr<TimeZone> tz);
+    void setTimeZone(const jxx::Ptr<TimeZone> tz);
 
     jxx::lang::jint get(jxx::lang::jint field) const;
 

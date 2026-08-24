@@ -19,7 +19,7 @@ namespace jxx::net
         ~ContentHandler() override = default;
 
     public:
-        virtual jxx::Ptr<jxx::lang::Object> getContent(jxx::Ptr<URLConnection> urlc) = 0;
+        virtual jxx::Ptr<jxx::lang::Object> getContent(const jxx::Ptr<URLConnection> urlc) = 0;
         virtual jxx::Ptr<jxx::lang::Object> getContent(
             jxx::Ptr<URLConnection> urlc,
             jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Class>, 1U>> /*classes*/)

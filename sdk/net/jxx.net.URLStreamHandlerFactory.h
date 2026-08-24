@@ -13,6 +13,6 @@ namespace jxx::net
         virtual ~URLStreamHandlerFactory() = default;
 
     public:
-        virtual jxx::Ptr<URLStreamHandler> createURLStreamHandler(jxx::Ptr<jxx::lang::String> protocol) = 0;
+        virtual jxx::Ptr<URLStreamHandler> createURLStreamHandler(const jxx::Ptr<jxx::lang::String> protocol) = 0;
     };
 }

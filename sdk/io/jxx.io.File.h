@@ -30,10 +30,10 @@ namespace jxx::io
         static constexpr char pathSeparatorChar = ':';
 
     public:
-        explicit File(jxx::Ptr<jxx::lang::String> pathname);
-        File(jxx::Ptr<jxx::lang::String> parent,
+        explicit File(const jxx::Ptr<jxx::lang::String> pathname);
+        File(const jxx::Ptr<jxx::lang::String> parent,
              jxx::Ptr<jxx::lang::String> child);
-        File(jxx::Ptr<File> parent,
+        File(const jxx::Ptr<File> parent,
              jxx::Ptr<jxx::lang::String> child);
 
         ~File() override = default;
@@ -72,7 +72,7 @@ namespace jxx::io
         jxx::lang::jbool mkdir();
         jxx::lang::jbool mkdirs();
 
-        jxx::lang::jbool renameTo(jxx::Ptr<File> dest);
+        jxx::lang::jbool renameTo(const jxx::Ptr<File> dest);
 
         jxx::lang::jbool setLastModified(jxx::lang::jlong time);
         jxx::lang::jbool setReadOnly();
@@ -85,16 +85,16 @@ namespace jxx::io
         jxx::lang::jint hashCode() const override;
         jxx::Ptr<jxx::lang::String> toString() const override;
 
-        static jxx::Ptr<File> createTempFile(jxx::Ptr<jxx::lang::String> prefix,
+        static jxx::Ptr<File> createTempFile(const jxx::Ptr<jxx::lang::String> prefix,
                                              jxx::Ptr<jxx::lang::String> suffix);
-        static jxx::Ptr<File> createTempFile(jxx::Ptr<jxx::lang::String> prefix,
+        static jxx::Ptr<File> createTempFile(const jxx::Ptr<jxx::lang::String> prefix,
                                              jxx::Ptr<jxx::lang::String> suffix,
                                              jxx::Ptr<File> directory);
 
         static jxx::Ptr<jxx::JxxArray<jxx::Ptr<File>, 1U>> listRoots();
 
-        virtual void writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out) override;
-        virtual void readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) override;
+        virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) override;
+        virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) override;
         virtual void readObjectNoData() override;
 
     private:

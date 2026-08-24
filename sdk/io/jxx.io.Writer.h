@@ -30,12 +30,12 @@ public:
     virtual void write(const jxx::lang::CharArray cbuf);
     virtual void write(const jxx::lang::CharArray cbuf, jxx::lang::jint off, jxx::lang::jint len);
 
-    virtual void write(jxx::Ptr<jxx::lang::String> str);
-    virtual void write(jxx::Ptr<jxx::lang::String> str, jxx::lang::jint off, jxx::lang::jint len);
+    virtual void write(const jxx::Ptr<jxx::lang::String> str);
+    virtual void write(const jxx::Ptr<jxx::lang::String> str, jxx::lang::jint off, jxx::lang::jint len);
 
     // append
-    virtual jxx::Ptr<Writer> append(jxx::Ptr<jxx::lang::CharSequence> csq);
-    virtual jxx::Ptr<Writer> append(jxx::Ptr<jxx::lang::CharSequence> csq, jxx::lang::jint start, jxx::lang::jint end);
+    virtual jxx::Ptr<Writer> append(const jxx::Ptr<jxx::lang::CharSequence> csq);
+    virtual jxx::Ptr<Writer> append(const jxx::Ptr<jxx::lang::CharSequence> csq, jxx::lang::jint start, jxx::lang::jint end);
     virtual jxx::Ptr<Writer> append(jxx::lang::jchar c);
 
     // default no-op
@@ -44,7 +44,7 @@ public:
 
 protected:
     static void checkBounds_(const jxx::lang::CharArray cbuf, jxx::lang::jint off, jxx::lang::jint len);
-    static void checkStringBounds_(jxx::Ptr<jxx::lang::String> s, jxx::lang::jint off, jxx::lang::jint len);
+    static void checkStringBounds_(const jxx::Ptr<jxx::lang::String> s, jxx::lang::jint off, jxx::lang::jint len);
 
     jxx::Ptr<Writer> self_();
 };

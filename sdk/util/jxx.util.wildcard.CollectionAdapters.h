@@ -19,7 +19,7 @@ private:
         jxx::Ptr<Iterator<T>> innerIterator;
 
     public:
-        explicit ObjectIteratorView(jxx::Ptr<Iterator<T>> it)
+        explicit ObjectIteratorView(const jxx::Ptr<Iterator<T>> it)
             : innerIterator(it) {}
 
         virtual ~ObjectIteratorView() = default;
@@ -38,7 +38,7 @@ private:
     };
 
 public:
-    explicit CollectionAnyView(jxx::Ptr<Collection<T>> c)
+    explicit CollectionAnyView(const jxx::Ptr<Collection<T>> c)
         : inner(c) {
         if (inner == nullptr) {
             throw NullPointerException();
@@ -51,8 +51,8 @@ public:
         return inner->size();
     }
 
-    virtual jbool containsObject(jxx::Ptr<jxx::lang::Object> o) override {
-        return inner->contains(jxx::Ptr<T>(o));
+    virtual jbool containsObject(const jxx::Ptr<jxx::lang::Object> o) override {
+        return inner->contains(const jxx::Ptr<T>(o));
     }
 
     virtual jxx::Ptr<Iterator<jxx::lang::Object>> iteratorObject() override {
@@ -70,7 +70,7 @@ private:
         jxx::Ptr<Iterator<Derived>> innerIterator;
 
     public:
-        explicit BaseIteratorView(jxx::Ptr<Iterator<Derived>> it)
+        explicit BaseIteratorView(const jxx::Ptr<Iterator<Derived>> it)
             : innerIterator(it) {}
 
         virtual ~BaseIteratorView() = default;
@@ -93,7 +93,7 @@ private:
         jxx::Ptr<Iterator<Derived>> innerIterator;
 
     public:
-        explicit ObjectIteratorView(jxx::Ptr<Iterator<Derived>> it)
+        explicit ObjectIteratorView(const jxx::Ptr<Iterator<Derived>> it)
             : innerIterator(it) {}
 
         virtual ~ObjectIteratorView() = default;
@@ -112,7 +112,7 @@ private:
     };
 
 public:
-    explicit CollectionExtendsView(jxx::Ptr<Collection<Derived>> c)
+    explicit CollectionExtendsView(const jxx::Ptr<Collection<Derived>> c)
         : inner(c) {
         if (inner == nullptr) {
             throw NullPointerException();
@@ -125,8 +125,8 @@ public:
         return inner->size();
     }
 
-    virtual jbool containsObject(jxx::Ptr<jxx::lang::Object> o) override {
-        return inner->contains(jxx::Ptr<Derived>(o));
+    virtual jbool containsObject(const jxx::Ptr<jxx::lang::Object> o) override {
+        return inner->contains(const jxx::Ptr<Derived>(o));
     }
 
     virtual jxx::Ptr<Iterator<jxx::lang::Object>> iteratorObject() override {

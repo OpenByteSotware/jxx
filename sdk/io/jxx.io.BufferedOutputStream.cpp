@@ -7,10 +7,10 @@ namespace jxx::io {
 
 static constexpr jxx::lang::jint DEFAULT_BUF_SIZE = 8192;
 
-BufferedOutputStream::BufferedOutputStream(jxx::Ptr<OutputStream> out)
+BufferedOutputStream::BufferedOutputStream(const jxx::Ptr<OutputStream> out)
     : BufferedOutputStream(std::move(out), DEFAULT_BUF_SIZE) {}
 
-BufferedOutputStream::BufferedOutputStream(jxx::Ptr<OutputStream> out, jxx::lang::jint size)
+BufferedOutputStream::BufferedOutputStream(const jxx::Ptr<OutputStream> out, jxx::lang::jint size)
     : FilterOutputStream(std::move(out)) {
     if (size <= 0) throw jxx::lang::IllegalArgumentException(jxx::NEW<jxx::lang::String>("size <= 0"));
     buf_ = jxx::NEW<jxx::lang::ByteArrayType>((std::uint32_t)size);

@@ -58,7 +58,7 @@ public:
     }
     jxx::lang::jint getRawOffset() const override { return off_ms_; }
     jxx::lang::jbool useDaylightTime() const override { return false; }
-    jxx::lang::jbool inDaylightTime(jxx::Ptr<Date> /*d*/) const override { return false; }
+    jxx::lang::jbool inDaylightTime(const jxx::Ptr<Date> /*d*/) const override { return false; }
 };
 
 class TzdbTimeZone final : public TimeZone {
@@ -95,7 +95,7 @@ public:
     jxx::lang::jint getRawOffset() const override { return (jxx::lang::jint)(z_.default_offset * 1000); }
     jxx::lang::jbool useDaylightTime() const override { return true; }
 
-    jxx::lang::jbool inDaylightTime(jxx::Ptr<Date> d) const override {
+    jxx::lang::jbool inDaylightTime(const jxx::Ptr<Date> d) const override {
         if (!d) return false;
         jxx::lang::jint off = getOffset(d->getTime());
         return off != getRawOffset();
@@ -106,7 +106,7 @@ static bool load_zone_file(const std::string& filePath, const std::string& zoneI
     return load_tzif(filePath, zoneId, z);
 }
 
-jxx::Ptr<TimeZone> TimeZone::getTimeZone(jxx::Ptr<jxx::lang::String> id) {
+jxx::Ptr<TimeZone> TimeZone::getTimeZone(const jxx::Ptr<jxx::lang::String> id) {
     if (!id) return getDefault();
     std::string zid = id->utf8();
 

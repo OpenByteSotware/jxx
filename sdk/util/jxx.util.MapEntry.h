@@ -11,8 +11,8 @@ public:
     virtual ~MapEntry() = default;
     virtual jxx::Ptr<K> getKey() = 0;
     virtual jxx::Ptr<V> getValue() = 0;
-    virtual jxx::Ptr<V> setValue(jxx::Ptr<V> value) = 0;
-    virtual jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> o) = 0;
+    virtual jxx::Ptr<V> setValue(const jxx::Ptr<V> value) = 0;
+    virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object> o) = 0;
     virtual jxx::lang::jint hashCode() = 0;
 };
 

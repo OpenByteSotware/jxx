@@ -5,7 +5,7 @@ namespace jxx::util {
 
 class MissingFormatArgumentException : public IllegalFormatException {
 public:
-    explicit MissingFormatArgumentException(jxx::Ptr<jxx::lang::String> msg)
+    explicit MissingFormatArgumentException(const jxx::Ptr<jxx::lang::String> msg)
         : IllegalFormatException(std::move(msg)) {}
 };
 

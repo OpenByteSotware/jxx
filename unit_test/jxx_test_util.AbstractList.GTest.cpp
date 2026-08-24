@@ -26,121 +26,258 @@ namespace
 		return jxx::NEW<String>(value);
 	}
 
-	/**
-	 * Small concrete list used to test AbstractList's skeletal implementation.
-	 *
-	 * Structural changes increment modCount. Element replacement does not, which
-	 * matches the Java AbstractList iterator contract.
-	 */
-	class TestStringList final : public jxx::util::AbstractList<String>
+	class TestStringList final
+		: public jxx::util::
+		AbstractList<String>
 	{
 	private:
 		std::vector<StringPtr> values_;
 
-		void checkElementIndex(jxx::lang::jint index) const
+		void checkElementIndex(
+			jxx::lang::jint index)
+			const
 		{
+
 			if (index < 0 ||
-				index >= static_cast<jxx::lang::jint>(values_.size())) {
-				throw jxx::lang::IndexOutOfBoundsException();
+				index >=
+					static_cast<
+						jxx::lang::jint>(
+							values_.size())) {
+
+				throw jxx::lang::
+					IndexOutOfBoundsException();
 			}
 		}
 
-		void checkPositionIndex(jxx::lang::jint index) const
+		void checkPositionIndex(
+			jxx::lang::jint index)
+			const
 		{
+
 			if (index < 0 ||
-				index > static_cast<jxx::lang::jint>(values_.size())) {
-				throw jxx::lang::IndexOutOfBoundsException();
+				index >
+					static_cast<
+						jxx::lang::jint>(
+							values_.size())) {
+
+				throw jxx::lang::
+					IndexOutOfBoundsException();
 			}
 		}
 
 	public:
-	
-		explicit TestStringList()
-		{
-		}
+		TestStringList() = default;
 
-		TestStringList(std::initializer_list<StringPtr> values)
+		TestStringList(
+			std::initializer_list<
+				StringPtr> values)
 			: values_(values)
 		{
 		}
 
-		virtual ~TestStringList() {
+		~TestStringList() override =
+			default;
+
+		jxx::lang::jint size()
+			override
+		{
+
+			return static_cast<
+				jxx::lang::jint>(
+					values_.size());
 		}
 
-		jxx::lang::jint size() override
+		StringPtr get(
+			jxx::lang::jint index)
+			override
 		{
-			return static_cast<jxx::lang::jint>(values_.size());
-		}
 
-		virtual StringPtr get(jxx::lang::jint index) override
-		{
 			checkElementIndex(index);
-			return values_[static_cast<std::size_t>(index)];
+
+			return values_[
+				static_cast<
+					std::size_t>(
+						index)];
 		}
 
-		virtual StringPtr set(
+		StringPtr set(
 			jxx::lang::jint index,
-			StringPtr element) override
+			const jxx::Ptr<String> element)
+			override
 		{
 
 			checkElementIndex(index);
-			auto oldValue = values_[static_cast<std::size_t>(index)];
-			values_[static_cast<std::size_t>(index)] = std::move(element);
+
+			auto oldValue =
+				values_[
+					static_cast<
+						std::size_t>(
+							index)];
+
+			values_[
+				static_cast<
+					std::size_t>(
+						index)] = element;
+
 			return oldValue;
 		}
 
-		virtual void add(
+		void add(
 			jxx::lang::jint index,
-			StringPtr element) override
+			const jxx::Ptr<String> element)
+			override
 		{
 
 			checkPositionIndex(index);
+
 			values_.insert(
-				values_.begin() + static_cast<std::ptrdiff_t>(index),
-				std::move(element));
+				values_.begin() +
+					static_cast<
+						std::ptrdiff_t>(
+							index),
+				element);
+
 			++this->modCount;
 		}
 
-		/*
-		 * Override the broken recursive AbstractList::add(Ptr<E>) implementation.
-		 */
-		virtual jxx::lang::jbool add(StringPtr element) override
+		jxx::lang::jbool add(
+			const jxx::Ptr<String> element)
+			override
 		{
-			add(size(), std::move(element));
-			return true;
+
+			add(
+				size(),
+				element);
+
+			return static_cast<
+				jxx::lang::jbool>(
+					true);
 		}
 
-		virtual StringPtr remove(jxx::lang::jint index) override
+		StringPtr remove(
+			jxx::lang::jint index)
+			override
 		{
+
 			checkElementIndex(index);
-			auto oldValue = values_[static_cast<std::size_t>(index)];
+
+			auto oldValue =
+				values_[
+					static_cast<
+						std::size_t>(
+							index)];
+
 			values_.erase(
-				values_.begin() + static_cast<std::ptrdiff_t>(index));
+				values_.begin() +
+					static_cast<
+						std::ptrdiff_t>(
+							index));
+
 			++this->modCount;
+
 			return oldValue;
 		}
 
-		void structuralAppendForFailFastTest(const StringPtr& value)
+		void replaceAll(
+			const jxx::Ptr<
+				jxx::util::function::
+					UnaryOperator<String>>
+						operation)
+			override
 		{
+
+			if (operation == nullptr) {
+				throw jxx::lang::
+					NullPointerException();
+			}
+
+			for (jxx::lang::jint i = 0;
+				 i < size();
+				 ++i) {
+
+				set(
+					i,
+					operation->apply(
+						get(i)));
+			}
+		}
+
+		void sort(const jxx::Ptr<
+				jxx::util::
+					ComparatorSuper<String>>
+						comparator)
+			override
+		{
+
+			std::stable_sort(
+				values_.begin(),
+				values_.end(),
+				[comparator](const StringPtr& left,
+					const StringPtr& right)
+{
+
+	if (comparator != nullptr) {
+		return comparator->
+			compareSuper(
+				left,
+				right) < 0;
+	}
+
+	if (left == nullptr ||
+		right == nullptr) {
+
+		throw jxx::lang::
+			NullPointerException();
+	}
+
+	return left->compareTo(
+			   right) < 0;
+				});
+		}
+
+		jxx::Ptr<
+			jxx::util::
+			Spliterator<String>>
+			spliterator() override
+		{
+
+			throw jxx::lang::
+				UnsupportedOperationException();
+		}
+
+		void structuralAppendForFailFastTest(
+			const StringPtr& value)
+		{
+
 			values_.push_back(value);
 			++this->modCount;
 		}
 
 	protected:
-		jxx::Ptr<jxx::lang::Object> cloneImpl() const override
+		jxx::Ptr<jxx::lang::Object>
+			cloneImpl() const override
 		{
-			auto copy = jxx::NEW<TestStringList>();
-			copy->values_ = values_;
-			return jxx::CAST<jxx::lang::Object>(copy);
+
+			auto copy =
+				jxx::NEW<
+				TestStringList>();
+
+			copy->values_ =
+				values_;
+
+			return jxx::CAST<
+				jxx::lang::Object>(
+					copy);
 		}
 	};
+
 
 	std::string utf8(const StringPtr& value)
 	{
 		return value == nullptr ? std::string("<null>") : value->utf8();
 	}
 
-	
+
 	TEST(AbstractListTest, IteratorTraversesElementsInOrder)
 	{
 		auto list = jxx::NEW<TestStringList>(
@@ -361,4 +498,4 @@ namespace
 		EXPECT_THROW(list->subList(0, 1), jxx::lang::UnsupportedOperationException);
 	}
 
-	} // namespace
+} // namespace

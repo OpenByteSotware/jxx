@@ -160,7 +160,7 @@ namespace jxx::nio
         return self__();
     }
 
-    jxx::Ptr<IntBuffer> IntBuffer::put(jxx::Ptr<IntBuffer> src)
+    jxx::Ptr<IntBuffer> IntBuffer::put(const jxx::Ptr<IntBuffer> src)
     {
         if (!src)
             throwIAE_("null source buffer");

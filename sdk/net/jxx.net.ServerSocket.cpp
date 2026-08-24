@@ -32,12 +32,12 @@ namespace
         throw jxx::net::SocketException(msg);
     }
 
-    inline bool isIpv6_(jxx::Ptr<jxx::net::InetAddress> addr)
+    inline bool isIpv6_(const jxx::Ptr<jxx::net::InetAddress> addr)
     {
         return std::dynamic_pointer_cast<jxx::net::Inet6Address>(addr) != nullptr;
     }
 
-    inline sockaddr_storage toSockaddr_(jxx::Ptr<jxx::net::InetAddress> addr,
+    inline sockaddr_storage toSockaddr_(const jxx::Ptr<jxx::net::InetAddress> addr,
                                         jxx::lang::jint port,
                                         socklen_t& len)
     {
@@ -123,7 +123,7 @@ namespace jxx::net
         try { close(); } catch (...) {}
     }
 
-    void ServerSocket::setSocketFactory(jxx::Ptr<SocketImplFactory> fac)
+    void ServerSocket::setSocketFactory(const jxx::Ptr<SocketImplFactory> fac)
     {
         g_serverFactory = std::move(fac);
     }
@@ -142,7 +142,7 @@ namespace jxx::net
             throwSE_("server socket creation failed");
     }
 
-    void ServerSocket::bind(jxx::Ptr<SocketAddress> endpoint)
+    void ServerSocket::bind(const jxx::Ptr<SocketAddress> endpoint)
     {
         bind(std::move(endpoint), 50);
     }

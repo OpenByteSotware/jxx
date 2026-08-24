@@ -12,14 +12,14 @@ namespace jxx::net
     {
     public:
         InetSocketAddress(jxx::lang::jint port);
-        InetSocketAddress(jxx::Ptr<InetAddress> addr,
+        InetSocketAddress(const jxx::Ptr<InetAddress> addr,
                           jxx::lang::jint port);
-        InetSocketAddress(jxx::Ptr<jxx::lang::String> hostname,
+        InetSocketAddress(const jxx::Ptr<jxx::lang::String> hostname,
                           jxx::lang::jint port);
         ~InetSocketAddress() override = default;
 
     public:
-        static jxx::Ptr<InetSocketAddress> createUnresolved(jxx::Ptr<jxx::lang::String> host,
+        static jxx::Ptr<InetSocketAddress> createUnresolved(const jxx::Ptr<jxx::lang::String> host,
                                                             jxx::lang::jint port);
 
         jxx::lang::jint getPort() const noexcept;
@@ -29,11 +29,11 @@ namespace jxx::net
         jxx::lang::jbool isUnresolved() const noexcept;
 
         jxx::Ptr<jxx::lang::String> toString() const override;
-        jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> other) const override;
+        jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object> other) const override;
         jxx::lang::jint hashCode() const override;
 
     private:
-        InetSocketAddress(jxx::Ptr<InetAddress> addr,
+        InetSocketAddress(const jxx::Ptr<InetAddress> addr,
                           jxx::Ptr<jxx::lang::String> host,
                           jxx::lang::jint port,
                           jxx::lang::jbool unresolved);

@@ -26,12 +26,12 @@ private:
     void ensureMatchState() const;
 
 public:
-    Matcher(jxx::Ptr<Pattern> pattern, jxx::Ptr<jxx::lang::CharSequence> input);
+    Matcher(const jxx::Ptr<Pattern> pattern, jxx::Ptr<jxx::lang::CharSequence> input);
     virtual ~Matcher() = default;
 
     jxx::Ptr<Pattern> pattern();
     jxx::Ptr<Matcher> reset();
-    jxx::Ptr<Matcher> reset(jxx::Ptr<jxx::lang::CharSequence> input);
+    jxx::Ptr<Matcher> reset(const jxx::Ptr<jxx::lang::CharSequence> input);
 
     jxx::lang::jbool matches();
     jxx::lang::jbool lookingAt();
@@ -46,9 +46,9 @@ public:
     virtual jxx::Ptr<jxx::lang::String> group(jxx::lang::jint group);
     virtual jxx::lang::jint groupCount();
 
-    jxx::Ptr<jxx::lang::String> replaceAll(jxx::Ptr<jxx::lang::String> replacement);
-    jxx::Ptr<jxx::lang::String> replaceFirst(jxx::Ptr<jxx::lang::String> replacement);
-    static jxx::Ptr<jxx::lang::String> quoteReplacement(jxx::Ptr<jxx::lang::String> s);
+    jxx::Ptr<jxx::lang::String> replaceAll(const jxx::Ptr<jxx::lang::String> replacement);
+    jxx::Ptr<jxx::lang::String> replaceFirst(const jxx::Ptr<jxx::lang::String> replacement);
+    static jxx::Ptr<jxx::lang::String> quoteReplacement(const jxx::Ptr<jxx::lang::String> s);
 };
 
 } // namespace regex

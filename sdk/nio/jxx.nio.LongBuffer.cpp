@@ -160,7 +160,7 @@ namespace jxx::nio
         return self__();
     }
 
-    jxx::Ptr<LongBuffer> LongBuffer::put(jxx::Ptr<LongBuffer> src)
+    jxx::Ptr<LongBuffer> LongBuffer::put(const jxx::Ptr<LongBuffer> src)
     {
         if (!src)
             throwIAE_("null source buffer");

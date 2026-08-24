@@ -10,9 +10,9 @@ namespace jxx::net
     class HttpRetryException final : public std::runtime_error
     {
     public:
-        HttpRetryException(jxx::Ptr<jxx::lang::String> detail,
+        HttpRetryException(const jxx::Ptr<jxx::lang::String> detail,
                            jxx::lang::jint code);
-        HttpRetryException(jxx::Ptr<jxx::lang::String> detail,
+        HttpRetryException(const jxx::Ptr<jxx::lang::String> detail,
                            jxx::lang::jint code,
                            jxx::Ptr<jxx::lang::String> location);
         ~HttpRetryException() override = default;

@@ -8,7 +8,7 @@
 
 namespace jxx::io {
 
-DataInputStream::DataInputStream(jxx::Ptr<InputStream> in)
+DataInputStream::DataInputStream(const jxx::Ptr<InputStream> in)
     : FilterInputStream(std::move(in)) {}
 
 void DataInputStream::readFullyRaw_(jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) {

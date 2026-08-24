@@ -9,7 +9,7 @@ namespace jxx::net
     class JarURLConnection : public URLConnection
     {
     protected:
-        explicit JarURLConnection(jxx::Ptr<URL> url);
+        explicit JarURLConnection(const jxx::Ptr<URL> url);
 
     public:
         ~JarURLConnection() override = default;

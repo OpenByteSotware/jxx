@@ -12,7 +12,7 @@ namespace jxx::lang {
  */
 class Package final : public Object {
 public:
-    explicit Package(jxx::Ptr<String> name);
+    explicit Package(const jxx::Ptr<String> name);
 
     jxx::Ptr<String> getName() const;
     jxx::Ptr<String> toString() const override;

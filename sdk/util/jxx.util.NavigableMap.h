@@ -15,14 +15,14 @@ namespace jxx::util
         ~NavigableMap() override = default;
 
     public:
-        virtual jxx::Ptr<MapEntry<K, V>> lowerEntry(jxx::Ptr<K> key) const = 0;
-        virtual jxx::Ptr<K> lowerKey(jxx::Ptr<K> key) const = 0;
-        virtual jxx::Ptr<MapEntry<K, V>> floorEntry(jxx::Ptr<K> key) const = 0;
-        virtual jxx::Ptr<K> floorKey(jxx::Ptr<K> key) const = 0;
-        virtual jxx::Ptr<MapEntry<K, V>> ceilingEntry(jxx::Ptr<K> key) const = 0;
-        virtual jxx::Ptr<K> ceilingKey(jxx::Ptr<K> key) const = 0;
-        virtual jxx::Ptr<MapEntry<K, V>> higherEntry(jxx::Ptr<K> key) const = 0;
-        virtual jxx::Ptr<K> higherKey(jxx::Ptr<K> key) const = 0;
+        virtual jxx::Ptr<MapEntry<K, V>> lowerEntry(const jxx::Ptr<K> key) const = 0;
+        virtual jxx::Ptr<K> lowerKey(const jxx::Ptr<K> key) const = 0;
+        virtual jxx::Ptr<MapEntry<K, V>> floorEntry(const jxx::Ptr<K> key) const = 0;
+        virtual jxx::Ptr<K> floorKey(const jxx::Ptr<K> key) const = 0;
+        virtual jxx::Ptr<MapEntry<K, V>> ceilingEntry(const jxx::Ptr<K> key) const = 0;
+        virtual jxx::Ptr<K> ceilingKey(const jxx::Ptr<K> key) const = 0;
+        virtual jxx::Ptr<MapEntry<K, V>> higherEntry(const jxx::Ptr<K> key) const = 0;
+        virtual jxx::Ptr<K> higherKey(const jxx::Ptr<K> key) const = 0;
         virtual jxx::Ptr<MapEntry<K, V>> firstEntry() const = 0;
         virtual jxx::Ptr<MapEntry<K, V>> lastEntry() const = 0;
         virtual jxx::Ptr<MapEntry<K, V>> pollFirstEntry() = 0;
@@ -30,13 +30,13 @@ namespace jxx::util
         virtual jxx::Ptr<NavigableMap<K, V>> descendingMap() const = 0;
         virtual jxx::Ptr<NavigableSet<K>> navigableKeySet() const = 0;
         virtual jxx::Ptr<NavigableSet<K>> descendingKeySet() const = 0;
-        virtual jxx::Ptr<NavigableMap<K, V>> subMap(jxx::Ptr<K> fromKey,
+        virtual jxx::Ptr<NavigableMap<K, V>> subMap(const jxx::Ptr<K> fromKey,
                                                     jxx::lang::jbool fromInclusive,
                                                     jxx::Ptr<K> toKey,
                                                     jxx::lang::jbool toInclusive) const = 0;
-        virtual jxx::Ptr<NavigableMap<K, V>> headMap(jxx::Ptr<K> toKey,
+        virtual jxx::Ptr<NavigableMap<K, V>> headMap(const jxx::Ptr<K> toKey,
                                                      jxx::lang::jbool inclusive) const = 0;
-        virtual jxx::Ptr<NavigableMap<K, V>> tailMap(jxx::Ptr<K> fromKey,
+        virtual jxx::Ptr<NavigableMap<K, V>> tailMap(const jxx::Ptr<K> fromKey,
                                                      jxx::lang::jbool inclusive) const = 0;
     };
 }

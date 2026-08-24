@@ -28,18 +28,18 @@ namespace jxx::net
     class URLConnection : public jxx::lang::Object
     {
     protected:
-        explicit URLConnection(jxx::Ptr<URL> url);
+        explicit URLConnection(const jxx::Ptr<URL> url);
 
     public:
         ~URLConnection() override = default;
 
     public:
         static jxx::Ptr<FileNameMap> getFileNameMap();
-        static void setFileNameMap(jxx::Ptr<FileNameMap> map);
-        static void setContentHandlerFactory(jxx::Ptr<ContentHandlerFactory> fac);
+        static void setFileNameMap(const jxx::Ptr<FileNameMap> map);
+        static void setContentHandlerFactory(const jxx::Ptr<ContentHandlerFactory> fac);
 
-        static jxx::Ptr<jxx::lang::String> guessContentTypeFromName(jxx::Ptr<jxx::lang::String> fname);
-        static jxx::Ptr<jxx::lang::String> guessContentTypeFromStream(jxx::Ptr<jxx::io::InputStream> is);
+        static jxx::Ptr<jxx::lang::String> guessContentTypeFromName(const jxx::Ptr<jxx::lang::String> fname);
+        static jxx::Ptr<jxx::lang::String> guessContentTypeFromStream(const jxx::Ptr<jxx::io::InputStream> is);
 
         virtual void connect() = 0;
 
@@ -52,18 +52,18 @@ namespace jxx::net
         jxx::lang::jlong getDate() const;
         jxx::lang::jlong getLastModified() const;
 
-        jxx::Ptr<jxx::lang::String> getHeaderField(jxx::Ptr<jxx::lang::String> name) const;
+        jxx::Ptr<jxx::lang::String> getHeaderField(const jxx::Ptr<jxx::lang::String> name) const;
         jxx::Ptr<jxx::lang::String> getHeaderField(jxx::lang::jint n) const;
         jxx::Ptr<jxx::lang::String> getHeaderFieldKey(jxx::lang::jint n) const;
-        jxx::lang::jlong getHeaderFieldDate(jxx::Ptr<jxx::lang::String> name,
+        jxx::lang::jlong getHeaderFieldDate(const jxx::Ptr<jxx::lang::String> name,
                                             jxx::lang::jlong defaultValue) const;
-        jxx::lang::jint getHeaderFieldInt(jxx::Ptr<jxx::lang::String> name,
+        jxx::lang::jint getHeaderFieldInt(const jxx::Ptr<jxx::lang::String> name,
                                           jxx::lang::jint defaultValue) const;
-        jxx::lang::jlong getHeaderFieldLong(jxx::Ptr<jxx::lang::String> name,
+        jxx::lang::jlong getHeaderFieldLong(const jxx::Ptr<jxx::lang::String> name,
                                             jxx::lang::jlong defaultValue) const;
 
         jxx::Ptr<jxx::lang::Object> getContent();
-        jxx::Ptr<jxx::lang::Object> getContent(jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Class>, 1U>> classes);
+        jxx::Ptr<jxx::lang::Object> getContent(const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Class>, 1U>> classes);
 
         virtual jxx::Ptr<jxx::io::InputStream> getInputStream();
         virtual jxx::Ptr<jxx::io::OutputStream> getOutputStream();
@@ -85,11 +85,11 @@ namespace jxx::net
         jxx::lang::jint getReadTimeout() const noexcept;
         void setReadTimeout(jxx::lang::jint timeout);
 
-        void setRequestProperty(jxx::Ptr<jxx::lang::String> key,
+        void setRequestProperty(const jxx::Ptr<jxx::lang::String> key,
                                 jxx::Ptr<jxx::lang::String> value);
-        void addRequestProperty(jxx::Ptr<jxx::lang::String> key,
+        void addRequestProperty(const jxx::Ptr<jxx::lang::String> key,
                                 jxx::Ptr<jxx::lang::String> value);
-        jxx::Ptr<jxx::lang::String> getRequestProperty(jxx::Ptr<jxx::lang::String> key) const;
+        jxx::Ptr<jxx::lang::String> getRequestProperty(const jxx::Ptr<jxx::lang::String> key) const;
 
     protected:
         jxx::Ptr<ContentHandler> getContentHandler_();

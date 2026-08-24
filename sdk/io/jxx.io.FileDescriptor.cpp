@@ -46,7 +46,7 @@ namespace jxx::io
             std::string("FileDescriptor[fd=") + std::to_string(fd_) + "]");
     }
 
-    jxx::lang::jbool FileDescriptor::equals(jxx::Ptr<jxx::lang::Object> other) const
+    jxx::lang::jbool FileDescriptor::equals(const jxx::Ptr<jxx::lang::Object> other) const
     {
         auto fd = std::dynamic_pointer_cast<FileDescriptor>(other);
         return fd && fd->fd_ == fd_;

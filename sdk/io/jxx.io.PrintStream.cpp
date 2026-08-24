@@ -3,7 +3,7 @@
 
 namespace jxx::io {
 
-PrintStream::PrintStream(jxx::Ptr<OutputStream> out, jxx::lang::jbool autoFlush)
+PrintStream::PrintStream(const jxx::Ptr<OutputStream> out, jxx::lang::jbool autoFlush)
     : FilterOutputStream(std::move(out)), autoFlush_(autoFlush) {}
 
 void PrintStream::writeBytes_(const std::string& bytes) {
@@ -27,9 +27,10 @@ void PrintStream::close() {
 
 jxx::lang::jbool PrintStream::checkError() const { return trouble_; }
 
-void PrintStream::print(jxx::Ptr<jxx::lang::String> s) {
-    if (!s) s = jxx::NEW<jxx::lang::String>("null");
-    writeBytes_(s->utf8());
+void PrintStream::print(const jxx::Ptr<jxx::lang::String> s) {
+    jxx::Ptr<jxx::lang::String> s2 = s;
+    if (!s2) s2 = jxx::NEW<jxx::lang::String>("null");
+    writeBytes_(s2->utf8());
 }
 
 void PrintStream::print(jxx::lang::jbool b) { writeBytes_(b ? "true" : "false"); }
@@ -62,6 +63,6 @@ void PrintStream::print(jxx::lang::jchar c) {
 }
 
 void PrintStream::println() { writeBytes_(""); }
-void PrintStream::println(jxx::Ptr<jxx::lang::String> s) { print(s); println(); }
+void PrintStream::println(const jxx::Ptr<jxx::lang::String> s) { print(s); println(); }
 
 } // namespace jxx::io

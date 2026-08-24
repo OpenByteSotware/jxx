@@ -18,7 +18,7 @@ void Writer::checkBounds_(const jxx::lang::CharArray cbuf, jxx::lang::jint off, 
     }
 }
 
-void Writer::checkStringBounds_(jxx::Ptr<jxx::lang::String> s, jxx::lang::jint off, jxx::lang::jint len) {
+void Writer::checkStringBounds_(const jxx::Ptr<jxx::lang::String> s, jxx::lang::jint off, jxx::lang::jint len) {
     if (!s) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("str"));
     if (off < 0 || len < 0 || off + len > s->length()) {
         throw jxx::lang::IndexOutOfBoundsException(jxx::NEW<jxx::lang::String>("off/len"));
@@ -35,18 +35,18 @@ void Writer::write(const jxx::lang::CharArray cbuf, jxx::lang::jint off, jxx::la
     for (jxx::lang::jint i = 0; i < len; ++i) write((jxx::lang::jint)(*cbuf)[off + i]);
 }
 
-void Writer::write(jxx::Ptr<jxx::lang::String> str) {
+void Writer::write(const jxx::Ptr<jxx::lang::String> str) {
     if (!str) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("str"));
     write(str, 0, str->length());
 }
 
-void Writer::write(jxx::Ptr<jxx::lang::String> str, jxx::lang::jint off, jxx::lang::jint len) {
+void Writer::write(const jxx::Ptr<jxx::lang::String> str, jxx::lang::jint off, jxx::lang::jint len) {
     checkStringBounds_(str, off, len);
     const auto& u16 = str->utf16();
     for (jxx::lang::jint i = 0; i < len; ++i) write((jxx::lang::jint)u16[(std::size_t)(off + i)]);
 }
 
-jxx::Ptr<Writer> Writer::append(jxx::Ptr<jxx::lang::CharSequence> csq) {
+jxx::Ptr<Writer> Writer::append(const jxx::Ptr<jxx::lang::CharSequence> csq) {
     if (!csq) {
         write(jxx::NEW<jxx::lang::String>("null"));
         return self_();
@@ -58,9 +58,10 @@ jxx::Ptr<Writer> Writer::append(jxx::Ptr<jxx::lang::CharSequence> csq) {
     return self_();
 }
 
-jxx::Ptr<Writer> Writer::append(jxx::Ptr<jxx::lang::CharSequence> csq, jxx::lang::jint start, jxx::lang::jint end) {
-    if (!csq) csq = jxx::NEW<jxx::lang::String>("null");
-    if (start < 0 || end < start || end > csq->length()) {
+jxx::Ptr<Writer> Writer::append(const jxx::Ptr<jxx::lang::CharSequence> csq, jxx::lang::jint start, jxx::lang::jint end) {
+    jxx::Ptr<jxx::lang::CharSequence> csq2 = csq;
+    if (!csq2) csq2 = jxx::NEW<jxx::lang::String>("null");
+    if (start < 0 || end < start || end > csq2->length()) {
         throw jxx::lang::IndexOutOfBoundsException(jxx::NEW<jxx::lang::String>("start/end"));
     }
     auto a = jxx::NEW<jxx::lang::CharArrayType>((std::uint32_t)(end - start));

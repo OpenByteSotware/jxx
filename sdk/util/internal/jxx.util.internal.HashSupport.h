@@ -7,7 +7,7 @@
 namespace jxx::util::internal
 {
     template<typename T>
-    inline jxx::lang::jbool ptrEquals(jxx::Ptr<T> a,
+    inline jxx::lang::jbool ptrEquals(const jxx::Ptr<T> a,
                                       jxx::Ptr<T> b)
     {
         return (!a && !b) || (a && b && a->equals(b));

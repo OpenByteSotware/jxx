@@ -77,22 +77,22 @@ public:
     virtual jxx::Ptr<jxx::io::IOException> ioException();
 
     virtual jxx::Ptr<regex::Pattern> delimiter();
-    virtual jxx::Ptr<Scanner> useDelimiter(jxx::Ptr<regex::Pattern> pattern);
-    virtual jxx::Ptr<Scanner> useDelimiter(jxx::Ptr<jxx::lang::String> pattern);
+    virtual jxx::Ptr<Scanner> useDelimiter(const jxx::Ptr<regex::Pattern> pattern);
+    virtual jxx::Ptr<Scanner> useDelimiter(const jxx::Ptr<jxx::lang::String> pattern);
 
     virtual jxx::Ptr<Locale> locale();
-    virtual jxx::Ptr<Scanner> useLocale(jxx::Ptr<Locale> locale);
+    virtual jxx::Ptr<Scanner> useLocale(const jxx::Ptr<Locale> locale);
 
     virtual jxx::lang::jint radix();
     virtual jxx::Ptr<Scanner> useRadix(jxx::lang::jint radix);
 
     virtual jxx::lang::jbool hasNext() override;
-    virtual jxx::lang::jbool hasNext(jxx::Ptr<regex::Pattern> pattern);
-    virtual jxx::lang::jbool hasNext(jxx::Ptr<jxx::lang::String> pattern);
+    virtual jxx::lang::jbool hasNext(const jxx::Ptr<regex::Pattern> pattern);
+    virtual jxx::lang::jbool hasNext(const jxx::Ptr<jxx::lang::String> pattern);
 
     virtual jxx::Ptr<jxx::lang::String> next() override;
-    virtual jxx::Ptr<jxx::lang::String> next(jxx::Ptr<regex::Pattern> pattern);
-    virtual jxx::Ptr<jxx::lang::String> next(jxx::Ptr<jxx::lang::String> pattern);
+    virtual jxx::Ptr<jxx::lang::String> next(const jxx::Ptr<regex::Pattern> pattern);
+    virtual jxx::Ptr<jxx::lang::String> next(const jxx::Ptr<jxx::lang::String> pattern);
 
     virtual void remove() override;
 
@@ -115,14 +115,14 @@ public:
     virtual jxx::lang::jbool hasNextDouble();
     virtual jxx::lang::jdouble nextDouble();
 
-    virtual jxx::Ptr<jxx::lang::String> findInLine(jxx::Ptr<regex::Pattern> pattern);
-    virtual jxx::Ptr<jxx::lang::String> findInLine(jxx::Ptr<jxx::lang::String> pattern);
+    virtual jxx::Ptr<jxx::lang::String> findInLine(const jxx::Ptr<regex::Pattern> pattern);
+    virtual jxx::Ptr<jxx::lang::String> findInLine(const jxx::Ptr<jxx::lang::String> pattern);
 
-    virtual jxx::Ptr<jxx::lang::String> findWithinHorizon(jxx::Ptr<regex::Pattern> pattern, jxx::lang::jint horizon);
-    virtual jxx::Ptr<jxx::lang::String> findWithinHorizon(jxx::Ptr<jxx::lang::String> pattern, jxx::lang::jint horizon);
+    virtual jxx::Ptr<jxx::lang::String> findWithinHorizon(const jxx::Ptr<regex::Pattern> pattern, jxx::lang::jint horizon);
+    virtual jxx::Ptr<jxx::lang::String> findWithinHorizon(const jxx::Ptr<jxx::lang::String> pattern, jxx::lang::jint horizon);
 
-    virtual jxx::Ptr<Scanner> skip(jxx::Ptr<regex::Pattern> pattern);
-    virtual jxx::Ptr<Scanner> skip(jxx::Ptr<jxx::lang::String> pattern);
+    virtual jxx::Ptr<Scanner> skip(const jxx::Ptr<regex::Pattern> pattern);
+    virtual jxx::Ptr<Scanner> skip(const jxx::Ptr<jxx::lang::String> pattern);
 
     virtual jxx::Ptr<regex::MatchResult> match();
 

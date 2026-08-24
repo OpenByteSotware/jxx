@@ -6,7 +6,7 @@
 
 namespace jxx::net
 {
-    JarURLConnection::JarURLConnection(jxx::Ptr<URL> url)
+    JarURLConnection::JarURLConnection(const jxx::Ptr<URL> url)
         : URLConnection(std::move(url))
     {
     }

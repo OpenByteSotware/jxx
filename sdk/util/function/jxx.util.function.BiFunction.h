@@ -11,10 +11,10 @@ template <typename T, typename U, typename R>
 class BiFunction : public jxx::lang::Object {
 public:
     virtual ~BiFunction() = default;
-    virtual jxx::Ptr<R> apply(jxx::Ptr<T> t, jxx::Ptr<U> u) = 0;
+    virtual jxx::Ptr<R> apply(const jxx::Ptr<T> t, jxx::Ptr<U> u) = 0;
 
     template <typename V>
-    jxx::Ptr<BiFunction<T, U, V>> andThen(jxx::Ptr<Function<R, V>> /*after*/) {
+    jxx::Ptr<BiFunction<T, U, V>> andThen(const jxx::Ptr<Function<R, V>> /*after*/) {
         throw jxx::lang::UnsupportedOperationException();
     }
 };

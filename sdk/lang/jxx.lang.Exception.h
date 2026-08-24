@@ -16,7 +16,7 @@ namespace jxx::lang {
 
     class InvocationTargetException : public Exception {
     public:
-        InvocationTargetException(jxx::Ptr<String> message, jxx::Ptr<Throwable> cause)
+        InvocationTargetException(const jxx::Ptr<String> message, jxx::Ptr<Throwable> cause)
             : Exception(message, cause) {}
         
     protected:

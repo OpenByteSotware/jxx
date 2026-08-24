@@ -11,6 +11,6 @@ namespace jxx::net
         virtual ~FileNameMap() = default;
 
     public:
-        virtual jxx::Ptr<jxx::lang::String> getContentTypeFor(jxx::Ptr<jxx::lang::String> fileName) = 0;
+        virtual jxx::Ptr<jxx::lang::String> getContentTypeFor(const jxx::Ptr<jxx::lang::String> fileName) = 0;
     };
 }

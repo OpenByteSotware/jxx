@@ -30,6 +30,6 @@ namespace jxx::io
         virtual void flush() override = 0;
         virtual void close() override = 0;
 
-        virtual void writeObject(jxx::Ptr<jxx::lang::Object> obj) = 0;
+        virtual void writeObject(const jxx::Ptr<jxx::lang::Object> obj) = 0;
     };
 }

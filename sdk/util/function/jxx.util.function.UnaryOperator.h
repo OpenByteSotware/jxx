@@ -15,7 +15,7 @@ public:
         class IdentityUnaryOperator : public virtual UnaryOperator<T> {
         public:
             virtual ~IdentityUnaryOperator() = default;
-            virtual jxx::Ptr<T> apply(jxx::Ptr<T> t) override {
+            virtual jxx::Ptr<T> apply(const jxx::Ptr<T> t) override {
                 return t;
             }
         };

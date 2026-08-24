@@ -7,7 +7,7 @@
 
 namespace jxx::io {
 
-BufferedReader::BufferedReader(jxx::Ptr<Reader> in, jxx::lang::jint size)
+BufferedReader::BufferedReader(const jxx::Ptr<Reader> in, jxx::lang::jint size)
     : in_(std::move(in)) {
     if (!in_) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("in"));
     if (size <= 0) throw jxx::lang::IllegalArgumentException(jxx::NEW<jxx::lang::String>("size"));

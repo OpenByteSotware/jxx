@@ -43,7 +43,7 @@ static std::regex_constants::syntax_option_type toSyntaxFlags(jxx::lang::jint fl
     return syntax;
 }
 
-static std::string compilePatternUtf8(jxx::Ptr<jxx::lang::String> regex, jxx::lang::jint flags) {
+static std::string compilePatternUtf8(const jxx::Ptr<jxx::lang::String> regex, jxx::lang::jint flags) {
     if (regex == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -54,7 +54,7 @@ static std::string compilePatternUtf8(jxx::Ptr<jxx::lang::String> regex, jxx::la
     return patternUtf8;
 }
 
-static jxx::Ptr<jxx::lang::String> toStringPtr(jxx::Ptr<jxx::lang::CharSequence> seq) {
+static jxx::Ptr<jxx::lang::String> toStringPtr(const jxx::Ptr<jxx::lang::CharSequence> seq) {
     if (seq == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -83,11 +83,11 @@ Pattern::Pattern(
     , compiled_(std::move(compiled)) {
 }
 
-jxx::Ptr<Pattern> Pattern::compile(jxx::Ptr<jxx::lang::String> regex) {
+jxx::Ptr<Pattern> Pattern::compile(const jxx::Ptr<jxx::lang::String> regex) {
     return compile(regex, static_cast<jxx::lang::jint>(0));
 }
 
-jxx::Ptr<Pattern> Pattern::compile(jxx::Ptr<jxx::lang::String> regex, jxx::lang::jint flags) {
+jxx::Ptr<Pattern> Pattern::compile(const jxx::Ptr<jxx::lang::String> regex, jxx::lang::jint flags) {
     if (regex == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -107,7 +107,7 @@ jxx::lang::jbool Pattern::matches(
     return p->matcher(input)->matches();
 }
 
-jxx::Ptr<Matcher> Pattern::matcher(jxx::Ptr<jxx::lang::CharSequence> input) {
+jxx::Ptr<Matcher> Pattern::matcher(const jxx::Ptr<jxx::lang::CharSequence> input) {
     return jxx::NEW<Matcher>(jxx::CAST<Pattern>(jxx::CAST<jxx::lang::Object>(shared_from_this())), input);
 }
 
@@ -148,7 +148,7 @@ jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> Pattern::split(
     return vectorToStringArray(parts);
 }
 
-jxx::Ptr<jxx::lang::String> Pattern::quote(jxx::Ptr<jxx::lang::String> s) {
+jxx::Ptr<jxx::lang::String> Pattern::quote(const jxx::Ptr<jxx::lang::String> s) {
     if (s == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -167,7 +167,7 @@ const std::string& Pattern::nativePatternUtf8() const {
     return compiledPatternUtf8_;
 }
 
-void Pattern::writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out) {
+void Pattern::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) {
     if (out == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -175,7 +175,7 @@ void Pattern::writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out) {
 	out->writeInt(flags_);
 }
 
-void Pattern::readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) {
+void Pattern::readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) {
     if (in == nullptr) {
         throw jxx::lang::NullPointerException();
     }

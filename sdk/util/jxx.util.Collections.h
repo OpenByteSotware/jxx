@@ -112,7 +112,7 @@ namespace jxx::util {
         virtual ~Collections() = default;
 
         template <typename T>
-        static void reverse(jxx::Ptr<List<T>> list) {
+        static void reverse(const jxx::Ptr<List<T>> list) {
             if (list == nullptr) {
                 throw jxx::lang::NullPointerException();
             }
@@ -120,7 +120,7 @@ namespace jxx::util {
         }
 
         template <typename T>
-        static void shuffle(jxx::Ptr<List<T>> list) {
+        static void shuffle(const jxx::Ptr<List<T>> list) {
             if (list == nullptr) {
                 throw jxx::lang::NullPointerException();
             }
@@ -128,7 +128,7 @@ namespace jxx::util {
         }
 
         template <typename T>
-        static void shuffle(jxx::Ptr<List<T>> list, jxx::Ptr<jxx::util::Random> random) {
+        static void shuffle(const jxx::Ptr<List<T>> list, jxx::Ptr<jxx::util::Random> random) {
             if (list == nullptr || random == nullptr) {
                 throw jxx::lang::NullPointerException();
             }
@@ -144,7 +144,7 @@ namespace jxx::util {
         }
 
         template <typename T>
-        static void sort(jxx::Ptr<List<T>> list) {
+        static void sort(const jxx::Ptr<List<T>> list) {
             sort<T>(list, nullptr);
         }
 
@@ -216,7 +216,7 @@ namespace jxx::util {
         }
 
         template <typename T>
-        static jxx::Ptr<T> min(jxx::Ptr<Collection<T>> collection) {
+        static jxx::Ptr<T> min(const jxx::Ptr<Collection<T>> collection) {
             return min<T>(collection, nullptr);
         }
 
@@ -245,7 +245,7 @@ namespace jxx::util {
         }
 
         template <typename T>
-        static jxx::Ptr<T> max(jxx::Ptr<Collection<T>> collection) {
+        static jxx::Ptr<T> max(const jxx::Ptr<Collection<T>> collection) {
             return max<T>(collection, nullptr);
         }
 
@@ -319,7 +319,7 @@ namespace jxx::util {
         }
 
         template <typename T>
-        static void fill(jxx::Ptr<List<T>> list, jxx::Ptr<T> value) {
+        static void fill(const jxx::Ptr<List<T>> list, jxx::Ptr<T> value) {
             if (list == nullptr) {
                 throw jxx::lang::NullPointerException();
             }
@@ -360,7 +360,7 @@ namespace jxx::util {
         }
 
         template <typename T>
-        static void rotate(jxx::Ptr<List<T>> list, jxx::lang::jint distance) {
+        static void rotate(const jxx::Ptr<List<T>> list, jxx::lang::jint distance) {
             if (list == nullptr) {
                 throw jxx::lang::NullPointerException();
             }

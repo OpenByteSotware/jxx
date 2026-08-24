@@ -17,7 +17,7 @@ public:
     explicit MessageFormat(const jxx::Ptr<jxx::lang::String>& pattern);
 
     static jxx::Ptr<MessageFormat> of(const jxx::Ptr<jxx::lang::String>& pattern);
-    jxx::Ptr<jxx::lang::String> format(jxx::Ptr<jxx::lang::Object>* args, jxx::lang::jint count) const;
+    jxx::Ptr<jxx::lang::String> format(const jxx::Ptr<jxx::lang::Object>* args, jxx::lang::jint count) const;
 };
 
 } // namespace jxx::util

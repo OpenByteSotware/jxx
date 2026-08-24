@@ -22,9 +22,9 @@ namespace jxx::net
         virtual ~NetworkInterface() override = default;
 
     public:
-        static jxx::Ptr<NetworkInterface> getByName(jxx::Ptr<jxx::lang::String> name);
+        static jxx::Ptr<NetworkInterface> getByName(const jxx::Ptr<jxx::lang::String> name);
         static jxx::Ptr<NetworkInterface> getByIndex(jxx::lang::jint index);
-        static jxx::Ptr<NetworkInterface> getByInetAddress(jxx::Ptr<InetAddress> addr);
+        static jxx::Ptr<NetworkInterface> getByInetAddress(const jxx::Ptr<InetAddress> addr);
         static jxx::Ptr<jxx::util::Enumeration<NetworkInterface>> getNetworkInterfaces();
 
         jxx::Ptr<jxx::util::Enumeration<InetAddress>> getInetAddresses() const;
@@ -45,7 +45,7 @@ namespace jxx::net
         jxx::lang::ByteArray getHardwareAddress() const;
 
         jxx::Ptr<jxx::lang::String> toString() const override;
-        jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> other) const override;
+        jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object> other) const override;
         jxx::lang::jint hashCode() const override;
 
     

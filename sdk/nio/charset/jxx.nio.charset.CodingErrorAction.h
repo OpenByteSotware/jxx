@@ -14,12 +14,12 @@ namespace jxx::nio::charset
         static jxx::Ptr<CodingErrorAction> REPORT;
 
     public:
-        explicit CodingErrorAction(jxx::Ptr<jxx::lang::String> name);
+        explicit CodingErrorAction(const jxx::Ptr<jxx::lang::String> name);
         ~CodingErrorAction() override = default;
 
     public:
         jxx::Ptr<jxx::lang::String> toString() const override;
-        jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> other) const override;
+        jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object> other) const override;
         jxx::lang::jint hashCode() const override;
 
     private:

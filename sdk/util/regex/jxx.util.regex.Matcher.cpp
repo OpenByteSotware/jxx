@@ -13,7 +13,7 @@ namespace util {
 namespace regex {
 namespace {
 
-static jxx::Ptr<jxx::lang::String> toStringPtr(jxx::Ptr<jxx::lang::CharSequence> seq) {
+static jxx::Ptr<jxx::lang::String> toStringPtr(const jxx::Ptr<jxx::lang::CharSequence> seq) {
     if (seq == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -33,7 +33,7 @@ static std::string escapeReplacement(const std::string& s) {
 
 } // anonymous namespace
 
-Matcher::Matcher(jxx::Ptr<Pattern> pattern, jxx::Ptr<jxx::lang::CharSequence> input)
+Matcher::Matcher(const jxx::Ptr<Pattern> pattern, jxx::Ptr<jxx::lang::CharSequence> input)
     : pattern_(pattern)
     , input_(toStringPtr(input))
     , inputUtf8_(input_->utf8())
@@ -62,7 +62,7 @@ jxx::Ptr<Matcher> Matcher::reset() {
     return jxx::CAST<Matcher>(jxx::CAST<jxx::lang::Object>(shared_from_this()));
 }
 
-jxx::Ptr<Matcher> Matcher::reset(jxx::Ptr<jxx::lang::CharSequence> input) {
+jxx::Ptr<Matcher> Matcher::reset(const jxx::Ptr<jxx::lang::CharSequence> input) {
     input_ = toStringPtr(input);
     inputUtf8_ = input_->utf8();
     return reset();
@@ -161,7 +161,7 @@ jxx::lang::jint Matcher::groupCount() {
     return static_cast<jxx::lang::jint>(pattern_->nativeRegex().mark_count());
 }
 
-jxx::Ptr<jxx::lang::String> Matcher::replaceAll(jxx::Ptr<jxx::lang::String> replacement) {
+jxx::Ptr<jxx::lang::String> Matcher::replaceAll(const jxx::Ptr<jxx::lang::String> replacement) {
     if (replacement == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -169,7 +169,7 @@ jxx::Ptr<jxx::lang::String> Matcher::replaceAll(jxx::Ptr<jxx::lang::String> repl
         std::regex_replace(inputUtf8_, pattern_->nativeRegex(), replacement->utf8()));
 }
 
-jxx::Ptr<jxx::lang::String> Matcher::replaceFirst(jxx::Ptr<jxx::lang::String> replacement) {
+jxx::Ptr<jxx::lang::String> Matcher::replaceFirst(const jxx::Ptr<jxx::lang::String> replacement) {
     if (replacement == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -181,7 +181,7 @@ jxx::Ptr<jxx::lang::String> Matcher::replaceFirst(jxx::Ptr<jxx::lang::String> re
             std::regex_constants::format_first_only));
 }
 
-jxx::Ptr<jxx::lang::String> Matcher::quoteReplacement(jxx::Ptr<jxx::lang::String> s) {
+jxx::Ptr<jxx::lang::String> Matcher::quoteReplacement(const jxx::Ptr<jxx::lang::String> s) {
     if (s == nullptr) {
         throw jxx::lang::NullPointerException();
     }

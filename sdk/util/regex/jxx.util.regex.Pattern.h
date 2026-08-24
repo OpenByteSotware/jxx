@@ -51,13 +51,13 @@ private:
 public:
     virtual ~Pattern() = default;
 
-    static jxx::Ptr<Pattern> compile(jxx::Ptr<jxx::lang::String> regex);
-    static jxx::Ptr<Pattern> compile(jxx::Ptr<jxx::lang::String> regex, jxx::lang::jint flags);
+    static jxx::Ptr<Pattern> compile(const jxx::Ptr<jxx::lang::String> regex);
+    static jxx::Ptr<Pattern> compile(const jxx::Ptr<jxx::lang::String> regex, jxx::lang::jint flags);
     static jxx::lang::jbool matches(
         jxx::Ptr<jxx::lang::String> regex,
         jxx::Ptr<jxx::lang::CharSequence> input);
 
-    jxx::Ptr<Matcher> matcher(jxx::Ptr<jxx::lang::CharSequence> input);
+    jxx::Ptr<Matcher> matcher(const jxx::Ptr<jxx::lang::CharSequence> input);
     jxx::Ptr<jxx::lang::String> pattern() const;
     jxx::lang::jint flags() const;
 
@@ -67,14 +67,14 @@ public:
         jxx::Ptr<jxx::lang::CharSequence> input,
         jxx::lang::jint limit);
 
-    static jxx::Ptr<jxx::lang::String> quote(jxx::Ptr<jxx::lang::String> s);
+    static jxx::Ptr<jxx::lang::String> quote(const jxx::Ptr<jxx::lang::String> s);
     virtual jxx::Ptr<jxx::lang::String> toString() const override;
 
     const std::regex& nativeRegex() const;
     const std::string& nativePatternUtf8() const;
 
-    virtual void writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out) override;
-    virtual void readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) override;
+    virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) override;
+    virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) override;
     virtual void readObjectNoData() override;
 };
 

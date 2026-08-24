@@ -9,17 +9,17 @@ namespace jxx::net
     class SocketPermission final : public jxx::lang::Object
     {
     public:
-        SocketPermission(jxx::Ptr<jxx::lang::String> host,
+        SocketPermission(const jxx::Ptr<jxx::lang::String> host,
                          jxx::Ptr<jxx::lang::String> action);
         ~SocketPermission() override = default;
 
     public:
         jxx::Ptr<jxx::lang::String> getName() const;
         jxx::Ptr<jxx::lang::String> getActions() const;
-        jxx::lang::jbool implies(jxx::Ptr<SocketPermission> p) const;
+        jxx::lang::jbool implies(const jxx::Ptr<SocketPermission> p) const;
 
         jxx::Ptr<jxx::lang::String> toString() const override;
-        jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> other) const override;
+        jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object> other) const override;
         jxx::lang::jint hashCode() const override;
 
     private:

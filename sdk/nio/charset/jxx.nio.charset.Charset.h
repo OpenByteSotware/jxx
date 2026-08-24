@@ -25,22 +25,22 @@ namespace jxx::nio::charset
     class Charset : public jxx::lang::Object
     {
     public:
-        Charset(jxx::Ptr<jxx::lang::String> canonicalName,
+        Charset(const jxx::Ptr<jxx::lang::String> canonicalName,
                 const jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> aliases);
 
         ~Charset() override = default;
 
-        static jxx::lang::jbool isSupported(jxx::Ptr<jxx::lang::String> charsetName);
-        static jxx::Ptr<Charset> forName(jxx::Ptr<jxx::lang::String> charsetName);
+        static jxx::lang::jbool isSupported(const jxx::Ptr<jxx::lang::String> charsetName);
+        static jxx::Ptr<Charset> forName(const jxx::Ptr<jxx::lang::String> charsetName);
         static jxx::Ptr<Charset> defaultCharset();
 
         jxx::Ptr<jxx::lang::String> name() const;
-        virtual jxx::lang::jbool contains(jxx::Ptr<Charset> cs) const;
+        virtual jxx::lang::jbool contains(const jxx::Ptr<Charset> cs) const;
         virtual jxx::Ptr<CharsetDecoder> newDecoder();
         virtual jxx::Ptr<CharsetEncoder> newEncoder();
 
         jxx::Ptr<jxx::lang::String> toString() const override;
-        jxx::lang::jbool equals(jxx::Ptr<jxx::lang::Object> other) const override;
+        jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object> other) const override;
         jxx::lang::jint hashCode() const override;
 
     protected:

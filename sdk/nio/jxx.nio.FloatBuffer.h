@@ -33,7 +33,7 @@ namespace jxx::nio
         jxx::Ptr<FloatBuffer> put(const jxx::lang::FloatArray src,
                             jxx::lang::jint offset,
                             jxx::lang::jint length);
-        jxx::Ptr<FloatBuffer> put(jxx::Ptr<FloatBuffer> src);
+        jxx::Ptr<FloatBuffer> put(const jxx::Ptr<FloatBuffer> src);
 
         jxx::Ptr<FloatBuffer> slice() const;
         jxx::Ptr<FloatBuffer> duplicate() const;

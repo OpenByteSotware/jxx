@@ -2,7 +2,7 @@
 
 namespace jxx::io {
 
-    BufferedInputStream::BufferedInputStream(jxx::Ptr<InputStream> in, jxx::lang::jint size)
+    BufferedInputStream::BufferedInputStream(const jxx::Ptr<InputStream> in, jxx::lang::jint size)
         : FilterInputStream(std::move(in)) {
         buf_ = jxx::NEW<jxx::lang::ByteArrayType>((std::uint32_t)size);
     }

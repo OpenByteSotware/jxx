@@ -12,6 +12,6 @@ namespace jxx::nio::channels
         ~WritableByteChannel() override = default;
 
     public:
-        virtual jxx::lang::jint write(jxx::Ptr<jxx::nio::ByteBuffer> src) = 0;
+        virtual jxx::lang::jint write(const jxx::Ptr<jxx::nio::ByteBuffer> src) = 0;
     };
 }

@@ -14,21 +14,21 @@ namespace jxx::nio::charset
     class CharsetDecoder final : public jxx::lang::Object
     {
     public:
-        explicit CharsetDecoder(jxx::Ptr<Charset> cs);
+        explicit CharsetDecoder(const jxx::Ptr<Charset> cs);
         ~CharsetDecoder() override = default;
 
     public:
         jxx::Ptr<Charset> charset() const;
-        jxx::Ptr<CharsetDecoder> onMalformedInput(jxx::Ptr<CodingErrorAction> action);
-        jxx::Ptr<CharsetDecoder> onUnmappableCharacter(jxx::Ptr<CodingErrorAction> action);
-        jxx::Ptr<CharsetDecoder> replaceWith(jxx::Ptr<jxx::lang::String> newReplacement);
+        jxx::Ptr<CharsetDecoder> onMalformedInput(const jxx::Ptr<CodingErrorAction> action);
+        jxx::Ptr<CharsetDecoder> onUnmappableCharacter(const jxx::Ptr<CodingErrorAction> action);
+        jxx::Ptr<CharsetDecoder> replaceWith(const jxx::Ptr<jxx::lang::String> newReplacement);
         jxx::Ptr<jxx::lang::String> replacement() const;
 
-        jxx::Ptr<jxx::nio::CharBuffer> decode(jxx::Ptr<jxx::nio::ByteBuffer> in);
-        jxx::Ptr<CoderResult> decode(jxx::Ptr<jxx::nio::ByteBuffer> in,
+        jxx::Ptr<jxx::nio::CharBuffer> decode(const jxx::Ptr<jxx::nio::ByteBuffer> in);
+        jxx::Ptr<CoderResult> decode(const jxx::Ptr<jxx::nio::ByteBuffer> in,
                                      jxx::Ptr<jxx::nio::CharBuffer> out,
                                      jxx::lang::jbool endOfInput);
-        jxx::Ptr<CoderResult> flush(jxx::Ptr<jxx::nio::CharBuffer> out);
+        jxx::Ptr<CoderResult> flush(const jxx::Ptr<jxx::nio::CharBuffer> out);
         jxx::Ptr<CharsetDecoder> reset();
 
     private:

@@ -14,7 +14,7 @@ namespace jxx::io
     class ObjectInputStream : public InputStream, public ObjectInput
     {
     public:
-        explicit ObjectInputStream(jxx::Ptr<InputStream> in);
+        explicit ObjectInputStream(const jxx::Ptr<InputStream> in);
         ~ObjectInputStream() override = default;
 
     public:

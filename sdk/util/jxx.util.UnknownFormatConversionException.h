@@ -5,7 +5,7 @@ namespace jxx::util {
 
 class UnknownFormatConversionException : public IllegalFormatException {
 public:
-    explicit UnknownFormatConversionException(jxx::Ptr<jxx::lang::String> msg)
+    explicit UnknownFormatConversionException(const jxx::Ptr<jxx::lang::String> msg)
         : IllegalFormatException(std::move(msg)) {}
 };
 

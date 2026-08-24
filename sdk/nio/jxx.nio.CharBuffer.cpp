@@ -63,7 +63,7 @@ namespace jxx::nio
         out->limit(length);
         return out;
     }
-    jxx::Ptr<CharBuffer> CharBuffer::wrap(jxx::Ptr<jxx::lang::String> str)
+    jxx::Ptr<CharBuffer> CharBuffer::wrap(const jxx::Ptr<jxx::lang::String> str)
     {
         if (!str)
             throwIAE_("null string");
@@ -165,7 +165,7 @@ namespace jxx::nio
         return self__();
     }
 
-    jxx::Ptr<CharBuffer> CharBuffer::put(jxx::Ptr<CharBuffer> src)
+    jxx::Ptr<CharBuffer> CharBuffer::put(const jxx::Ptr<CharBuffer> src)
     {
         if (!src)
             throwIAE_("null source buffer");

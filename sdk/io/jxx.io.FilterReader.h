@@ -11,7 +11,7 @@ namespace jxx::io
         jxx::Ptr<Reader> in_;
 
     public:
-        explicit FilterReader(jxx::Ptr<Reader> in);
+        explicit FilterReader(const jxx::Ptr<Reader> in);
         ~FilterReader() override = default;
 
     public:

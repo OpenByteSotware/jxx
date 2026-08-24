@@ -6,9 +6,9 @@
 namespace jxx::io {
 
 PipedOutputStream::PipedOutputStream() = default;
-PipedOutputStream::PipedOutputStream(jxx::Ptr<PipedInputStream> snk) { connect(std::move(snk)); }
+PipedOutputStream::PipedOutputStream(const jxx::Ptr<PipedInputStream> snk) { connect(std::move(snk)); }
 
-void PipedOutputStream::connect(jxx::Ptr<PipedInputStream> snk) {
+void PipedOutputStream::connect(const jxx::Ptr<PipedInputStream> snk) {
     if (!snk) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("snk"));
     if (connected_) throw IOException(jxx::NEW<jxx::lang::String>("Already connected"));
 

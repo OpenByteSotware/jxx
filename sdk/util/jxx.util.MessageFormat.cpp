@@ -14,7 +14,7 @@ jxx::Ptr<MessageFormat> MessageFormat::of(const jxx::Ptr<jxx::lang::String>& pat
     return jxx::NEW<MessageFormat>(pattern);
 }
 
-jxx::Ptr<jxx::lang::String> MessageFormat::format(jxx::Ptr<jxx::lang::Object>* args, jxx::lang::jint count) const {
+jxx::Ptr<jxx::lang::String> MessageFormat::format(const jxx::Ptr<jxx::lang::Object>* args, jxx::lang::jint count) const {
     std::string input = pattern_->utf8();
     std::ostringstream out;
 

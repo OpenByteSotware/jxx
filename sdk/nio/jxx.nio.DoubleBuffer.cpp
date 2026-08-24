@@ -158,7 +158,7 @@ namespace jxx::nio
         return self__();
     }
 
-    jxx::Ptr<DoubleBuffer> DoubleBuffer::put(jxx::Ptr<DoubleBuffer> src)
+    jxx::Ptr<DoubleBuffer> DoubleBuffer::put(const jxx::Ptr<DoubleBuffer> src)
     {
         if (!src)
             throwIAE_("null source buffer");

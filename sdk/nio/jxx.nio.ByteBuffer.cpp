@@ -174,7 +174,7 @@ namespace jxx::nio
         return self_Byte_();
     }
 
-    jxx::Ptr<ByteBuffer> ByteBuffer::put(jxx::Ptr<ByteBuffer> src)
+    jxx::Ptr<ByteBuffer> ByteBuffer::put(const jxx::Ptr<ByteBuffer> src)
     {
         if (!src)
             throwIAE_("null source buffer");
@@ -252,7 +252,7 @@ namespace jxx::nio
     jxx::lang::jbool ByteBuffer::isDirect() const { return direct_; }
     jxx::Ptr<ByteOrder> ByteBuffer::order() const { return order_; }
 
-    jxx::Ptr<ByteBuffer> ByteBuffer::order(jxx::Ptr<ByteOrder> order)
+    jxx::Ptr<ByteBuffer> ByteBuffer::order(const jxx::Ptr<ByteOrder> order)
     {
         order_ = order ? order : ByteOrder::BIG_ENDIAN;
         return self_Byte_();

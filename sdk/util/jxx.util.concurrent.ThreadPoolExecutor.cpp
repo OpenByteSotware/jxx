@@ -1,6 +1,7 @@
 #include "util/jxx.util.concurrent.ThreadPoolExecutor.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "util/jxx.util.ArrayList.h"
+#include "lang/jxx.lang.Object.h"
 namespace jxx::util::concurrent
 {
 	ThreadPoolExecutor::ThreadPoolExecutor(jxx::lang::jint core, jxx::lang::jint maximum, jxx::lang::jlong keepAlive, const jxx::Ptr<TimeUnit>& unit)
@@ -18,7 +19,7 @@ namespace jxx::util::concurrent
 	{
 		for (jxx::lang::jint i = 0; i < count; ++i)workers_.emplace_back([this]
 	   {
-				  workerLoop_();
+		   workerLoop_();
 	   }); largestPoolSize_ = static_cast<jxx::lang::jint>(workers_.size());
 	}
 	void ThreadPoolExecutor::workerLoop_()
@@ -28,7 +29,7 @@ namespace jxx::util::concurrent
 			{
 				std::unique_lock<std::mutex> lock(mutex_); workAvailable_.wait(lock, [&]
 			   {
-								  return stopNow_ || !queue_.empty() || shutdown_;
+				   return stopNow_ || !queue_.empty() || shutdown_;
 			   }); if (stopNow_)break; if (queue_.empty()) {
 				   if (shutdown_)break; continue;
 			   }task = queue_.front(); queue_.pop_front(); ++activeCount_;
@@ -70,7 +71,9 @@ namespace jxx::util::concurrent
 			std::lock_guard<std::mutex> lock(mutex_); shutdown_ = true; stopNow_ = true; while (!queue_.empty()) {
 				result->add(queue_.front()); queue_.pop_front();
 			}
-		}workAvailable_.notify_all(); return jxx::CAST<jxx::util::List<jxx::lang::Runnable>>(result);
+		}
+		workAvailable_.notify_all(); 
+		return jxx::CAST<jxx::util::List<jxx::lang::Runnable>>(result);
 	}
 	jxx::lang::jbool ThreadPoolExecutor::isShutdown()
 	{
@@ -84,7 +87,7 @@ namespace jxx::util::concurrent
 	{
 		if (unit == nullptr)throw jxx::lang::NullPointerException(); std::unique_lock<std::mutex> lock(mutex_); return terminated_.wait_for(lock, unit->toChrono(timeout), [&]
 	   {
-				  return shutdown_ && queue_.empty() && activeCount_ == 0;
+		   return shutdown_ && queue_.empty() && activeCount_ == 0;
 	   });
 	}
 	jxx::lang::jint ThreadPoolExecutor::getPoolSize()

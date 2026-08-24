@@ -39,16 +39,16 @@ namespace jxx::net
     {
     public:
         Socket();
-        explicit Socket(jxx::Ptr<Proxy> proxy);
-        Socket(jxx::Ptr<jxx::lang::String> host,
+        explicit Socket(const jxx::Ptr<Proxy> proxy);
+        Socket(const jxx::Ptr<jxx::lang::String> host,
                jxx::lang::jint port);
-        Socket(jxx::Ptr<InetAddress> address,
+        Socket(const jxx::Ptr<InetAddress> address,
                jxx::lang::jint port);
-        Socket(jxx::Ptr<jxx::lang::String> host,
+        Socket(const jxx::Ptr<jxx::lang::String> host,
                jxx::lang::jint port,
                jxx::Ptr<InetAddress> localAddr,
                jxx::lang::jint localPort);
-        Socket(jxx::Ptr<InetAddress> address,
+        Socket(const jxx::Ptr<InetAddress> address,
                jxx::lang::jint port,
                jxx::Ptr<InetAddress> localAddr,
                jxx::lang::jint localPort);
@@ -60,12 +60,12 @@ namespace jxx::net
         ~Socket() override;
 
     public:
-        static void setSocketImplFactory(jxx::Ptr<SocketImplFactory> fac);
+        static void setSocketImplFactory(const jxx::Ptr<SocketImplFactory> fac);
 
-        void connect(jxx::Ptr<SocketAddress> endpoint);
-        void connect(jxx::Ptr<SocketAddress> endpoint,
+        void connect(const jxx::Ptr<SocketAddress> endpoint);
+        void connect(const jxx::Ptr<SocketAddress> endpoint,
                      jxx::lang::jint timeout);
-        void bind(jxx::Ptr<SocketAddress> bindpoint);
+        void bind(const jxx::Ptr<SocketAddress> bindpoint);
 
         jxx::Ptr<InetAddress> getInetAddress() const;
         jxx::Ptr<InetAddress> getLocalAddress() const;

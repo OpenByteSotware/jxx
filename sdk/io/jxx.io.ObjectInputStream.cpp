@@ -13,7 +13,7 @@ namespace
 
 namespace jxx::io
 {
-    ObjectInputStream::ObjectInputStream(jxx::Ptr<InputStream> in)
+    ObjectInputStream::ObjectInputStream(const jxx::Ptr<InputStream> in)
         : in_(std::move(in))
     {
         if (!in_)

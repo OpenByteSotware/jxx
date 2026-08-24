@@ -49,7 +49,7 @@ namespace jxx::lang {
          *  - writableStackTrace: if false, stack trace is empty and fillInStackTrace is a no-op
          */        
 
-        explicit Throwable(jxx::Ptr<String> message = jxx::NEW<String>(""),
+        explicit Throwable(const jxx::Ptr<String> message = jxx::NEW<String>(""),
             jxx::Ptr<Throwable> cause = nullptr,
             bool enableSuppression = true,
             bool writableStackTrace = true);
@@ -87,7 +87,7 @@ namespace jxx::lang {
          * Java's initCause has constraints (can only be set once, cannot set self, etc.).
          * This is a permissive version; tighten if you want exact rules.
          */
-        void initCause(jxx::Ptr<Throwable> cause);
+        void initCause(const jxx::Ptr<Throwable> cause);
 
         // ---- Suppressed exceptions (Java 7+, present in Java 8) ----
         /**

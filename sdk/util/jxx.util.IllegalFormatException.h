@@ -11,7 +11,7 @@ namespace jxx::util {
 class IllegalFormatException : public jxx::lang::IllegalArgumentException {
 public:
     IllegalFormatException() = default;
-    explicit IllegalFormatException(jxx::Ptr<jxx::lang::String> msg)
+    explicit IllegalFormatException(const jxx::Ptr<jxx::lang::String> msg)
         : jxx::lang::IllegalArgumentException(std::move(msg)) {}
 };
 

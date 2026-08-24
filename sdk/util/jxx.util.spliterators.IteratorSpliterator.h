@@ -40,7 +40,7 @@ public:
 
     virtual ~IteratorSpliterator() = default;
 
-    virtual jxx::lang::jbool tryAdvance(jxx::Ptr<jxx::util::function::Consumer<E>> action) override {
+    virtual jxx::lang::jbool tryAdvance(const jxx::Ptr<jxx::util::function::Consumer<E>> action) override {
         if (action == nullptr) {
             throw jxx::lang::NullPointerException();
         }
@@ -54,7 +54,7 @@ public:
         return true;
     }
 
-    virtual void forEachRemaining(jxx::Ptr<jxx::util::function::Consumer<E>> action) override {
+    virtual void forEachRemaining(const jxx::Ptr<jxx::util::function::Consumer<E>> action) override {
         if (action == nullptr) {
             throw jxx::lang::NullPointerException();
         }

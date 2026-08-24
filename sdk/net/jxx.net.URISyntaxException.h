@@ -10,10 +10,10 @@ namespace jxx::net
     class URISyntaxException final : public std::runtime_error
     {
     public:
-        URISyntaxException(jxx::Ptr<jxx::lang::String> input,
+        URISyntaxException(const jxx::Ptr<jxx::lang::String> input,
                            jxx::Ptr<jxx::lang::String> reason,
                            jxx::lang::jint index);
-        URISyntaxException(jxx::Ptr<jxx::lang::String> input,
+        URISyntaxException(const jxx::Ptr<jxx::lang::String> input,
                            jxx::Ptr<jxx::lang::String> reason);
         ~URISyntaxException() override = default;
 

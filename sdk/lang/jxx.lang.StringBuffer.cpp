@@ -29,12 +29,12 @@ namespace jxx::lang {
         value_.reserve((std::size_t)capacity);
     }
 
-    StringBuffer::StringBuffer(jxx::Ptr<String> str) : value_() {
+    StringBuffer::StringBuffer(const jxx::Ptr<String> str) : value_() {
         if (!str) throwNPE_();
         value_ = str->utf16();
     }
 
-    StringBuffer::StringBuffer(jxx::Ptr<CharSequence> seq) : value_() {
+    StringBuffer::StringBuffer(const jxx::Ptr<CharSequence> seq) : value_() {
         if (!seq) throwNPE_();
         value_ = toUtf16_(seq);
     }
@@ -105,7 +105,7 @@ namespace jxx::lang {
     }
 
     // ---- utf16 helpers ----
-    std::u16string StringBuffer::toUtf16_(jxx::Ptr<CharSequence> s) {
+    std::u16string StringBuffer::toUtf16_(const jxx::Ptr<CharSequence> s) {
         if (!s) throwNPE_();
         std::u16string out;
         out.reserve((std::size_t)s->length());
@@ -237,15 +237,16 @@ namespace jxx::lang {
         return append_(obj->toString());
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::append_(jxx::Ptr<String> str) {
+    jxx::Ptr<StringBuffer> StringBuffer::append_(const jxx::Ptr<String> str) {
         if (!str) return append(jxx::NEW<String>("null"));
         return append_(str->toString());
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::append(jxx::Ptr<String> str) {
+    jxx::Ptr<StringBuffer> StringBuffer::append(const jxx::Ptr<String> str) {
         this->synchronized([&] {
-            if (!str) str = jxx::NEW<String>("null");
-            appendUtf16_(str->utf16());
+            jxx::Ptr<String> str2 = str;
+            if (!str2) str2 = jxx::NEW<String>("null");
+            appendUtf16_(str2->utf16());
             });
         return self_();
     }

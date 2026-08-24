@@ -12,7 +12,7 @@ namespace
 
 namespace jxx::nio::charset
 {
-    CharsetEncoder::CharsetEncoder(jxx::Ptr<Charset> cs)
+    CharsetEncoder::CharsetEncoder(const jxx::Ptr<Charset> cs)
         : cs_(std::move(cs)),
           malformedAction_(CodingErrorAction::REPORT),
           unmappableAction_(CodingErrorAction::REPORT),
@@ -29,12 +29,12 @@ namespace jxx::nio::charset
     }
 
     jxx::Ptr<Charset> CharsetEncoder::charset() const { return cs_; }
-    jxx::Ptr<CharsetEncoder> CharsetEncoder::onMalformedInput(jxx::Ptr<CodingErrorAction> action) { malformedAction_ = action; return self_(); }
-    jxx::Ptr<CharsetEncoder> CharsetEncoder::onUnmappableCharacter(jxx::Ptr<CodingErrorAction> action) { unmappableAction_ = action; return self_(); }
+    jxx::Ptr<CharsetEncoder> CharsetEncoder::onMalformedInput(const jxx::Ptr<CodingErrorAction> action) { malformedAction_ = action; return self_(); }
+    jxx::Ptr<CharsetEncoder> CharsetEncoder::onUnmappableCharacter(const jxx::Ptr<CodingErrorAction> action) { unmappableAction_ = action; return self_(); }
     jxx::Ptr<CharsetEncoder> CharsetEncoder::replaceWith(const jxx::lang::ByteArray replacement) { if (replacement) replacement_ = replacement; return self_(); }
     jxx::lang::ByteArray CharsetEncoder::replacement() const { return replacement_; }
 
-    jxx::Ptr<jxx::nio::ByteBuffer> CharsetEncoder::encode(jxx::Ptr<jxx::nio::CharBuffer> in)
+    jxx::Ptr<jxx::nio::ByteBuffer> CharsetEncoder::encode(const jxx::Ptr<jxx::nio::CharBuffer> in)
     {
         if (!in)
             throwIAE_("null input buffer");
@@ -45,7 +45,7 @@ namespace jxx::nio::charset
         return jxx::nio::ByteBuffer::wrap(bytes);
     }
 
-    jxx::Ptr<CoderResult> CharsetEncoder::encode(jxx::Ptr<jxx::nio::CharBuffer> in,
+    jxx::Ptr<CoderResult> CharsetEncoder::encode(const jxx::Ptr<jxx::nio::CharBuffer> in,
                                                  jxx::Ptr<jxx::nio::ByteBuffer> out,
                                                  jxx::lang::jbool /*endOfInput*/)
     {
@@ -58,7 +58,7 @@ namespace jxx::nio::charset
         return CoderResult::JXX_UNDERFLOW;
     }
 
-    jxx::Ptr<CoderResult> CharsetEncoder::flush(jxx::Ptr<jxx::nio::ByteBuffer> /*out*/)
+    jxx::Ptr<CoderResult> CharsetEncoder::flush(const jxx::Ptr<jxx::nio::ByteBuffer> /*out*/)
     {
         return CoderResult::JXX_UNDERFLOW;
     }

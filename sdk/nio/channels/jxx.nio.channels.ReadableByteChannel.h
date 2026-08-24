@@ -12,6 +12,6 @@ namespace jxx::nio::channels
         ~ReadableByteChannel() override = default;
 
     public:
-        virtual jxx::lang::jint read(jxx::Ptr<jxx::nio::ByteBuffer> dst) = 0;
+        virtual jxx::lang::jint read(const jxx::Ptr<jxx::nio::ByteBuffer> dst) = 0;
     };
 }

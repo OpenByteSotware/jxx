@@ -9,7 +9,7 @@ template <typename T>
 class ComparatorSuper  {
 public:
     virtual ~ComparatorSuper() = default;
-    virtual jxx::lang::jint compareSuper(jxx::Ptr<T> a, jxx::Ptr<T> b) = 0;
+    virtual jxx::lang::jint compareSuper(const jxx::Ptr<T> a, jxx::Ptr<T> b) = 0;
 };
 
 } // namespace util

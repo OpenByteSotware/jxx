@@ -2,7 +2,7 @@
 
 namespace jxx::lang {
 
-Package::Package(jxx::Ptr<String> name) : name_(name) {}
+Package::Package(const jxx::Ptr<String> name) : name_(name) {}
 
 jxx::Ptr<String> Package::getName() const { return name_; }
 

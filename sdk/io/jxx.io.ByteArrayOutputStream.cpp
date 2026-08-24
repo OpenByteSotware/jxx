@@ -52,7 +52,7 @@ jxx::lang::ByteArray ByteArrayOutputStream::toByteArray() const {
     return out;
 }
 
-void ByteArrayOutputStream::writeTo(jxx::Ptr<OutputStream> out) const {
+void ByteArrayOutputStream::writeTo(const jxx::Ptr<OutputStream> out) const {
     if (!out) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("out"));
     out->write(buf_, 0, count_);
 }

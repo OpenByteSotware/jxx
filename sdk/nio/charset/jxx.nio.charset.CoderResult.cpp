@@ -5,7 +5,7 @@ namespace jxx::nio::charset
     jxx::Ptr<CoderResult> CoderResult::JXX_UNDERFLOW = jxx::NEW<CoderResult>(jxx::NEW<jxx::lang::String>("UNDERFLOW"));
     jxx::Ptr<CoderResult> CoderResult::JXX_OVERFLOW = jxx::NEW<CoderResult>(jxx::NEW<jxx::lang::String>("OVERFLOW"));
 
-    CoderResult::CoderResult(jxx::Ptr<jxx::lang::String> kind,
+    CoderResult::CoderResult(const jxx::Ptr<jxx::lang::String> kind,
                              jxx::lang::jint length)
         : kind_(std::move(kind)), length_(length)
     {

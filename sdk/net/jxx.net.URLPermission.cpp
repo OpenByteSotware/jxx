@@ -2,12 +2,12 @@
 
 namespace jxx::net
 {
-    URLPermission::URLPermission(jxx::Ptr<jxx::lang::String> url)
+    URLPermission::URLPermission(const jxx::Ptr<jxx::lang::String> url)
         : URLPermission(std::move(url), nullptr)
     {
     }
 
-    URLPermission::URLPermission(jxx::Ptr<jxx::lang::String> url,
+    URLPermission::URLPermission(const jxx::Ptr<jxx::lang::String> url,
                                  jxx::Ptr<jxx::lang::String> actions)
         : url_(std::move(url)),
           actions_(std::move(actions))
@@ -17,7 +17,7 @@ namespace jxx::net
     jxx::Ptr<jxx::lang::String> URLPermission::getName() const { return url_; }
     jxx::Ptr<jxx::lang::String> URLPermission::getActions() const { return actions_; }
 
-    jxx::lang::jbool URLPermission::implies(jxx::Ptr<URLPermission> p) const
+    jxx::lang::jbool URLPermission::implies(const jxx::Ptr<URLPermission> p) const
     {
         return p &&
             ((!url_ && !p->url_) || (url_ && p->url_ && url_->equals(p->url_))) &&
@@ -25,7 +25,7 @@ namespace jxx::net
     }
 
     jxx::Ptr<jxx::lang::String> URLPermission::toString() const { return url_; }
-    jxx::lang::jbool URLPermission::equals(jxx::Ptr<jxx::lang::Object> other) const
+    jxx::lang::jbool URLPermission::equals(const jxx::Ptr<jxx::lang::Object> other) const
     {
         return implies(std::dynamic_pointer_cast<URLPermission>(other));
     }

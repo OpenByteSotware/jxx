@@ -14,7 +14,7 @@ public:
     void reset();
     jxx::lang::jint size() const;
     jxx::lang::ByteArray toByteArray() const;
-    void writeTo(jxx::Ptr<OutputStream> out) const;
+    void writeTo(const jxx::Ptr<OutputStream> out) const;
 
     void close() override;
 

@@ -62,7 +62,7 @@ static jxx::Ptr<jxx::lang::String> defaultDelimiterPattern() {
     return jxx::NEW<jxx::lang::String>("\\s+");
 }
 
-static std::u16string readAllFromReader(jxx::Ptr<jxx::io::Reader> reader) {
+static std::u16string readAllFromReader(const jxx::Ptr<jxx::io::Reader> reader) {
     std::u16string out;
     while (true) {
         const auto ch = reader->read();
@@ -72,7 +72,7 @@ static std::u16string readAllFromReader(jxx::Ptr<jxx::io::Reader> reader) {
     return out;
 }
 
-static std::vector<unsigned char> readAllBytes(jxx::Ptr<jxx::io::InputStream> in) {
+static std::vector<unsigned char> readAllBytes(const jxx::Ptr<jxx::io::InputStream> in) {
     std::vector<unsigned char> bytes;
     while (true) {
         const auto b = in->read();
@@ -176,7 +176,7 @@ static jxx::lang::jbool tryParseByte(
     return static_cast<jxx::lang::jbool>(true);
 }
 
-static jxx::lang::jbool tryParseDouble(jxx::Ptr<jxx::lang::String> token, jxx::lang::jdouble& out) {
+static jxx::lang::jbool tryParseDouble(const jxx::Ptr<jxx::lang::String> token, jxx::lang::jdouble& out) {
     if (token == nullptr) return static_cast<jxx::lang::jbool>(false);
     try {
         std::size_t idx = 0;
@@ -190,7 +190,7 @@ static jxx::lang::jbool tryParseDouble(jxx::Ptr<jxx::lang::String> token, jxx::l
     }
 }
 
-static jxx::lang::jbool tryParseFloat(jxx::Ptr<jxx::lang::String> token, jxx::lang::jfloat& out) {
+static jxx::lang::jbool tryParseFloat(const jxx::Ptr<jxx::lang::String> token, jxx::lang::jfloat& out) {
     jxx::lang::jdouble value = 0.0;
     if (!tryParseDouble(token, value)) {
         return static_cast<jxx::lang::jbool>(false);
@@ -202,7 +202,7 @@ static jxx::lang::jbool tryParseFloat(jxx::Ptr<jxx::lang::String> token, jxx::la
     return static_cast<jxx::lang::jbool>(true);
 }
 
-static jxx::lang::jbool tryParseBoolean(jxx::Ptr<jxx::lang::String> token, jxx::lang::jbool& out) {
+static jxx::lang::jbool tryParseBoolean(const jxx::Ptr<jxx::lang::String> token, jxx::lang::jbool& out) {
     if (token == nullptr) return static_cast<jxx::lang::jbool>(false);
     const std::string s = asciiLower(token->utf8());
     if (s == "true") {
@@ -216,7 +216,7 @@ static jxx::lang::jbool tryParseBoolean(jxx::Ptr<jxx::lang::String> token, jxx::
     return static_cast<jxx::lang::jbool>(false);
 }
 
-static jxx::Ptr<jxx::lang::String> requirePatternString(jxx::Ptr<jxx::lang::String> pattern) {
+static jxx::Ptr<jxx::lang::String> requirePatternString(const jxx::Ptr<jxx::lang::String> pattern) {
     if (pattern == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -482,7 +482,7 @@ jxx::Ptr<regex::Pattern> Scanner::delimiter() {
     return delimiterPattern_;
 }
 
-jxx::Ptr<Scanner> Scanner::useDelimiter(jxx::Ptr<regex::Pattern> pattern) {
+jxx::Ptr<Scanner> Scanner::useDelimiter(const jxx::Ptr<regex::Pattern> pattern) {
     ensureOpen();
     if (pattern == nullptr) {
         throw jxx::lang::NullPointerException();
@@ -492,7 +492,7 @@ jxx::Ptr<Scanner> Scanner::useDelimiter(jxx::Ptr<regex::Pattern> pattern) {
     return self();
 }
 
-jxx::Ptr<Scanner> Scanner::useDelimiter(jxx::Ptr<jxx::lang::String> pattern) {
+jxx::Ptr<Scanner> Scanner::useDelimiter(const jxx::Ptr<jxx::lang::String> pattern) {
     ensureOpen();
     delimiterPattern_ = regex::Pattern::compile(requirePatternString(pattern));
     clearMatchResult();
@@ -504,7 +504,7 @@ jxx::Ptr<Locale> Scanner::locale() {
     return locale_;
 }
 
-jxx::Ptr<Scanner> Scanner::useLocale(jxx::Ptr<Locale> locale) {
+jxx::Ptr<Scanner> Scanner::useLocale(const jxx::Ptr<Locale> locale) {
     ensureOpen();
     if (locale == nullptr) {
         throw jxx::lang::NullPointerException();
@@ -534,7 +534,7 @@ jxx::lang::jbool Scanner::hasNext() {
     return locateNextToken(position_, start, end);
 }
 
-jxx::lang::jbool Scanner::hasNext(jxx::Ptr<regex::Pattern> pattern) {
+jxx::lang::jbool Scanner::hasNext(const jxx::Ptr<regex::Pattern> pattern) {
     ensureOpen();
     std::size_t tokenStart = 0;
     std::size_t tokenEnd = 0;
@@ -543,7 +543,7 @@ jxx::lang::jbool Scanner::hasNext(jxx::Ptr<regex::Pattern> pattern) {
     return matchTokenAtCurrentPosition(pattern, tokenStart, tokenEnd, tokenText, snapshot);
 }
 
-jxx::lang::jbool Scanner::hasNext(jxx::Ptr<jxx::lang::String> pattern) {
+jxx::lang::jbool Scanner::hasNext(const jxx::Ptr<jxx::lang::String> pattern) {
     return hasNext(regex::Pattern::compile(requirePatternString(pattern)));
 }
 
@@ -559,7 +559,7 @@ jxx::Ptr<jxx::lang::String> Scanner::next() {
     return tokenString(start, end);
 }
 
-jxx::Ptr<jxx::lang::String> Scanner::next(jxx::Ptr<regex::Pattern> pattern) {
+jxx::Ptr<jxx::lang::String> Scanner::next(const jxx::Ptr<regex::Pattern> pattern) {
     ensureOpen();
     std::size_t tokenStart = 0;
     std::size_t tokenEnd = 0;
@@ -578,7 +578,7 @@ jxx::Ptr<jxx::lang::String> Scanner::next(jxx::Ptr<regex::Pattern> pattern) {
     return tokenText;
 }
 
-jxx::Ptr<jxx::lang::String> Scanner::next(jxx::Ptr<jxx::lang::String> pattern) {
+jxx::Ptr<jxx::lang::String> Scanner::next(const jxx::Ptr<jxx::lang::String> pattern) {
     return next(regex::Pattern::compile(requirePatternString(pattern)));
 }
 
@@ -796,7 +796,7 @@ jxx::lang::jdouble Scanner::nextDouble() {
     return value;
 }
 
-jxx::Ptr<jxx::lang::String> Scanner::findInLine(jxx::Ptr<regex::Pattern> pattern) {
+jxx::Ptr<jxx::lang::String> Scanner::findInLine(const jxx::Ptr<regex::Pattern> pattern) {
     ensureOpen();
     std::size_t lineStart = 0;
     std::size_t lineEnd = 0;
@@ -818,11 +818,11 @@ jxx::Ptr<jxx::lang::String> Scanner::findInLine(jxx::Ptr<regex::Pattern> pattern
     return matchText;
 }
 
-jxx::Ptr<jxx::lang::String> Scanner::findInLine(jxx::Ptr<jxx::lang::String> pattern) {
+jxx::Ptr<jxx::lang::String> Scanner::findInLine(const jxx::Ptr<jxx::lang::String> pattern) {
     return findInLine(regex::Pattern::compile(requirePatternString(pattern)));
 }
 
-jxx::Ptr<jxx::lang::String> Scanner::findWithinHorizon(jxx::Ptr<regex::Pattern> pattern, jxx::lang::jint horizon) {
+jxx::Ptr<jxx::lang::String> Scanner::findWithinHorizon(const jxx::Ptr<regex::Pattern> pattern, jxx::lang::jint horizon) {
     ensureOpen();
     if (horizon < 0) {
         throw jxx::lang::IllegalArgumentException("radix out of range: 2-36");
@@ -843,11 +843,11 @@ jxx::Ptr<jxx::lang::String> Scanner::findWithinHorizon(jxx::Ptr<regex::Pattern> 
     return matchText;
 }
 
-jxx::Ptr<jxx::lang::String> Scanner::findWithinHorizon(jxx::Ptr<jxx::lang::String> pattern, jxx::lang::jint horizon) {
+jxx::Ptr<jxx::lang::String> Scanner::findWithinHorizon(const jxx::Ptr<jxx::lang::String> pattern, jxx::lang::jint horizon) {
     return findWithinHorizon(regex::Pattern::compile(requirePatternString(pattern)), horizon);
 }
 
-jxx::Ptr<Scanner> Scanner::skip(jxx::Ptr<regex::Pattern> pattern) {
+jxx::Ptr<Scanner> Scanner::skip(const jxx::Ptr<regex::Pattern> pattern) {
     ensureOpen();
     std::size_t matchStart = 0;
     std::size_t matchEnd = 0;
@@ -861,7 +861,7 @@ jxx::Ptr<Scanner> Scanner::skip(jxx::Ptr<regex::Pattern> pattern) {
     return self();
 }
 
-jxx::Ptr<Scanner> Scanner::skip(jxx::Ptr<jxx::lang::String> pattern) {
+jxx::Ptr<Scanner> Scanner::skip(const jxx::Ptr<jxx::lang::String> pattern) {
     return skip(regex::Pattern::compile(requirePatternString(pattern)));
 }
 

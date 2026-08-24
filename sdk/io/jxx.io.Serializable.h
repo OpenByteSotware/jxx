@@ -9,8 +9,8 @@ namespace jxx::io {
     public:
 	virtual ~Serializable() = default;
 
-    virtual void writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out) = 0;
-    virtual void readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) = 0;        
+    virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) = 0;
+    virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) = 0;        
     virtual void readObjectNoData() = 0;
 };
 }

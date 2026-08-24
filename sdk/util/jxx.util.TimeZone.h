@@ -23,8 +23,8 @@ public:
 
     virtual jxx::lang::jint getRawOffset() const = 0;
     virtual jxx::lang::jbool useDaylightTime() const = 0;
-    virtual jxx::lang::jbool inDaylightTime(jxx::Ptr<Date> d) const = 0;
-    static jxx::Ptr<TimeZone> getTimeZone(jxx::Ptr<jxx::lang::String> id);
+    virtual jxx::lang::jbool inDaylightTime(const jxx::Ptr<Date> d) const = 0;
+    static jxx::Ptr<TimeZone> getTimeZone(const jxx::Ptr<jxx::lang::String> id);
     static jxx::Ptr<TimeZone> getDefault();
 };
 

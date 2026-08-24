@@ -78,14 +78,14 @@ namespace
 
 namespace jxx::io
 {
-    File::File(jxx::Ptr<jxx::lang::String> pathname)
+    File::File(const jxx::Ptr<jxx::lang::String> pathname)
         : path_(toUtf8_(pathname))
     {
         if (!pathname)
             throwIAE_("null pathname");
     }
 
-    File::File(jxx::Ptr<jxx::lang::String> parent,
+    File::File(const jxx::Ptr<jxx::lang::String> parent,
                jxx::Ptr<jxx::lang::String> child)
     {
         if (!child)
@@ -94,7 +94,7 @@ namespace jxx::io
         path_ = joinPath_(toUtf8_(parent), toUtf8_(child));
     }
 
-    File::File(jxx::Ptr<File> parent,
+    File::File(const jxx::Ptr<File> parent,
                jxx::Ptr<jxx::lang::String> child)
     {
         if (!child)
@@ -313,7 +313,7 @@ namespace jxx::io
         return fs::create_directories(path_, ec) && !ec;
     }
 
-    jxx::lang::jbool File::renameTo(jxx::Ptr<File> dest)
+    jxx::lang::jbool File::renameTo(const jxx::Ptr<File> dest)
     {
         if (!dest)
             throwIAE_("null destination");
@@ -410,7 +410,7 @@ namespace jxx::io
         return 0;
     }
 
-    jxx::lang::jbool File::equals(jxx::Ptr<jxx::lang::Object> other) const
+    jxx::lang::jbool File::equals(const jxx::Ptr<jxx::lang::Object> other) const
     {
         auto f = std::dynamic_pointer_cast<File>(other);
         return f && f->path_ == path_;
@@ -426,13 +426,13 @@ namespace jxx::io
         return toStringPtr_(path_);
     }
 
-    jxx::Ptr<File> File::createTempFile(jxx::Ptr<jxx::lang::String> prefix,
+    jxx::Ptr<File> File::createTempFile(const jxx::Ptr<jxx::lang::String> prefix,
                                         jxx::Ptr<jxx::lang::String> suffix)
     {
         return createTempFile(prefix, suffix, nullptr);
     }
 
-    jxx::Ptr<File> File::createTempFile(jxx::Ptr<jxx::lang::String> prefix,
+    jxx::Ptr<File> File::createTempFile(const jxx::Ptr<jxx::lang::String> prefix,
                                         jxx::Ptr<jxx::lang::String> suffix,
                                         jxx::Ptr<File> directory)
     {
@@ -467,11 +467,11 @@ namespace jxx::io
     #endif
     }
 
-    void File::writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out) {
+    void File::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) {
         // Default serialization: write the path string
 		///out->writeUTF(toUtf8_(getPath()));
     }
-    void File::readObject(jxx::Ptr<jxx::io::ObjectInputStream> in) {
+    void File::readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) {
         // Default deserialization: read the path string
         //auto path = in->readUTF();
         /*if (path) {

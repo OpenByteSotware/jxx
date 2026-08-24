@@ -160,7 +160,7 @@ namespace jxx::nio
         return self__();
     }
 
-    jxx::Ptr<FloatBuffer> FloatBuffer::put(jxx::Ptr<FloatBuffer> src)
+    jxx::Ptr<FloatBuffer> FloatBuffer::put(const jxx::Ptr<FloatBuffer> src)
     {
         if (!src)
             throwIAE_("null source buffer");

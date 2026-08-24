@@ -18,12 +18,12 @@ namespace
 
 namespace jxx::io
 {
-    PushbackInputStream::PushbackInputStream(jxx::Ptr<InputStream> in)
+    PushbackInputStream::PushbackInputStream(const jxx::Ptr<InputStream> in)
         : PushbackInputStream(std::move(in), 1)
     {
     }
 
-    PushbackInputStream::PushbackInputStream(jxx::Ptr<InputStream> in, jxx::lang::jint size)
+    PushbackInputStream::PushbackInputStream(const jxx::Ptr<InputStream> in, jxx::lang::jint size)
         : FilterInputStream(std::move(in))
     {
         if (size <= 0)

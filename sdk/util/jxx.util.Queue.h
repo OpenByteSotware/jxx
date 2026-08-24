@@ -10,12 +10,12 @@ class Queue : virtual public Collection<E> {
 public:
     virtual ~Queue() = default;
 
-    virtual jxx::lang::jbool add(jxx::Ptr<E> e) override {
+    virtual jxx::lang::jbool add(const jxx::Ptr<E> e) override {
         if (offer(e)) return true;
         throw IllegalStateException();
     }
 
-    virtual jxx::lang::jbool offer(jxx::Ptr<E> e) = 0;
+    virtual jxx::lang::jbool offer(const jxx::Ptr<E> e) = 0;
     virtual jxx::Ptr<E> remove() = 0;
     virtual jxx::Ptr<E> poll() = 0;
     virtual jxx::Ptr<E> element() = 0;

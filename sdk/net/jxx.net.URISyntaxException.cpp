@@ -2,7 +2,7 @@
 
 namespace jxx::net
 {
-    URISyntaxException::URISyntaxException(jxx::Ptr<jxx::lang::String> input,
+    URISyntaxException::URISyntaxException(const jxx::Ptr<jxx::lang::String> input,
                                            jxx::Ptr<jxx::lang::String> reason,
                                            jxx::lang::jint index)
         : std::runtime_error(reason ? reason->utf8() : std::string("URISyntaxException")),
@@ -12,7 +12,7 @@ namespace jxx::net
     {
     }
 
-    URISyntaxException::URISyntaxException(jxx::Ptr<jxx::lang::String> input,
+    URISyntaxException::URISyntaxException(const jxx::Ptr<jxx::lang::String> input,
                                            jxx::Ptr<jxx::lang::String> reason)
         : URISyntaxException(std::move(input), std::move(reason), -1)
     {

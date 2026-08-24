@@ -72,8 +72,8 @@ namespace jxx::lang
 
         jchar charValue() const noexcept;
 
-        jint compareTo(jxx::Ptr<Character> anotherCharacter) const override;
-        jbool equals(jxx::Ptr<Object> obj) const override;
+        jint compareTo(const jxx::Ptr<Character> anotherCharacter) const override;
+        jbool equals(const jxx::Ptr<Object> obj) const override;
         jint hashCode() const override;
         jxx::Ptr<String> toString() const override;
 
@@ -118,8 +118,8 @@ namespace jxx::lang
 
         static CharArray toChars(jint codePoint);
 
-        virtual void writeObject(jxx::Ptr<jxx::io::ObjectOutputStream> out);
-        virtual void readObject(jxx::Ptr<jxx::io::ObjectInputStream> in);
+        virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out);
+        virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in);
         virtual void readObjectNoData();
 
     private:

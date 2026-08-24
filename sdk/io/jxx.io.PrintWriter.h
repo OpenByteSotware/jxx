@@ -18,8 +18,8 @@ class PrintWriter : public jxx::lang::Object, public Flushable, public Closeable
     void setError() { error_ = true; }
     void doWrite(const std::u16string& s);
 public:
-    explicit PrintWriter(jxx::Ptr<Writer> w, bool autoFlush_ = false);
-    explicit PrintWriter(jxx::Ptr<OutputStream> os, bool autoFlush_ = false, const std::string& charset = "UTF-8");
+    explicit PrintWriter(const jxx::Ptr<Writer> w, bool autoFlush_ = false);
+    explicit PrintWriter(const jxx::Ptr<OutputStream> os, bool autoFlush_ = false, const std::string& charset = "UTF-8");
 
     void flush() override;
     void close() override;

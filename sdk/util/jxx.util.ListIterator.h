@@ -15,8 +15,8 @@ public:
 
     virtual jxx::lang::jint nextIndex() = 0;
     virtual jxx::lang::jint previousIndex() = 0;
-    virtual void set(jxx::Ptr<E> e) = 0;
-    virtual void add(jxx::Ptr<E> e) = 0;
+    virtual void set(const jxx::Ptr<E> e) = 0;
+    virtual void add(const jxx::Ptr<E> e) = 0;
 };
 
 } // namespace util

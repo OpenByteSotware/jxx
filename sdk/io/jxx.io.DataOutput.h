@@ -28,8 +28,8 @@ namespace jxx::io
         virtual void writeLong(jxx::lang::jlong v) = 0;
         virtual void writeFloat(jxx::lang::jfloat v) = 0;
         virtual void writeDouble(jxx::lang::jdouble v) = 0;
-        virtual void writeBytes(jxx::Ptr<jxx::lang::String> s) = 0;
-        virtual void writeChars(jxx::Ptr<jxx::lang::String> s) = 0;
-        virtual void writeUTF(jxx::Ptr<jxx::lang::String> s) = 0;
+        virtual void writeBytes(const jxx::Ptr<jxx::lang::String> s) = 0;
+        virtual void writeChars(const jxx::Ptr<jxx::lang::String> s) = 0;
+        virtual void writeUTF(const jxx::Ptr<jxx::lang::String> s) = 0;
     };
 }

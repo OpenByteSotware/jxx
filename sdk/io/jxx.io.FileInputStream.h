@@ -13,9 +13,9 @@ namespace jxx::io
     class FileInputStream final : public InputStream
     {
     public:
-        explicit FileInputStream(jxx::Ptr<jxx::lang::String> name);
-        explicit FileInputStream(jxx::Ptr<File> file);
-        explicit FileInputStream(jxx::Ptr<FileDescriptor> fdObj);
+        explicit FileInputStream(const jxx::Ptr<jxx::lang::String> name);
+        explicit FileInputStream(const jxx::Ptr<File> file);
+        explicit FileInputStream(const jxx::Ptr<FileDescriptor> fdObj);
 
         ~FileInputStream() override;
 

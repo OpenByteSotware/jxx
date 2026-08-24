@@ -33,7 +33,7 @@ namespace jxx::nio
         jxx::Ptr<LongBuffer> put(const jxx::lang::LongArray src,
                             jxx::lang::jint offset,
                             jxx::lang::jint length);
-        jxx::Ptr<LongBuffer> put(jxx::Ptr<LongBuffer> src);
+        jxx::Ptr<LongBuffer> put(const jxx::Ptr<LongBuffer> src);
 
         jxx::Ptr<LongBuffer> slice() const;
         jxx::Ptr<LongBuffer> duplicate() const;

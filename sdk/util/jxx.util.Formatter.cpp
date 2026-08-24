@@ -1153,7 +1153,7 @@ namespace jxx::util
         : locale_(nullptr)
     {}
 
-    Formatter::Formatter(jxx::Ptr<Locale> locale)
+    Formatter::Formatter(const jxx::Ptr<Locale> locale)
         : locale_(std::move(locale))
     {}
 

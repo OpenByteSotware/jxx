@@ -30,7 +30,7 @@ namespace jxx::lang {
         virtual jxx::Ptr<jxx::util::Iterator<T>> iterator() = 0;
 
         // Java 8 default: void forEach(Consumer<? super T> action)
-        virtual void forEach(jxx::Ptr<jxx::util::function::Consumer<T>> action) {
+        virtual void forEach(const jxx::Ptr<jxx::util::function::Consumer<T>> action) {
             if (!action) {
                 throw jxx::lang::NullPointerException("action");
             }
@@ -53,7 +53,7 @@ namespace jxx::lang {
                 int
             > = 0
         >
-        void forEach(jxx::Ptr<jxx::util::function::Consumer<U>> action) {
+        void forEach(const jxx::Ptr<jxx::util::function::Consumer<U>> action) {
             if (!action) {
                 throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("action"));
             }
@@ -62,7 +62,7 @@ namespace jxx::lang {
             struct ConsumerAdapter : public jxx::util::function::Consumer<T> {
                 jxx::Ptr<jxx::util::function::Consumer<U>> wrapped;
                 
-                explicit ConsumerAdapter(jxx::Ptr<jxx::util::function::Consumer<U>> w) : wrapped(w) {}
+                explicit ConsumerAdapter(const jxx::Ptr<jxx::util::function::Consumer<U>> w) : wrapped(w) {}
                 
                 void accept(T value) override {
                     // implicit T -> U conversion occurs here

@@ -9,8 +9,8 @@ namespace jxx::io
     class PushbackInputStream final : public FilterInputStream
     {
     public:
-        explicit PushbackInputStream(jxx::Ptr<InputStream> in);
-        PushbackInputStream(jxx::Ptr<InputStream> in, jxx::lang::jint size);
+        explicit PushbackInputStream(const jxx::Ptr<InputStream> in);
+        PushbackInputStream(const jxx::Ptr<InputStream> in, jxx::lang::jint size);
 
         ~PushbackInputStream() override = default;
 

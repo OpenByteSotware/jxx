@@ -13,6 +13,6 @@ namespace jxx::net
         virtual ~ContentHandlerFactory() = default;
 
     public:
-        virtual jxx::Ptr<ContentHandler> createContentHandler(jxx::Ptr<jxx::lang::String> mimeType) = 0;
+        virtual jxx::Ptr<ContentHandler> createContentHandler(const jxx::Ptr<jxx::lang::String> mimeType) = 0;
     };
 }

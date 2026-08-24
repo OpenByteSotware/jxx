@@ -21,7 +21,7 @@ public:
     virtual jxx::Ptr<jxx::util::Iterator<T>> iterator() = 0;
 
     // Java 8 default method: forEach(Consumer<? super T>)
-    virtual void forEach(jxx::Ptr<jxx::util::function::ConsumerSuper<T>> action) {
+    virtual void forEach(const jxx::Ptr<jxx::util::function::ConsumerSuper<T>> action) {
         if (action == nullptr) {
             throw NullPointerException();
         }
