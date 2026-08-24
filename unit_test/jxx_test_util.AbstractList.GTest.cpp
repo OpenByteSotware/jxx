@@ -5,7 +5,11 @@
 #include <vector>
 #include <type_traits>
 #include <gtest/gtest.h>
+#include <algorithm>
 
+#include "util/function/jxx.util.function.UnaryOperator.h"
+#include "util/jxx.util.ComparatorSuper.h"
+#include "util/jxx.util.Spliterator.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
