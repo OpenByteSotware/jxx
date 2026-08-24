@@ -161,7 +161,7 @@ public:
         auto it = this->iterator();
         while (it->hasNext()) {
             auto e = it->next();
-            hash = 31 * hash + (e == nullptr ? 0 : e->hashCode());
+            hash = 31 * hash;// \;// +(e == nullptr ? 0 : e->hashCode());
         }
         return hash;
     }
