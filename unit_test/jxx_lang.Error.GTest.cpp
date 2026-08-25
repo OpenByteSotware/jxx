@@ -36,12 +36,4 @@ namespace
 		ASSERT_NE(e->getMessage(), nullptr);
 		EXPECT_EQ(e->what(), "42");
 	}
-	/*
-	TEST(ErrorHierarchyTest, ExceptionInInitializerRetainsThrownException)
-	{
-		auto cause = jxx::NEW<Error>(jxx::NEW<String>("init")); 
-		auto e = jxx::NEW<ExceptionInInitializerError>(jxx::CAST<Throwable>(cause)); 
-		EXPECT_EQ(e->what(), jxx::CAST<Throwable>(cause));
-	}*/
-
 } // namespace
