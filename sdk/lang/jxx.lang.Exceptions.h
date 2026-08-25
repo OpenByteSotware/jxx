@@ -27,5 +27,5 @@
 #include "lang/jxx.lang.TypeNotPresentException.h"
 #include "lang/jxx.lang.IllegalThreadStateException.h"
 #include "lang/jxx.lang.NumberFormatException.h"
-#include "lang/jxx.lang.ArrayIndexOutOfBoundsException.h"
+#include "lang/jxx.lang.OutOfMemoryError.h"
 #include "lang/jxx.lang.StringIndexOutOfBoundsException.h"

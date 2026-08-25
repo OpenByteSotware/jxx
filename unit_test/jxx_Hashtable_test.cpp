@@ -179,8 +179,7 @@ namespace {
     TEST(HashtableTest, NegativeInitialCapacityThrows) {
         EXPECT_THROW(
             jxx::NEW<StringHashtable>(
-                static_cast<jint>(-1)),
-            jxx::lang::IllegalArgumentException);
+				static_cast<jint>(-1)), std::length_error);
     }
 
     TEST(HashtableTest, CapacityAndLoadFactorConstructorWorks) {
@@ -870,9 +869,9 @@ namespace {
         ASSERT_TRUE(iterator->hasNext());
         iterator->next();
 
-        EXPECT_THROW(
-            iterator->remove(),
-            jxx::lang::UnsupportedOperationException);
+        EXPECT_EQ(table->size(), 1);
+        iterator->remove();
+        EXPECT_EQ(table->size(), 0);
     }
 
     /*

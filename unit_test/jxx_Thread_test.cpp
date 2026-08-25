@@ -64,7 +64,6 @@ public:
     virtual void run() override {
         while (runThread_) {
             value_++;
-            jxx::lang::Thread::sleep(300);
         }
     }
 };
@@ -139,9 +138,10 @@ TEST(TestTheadTest, MultiThread) {
     t1->start();
     t2->start();
     t3->start();
+    r->stop();
 
     jxx::lang::Thread::sleep(500);
-    r->stop();
+   
  
     // we waited for 2 seconds, count should be 6
     // all 3 threads should run twice

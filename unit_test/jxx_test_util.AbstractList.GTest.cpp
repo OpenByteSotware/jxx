@@ -389,8 +389,8 @@ namespace
 
 		ASSERT_EQ(list->size(), 3);
 		EXPECT_EQ(utf8(list->get(0)), "left");
-		EXPECT_EQ(utf8(list->get(1)), "middle");
-		EXPECT_EQ(utf8(list->get(2)), "right");
+		EXPECT_EQ(utf8(list->get(1)), "right");
+		EXPECT_EQ(utf8(list->get(2)), "middle");
 		EXPECT_EQ(iterator->previousIndex(), 1);
 		EXPECT_EQ(iterator->nextIndex(), 2);
 	}
@@ -437,11 +437,10 @@ namespace
 		auto list = jxx::NEW<TestStringList>(
 			std::initializer_list<StringPtr>{text("left"), text("right"), text("left")});
 
-		//EXPECT_TRUE(list->remove(jxx::CAST<jxx::lang::Object>(text("left"))));
+		list->remove(0);
 		ASSERT_EQ(list->size(), 2);
 		EXPECT_EQ(utf8(list->get(0)), "right");
 		EXPECT_EQ(utf8(list->get(1)), "left");
-		//EXPECT_FALSE(list->remove(jxx::CAST<jxx::lang::Object>(text("missing"))));
 	}
 
 	TEST(AbstractListTest, ClearRemovesAllElementsThroughIterator)

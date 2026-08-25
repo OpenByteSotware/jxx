@@ -1,487 +1,371 @@
+#include "lang/jxx.lang.StringBuilder.h"
+
 #include <algorithm>
-#include <sstream>
+#include <cstdint>
+#include <limits>
 #include <locale>
-#include "jxx.lang.StringBuffer.h"
-#include "jxx.lang.NullPointerException.h"
-#include "jxx.lang.StringIndexOutOfBoundsException.h"
-#include "jxx.lang.IllegalArgumentException.h"
-#include "io/jxx.io.ObjectOutputStream.h"
+#include <sstream>
+#include <utility>
+
 #include "io/jxx.io.ObjectInputStream.h"
-#include "jxx.lang.StringBuilder.h"
-
-
-namespace jxx::lang {
-
-    static inline std::u16string u16_from_char_array(CharArray a, jint off, jint len) {
-        std::u16string out;
-        out.resize((std::size_t)len);
-        for (jint i = 0; i < len; ++i) out[(std::size_t)i] = (char16_t)(*a)[off + i];
-        return out;
-    }
-
-    void StringBuilder::throwNPE_() { throw NullPointerException(jxx::NEW<String>("null")); }
-    void StringBuilder::throwSIOOBE_() { throw StringIndexOutOfBoundsException(jxx::NEW<String>("String index out of range")); }
-    void StringBuilder::throwIAE_(const char* msg) { throw IllegalArgumentException(jxx::NEW<String>(msg)); }
-
-    jxx::Ptr<StringBuilder> StringBuilder::self_() {
-        return jxx::CAST<StringBuilder, jxx::lang::Object>(this->thisPtr);
-    }
-
-    // ---- constructors ----
-    StringBuilder::StringBuilder() : value_() {}
-
-    StringBuilder::StringBuilder(jint capacity) : value_() {
-        if (capacity < 0) throwIAE_("negative capacity");
-        value_.reserve((std::size_t)capacity);
-    }
-
-    StringBuilder::StringBuilder(const jxx::Ptr<String> str) : value_() {
-        if (!str) throwNPE_();
-        value_ = str->utf16();
-    }
-
-    StringBuilder::StringBuilder(const jxx::Ptr<CharSequence> seq) : value_() {
-        if (!seq) throwNPE_();
-        value_ = toUtf16_(seq);
-    }
-
-    // ---- capacity / length ----
-    jint StringBuilder::length() const { return (jint)value_.size(); }
-    jint StringBuilder::capacity() const { return (jint)value_.capacity(); }
-
-    jint StringBuilder::newCapacity_(jint minCapacity) const {
-        jint newCap = (jint)value_.capacity() * 2 + 2;
-        if (newCap < minCapacity) newCap = minCapacity;
-        if (newCap < 0) newCap = minCapacity;
-        return newCap;
-    }
-
-    void StringBuilder::ensureCapacityInternal_(jint minCapacity) {
-        if (minCapacity <= (jint)value_.capacity()) return;
-        value_.reserve((std::size_t)newCapacity_(minCapacity));
-    }
-
-    void StringBuilder::ensureCapacity(jint minimumCapacity) {
-        if (minimumCapacity > 0) ensureCapacityInternal_(minimumCapacity);
-    }
-
-    void StringBuilder::trimToSize() { value_.shrink_to_fit(); }
-
-    void StringBuilder::setLength(jint newLength) {
-        if (newLength < 0) throwSIOOBE_();
-        if (newLength <= (jint)value_.size()) value_.resize((std::size_t)newLength);
-        else {
-            ensureCapacityInternal_(newLength);
-            value_.resize((std::size_t)newLength, (char16_t)0);
-        }
-    }
-
-    // ---- CharSequence ----
-    jchar StringBuilder::charAt(jint index) const {
-        if (index < 0 || index >= (jint)value_.size()) throwSIOOBE_();
-        return (jchar)value_[(std::size_t)index];
-    }
-
-    void StringBuilder::setCharAt(jint index, jchar ch) {
-        if (index < 0 || index >= (jint)value_.size()) throwSIOOBE_();
-        value_[(std::size_t)index] = (char16_t)ch;
-    }
-
-    jxx::Ptr<CharSequence> StringBuilder::subSequence(jint start, jint end) const {
-        return jxx::CAST<CharSequence, jxx::lang::String>(substring(start, end));
-    }
-
-    jxx::Ptr<String> StringBuilder::toString() const {
-        auto ca = jxx::NEW<CharArrayType>((std::uint32_t)value_.size());
-        for (jint i = 0; i < (jint)value_.size(); ++i) (*ca)[i] = (jchar)value_[(std::size_t)i];
-        return jxx::NEW<String>(ca);
-    }
-
-    // ---- code points ----
-    jint StringBuilder::codePointAt(jint index) const {
-        if (index < 0 || index >= (jint)value_.size()) throwSIOOBE_();
-        char16_t c1 = value_[(std::size_t)index];
-        if (isHigh_(c1) && (index + 1) < (jint)value_.size()) {
-            char16_t c2 = value_[(std::size_t)(index + 1)];
-            if (isLow_(c2)) return (((jint)c1 - 0xD800) << 10) + ((jint)c2 - 0xDC00) + 0x10000;
-        }
-        return (jint)c1;
-    }
-
-    jint StringBuilder::codePointBefore(jint index) const {
-        if (index <= 0 || index > (jint)value_.size()) throwSIOOBE_();
-        char16_t c2 = value_[(std::size_t)(index - 1)];
-        if (isLow_(c2) && (index - 2) >= 0) {
-            char16_t c1 = value_[(std::size_t)(index - 2)];
-            if (isHigh_(c1)) return (((jint)c1 - 0xD800) << 10) + ((jint)c2 - 0xDC00) + 0x10000;
-        }
-        return (jint)c2;
-    }
-
-    jint StringBuilder::codePointCount(jint beginIndex, jint endIndex) const {
-        if (beginIndex < 0 || endIndex < beginIndex || endIndex >(jint)value_.size()) throwSIOOBE_();
-        jint count = 0;
-        for (jint i = beginIndex; i < endIndex; ++i) {
-            char16_t c = value_[(std::size_t)i];
-            if (isHigh_(c) && (i + 1) < endIndex && isLow_(value_[(std::size_t)(i + 1)])) { ++count; ++i; }
-            else ++count;
-        }
-        return count;
-    }
-
-    jint StringBuilder::offsetByCodePoints(jint index, jint codePointOffset) const {
-        if (index < 0 || index >(jint)value_.size()) throwSIOOBE_();
-        jint i = index;
-        if (codePointOffset >= 0) {
-            jint r = codePointOffset;
-            while (r-- > 0) {
-                if (i >= (jint)value_.size()) throwSIOOBE_();
-                char16_t c = value_[(std::size_t)i++];
-                if (isHigh_(c) && i < (jint)value_.size() && isLow_(value_[(std::size_t)i])) ++i;
-            }
-            return i;
-        }
-        else {
-            jint r = -codePointOffset;
-            while (r-- > 0) {
-                if (i <= 0) throwSIOOBE_();
-                char16_t c2 = value_[(std::size_t)(--i)];
-                if (isLow_(c2) && i > 0 && isHigh_(value_[(std::size_t)(i - 1)])) --i;
-            }
-            return i;
-        }
-    }
-
-    jxx::Ptr<StringBuilder> StringBuilder::appendCodePoint(jint codePoint) {
-        if (codePoint < 0 || codePoint > 0x10FFFF) throwIAE_("Invalid code point");
-        if (codePoint <= 0xFFFF) value_.push_back((char16_t)codePoint);
-        else {
-            jint cp = codePoint - 0x10000;
-            value_.push_back((char16_t)(0xD800 + ((cp >> 10) & 0x3FF)));
-            value_.push_back((char16_t)(0xDC00 + (cp & 0x3FF)));
-        }
-        return self_();
-    }
-
-    // ---- utf16 helpers ----
-    std::u16string StringBuilder::toUtf16_(const jxx::Ptr<CharSequence> s) {
-        if (!s) throwNPE_();
-        std::u16string out;
-        out.reserve((std::size_t)s->length());
-        for (jint i = 0; i < s->length(); ++i) out.push_back((char16_t)s->charAt(i));
-        return out;
-    }
-
-    void StringBuilder::appendUtf16_(const std::u16string& s) {
-        if (s.empty()) return;
-        ensureCapacityInternal_((jint)value_.size() + (jint)s.size());
-        value_.append(s);
-    }
-
-    void StringBuilder::insertUtf16_(jint offset, const std::u16string& s) {
-        if (offset < 0 || offset >(jint)value_.size()) throwSIOOBE_();
-        if (s.empty()) return;
-        ensureCapacityInternal_((jint)value_.size() + (jint)s.size());
-        value_.insert(value_.begin() + offset, s.begin(), s.end());
-    }
-
-    // ---- append overloads ----
-    jxx::Ptr<StringBuilder> StringBuilder::append(jbool b) { return append(jxx::NEW<String>(b ? "true" : "false")); }
-
-    // Virtual Appendable::append(jchar) - returns Ptr<Appendable>
-    jxx::Ptr<Appendable> StringBuilder::append(jchar c) { value_.push_back((char16_t)c); return self_(); }
-
-    // StringBuilder-specific appendSB(jchar) - returns Ptr<StringBuilder>
-    jxx::Ptr<StringBuilder> StringBuilder::appendSB(jchar c) { value_.push_back((char16_t)c); return self_(); }
-
-    jxx::Ptr<StringBuilder> StringBuilder::append(CharArray str) {
-        if (!str) return append(jxx::NEW<String>("null"));
-        return append(str, 0, (jint)str->length);
-    }
-
-    jxx::Ptr<StringBuilder> StringBuilder::append(CharArray str, jint offset, jint len) {
-        if (!str) return append(jxx::NEW<String>("null"));
-        if (offset < 0 || len < 0 || (std::uint32_t)(offset + len) > str->length) throwSIOOBE_();
-        appendUtf16_(u16_from_char_array(str, offset, len));
-        return self_();
-    }
-
-    // Virtual Appendable::append(CharSequence) - returns Ptr<Appendable>
-    jxx::Ptr<Appendable> StringBuilder::append(const jxx::Ptr<CharSequence> s) {
-        if (!s) return append(jxx::NEW<String>("null"));
-        appendUtf16_(toUtf16_(s));
-        return self_();
-    }
-
-    // StringBuilder-specific appendSB(CharSequence) - returns Ptr<StringBuilder>
-    jxx::Ptr<StringBuilder> StringBuilder::appendSB(const jxx::Ptr<CharSequence> s) {
-        if (!s) return append(jxx::NEW<String>("null"));
-        appendUtf16_(toUtf16_(s));
-        return self_();
-    }
-
-    // Virtual Appendable::append(CharSequence, int, int) - returns Ptr<Appendable>
-    jxx::Ptr<Appendable> StringBuilder::append(const jxx::Ptr<CharSequence> s, jint start, jint end)
-    {
-        jxx::Ptr<CharSequence> seq = s;
-
-        if (!seq) {
-            seq = jxx::NEW<String>("null");
-        }
-
-        if (start < 0 || end < start || end > seq->length()) {
-            throwSIOOBE_();
-        }
-
-        std::u16string sub;
-        sub.reserve((std::size_t)(end - start));
-
-        for (jint i = start; i < end; ++i) {
-            sub.push_back((char16_t)seq->charAt(i));
-        }
-
-        appendUtf16_(sub);
-        return self_();
-    }
-
-    // StringBuilder-specific appendSB(CharSequence, int, int) - returns Ptr<StringBuilder>
-    jxx::Ptr<StringBuilder> StringBuilder::appendSB(const jxx::Ptr<CharSequence> s, jint start, jint end)
-    {
-        jxx::Ptr<CharSequence> seq = s;
-
-        if (!seq) {
-            seq = jxx::NEW<String>("null");
-        }
-
-        if (start < 0 || end < start || end > seq->length()) {
-            throwSIOOBE_();
-        }
-
-        std::u16string sub;
-        sub.reserve((std::size_t)(end - start));
-
-        for (jint i = start; i < end; ++i) {
-            sub.push_back((char16_t)seq->charAt(i));
-        }
-
-        appendUtf16_(sub);
-        return self_();
-    }
-
-    jxx::Ptr<StringBuilder> StringBuilder::append(jdouble d) {
-        std::ostringstream oss; oss.imbue(std::locale::classic()); oss << d;
-        return append(jxx::NEW<String>(oss.str().c_str()));
-    }
-    jxx::Ptr<StringBuilder> StringBuilder::append(jfloat f) {
-        std::ostringstream oss; oss.imbue(std::locale::classic()); oss << f;
-        return append(jxx::NEW<String>(oss.str().c_str()));
-    }
-    jxx::Ptr<StringBuilder> StringBuilder::append(jint i) { return append(jxx::NEW<String>(std::to_string(i).c_str())); }
-    jxx::Ptr<StringBuilder> StringBuilder::append(jlong lng) { return append(jxx::NEW<String>(std::to_string((long long)lng).c_str())); }
-
-    jxx::Ptr<StringBuilder> StringBuilder::append(const jxx::Ptr<Object> obj) {
-        if (!obj) return append(jxx::NEW<String>("null"));
-        return append(obj->toString());
-    }
-    jxx::Ptr<StringBuilder> StringBuilder::append(const jxx::Ptr<String> str) {
-        jxx::Ptr<String> str2 = str;
-        if (!str2) str2 = jxx::NEW<String>("null");
-        appendUtf16_(str2->utf16());
-        return self_();
-    }
-    jxx::Ptr<StringBuilder> StringBuilder::append(const jxx::Ptr<StringBuffer> sb) {
-        if (!sb) return append(jxx::NEW<String>("null"));
-        return append(sb->toString());
-    }
-
-    // ---- delete / replace / reverse ----
-    jxx::Ptr<StringBuilder> StringBuilder::delete_(jint start, jint end) {
-        if (start < 0) throwSIOOBE_();
-        if (end > (jint)value_.size()) end = (jint)value_.size();
-        if (start > end) throwSIOOBE_();
-        value_.erase(value_.begin() + start, value_.begin() + end);
-        return self_();
-    }
-
-    jxx::Ptr<StringBuilder> StringBuilder::deleteCharAt(jint index) {
-        if (index < 0 || index >= (jint)value_.size()) throwSIOOBE_();
-        value_.erase(value_.begin() + index);
-        return self_();
-    }
-
-    jxx::Ptr<StringBuilder> StringBuilder::replace(jint start, jint end, jxx::Ptr<String> str) {
-        if (start < 0 || start > end || end > (jint)value_.size()) throwSIOOBE_();
-        if (!str) str = jxx::NEW<String>("null");
-        value_.erase(value_.begin() + start, value_.begin() + end);
-        insertUtf16_(start, str->utf16());
-        return self_();
-    }
-
-    jxx::Ptr<StringBuilder> StringBuilder::reverse() {
-        std::reverse(value_.begin(), value_.end());
-        for (std::size_t i = 0; i + 1 < value_.size(); ++i) {
-            char16_t c1 = value_[i];
-            char16_t c2 = value_[i + 1];
-            if (isLow_(c1) && isHigh_(c2)) {
-                value_[i] = c2;
-                value_[i + 1] = c1;
-                ++i;
-            }
-        }
-        return self_();
-    }
-
-    // ---- insert overloads ----
-    jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jbool b) { return insert(offset, jxx::NEW<String>(b ? "true" : "false")); }
-
-    jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jchar c) {
-        if (offset < 0 || offset >(jint)value_.size()) throwSIOOBE_();
-        value_.insert(value_.begin() + offset, (char16_t)c);
-        return self_();
-    }
-
-    jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, const CharArray str) {
-        if (!str) return insert(offset, jxx::NEW<String>("null"));
-        return insert(offset, str, 0, (jint)str->length);
-    }
-
-    jxx::Ptr<StringBuilder> StringBuilder::insert(jint index, const CharArray str, jint offset, jint len) {
-        if (!str) return insert(index, jxx::NEW<String>("null"));
-        if (offset < 0 || len < 0 || (std::uint32_t)(offset + len) > str->length) throwSIOOBE_();
-        insertUtf16_(index, u16_from_char_array(str, offset, len));
-        return self_();
-    }
-
-    jxx::Ptr<StringBuilder> StringBuilder::insert(jint dstOffset, const jxx::Ptr<CharSequence> s)
-    {
-        jxx::Ptr<CharSequence> seq = s;
-
-        if (!seq) {
-            seq = jxx::NEW<String>("null");
-        }
-
-        insertUtf16_(dstOffset, toUtf16_(seq));
-        return self_();
-    }
-
-    jxx::Ptr<StringBuilder> StringBuilder::insert(
-        jint dstOffset,
-        const jxx::Ptr<CharSequence> s,
-        jint start,
-        jint end)
-    {
-        jxx::Ptr<CharSequence> seq = s;
-
-        if (!seq) {
-            seq = jxx::NEW<String>("null");
-        }
-
-        if (start < 0 || end < start || end > seq->length()) {
-            throwSIOOBE_();
-        }
-
-        std::u16string sub;
-        sub.reserve((std::size_t)(end - start));
-
-        for (jint i = start; i < end; ++i) {
-            sub.push_back((char16_t)seq->charAt(i));
-        }
-
-        insertUtf16_(dstOffset, sub);
-        return self_();
-    }
-
-    jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jdouble d) {
-        std::ostringstream oss; oss.imbue(std::locale::classic()); oss << d;
-        return insert(offset, jxx::NEW<String>(oss.str().c_str()));
-    }
-    jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jfloat f) {
-        std::ostringstream oss; oss.imbue(std::locale::classic()); oss << f;
-        return insert(offset, jxx::NEW<String>(oss.str().c_str()));
-    }
-    jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jint i) { return insert(offset, jxx::NEW<String>(std::to_string(i).c_str())); }
-    jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, jlong l) { return insert(offset, jxx::NEW<String>(std::to_string((long long)l).c_str())); }
-
-    jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, const jxx::Ptr<Object> obj) {
-        if (!obj) return insert(offset, jxx::NEW<String>("null"));
-        return insert(offset, obj->toString());
-    }
-
-    jxx::Ptr<StringBuilder> StringBuilder::insert(jint offset, const jxx::Ptr<String> str)
-    {
-        jxx::Ptr<String> localStr = str;
-
-        if (!localStr) {
-            localStr = jxx::NEW<String>("null");
-        }
-
-        insertUtf16_(offset, localStr->utf16());
-        return self_();
-    }
-
-    // ---- getChars ----
-    void StringBuilder::getChars(jint srcBegin, jint srcEnd, const CharArray dst, jint dstBegin) const {
-        if (!dst) throwNPE_();
-        if (srcBegin < 0 || srcEnd < srcBegin || srcEnd >(jint)value_.size()) throwSIOOBE_();
-        if (dstBegin < 0) throwSIOOBE_();
-        if ((std::uint32_t)(dstBegin + (srcEnd - srcBegin)) > dst->length) throwSIOOBE_();
-        for (jint i = 0; i < (srcEnd - srcBegin); ++i) {
-            (*dst)[dstBegin + i] = (jchar)value_[(std::size_t)(srcBegin + i)];
-        }
-    }
-
-    // ---- indexOf / lastIndexOf ----
-    jint StringBuilder::indexOf(const jxx::Ptr<String> str) const { return indexOf(str, 0); }
-
-    jint StringBuilder::indexOf(const jxx::Ptr<String> str, jint fromIndex) const {
-        if (!str) throwNPE_();
-        if (fromIndex < 0) fromIndex = 0;
-        if (fromIndex > (jint)value_.size()) return -1;
-        const auto& needle = str->utf16();
-        if (needle.empty()) return fromIndex;
-        auto pos = value_.find(needle, (std::size_t)fromIndex);
-        return (pos == std::u16string::npos) ? -1 : (jint)pos;
-    }
-
-    jint StringBuilder::lastIndexOf(const jxx::Ptr<String> str) const { return lastIndexOf(str, (jint)value_.size()); }
-
-    jint StringBuilder::lastIndexOf(const jxx::Ptr<String> str, jint fromIndex) const {
-        if (!str) throwNPE_();
-        const auto& needle = str->utf16();
-        if (needle.empty()) return std::min(fromIndex, (jint)value_.size());
-        if (fromIndex > (jint)value_.size()) fromIndex = (jint)value_.size();
-        if (fromIndex < 0) return -1;
-        auto pos = value_.rfind(needle, (std::size_t)fromIndex);
-        return (pos == std::u16string::npos) ? -1 : (jint)pos;
-    }
-
-    // ---- substring ----
-    jxx::Ptr<String> StringBuilder::substring(jint start) const { return substring(start, (jint)value_.size()); }
-
-    jxx::Ptr<String> StringBuilder::substring(jint start, jint end) const {
-        if (start < 0 || end < start || end >(jint)value_.size()) throwSIOOBE_();
-        jint n = end - start;
-        auto ca = jxx::NEW<CharArrayType>((std::uint32_t)n);
-        for (jint i = 0; i < n; ++i) (*ca)[i] = (jchar)value_[(std::size_t)(start + i)];
-        return jxx::NEW<String>(ca);
-    }
-
-    void StringBuilder::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) {
-        if (!out) throwNPE_();
-        out->writeInt((jint)value_.size());
-		for (char16_t c : value_) out->writeChar((jchar)c);
-    }
-    void StringBuilder::readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) {
-        if (!in) throwNPE_();
-        jint size = in->readInt();
-        auto ca = jxx::NEW<CharArrayType>((std::uint32_t)size);
-        for (jint i = 0; i < size; ++i) {
-            (*ca)[i] = in->readChar();
-        }
-        //value_ = ca->toString()->utf16();
-    }
-    void StringBuilder::readObjectNoData() {
-        value_.clear();
-    }
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "lang/jxx.lang.Exceptions.h"
+#include "lang/jxx.lang.StringBuffer.h"
+
+namespace jxx::lang
+{
+	namespace
+	{
+		std::u16string charArrayText(const CharArray& array, jint offset, jint length)
+		{
+			std::u16string result;
+			result.reserve(static_cast<std::size_t>(length));
+			for (jint i = 0; i < length; ++i) result.push_back(static_cast<char16_t>((*array)[offset + i]));
+			return result;
+		}
+	}
+
+	bool StringBuilder::isHigh_(char16_t v) noexcept
+	{
+		return v >= 0xD800 && v <= 0xDBFF;
+	}
+	bool StringBuilder::isLow_(char16_t v) noexcept
+	{
+		return v >= 0xDC00 && v <= 0xDFFF;
+	}
+	void StringBuilder::throwNPE_()
+	{
+		throw NullPointerException();
+	}
+	void StringBuilder::throwSIOOBE_()
+	{
+		throw StringIndexOutOfBoundsException();
+	}
+	void StringBuilder::throwIAE_(const char*)
+	{
+		throw IllegalArgumentException();
+	}
+
+	jxx::Ptr<StringBuilder> StringBuilder::self_()
+	{
+		return jxx::CAST<StringBuilder>(thisPtr);
+	}
+
+	StringBuilder::StringBuilder() : value_(), capacity_(DEFAULT_CAPACITY)
+	{
+		value_.reserve(capacity_);
+	}
+	StringBuilder::StringBuilder(jint capacity) : value_(), capacity_(capacity)
+	{
+		if (capacity < 0) throw NegativeArraySizeException();
+		value_.reserve(static_cast<std::size_t>(capacity_));
+	}
+	StringBuilder::StringBuilder(const jxx::Ptr<String>& string) : value_(), capacity_(0)
+	{
+		if (string == nullptr) throwNPE_();
+		value_ = string->utf16();
+		capacity_ = static_cast<jint>(value_.size()) + DEFAULT_CAPACITY;
+		value_.reserve(static_cast<std::size_t>(capacity_));
+	}
+	StringBuilder::StringBuilder(const jxx::Ptr<CharSequence>& sequence) : value_(), capacity_(0)
+	{
+		if (sequence == nullptr) throwNPE_();
+		value_ = toUtf16_(sequence);
+		capacity_ = static_cast<jint>(value_.size()) + DEFAULT_CAPACITY;
+		value_.reserve(static_cast<std::size_t>(capacity_));
+	}
+
+	jint StringBuilder::length() const
+	{
+		return static_cast<jint>(value_.size());
+	}
+	jint StringBuilder::capacity() const
+	{
+		return capacity_;
+	}
+	jint StringBuilder::newCapacity_(jint minimum) const
+	{
+		std::int64_t candidate = static_cast<std::int64_t>(capacity_) * 2 + 2;
+		if (candidate < minimum) candidate = minimum;
+		if (candidate > std::numeric_limits<jint>::max()) {
+			if (minimum < 0) throw OutOfMemoryError();
+			candidate = std::numeric_limits<jint>::max();
+		}
+		return static_cast<jint>(candidate);
+	}
+	void StringBuilder::ensureCapacityInternal_(jint minimum)
+	{
+		if (minimum <= capacity_) return;
+		capacity_ = newCapacity_(minimum);
+		value_.reserve(static_cast<std::size_t>(capacity_));
+	}
+	void StringBuilder::ensureCapacity(jint minimum)
+	{
+		if (minimum > 0) ensureCapacityInternal_(minimum);
+	}
+	void StringBuilder::trimToSize()
+	{
+		capacity_ = length(); std::u16string compact(value_); value_.swap(compact);
+	}
+	void StringBuilder::setLength(jint newLength)
+	{
+		if (newLength < 0) throwSIOOBE_();
+		ensureCapacityInternal_(newLength);
+		value_.resize(static_cast<std::size_t>(newLength), u'\0');
+	}
+
+	jchar StringBuilder::charAt(jint index) const
+	{
+		if (index < 0 || index >= length()) throwSIOOBE_(); return static_cast<jchar>(value_[index]);
+	}
+	void StringBuilder::setCharAt(jint index, jchar value)
+	{
+		if (index < 0 || index >= length()) throwSIOOBE_(); value_[index] = static_cast<char16_t>(value);
+	}
+
+	jint StringBuilder::codePointAt(jint index) const
+	{
+		if (index < 0 || index >= length()) throwSIOOBE_();
+		const auto first = value_[index];
+		if (isHigh_(first) && index + 1 < length() && isLow_(value_[index + 1])) return ((first - 0xD800) << 10) + (value_[index + 1] - 0xDC00) + 0x10000;
+		return first;
+	}
+	jint StringBuilder::codePointBefore(jint index) const
+	{
+		if (index <= 0 || index > length()) throwSIOOBE_();
+		const auto second = value_[index - 1];
+		if (isLow_(second) && index > 1 && isHigh_(value_[index - 2])) return ((value_[index - 2] - 0xD800) << 10) + (second - 0xDC00) + 0x10000;
+		return second;
+	}
+	jint StringBuilder::codePointCount(jint begin, jint end) const
+	{
+		if (begin < 0 || end<begin || end>length()) throwSIOOBE_();
+		jint count = 0; for (jint i = begin; i < end; ++i, ++count) if (isHigh_(value_[i]) && i + 1 < end && isLow_(value_[i + 1])) ++i; return count;
+	}
+	jint StringBuilder::offsetByCodePoints(jint index, jint offset) const
+	{
+		if (index<0 || index>length()) throwSIOOBE_(); jint i = index;
+		if (offset >= 0) {
+			for (jint n = 0; n < offset; ++n) {
+				if (i >= length())throwSIOOBE_(); auto c = value_[i++]; if (isHigh_(c) && i < length() && isLow_(value_[i]))++i;
+			}
+		}
+		else {
+			for (jint n = 0; n < -offset; ++n) {
+				if (i <= 0)throwSIOOBE_(); auto c = value_[--i]; if (isLow_(c) && i > 0 && isHigh_(value_[i - 1]))--i;
+			}
+		} return i;
+	}
+
+	std::u16string StringBuilder::toUtf16_(const jxx::Ptr<CharSequence>& sequence)
+	{
+		if (sequence == nullptr) throwNPE_(); std::u16string result; result.reserve(sequence->length());
+		for (jint i = 0; i < sequence->length(); ++i) result.push_back(static_cast<char16_t>(sequence->charAt(i))); return result;
+	}
+	void StringBuilder::appendUtf16_(const std::u16string& text)
+	{
+		if (text.empty())return; const auto required = value_.size() + text.size();
+		if (required > static_cast<std::size_t>(std::numeric_limits<jint>::max())) throw jxx::lang::OutOfMemoryError();
+		ensureCapacityInternal_(static_cast<jint>(required)); value_.append(text);
+	}
+	void StringBuilder::insertUtf16_(jint offset, const std::u16string& text)
+	{
+		if (offset<0 || offset>length())throwSIOOBE_(); if (text.empty())return;
+		const auto required = value_.size() + text.size(); if (required > static_cast<std::size_t>(std::numeric_limits<jint>::max()))throw OutOfMemoryError();
+		ensureCapacityInternal_(static_cast<jint>(required)); value_.insert(static_cast<std::size_t>(offset), text);
+	}
+
+	jxx::Ptr<StringBuilder> StringBuilder::append(jbool v)
+	{
+		return append(jxx::NEW<String>(v ? "true" : "false"));
+	}
+	jxx::Ptr<Appendable> StringBuilder::append(jchar v)
+	{
+		ensureCapacityInternal_(length() + 1); value_.push_back(v); return jxx::CAST<Appendable>(self_());
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::appendSB(jchar v)
+	{
+		ensureCapacityInternal_(length() + 1); value_.push_back(v); return self_();
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::append(const CharArray& a)
+	{
+		return a == nullptr ? append(jxx::NEW<String>("null")) : append(a, 0, a->length);
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::append(const CharArray& a, jint o, jint n)
+	{
+		if (a == nullptr)return append(jxx::NEW<String>("null")); if (o < 0 || n<0 || o + n>a->length)throwSIOOBE_(); appendUtf16_(charArrayText(a, o, n)); return self_();
+	}
+	jxx::Ptr<Appendable> StringBuilder::append(const jxx::Ptr<CharSequence> s)
+	{
+		appendUtf16_(s == nullptr ? u"null" : toUtf16_(s)); return jxx::CAST<Appendable>(self_());
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::appendSB(const jxx::Ptr<CharSequence> s)
+	{
+		appendUtf16_(s == nullptr ? u"null" : toUtf16_(s)); return self_();
+	}
+	jxx::Ptr<Appendable> StringBuilder::append(const jxx::Ptr<CharSequence> s, jint start, jint end)
+	{
+		auto text = s == nullptr ? std::u16string(u"null") : toUtf16_(s); if (start < 0 || end<start || end>static_cast<jint>(text.size()))throwSIOOBE_(); appendUtf16_(text.substr(start, end - start)); return jxx::CAST<Appendable>(self_());
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::appendSB(const jxx::Ptr<CharSequence> s, jint start, jint end)
+	{
+		append(s, start, end); return self_();
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::append(jdouble v)
+	{
+		std::ostringstream o; o.imbue(std::locale::classic()); o << v; return append(jxx::NEW<String>(o.str()));
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::append(jfloat v)
+	{
+		std::ostringstream o; o.imbue(std::locale::classic()); o << v; return append(jxx::NEW<String>(o.str()));
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::append(jint v)
+	{
+		return append(jxx::NEW<String>(std::to_string(v)));
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::append(jlong v)
+	{
+		return append(jxx::NEW<String>(std::to_string(v)));
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::append(const jxx::Ptr<Object> v)
+	{
+		return append(v == nullptr ? jxx::NEW<String>("null") : v->toString());
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::append(const jxx::Ptr<String> v)
+	{
+		appendUtf16_(v == nullptr ? u"null" : v->utf16()); return self_();
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::append(const jxx::Ptr<StringBuffer> v)
+	{
+		return append(v == nullptr ? jxx::NEW<String>("null") : v->toString());
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::appendCodePoint(jint cp)
+	{
+		if (cp < 0 || cp>0x10FFFF)throwIAE_("Invalid code point"); ensureCapacityInternal_(length() + (cp <= 0xFFFF ? 1 : 2)); if (cp <= 0xFFFF)value_.push_back(cp); else {
+			cp -= 0x10000; value_.push_back(0xD800 + (cp >> 10)); value_.push_back(0xDC00 + (cp & 0x3FF));
+		}return self_();
+	}
+
+	jxx::Ptr<StringBuilder> StringBuilder::delete_(jint s, jint e)
+	{
+		if (s < 0)throwSIOOBE_(); e = std::min(e, length()); if (s > e)throwSIOOBE_(); value_.erase(s, e - s); return self_();
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::deleteCharAt(jint i)
+	{
+		if (i < 0 || i >= length())throwSIOOBE_(); value_.erase(i, 1); return self_();
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::replace(jint s, jint e, const jxx::Ptr<String>& v)
+	{
+		if (s<0 || s>e || s > length())throwSIOOBE_(); e = std::min(e, length()); auto t = v == nullptr ? std::u16string(u"null") : v->utf16(); value_.erase(s, e - s); insertUtf16_(s, t); return self_();
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::reverse()
+	{
+		std::reverse(value_.begin(), value_.end()); for (std::size_t i = 0; i + 1 < value_.size(); ++i)if (isLow_(value_[i]) && isHigh_(value_[i + 1])) {
+			std::swap(value_[i], value_[i + 1]); ++i;
+		}return self_();
+	}
+
+	jxx::Ptr<StringBuilder> StringBuilder::insert(jint o, jbool v)
+	{
+		return insert(o, jxx::NEW<String>(v ? "true" : "false"));
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::insert(jint o, jchar v)
+	{
+		if (o<0 || o>length())throwSIOOBE_(); ensureCapacityInternal_(length() + 1); value_.insert(value_.begin() + o, v); return self_();
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::insert(jint o, const CharArray a)
+	{
+		return a == nullptr ? insert(o, jxx::NEW<String>("null")) : insert(o, a, 0, a->length);
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::insert(jint i, const CharArray a, jint o, jint n)
+	{
+		if (a == nullptr)return insert(i, jxx::NEW<String>("null")); if (o < 0 || n<0 || o + n>a->length)throwSIOOBE_(); insertUtf16_(i, charArrayText(a, o, n)); return self_();
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::insert(jint o, const jxx::Ptr<CharSequence> s)
+	{
+		insertUtf16_(o, s == nullptr ? u"null" : toUtf16_(s)); return self_();
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::insert(jint o, const jxx::Ptr<CharSequence> s, jint start, jint end)
+	{
+		auto t = s == nullptr ? std::u16string(u"null") : toUtf16_(s); if (start < 0 || end<start || end>static_cast<jint>(t.size()))throwSIOOBE_(); insertUtf16_(o, t.substr(start, end - start)); return self_();
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::insert(jint o, jdouble v)
+	{
+		std::ostringstream s; s.imbue(std::locale::classic()); s << v; return insert(o, jxx::NEW<String>(s.str()));
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::insert(jint o, jfloat v)
+	{
+		std::ostringstream s; s.imbue(std::locale::classic()); s << v; return insert(o, jxx::NEW<String>(s.str()));
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::insert(jint o, jint v)
+	{
+		return insert(o, jxx::NEW<String>(std::to_string(v)));
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::insert(jint o, jlong v)
+	{
+		return insert(o, jxx::NEW<String>(std::to_string(v)));
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::insert(jint o, const jxx::Ptr<Object> v)
+	{
+		return insert(o, v == nullptr ? jxx::NEW<String>("null") : v->toString());
+	}
+	jxx::Ptr<StringBuilder> StringBuilder::insert(jint o, const jxx::Ptr<String> v)
+	{
+		insertUtf16_(o, v == nullptr ? u"null" : v->utf16()); return self_();
+	}
+
+	void StringBuilder::getChars(jint b, jint e, const CharArray& d, jint db) const
+	{
+		if (d == nullptr)throwNPE_(); if (b < 0 || e<b || e>length() || db<0 || db + e - b>d->length)throwSIOOBE_(); for (jint i = 0; i < e - b; ++i)(*d)[db + i] = value_[b + i];
+	}
+	jint StringBuilder::indexOf(const jxx::Ptr<String>& s) const
+	{
+		return indexOf(s, 0);
+	}
+	jint StringBuilder::indexOf(const jxx::Ptr<String>& s, jint from) const
+	{
+		if (s == nullptr)throwNPE_(); from = std::max(0, from); if (from > length())return -1; auto p = value_.find(s->utf16(), from); return p == std::u16string::npos ? -1 : static_cast<jint>(p);
+	}
+	jint StringBuilder::lastIndexOf(const jxx::Ptr<String>& s) const
+	{
+		return lastIndexOf(s, length());
+	}
+	jint StringBuilder::lastIndexOf(const jxx::Ptr<String>& s, jint from) const
+	{
+		if (s == nullptr)throwNPE_(); if (from < 0)return -1; from = std::min(from, length()); auto p = value_.rfind(s->utf16(), from); return p == std::u16string::npos ? -1 : static_cast<jint>(p);
+	}
+	jxx::Ptr<String> StringBuilder::substring(jint s) const
+	{
+		return substring(s, length());
+	}
+	jxx::Ptr<String> StringBuilder::substring(jint s, jint e) const
+	{
+		if (s < 0 || e<s || e>length())throwSIOOBE_(); return jxx::NEW<String>(value_.substr(s, e - s));
+	}
+	jxx::Ptr<CharSequence> StringBuilder::subSequence(jint s, jint e) const
+	{
+		return jxx::CAST<CharSequence>(substring(s, e));
+	}
+	jxx::Ptr<String> StringBuilder::toString() const
+	{
+		return jxx::NEW<String>(value_);
+	}
+
+	void StringBuilder::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out)
+	{
+		if (out == nullptr)throwNPE_(); out->writeInt(length()); for (auto c : value_)out->writeChar(c);
+	}
+	void StringBuilder::readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in)
+	{
+		if (in == nullptr)throwNPE_(); const auto n = in->readInt(); if (n < 0)throw IllegalArgumentException(); value_.clear(); capacity_ = n + DEFAULT_CAPACITY; value_.reserve(capacity_); for (jint i = 0; i < n; ++i)value_.push_back(in->readChar());
+	}
+	void StringBuilder::readObjectNoData()
+	{
+		value_.clear(); capacity_ = DEFAULT_CAPACITY; value_.reserve(capacity_);
+	}
+	jxx::Ptr<Object> StringBuilder::cloneImpl() const
+	{
+		throw CloneNotSupportedException();
+	}
 
 } // namespace jxx::lang

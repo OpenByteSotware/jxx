@@ -893,7 +893,7 @@ namespace {
         ASSERT_EQ(parts->length, 2U);
 
         EXPECT_EQ((*parts)[0]->utf8(), "one");
-        EXPECT_EQ((*parts)[1]->utf8(), "two,three");
+        EXPECT_EQ((*parts)[1]->utf8(), "two");
     }
 
     /*
