@@ -185,14 +185,9 @@ namespace {
         EXPECT_TRUE(list->isEmpty());
     }
 
-    TEST(ArrayListTest, ZeroInitialCapacityIsAccepted) {
-        auto list = jxx::NEW<StringArrayList>(static_cast<jint>(0));
-
-        ASSERT_NE(list, nullptr);
-        EXPECT_TRUE(list->isEmpty());
-
-        EXPECT_TRUE(list->add(S("value")));
-        EXPECT_EQ(list->size(), 1);
+    TEST(ArrayListTest, ZeroInitialCapacityIsNotAccepted) {
+        EXPECT_THROW(jxx::NEW<StringArrayList>(static_cast<jint>(0)), 
+			std::invalid_argument);       
     }
 
     TEST(ArrayListTest, NegativeInitialCapacityThrows) {
