@@ -168,42 +168,124 @@ namespace jxx::lang {
         return (n == "java.lang.Object" || n == "java.lang.Cloneable" || n == "java.io.Serializable");
     }
 
-    jbool ClassAny::isAssignableFromImpl_(const ClassAny& target, const ClassAny& src) {
-        // same type
-        if (target.meta_.typeId == src.meta_.typeId) return true;
-        if (!target.meta_.binaryName.empty() && target.meta_.binaryName == src.meta_.binaryName) return true;
+    jbool ClassAny::isAssignableFromImpl_(const ClassAny& target, const ClassAny& source)
+    {
 
-        // array special rules
-        if (src.meta_.isArray && isArraySuperInterfaceName(target.meta_.binaryName)) return true;
+        const auto voidType =
+            std::type_index(
+                typeid(void));
 
-        // superclass chain
-        for (auto cur = src.meta_.superClass; cur; cur = cur->meta_.superClass) {
-            if (cur->meta_.typeId == target.meta_.typeId) return true;
-            if (cur->meta_.binaryName == target.meta_.binaryName) return true;
+        /*
+         * Same concrete RTTI type.
+         *
+         * Do not compare typeid(void), because array descriptors use that
+         * as their sentinel type.
+         */
+        if (target.meta_.typeId != voidType &&
+            source.meta_.typeId != voidType &&
+            target.meta_.typeId ==
+                source.meta_.typeId) {
+
+            return true;
         }
 
-        // interface closure
-        std::vector<jxx::Ptr<ClassAny>> stack(src.meta_.interfaces.begin(), src.meta_.interfaces.end());
-        while (!stack.empty()) {
-            auto top = stack.back();
-            stack.pop_back();
-            if (!top) continue;
-            if (top->meta_.typeId == target.meta_.typeId) return true;
-            if (top->meta_.binaryName == target.meta_.binaryName) return true;
-            for (auto& ii : top->meta_.interfaces) stack.push_back(ii);
+        /*
+         * Same canonical binary name.
+         */
+        if (!target.meta_.binaryName.empty() &&
+            target.meta_.binaryName ==
+                source.meta_.binaryName) {
+
+            return true;
         }
 
-        // array component covariance:
-        // In Java, S[] is assignable to T[] if S is assignable to T and both are reference types.
-        if (target.meta_.isArray && src.meta_.isArray) {
-            auto tc = target.meta_.componentType;
-            auto sc = src.meta_.componentType;
-            if (!tc || !sc) return false;
-            if (tc->meta_.isPrimitive || sc->meta_.isPrimitive) {
-                // primitive arrays only assignable if same primitive type (handled above)
+        /*
+         * Java array superclass/interface rules.
+         */
+        if (source.meta_.isArray &&
+            isArraySuperInterfaceName(
+                target.meta_.binaryName)) {
+
+            return true;
+        }
+
+        /*
+         * Java reference-array covariance:
+         *
+         * S[] is assignable to T[] when S is assignable to T.
+         */
+        if (target.meta_.isArray &&
+            source.meta_.isArray) {
+
+            const auto targetComponent =
+                target.meta_.componentType;
+
+            const auto sourceComponent =
+                source.meta_.componentType;
+
+            if (targetComponent == nullptr ||
+                sourceComponent == nullptr) {
+
                 return false;
             }
-            return isAssignableFromImpl_(*tc, *sc);
+
+            /*
+             * Primitive arrays are assignable only when their exact array
+             * types match. Exact matches were handled above.
+             */
+            if (targetComponent->
+                    meta_.isPrimitive ||
+                sourceComponent->
+                    meta_.isPrimitive) {
+
+                return false;
+            }
+
+            return isAssignableFromImpl_(
+                *targetComponent,
+                *sourceComponent);
+        }
+
+        /*
+         * Search every directly declared interface.
+         *
+         * Recursion also searches parent interfaces.
+         */
+        for (const auto& interfaceType :
+             source.meta_.interfaces) {
+
+            if (interfaceType == nullptr) {
+                continue;
+            }
+
+            if (isAssignableFromImpl_(
+                target,
+                *interfaceType)) {
+
+                return true;
+            }
+        }
+
+        /*
+         * Search the superclass recursively.
+         *
+         * This is the important correction. The recursive call checks:
+         *
+         *   - the superclass itself
+         *   - interfaces implemented by the superclass
+         *   - interfaces extended by those interfaces
+         *   - the superclass's own superclass
+         *
+         * In this test:
+         *
+         *   ConcreteDevice
+         *       -> AbstractDevice
+         *           -> Startable
+         */
+        if (source.meta_.superClass != nullptr) {
+            return isAssignableFromImpl_(
+                target,
+                *source.meta_.superClass);
         }
 
         return false;

@@ -263,6 +263,16 @@ public:
         return ensureRegistered();
     }
 
+    /**
+     * Registration callback used by jxx::lang::initialize().
+     *
+     * The callback has a void return type so it can be stored as an ordinary
+     * function pointer without constructing a ClassAny until initialization.
+     */
+    static void initializeClass() {
+        (void)ensureRegistered();
+    }
+
     static const std::string& staticClassName() {
         return class_info_detail::binaryTypeName<Derived>();
     }
