@@ -11,6 +11,7 @@ namespace jxx::lang {
 
     ClassAny::ClassAny(Meta meta) : meta_(std::move(meta)) {}
 
+
     jxx::Ptr<ClassAny> ClassAny::registerClass(const Meta& meta) {
         if (meta.binaryName.empty()) {
             throw IllegalArgumentException(jxx::NEW<String>("Class.registerClass: binaryName is empty"));
@@ -32,23 +33,44 @@ namespace jxx::lang {
         return cls;
     }
 
-    jxx::Ptr<ClassAny> ClassAny::forName(const jxx::Ptr<String> className) {
-        if (!className) throw NullPointerException(jxx::NEW<String>("className"));
+    jxx::Ptr<ClassAny> ClassAny::forName(const jxx::Ptr<String> className)
+    {
 
-        std::string key = className->utf8();
-        std::lock_guard<std::mutex> lk(registryMutex_);
-
-        auto it = registryByName_.find(key);
-        if (it != registryByName_.end()) {
-            if (auto c = it->second.lock()) return c;
+        if (className == nullptr) {
+            throw NullPointerException(
+                jxx::NEW<String>(
+                    "className"));
         }
 
-        throw ClassNotFoundException(jxx::NEW<String>(className->utf8().c_str()));
+        const std::string key =
+            className->utf8();
+
+        std::lock_guard<std::mutex>
+            lock(registryMutex_);
+
+        auto iterator =
+            registryByName_.find(key);
+
+        if (iterator !=
+            registryByName_.end()) {
+
+            if (auto descriptor =
+                    iterator->
+                        second.lock()) {
+
+                return descriptor;
+            }
+        }
+
+        throw ClassNotFoundException(
+            jxx::NEW<String>(key));
     }
 
-    jxx::Ptr<ClassAny> ClassAny::forName(const jxx::Ptr<String> className, jxx::lang::jbool /*initialize*/, jxx::Ptr<ClassLoader> /*loader*/) {
-        // Java allows loading via specific loader and optional initialization.
-        // JXX runtime typically has a single registry, so we treat as alias.
+    jxx::Ptr<ClassAny>  ClassAny::forName(const jxx::Ptr<String> className,
+            jbool /* initialize */,
+            const jxx::Ptr<ClassLoader>
+        /* loader */)
+    {
         return forName(className);
     }
 
@@ -199,17 +221,34 @@ namespace jxx::lang {
         return this->isAssignableFrom(oc);
     }
 
-    jxx::Ptr<Object> ClassAny::cast(const jxx::Ptr<Object> obj) const {
-        if (!obj) return nullptr;
-        if (isInstance(obj)) return obj;
+    jxx::Ptr<Object> ClassAny::cast(const jxx::Ptr<Object> object) const
+    {
+        if (object == nullptr) {
+            return nullptr;
+        }
 
-        auto src = obj->getClass();
-        std::string msg;
-        if (src) msg = src->meta_.binaryName;
-        else msg = "Object";
-        msg += " cannot be cast to ";
-        msg += meta_.binaryName;
-        throw ClassCastException(jxx::NEW<String>(msg.c_str()));
+        if (isInstance(object)) {
+            return object;
+        }
+
+        auto sourceClass =
+            object->getClass();
+
+        std::string message =
+            sourceClass == nullptr
+            ? "Object"
+            : sourceClass->
+            meta_.binaryName;
+
+        message +=
+            " cannot be cast to ";
+
+        message +=
+            meta_.binaryName;
+
+        throw ClassCastException(
+            jxx::NEW<String>(
+                message));
     }
 
     jxx::Ptr<Object> ClassAny::newInstance() const {

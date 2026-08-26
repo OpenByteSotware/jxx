@@ -3,6 +3,7 @@
 #include "jxx_types.h"
 #include "jxx.lang.Object.h"
 #include "io/jxx.io.Serializable.h"
+#include "lang/jxx.lang.ClassInfoMarker.h"
 
 // Exceptions required (as you stated)
 #include "jxx.lang.NullPointerException.h"
@@ -44,21 +45,21 @@ namespace jxx::lang {
         // ---------------------------------------------------------------------
         using FactoryFn = std::function<jxx::Ptr<Object>()>;
 
-        struct Meta {
-            // Java binary name (Class.getName()):
-            //  - normal: "java.lang.String"
-            //  - array primitive: "[I", "[Z", etc
-            //  - array ref: "[Ljava.lang.String;"
+        using InstancePredicate = std::function<jbool(const jxx::Ptr<Object>&)>;
+
+        struct Meta
+        {
             std::string binaryName;
 
-            // RTTI key for Object::getClass() -> ClassAny mapping
-            std::type_index typeId = typeid(void);
+            std::type_index typeId =
+                typeid(void);
 
-            // super + interfaces
-            jxx::Ptr<ClassAny> superClass;                 // null for Object / primitive / void
-            std::vector<jxx::Ptr<ClassAny>> interfaces;    // direct interfaces
+            jxx::Ptr<ClassAny> superClass;
 
-            // kind flags
+            std::vector<
+                jxx::Ptr<ClassAny>>
+                interfaces;
+
             jbool isInterface = false;
             jbool isPrimitive = false;
             jbool isArray = false;
@@ -66,15 +67,24 @@ namespace jxx::lang {
             jbool isAnnotation = false;
             jbool isSynthetic = false;
 
-            // arrays
-            jxx::Ptr<ClassAny> componentType;              // for arrays only
+            jxx::Ptr<ClassAny>
+                componentType;
 
-            // modifier bitmask (java.lang.reflect.Modifier compatible)
             jint modifiers = 0;
 
-            // Java 8 Class.newInstance() factory (public no-arg ctor)
-            // If not set => newInstance throws InstantiationException.
             FactoryFn factory;
+
+            /**
+             * Runtime equivalent of Java Class.isInstance().
+             *
+             * For an Object-derived JXX class, this performs a normal
+             * dynamic cast to that class.
+             *
+             * For a pure-virtual JXX interface, this performs a cross-cast
+             * from Object through the complete concrete implementation.
+             */
+            InstancePredicate
+                instancePredicate;
         };
 
         explicit ClassAny(Meta meta);

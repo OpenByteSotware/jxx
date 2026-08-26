@@ -21,7 +21,6 @@
 #include <chrono>
 #include <iostream>
 
-#include "lang/jxx.lang.Cloneable.h"
 // ---------- Optional: demangle for GCC/Clang ----------
 #if defined(__GNUG__) || defined(__clang__)
 #include <cxxabi.h>
@@ -30,6 +29,8 @@
 
 #include "jxx.lang.ByteType.h"
 #include "jxx_types.h"
+#include "lang/jxx.lang.Cloneable.h"
+#include "lang/jxx.lang.ClassInfoMarker.h"
 
 namespace jxx::lang {
     class Object;
@@ -191,20 +192,7 @@ namespace jxx::lang {
     using PolySet = std::unordered_set<TPtr, PolyHash, PolyEqual>;
 
     template <typename TValue, typename TKeyPtr = jxx::Ptr<jxx::lang::Object>>
-    using PolyMap = std::unordered_map<TKeyPtr, TValue, PolyHash, PolyEqual>;
-
-
-
-    //JXX_REGISTER_CLASS(jxx::lang::Object, "jxx.lang.Object", "Object");
-
-    //JXX_REGISTER_INTERFACE(myns::IFoo, "myns.IFoo", "IFoo");
-    //JXX_REGISTER_CLASS(myns::Foo, "myns.Foo", "Foo");
-
-    //JXX_SET_SUPER(myns::Foo, jxx::lang::Object);
-    //JXX_ADD_INTERFACE_EDGE(myns::Foo, myns::IFoo);
-
-    //JXX_ENABLE_DEFAULT_CTOR(jxx::lang::Object);
-
+    using PolyMap = std::unordered_map<TKeyPtr, TValue, PolyHash, PolyEqual>;    
 
 #define JXX_OBJECT_CLONE(Derived) \
     jxx::Ptr<jxx::lang::Object> cloneImpl() const override { return jxx::NEW<Derived>(*this); }
@@ -306,25 +294,44 @@ namespace jxx {
          *   jxx::NEW<IntArrayType>(10)
          *   jxx::NEW<IntArray2DType>(2, 3)
          */
-        template <typename T, typename... Args>
-        std::shared_ptr<T> NEW(
-            Args&&... args) {
+        template <typename T, typename... Args>  std::shared_ptr<T> NEW(Args&&... args)
+        {
 
             static_assert(
                 !std::is_array_v<T>,
-                "jxx::NEW<T> does not accept native C++ array types. "
+                "jxx::NEW<T> does not accept "
+                "native C++ array types. "
                 "Use JxxArray<T, Rank>.");
 
             static_assert(
-                std::is_constructible_v<T, Args...>,
-                "jxx::NEW<T>: T is not constructible "
-                "from the supplied arguments.");
+                std::is_constructible_v<
+                    T,
+                    Args...>,
+                "jxx::NEW<T>: T is not "
+                "constructible from the "
+                "supplied arguments.");
+
+            /*
+             * Automatically register an Object-derived class when it
+             * also inherits ClassInfo<T>.
+             */
+            if constexpr (
+                std::is_base_of_v<
+                    jxx::lang::Object,
+                    T> &&
+                jxx::lang::class_info_detail::
+                    HasClassInfo<T>::value) {
+
+                T::Class();
+            }
 
             auto object =
                 std::make_shared<T>(
-                    std::forward<Args>(args)...);
+                    std::forward<Args>(
+                        args)...);
 
-            detail::initializeThisPtr(object);
+            detail::initializeThisPtr(
+                object);
 
             return object;
         }
