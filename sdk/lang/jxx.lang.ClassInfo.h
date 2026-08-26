@@ -396,7 +396,13 @@ private:
 
 public:
     using JxxClassInfoMarker = Metadata;
-    using Metadata::Class;
+
+    /**
+     * Hides Class() functions inherited through parent interfaces.
+     */
+    static jxx::Ptr<ClassAny> Class() {
+        return Metadata::Class();
+    }
 
     virtual ~InterfaceBase() = default;
 
@@ -436,7 +442,14 @@ private:
 
 public:
     using JxxClassInfoMarker = Metadata;
-    using Metadata::Class;
+
+    /**
+     * Hides Class() functions inherited from the Java superclass and
+     * implemented interfaces.
+     */
+    static jxx::Ptr<ClassAny> Class() {
+        return Metadata::Class();
+    }
 
     virtual ~ClassBase() = default;
 

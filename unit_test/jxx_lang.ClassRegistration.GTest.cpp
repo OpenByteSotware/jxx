@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-
+#include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.ClassRegistration.h"
 
 namespace jxx::test::registration {
@@ -11,10 +11,9 @@ public:
     virtual void execute() = 0;
 };
 
-class TestClass final
-    : public jxx::lang::Object
-    , public jxx::lang::ClassInfo<TestClass>
-    , public virtual TestInterface {
+class TestClass final:
+    public jxx::lang::ClassBase<TestClass, jxx::lang::Object, TestInterface>
+{
 public:
     TestClass() = default;
     void execute() override {}
@@ -25,19 +24,6 @@ protected:
 
 } // namespace jxx::test::registration
 
-namespace jxx::lang {
-template <>
-struct ClassInfo<jxx::test::registration::TestClass> {
-    using JavaSuper = Object;
-    static constexpr jint modifiers = 0x0001 | 0x0010;
-    static constexpr jbool isEnum = false;
-    static constexpr jbool isAnnotation = false;
-    static constexpr jbool isSynthetic = false;
-    static std::vector<jxx::Ptr<ClassAny>> interfaces() {
-        return { jxx::test::registration::TestInterface::Class() };
-    }
-};
-} // namespace jxx::lang
 
 namespace {
 using jxx::test::registration::TestClass;
