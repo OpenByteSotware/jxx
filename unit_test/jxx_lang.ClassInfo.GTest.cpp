@@ -15,16 +15,10 @@ namespace jxx::test::classinfo
     // -----------------------------------------------------------------------------
 
     class Startable
-        : public jxx::lang::ClassInfo<Startable>
+        : public jxx::lang::InterfaceBase<Startable>
     {
-    private:
-        using Metadata =
-            jxx::lang::ClassInfo<Startable>;
-    public:
-        using JxxClassInfoMarker =
-            Metadata;
-
-        using Metadata::Class;
+    
+    public:       
 
         virtual ~Startable() = default;
 
@@ -32,16 +26,10 @@ namespace jxx::test::classinfo
     };
 
     class Stoppable
-        : public jxx::lang::ClassInfo<Stoppable>
-    {
-    private:
-        using Metadata =
-            jxx::lang::ClassInfo<Stoppable>;
+        : public jxx::lang::InterfaceBase<Stoppable>
+    {    
     public:
-        using JxxClassInfoMarker = Metadata;
-
-        using Metadata::Class;
-
+        
         virtual ~Stoppable() = default;
 
         virtual void stop() = 0;
@@ -49,39 +37,20 @@ namespace jxx::test::classinfo
 
     /** Java-style marker interface with no methods. */
     class Resettable
-        : public jxx::lang::ClassInfo<Resettable>
-    {
-    private:
-        using Metadata =
-            jxx::lang::ClassInfo<Resettable>;
-    public:
-        using JxxClassInfoMarker = Metadata;
-
-        using Metadata::Class;
-
+        : public jxx::lang::InterfaceBase<Resettable>
+    {       
+    public: 
         virtual ~Resettable() = default;
     };
 
     /** Interface extending multiple interfaces. */
     class ManagedDevice
-        : public jxx::lang::ClassInfo<
-        ManagedDevice, jxx::lang::Object,
-        Startable,
-        Stoppable>
+        : public jxx::lang::InterfaceBase<ManagedDevice, Startable, Stoppable>
         , public virtual Startable
         , public virtual Stoppable
     {
-    private:
-        using Metadata =
-            jxx::lang::ClassInfo<
-            ManagedDevice, jxx::lang::Object,
-            Startable,
-            Stoppable>;
-
-    public:
-        using JxxClassInfoMarker = Metadata;
-
-        using Metadata::Class;
+   
+    public:       
 
         virtual ~ManagedDevice() = default;
 
@@ -93,16 +62,10 @@ namespace jxx::test::classinfo
     // -----------------------------------------------------------------------------
 
     class PlainDevice final
-        : public jxx::lang::Object
-        , public jxx::lang::ClassInfo<PlainDevice>
+        : public jxx::lang::ClassBase<PlainDevice>
     {
-    private:
-        using Metadata =
-            jxx::lang::ClassInfo<PlainDevice>;
-    public:
-        using JxxClassInfoMarker = Metadata;
-
-        using Metadata::Class;
+    
+    public:       
 
         PlainDevice() = default;
 
@@ -111,24 +74,9 @@ namespace jxx::test::classinfo
     };
 
     class AbstractDevice
-        : public jxx::lang::Object
-        , public jxx::lang::ClassInfo<
-        AbstractDevice,
-        jxx::lang::Object,
-        Startable>
-        , public virtual Startable
-    {
-    private:
-        using Metadata =
-            jxx::lang::ClassInfo<
-            AbstractDevice,
-            jxx::lang::Object,
-            Startable>;
-
-    public:
-        using JxxClassInfoMarker = Metadata;
-
-        using Metadata::Class;
+        : public jxx::lang::ClassBase<AbstractDevice, jxx::lang::Object, Startable>
+    {    
+    public:       
 
         virtual ~AbstractDevice() = default;
 
@@ -136,25 +84,14 @@ namespace jxx::test::classinfo
     };
 
     class ConcreteDevice final
-        : public AbstractDevice
-        , public jxx::lang::ClassInfo<
+        : public jxx::lang::ClassBase<
         ConcreteDevice,
         AbstractDevice,
         Stoppable,
-        Resettable>
-        , public virtual Stoppable
-        , public virtual Resettable
-    {
-    private:
-        using Metadata = jxx::lang::ClassInfo<
-            ConcreteDevice,
-            AbstractDevice,
-            Stoppable,
-            Resettable>;
+        Resettable>        
+    {    
     
-    public:
-        using JxxClassInfoMarker = Metadata;
-        using Metadata::Class;
+    public:        
         ConcreteDevice() = default;
         ~ConcreteDevice() override = default;        
     protected:
@@ -180,28 +117,18 @@ namespace jxx::test::classinfo
     };
 
     /** Concrete class directly implementing a multiply-derived interface. */
-    class ManagedNetworkDevice final
-        : public jxx::lang::Object
-        , public jxx::lang::ClassInfo<
+    class ManagedNetworkDevice final:
+        public jxx::lang::ClassBase<
         ManagedNetworkDevice,
         jxx::lang::Object,
         ManagedDevice,
         Resettable>
         , public virtual ManagedDevice
         , public virtual Resettable
-    {
-    private:
-        using Metadata =
-            jxx::lang::ClassInfo<
-            ManagedNetworkDevice,
-            jxx::lang::Object,
-            ManagedDevice,
-            Resettable>;
+    {    
 
     public:
-        using JxxClassInfoMarker = Metadata;
-        using Metadata::Class;
-
+       
         ManagedNetworkDevice() = default;
 
         void start() override
@@ -240,15 +167,9 @@ namespace jxx::test::classinfo
     /** No public/default constructor, so ClassAny has no construction factory. */
     class NoDefaultConstructor final
         : public jxx::lang::Object
-        , public jxx::lang::ClassInfo<NoDefaultConstructor, jxx::lang::Object>
-    {
-    private:
-        using Metadata =
-            jxx::lang::ClassInfo<NoDefaultConstructor, jxx::lang::Object>;
-    public:
-        using JxxClassInfoMarker = Metadata;
-
-        using Metadata::Class;
+        , public jxx::lang::ClassBase<NoDefaultConstructor, jxx::lang::Object>
+    {    
+    public:       
 
         explicit NoDefaultConstructor(
             jxx::lang::jint value)
