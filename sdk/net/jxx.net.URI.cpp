@@ -196,7 +196,7 @@ namespace jxx::net
         return jxx::NEW<jxx::lang::String>(internal::rebuildUri(p));
     }
 
-    jxx::lang::jbool URI::equals(const jxx::Ptr<jxx::lang::Object> other) const
+    jxx::lang::jbool URI::equals(const jxx::Ptr<jxx::lang::Object>& other) const
     {
         auto u = std::dynamic_pointer_cast<URI>(other);
         return u && toString()->equals(u->toString());

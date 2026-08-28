@@ -8,7 +8,7 @@ namespace jxx::nio::charset
 
     CodingErrorAction::CodingErrorAction(const jxx::Ptr<jxx::lang::String> name) : name_(std::move(name)) {}
     jxx::Ptr<jxx::lang::String> CodingErrorAction::toString() const { return name_; }
-    jxx::lang::jbool CodingErrorAction::equals(const jxx::Ptr<jxx::lang::Object> other) const
+    jxx::lang::jbool CodingErrorAction::equals(const jxx::Ptr<jxx::lang::Object>& other) const
     {
         auto o = std::dynamic_pointer_cast<CodingErrorAction>(other);
         return o && name_ && o->name_ && name_->equals(o->name_);

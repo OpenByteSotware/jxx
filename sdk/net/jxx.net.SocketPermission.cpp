@@ -21,7 +21,7 @@ namespace jxx::net
 
     jxx::Ptr<jxx::lang::String> SocketPermission::toString() const { return host_; }
 
-    jxx::lang::jbool SocketPermission::equals(const jxx::Ptr<jxx::lang::Object> other) const
+    jxx::lang::jbool SocketPermission::equals(const jxx::Ptr<jxx::lang::Object>& other) const
     {
         auto p = std::dynamic_pointer_cast<SocketPermission>(other);
         return implies(p);

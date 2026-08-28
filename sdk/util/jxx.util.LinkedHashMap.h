@@ -16,13 +16,14 @@
 #include "util/jxx.util.MapEntry.h"
 #include "util/jxx.util.NoSuchElementException.h"
 #include "util/jxx.util.Set.h"
+#include "lang/jxx.lang.ClassInfo.h"
 
 namespace jxx {
     namespace util {
 
         template <typename K, typename V>
-        class LinkedHashMap
-            : public HashMap<K, V> {
+		class LinkedHashMap : public jxx::lang::ClassBase <LinkedHashMap<K, V>, HashMap<K, V>>
+        {
         private:
             struct OrderKeyHash {
                 std::size_t operator()(
@@ -250,8 +251,7 @@ namespace jxx {
                 }
             }
 
-            virtual void afterNodeInsertion(
-                jxx::Ptr<K> key,
+            virtual void afterNodeInsertion(const jxx::Ptr<K>& key,
                 jxx::lang::jbool isNewKey) override {
 
                 if (!isNewKey) {

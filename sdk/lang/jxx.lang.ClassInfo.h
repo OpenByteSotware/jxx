@@ -12,8 +12,16 @@
 #include "lang/jxx.lang.ClassInfoMarker.h"
 #include "lang/jxx.lang.IllegalStateException.h"
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.BootstrapClasses.h"
+
+namespace jxx::io
+{
+    class Serializable;
+
+} // namespace jxx::io
 
 namespace jxx::lang {
+class CharSequence; class Cloneable; template <typename T> class Comparable;
 
 template <
     typename Derived,
@@ -22,6 +30,7 @@ template <
 class ClassInfo;
 
 namespace class_info_detail {
+template <typename T> struct IsComparableInterface:std::false_type{}; template <typename T> struct IsComparableInterface<Comparable<T>>:std::true_type{};
 
 template <typename T>
 constexpr std::string_view rawTypeName() noexcept {
@@ -161,38 +170,6 @@ const std::string& simpleTypeName() {
     return name;
 }
 
-inline jxx::Ptr<ClassAny> ensureObjectRegistered() {
-    static const auto descriptor = [] {
-        try {
-            return ClassAny::forType(std::type_index(typeid(Object)));
-        } catch (const IllegalStateException&) {
-            ClassAny::Meta metadata;
-            metadata.binaryName = "jxx.lang.Object";
-            metadata.typeId = std::type_index(typeid(Object));
-            metadata.superClass = nullptr;
-            metadata.interfaces.clear();
-            metadata.isInterface = false;
-            metadata.isPrimitive = false;
-            metadata.isArray = false;
-            metadata.isEnum = false;
-            metadata.isAnnotation = false;
-            metadata.isSynthetic = false;
-            metadata.componentType = nullptr;
-            metadata.modifiers = 0x0001;
-            metadata.factory = []() -> jxx::Ptr<Object> {
-                return jxx::NEW<Object>();
-            };
-            metadata.instancePredicate =
-                [](const jxx::Ptr<Object>& object) -> jbool {
-                    return object != nullptr;
-                };
-            return ClassAny::registerClass(metadata);
-        }
-    }();
-
-    return descriptor;
-}
-
 template <typename Super>
 jxx::Ptr<ClassAny> superclassDescriptor() {
     if constexpr (std::is_same_v<Super, Object>) {
@@ -207,18 +184,7 @@ jxx::Ptr<ClassAny> superclassDescriptor() {
     }
 }
 
-template <typename Interface>
-jxx::Ptr<ClassAny> interfaceDescriptor() {
-    static_assert(
-        HasClassInfo<Interface>::value,
-        "Each Java interface listed in ClassInfo must inherit ClassInfo<Interface>."
-    );
-
-    using ExactClassInfo =
-        typename Interface::JxxClassInfoMarker;
-
-    return ExactClassInfo::Class();
-}
+template <typename Interface> jxx::Ptr<ClassAny> interfaceDescriptor(){ if constexpr(std::is_same_v<Interface,jxx::io::Serializable>) return ensureSerializableRegistered(); else if constexpr(std::is_same_v<Interface,Cloneable>) return ensureCloneableRegistered(); else if constexpr(std::is_same_v<Interface,CharSequence>) return ensureCharSequenceRegistered(); else if constexpr(IsComparableInterface<Interface>::value) return ensureComparableRegistered(); else { static_assert(HasClassInfo<Interface>::value,"Interface must inherit InterfaceBase or expose JxxClassInfoMarker."); using M=typename Interface::JxxClassInfoMarker; return M::Class(); } }
 
 } // namespace class_info_detail
 

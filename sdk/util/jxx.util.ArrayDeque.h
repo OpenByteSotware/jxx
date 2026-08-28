@@ -5,7 +5,7 @@
 #include "util/jxx.util.AbstractQueue.h"
 #include "util/jxx.util.Deque.h"
 #include "lang/jxx.lang.Cloneable.h"
-#include "io/jxx.io.Serializable.h"
+#include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.Exceptions.h"
 
 namespace jxx {
@@ -16,7 +16,7 @@ class ArrayDeque
     : public AbstractQueue<E>
     , public virtual Deque<E>
     , public virtual jxx::lang::Cloneable
-    , public virtual jxx::io::Serializable {
+    , public virtual jxx::io::SerializableI {
 private:
     std::deque<jxx::Ptr<E>> data_;
     jxx::lang::jint modCount_;
@@ -285,7 +285,7 @@ public:
         return removeFirst();
     }
 
-    virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object> o) override {
+    virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object>& o) override {
         return removeFirstOccurrence(o);
     }
 

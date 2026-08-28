@@ -12,6 +12,7 @@
 #include <iterator>
 #include "util/jxx.util.AbstractSequentialList.h"
 #include "lang/jxx.lang.Cloneable.h"
+#include "io/jxx.io.SerializableI.h"
 
 // ====================== Java-like exceptions ======================
 struct index_out_of_bounds_error : std::out_of_range {
@@ -34,7 +35,7 @@ class LinkedList
     : public AbstractSequentialList<T>
     , public Deque<T>
     , public Cloneable
-    , public jxx::io::Serializable
+    , public jxx::io::SerializableI
 {
 private:
     struct Node {

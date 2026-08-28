@@ -35,7 +35,7 @@ namespace jxx::math {
         jxx::lang::jfloat floatValue() const override;
         jxx::lang::jdouble doubleValue() const override;
         jxx::lang::jint hashCode() const override;
-        jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object> obj) const override;
+        jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& obj) const override;
 
     private:
         jxx::lang::jbool negative_;

@@ -24,7 +24,7 @@ namespace jxx::net
 
     jxx::Ptr<jxx::lang::String> NetPermission::toString() const { return name_; }
 
-    jxx::lang::jbool NetPermission::equals(const jxx::Ptr<jxx::lang::Object> other) const
+    jxx::lang::jbool NetPermission::equals(const jxx::Ptr<jxx::lang::Object>& other) const
     {
         auto p = std::dynamic_pointer_cast<NetPermission>(other);
         return p &&

@@ -4,14 +4,14 @@
 #include <unordered_map>
 #include <mutex>
 
-#include "jxx_types.h"
+#include "lang/jxx_types.h"
 #include "jxx.lang.buildin_array.h"
 #include "jxx.lang.Object.h"
-#include "jxx.lang.Iterable.h"
 #include "jxx.lang.CharSequence.h"
 #include "jxx.lang.Comparable.h"
 #include "io/jxx.io.Serializable.h"
 #include "jxx.lang.Charset.h"
+
 
 namespace jxx::lang {
 
@@ -41,12 +41,14 @@ namespace jxx::lang {
      *
      * Internal storage: UTF-16 code units (std::u16string)
      */
-    class String final : public Object
-        , public jxx::lang::CharSequence
-        , public jxx::lang::Comparable<jxx::lang::String>
-        , public jxx::io::Serializable
-    {
+    class String final
+        : public Object
+        , public virtual CharSequence
+        , public virtual Comparable<String>
+        , public virtual jxx::io::Serializable {
     public:
+        static jxx::Ptr<ClassAny> Class();
+
 
         // String()
         String();
@@ -96,8 +98,10 @@ namespace jxx::lang {
         // JXX convenience (non-Java): String(const char* utf8)
         explicit String(const char* utf8);
 
-        explicit String(const std::string stdString);
-        explicit String(const std::u16string stdString);
+        explicit String(const std::string& stdString);
+        explicit String(const std::u16string& stdString);
+
+		virtual ~String() override = default;
 
         // ---------------------------------------------------------------------
         // CharSequence
@@ -112,12 +116,12 @@ namespace jxx::lang {
         // ---------------------------------------------------------------------
         // Comparable<String>
         // ---------------------------------------------------------------------
-        virtual jxx::lang::jint compareTo(const jxx::Ptr<jxx::lang::String> anotherString) const override;
+        virtual jxx::lang::jint compareTo(const jxx::Ptr<jxx::lang::String>& anotherString) const override;
 
         // ---------------------------------------------------------------------
         // Object overrides
         // ---------------------------------------------------------------------
-        virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object> obj) const override;
+        virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& obj) const override;
         virtual jxx::lang::jint hashCode() const override;
 
         // ---------------------------------------------------------------------
@@ -220,10 +224,10 @@ namespace jxx::lang {
         // Java 8 join overloads
         static jxx::Ptr<String> join(
             jxx::Ptr<CharSequence> delimiter,
-            jxx::Ptr<JxxArray<jxx::Ptr<CharSequence>, 1U>> elements);
+            const jxx::Ptr<JxxArray<jxx::Ptr<CharSequence>, 1U>>& elements);
         static jxx::Ptr<String> join(
             jxx::Ptr<CharSequence> delimiter,
-            jxx::Ptr<jxx::lang::Iterable<jxx::Ptr<CharSequence>>> elements);
+            const jxx::Ptr<jxx::lang::Iterable<CharSequence>>& elements);
 
         // ---------------------------------------------------------------------
         // Helpers used by runtime (StringBuilder/StringBuffer/etc.)
@@ -231,10 +235,6 @@ namespace jxx::lang {
         const std::u16string& utf16() const noexcept { return value_; }
         std::string utf8() const;
 
-        //Serializeable
-        virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out);
-        virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in);
-        virtual void readObjectNoData();
 
     private:
         std::u16string value_;
@@ -260,7 +260,7 @@ namespace jxx::lang {
         static void throwIAE_(const char* msg);
 
         static std::u16string toUtf16_(const jxx::Ptr<CharSequence> s);
-        static jxx::lang::jbool isTurkicLocale_(const jxx::Ptr<jxx::util::Locale> loc);
+        static jxx::lang::jbool isTurkicLocale_(const jxx::Ptr<jxx::util::Locale>& loc);
     };
 
 } // namespace jxx::lang

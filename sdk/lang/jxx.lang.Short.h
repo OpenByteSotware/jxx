@@ -27,7 +27,7 @@ namespace jxx::lang
 
         jxx::Ptr<String> toString() const override;
         jint hashCode() const override;
-        jbool equals(const jxx::Ptr<Object> obj) const override;
+        jbool equals(const jxx::Ptr<Object>& obj) const override;
 
     private:
         jshort value_;

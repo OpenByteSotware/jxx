@@ -1,21 +1,11 @@
-#include <gtest/gtest.h>
-#include "lang/jxx.lang.Object.h"
-#include "lang/jxx.lang.Cloneable.h"
-#include "io/jxx.io.Serializable.h"
-#include "lang/jxx.lang.String.h"
-
-using namespace jxx::lang;
-using namespace jxx::io;
-
 #pragma once
-
+#include <gtest/gtest.h>
 #include <cstdint>
 #include <utility>
 
 #include "io/jxx.io.ObjectInputStream.h"
 #include "io/jxx.io.ObjectOutputStream.h"
-#include "io/jxx.io.Serializable.h"
-
+#include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.Cloneable.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.Object.h"
@@ -24,7 +14,7 @@ using namespace jxx::io;
 class Person final
     : public jxx::lang::Object
     , public virtual jxx::lang::Cloneable
-    , public virtual jxx::io::Serializable {
+    , public virtual jxx::io::SerializableI {
 private:
     /*
      * This cannot be const because readObject() must restore it.
@@ -62,8 +52,7 @@ public:
     /*
      * Object.equals(Object)
      */
-    jxx::lang::jbool equals(
-        jxx::Ptr<jxx::lang::Object> other)
+    jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& other)
         const noexcept override {
 
         if (this->same(other)) {
@@ -158,9 +147,8 @@ public:
      * Change these stream calls if your ObjectOutputStream API uses
      * different names.
      */
-    void writeObject(
-        jxx::Ptr<
-        jxx::io::ObjectOutputStream> out)
+    virtual void writeObject(const jxx::Ptr<
+        jxx::io::ObjectOutputStream>& out)
         override {
 
         if (out == nullptr) {
@@ -179,9 +167,8 @@ public:
     /*
      * Serializable custom read hook.
      */
-    void readObject(
-        jxx::Ptr<
-        jxx::io::ObjectInputStream> in)
+    virtual void readObject(const jxx::Ptr<
+        jxx::io::ObjectInputStream>& in)
         override {
 
         if (in == nullptr) {
@@ -202,7 +189,7 @@ public:
      * This is likely the missing pure virtual method that made
      * Person abstract.
      */
-    void readObjectNoData() override {
+    virtual void readObjectNoData() override {
         name_ = nullptr;
         age_ = 0;
     }
@@ -242,7 +229,7 @@ TEST(PersonTest, IntValueTest) {
     //const std::string input_filepath = "this/package/testdata/myinputfile.dat";
     //const std::string output_filepath = "this/package/testdata/myoutputfile.dat";
     int age = 10;
-    auto name = jxx::NEW<String>("test");
+    auto name = jxx::NEW<jxx::lang::String>("test");
     auto ixx = jxx::NEW<Person>(name, age);
     EXPECT_EQ(age, ixx->age());
 }
@@ -251,7 +238,7 @@ TEST(PersonTest, Clone) {
     //const std::string input_filepath = "this/package/testdata/myinputfile.dat";
     //const std::string output_filepath = "this/package/testdata/myoutputfile.dat";
     int age = 10;
-    auto name = jxx::NEW<String>("Sue");
+    auto name = jxx::NEW<jxx::lang::String>("Sue");
     auto p1 = jxx::NEW<Person>(name, age);
     EXPECT_EQ(age, p1->age());
 

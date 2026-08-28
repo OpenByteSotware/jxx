@@ -11,7 +11,7 @@ namespace jxx::net
     }
 
     jxx::Ptr<jxx::lang::String> StandardProtocolFamily::toString() const { return name_; }
-    jxx::lang::jbool StandardProtocolFamily::equals(const jxx::Ptr<jxx::lang::Object> other) const
+    jxx::lang::jbool StandardProtocolFamily::equals(const jxx::Ptr<jxx::lang::Object>& other) const
     {
         auto o = std::dynamic_pointer_cast<StandardProtocolFamily>(other);
         return o && name_ && o->name_ && name_->equals(o->name_);

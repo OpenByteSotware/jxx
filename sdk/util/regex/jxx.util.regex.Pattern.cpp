@@ -58,7 +58,7 @@ static jxx::Ptr<jxx::lang::String> toStringPtr(const jxx::Ptr<jxx::lang::CharSeq
     if (seq == nullptr) {
         throw jxx::lang::NullPointerException();
     }
-    auto asString = jxx::CAST<jxx::lang::String>(seq);
+    auto asString = jxx::CAST<jxx::lang::String, jxx::lang::CharSequence>(seq);
     return asString;
 }
 
@@ -167,7 +167,7 @@ const std::string& Pattern::nativePatternUtf8() const {
     return compiledPatternUtf8_;
 }
 
-void Pattern::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) {
+void Pattern::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out) {
     if (out == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -175,7 +175,7 @@ void Pattern::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) {
 	out->writeInt(flags_);
 }
 
-void Pattern::readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) {
+void Pattern::readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in) {
     if (in == nullptr) {
         throw jxx::lang::NullPointerException();
     }

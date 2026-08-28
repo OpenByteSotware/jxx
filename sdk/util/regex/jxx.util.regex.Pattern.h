@@ -4,7 +4,7 @@
 #include <string>
 
 #include "lang/jxx.lang.buildin_array.h"
-#include "io/jxx.io.Serializable.h"
+#include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.CharSequence.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
@@ -21,7 +21,7 @@ namespace regex {
 class Matcher;
 class PatternSyntaxException;
 
-class Pattern final : public jxx::lang::Object, public virtual jxx::io::Serializable {
+class Pattern final : public jxx::lang::Object, public virtual jxx::io::SerializableI {
 public:
     static constexpr jxx::lang::jint UNIX_LINES = 0x01;
     static constexpr jxx::lang::jint CASE_INSENSITIVE = 0x02;
@@ -73,8 +73,8 @@ public:
     const std::regex& nativeRegex() const;
     const std::string& nativePatternUtf8() const;
 
-    virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) override;
-    virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) override;
+    virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out) override;
+    virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in) override;
     virtual void readObjectNoData() override;
 };
 

@@ -29,7 +29,6 @@
 
 #include "jxx.lang.ByteType.h"
 #include "jxx_types.h"
-#include "lang/jxx.lang.Cloneable.h"
 #include "lang/jxx.lang.ClassInfoMarker.h"
 
 namespace jxx::lang {
@@ -89,7 +88,7 @@ namespace jxx::lang {
         Object& operator=(Object&&) noexcept = default;
 
         // Java-like: logical equality (default identity)
-        virtual jbool equals(const jxx::Ptr<Object> other) const;
+        virtual jbool equals(const jxx::Ptr<Object>& other) const;
 
         // Java-like: hashCode (default identity-based)
         virtual jxx::lang::jint hashCode() const;
@@ -103,7 +102,7 @@ namespace jxx::lang {
         virtual jxx::Ptr<jxx::lang::String> toString() const;
 
         // Identity check (reference equality)
-        virtual bool same(const jxx::Ptr<Object> other) const;
+        virtual bool same(const jxx::Ptr<Object>& other) const;
 
         template <typename Rep, typename Period>
         bool wait_for(const std::chrono::duration<Rep, Period>& d) {
@@ -149,17 +148,6 @@ namespace jxx::lang {
 
         mutable std::recursive_mutex mutex_;
     };
-
-    class Cloneable {
-    public:
-
-        // make it polymorhpic
-        virtual ~Cloneable() = default;
-
-        // Implement cloneImpl for deep copy, Object uses this for C++ to mimic java like clone
-        virtual jxx::Ptr<jxx::lang::Object> cloneImpl() const = 0;
-    };
-
 
     // =============== Polymorphic hashing/equality for smart pointers ===============
     struct PolyHash {
@@ -394,12 +382,47 @@ namespace jxx {
     }
 
     template <typename To, typename From>
-    jxx::Ptr<To> CAST(const std::shared_ptr<From>& ptr)
+    jxx::Ptr<To> CAST(
+        const jxx::Ptr<From>& ptr)
     {
-        if constexpr (std::is_base_of_v<From, To>)
-            return std::static_pointer_cast<To>(ptr);   // upcast (Derived -> Base)
-        else
-            return std::dynamic_pointer_cast<To>(ptr);  // downcast / unrelated
-    } 
+
+        if (ptr == nullptr) {
+            return nullptr;
+        }
+
+        if constexpr (
+            std::is_base_of_v<
+                To,
+                From>) {
+
+            /*
+             * From derives from To:
+             *
+             *     Ptr<Derived> -> Ptr<Base>
+             *
+             * This is an upcast.
+             */
+            return std::static_pointer_cast<To>(
+                ptr);
+
+        }
+        else {
+            /*
+             * This includes:
+             *
+             * - Base -> Derived downcasts
+             * - Object -> interface cross-casts
+             * - Interface -> implementing class casts
+             * - Sibling-interface cross-casts
+             */
+            static_assert(
+                std::is_polymorphic_v<From>,
+                "jxx::CAST requires a polymorphic "
+                "source type for checked casts.");
+
+            return std::dynamic_pointer_cast<To>(
+                ptr);
+        }
+    }
 
 } // namespace jxx::lang

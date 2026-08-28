@@ -5,7 +5,7 @@
 #include "util/jxx.util.RandomAccess.h"
 #include "util/jxx.util.SubList.h"
 #include "lang/jxx.lang.Cloneable.h"
-#include "io/jxx.io.Serializable.h"
+#include "io/jxx.io.SerializableI.h"
 #include "util/jxx.util.ComparatorSuper.h"
 #include "util/jxx.util.Spliterator.h"
 #include "util/function/jxx.util.function.PredicateSuper.h"
@@ -26,7 +26,7 @@ namespace jxx
 			: public AbstractList<E>
 			, public virtual RandomAccess
 			, public virtual jxx::lang::Cloneable
-			, public virtual jxx::io::Serializable
+			, public virtual jxx::io::SerializableI
 		{
 		private:
 			static constexpr jxx::lang::jint DEFAULT_CAPACITY = 10;
@@ -66,11 +66,11 @@ namespace jxx
 
 			virtual ~ArrayList() = default;
 
-			virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) override
+			virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out) override
 			{
 
 			}
-			virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) override
+			virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in) override
 			{
 
 			}
@@ -216,7 +216,7 @@ namespace jxx
 				return oldValue;
 			}
 
-			virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object> o) override
+			virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object>& o) override
 			{
 				jxx::lang::jint i = indexOf(o);
 				if (i >= 0) {

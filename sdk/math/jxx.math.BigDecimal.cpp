@@ -226,7 +226,7 @@ namespace jxx::math
         return negative_ ? -h : h;
     }
 
-    jxx::lang::jbool BigDecimal::equals(const jxx::Ptr<jxx::lang::Object> obj) const
+    jxx::lang::jbool BigDecimal::equals(const jxx::Ptr<jxx::lang::Object>& obj) const
     {
         jxx::Ptr<BigDecimal> other = jxx::CAST<BigDecimal, jxx::lang::Object>(obj);
         return other

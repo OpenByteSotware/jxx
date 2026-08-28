@@ -36,7 +36,7 @@ public:
     jint hashCode() const override;
     static jint hashCode(jbool value);
 
-    jbool equals(const jxx::Ptr<Object> obj) const override;
+    jbool equals(const jxx::Ptr<Object>& obj) const override;
 
     jint compareTo(const jxx::Ptr<Boolean> b) const;
     static jint compare(jbool x, jbool y);

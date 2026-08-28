@@ -32,7 +32,7 @@ namespace jxx::lang
         return value_;
     }
 
-    jint Character::compareTo(const jxx::Ptr<Character> anotherCharacter) const
+    jint Character::compareTo(const jxx::Ptr<Character>& anotherCharacter) const
     {
         if (!anotherCharacter)
             return 1;
@@ -44,7 +44,7 @@ namespace jxx::lang
         return 0;
     }
 
-    jbool Character::equals(const jxx::Ptr<Object> obj) const
+    jbool Character::equals(const jxx::Ptr<Object>& obj) const
     {
         auto other = std::dynamic_pointer_cast<Character>(obj);
         return other && other->value_ == value_;
@@ -265,13 +265,13 @@ namespace jxx::lang
         return result;
     }
 
-    void Character::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out)
+    void Character::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out)
     {
 
 
     }
 
-    void Character::readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) {
+    void Character::readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in) {
 
     }
     void Character::readObjectNoData() {

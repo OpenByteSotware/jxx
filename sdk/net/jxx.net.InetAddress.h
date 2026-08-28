@@ -69,8 +69,7 @@ namespace jxx::net {
 
         virtual jxx::Ptr<jxx::lang::String> toString() const override;
 
-        virtual jxx::lang::jbool equals(
-            jxx::Ptr<jxx::lang::Object> other) const override;
+        virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& other) const override;
 
         virtual jxx::lang::jint hashCode() const override;
 

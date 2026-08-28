@@ -11,7 +11,7 @@
 
 #include "io/jxx.io.ObjectInputStream.h"
 #include "io/jxx.io.ObjectOutputStream.h"
-#include "io/jxx.io.Serializable.h"
+#include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.Cloneable.h"
 #include "lang/jxx.lang.Comparable.h"
 #include "lang/jxx.lang.Exceptions.h"
@@ -38,7 +38,7 @@ namespace jxx::util {
     template <typename E>
     class Vector
         : public AbstractList<E>
-        , public virtual jxx::io::Serializable
+        , public virtual jxx::io::SerializableI
         , public virtual jxx::lang::Cloneable
         , public virtual RandomAccess {
     private:
@@ -217,14 +217,14 @@ namespace jxx::util {
 
         virtual ~Vector() = default;
 
-        void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) override {
+        void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out) override {
             if (out == nullptr) {
                 throw jxx::lang::NullPointerException();
             }
             throw jxx::lang::UnsupportedOperationException();
         }
 
-        void readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) override {
+        void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in) override {
             if (in == nullptr) {
                 throw jxx::lang::NullPointerException();
             }
@@ -460,7 +460,7 @@ namespace jxx::util {
                 });
         }
 
-        jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object> object) override {
+        jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object>& object) override {
             return removeElement(object);
         }
 
@@ -682,7 +682,7 @@ namespace jxx::util {
         }
 
 
-        jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object> object) override {
+        jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& object) override {
             if (object == nullptr) {
                 return false;
             }

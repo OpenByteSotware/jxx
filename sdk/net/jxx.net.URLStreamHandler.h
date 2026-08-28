@@ -23,7 +23,7 @@ namespace jxx::net
         }
 
         virtual jxx::lang::jint getDefaultPort() const;
-        virtual jxx::lang::jbool equals(const jxx::Ptr<URL> u1,
+        virtual jxx::lang::jbool equals(const jxx::Ptr<URL>& u1,
                                         jxx::Ptr<URL> u2) const;
         virtual jxx::lang::jint hashCode(const jxx::Ptr<URL> u) const;
         virtual jxx::lang::jbool sameFile(const jxx::Ptr<URL> u1,

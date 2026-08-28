@@ -107,7 +107,7 @@ namespace jxx::lang
         return static_cast<jint>(value_);
     }
 
-    jbool Byte::equals(const jxx::Ptr<Object> obj) const
+    jbool Byte::equals(const jxx::Ptr<Object>& obj) const
     {
         jxx::Ptr<Byte> other = jxx::CAST<Byte, Object>(obj);
         return other ? (other->value_ == value_) : false;
@@ -153,7 +153,7 @@ namespace jxx::lang
         return static_cast<jint>(value_);
     }
 
-    jbool Short::equals(const jxx::Ptr<Object> obj) const
+    jbool Short::equals(const jxx::Ptr<Object>& obj) const
     {
         jxx::Ptr<Short> other = jxx::CAST<Short, Object>(obj);
         return other ? (other->value_ == value_) : false;
@@ -199,7 +199,7 @@ namespace jxx::lang
         return value_;
     }
 
-    jbool Integer::equals(const jxx::Ptr<Object> obj) const
+    jbool Integer::equals(const jxx::Ptr<Object>& obj) const
     {
         jxx::Ptr<Integer> other = jxx::CAST<Integer, Object>(obj);
         return other ? (other->value_ == value_) : false;
@@ -241,7 +241,7 @@ namespace jxx::lang
         return hashLongBits_(value_);
     }
 
-    jbool Long::equals(const jxx::Ptr<Object> obj) const
+    jbool Long::equals(const jxx::Ptr<Object>& obj) const
     {
         jxx::Ptr<Long> other = jxx::CAST<Long, Object>(obj);
         return other ? (other->value_ == value_) : false;
@@ -285,7 +285,7 @@ namespace jxx::lang
         return hashFloatBits_(value_);
     }
 
-    jbool Float::equals(const jxx::Ptr<Object> obj) const
+    jbool Float::equals(const jxx::Ptr<Object>& obj) const
     {
         jxx::Ptr<Float> other = jxx::CAST<Float, Object>(obj);
         return other ? (other->value_ == value_) : false;
@@ -329,7 +329,7 @@ namespace jxx::lang
         return hashDoubleBits_(value_);
     }
 
-    jbool Double::equals(const jxx::Ptr<Object> obj) const
+    jbool Double::equals(const jxx::Ptr<Object>& obj) const
     {
         jxx::Ptr<Double> other = jxx::CAST<Double, Object>(obj);
         return other ? (other->value_ == value_) : false;

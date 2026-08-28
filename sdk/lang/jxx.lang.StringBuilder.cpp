@@ -351,11 +351,11 @@ namespace jxx::lang
 		return jxx::NEW<String>(value_);
 	}
 
-	void StringBuilder::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out)
+	void StringBuilder::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out)
 	{
 		if (out == nullptr)throwNPE_(); out->writeInt(length()); for (auto c : value_)out->writeChar(c);
 	}
-	void StringBuilder::readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in)
+	void StringBuilder::readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in)
 	{
 		if (in == nullptr)throwNPE_(); const auto n = in->readInt(); if (n < 0)throw IllegalArgumentException(); value_.clear(); capacity_ = n + DEFAULT_CAPACITY; value_.reserve(capacity_); for (jint i = 0; i < n; ++i)value_.push_back(in->readChar());
 	}

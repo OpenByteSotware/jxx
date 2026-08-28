@@ -6,7 +6,8 @@
 #include "util/jxx.util.Enumeration.h"
 #include "util/jxx.util.Set.h"
 #include "lang/jxx.lang.String.h"
-#include "io/jxx.io.Serializable.h"
+#include "io/jxx.io.SerializableI.h"
+#include "lang/jxx.lang.ClassInfo.h"
 
 namespace jxx {
     namespace io {
@@ -21,7 +22,8 @@ namespace jxx {
 namespace jxx {
 namespace util {
 
-class Properties : public virtual jxx::util::Hashtable<jxx::lang::Object, jxx::lang::Object> {
+class Properties : public jxx::lang::ClassBase<Properties, 
+    jxx::util::Hashtable<jxx::lang::Object, jxx::lang::Object>> {
 protected:
     jxx::Ptr<Properties> defaults;
 
@@ -30,9 +32,8 @@ public:
     explicit Properties(const jxx::Ptr<Properties> defaults);
     virtual ~Properties() = default;
 
-    virtual jxx::Ptr<jxx::lang::Object> setProperty(
-        jxx::Ptr<jxx::lang::String> key,
-        jxx::Ptr<jxx::lang::String> value);
+    virtual jxx::Ptr<jxx::lang::Object> setProperty(const jxx::Ptr<jxx::lang::String>& key,
+        const jxx::Ptr<jxx::lang::String>& value);
 
     virtual jxx::Ptr<jxx::lang::String> getProperty(
         jxx::Ptr<jxx::lang::String> key);

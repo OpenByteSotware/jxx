@@ -1,16 +1,2 @@
 #pragma once
-#include "lang/jxx.lang.Object.h"
-
-namespace jxx::io {
-	class ObjectOutputStream;
-	class ObjectInputStream;
-    
-    class Serializable {
-    public:
-	virtual ~Serializable() = default;
-
-    virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) = 0;
-    virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) = 0;        
-    virtual void readObjectNoData() = 0;
-};
-}
+namespace jxx::io { class Serializable { public: virtual ~Serializable() = default; }; }

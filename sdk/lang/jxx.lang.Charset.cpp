@@ -85,7 +85,7 @@ jxx::Ptr<String> Charset::decode(const jxx::lang::ByteArray bytes) const {
     return jxx::NEW<String>(u);
 }
 
-jbool Charset::equals(const jxx::Ptr<Object> o) const {
+jbool Charset::equals(const jxx::Ptr<Object>& o) const {
     auto other = std::dynamic_pointer_cast<Charset>(o);
     return other && other->kind_ == kind_;
 }

@@ -4,16 +4,15 @@
 #include "jxx.lang.Object.h"
 #include "jxx.lang.Comparable.h"
 #include "jxx.lang.buildin_array.h"
-#include "io/jxx.io.Serializable.h"
+#include "io/jxx.io.SerializableI.h"
+#include "lang/jxx.lang.ClassInfo.h"
 
 namespace jxx::lang
 {
     class String;
 
     class Character final
-        : public Object
-        , public Comparable<Character>
-        , public jxx::io::Serializable
+		: public ClassBase<Character, Object, Comparable<Character>, jxx::io::SerializableI>
     {
     public:
         static constexpr jchar MIN_VALUE = 0x0000;
@@ -72,8 +71,8 @@ namespace jxx::lang
 
         jchar charValue() const noexcept;
 
-        jint compareTo(const jxx::Ptr<Character> anotherCharacter) const override;
-        jbool equals(const jxx::Ptr<Object> obj) const override;
+        jint compareTo(const jxx::Ptr<Character>& anotherCharacter) const override;
+        jbool equals(const jxx::Ptr<Object>& obj) const override;
         jint hashCode() const override;
         jxx::Ptr<String> toString() const override;
 
@@ -118,8 +117,8 @@ namespace jxx::lang
 
         static CharArray toChars(jint codePoint);
 
-        virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out);
-        virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in);
+        virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out);
+        virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in);
         virtual void readObjectNoData();
 
     private:

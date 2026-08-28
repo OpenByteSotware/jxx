@@ -27,7 +27,7 @@ namespace jxx::nio
 
     jxx::Ptr<jxx::lang::String> ByteOrder::toString() const { return name_; }
 
-    jxx::lang::jbool ByteOrder::equals(const jxx::Ptr<jxx::lang::Object> other) const
+    jxx::lang::jbool ByteOrder::equals(const jxx::Ptr<jxx::lang::Object>& other) const
     {
         auto o = std::dynamic_pointer_cast<ByteOrder>(other);
         return o && name_ && o->name_ && name_->equals(o->name_);

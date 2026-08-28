@@ -5,7 +5,7 @@
 #include "jxx_types.h"
 #include "jxx.lang.buildin_array.h"
 #include "jxx.lang.Object.h"
-#include "io/jxx.io.Serializable.h"
+#include "io/jxx.io.SerializableI.h"
 #include "jxx.lang.Appendable.h"
 #include "jxx.lang.CharSequence.h"
 
@@ -16,7 +16,7 @@ namespace jxx::lang {
 
     class StringBuffer final
         : public Object
-        , public jxx::io::Serializable
+        , public jxx::io::SerializableI
         , public Appendable
         , public CharSequence
     {

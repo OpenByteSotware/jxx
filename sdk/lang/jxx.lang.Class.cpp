@@ -455,14 +455,14 @@ namespace jxx::lang {
 
     jxx::Ptr<Package> ClassAny::getPackage() const { return nullptr; }
     jxx::Ptr<ClassLoader> ClassAny::getClassLoader() const { return nullptr; }
-
-    void ClassAny::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) {
+    /*
+    void ClassAny::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out) {
     }
     
-        void ClassAny::readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) {
+        void ClassAny::readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in) {
 
     }
         void ClassAny::readObjectNoData() {
 
-    }
+    }*/
 } // namespace jxx::lang

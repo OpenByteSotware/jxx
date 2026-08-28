@@ -148,7 +148,7 @@ jxx::lang::jdouble Random::nextGaussian() {
     return v1 * multiplier;
 }
 
-void Random::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) {
+void Random::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out) {
     if (out == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -158,7 +158,7 @@ void Random::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) {
     out->writeBoolean(haveNextNextGaussian_);
 }
 
-void Random::readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) {
+void Random::readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in) {
     if (in == nullptr) {
         throw jxx::lang::NullPointerException();
     }

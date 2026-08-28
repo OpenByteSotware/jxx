@@ -7,7 +7,7 @@
 #include "lang/jxx.lang.CharSequence.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
-#include "io/jxx.io.Serializable.h"
+#include "io/jxx.io.SerializableI.h"
 
 namespace jxx::io {
 class ObjectInputStream;
@@ -20,7 +20,7 @@ class StringBuffer;
 
 class StringBuilder final
     : public Object
-    , public virtual jxx::io::Serializable
+    , public virtual jxx::io::SerializableI
     , public virtual Appendable
     , public virtual CharSequence {
 public:
@@ -89,8 +89,8 @@ public:
     jxx::Ptr<String> substring(jint start, jint end) const;
     jxx::Ptr<String> toString() const override;
 
-    void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> output) override;
-    void readObject(const jxx::Ptr<jxx::io::ObjectInputStream> input) override;
+    void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& output) override;
+    void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& input) override;
     void readObjectNoData() override;
 
 protected:

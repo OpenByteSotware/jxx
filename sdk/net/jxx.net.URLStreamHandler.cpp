@@ -9,7 +9,7 @@ namespace jxx::net
         return -1;
     }
 
-    jxx::lang::jbool URLStreamHandler::equals(const jxx::Ptr<URL> u1,
+    jxx::lang::jbool URLStreamHandler::equals(const jxx::Ptr<URL>& u1,
                                               jxx::Ptr<URL> u2) const
     {
         return u1 && u2 && u1->equals(u2);

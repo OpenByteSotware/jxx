@@ -1066,8 +1066,7 @@ namespace jxx::net {
     }
 
     jxx::lang::jbool
-        NetworkInterface::equals(
-            jxx::Ptr<jxx::lang::Object> other)
+        NetworkInterface::equals(const jxx::Ptr<jxx::lang::Object>& other)
         const {
 
         auto networkInterface =

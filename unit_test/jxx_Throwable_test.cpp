@@ -13,7 +13,7 @@ public:
 
     int intValue() const noexcept { return value_; }
     
-    jxx::lang::jbool equals(const jxx::Ptr<Object> other) const noexcept override {
+    jxx::lang::jbool equals(const jxx::Ptr<Object>& other) const noexcept override {
         auto* o = dynamic_cast<const ThrowableTest*>(other.get());
         return o && value_ == o->value_;
     }

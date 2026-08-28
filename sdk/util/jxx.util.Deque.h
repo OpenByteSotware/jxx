@@ -39,7 +39,7 @@ public:
     virtual void push(const jxx::Ptr<E> e) { addFirst(e); }
     virtual jxx::Ptr<E> pop() { return removeFirst(); }
 
-    virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object> o) override {
+    virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object>& o) override {
         return removeFirstOccurrence(o);
     }
 

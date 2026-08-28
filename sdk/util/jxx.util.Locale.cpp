@@ -193,7 +193,7 @@ jxx::Ptr<jxx::lang::String> Locale::toString() const {
     return join(parts, "_");
 }
 
-jxx::lang::jbool Locale::equals(const jxx::Ptr<jxx::lang::Object> other) const {
+jxx::lang::jbool Locale::equals(const jxx::Ptr<jxx::lang::Object>& other) const {
     if (other.get() == this) return true;
     auto o = std::dynamic_pointer_cast<Locale>(other);
     if (!o) return false;

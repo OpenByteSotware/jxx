@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.Cloneable.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_array.h"
 #include "lang/jxx_types.h"
@@ -25,7 +26,7 @@ public:
 
     int intValue() const noexcept { return value_; }
 
-    jbool equals(const jxx::Ptr<Object> other) const override {
+    jbool equals(const jxx::Ptr<Object>& other) const override {
         auto* o = dynamic_cast<const TestInteger*>(other.get());
         return o && value_ == o->value_;
     }

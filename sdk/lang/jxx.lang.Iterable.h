@@ -1,12 +1,12 @@
 #pragma once
-#include <type_traits>
-
 #include "lang/jxx_types.h"
+#include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "util/jxx.util.Iterator.h"
 #include "util/jxx.util.Spliterator.h"
 #include "util/jxx.util.Spliterators.h"
 #include "util/function/jxx.util.function.Consumer.h"
+
 
 namespace jxx::lang {
 
@@ -21,8 +21,8 @@ namespace jxx::lang {
      * Constraints:
      * - Interface does NOT inherit jxx::lang::Object (Java-like).
      */
-    template <class T>
-    class Iterable {
+    template <typename T>
+    class Iterable : public jxx::lang::InterfaceBase<Iterable<T>> {
     public:
         virtual ~Iterable() = default;
 
@@ -30,7 +30,7 @@ namespace jxx::lang {
         virtual jxx::Ptr<jxx::util::Iterator<T>> iterator() = 0;
 
         // Java 8 default: void forEach(Consumer<? super T> action)
-        virtual void forEach(const jxx::Ptr<jxx::util::function::Consumer<T>> action) {
+        virtual void forEach(const jxx::Ptr<jxx::util::function::Consumer<T>>& action) {
             if (!action) {
                 throw jxx::lang::NullPointerException("action");
             }
@@ -42,36 +42,6 @@ namespace jxx::lang {
             while (it->hasNext()) {
                 action->accept(it->next());
             }
-        }
-
-        // Variance-friendly forEach: Consumer<U> where T -> U convertible (Consumer<? super T>)
-        template <
-            class U,
-            std::enable_if_t<
-                !std::is_same_v<T, U> &&
-                (std::is_convertible_v<T, U> || std::is_constructible_v<U, T>),
-                int
-            > = 0
-        >
-        void forEach(const jxx::Ptr<jxx::util::function::Consumer<U>> action) {
-            if (!action) {
-                throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("action"));
-            }
-
-            // Create a Consumer<T> adapter that wraps Consumer<U>
-            struct ConsumerAdapter : public jxx::util::function::Consumer<T> {
-                jxx::Ptr<jxx::util::function::Consumer<U>> wrapped;
-                
-                explicit ConsumerAdapter(const jxx::Ptr<jxx::util::function::Consumer<U>> w) : wrapped(w) {}
-                
-                void accept(T value) override {
-                    // implicit T -> U conversion occurs here
-                    wrapped->accept(static_cast<U>(value));
-                }
-            };
-
-            auto adapter = jxx::NEW<ConsumerAdapter>(action);
-            forEach(adapter);
         }
 
         // Java 8 default: Spliterator<T> spliterator()

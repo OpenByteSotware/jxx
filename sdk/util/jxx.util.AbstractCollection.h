@@ -8,14 +8,15 @@
 #include "util/jxx.util.Iterator.h"
 #include "util/jxx.util.wildcard.CollectionAny.h"
 #include "util/jxx.util.wildcard.CollectionExtends.h"
+#include "lang/jxx.lang.ClassInfo.h"
 
 namespace jxx {
     namespace util {
 
         template <typename E>
-        class AbstractCollection
-            : public jxx::lang::Object
-            , public virtual Collection<E> {
+		class AbstractCollection : public jxx::lang::ClassBase<AbstractCollection<E>, 
+            jxx::lang::Object, Collection<E>>
+        {
         public:
             AbstractCollection() = default;
             virtual ~AbstractCollection() = default;
@@ -97,7 +98,7 @@ namespace jxx {
             }
 
             virtual jxx::lang::jbool remove(
-                jxx::Ptr<jxx::lang::Object> object) override {
+                const jxx::Ptr<jxx::lang::Object>& object) override {
 
                 auto iterator = this->iterator();
 

@@ -301,7 +301,7 @@ namespace jxx::net
 
     jxx::Ptr<jxx::lang::String> URL::toString() const { return toExternalForm(); }
 
-    jxx::lang::jbool URL::equals(const jxx::Ptr<jxx::lang::Object> other) const
+    jxx::lang::jbool URL::equals(const jxx::Ptr<jxx::lang::Object>& other) const
     {
         auto u = std::dynamic_pointer_cast<URL>(other);
         return u && toExternalForm()->equals(u->toExternalForm());

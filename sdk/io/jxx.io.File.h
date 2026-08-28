@@ -4,7 +4,7 @@
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.Comparable.h"
 #include "lang/jxx.lang.buildin_array.h"
-#include "io/jxx.io.Serializable.h"
+#include "io/jxx.io.SerializableI.h"
 
 namespace jxx::lang {
     class String;
@@ -23,7 +23,7 @@ namespace jxx::io
     class File final
         : public jxx::lang::Object
         , public jxx::lang::Comparable<File>
-        , public jxx::io::Serializable
+        , public jxx::io::SerializableI
     {
     public:
         static constexpr char separatorChar = '/';
@@ -80,8 +80,8 @@ namespace jxx::io
         jxx::lang::jbool setReadable(jxx::lang::jbool readable);
         jxx::lang::jbool setExecutable(jxx::lang::jbool executable);
 
-        jxx::lang::jint compareTo(const jxx::Ptr<File> pathname) const override;
-        jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object> other) const override;
+        jxx::lang::jint compareTo(const jxx::Ptr<File>& pathname) const override;
+        jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& other) const override;
         jxx::lang::jint hashCode() const override;
         jxx::Ptr<jxx::lang::String> toString() const override;
 
@@ -93,8 +93,8 @@ namespace jxx::io
 
         static jxx::Ptr<jxx::JxxArray<jxx::Ptr<File>, 1U>> listRoots();
 
-        virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) override;
-        virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) override;
+        virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out) override;
+        virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in) override;
         virtual void readObjectNoData() override;
 
     private:

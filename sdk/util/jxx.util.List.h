@@ -32,7 +32,7 @@ public:
     virtual jxx::Ptr<Iterator<E>> iterator() = 0;
     virtual jxx::lang::ObjectArray toArray() = 0;
     virtual jxx::lang::jbool add(const jxx::Ptr<E> e) = 0;
-    virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object> o) = 0;
+    virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object>& o) = 0;
     virtual jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny> c) = 0;
     virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<E>> c) = 0;
     virtual jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny> c) = 0;
@@ -62,7 +62,7 @@ public:
     virtual jxx::Ptr<Spliterator<E>> spliterator() = 0;
 
     // Java List contract redeclarations
-    virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object> o) = 0;
+    virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& o) = 0;
     virtual jxx::lang::jint hashCode() = 0;
 };
 

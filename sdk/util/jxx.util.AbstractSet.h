@@ -45,8 +45,7 @@ namespace jxx::util {
             return AbstractCollection<E>::add(element);
         }
 
-        virtual jxx::lang::jbool remove(
-            jxx::Ptr<jxx::lang::Object> object) override {
+        virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object>& object) override {
 
             return AbstractCollection<E>::remove(object);
         }
@@ -79,9 +78,7 @@ namespace jxx::util {
             AbstractCollection<E>::clear();
         }
 
-        virtual jxx::lang::jbool equals(
-            jxx::Ptr<jxx::lang::Object> object)
-            const override {
+        virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& object) const override {
 
             if (object == nullptr) {
                 return static_cast<jxx::lang::jbool>(false);

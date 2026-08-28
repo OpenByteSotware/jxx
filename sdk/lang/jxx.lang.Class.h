@@ -1,7 +1,7 @@
 #pragma once
 
-#include "jxx_types.h"
-#include "jxx.lang.Object.h"
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.Object.h"
 #include "io/jxx.io.Serializable.h"
 #include "lang/jxx.lang.ClassInfoMarker.h"
 
@@ -38,7 +38,7 @@ namespace jxx::lang {
      * In JXX we provide type-erased ClassAny, and use it everywhere
      * a Java Class<?> would appear. (Your requirement)
      */
-    class ClassAny final : public Object, public jxx::io::Serializable {
+    class ClassAny final : public Object, public virtual jxx::io::Serializable {
     public:
         // ---------------------------------------------------------------------
         // Metadata structure (runtime reflection substrate)
@@ -171,9 +171,9 @@ namespace jxx::lang {
         // ---------------------------------------------------------------------
         const Meta& meta() const noexcept { return meta_; }
 
-        virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) override;
-        virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) override;
-        virtual void readObjectNoData() override;
+        //void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out);
+       // void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in);
+        //void readObjectNoData();
 
     private:
         

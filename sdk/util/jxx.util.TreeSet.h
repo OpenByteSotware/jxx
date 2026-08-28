@@ -5,7 +5,7 @@
 #include <set>
 #include <vector>
 
-#include "io/jxx.io.Serializable.h"
+#include "io/jxx.io.SerializableI.h"
 
 #include "lang/jxx.lang.ClassCastException.h"
 #include "lang/jxx.lang.Cloneable.h"
@@ -153,7 +153,7 @@ namespace jxx {
         class TreeSet
             : public virtual AbstractSet<E>
             , public virtual jxx::lang::Cloneable
-            , public virtual jxx::io::Serializable {
+            , public virtual jxx::io::SerializableI {
         private:
             template <typename T>
             friend class TreeSetIterator;

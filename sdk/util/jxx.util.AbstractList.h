@@ -247,8 +247,7 @@ namespace jxx::util
             return oldValue;
         }
 
-        jxx::lang::jbool remove(
-            const jxx::Ptr<jxx::lang::Object> object)
+        jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object>& object)
             override
         {
 
@@ -274,8 +273,7 @@ namespace jxx::util
         /**
          * Java List equality contract: ordered element-wise equality.
          */
-        jxx::lang::jbool equals(
-            const jxx::Ptr<jxx::lang::Object> other)
+        jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& other)
             override
         {
 

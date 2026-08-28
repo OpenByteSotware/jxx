@@ -82,7 +82,7 @@ namespace jxx::nio::charset
     }
 
     jxx::Ptr<jxx::lang::String> Charset::toString() const { return canonicalName_; }
-    jxx::lang::jbool Charset::equals(const jxx::Ptr<jxx::lang::Object> other) const
+    jxx::lang::jbool Charset::equals(const jxx::Ptr<jxx::lang::Object>& other) const
     {
         auto o = std::dynamic_pointer_cast<Charset>(other);
         return o && canonicalName_ && o->canonicalName_ && canonicalName_->equals(o->canonicalName_);

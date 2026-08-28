@@ -2,21 +2,23 @@
 
 #include "lang/jxx.lang.Object.h"
 #include "util/jxx.util.Enumeration.h"
+#include "lang/jxx.lang.ClassInfo.h"
 
 namespace jxx {
 namespace util {
 
 template <typename K, typename V>
-class Dictionary : public jxx::lang::Object {
+class Dictionary : public jxx::lang::ClassBase<Dictionary<K,V>, jxx::lang::Object>
+{
 public:
     virtual ~Dictionary() = default;
     virtual jxx::lang::jint size() = 0;
     virtual jxx::lang::jbool isEmpty() = 0;
     virtual jxx::Ptr<jxx::util::Enumeration<K>> keys() = 0;
     virtual jxx::Ptr<jxx::util::Enumeration<V>> elements() = 0;
-    virtual jxx::Ptr<V> get(const jxx::Ptr<jxx::lang::Object> key) = 0;
-    virtual jxx::Ptr<V> put(const jxx::Ptr<K> key, jxx::Ptr<V> value) = 0;
-    virtual jxx::Ptr<V> remove(const jxx::Ptr<jxx::lang::Object> key) = 0;
+    virtual jxx::Ptr<V> get(const jxx::Ptr<jxx::lang::Object>& key) = 0;
+    virtual jxx::Ptr<V> put(const jxx::Ptr<K>& key, const jxx::Ptr<V>& value) = 0;
+    virtual jxx::Ptr<V> remove(const jxx::Ptr<jxx::lang::Object>& key) = 0;
 };
 
 } // namespace util

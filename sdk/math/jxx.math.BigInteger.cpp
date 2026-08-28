@@ -188,7 +188,7 @@ namespace jxx::math
         return negative_ ? -h : h;
     }
 
-    jxx::lang::jbool BigInteger::equals(const jxx::Ptr<Object> obj) const
+    jxx::lang::jbool BigInteger::equals(const jxx::Ptr<Object>& obj) const
     {
         jxx::Ptr<BigInteger> other = jxx::CAST<BigInteger, Object>(obj);
         return other ? (other->negative_ == negative_ && other->digits_ == digits_) : false;

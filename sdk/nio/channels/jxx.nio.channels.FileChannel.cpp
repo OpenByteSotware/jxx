@@ -25,7 +25,7 @@ namespace jxx::nio::channels
 
     FileChannel::MapMode::MapMode(const jxx::Ptr<jxx::lang::String> name) : name_(std::move(name)) {}
     jxx::Ptr<jxx::lang::String> FileChannel::MapMode::toString() const { return name_; }
-    jxx::lang::jbool FileChannel::MapMode::equals(const jxx::Ptr<jxx::lang::Object> other) const
+    jxx::lang::jbool FileChannel::MapMode::equals(const jxx::Ptr<jxx::lang::Object>& other) const
     {
         auto o = std::dynamic_pointer_cast<MapMode>(other);
         return o && name_ && o->name_ && name_->equals(o->name_);

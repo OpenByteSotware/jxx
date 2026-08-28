@@ -8,6 +8,7 @@
 #include <utility>
 #include <vector>
 #include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.IndexOutOfBoundsException.h"
 #include "util/jxx.util.NoSuchElementException.h"
 #include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "util/jxx.util.Scanner.h"

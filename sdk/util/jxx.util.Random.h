@@ -6,7 +6,7 @@
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.buildin_array.h"
 #include "lang/jxx_types.h"
-#include "io/jxx.io.Serializable.h"
+#include "io/jxx.io.SerializableI.h"
 
 namespace jxx::util {
 
@@ -17,7 +17,7 @@ namespace jxx::util {
  * Public Java reference types use jxx::Ptr<T>; STL is private only.
  */
 class Random : public jxx::lang::Object,
-               public virtual jxx::io::Serializable {
+               public virtual jxx::io::SerializableI {
 public:
     Random();
     Random(jxx::lang::jlong seed);
@@ -38,8 +38,8 @@ public:
     virtual jxx::lang::jdouble nextDouble();
     virtual jxx::lang::jdouble nextGaussian();
 
-    virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) override;
-    virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) override;
+    virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out) override;
+    virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in) override;
     virtual void readObjectNoData() override;
 
 private:

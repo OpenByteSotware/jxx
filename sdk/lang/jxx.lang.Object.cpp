@@ -3,6 +3,7 @@
 #include "jxx.lang.ClassRegistration.h"
 #include "jxx.lang.Class.h"
 #include "jxx.lang.Cast.h"
+#include "jxx.lang.Cloneable.h"
 #include "jxx.lang.Object.h"
 
 
@@ -57,7 +58,7 @@ namespace jxx::lang {
     }
 
     // Java-like: logical equality (default identity)
-    jbool Object::equals(const jxx::Ptr<Object> other) const {
+    jbool Object::equals(const jxx::Ptr<Object>& other) const {
         return this == other.get();
     }
 
@@ -79,7 +80,7 @@ namespace jxx::lang {
     }
 
     // Identity check (reference equality)
-    bool Object::same(const jxx::Ptr<Object> other) const {
+    bool Object::same(const jxx::Ptr<Object>& other) const {
         return thisPtr == other;
     }
 

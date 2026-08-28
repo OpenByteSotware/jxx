@@ -3,7 +3,7 @@
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.buildin_array.h"
 #include "lang/jxx.lang.Object.h"
-#include "io/jxx.io.Serializable.h"
+#include "io/jxx.io.SerializableI.h"
 
 namespace jxx::util {
 
@@ -13,7 +13,7 @@ namespace jxx::util {
  *   - toArray()
  *   - size()
  */
-class IntStream final : public jxx::lang::Object, public jxx::io::Serializable {
+class IntStream final : public jxx::lang::Object, public jxx::io::SerializableI {
 public:
     IntStream() = default;
     explicit IntStream(jxx::lang::IntArray backing);
@@ -26,8 +26,8 @@ public:
     // convenience
     jxx::lang::jint size() const;
 
-    virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) override;
-    virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) override;
+    virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out) override;
+    virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in) override;
     virtual void readObjectNoData() override;
 
 private:

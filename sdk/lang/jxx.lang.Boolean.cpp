@@ -54,7 +54,7 @@ namespace jxx::lang {
     }
 
     // ---- equals ----
-    jxx::lang::jbool Boolean::equals(const jxx::Ptr<jxx::lang::Object> obj) const {
+    jxx::lang::jbool Boolean::equals(const jxx::Ptr<jxx::lang::Object>& obj) const {
         if (this == obj.get()) return true;
         if (!obj) return false;
 

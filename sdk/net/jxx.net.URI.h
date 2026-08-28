@@ -64,7 +64,7 @@ namespace jxx::net
 
         jxx::Ptr<jxx::lang::String> toASCIIString() const;
         jxx::Ptr<jxx::lang::String> toString() const override;
-        jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object> other) const override;
+        jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& other) const override;
         jxx::lang::jint hashCode() const override;
         jxx::lang::jint compareTo(const jxx::Ptr<URI> other) const;
 

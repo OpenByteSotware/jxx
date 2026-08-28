@@ -4,11 +4,12 @@
 #include "lang/jxx.lang.Iterable.h"
 #include "util/jxx.util.wildcard.CollectionAny.h"
 #include "util/jxx.util.wildcard.CollectionExtends.h"
+#include "lang/jxx.lang.ClassInfo.h"
 
 namespace jxx::util {
     template <typename E>
-    class Collection
-        : public virtual jxx::lang::Iterable<E> {
+    class Collection : public jxx::lang::InterfaceBase<Collection<E>, jxx::lang::Iterable<E>>
+    {
     public:
         virtual ~Collection() = default;
 
@@ -26,8 +27,7 @@ namespace jxx::util {
         virtual jxx::lang::jbool add(
             jxx::Ptr<E> element) = 0;
 
-        virtual jxx::lang::jbool remove(
-            jxx::Ptr<jxx::lang::Object> object) = 0;
+        virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object>& object) = 0;
 
         virtual jxx::lang::jbool containsAll(
             jxx::Ptr<wildcard::CollectionAny> collection) = 0;

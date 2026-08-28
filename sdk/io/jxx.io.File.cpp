@@ -398,7 +398,7 @@ namespace jxx::io
         return !ec;
     }
 
-    jxx::lang::jint File::compareTo(const jxx::Ptr<File> pathname) const
+    jxx::lang::jint File::compareTo(const jxx::Ptr<File>& pathname) const
     {
         if (!pathname)
             return 1;
@@ -410,7 +410,7 @@ namespace jxx::io
         return 0;
     }
 
-    jxx::lang::jbool File::equals(const jxx::Ptr<jxx::lang::Object> other) const
+    jxx::lang::jbool File::equals(const jxx::Ptr<jxx::lang::Object>& other) const
     {
         auto f = std::dynamic_pointer_cast<File>(other);
         return f && f->path_ == path_;
@@ -467,11 +467,11 @@ namespace jxx::io
     #endif
     }
 
-    void File::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) {
+    void File::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out) {
         // Default serialization: write the path string
 		///out->writeUTF(toUtf8_(getPath()));
     }
-    void File::readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) {
+    void File::readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in) {
         // Default deserialization: read the path string
         //auto path = in->readUTF();
         /*if (path) {

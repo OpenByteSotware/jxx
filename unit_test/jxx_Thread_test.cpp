@@ -9,6 +9,7 @@
 #include "jxx_memory_detect.h"
 #include "lang/jxx.lang.Runnable.h"
 #include "lang/jxx.lang.Thread.h"
+#include "lang/jxx.lang.Exceptions.h"
 
 using namespace jxx::lang;
 

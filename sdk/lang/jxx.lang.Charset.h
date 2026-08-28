@@ -23,7 +23,7 @@ public:
     jxx::lang::ByteArray encode(const jxx::Ptr<String> s) const;
     jxx::Ptr<String> decode(const jxx::lang::ByteArray bytes) const;
 
-    jbool equals(const jxx::Ptr<Object> o) const override;
+    jbool equals(const jxx::Ptr<Object>& o) const override;
     jint hashCode() const override;
 
 private:

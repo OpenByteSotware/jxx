@@ -25,7 +25,7 @@ namespace jxx::net
     }
 
     jxx::Ptr<jxx::lang::String> URLPermission::toString() const { return url_; }
-    jxx::lang::jbool URLPermission::equals(const jxx::Ptr<jxx::lang::Object> other) const
+    jxx::lang::jbool URLPermission::equals(const jxx::Ptr<jxx::lang::Object>& other) const
     {
         return implies(std::dynamic_pointer_cast<URLPermission>(other));
     }

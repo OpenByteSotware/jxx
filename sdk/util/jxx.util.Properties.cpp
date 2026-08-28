@@ -92,7 +92,7 @@ public:
     virtual jxx::lang::jbool add(const jxx::Ptr<jxx::lang::String> /*e*/) override {
         throw jxx::lang::UnsupportedOperationException();
     }
-    virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object> /*o*/) override {
+    virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object>& /*o*/) override {
         throw jxx::lang::UnsupportedOperationException();
     }
     virtual void clear() override {
@@ -111,7 +111,7 @@ public:
 	virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends < jxx::lang::String>> c) override { throw jxx::lang::UnsupportedOperationException(); }
 	virtual jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny> c) override { throw jxx::lang::UnsupportedOperationException(); }
 	virtual jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny> c) override { throw jxx::lang::UnsupportedOperationException(); }
-    virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object> o) override { throw jxx::lang::UnsupportedOperationException(); }
+    virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& o) override { throw jxx::lang::UnsupportedOperationException(); }
     virtual jxx::lang::jint hashCode() override { throw jxx::lang::UnsupportedOperationException(); }
 	virtual jxx::Ptr<Spliterator<jxx::lang::String>> spliterator() override { throw jxx::lang::UnsupportedOperationException(); }
 };
@@ -335,9 +335,9 @@ static void loadIntoProperties(Properties* props, const std::u16string& text) {
 
         const std::u16string keyRaw = line.substr(start, keyEnd - start);
         const std::u16string valueRaw = (valueStart <= line.size()) ? line.substr(valueStart) : std::u16string();
-        props->setProperty(
-            jxx::NEW<jxx::lang::String>(loadConvert(keyRaw)),
-            jxx::NEW<jxx::lang::String>(loadConvert(valueRaw)));
+        
+        auto tmpValue = jxx::NEW<jxx::lang::String>(loadConvert(valueRaw));
+        props->setProperty(jxx::NEW<jxx::lang::String>(loadConvert(keyRaw)), tmpValue);            
     }
 }
 
@@ -588,21 +588,20 @@ static void writeXmlDocument(Properties* props, jxx::Ptr<jxx::io::OutputStream> 
 
 } // anonymous namespace
 
-Properties::Properties()
-    : Hashtable<jxx::lang::Object, jxx::lang::Object>()
-    , defaults(nullptr) {
+Properties::Properties() : defaults(nullptr) {
 }
 
 Properties::Properties(const jxx::Ptr<Properties> defaults_)
-    : Hashtable<jxx::lang::Object, jxx::lang::Object>()
-    , defaults(defaults_) {
+    : defaults(defaults_) {
 }
 
-jxx::Ptr<jxx::lang::Object> Properties::setProperty(const jxx::Ptr<jxx::lang::String> key, jxx::Ptr<jxx::lang::String> value) {
+jxx::Ptr<jxx::lang::Object> Properties::setProperty(const jxx::Ptr<jxx::lang::String>& key, const
+    jxx::Ptr<jxx::lang::String>& value) {
     if (key == nullptr || value == nullptr) {
         throw jxx::lang::NullPointerException();
     }
-    return this->put(jxx::CAST<jxx::lang::Object>(key), jxx::CAST<jxx::lang::Object>(value));
+    jxx::Ptr<Object> tmp = jxx::CAST<jxx::lang::Object>(value);
+    return this->put(jxx::CAST<jxx::lang::Object>(key), tmp);
 }
 
 jxx::Ptr<jxx::lang::String> Properties::getProperty(const jxx::Ptr<jxx::lang::String> key) {

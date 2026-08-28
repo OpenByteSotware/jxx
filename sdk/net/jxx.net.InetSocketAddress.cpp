@@ -65,7 +65,7 @@ namespace jxx::net
         return jxx::NEW<jxx::lang::String>((host ? host->utf8() : std::string()) + ":" + std::to_string(port_));
     }
 
-    jxx::lang::jbool InetSocketAddress::equals(const jxx::Ptr<jxx::lang::Object> other) const
+    jxx::lang::jbool InetSocketAddress::equals(const jxx::Ptr<jxx::lang::Object>& other) const
     {
         auto o = std::dynamic_pointer_cast<InetSocketAddress>(other);
         if (!o || port_ != o->port_ || unresolved_ != o->unresolved_)

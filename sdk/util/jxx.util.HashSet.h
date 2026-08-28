@@ -6,7 +6,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "io/jxx.io.Serializable.h"
+#include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.Cloneable.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.Object.h"
@@ -156,7 +156,7 @@ namespace jxx {
         class HashSet
             : public AbstractSet<E>
             , public virtual jxx::lang::Cloneable
-            , public virtual jxx::io::Serializable {
+            , public virtual jxx::io::SerializableI {
         private:
             /*
              * Allow the external iterator implementation to access set_

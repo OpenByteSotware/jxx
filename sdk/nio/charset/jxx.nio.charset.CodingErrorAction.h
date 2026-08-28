@@ -19,7 +19,7 @@ namespace jxx::nio::charset
 
     public:
         jxx::Ptr<jxx::lang::String> toString() const override;
-        jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object> other) const override;
+        jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& other) const override;
         jxx::lang::jint hashCode() const override;
 
     private:

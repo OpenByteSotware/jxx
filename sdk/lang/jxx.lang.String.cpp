@@ -1,3 +1,5 @@
+#include "lang/jxx.lang.String.h"
+
 #include <algorithm>
 #include <sstream>
 #include <regex>
@@ -12,17 +14,18 @@
 #include "util/jxx.util.IntStream.h"
 #include "util/jxx.util.Formatter.h"
 #include "jxx.lang.Cast.h"
-#include "jxx.lang.Iterable.h"
-#include "jxx.lang.String.h"
+#include "lang/jxx.lang.Iterable.h"
+#include "lang/jxx.lang.BootstrapClasses.h"
 
 
 namespace jxx::lang {
+    jxx::Ptr<ClassAny> String::Class() { return class_info_detail::ensureStringRegistered(); }
 
-    String::String(const std::string stdString) {
+    String::String(const std::string& stdString) {
         value_ = utf8ToUtf16_(stdString);        
     }
 
-    String::String(const std::u16string stdString) {
+    String::String(const std::u16string& stdString) {
         value_ = stdString;
     }
 
@@ -39,7 +42,7 @@ namespace jxx::lang {
         return c;
     }
 
-    jxx::lang::jbool String::isTurkicLocale_(const jxx::Ptr<jxx::util::Locale> const loc) {
+    jxx::lang::jbool String::isTurkicLocale_(const jxx::Ptr<jxx::util::Locale>& loc) {
         if (!loc) return false;
         auto lang = loc->getLanguage();
         if (!lang) return false;
@@ -254,7 +257,7 @@ namespace jxx::lang {
         return jxx::CAST<jxx::lang::String>(this->thisPtr);
     }
     // Comparable
-    jxx::lang::jint String::compareTo(const jxx::Ptr<String> another) const {
+    jxx::lang::jint String::compareTo(const jxx::Ptr<String>& another) const {
         if (!another) throwNPE_();
         const auto& b = another->value_;
         size_t n = std::min(value_.size(), b.size());
@@ -265,7 +268,7 @@ namespace jxx::lang {
     }
 
     // Object
-    jxx::lang::jbool String::equals(const jxx::Ptr<Object> obj) const {
+    jxx::lang::jbool String::equals(const jxx::Ptr<Object>& obj) const {
         auto s = std::dynamic_pointer_cast<String>(obj);
         return s && s->value_ == value_;
     }
@@ -689,7 +692,7 @@ namespace jxx::lang {
         return formatter->toString();
     }   
 
-    jxx::Ptr<String> String::join(const jxx::Ptr<CharSequence> delimiter, jxx::Ptr<JxxArray<jxx::Ptr<CharSequence>, 1U>> elements) {
+    jxx::Ptr<String> String::join(const jxx::Ptr<CharSequence> delimiter, const jxx::Ptr<JxxArray<jxx::Ptr<CharSequence>, 1U>>& elements) {
         if (!delimiter || !elements) throwNPE_();
         std::u16string delim = toUtf16_(delimiter);
 
@@ -706,7 +709,7 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<String> String::join(const jxx::Ptr<CharSequence> delimiter,
-        jxx::Ptr<jxx::lang::Iterable<jxx::Ptr<CharSequence>>> elements) {
+        const jxx::Ptr<jxx::lang::Iterable<CharSequence>>& elements) {
 
         if (!delimiter || !elements) throwNPE_();
 
@@ -721,8 +724,11 @@ namespace jxx::lang {
             if (!first) out.append(delim);
             first = false;
 
-            auto e = it->next(); // jxx::Ptr<CharSequence>
-            out.append(e ? toUtf16_((*e)) : std::u16string(u"null"));
+            const jxx::Ptr<CharSequence> element = it->next();
+            out.append(
+                element != nullptr
+                    ? toUtf16_(element)
+                    : std::u16string(u"null"));
         }
 
         auto s = jxx::NEW<String>();
@@ -730,8 +736,5 @@ namespace jxx::lang {
         return s;
     }
 
-    void String::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream> out) {}
-    void String::readObject(const jxx::Ptr<jxx::io::ObjectInputStream> in) {}
-    void String::readObjectNoData() {}
 
-} // namespace jxx::lang} // namespace jxx::lang
+} // namespace jxx::lang

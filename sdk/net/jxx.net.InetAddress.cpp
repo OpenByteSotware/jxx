@@ -205,7 +205,7 @@ namespace jxx::net
         return jxx::NEW<jxx::lang::String>((hn ? hn->utf8() : std::string()) + "/" + (ha ? ha->utf8() : std::string()));
     }
 
-    jxx::lang::jbool InetAddress::equals(const jxx::Ptr<jxx::lang::Object> other) const
+    jxx::lang::jbool InetAddress::equals(const jxx::Ptr<jxx::lang::Object>& other) const
     {
         auto a = std::dynamic_pointer_cast<InetAddress>(other);
         return a && bytes_ == a->bytes_ && family_ == a->family_;
