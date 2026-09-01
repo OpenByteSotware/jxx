@@ -87,7 +87,7 @@ public:
         return map_.find(castKey) != map_.end();
     }
 
-    virtual jxx::lang::jbool containsValue(const jxx::Ptr<jxx::lang::Object> value) override {
+    virtual jxx::lang::jbool containsValue(const jxx::Ptr<jxx::lang::Object>& value) override {
         if (value == nullptr) {
             for (const auto& kv : map_) if (kv.second == nullptr) return true;
         } else {
@@ -283,7 +283,7 @@ protected:
             auto it = map_->map_.find(key_);
             return it == map_->map_.end() ? nullptr : it->second;
         }
-        virtual jxx::Ptr<V> setValue(const jxx::Ptr<V> value) override { return map_->put(key_, value); }
+        virtual jxx::Ptr<V> setValue(const jxx::Ptr<V>& value) override { return map_->put(key_, value); }
         virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& o) override {
             auto other = jxx::CAST<MapEntry<K, V>, jxx::lang::Object>(o);
             if (other == nullptr) return false;
@@ -356,7 +356,7 @@ protected:
         virtual ~EntrySet() = default;
         virtual jxx::lang::jint size() override { return map_->size(); }
         virtual jxx::lang::jbool isEmpty() override { return map_->isEmpty(); }
-        virtual jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object> o) override {
+        virtual jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object>& o) override {
             auto e = jxx::CAST<MapEntry<K, V>, jxx::lang::Object>(o);
             if (e == nullptr) return false;
             auto value = map_->get(e->getKey());
@@ -369,7 +369,7 @@ protected:
         virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1>> toArray() override {
             return AbstractCollection<MapEntry<K, V>>::toArray();
         }
-        virtual jxx::lang::jbool add(const jxx::Ptr<MapEntry<K, V>> /*e*/) override { throw UnsupportedOperationException(); }
+        virtual jxx::lang::jbool add(const jxx::Ptr<MapEntry<K, V>>& /*e*/) override { throw UnsupportedOperationException(); }
         virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object>& o) override {
             auto e = jxx::CAST<MapEntry<K, V>, jxx::lang::Object>(o);
             if (e == nullptr) return false;

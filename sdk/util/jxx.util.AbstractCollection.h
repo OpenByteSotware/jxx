@@ -26,8 +26,7 @@ namespace jxx {
                     this->size() == 0);
             }
 
-            virtual jxx::lang::jbool contains(
-                jxx::Ptr<jxx::lang::Object> object) override {
+            virtual jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object>& object) override {
 
                 auto iterator = this->iterator();
 
@@ -92,7 +91,7 @@ namespace jxx {
              * provides one unambiguous final overrider at this hierarchy level.
              */
             virtual jxx::lang::jbool add(
-                jxx::Ptr<E> /* element */) override {
+                const jxx::Ptr<E>& /* element */) override {
 
                 throw jxx::lang::UnsupportedOperationException();
             }

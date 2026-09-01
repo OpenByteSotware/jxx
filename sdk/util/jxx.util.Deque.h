@@ -43,7 +43,7 @@ public:
         return removeFirstOccurrence(o);
     }
 
-    virtual jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object> o) = 0;
+    virtual jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object>& o) = 0;
     virtual jxx::Ptr<Iterator<E>> iterator() = 0;
     virtual jxx::Ptr<Iterator<E>> descendingIterator() = 0;
 };

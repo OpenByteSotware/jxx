@@ -108,7 +108,7 @@ namespace jxx
 				return size_ == 0;
 			}
 
-			virtual jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object> o) override
+			virtual jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object>& o) override
 			{
 				return indexOf(o) >= 0;
 			}
@@ -187,7 +187,7 @@ namespace jxx
 				return oldValue;
 			}
 
-			virtual jxx::lang::jbool add(const jxx::Ptr<E> e) override
+			virtual jxx::lang::jbool add(const jxx::Ptr<E>& e) override
 			{
 				ensureCapacityInternal(size_ + 1);
 				(*elementData)(size_++) = e;

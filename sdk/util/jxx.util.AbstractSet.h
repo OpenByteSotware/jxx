@@ -28,7 +28,7 @@ namespace jxx::util {
         }
 
         virtual jxx::lang::jbool contains(
-            jxx::Ptr<jxx::lang::Object> object) override {
+            const jxx::Ptr<jxx::lang::Object>& object) override {
 
             return AbstractCollection<E>::contains(object);
         }
@@ -39,8 +39,7 @@ namespace jxx::util {
             return AbstractCollection<E>::toArray();
         }
 
-        virtual jxx::lang::jbool add(
-            jxx::Ptr<E> element) override {
+        virtual jxx::lang::jbool add(const jxx::Ptr<E>& element) override {
 
             return AbstractCollection<E>::add(element);
         }

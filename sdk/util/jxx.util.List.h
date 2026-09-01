@@ -26,12 +26,12 @@ public:
         return size() == 0;
     }
 
-    virtual jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object> o) = 0;
+    virtual jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object>& o) = 0;
     virtual jxx::Ptr<ListIterator<E>> listIterator() = 0;
     virtual jxx::Ptr<ListIterator<E>> listIterator(jxx::lang::jint index) = 0;
     virtual jxx::Ptr<Iterator<E>> iterator() = 0;
     virtual jxx::lang::ObjectArray toArray() = 0;
-    virtual jxx::lang::jbool add(const jxx::Ptr<E> e) = 0;
+    virtual jxx::lang::jbool add(const jxx::Ptr<E>& e) = 0;
     virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object>& o) = 0;
     virtual jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny> c) = 0;
     virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<E>> c) = 0;

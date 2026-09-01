@@ -98,8 +98,7 @@ namespace jxx::util
         // Collection methods redeclared by List
         // ---------------------------------------------------------------------
 
-        jxx::lang::jbool contains(
-            const jxx::Ptr<jxx::lang::Object> object)
+        jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object>& object)
             override
         {
 
@@ -150,8 +149,7 @@ namespace jxx::util
          * The default implementation delegates to add(size(), element). A list
          * that does not support insertion may leave indexed add unsupported.
          */
-        jxx::lang::jbool add(
-            const jxx::Ptr<E> element)
+        jxx::lang::jbool add(const jxx::Ptr<E>& element)
             override
         {
 

@@ -144,8 +144,7 @@ namespace
 			++this->modCount;
 		}
 
-		jxx::lang::jbool add(
-			const jxx::Ptr<String> element)
+		jxx::lang::jbool add(const jxx::Ptr<String>& element)
 			override
 		{
 

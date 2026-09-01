@@ -219,7 +219,7 @@ namespace jxx::util
 			{
 				return owner_->get(object_(key_));
 			}
-			jxx::Ptr<V> setValue(const jxx::Ptr<V> value) override
+			jxx::Ptr<V> setValue(const jxx::Ptr<V>& value) override
 			{
 				if (value == nullptr) throw jxx::lang::NullPointerException();
 				return owner_->put(key_, value);
@@ -258,7 +258,7 @@ namespace jxx::util
 			{
 				return owner_->keyIterator_();
 			}
-			jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object> o) override
+			jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object>& o) override
 			{
 				return owner_->containsKey(o);
 			}
@@ -266,7 +266,7 @@ namespace jxx::util
 			{
 				return AbstractCollection<K>::toArray();
 			}
-			jxx::lang::jbool add(const jxx::Ptr<K>) override
+			jxx::lang::jbool add(const jxx::Ptr<K>&) override
 			{
 				throw jxx::lang::UnsupportedOperationException();
 			}
@@ -330,7 +330,7 @@ namespace jxx::util
 			{
 				return owner_->valueIterator_();
 			}
-			jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object> o) override
+			jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object>& o) override
 			{
 				return owner_->containsValue(o);
 			}
@@ -338,7 +338,7 @@ namespace jxx::util
 			{
 				return AbstractCollection<V>::toArray();
 			}
-			jxx::lang::jbool add(const jxx::Ptr<V>) override
+			jxx::lang::jbool add(const jxx::Ptr<V>&) override
 			{
 				throw jxx::lang::UnsupportedOperationException();
 			}
@@ -393,7 +393,7 @@ namespace jxx::util
 			{
 				return owner_->entryIterator_();
 			}
-			jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object> o) override
+			jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object>& o) override
 			{
 				auto entry = jxx::CAST<MapEntry<K, V>>(o);
 				if (entry == nullptr) return false;
@@ -406,7 +406,7 @@ namespace jxx::util
 			{
 				return AbstractCollection<MapEntry<K, V>>::toArray();
 			}
-			jxx::lang::jbool add(const jxx::Ptr<MapEntry<K, V>>) override
+			jxx::lang::jbool add(const jxx::Ptr<MapEntry<K, V>>&) override
 			{
 				throw jxx::lang::UnsupportedOperationException();
 			}

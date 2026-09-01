@@ -74,7 +74,7 @@ public:
     virtual jxx::lang::jint size() override {
         return static_cast<jxx::lang::jint>(values_.size());
     }
-    virtual jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object> o) override {
+    virtual jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object>& o) override {
         for (const auto& value : values_) {
             if (o == nullptr) {
                 if (value == nullptr) {
@@ -89,7 +89,7 @@ public:
     virtual jxx::Ptr<Iterator<jxx::lang::String>> iterator() override {
         return std::make_shared<StringIteratorImpl>(values_);
     }
-    virtual jxx::lang::jbool add(const jxx::Ptr<jxx::lang::String> /*e*/) override {
+    virtual jxx::lang::jbool add(const jxx::Ptr<jxx::lang::String>& /*e*/) override {
         throw jxx::lang::UnsupportedOperationException();
     }
     virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object>& /*o*/) override {

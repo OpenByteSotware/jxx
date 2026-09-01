@@ -52,7 +52,7 @@ public:
         return data_.empty();
     }
 
-    virtual jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object> o) override {
+    virtual jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object>& o) override {
         for (const auto& e : data_) {
             if (o == nullptr) {
                 if (e == nullptr) return true;
@@ -177,7 +177,7 @@ public:
         if (!offerLast(e)) throw IllegalStateException();
     }
 
-    virtual jxx::lang::jbool add(const jxx::Ptr<E> e) override {
+    virtual jxx::lang::jbool add(const jxx::Ptr<E>& e) override {
         return offerLast(e);
     }
 

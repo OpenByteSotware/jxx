@@ -63,7 +63,10 @@ public:
     }
 
 protected:
-    JXX_OBJECT_CLONE(LinkedTreeMap<K, V>)
+    jxx::Ptr<jxx::lang::Object> cloneImpl() const override
+    {
+        return jxx::NEW<LinkedTreeMap<K, V>>(*this);
+    }
 
 private:
     jxx::Ptr<jxx::util::Comparator<K>> comparator_;

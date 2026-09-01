@@ -62,8 +62,7 @@ public:
      * Null validation is delegated to offer(), matching Java's
      * AbstractQueue behavior.
      */
-    virtual jxx::lang::jbool add(
-        jxx::Ptr<E> element) override {
+    virtual jxx::lang::jbool add(const jxx::Ptr<E>& element) override {
 
         if (this->offer(element)) {
             return static_cast<jxx::lang::jbool>(true);

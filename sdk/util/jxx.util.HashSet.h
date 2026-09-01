@@ -297,8 +297,7 @@ namespace jxx {
                     set_.empty());
             }
 
-            virtual jxx::lang::jbool contains(
-                jxx::Ptr<jxx::lang::Object> object)
+            virtual jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object>& object)
                 override {
 
                 if (object == nullptr) {
@@ -319,7 +318,7 @@ namespace jxx {
             }
 
             virtual jxx::lang::jbool add(
-                jxx::Ptr<E> element) override {
+                const jxx::Ptr<E>& element) override {
 
                 const auto result =
                     set_.insert(element);

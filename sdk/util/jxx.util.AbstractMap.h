@@ -134,7 +134,7 @@ public:
             return jxx::CAST<Iterator<K>>(iteratorValue);
         }
         virtual jxx::lang::ObjectArray toArray() override { return AbstractCollection<K>::toArray(); }
-        virtual jxx::lang::jbool add(const jxx::Ptr<K> /*e*/) override { throw UnsupportedOperationException(); }
+        virtual jxx::lang::jbool add(const jxx::Ptr<K>& /*e*/) override { throw UnsupportedOperationException(); }
         virtual jxx::lang::jbool remove(
             const jxx::Ptr<jxx::lang::Object>& object) override {
 
@@ -180,7 +180,7 @@ public:
             return jxx::CAST<Iterator<V>>(iteratorValue);
         }
         virtual jxx::lang::ObjectArray toArray() override { return AbstractCollection<V>::toArray(); }
-        virtual jxx::lang::jbool add(const jxx::Ptr<V> /*e*/) override { throw UnsupportedOperationException(); }
+        virtual jxx::lang::jbool add(const jxx::Ptr<V>& /*e*/) override { throw UnsupportedOperationException(); }
         virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object>& o) override {
             auto it = map_->entrySet()->iterator();
             if (o == nullptr) {

@@ -18,14 +18,13 @@ namespace jxx::util {
         virtual jxx::lang::jbool isEmpty() = 0;
 
         virtual jxx::lang::jbool contains(
-            jxx::Ptr<jxx::lang::Object> object) = 0;
+            const jxx::Ptr<jxx::lang::Object>& object) = 0;
 
         virtual jxx::Ptr<Iterator<E>> iterator() = 0;
 
         virtual jxx::lang::ObjectArray toArray() = 0;
 
-        virtual jxx::lang::jbool add(
-            jxx::Ptr<E> element) = 0;
+        virtual jxx::lang::jbool add(const jxx::Ptr<E>& element) = 0;
 
         virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object>& object) = 0;
 

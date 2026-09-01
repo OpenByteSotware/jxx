@@ -2,7 +2,6 @@
 
 #include <cstddef>
 #include <list>
-#include <memory>
 #include <unordered_map>
 #include <vector>
 
@@ -85,7 +84,7 @@ namespace jxx {
             OrderIndexMap orderIndex_;
             jxx::lang::jbool accessOrder_;
 
-            void appendOrderKey_(const jxx::Ptr<K> key) {
+            void appendOrderKey_(const jxx::Ptr<K>& key) {
                 order_.push_back(key);
 
                 auto tail = order_.end();
@@ -94,7 +93,7 @@ namespace jxx {
                 orderIndex_.emplace(key, tail);
             }
 
-            void removeOrderKey_(const jxx::Ptr<K> key) {
+            void removeOrderKey_(const jxx::Ptr<K>& key) {
                 auto found = orderIndex_.find(key);
 
                 if (found == orderIndex_.end()) {
@@ -106,7 +105,7 @@ namespace jxx {
             }
 
             jxx::lang::jbool moveOrderKeyToEnd_(
-                jxx::Ptr<K> key) {
+                const jxx::Ptr<K>& key) {
 
                 auto found = orderIndex_.find(key);
 
@@ -209,7 +208,7 @@ namespace jxx {
             }
 
             explicit LinkedHashMap(
-                jxx::Ptr<Map<K, V>> source)
+                const jxx::Ptr<Map<K, V>>& source)
                 : LinkedHashMap() {
 
                 if (source == nullptr) {
@@ -228,15 +227,15 @@ namespace jxx {
              *     Map.Entry<K,V> eldest)
              */
             virtual jxx::lang::jbool removeEldestEntry(
-                jxx::Ptr<MapEntry<K, V>>
-            /* eldest */) {
+                const jxx::Ptr<MapEntry<K, V>>&
+                /* eldest */) {
 
                 return static_cast<jxx::lang::jbool>(
                     false);
             }
 
             virtual void afterNodeAccess(
-                jxx::Ptr<K> key) override {
+                const jxx::Ptr<K>& key) override {
 
                 if (!accessOrder_) {
                     return;
@@ -251,7 +250,8 @@ namespace jxx {
                 }
             }
 
-            virtual void afterNodeInsertion(const jxx::Ptr<K>& key,
+            virtual void afterNodeInsertion(
+                const jxx::Ptr<K>& key,
                 jxx::lang::jbool isNewKey) override {
 
                 if (!isNewKey) {
@@ -277,7 +277,7 @@ namespace jxx {
             }
 
             virtual void afterNodeRemoval(
-                jxx::Ptr<K> key) override {
+                const jxx::Ptr<K>& key) override {
 
                 removeOrderKey_(key);
             }
@@ -288,7 +288,10 @@ namespace jxx {
             }
 
             class LinkedEntryIterator final
-                : public virtual Iterator<MapEntry<K, V>> {
+                : public jxx::lang::ClassBase<
+                      LinkedEntryIterator,
+                      jxx::lang::Object,
+                      Iterator<MapEntry<K, V>>> {
             private:
                 LinkedHashMap<K, V>* owner_;
 
@@ -402,10 +405,11 @@ namespace jxx {
                     Iterator<MapEntry<K, V>>>
                     iterator() override {
 
-                    return jxx::Ptr<
-                        Iterator<MapEntry<K, V>>>(
-                            new LinkedEntryIterator(
-                                owner_));
+                    auto iteratorValue =
+                        jxx::NEW<LinkedEntryIterator>(owner_);
+
+                    return jxx::CAST<Iterator<MapEntry<K, V>>>(
+                        iteratorValue);
                 }
             };
 
@@ -413,48 +417,28 @@ namespace jxx {
                 Set<MapEntry<K, V>>>
                 createEntrySetView() override {
 
-                return jxx::Ptr<
-                    Set<MapEntry<K, V>>>(
-                        new LinkedEntrySet(this));
+                auto view = jxx::NEW<LinkedEntrySet>(thisPtr);
+                return jxx::CAST<Set<MapEntry<K, V>>>(view);
             }
 
         public:
             virtual jxx::Ptr<jxx::lang::Object>
-                clone() {
-
+                clone() const override
+            {
                 auto cloned =
-                    jxx::Ptr<LinkedHashMap<K, V>>(
-                        new LinkedHashMap<K, V>(
-                            this->size(),
-                            this->loadFactorValue_(),
-                            accessOrder_));
-
-                /*
-                 * Use the base public API instead of directly
-                 * accessing HashMap's private unordered_map.
-                 *
-                 * Temporarily disable access-order behavior while
-                 * reading values from this map so clone() does not
-                 * reorder the source map.
-                 */
-                const jxx::lang::jbool savedAccessOrder =
-                    accessOrder_;
-
-                accessOrder_ =
-                    static_cast<jxx::lang::jbool>(false);
+                    jxx::NEW<LinkedHashMap<K, V>>(
+                        static_cast<jxx::lang::jint>(order_.size()),
+                        this->loadFactorValue_(),
+                        accessOrder_);
 
                 for (const auto& key : order_) {
-                    auto value = this->get(
-                        jxx::CAST<jxx::lang::Object>(
-                            key));
+                    const auto value =
+                        this->getWithoutAccess_(key);
 
                     cloned->put(key, value);
                 }
 
-                accessOrder_ = savedAccessOrder;
-
-                return jxx::CAST<jxx::lang::Object>(
-                    cloned);
+                return jxx::CAST<jxx::lang::Object>(cloned);
             }
         };
 

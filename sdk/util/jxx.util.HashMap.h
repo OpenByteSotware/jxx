@@ -107,22 +107,45 @@ namespace jxx
 			}
 
 		protected:
-			virtual void afterNodeAccess(const jxx::Ptr<K> /*key*/)
+			virtual void afterNodeAccess(const jxx::Ptr<K>& /*key*/)
 			{
 			}
 
-			virtual void afterNodeInsertion(const jxx::Ptr<K>& /*key*/,
+			virtual void afterNodeInsertion(
+                const jxx::Ptr<K>& /*key*/,
 				jxx::lang::jbool /*isNewKey*/)
 			{
 			}
 
-			virtual void afterNodeRemoval(const jxx::Ptr<K> /*key*/)
+			virtual void afterNodeRemoval(const jxx::Ptr<K>& /*key*/)
 			{
 			}
 
 			virtual void afterClear()
 			{
 			}
+
+            jxx::lang::jint modificationCount_() const noexcept
+            {
+                return modCount_;
+            }
+
+            void incrementModificationCount_() noexcept
+            {
+                ++modCount_;
+            }
+
+            jxx::lang::jfloat loadFactorValue_() const noexcept
+            {
+                return loadFactor_;
+            }
+
+            jxx::Ptr<V> getWithoutAccess_(
+                const jxx::Ptr<K>& key) const
+            {
+                const auto found = map_.find(key);
+                return found == map_.end() ? nullptr : found->second;
+            }
 
 		public:
 			HashMap()
@@ -192,7 +215,8 @@ namespace jxx
 			 * Java's marker-only interface. These methods make HashMap
 			 * concrete without inventing ObjectStream APIs.
 			 */
-			virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out) override
+			virtual void writeObject(
+				const jxx::Ptr<jxx::io::ObjectOutputStream>& out) override
 			{
 
 				if (out == nullptr) {
@@ -202,7 +226,8 @@ namespace jxx
 				throw jxx::lang::UnsupportedOperationException();
 			}
 
-			virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in) override
+			virtual void readObject(
+				const jxx::Ptr<jxx::io::ObjectInputStream>& in) override
 			{
 
 				if (in == nullptr) {
@@ -229,7 +254,8 @@ namespace jxx
 					map_.empty());
 			}
 
-			virtual jxx::lang::jbool containsKey(const jxx::Ptr<jxx::lang::Object>& key) override
+			virtual jxx::lang::jbool containsKey(
+				const jxx::Ptr<jxx::lang::Object>& key) override
 			{
 
 				if (key == nullptr) {
@@ -262,7 +288,8 @@ namespace jxx
 				return static_cast<jxx::lang::jbool>(false);
 			}
 
-			virtual jxx::Ptr<V> get(const jxx::Ptr<jxx::lang::Object>& key) override
+			virtual jxx::Ptr<V> get(
+				const jxx::Ptr<jxx::lang::Object>& key) override
 			{
 
 				jxx::Ptr<K> castKey = nullptr;
@@ -309,7 +336,8 @@ namespace jxx
 				return previous;
 			}
 
-			virtual jxx::Ptr<V> remove(const jxx::Ptr<jxx::lang::Object>& key) override
+			virtual jxx::Ptr<V> remove(
+				const jxx::Ptr<jxx::lang::Object>& key) override
 			{
 
 				jxx::Ptr<K> castKey = nullptr;
@@ -336,7 +364,8 @@ namespace jxx
 				return previous;
 			}
 
-			virtual void putAll(const jxx::Ptr<Map<K, V>>& source) override
+			virtual void putAll(
+				const jxx::Ptr<Map<K, V>>& source) override
 			{
 
 				if (source == nullptr) {
@@ -406,15 +435,14 @@ namespace jxx
 						jxx::CAST<jxx::lang::Object>(key_));
 				}
 
-				virtual jxx::Ptr<V> setValue(
-                    const jxx::Ptr<V>& value) override
+				virtual jxx::Ptr<V> setValue(const jxx::Ptr<V>& value) override
 				{
 
 					return owner_->put(key_, value);
 				}
 
 				virtual jxx::lang::jbool equals(
-					jxx::Ptr<jxx::lang::Object> object) const override
+                    const jxx::Ptr<jxx::lang::Object>& object) const override
 				{
 
 					auto other =
@@ -493,7 +521,7 @@ namespace jxx
 			virtual jxx::Ptr<MapEntry<K, V>> makeEntryView(
                 const jxx::Ptr<K>& key)
             {
-                auto entry = jxx::NEW<EntryView>(this, key);
+                auto entry = jxx::NEW<EntryView>(thisPtr, key);
                 return jxx::CAST<MapEntry<K, V>>(entry);
             }
 
@@ -697,7 +725,7 @@ namespace jxx
 			virtual jxx::Ptr<Set<MapEntry<K, V>>>
                 createEntrySetView()
             {
-                auto view = jxx::NEW<EntrySet>(this);
+                auto view = jxx::NEW<EntrySet>(thisPtr);
                 return jxx::CAST<Set<MapEntry<K, V>>>(view);
             }
 

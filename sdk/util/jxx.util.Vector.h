@@ -441,7 +441,7 @@ namespace jxx::util {
                 });
         }
 
-        jxx::lang::jbool add(const jxx::Ptr<E> element) override {
+        jxx::lang::jbool add(const jxx::Ptr<E>& element) override {
             addElement(element);
             return true;
         }

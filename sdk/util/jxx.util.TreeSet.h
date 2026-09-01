@@ -245,8 +245,7 @@ namespace jxx {
                 return comparator_;
             }
 
-            virtual jxx::lang::jbool contains(
-                jxx::Ptr<jxx::lang::Object> object)
+            virtual jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object>& object)
                 override {
 
                 if (object == nullptr) {
@@ -272,8 +271,7 @@ namespace jxx {
                     new TreeSetIterator<E>(this));
             }
 
-            virtual jxx::lang::jbool add(
-                jxx::Ptr<E> element) override {
+            virtual jxx::lang::jbool add(const jxx::Ptr<E>& element) override {
 
                 if (element == nullptr) {
                     throw jxx::lang::NullPointerException();
