@@ -122,9 +122,6 @@ namespace jxx::lang {
             : JxxArray(array_detail::checkedLength(requestedLength),
                 CheckedLengthTag{}) {}
 
-        template <typename Integer, array_detail::EnableIntegral<Integer> = 0>
-        explicit JxxArray(const std::array<Integer, 1U>& dimensions)
-            : JxxArray(dimensions[0]) {}
 
         JxxArray(std::initializer_list<T> values)
             : JxxArray(array_detail::checkedLength(values.size()),
@@ -312,8 +309,20 @@ namespace jxx::lang {
             : JxxArray(dimensions[0], CheckedLengthTag{}) {
             const auto tail = tailDimensions_(dimensions);
             for (jxx::lang::jint i = 0; i < length; ++i) {
-                elements_[array_detail::nativeSize(i)] =
-                    jxx::NEW<SubArray>(tail);
+                if constexpr (Rank == 2U) {
+                    /*
+                     * The rank-one specialization has both scalar-length and
+                     * std::array value constructors. Pass the final dimension
+                     * as a scalar to avoid an ambiguous std::array<T,1>
+                     * construction while preserving Java new T[x][y].
+                     */
+                    elements_[array_detail::nativeSize(i)] =
+                        jxx::NEW<SubArray>(tail[0]);
+                }
+                else {
+                    elements_[array_detail::nativeSize(i)] =
+                        jxx::NEW<SubArray>(tail);
+                }
             }
         }
 

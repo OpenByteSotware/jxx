@@ -1,8 +1,12 @@
 #pragma once
 
+#include <cstdint>
+#include <vector>
+
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.UnsupportedOperationException.h"
+#include "lang/jxx.lang.buildin_array.h"
 #include "util/jxx.util.Collection.h"
 
 namespace jxx::util
@@ -29,6 +33,37 @@ namespace jxx::util
 
             throw jxx::lang::
                 UnsupportedOperationException();
+        }
+
+        jxx::lang::ObjectArray toArray() override
+        {
+            std::vector<jxx::Ptr<jxx::lang::Object>> snapshot;
+
+            const auto expectedSize = this->size();
+            if (expectedSize > 0) {
+                snapshot.reserve(
+                    static_cast<std::size_t>(expectedSize));
+            }
+
+            auto iteratorValue = this->iterator();
+            while (iteratorValue->hasNext()) {
+                snapshot.push_back(
+                    jxx::CAST<jxx::lang::Object>(
+                        iteratorValue->next()));
+            }
+
+            auto result =
+                jxx::NEW<jxx::lang::ObjectArrayType>(
+                    static_cast<std::uint32_t>(snapshot.size()));
+
+            for (std::size_t index = 0;
+                 index < snapshot.size();
+                 ++index) {
+                (*result)[static_cast<jxx::lang::jint>(index)] =
+                    snapshot[index];
+            }
+
+            return result;
         }
 
         jxx::lang::jbool contains(
