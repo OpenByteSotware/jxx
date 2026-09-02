@@ -1,489 +1,564 @@
 #pragma once
+
+#include <cstdint>
+
+#include "io/jxx.io.SerializableI.h"
+#include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.Cloneable.h"
+#include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.buildin_array.h"
 #include "util/jxx.util.AbstractList.h"
+#include "util/jxx.util.ConcurrentModificationException.h"
 #include "util/jxx.util.List.h"
+#include "util/jxx.util.ListIterator.h"
+#include "util/jxx.util.NoSuchElementException.h"
 #include "util/jxx.util.RandomAccess.h"
 #include "util/jxx.util.SubList.h"
-#include "lang/jxx.lang.Cloneable.h"
-#include "io/jxx.io.SerializableI.h"
-#include "util/jxx.util.ComparatorSuper.h"
-#include "util/jxx.util.Spliterator.h"
-#include "util/function/jxx.util.function.PredicateSuper.h"
-#include "util/function/jxx.util.function.UnaryOperator.h"
-#include "util/function/jxx.util.function.Consumer.h"
 #include "util/jxx.util.wildcard.CollectionExtends.h"
-#include "lang/jxx.lang.IllegalArgumentException.h"
-#include "lang/jxx.lang.IndexOutOfBoundsException.h"
-#include "lang/jxx.lang.NullPointerException.h"
 
-namespace jxx
-{
-	namespace util
-	{
+namespace jxx::util {
 
-		template <typename E>
-		class ArrayList
-			: public AbstractList<E>
-			, public virtual RandomAccess
-			, public virtual jxx::lang::Cloneable
-			, public virtual jxx::io::SerializableI
-		{
-		private:
-			static constexpr jxx::lang::jint DEFAULT_CAPACITY = 10;
+template <typename E>
+class ArrayList
+    : public jxx::lang::ClassBase<
+          ArrayList<E>,
+          AbstractList<E>,
+          RandomAccess,
+          jxx::lang::Cloneable,
+          jxx::io::SerializableI> {
+private:
+    static constexpr jxx::lang::jint DEFAULT_CAPACITY = 10;
 
-			jxx::Ptr<JxxArray<jxx::Ptr<E>, 1U>> elementData;
-			jxx::lang::jint size_;
+    jxx::Ptr<jxx::JxxArray<jxx::Ptr<E>, 1U>> elementData_;
+    jxx::lang::jint size_ = 0;
 
-		public:
-			ArrayList()
-				: elementData(jxx::NEW<JxxArray<jxx::Ptr<E>, 1U>>(DEFAULT_CAPACITY)), size_(0)
-			{
-			}
+    static jxx::lang::jint initialStorageCapacity_(
+        jxx::lang::jint requestedCapacity) {
 
-			explicit ArrayList(jxx::lang::jint initialCapacity)
-				: elementData(), size_(0)
-			{
-				if (initialCapacity < 0) {
-					throw jxx::lang::IllegalArgumentException();
-				}
-				elementData = jxx::Ptr<JxxArray<jxx::Ptr<E>, 1U>>(jxx::NEW<JxxArray<jxx::Ptr<E>, 1U>>(initialCapacity));
-			}
+        return requestedCapacity > 0 ? requestedCapacity : 1;
+    }
 
-			// Java: ArrayList(Collection<? extends E> c)
-			explicit ArrayList(const jxx::Ptr<wildcard::CollectionExtends<E>> c)
-				: elementData(), size_(0)
-			{
-				if (c == nullptr) {
-					throw jxx::lang::NullPointerException();
-				}
-				const jxx::lang::jint n = c->size();
-				elementData = jxx::Ptr<JxxArray<jxx::Ptr<E>>>(new JxxArray<jxx::Ptr<E>, 1U>(n > 0 ? n : DEFAULT_CAPACITY));
-				auto it = c->iteratorExtends();
-				while (it->hasNext()) {
-					(*elementData)(size_++) = it->next();
-				}
-			}
+    void rangeCheck_(jxx::lang::jint index) const {
+        if (index < 0 || index >= size_) {
+            throw jxx::lang::IndexOutOfBoundsException();
+        }
+    }
 
-			virtual ~ArrayList() = default;
+    void rangeCheckForAdd_(jxx::lang::jint index) const {
+        if (index < 0 || index > size_) {
+            throw jxx::lang::IndexOutOfBoundsException();
+        }
+    }
 
-			virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out) override
-			{
+    void ensureCapacityInternal_(jxx::lang::jint minimumCapacity) {
+        if (minimumCapacity <= capacity_()) {
+            return;
+        }
 
-			}
-			virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in) override
-			{
+        jxx::lang::jint newCapacity =
+            capacity_() + (capacity_() >> 1);
 
-			}
-			virtual void readObjectNoData() override
-			{
-			}
+        if (newCapacity < minimumCapacity) {
+            newCapacity = minimumCapacity;
+        }
+        if (newCapacity < DEFAULT_CAPACITY) {
+            newCapacity = DEFAULT_CAPACITY;
+        }
 
-			virtual jxx::Ptr<jxx::lang::Object> cloneImpl() const override
-			{
-				return jxx::NEW<ArrayList<E>>(*this);
-			}
+        auto replacement =
+            jxx::NEW<jxx::JxxArray<jxx::Ptr<E>, 1U>>(
+                static_cast<std::uint32_t>(newCapacity));
 
-			virtual void trimToSize()
-			{
-				if (size_ < elementData->size()) {
-					elementData = copyArray(size_);
-					++this->modCount;
-				}
-			}
+        for (jxx::lang::jint index = 0; index < size_; ++index) {
+            (*replacement)(index) = (*elementData_)(index);
+        }
 
-			virtual void ensureCapacity(jxx::lang::jint minCapacity)
-			{
-				if (minCapacity > elementData->size()) {
-					grow(minCapacity);
-				}
-			}
+        elementData_ = replacement;
+    }
 
-			virtual jxx::lang::jint size() override
-			{
-				return size_;
-			}
+    jxx::lang::jint capacity_() const {
+        return static_cast<jxx::lang::jint>(elementData_->size());
+    }
 
-			virtual jxx::lang::jbool isEmpty() override
-			{
-				return size_ == 0;
-			}
+    void fastRemove_(jxx::lang::jint index) {
+        const auto elementsToMove = size_ - index - 1;
 
-			virtual jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object>& o) override
-			{
-				return indexOf(o) >= 0;
-			}
+        for (jxx::lang::jint offset = 0;
+             offset < elementsToMove;
+             ++offset) {
 
-			virtual jxx::lang::jint indexOf(const jxx::Ptr<jxx::lang::Object> o) override
-			{
-				if (o == nullptr) {
-					for (jxx::lang::jint i = 0; i < size_; ++i) {
-						if ((*elementData)(i) == nullptr) {
-							return i;
-						}
-					}
-				}
-				else {
-					for (jxx::lang::jint i = 0; i < size_; ++i) {
-						auto e = (*elementData)(i);
-						if (e != nullptr && o->equals(jxx::CAST<jxx::lang::Object, E>(e))) {
-							return i;
-						}
-					}
-				}
-				return -1;
-			}
+            (*elementData_)(index + offset) =
+                (*elementData_)(index + offset + 1);
+        }
 
-			virtual jxx::lang::jint lastIndexOf(const jxx::Ptr<jxx::lang::Object> o) override
-			{
-				if (o == nullptr) {
-					for (jxx::lang::jint i = size_ - 1; i >= 0; --i) {
-						if ((*elementData)(i) == nullptr) {
-							return i;
-						}
-					}
-				}
-				else {
-					for (jxx::lang::jint i = size_ - 1; i >= 0; --i) {
-						auto e = (*elementData)(i);
-						if (e != nullptr && o->equals(jxx::CAST<jxx::lang::Object, E>(e))) {
-							return i;
-						}
-					}
-				}
-				return -1;
-			}
+        --size_;
+        (*elementData_)(size_) = nullptr;
+        ++this->modCount;
+    }
 
-			virtual jxx::Ptr<jxx::lang::Object> clone()
-			{
-				jxx::Ptr<ArrayList<E>> cloned(jxx::NEW<ArrayList<E>>(size_));
-				for (jxx::lang::jint i = 0; i < size_; ++i) {
-					(*cloned->elementData)(i) = (*elementData)(i);
-				}
-				cloned->size_ = size_;
-				return cloned;
-			}
+    static jxx::lang::jbool equalsObject_(
+        const jxx::Ptr<jxx::lang::Object>& left,
+        const jxx::Ptr<jxx::lang::Object>& right) {
 
-			virtual jxx::lang::ObjectArray toArray() override
-			{
-				auto a = jxx::NEW<jxx::lang::ObjectArrayType>(size_);
-				for (jxx::lang::jint i = 0; i < size_; ++i)
-				{
-					a->operator[](i) = jxx::CAST<jxx::lang::Object>((*elementData)(i));
-				}
-				return a;
-			}
+        return left == nullptr
+            ? right == nullptr
+            : left->equals(right);
+    }
 
-			virtual jxx::Ptr<E> get(jxx::lang::jint index) override
-			{
-				rangeCheck(index);
-				return (*elementData)(index);
-			}
+    class ArrayListIterator final
+        : public jxx::lang::ClassBase<
+              ArrayListIterator,
+              jxx::lang::Object,
+              ListIterator<E>> {
+    private:
+        jxx::Ptr<ArrayList<E>> owner_;
+        jxx::lang::jint cursor_ = 0;
+        jxx::lang::jint lastReturned_ = -1;
+        jxx::lang::jint expectedModCount_ = 0;
 
-			virtual jxx::Ptr<E> set(jxx::lang::jint index, const jxx::Ptr<E> element) override
-			{
-				rangeCheck(index);
-				jxx::Ptr<E> oldValue = (*elementData)(index);
-				(*elementData)(index) = element;
-				return oldValue;
-			}
+        void checkForComodification_() const {
+            if (expectedModCount_ != owner_->modCount) {
+                throw ConcurrentModificationException();
+            }
+        }
 
-			virtual jxx::lang::jbool add(const jxx::Ptr<E>& e) override
-			{
-				ensureCapacityInternal(size_ + 1);
-				(*elementData)(size_++) = e;
-				++this->modCount;
-				return true;
-			}
+    public:
+        ArrayListIterator(
+            const jxx::Ptr<ArrayList<E>>& owner,
+            jxx::lang::jint index)
+            : owner_(owner)
+            , cursor_(index)
+            , lastReturned_(-1)
+            , expectedModCount_(owner == nullptr ? 0 : owner->modCount) {
 
-			virtual void add(jxx::lang::jint index, const jxx::Ptr<E> element) override
-			{
-				rangeCheckForAdd(index);
-				ensureCapacityInternal(size_ + 1);
-				shiftRight(index, 1);
-				(*elementData)(index) = element;
-				++size_;
-				++this->modCount;
-			}
+            if (owner_ == nullptr) {
+                throw jxx::lang::NullPointerException();
+            }
+            owner_->rangeCheckForAdd_(index);
+        }
 
-			virtual jxx::Ptr<E> remove(jxx::lang::jint index) override
-			{
-				rangeCheck(index);
-				++this->modCount;
-				jxx::Ptr<E> oldValue = (*elementData)(index);
-				shiftLeft(index + 1, 1);
-				--size_;
-				(*elementData)(size_) = nullptr;
-				return oldValue;
-			}
+        ~ArrayListIterator() override = default;
 
-			virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object>& o) override
-			{
-				jxx::lang::jint i = indexOf(o);
-				if (i >= 0) {
-					remove(i);
-					return true;
-				}
-				return false;
-			}
+        jxx::lang::jbool hasNext() override {
+            return cursor_ < owner_->size_;
+        }
 
-			virtual void clear() override
-			{
-				++this->modCount;
-				for (jxx::lang::jint i = 0; i < size_; ++i) {
-					(*elementData)(i) = nullptr;
-				}
-				size_ = 0;
-			}
+        jxx::Ptr<E> next() override {
+            checkForComodification_();
+            if (!hasNext()) {
+                throw NoSuchElementException();
+            }
 
-			virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<E>>& c) override
-			{
-				return addAll(size_, c);
-			}
+            lastReturned_ = cursor_;
+            return (*owner_->elementData_)(cursor_++);
+        }
 
-			virtual jxx::lang::jbool addAll(jxx::lang::jint index,
-				const jxx::Ptr<wildcard::CollectionExtends<E>>& c) override
-			{
-				rangeCheckForAdd(index);
-				if (c == nullptr) {
-					throw jxx::lang::NullPointerException();
-				}
-				const jxx::lang::jint numNew = c->size();
-				if (numNew == 0) {
-					return false;
-				}
-				ensureCapacityInternal(size_ + numNew);
-				shiftRight(index, numNew);
-				auto it = c->iteratorExtends();
-				jxx::lang::jint dest = index;
-				while (it->hasNext()) {
-					(*elementData)(dest++) = it->next();
-				}
-				size_ += numNew;
-				++this->modCount;
-				return true;
-			}
+        jxx::lang::jbool hasPrevious() override {
+            return cursor_ > 0;
+        }
 
-			virtual jxx::Ptr<List<E>> subList(jxx::lang::jint fromIndex, jxx::lang::jint toIndex) override
-			{
-				if (fromIndex < 0 || toIndex > size_ || fromIndex > toIndex) {
-					throw jxx::lang::IndexOutOfBoundsException();
-				}
-				return jxx::Ptr<List<E>>(jxx::NEW<SubList<E>>(jxx::Ptr<List<E>>(this), fromIndex, toIndex));
-			}
+        jxx::Ptr<E> previous() override {
+            checkForComodification_();
+            if (!hasPrevious()) {
+                throw NoSuchElementException();
+            }
 
-			virtual jxx::lang::jbool removeIf(const jxx::Ptr<function::PredicateSuper<E>> filter)
-			{
-				if (filter == nullptr) {
-					throw jxx::lang::NullPointerException();
-				}
-				jxx::lang::jbool removed = false;
-				jxx::lang::jint i = 0;
-				while (i < size_) {
-					if (filter->test((*elementData)(i))) {
-						remove(i);
-						removed = true;
-					}
-					else {
-						++i;
-					}
-				}
-				return removed;
-			}
+            --cursor_;
+            lastReturned_ = cursor_;
+            return (*owner_->elementData_)(cursor_);
+        }
 
-			virtual void replaceAll(const jxx::Ptr<function::UnaryOperator<E>> op) override
-			{
-				if (op == nullptr) {
-					throw jxx::lang::NullPointerException();
-				}
-				const jxx::lang::jint expected = this->modCount;
-				for (jxx::lang::jint i = 0; i < size_; ++i) {
-					(*elementData)(i) = op->apply((*elementData)(i));
-				}
-				if (this->modCount != expected) {
-					throw ConcurrentModificationException();
-				}
-				++this->modCount;
-			}
+        jxx::lang::jint nextIndex() override {
+            return cursor_;
+        }
 
-			virtual void sort(const jxx::Ptr<ComparatorSuper<E>> c) override
-			{
-				if (c == nullptr) {
-					throw jxx::lang::NullPointerException();
-				}
-				const jxx::lang::jint expected = this->modCount;
-				for (jxx::lang::jint i = 1; i < size_; ++i) {
-					jxx::Ptr<E> key = (*elementData)(i);
-					jxx::lang::jint j = i - 1;
-					while (j >= 0 && c->compareSuper((*elementData)(j), key) > 0) {
-						(*elementData)(j + 1) = (*elementData)(j);
-						--j;
-					}
-					(*elementData)(j + 1) = key;
-				}
-				if (this->modCount != expected) {
-					throw ConcurrentModificationException();
-				}
-				++this->modCount;
-			}
+        jxx::lang::jint previousIndex() override {
+            return cursor_ - 1;
+        }
 
-			class ArrayListSpliterator : public virtual Spliterator<E>
-			{
-			private:
-				ArrayList<E>* list;
-				jxx::lang::jint index;
-				jxx::lang::jint fence;
-				jxx::lang::jint expectedModCount;
+        void remove() override {
+            checkForComodification_();
+            if (lastReturned_ < 0) {
+                throw jxx::lang::IllegalStateException();
+            }
 
-			public:
-				ArrayListSpliterator(ArrayList<E>* l, jxx::lang::jint origin, jxx::lang::jint fenceIndex, jxx::lang::jint expected)
-					: list(l), index(origin), fence(fenceIndex), expectedModCount(expected)
-				{
-				}
+            owner_->remove(lastReturned_);
+            if (lastReturned_ < cursor_) {
+                --cursor_;
+            }
+            lastReturned_ = -1;
+            expectedModCount_ = owner_->modCount;
+        }
 
-				virtual ~ArrayListSpliterator() = default;
+        void set(const jxx::Ptr<E>& element) override {
+            checkForComodification_();
+            if (lastReturned_ < 0) {
+                throw jxx::lang::IllegalStateException();
+            }
+            owner_->set(lastReturned_, element);
+        }
 
-				virtual jxx::lang::jbool tryAdvance(const jxx::Ptr<function::Consumer<E>> action) override
-				{
-					if (action == nullptr) {
-						throw jxx::lang::NullPointerException();
-					}
-					if (index < fence) {
-						auto e = list->elementData;
-						action->accept((*e)(index++));
-						checkForComodification();
-						return true;
-					}
-					return false;
-				}
+        void add(const jxx::Ptr<E>& element) override {
+            checkForComodification_();
+            owner_->add(cursor_, element);
+            ++cursor_;
+            lastReturned_ = -1;
+            expectedModCount_ = owner_->modCount;
+        }
+    };
 
-				virtual void forEachRemaining(const jxx::Ptr<function::Consumer<E>> action) override
-				{
-					if (action == nullptr) {
-						throw jxx::lang::NullPointerException();
-					}
-					while (index < fence) {
-						auto e = list->elementData;
-						action->accept((*e)(index++));
-					}
-					checkForComodification();
-				}
+public:
+    ArrayList()
+        : elementData_(
+              jxx::NEW<jxx::JxxArray<jxx::Ptr<E>, 1U>>(
+                  static_cast<std::uint32_t>(DEFAULT_CAPACITY))) {
+    }
 
-				virtual jxx::Ptr<Spliterator<E>> trySplit() override
-				{
-					const jxx::lang::jint lo = index;
-					const jxx::lang::jint mid = lo + ((fence - lo) >> 1);
-					if (lo >= mid) {
-						return nullptr;
-					}
-					index = mid;
-					return jxx::Ptr<Spliterator<E>>(new ArrayListSpliterator(list, lo, mid, expectedModCount));
-				}
+    explicit ArrayList(jxx::lang::jint initialCapacity)
+        : elementData_(nullptr) {
 
-				virtual jxx::lang::jlong estimateSize() override
-				{
-					return static_cast<jxx::lang::jlong>(fence - index);
-				}
+        if (initialCapacity < 0) {
+            throw jxx::lang::IllegalArgumentException();
+        }
 
-				virtual jxx::lang::jint characteristics() override
-				{
-					return Spliterator<E>::ORDERED | Spliterator<E>::SIZED | Spliterator<E>::SUBSIZED;
-				}
+        elementData_ =
+            jxx::NEW<jxx::JxxArray<jxx::Ptr<E>, 1U>>(
+                static_cast<std::uint32_t>(
+                    initialStorageCapacity_(initialCapacity)));
+    }
 
-			private:
-				void checkForComodification()
-				{
-					if (list->modCount != expectedModCount) {
-						throw ConcurrentModificationException();
-					}
-				}
-			};
+    explicit ArrayList(
+        const jxx::Ptr<wildcard::CollectionExtends<E>>& collection)
+        : ArrayList(collection == nullptr ? 0 : collection->size()) {
 
-			virtual jxx::Ptr<Spliterator<E>> spliterator() override
-			{
-				return jxx::Ptr<Spliterator<E>>(new ArrayListSpliterator(this, 0, size_, this->modCount));
-			}
+        if (collection == nullptr) {
+            throw jxx::lang::NullPointerException();
+        }
 
-		protected:
-			virtual void removeRange(jxx::lang::jint fromIndex, jxx::lang::jint toIndex) override
-			{
-				if (fromIndex < 0 || toIndex > size_ || fromIndex > toIndex) {
-					throw jxx::lang::IndexOutOfBoundsException();
-				}
-				++this->modCount;
-				const jxx::lang::jint numMoved = size_ - toIndex;
-				for (jxx::lang::jint i = 0; i < numMoved; ++i) {
-					(*elementData)(fromIndex + i) = (*elementData)(toIndex + i);
-				}
-				const jxx::lang::jint newSize = size_ - (toIndex - fromIndex);
-				for (jxx::lang::jint i = newSize; i < size_; ++i) {
-					(*elementData)(i) = nullptr;
-				}
-				size_ = newSize;
-			}
+        const auto iteratorValue = collection->iteratorExtends();
+        while (iteratorValue->hasNext()) {
+            add(iteratorValue->next());
+        }
 
-		private:
-			void ensureCapacityInternal(jxx::lang::jint minCapacity)
-			{
-				if (elementData == nullptr) {
-					elementData = jxx::NEW<JxxArray<jxx::Ptr<E>, 1U>>(DEFAULT_CAPACITY);
-				}
-				if (minCapacity > elementData->size()) {
-					grow(minCapacity);
-				}
-			}
+        this->modCount = 0;
+    }
 
-			void grow(jxx::lang::jint minCapacity)
-			{
-				jxx::lang::jint oldCapacity = elementData->size();
-				jxx::lang::jint newCapacity = oldCapacity + (oldCapacity >> 1);
-				if (newCapacity < minCapacity) {
-					newCapacity = minCapacity;
-				}
-				if (newCapacity < DEFAULT_CAPACITY) {
-					newCapacity = DEFAULT_CAPACITY;
-				}
-				elementData = copyArray(newCapacity);
-				++this->modCount;
-			}
+    ~ArrayList() override = default;
 
-			jxx::Ptr<JxxArray<jxx::Ptr<E>, 1U>> copyArray(jxx::lang::jint newCapacity)
-			{
-				auto newData = jxx::NEW<JxxArray<jxx::Ptr<E>, 1U>>(newCapacity);
-				const jxx::lang::jint limit = (size_ < newCapacity) ? size_ : newCapacity;
-				for (jxx::lang::jint i = 0; i < limit; ++i) {
-					(*newData)(i) = (*elementData)(i);
-				}
-				return newData;
-			}
+    void trimToSize() {
+        const auto desiredCapacity =
+            initialStorageCapacity_(size_);
 
-			void shiftRight(jxx::lang::jint index, jxx::lang::jint count)
-			{
-				for (jxx::lang::jint i = size_ - 1; i >= index; --i) {
-					(*elementData)(i + count) = (*elementData)(i);
-				}
-			}
+        if (desiredCapacity == capacity_()) {
+            return;
+        }
 
-			void shiftLeft(jxx::lang::jint fromIndex, jxx::lang::jint count)
-			{
-				for (jxx::lang::jint i = fromIndex; i < size_; ++i) {
-					(*elementData)(i - count) = (*elementData)(i);
-				}
-			}
+        auto replacement =
+            jxx::NEW<jxx::JxxArray<jxx::Ptr<E>, 1U>>(
+                static_cast<std::uint32_t>(desiredCapacity));
 
-			void rangeCheck(jxx::lang::jint index)
-			{
-				if (index < 0 || index >= size_) {
-					throw jxx::lang::IndexOutOfBoundsException();
-				}
-			}
+        for (jxx::lang::jint index = 0; index < size_; ++index) {
+            (*replacement)(index) = (*elementData_)(index);
+        }
 
-			void rangeCheckForAdd(jxx::lang::jint index)
-			{
-				if (index < 0 || index > size_) {
-					throw jxx::lang::IndexOutOfBoundsException();
-				}
-			}
-		};
+        elementData_ = replacement;
+        ++this->modCount;
+    }
 
-	} // namespace util
-} // namespace jxx
+    void ensureCapacity(jxx::lang::jint minimumCapacity) {
+        if (minimumCapacity < 0) {
+            throw jxx::lang::IllegalArgumentException();
+        }
+        ensureCapacityInternal_(minimumCapacity);
+    }
+
+    jxx::lang::jint size() override {
+        return size_;
+    }
+
+    jxx::lang::jbool isEmpty() override {
+        return size_ == 0;
+    }
+
+    jxx::lang::jbool contains(
+        const jxx::Ptr<jxx::lang::Object>& object) override {
+
+        return indexOf(object) >= 0;
+    }
+
+    jxx::lang::jint indexOf(
+        const jxx::Ptr<jxx::lang::Object>& object) override {
+
+        for (jxx::lang::jint index = 0; index < size_; ++index) {
+            const auto candidate =
+                jxx::CAST<jxx::lang::Object>((*elementData_)(index));
+
+            if (equalsObject_(object, candidate)) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+    jxx::lang::jint lastIndexOf(
+        const jxx::Ptr<jxx::lang::Object>& object) override {
+
+        for (jxx::lang::jint index = size_ - 1; index >= 0; --index) {
+            const auto candidate =
+                jxx::CAST<jxx::lang::Object>((*elementData_)(index));
+
+            if (equalsObject_(object, candidate)) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+    jxx::Ptr<E> get(jxx::lang::jint index) const override {
+        rangeCheck_(index);
+        return (*elementData_)(index);
+    }
+
+    jxx::Ptr<E> set(
+        jxx::lang::jint index,
+        const jxx::Ptr<E>& element) override {
+
+        rangeCheck_(index);
+        const auto oldValue = (*elementData_)(index);
+        (*elementData_)(index) = element;
+        return oldValue;
+    }
+
+    jxx::lang::jbool add(const jxx::Ptr<E>& element) override {
+        ensureCapacityInternal_(size_ + 1);
+        (*elementData_)(size_++) = element;
+        ++this->modCount;
+        return true;
+    }
+
+    void add(
+        jxx::lang::jint index,
+        const jxx::Ptr<E>& element) override {
+
+        rangeCheckForAdd_(index);
+        ensureCapacityInternal_(size_ + 1);
+
+        for (jxx::lang::jint position = size_;
+             position > index;
+             --position) {
+
+            (*elementData_)(position) =
+                (*elementData_)(position - 1);
+        }
+
+        (*elementData_)(index) = element;
+        ++size_;
+        ++this->modCount;
+    }
+
+    jxx::Ptr<E> remove(jxx::lang::jint index) override {
+        rangeCheck_(index);
+        const auto oldValue = (*elementData_)(index);
+        fastRemove_(index);
+        return oldValue;
+    }
+
+    jxx::lang::jbool remove(
+        const jxx::Ptr<jxx::lang::Object>& object) override {
+
+        const auto index = indexOf(object);
+        if (index < 0) {
+            return false;
+        }
+
+        fastRemove_(index);
+        return true;
+    }
+
+    void clear() override {
+        if (size_ == 0) {
+            return;
+        }
+
+        for (jxx::lang::jint index = 0; index < size_; ++index) {
+            (*elementData_)(index) = nullptr;
+        }
+
+        size_ = 0;
+        ++this->modCount;
+    }
+
+    jxx::lang::jbool addAll(
+        const jxx::Ptr<wildcard::CollectionExtends<E>>& collection) override {
+
+        return addAll(size_, collection);
+    }
+
+    jxx::lang::jbool addAll(
+        jxx::lang::jint index,
+        const jxx::Ptr<wildcard::CollectionExtends<E>>& collection) override {
+
+        rangeCheckForAdd_(index);
+        if (collection == nullptr) {
+            throw jxx::lang::NullPointerException();
+        }
+
+        const auto count = collection->size();
+        if (count == 0) {
+            return false;
+        }
+
+        ensureCapacityInternal_(size_ + count);
+
+        for (jxx::lang::jint position = size_ - 1;
+             position >= index;
+             --position) {
+
+            (*elementData_)(position + count) =
+                (*elementData_)(position);
+        }
+
+        auto iteratorValue = collection->iteratorExtends();
+        auto destination = index;
+
+        while (iteratorValue->hasNext()) {
+            (*elementData_)(destination++) = iteratorValue->next();
+        }
+
+        size_ += count;
+        ++this->modCount;
+        return true;
+    }
+
+    jxx::Ptr<Iterator<E>> iterator() override {
+        return jxx::CAST<Iterator<E>>(listIterator());
+    }
+
+    jxx::Ptr<ListIterator<E>> listIterator() override {
+        return listIterator(0);
+    }
+
+    jxx::Ptr<ListIterator<E>> listIterator(
+        jxx::lang::jint index) override {
+
+        rangeCheckForAdd_(index);
+
+        auto self =
+            jxx::CAST<ArrayList<E>>(this->thisPtr);
+
+        if (self == nullptr) {
+            throw jxx::lang::IllegalStateException();
+        }
+
+        auto iteratorValue =
+            jxx::NEW<ArrayListIterator>(self, index);
+
+        return jxx::CAST<ListIterator<E>>(iteratorValue);
+    }
+
+    jxx::Ptr<List<E>> subList(
+        jxx::lang::jint fromIndex,
+        jxx::lang::jint toIndex) override {
+
+        if (fromIndex < 0 || toIndex < fromIndex || toIndex > size_) {
+            throw jxx::lang::IndexOutOfBoundsException();
+        }
+
+        auto self =
+            jxx::CAST<ArrayList<E>>(this->thisPtr);
+
+        if (self == nullptr) {
+            throw jxx::lang::IllegalStateException();
+        }
+
+        auto root = jxx::CAST<List<E>>(self);
+        auto view =
+            jxx::NEW<SubList<E>>(root, fromIndex, toIndex);
+
+        return jxx::CAST<List<E>>(view);
+    }
+
+    jxx::lang::ObjectArray toArray() override {
+        auto result =
+            jxx::NEW<jxx::lang::ObjectArrayType>(
+                static_cast<std::uint32_t>(size_));
+
+        for (jxx::lang::jint index = 0; index < size_; ++index) {
+            (*result)[index] =
+                jxx::CAST<jxx::lang::Object>((*elementData_)(index));
+        }
+
+        return result;
+    }
+
+protected:
+    void removeRange(
+        jxx::lang::jint fromIndex,
+        jxx::lang::jint toIndex) {
+
+        if (fromIndex < 0 || toIndex < fromIndex || toIndex > size_) {
+            throw jxx::lang::IndexOutOfBoundsException();
+        }
+
+        const auto count = toIndex - fromIndex;
+        if (count == 0) {
+            return;
+        }
+
+        for (jxx::lang::jint position = toIndex;
+             position < size_;
+             ++position) {
+
+            (*elementData_)(position - count) =
+                (*elementData_)(position);
+        }
+
+        const auto newSize = size_ - count;
+        for (jxx::lang::jint position = newSize;
+             position < size_;
+             ++position) {
+
+            (*elementData_)(position) = nullptr;
+        }
+
+        size_ = newSize;
+        ++this->modCount;
+    }
+
+    jxx::Ptr<jxx::lang::Object> cloneImpl() const override {
+        auto result = jxx::NEW<ArrayList<E>>(size_);
+
+        for (jxx::lang::jint index = 0; index < size_; ++index) {
+            result->add((*elementData_)(index));
+        }
+
+        result->modCount = 0;
+        return jxx::CAST<jxx::lang::Object>(result);
+    }
+
+public:
+    void writeObject(
+        const jxx::Ptr<jxx::io::ObjectOutputStream>& output) override {
+
+        if (output == nullptr) {
+            throw jxx::lang::NullPointerException();
+        }
+        throw jxx::lang::UnsupportedOperationException();
+    }
+
+    void readObject(
+        const jxx::Ptr<jxx::io::ObjectInputStream>& input) override {
+
+        if (input == nullptr) {
+            throw jxx::lang::NullPointerException();
+        }
+        throw jxx::lang::UnsupportedOperationException();
+    }
+
+    void readObjectNoData() override {
+        throw jxx::lang::UnsupportedOperationException();
+    }
+};
+
+} // namespace jxx::util

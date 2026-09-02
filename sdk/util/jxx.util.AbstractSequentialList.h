@@ -1,76 +1,13 @@
 #pragma once
-
-#include <stdexcept>
-
 #include "util/jxx.util.AbstractList.h"
-
-namespace jxx::util
-{
-    template<typename E>
-    class AbstractSequentialList : public AbstractList<E>
-    {
-    protected:
-        AbstractSequentialList() = default;
-
-    public:
-        ~AbstractSequentialList() override = default;
-
-    public:
-        jxx::Ptr<E> get(jxx::lang::jint index) const override
-        {
-            auto self = const_cast<AbstractSequentialList<E>*>(this);
-            auto it = self->listIterator(index);
-            if (!it || !it->hasNext())
-                throw std::out_of_range("AbstractSequentialList::get index out of bounds");
-            return it->next();
-        }
-
-        jxx::Ptr<E> set(jxx::lang::jint index,
-                        jxx::Ptr<E> element) override
-        {
-            auto it = this->listIterator(index);
-            if (!it || !it->hasNext())
-                throw std::out_of_range("AbstractSequentialList::set index out of bounds");
-            auto old = it->next();
-            it->set(std::move(element));
-            return old;
-        }
-
-        void add(jxx::lang::jint index,
-                 jxx::Ptr<E> element) override
-        {
-            auto it = this->listIterator(index);
-            if (!it)
-                throw std::out_of_range("AbstractSequentialList::add index out of bounds");
-            it->add(std::move(element));
-        }
-
-        jxx::Ptr<E> remove(jxx::lang::jint index) override
-        {
-            auto it = this->listIterator(index);
-            if (!it || !it->hasNext())
-                throw std::out_of_range("AbstractSequentialList::remove index out of bounds");
-            auto old = it->next();
-            it->remove();
-            return old;
-        }
-
-        jxx::lang::jbool addAll(jxx::lang::jint index,
-                                const jxx::Ptr<Collection<E>>& c) override
-        {
-            if (!c)
-                return false;
-            auto it = this->listIterator(index);
-            if (!it)
-                throw std::out_of_range("AbstractSequentialList::addAll index out of bounds");
-            auto src = c->iterator();
-            jxx::lang::jbool modified = false;
-            while (src && src->hasNext())
-            {
-                it->add(src->next());
-                modified = true;
-            }
-            return modified;
-        }
-    };
-}
+namespace jxx::util {
+template <typename E>
+class AbstractSequentialList : public AbstractList<E> {
+public:
+    virtual ~AbstractSequentialList() = default;
+    jxx::Ptr<E> get(jxx::lang::jint i) const override { auto self=const_cast<AbstractSequentialList<E>*>(this); auto it=self->listIterator(i); if(!it->hasNext()) throw jxx::lang::IndexOutOfBoundsException(); return it->next(); }
+    jxx::Ptr<E> set(jxx::lang::jint i,const jxx::Ptr<E>& e) override { auto it=listIterator(i); if(!it->hasNext()) throw jxx::lang::IndexOutOfBoundsException(); auto old=it->next(); it->set(e); return old; }
+    void add(jxx::lang::jint i,const jxx::Ptr<E>& e) override { listIterator(i)->add(e); }
+    jxx::Ptr<E> remove(jxx::lang::jint i) override { auto it=listIterator(i); if(!it->hasNext()) throw jxx::lang::IndexOutOfBoundsException(); auto old=it->next(); it->remove(); return old; }
+};
+} // namespace jxx::util

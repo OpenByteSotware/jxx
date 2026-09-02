@@ -1,749 +1,111 @@
 #pragma once
-#include <cstddef>
-#include <memory>
-#include <stdexcept>
-#include <utility>
-#include <ostream>
-#include <istream>
-#include <limits>
-#include <type_traits>
-#include <optional>
-#include <vector>
-#include <iterator>
-#include "util/jxx.util.AbstractSequentialList.h"
-#include "lang/jxx.lang.Cloneable.h"
 #include "io/jxx.io.SerializableI.h"
-
-// ====================== Java-like exceptions ======================
-struct index_out_of_bounds_error : std::out_of_range {
-    explicit index_out_of_bounds_error(const char* msg) : std::out_of_range(msg) {}
-};
-struct no_such_element_error : std::out_of_range {
-    explicit no_such_element_error(const char* msg) : std::out_of_range(msg) {}
-};
-struct illegal_state_error : std::logic_error {
-    explicit illegal_state_error(const char* msg) : std::logic_error(msg) {}
-};
-struct concurrent_modification_error : std::runtime_error {
-    explicit concurrent_modification_error(const char* msg) : std::runtime_error(msg) {}
-};
-
-namespace jxx::util {}
-// ====================== LinkedList (Java 8 surface) ======================
-template <typename T>
-class LinkedList
-    : public AbstractSequentialList<T>
-    , public Deque<T>
-    , public Cloneable
-    , public jxx::io::SerializableI
-{
-private:
-    struct Node {
-        T item;
-        Node* prev{ nullptr };
-        Node* next{ nullptr };
-        template <typename U>
-        explicit Node(U&& v) : item(std::forward<U>(v)) {}
+#include "lang/jxx.lang.Cloneable.h"
+#include "lang/jxx.lang.Exceptions.h"
+#include "util/jxx.util.AbstractSequentialList.h"
+#include "util/jxx.util.ConcurrentModificationException.h"
+#include "util/jxx.util.Deque.h"
+#include "util/jxx.util.NoSuchElementException.h"
+#include "util/jxx.util.SubList.h"
+namespace jxx::util {
+template <typename E>
+class LinkedList : public jxx::lang::ClassBase<LinkedList<E>, AbstractSequentialList<E>, Deque<E>, jxx::lang::Cloneable, jxx::io::SerializableI> {
+    struct Node { jxx::Ptr<E> item; Node* prev=nullptr; Node* next=nullptr; explicit Node(const jxx::Ptr<E>& e):item(e){} };
+    Node* first_=nullptr; Node* last_=nullptr; jxx::lang::jint size_=0;
+    Node* node_(jxx::lang::jint i) const { if(i<0||i>=size_) throw jxx::lang::IndexOutOfBoundsException(); Node* x; if(i<(size_>>1)){x=first_;while(i--)x=x->next;}else{x=last_;for(auto n=size_-1;n>i;--n)x=x->prev;} return x; }
+    void linkFirst_(const jxx::Ptr<E>& e){auto n=new Node(e);n->next=first_;if(first_)first_->prev=n;else last_=n;first_=n;++size_;++this->modCount;}
+    void linkLast_(const jxx::Ptr<E>& e){auto n=new Node(e);n->prev=last_;if(last_)last_->next=n;else first_=n;last_=n;++size_;++this->modCount;}
+    void linkBefore_(const jxx::Ptr<E>& e,Node* s){auto n=new Node(e);n->next=s;n->prev=s->prev;if(s->prev)s->prev->next=n;else first_=n;s->prev=n;++size_;++this->modCount;}
+    jxx::Ptr<E> unlink_(Node* x){auto v=x->item;if(x->prev)x->prev->next=x->next;else first_=x->next;if(x->next)x->next->prev=x->prev;else last_=x->prev;delete x;--size_;++this->modCount;return v;}
+    bool eq_(const jxx::Ptr<jxx::lang::Object>& a,const jxx::Ptr<jxx::lang::Object>& b) const{return a==nullptr?b==nullptr:a->equals(b);}
+    class ListItr final : public jxx::lang::ClassBase<ListItr,jxx::lang::Object,ListIterator<E>> {
+        jxx::Ptr<LinkedList<E>> owner_; Node* next_; Node* last_=nullptr; jxx::lang::jint index_; jxx::lang::jint expected_;
+        void check_(){if(expected_!=owner_->modCount)throw ConcurrentModificationException();}
+    public:
+        ListItr(const jxx::Ptr<LinkedList<E>>& o,jxx::lang::jint i):owner_(o),next_(i==o->size_?nullptr:o->node_(i)),index_(i),expected_(o->modCount){if(i<0||i>o->size_)throw jxx::lang::IndexOutOfBoundsException();}
+        jxx::lang::jbool hasNext() override{return index_<owner_->size_;}
+        jxx::Ptr<E> next() override{check_();if(!hasNext())throw NoSuchElementException();last_=next_;next_=next_->next;++index_;return last_->item;}
+        jxx::lang::jbool hasPrevious() override{return index_>0;}
+        jxx::Ptr<E> previous() override{check_();if(!hasPrevious())throw NoSuchElementException();next_=next_?next_->prev:owner_->last_;last_=next_;--index_;return last_->item;}
+        jxx::lang::jint nextIndex() override{return index_;} jxx::lang::jint previousIndex() override{return index_-1;}
+        void remove() override{check_();if(!last_)throw jxx::lang::IllegalStateException();auto n=last_->next;if(next_==last_)next_=n;else --index_;owner_->unlink_(last_);last_=nullptr;expected_=owner_->modCount;}
+        void set(const jxx::Ptr<E>& e) override{check_();if(!last_)throw jxx::lang::IllegalStateException();last_->item=e;}
+        void add(const jxx::Ptr<E>& e) override{check_();if(next_)owner_->linkBefore_(e,next_);else owner_->linkLast_(e);++index_;last_=nullptr;expected_=owner_->modCount;}
     };
-
-    Node* first_{ nullptr };
-    Node* last_{ nullptr };
-    std::size_t size_{ 0 };
-    std::size_t mod_count_{ 0 };  // fail-fast like AbstractList.modCount
-
-    static bool equalsElem(const T& a, const T& b) { return a == b; }
-
-    Node* nodeAt(std::size_t index) const {
-        if (index >= size_) throw index_out_of_bounds_error("index out of bounds");
-        if (index < (size_ / 2)) {
-            Node* x = first_;
-            for (std::size_t i = 0; i < index; ++i) x = x->next;
-            return x;
-        }
-        else {
-            Node* x = last_;
-            for (std::size_t i = size_ - 1; i > index; --i) x = x->prev;
-            return x;
-        }
-    }
-
-    void linkFirst(Node* n) {
-        Node* f = first_;
-        n->next = f; n->prev = nullptr;
-        first_ = n;
-        if (!f) last_ = n; else f->prev = n;
-        ++size_; ++mod_count_;
-    }
-    void linkLast(Node* n) {
-        Node* l = last_;
-        n->prev = l; n->next = nullptr;
-        last_ = n;
-        if (!l) first_ = n; else l->next = n;
-        ++size_; ++mod_count_;
-    }
-    void linkBefore(Node* succ, Node* n) {
-        if (!succ) { linkLast(n); return; }
-        Node* pred = succ->prev;
-        n->next = succ; n->prev = pred;
-        succ->prev = n;
-        if (pred) pred->next = n; else first_ = n;
-        ++size_; ++mod_count_;
-    }
-    T unlink(Node* x) {
-        Node* next = x->next;
-        Node* prev = x->prev;
-        if (prev) prev->next = next; else first_ = next;
-        if (next) next->prev = prev; else last_ = prev;
-        T value = std::move(x->item);
-        delete x;
-        --size_; ++mod_count_;
-        return value;
-    }
-
-protected:
-    // ===== protected removeRange (like AbstractList.removeRange) =====
-    void removeRange(std::size_t fromIndex, std::size_t toIndex) {
-        if (fromIndex > toIndex) throw index_out_of_bounds_error("removeRange: from>to");
-        if (toIndex > size_) throw index_out_of_bounds_error("removeRange: to>size");
-        if (fromIndex == toIndex) return;
-        // find first to remove and last to remove
-        Node* start = nodeAt(fromIndex);
-        Node* endSucc = (toIndex == size_) ? nullptr : nodeAt(toIndex); // successor after range
-        // unlink block [start, endSucc)
-        Node* p = start->prev;
-        Node* cur = start;
-        while (cur != endSucc) {
-            Node* nx = cur->next;
-            delete cur;
-            --size_;
-            cur = nx;
-        }
-        if (p) p->next = endSucc; else first_ = endSucc;
-        if (endSucc) endSucc->prev = p; else last_ = p;
-        ++mod_count_;
-    }
-
+    class DescItr final : public jxx::lang::ClassBase<DescItr,jxx::lang::Object,Iterator<E>> { jxx::Ptr<ListIterator<E>> it_; public: explicit DescItr(const jxx::Ptr<ListIterator<E>>& i):it_(i){} jxx::lang::jbool hasNext() override{return it_->hasPrevious();} jxx::Ptr<E> next() override{return it_->previous();} void remove() override{it_->remove();}};
 public:
-    // --------------- ctors/dtor/assign ---------------
-    LinkedList() = default;
-
-    template <typename Iterable>
-    explicit LinkedList(const Iterable& c) {
-        addAll(c);
+    LinkedList()=default;
+    explicit LinkedList(const jxx::Ptr<wildcard::CollectionExtends<E>>& c){if(!c)throw jxx::lang::NullPointerException();auto it=c->iteratorExtends();while(it->hasNext())linkLast_(it->next());}
+    ~LinkedList() override{Node*x=first_;while(x){auto n=x->next;delete x;x=n;}}
+    jxx::lang::jint size() override{return size_;} jxx::lang::jbool isEmpty() override{return size_==0;}
+    jxx::Ptr<Iterator<E>> iterator() override {
+        return jxx::CAST<Iterator<E>>(this->listIterator(0));
     }
 
-    LinkedList(std::initializer_list<T> init) {
-        for (const auto& v : init) linkLast(new Node(v));
+    jxx::Ptr<ListIterator<E>> listIterator() override {
+        return this->listIterator(0);
     }
 
-    LinkedList(const LinkedList& rhs) {
-        for (Node* x = rhs.first_; x; x = x->next) linkLast(new Node(x->item));
+    jxx::Ptr<ListIterator<E>> listIterator(
+        jxx::lang::jint index) override {
+
+        if (index < 0 || index > size_) {
+            throw jxx::lang::IndexOutOfBoundsException();
+        }
+
+        auto self =
+            jxx::CAST<LinkedList<E>>(this->thisPtr);
+
+        if (self == nullptr) {
+            throw jxx::lang::IllegalStateException();
+        }
+
+        auto iteratorValue =
+            jxx::NEW<ListItr>(self, index);
+
+        return jxx::CAST<ListIterator<E>>(iteratorValue);
     }
+    jxx::Ptr<E> get(jxx::lang::jint i) const override{return node_(i)->item;}
+    jxx::Ptr<E> set(jxx::lang::jint i,const jxx::Ptr<E>& e) override{auto n=node_(i);auto old=n->item;n->item=e;return old;}
+    void add(jxx::lang::jint i,const jxx::Ptr<E>& e) override{if(i<0||i>size_)throw jxx::lang::IndexOutOfBoundsException();if(i==size_)linkLast_(e);else linkBefore_(e,node_(i));}
+    jxx::Ptr<E> remove(jxx::lang::jint i) override{return unlink_(node_(i));}
+    jxx::lang::jbool add(const jxx::Ptr<E>& e) override{linkLast_(e);return true;}
+    jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object>& o) override{return indexOf(o)>=0;}
+    jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object>& o) override{for(auto n=first_;n;n=n->next)if(eq_(o,jxx::CAST<jxx::lang::Object>(n->item))){unlink_(n);return true;}return false;}
+    jxx::lang::jint indexOf(const jxx::Ptr<jxx::lang::Object>& o) override{jxx::lang::jint i=0;for(auto n=first_;n;n=n->next,++i)if(eq_(o,jxx::CAST<jxx::lang::Object>(n->item)))return i;return -1;}
+    jxx::lang::jint lastIndexOf(const jxx::Ptr<jxx::lang::Object>& o) override{jxx::lang::jint i=size_-1;for(auto n=last_;n;n=n->prev,--i)if(eq_(o,jxx::CAST<jxx::lang::Object>(n->item)))return i;return -1;}
+    jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<E>>& c) override{return addAll(size_,c);}
+    jxx::lang::jbool addAll(jxx::lang::jint i,const jxx::Ptr<wildcard::CollectionExtends<E>>& c) override{if(!c)throw jxx::lang::NullPointerException();if(i<0||i>size_)throw jxx::lang::IndexOutOfBoundsException();bool changed=false;auto it=c->iteratorExtends();while(it->hasNext()){add(i++,it->next());changed=true;}return changed;}
+    void clear() override{while(first_)unlink_(first_);}
+    void addFirst(const jxx::Ptr<E>& e) override{linkFirst_(e);} void addLast(const jxx::Ptr<E>& e) override{linkLast_(e);}
+    jxx::lang::jbool offerFirst(const jxx::Ptr<E>& e) override{addFirst(e);return true;} jxx::lang::jbool offerLast(const jxx::Ptr<E>& e) override{addLast(e);return true;} jxx::lang::jbool offer(const jxx::Ptr<E>& e) override{return offerLast(e);}
+    jxx::Ptr<E> removeFirst() override{if(!first_)throw NoSuchElementException();return unlink_(first_);} jxx::Ptr<E> removeLast() override{if(!last_)throw NoSuchElementException();return unlink_(last_);} jxx::Ptr<E> pollFirst() override{return first_?unlink_(first_):nullptr;} jxx::Ptr<E> pollLast() override{return last_?unlink_(last_):nullptr;}
+    jxx::Ptr<E> getFirst() override{if(!first_)throw NoSuchElementException();return first_->item;} jxx::Ptr<E> getLast() override{if(!last_)throw NoSuchElementException();return last_->item;} jxx::Ptr<E> peekFirst() override{return first_?first_->item:nullptr;} jxx::Ptr<E> peekLast() override{return last_?last_->item:nullptr;}
+    jxx::Ptr<E> remove() override{return removeFirst();} jxx::Ptr<E> poll() override{return pollFirst();} jxx::Ptr<E> element() override{return getFirst();} jxx::Ptr<E> peek() override{return peekFirst();}
+    jxx::lang::jbool removeFirstOccurrence(const jxx::Ptr<jxx::lang::Object>& o) override{return remove(o);} jxx::lang::jbool removeLastOccurrence(const jxx::Ptr<jxx::lang::Object>& o) override{for(auto n=last_;n;n=n->prev)if(eq_(o,jxx::CAST<jxx::lang::Object>(n->item))){unlink_(n);return true;}return false;}
+    void push(const jxx::Ptr<E>& e) override{addFirst(e);} jxx::Ptr<E> pop() override{return removeFirst();}
+    jxx::Ptr<Iterator<E>> descendingIterator() override{return jxx::CAST<Iterator<E>>(jxx::NEW<DescItr>(this->listIterator(size_)));}
+    jxx::Ptr<List<E>> subList(
+        jxx::lang::jint fromIndex,
+        jxx::lang::jint toIndex) override {
 
-    LinkedList(LinkedList&& rhs) noexcept
-        : first_(rhs.first_), last_(rhs.last_), size_(rhs.size_), mod_count_(rhs.mod_count_) {
-        rhs.first_ = rhs.last_ = nullptr; rhs.size_ = 0; rhs.mod_count_ = 0;
+        if (fromIndex < 0 || toIndex < fromIndex || toIndex > size_) {
+            throw jxx::lang::IndexOutOfBoundsException();
+        }
+
+        auto self = jxx::CAST<LinkedList<E>>(this->thisPtr);
+        if (self == nullptr) {
+            throw jxx::lang::IllegalStateException();
+        }
+
+        auto root = jxx::CAST<List<E>>(self);
+        auto view = jxx::NEW<SubList<E>>(root, fromIndex, toIndex);
+        return jxx::CAST<List<E>>(view);
     }
-
-    LinkedList& operator=(const LinkedList& rhs) {
-        if (this != &rhs) {
-            clear();
-            for (Node* x = rhs.first_; x; x = x->next) linkLast(new Node(x->item));
-        }
-        return *this;
-    }
-    LinkedList& operator=(LinkedList&& rhs) noexcept {
-        if (this != &rhs) {
-            clear();
-            first_ = rhs.first_; last_ = rhs.last_; size_ = rhs.size_; mod_count_ = rhs.mod_count_;
-            rhs.first_ = rhs.last_ = nullptr; rhs.size_ = 0; rhs.mod_count_ = 0;
-        }
-        return *this;
-    }
-
-    ~LinkedList() override { clear(); }
-
-    // =============== Iterators (fail-fast) ===============
-    class ListIterator {
-        LinkedList* list_{ nullptr };
-        Node* next_{ nullptr };          // node to return on next()
-        Node* lastReturned_{ nullptr };  // last returned by next()/previous()
-        std::size_t nextIndex_{ 0 };
-        std::size_t expected_mod_count_{ 0 };
-
-        void checkForComodification() const {
-            if (expected_mod_count_ != list_->mod_count_)
-                throw concurrent_modification_error("Concurrent modification detected");
-        }
-
-    public:
-        using index_type = std::ptrdiff_t; // allows -1 (Java style)
-
-        ListIterator(LinkedList* list, std::size_t index)
-            : list_(list), expected_mod_count_(list->mod_count_) {
-            if (index > list->size_) throw index_out_of_bounds_error("listIterator index");
-            next_ = (index == list->size_) ? nullptr : list->nodeAt(index);
-            nextIndex_ = index;
-        }
-
-        bool hasNext() const { return nextIndex_ < list_->size_; }
-        bool hasPrevious() const { return nextIndex_ > 0; }
-
-        T& next() {
-            checkForComodification();
-            if (!hasNext()) throw no_such_element_error("next");
-            lastReturned_ = next_;
-            next_ = next_->next;
-            ++nextIndex_;
-            return lastReturned_->item;
-        }
-
-        T& previous() {
-            checkForComodification();
-            if (!hasPrevious()) throw no_such_element_error("previous");
-            if (next_) lastReturned_ = next_->prev;
-            else       lastReturned_ = list_->last_;
-            next_ = lastReturned_;
-            --nextIndex_;
-            return lastReturned_->item;
-        }
-
-        index_type nextIndex() const { return static_cast<index_type>(nextIndex_); }
-        index_type previousIndex() const { return hasPrevious() ? static_cast<index_type>(nextIndex_ - 1) : -1; }
-
-        void remove() {
-            checkForComodification();
-            if (!lastReturned_) throw illegal_state_error("Iterator.remove illegal state");
-            Node* toRemove = lastReturned_;
-            if (toRemove == next_) {
-                next_ = next_->next;
-            }
-            else {
-                --nextIndex_;
-            }
-            (void)list_->unlink(toRemove);
-            expected_mod_count_ = list_->mod_count_;
-            lastReturned_ = nullptr;
-        }
-
-        void set(const T& e) {
-            checkForComodification();
-            if (!lastReturned_) throw illegal_state_error("Iterator.set illegal state");
-            lastReturned_->item = e; // non-structural
-        }
-        void set(T&& e) {
-            checkForComodification();
-            if (!lastReturned_) throw illegal_state_error("Iterator.set illegal state");
-            lastReturned_->item = std::move(e);
-        }
-
-        void add(const T& e) {
-            checkForComodification();
-            if (!next_) list_->linkLast(new Node(e));
-            else        list_->linkBefore(next_, new Node(e));
-            ++nextIndex_;
-            expected_mod_count_ = list_->mod_count_;
-            lastReturned_ = nullptr;
-        }
-        void add(T&& e) {
-            checkForComodification();
-            if (!next_) list_->linkLast(new Node(std::move(e)));
-            else        list_->linkBefore(next_, new Node(std::move(e)));
-            ++nextIndex_;
-            expected_mod_count_ = list_->mod_count_;
-            lastReturned_ = nullptr;
-        }
-    };
-
-    class Iterator {
-        ListIterator it_;
-    public:
-        explicit Iterator(LinkedList* list) : it_(list, 0) {}
-        bool hasNext() const { return it_.hasNext(); }
-        T& next() { return it_.next(); }
-        void remove() { it_.remove(); }
-        void set(const T& e) { it_.set(e); }
-        void set(T&& e) { it_.set(std::move(e)); }
-        void add(const T& e) { it_.add(e); }
-        void add(T&& e) { it_.add(std::move(e)); }
-    };
-
-    class DescendingIterator {
-        ListIterator it_;
-    public:
-        explicit DescendingIterator(LinkedList* list) : it_(list, list->size_) {}
-        bool hasNext() const { return it_.hasPrevious(); }
-        T& next() { return it_.previous(); }
-        void remove() { it_.remove(); }
-    };
-
-    // =============== IList<T> ===============
-    std::size_t size() const noexcept override { return size_; }
-    bool empty() const noexcept override { return size_ == 0; }
-    bool isEmpty() const noexcept { return empty(); } // Java name
-
-    void clear() override {
-        Node* x = first_;
-        while (x) {
-            Node* nx = x->next;
-            delete x;
-            x = nx;
-        }
-        first_ = last_ = nullptr;
-        if (size_ != 0) { size_ = 0; ++mod_count_; }
-    }
-
-    const T& get(std::size_t index) const override { return nodeAt(index)->item; }
-    T& get(std::size_t index)       override { return nodeAt(index)->item; }
-
-    // Java List#set returns previous; add helper returning previous if needed
-    void set(std::size_t index, const T& value) override { nodeAt(index)->item = value; }
-    void set(std::size_t index, T&& value)      override { nodeAt(index)->item = std::move(value); }
-    T setRetPrev(std::size_t index, const T& value) { Node* n = nodeAt(index); T prev = n->item; n->item = value; return prev; }
-    T setRetPrev(std::size_t index, T&& value) { Node* n = nodeAt(index); T prev = std::move(n->item); n->item = std::move(value); return prev; }
-
-    // add(e) returns void in our base; provide Java-port helper addBool() -> true
-    void add(std::size_t index, const T& value) override {
-        if (index > size_) throw index_out_of_bounds_error("add: index");
-        if (index == size_) linkLast(new Node(value));
-        else                linkBefore(nodeAt(index), new Node(value));
-    }
-    void add(std::size_t index, T&& value) override {
-        if (index > size_) throw index_out_of_bounds_error("add: index");
-        if (index == size_) linkLast(new Node(std::move(value)));
-        else                linkBefore(nodeAt(index), new Node(std::move(value)));
-    }
-    bool addBool(const T& e) { this->add(e); return true; }
-    bool addBool(T&& e) { this->add(std::move(e)); return true; }
-
-    T removeAtRet(std::size_t index) override { return unlink(nodeAt(index)); }
-
-    // =============== Java Collection & List extras ===============
-    bool contains(const T& o) const { return indexOf(o) != static_cast<std::size_t>(-1); }
-
-    std::size_t indexOf(const T& o) const {
-        std::size_t i = 0;
-        for (Node* x = first_; x; x = x->next, ++i) if (equalsElem(x->item, o)) return i;
-        return static_cast<std::size_t>(-1);
-    }
-    std::size_t lastIndexOf(const T& o) const {
-        if (size_ == 0) return static_cast<std::size_t>(-1);
-        std::size_t i = size_ - 1;
-        for (Node* x = last_; x; x = x->prev, --i) {
-            if (equalsElem(x->item, o)) return i;
-            if (i == 0) break;
-        }
-        return static_cast<std::size_t>(-1);
-    }
-
-    bool remove(const T& o) { // remove first occurrence
-        for (Node* x = first_; x; x = x->next) {
-            if (equalsElem(x->item, o)) { unlink(x); return true; }
-        }
-        return false;
-    }
-
-    // remove() (no-arg) → Deque.removeFirst() in Java
-    T remove() { return removeFirstRet(); }
-
-    // Collection-like bulk ops
-    template <typename Iterable>
-    bool containsAll(const Iterable& c) const {
-        for (const auto& v : c) if (!contains(v)) return false;
-        return true;
-    }
-    template <typename Iterable>
-    bool addAll(const Iterable& c) {
-        bool changed = false;
-        for (const auto& v : c) { linkLast(new Node(v)); changed = true; }
-        return changed;
-    }
-    template <typename Iterable>
-    bool addAll(std::size_t index, const Iterable& c) {
-        if (index > size_) throw index_out_of_bounds_error("addAll index");
-        Node* succ = (index == size_) ? nullptr : nodeAt(index);
-        bool changed = false;
-        for (const auto& v : c) {
-            if (!succ) linkLast(new Node(v));
-            else { linkBefore(succ, new Node(v)); ++index; }
-            changed = true;
-        }
-        return changed;
-    }
-    template <typename Iterable>
-    bool removeAll(const Iterable& c) {
-        bool changed = false;
-        for (const auto& v : c) {
-            while (remove(v)) changed = true;
-        }
-        return changed;
-    }
-    template <typename Iterable>
-    bool retainAll(const Iterable& c) {
-        // Naive O(n*m): acceptable unless c is huge; can optimize for hashable T if needed.
-        bool changed = false;
-        Node* x = first_;
-        while (x) {
-            Node* nx = x->next;
-            bool keep = false;
-            for (const auto& v : c) { if (equalsElem(x->item, v)) { keep = true; break; } }
-            if (!keep) { (void)unlink(x); changed = true; }
-            x = nx;
-        }
-        return changed;
-    }
-
-    // subList view (live, fail-fast)
-    class SubList {
-        LinkedList* parent_;
-        std::size_t offset_;
-        std::size_t size_; // number of elements in view
-        std::size_t expected_mod_count_;
-
-        void checkForComodification() const {
-            if (expected_mod_count_ != parent_->mod_count_)
-                throw concurrent_modification_error("SubList concurrent modification");
-        }
-        void rangeCheck(std::size_t idx) const {
-            if (idx >= size_) throw index_out_of_bounds_error("SubList index");
-        }
-
-        std::size_t toParentIndex(std::size_t idx) const { return offset_ + idx; }
-
-        void updateExpected() { expected_mod_count_ = parent_->mod_count_; }
-
-    public:
-        SubList(LinkedList* p, std::size_t from, std::size_t to)
-            : parent_(p), offset_(from), size_(to - from), expected_mod_count_(p->mod_count_) {
-            if (from > to || to > p->size_) throw index_out_of_bounds_error("subList range");
-        }
-
-        std::size_t size() const { return size_; }
-        bool isEmpty() const { return size_ == 0; }
-
-        T& get(std::size_t index) {
-            checkForComodification(); rangeCheck(index);
-            return parent_->get(toParentIndex(index));
-        }
-        const T& get(std::size_t index) const {
-            checkForComodification(); rangeCheck(index);
-            return parent_->get(toParentIndex(index));
-        }
-
-        T setRetPrev(std::size_t index, const T& e) {
-            checkForComodification(); rangeCheck(index);
-            return parent_->setRetPrev(toParentIndex(index), e);
-        }
-        T setRetPrev(std::size_t index, T&& e) {
-            checkForComodification(); rangeCheck(index);
-            return parent_->setRetPrev(toParentIndex(index), std::move(e));
-        }
-        void set(std::size_t index, const T& e) {
-            checkForComodification(); rangeCheck(index);
-            parent_->set(toParentIndex(index), e);
-        }
-        void set(std::size_t index, T&& e) {
-            checkForComodification(); rangeCheck(index);
-            parent_->set(toParentIndex(index), std::move(e));
-        }
-
-        void add(std::size_t index, const T& e) {
-            checkForComodification();
-            if (index > size_) throw index_out_of_bounds_error("SubList add index");
-            parent_->add(toParentIndex(index), e);
-            ++size_; updateExpected();
-        }
-        void add(std::size_t index, T&& e) {
-            checkForComodification();
-            if (index > size_) throw index_out_of_bounds_error("SubList add index");
-            parent_->add(toParentIndex(index), std::move(e));
-            ++size_; updateExpected();
-        }
-        void add(const T& e) { add(size_, e); }
-        void add(T&& e) { add(size_, std::move(e)); }
-
-        T removeAtRet(std::size_t index) {
-            checkForComodification(); rangeCheck(index);
-            T v = parent_->removeAtRet(toParentIndex(index));
-            --size_; updateExpected();
-            return v;
-        }
-        bool remove(const T& e) { // first occurrence within view
-            checkForComodification();
-            for (std::size_t i = 0; i < size_; ++i) {
-                if (equalsElem(get(i), e)) { (void)removeAtRet(i); return true; }
-            }
-            return false;
-        }
-
-        void clear() {
-            checkForComodification();
-            parent_->removeRange(offset_, offset_ + size_);
-            size_ = 0; updateExpected();
-        }
-
-        // Iterators limited to [offset_, offset_+size_)
-        class Iterator {
-            LinkedList* parent_;
-            std::size_t offset_;
-            std::size_t size_;
-            std::size_t idx_{ 0 };
-            typename LinkedList::ListIterator it_; // positioned at offset + idx
-            std::size_t expected_mod_count_;
-        public:
-            Iterator(LinkedList* p, std::size_t off, std::size_t sz)
-                : parent_(p), offset_(off), size_(sz), idx_(0), it_(p, off), expected_mod_count_(p->mod_count_) {}
-            bool hasNext() const {
-                if (expected_mod_count_ != parent_->mod_count_) throw concurrent_modification_error("SubList iter CME");
-                return idx_ < size_;
-            }
-            T& next() {
-                if (!hasNext()) throw no_such_element_error("SubList iter next");
-                ++idx_;
-                return it_.next();
-            }
-            void remove() {
-                // Remove last returned by it_, ensure bounds
-                it_.remove();
-                --size_;
-                expected_mod_count_ = parent_->mod_count_;
-            }
-        };
-
-        Iterator iterator() { return Iterator(parent_, offset_, size_); }
-    };
-
-    SubList subList(std::size_t fromIndex, std::size_t toIndex) {
-        return SubList(this, fromIndex, toIndex);
-    }
-
-    // =============== IDeque<T> ===============
-    void addFirst(const T& e) override { linkFirst(new Node(e)); }
-    void addFirst(T&& e) override { linkFirst(new Node(std::move(e))); }
-    void addLast(const T& e) override { linkLast(new Node(e)); }
-    void addLast(T&& e) override { linkLast(new Node(std::move(e))); }
-
-    bool offerFirst(const T& e) override { addFirst(e); return true; }
-    bool offerFirst(T&& e) override { addFirst(std::move(e)); return true; }
-    bool offerLast(const T& e) override { addLast(e); return true; }
-    bool offerLast(T&& e) override { addLast(std::move(e)); return true; }
-
-    T removeFirstRet() override {
-        if (!first_) throw no_such_element_error("removeFirst on empty");
-        return unlink(first_);
-    }
-    T removeLastRet() override {
-        if (!last_) throw no_such_element_error("removeLast on empty");
-        return unlink(last_);
-    }
-
-    std::optional<T> pollFirst() override {
-        if (!first_) return std::nullopt;
-        return unlink(first_);
-    }
-    std::optional<T> pollLast() override {
-        if (!last_) return std::nullopt;
-        return unlink(last_);
-    }
-
-    const T& getFirst() const override {
-        if (!first_) throw no_such_element_error("getFirst on empty");
-        return first_->item;
-    }
-    const T& getLast() const override {
-        if (!last_) throw no_such_element_error("getLast on empty");
-        return last_->item;
-    }
-
-    // Queue-like aliases per Java
-    bool offer(const T& e) { return offerLast(e); }
-    bool offer(T&& e) { return offerLast(std::move(e)); }
-
-    std::optional<T> poll() { return pollFirst(); }
-
-    const T& element() const { return getFirst(); }
-
-    std::optional<T> peek() const {
-        if (!first_) return std::nullopt;
-        return first_->item;
-    }
-    std::optional<T> peekFirst() const { return peek(); }
-    std::optional<T> peekLast() const {
-        if (!last_) return std::nullopt;
-        return last_->item;
-    }
-
-    // Stack ops and aliases
-    void push(const T& e) override { addFirst(e); }
-    void push(T&& e) override { addFirst(std::move(e)); }
-    T popRet() override { return removeFirstRet(); }
-    T pop() { return popRet(); }   // Java name
-
-    // Occurrence removal
-    bool removeFirstOccurrence(const T& o) { return remove(o); }
-    bool removeLastOccurrence(const T& o) {
-        for (Node* x = last_; x; x = x->prev) {
-            if (equalsElem(x->item, o)) { unlink(x); return true; }
-        }
-        return false;
-    }
-
-    // =============== Iteration factories (Java-style) ===============
-    Iterator iterator() { return Iterator(this); }
-    ListIterator listIterator(std::size_t index = 0) { return ListIterator(this, index); }
-    DescendingIterator descendingIterator() { return DescendingIterator(this); }
-
-    // =============== Spliterator (Java 8) ===============
-    class Spliterator {
-        LinkedList* list_;
-        Node* cur_;
-        std::size_t est_;                  // remaining size estimate
-        std::size_t expected_mod_count_;   // fail-fast snapshot
-
-        void checkCME() const {
-            if (expected_mod_count_ != list_->mod_count_) throw concurrent_modification_error("Spliterator CME");
-        }
-    public:
-        // Characteristics: ORDERED | SIZED | SUBSIZED
-        static constexpr int ORDERED = 0x00000010;
-        static constexpr int SIZED = 0x00000040;
-        static constexpr int SUBSIZED = 0x00004000;
-
-        Spliterator(LinkedList* list)
-            : list_(list), cur_(list->first_), est_(list->size_), expected_mod_count_(list->mod_count_) {}
-
-        std::size_t estimateSize() const { return est_; }
-        jxx::lang::jint characteristics() const { return ORDERED | SIZED | SUBSIZED; }
-
-        // trySplit: split roughly in half; O(n/2) to locate mid node
-        std::optional<Spliterator> trySplit() {
-            checkCME();
-            if (est_ < 2 || !cur_) return std::nullopt;
-            // find mid by advancing est_/2 steps
-            std::size_t half = est_ / 2;
-            Node* start = cur_;
-            Node* mid = cur_;
-            for (std::size_t i = 0; i < half; ++i) mid = mid->next;
-            // left spliterator: [start, mid), size=half
-            Spliterator left(*this);
-            left.cur_ = start;
-            left.est_ = half;
-            // this becomes right: [mid, end), size=est_-half
-            this->cur_ = mid;
-            this->est_ -= half;
-            return left;
-        }
-
-        template <typename Consumer>
-        void forEachRemaining(Consumer&& action) {
-            checkCME();
-            while (cur_) {
-                action(cur_->item);
-                cur_ = cur_->next;
-                --est_;
-            }
-        }
-
-        bool tryAdvance(T& out) {
-            checkCME();
-            if (!cur_) return false;
-            out = cur_->item;
-            cur_ = cur_->next;
-            --est_;
-            return true;
-        }
-    };
-
-    Spliterator spliterator() { return Spliterator(this); }
-
-    // =============== Clone (shallow) ===============
-    std::unique_ptr<jxx::lang::Cloneable> clone_base() const override {
-        return std::unique_ptr<jxx::lang::Cloneable>(new LinkedList<T>(*this));
-    }
-    std::unique_ptr<LinkedList<T>> clone() const {
-        return std::unique_ptr<LinkedList<T>>(new LinkedList<T>(*this));
-    }
-    // Convenience: value-returning clone (like a copy)
-    LinkedList<T> cloneValue() const { return LinkedList<T>(*this); }
-
-    // =============== Serializable (simple text format) ===============
-    void serialize(std::ostream& os) const override {
-        os << size_ << '\n';
-        for (Node* x = first_; x; x = x->next) {
-            os << x->item << '\n'; // requires operator<< for T
-        }
-    }
-    static LinkedList<T> deserialize(std::istream& is) {
-        LinkedList<T> list;
-        std::size_t n{};
-        if (!(is >> n)) throw std::runtime_error("deserialize: failed to read size");
-        is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        for (std::size_t i = 0; i < n; ++i) {
-            T v{};
-            if (!(is >> v)) throw std::runtime_error("deserialize: failed to read element");
-            is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            list.addLast(std::move(v));
-        }
-        return list;
-    }
-
-    // =============== Arrays / vectors (Java toArray equivalents) ===============
-    std::vector<T> toArray() const {
-        std::vector<T> v;
-        v.reserve(size_);
-        for (Node* x = first_; x; x = x->next) v.push_back(x->item);
-        return v;
-    }
-    template <typename OutputIt>
-    void toArray(OutputIt out) const {
-        for (Node* x = first_; x; x = x->next) *out++ = x->item;
-    }
-
-    // =============== C++ iterators (optional convenience) ===============
-    class std_iterator {
-        Node* cur_{ nullptr };
-    public:
-        using iterator_category = std::bidirectional_iterator_tag;
-        using value_type = T;
-        using difference_type = std::ptrdiff_t;
-        using pointer = T*;
-        using reference = T&;
-        std_iterator() = default;
-        explicit std_iterator(Node* n) : cur_(n) {}
-        reference operator*()  const { return cur_->item; }
-        pointer   operator->() const { return &cur_->item; }
-        std_iterator& operator++() { cur_ = cur_->next; return *this; }
-        std_iterator operator++(int) { auto t = *this; ++(*this); return t; }
-        std_iterator& operator--() { cur_ = cur_->prev; return *this; }
-        std_iterator operator--(int) { auto t = *this; --(*this); return t; }
-        friend bool operator==(const std_iterator& a, const std_iterator& b) { return a.cur_ == b.cur_; }
-        friend bool operator!=(const std_iterator& a, const std_iterator& b) { return !(a == b); }
-    };
-    class const_std_iterator {
-        const Node* cur_{ nullptr };
-    public:
-        using iterator_category = std::bidirectional_iterator_tag;
-        using value_type = T;
-        using difference_type = std::ptrdiff_t;
-        using pointer = const T*;
-        using reference = const T&;
-        const_std_iterator() = default;
-        explicit const_std_iterator(const Node* n) : cur_(n) {}
-        reference operator*()  const { return cur_->item; }
-        pointer   operator->() const { return &cur_->item; }
-        const_std_iterator& operator++() { cur_ = cur_->next; return *this; }
-        const_std_iterator operator++(int) { auto t = *this; ++(*this); return t; }
-        const_std_iterator& operator--() { cur_ = cur_->prev; return *this; }
-        const_std_iterator operator--(int) { auto t = *this; --(*this); return t; }
-        friend bool operator==(const const_std_iterator& a, const const_std_iterator& b) { return a.cur_ == b.cur_; }
-        friend bool operator!=(const const_std_iterator& a, const const_std_iterator& b) { return !(a == b); }
-    };
-
-    std_iterator begin() { return std_iterator(first_); }
-    std_iterator end() { return std_iterator(nullptr); }
-    const_std_iterator begin() const { return const_std_iterator(first_); }
-    const_std_iterator end()   const { return const_std_iterator(nullptr); }
-    const_std_iterator cbegin() const { return const_std_iterator(first_); }
-    const_std_iterator cend()   const { return const_std_iterator(nullptr); }
+    jxx::lang::ObjectArray toArray() override{auto a=jxx::NEW<jxx::lang::ObjectArrayType>(static_cast<std::uint32_t>(size_));jxx::lang::jint i=0;for(auto n=first_;n;n=n->next)(*a)[i++]=jxx::CAST<jxx::lang::Object>(n->item);return a;}
+    jxx::Ptr<jxx::lang::Object> cloneImpl() const override{auto r=jxx::NEW<LinkedList<E>>();for(auto n=first_;n;n=n->next)r->add(n->item);return jxx::CAST<jxx::lang::Object>(r);}
+    void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out) override{if(!out)throw jxx::lang::NullPointerException();throw jxx::lang::UnsupportedOperationException();}
+    void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in) override{if(!in)throw jxx::lang::NullPointerException();throw jxx::lang::UnsupportedOperationException();}
+    void readObjectNoData() override{throw jxx::lang::UnsupportedOperationException();}
 };
-}
+} // namespace jxx::util

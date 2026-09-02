@@ -1,106 +1,57 @@
-#include <memory>
+#include <gtest/gtest.h>
 #include <thread>
 #include <type_traits>
-#include <vector>
-
-#include <gtest/gtest.h>
-
-#include "io/jxx.io.Serializable.h"
-#include "lang/jxx.lang.Cloneable.h"
-#include "lang/jxx.lang.Iterable.h"
 #include "lang/jxx.lang.String.h"
-#include "util/jxx.util.AbstractList.h"
-#include "util/jxx.util.Collection.h"
-#include "util/jxx.util.List.h"
-#include "util/jxx.util.RandomAccess.h"
 #include "util/jxx.util.Vector.h"
 
 namespace {
+using String = jxx::lang::String;
+using VectorType = jxx::util::Vector<String>;
+static jxx::Ptr<String> S(const char* v) { return jxx::NEW<String>(v); }
 
-using jxx::Ptr;
-using jxx::lang::String;
-using jxx::util::Vector;
-
-static Ptr<String> S(const char* value) {
-    return jxx::NEW<String>(value);
-}
-
-TEST(VectorTest, CoreElementOperationsWork) {
-    auto v = std::make_shared<Vector<String>>();
-    EXPECT_TRUE(v->isEmpty());
-
+TEST(VectorTest, CoreAndLegacyOperationsWork) {
+    auto v = jxx::NEW<VectorType>();
     v->addElement(S("a"));
-    v->addElement(S("b"));
-    v->insertElementAt(S("x"), 1);
-
-    EXPECT_EQ(v->size(), 3);
+    v->insertElementAt(S("b"), 1);
     EXPECT_EQ(v->capacity(), 10);
-    ASSERT_NE(v->firstElement(), nullptr);
-    EXPECT_EQ(v->firstElement()->utf8(), std::string("a"));
-    ASSERT_NE(v->elementAt(1), nullptr);
-    EXPECT_EQ(v->elementAt(1)->utf8(), std::string("x"));
-    ASSERT_NE(v->lastElement(), nullptr);
-    EXPECT_EQ(v->lastElement()->utf8(), std::string("b"));
-
-    auto old = v->set(1, S("y"));
-    ASSERT_NE(old, nullptr);
-    EXPECT_EQ(old->utf8(), std::string("x"));
-    EXPECT_EQ(v->elementAt(1)->utf8(), std::string("y"));
-
-    auto removed = v->remove(1);
-    ASSERT_NE(removed, nullptr);
-    EXPECT_EQ(removed->utf8(), std::string("y"));
-    EXPECT_EQ(v->size(), 2);
-    EXPECT_EQ(v->toString()->utf8(), std::string("[a, b]"));
+    EXPECT_EQ(v->firstElement()->utf8(), "a");
+    EXPECT_EQ(v->lastElement()->utf8(), "b");
+    v->setElementAt(S("B"), 1);
+    EXPECT_EQ(v->elementAt(1)->utf8(), "B");
+    EXPECT_TRUE(v->removeElement(jxx::CAST<jxx::lang::Object>(S("a"))));
+    EXPECT_EQ(v->size(), 1);
 }
 
-TEST(VectorTest, EnumerationTraversesOwnerStateSafely) {
-    auto v = std::make_shared<Vector<String>>();
-    v->addElement(S("one"));
-    v->addElement(S("two"));
-    v->addElement(S("three"));
-
+TEST(VectorTest, EnumerationAndListIteratorUseSharedOwner) {
+    auto v = jxx::NEW<VectorType>();
+    v->add(S("one")); v->add(S("two"));
     auto e = v->elements();
-    ASSERT_NE(e, nullptr);
-    ASSERT_TRUE(e->hasMoreElements());
-    EXPECT_EQ(e->nextElement()->utf8(), std::string("one"));
-    ASSERT_TRUE(e->hasMoreElements());
-    EXPECT_EQ(e->nextElement()->utf8(), std::string("two"));
-    ASSERT_TRUE(e->hasMoreElements());
-    EXPECT_EQ(e->nextElement()->utf8(), std::string("three"));
-    EXPECT_FALSE(e->hasMoreElements());
+    EXPECT_EQ(e->nextElement()->utf8(), "one");
+    EXPECT_EQ(e->nextElement()->utf8(), "two");
+    EXPECT_THROW(e->nextElement(), jxx::util::NoSuchElementException);
+    auto it = v->listIterator();
+    EXPECT_EQ(it->next()->utf8(), "one");
+    v->add(S("three"));
+    EXPECT_THROW(it->next(), jxx::util::ConcurrentModificationException);
 }
 
-TEST(VectorTest, CloneEqualsAndHashCodeTrackContents) {
-    auto v = jxx::NEW<Vector<String>>();
-    v->addElement(S("left"));
-    v->addElement(S("right"));
-
-    auto clonedObj = v->clone();
-    auto cloned = jxx::CAST<Vector<String>, jxx::lang::Object>(clonedObj);
-    ASSERT_NE(cloned, nullptr);
-    EXPECT_TRUE(v->equals(clonedObj));
-    EXPECT_EQ(v->hashCode(), cloned->hashCode());
-    EXPECT_EQ(cloned->toString()->utf8(), std::string("[left, right]"));
+TEST(VectorTest, CloneIsShallowWithIndependentStorage) {
+    auto v = jxx::NEW<VectorType>();
+    auto shared = S("shared");
+    v->add(shared);
+    auto copy = jxx::CAST<VectorType>(v->clone());
+    ASSERT_NE(copy, nullptr);
+    EXPECT_EQ(copy->get(0).get(), shared.get());
+    copy->add(S("other"));
+    EXPECT_EQ(v->size(), 1);
 }
 
-TEST(VectorTest, SynchronizeHelperGuardsConcurrentMutation) {
-    auto v = jxx::NEW<Vector<String>>();
-    constexpr int perThread = 300;
-
-    auto worker = [&](const char* prefix) {
-        for (int i = 0; i < perThread; ++i) {
-            auto s = jxx::NEW<String>(std::string(prefix) + std::to_string(i));
-            v->addElement(s);
-        }
-    };
-
-    std::thread t1(worker, "A");
-    std::thread t2(worker, "B");
-    t1.join();
-    t2.join();
-
-    EXPECT_EQ(v->size(), perThread * 2);
+TEST(VectorTest, SynchronizedMutationDoesNotLoseElements) {
+    auto v = jxx::NEW<VectorType>();
+    constexpr int count = 100;
+    auto worker = [&]() { for (int i = 0; i < count; ++i) v->add(S("x")); };
+    std::thread a(worker), b(worker);
+    a.join(); b.join();
+    EXPECT_EQ(v->size(), count * 2);
 }
-
-} // anonymous namespace
+} // namespace

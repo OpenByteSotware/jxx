@@ -1,232 +1,378 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.Exceptions.h"
 #include "util/jxx.util.AbstractList.h"
-#include "util/jxx.util.List.h"
-#include "util/jxx.util.RandomAccess.h"
-#include "util/jxx.util.ListIterator.h"
 #include "util/jxx.util.ConcurrentModificationException.h"
+#include "util/jxx.util.List.h"
+#include "util/jxx.util.ListIterator.h"
 #include "util/jxx.util.NoSuchElementException.h"
-#include "lang/jxx.lang.IllegalStateException.h"
-#include "lang/jxx.lang.IndexOutOfBoundsException.h"
-#include "lang/jxx.lang.NullPointerException.h"
+#include "util/jxx.util.RandomAccess.h"
 
-namespace jxx {
-namespace util {
+namespace jxx::util {
 
 template <typename E>
-class SubList : public AbstractList<E>, public virtual RandomAccess {
+class SubList
+    : public jxx::lang::ClassBase<
+          SubList<E>,
+          AbstractList<E>,
+          RandomAccess> {
 private:
-    jxx::Ptr<List<E>> root;
-    jxx::lang::jint offset_;
-    jxx::lang::jint size_;
+    jxx::Ptr<List<E>> root_;
+    jxx::lang::jint offset_ = 0;
+    jxx::lang::jint size_ = 0;
+    jxx::lang::jint expectedRootSize_ = 0;
 
-    // Inner ListIterator implementation for SubList
-    class SubListIterator : public virtual ListIterator<E> {
-    private:
-        SubList<E>* subList_;
-        jxx::Ptr<ListIterator<E>> rootIterator_;
-        jxx::lang::jint cursor_;
-        jxx::lang::jint lastRet_;
-        jxx::lang::jint expectedModCount_;
-
-    public:
-        SubListIterator(SubList<E>* subList, jxx::lang::jint index)
-            : subList_(subList), cursor_(index), lastRet_(-1), 
-              expectedModCount_(subList->modCount) {
-            rootIterator_ = subList->root->listIterator(subList->offset_ + index);
-        }
-
-        virtual jxx::lang::jbool hasNext() override {
-            return cursor_ < subList_->size_;
-        }
-
-        virtual jxx::Ptr<E> next() override {
-            if (expectedModCount_ != subList_->modCount) {
-                throw jxx::util::ConcurrentModificationException();
-            }
-            if (!hasNext()) {
-                throw jxx::util::NoSuchElementException();
-            }
-            lastRet_ = cursor_++;
-            return rootIterator_->next();
-        }
-
-        virtual jxx::lang::jbool hasPrevious() override {
-            return cursor_ > 0;
-        }
-
-        virtual jxx::Ptr<E> previous() override {
-            if (expectedModCount_ != subList_->modCount) {
-                throw jxx::util::ConcurrentModificationException();
-            }
-            if (!hasPrevious()) {
-                throw jxx::util::NoSuchElementException();
-            }
-            cursor_--;
-            lastRet_ = cursor_;
-            return rootIterator_->previous();
-        }
-
-        virtual jxx::lang::jint nextIndex() override {
-            return cursor_;
-        }
-
-        virtual jxx::lang::jint previousIndex() override {
-            return cursor_ - 1;
-        }
-
-        virtual void remove() override {
-            if (lastRet_ < 0) {
-                throw jxx::lang::IllegalStateException();
-            }
-            if (expectedModCount_ != subList_->modCount) {
-                throw jxx::util::ConcurrentModificationException();
-            }
-            rootIterator_->remove();
-            if (lastRet_ < cursor_) {
-                cursor_--;
-            }
-            lastRet_ = -1;
-            subList_->size_--;
-            subList_->modCount++;
-            expectedModCount_ = subList_->modCount;
-        }
-
-        virtual void set(const jxx::Ptr<E> e) override {
-            if (lastRet_ < 0) {
-                throw jxx::lang::IllegalStateException();
-            }
-            if (expectedModCount_ != subList_->modCount) {
-                throw jxx::util::ConcurrentModificationException();
-            }
-            rootIterator_->set(e);
-        }
-
-        virtual void add(const jxx::Ptr<E> e) override {
-            if (expectedModCount_ != subList_->modCount) {
-                throw jxx::util::ConcurrentModificationException();
-            }
-            rootIterator_->add(e);
-            cursor_++;
-            lastRet_ = -1;
-            subList_->size_++;
-            subList_->modCount++;
-            expectedModCount_ = subList_->modCount;
-        }
-    };
-
-public:
-    SubList(const jxx::Ptr<List<E>> list, jxx::lang::jint fromIndex, jxx::lang::jint toIndex)
-        : root(list), offset_(fromIndex), size_(toIndex - fromIndex) {
-        if (list == nullptr) {
-            throw jxx::lang::NullPointerException();
-        }
-        if (fromIndex < 0 || toIndex < fromIndex) {
-            throw jxx::lang::IndexOutOfBoundsException();
+    void checkForComodification_() const {
+        if (root_->size() != expectedRootSize_) {
+            throw ConcurrentModificationException();
         }
     }
 
-    virtual ~SubList() = default;
-    
-    virtual void replaceAll(const jxx::Ptr<function::UnaryOperator<E>> op) override {
-    }
-
-    
-    virtual void sort(const jxx::Ptr<ComparatorSuper<E>> c) override {
-
-    }
-
-    virtual jxx::Ptr<Spliterator<E>> spliterator() override {
-        return nullptr;
-    }
-
-    virtual jxx::Ptr<E> get(jxx::lang::jint index) override {
-        rangeCheck(index);
-        return root->get(offset_ + index);
-    }
-
-    virtual jxx::Ptr<E> set(jxx::lang::jint index, jxx::Ptr<E> element) override {
-        rangeCheck(index);
-        return root->set(offset_ + index, element);
-    }
-
-    virtual void add(jxx::lang::jint index, jxx::Ptr<E> element) override {
-        rangeCheckForAddLocal(index);
-        root->add(offset_ + index, element);
-        ++size_;
+    void updateAfterStructuralChange_(jxx::lang::jint delta) {
+        size_ += delta;
+        expectedRootSize_ += delta;
         ++this->modCount;
     }
 
-    virtual jxx::Ptr<E> remove(jxx::lang::jint index) override {
-        rangeCheck(index);
-        jxx::Ptr<E> oldValue = root->remove(offset_ + index);
-        --size_;
-        ++this->modCount;
-        return oldValue;
-    }
-
-    virtual jxx::lang::jint size() override {
-        return size_;
-    }
-
-    virtual jxx::lang::jbool addAll(jxx::lang::jint index, const jxx::Ptr<wildcard::CollectionExtends<E>>& c) override {
-        rangeCheckForAddLocal(index);
-        if (c == nullptr) {
-            throw jxx::lang::NullPointerException();
-        }
-        const jxx::lang::jint cSize = c->size();
-        if (cSize == 0) {
-            return false;
-        }
-        root->addAll(offset_ + index, c);
-        size_ += cSize;
-        ++this->modCount;
-        return true;
-    }
-
-    virtual jxx::Ptr<List<E>> subList(jxx::lang::jint fromIndex, jxx::lang::jint toIndex) override {
-        if (fromIndex < 0 || toIndex > size_ || fromIndex > toIndex) {
-            throw jxx::lang::IndexOutOfBoundsException();
-        }
-        return jxx::Ptr<List<E>>(jxx::NEW<SubList<E>>(root, offset_ + fromIndex, offset_ + toIndex));
-    }
-
-    virtual jxx::Ptr<jxx::util::Iterator<E>> iterator() override {
-        return listIterator(0);
-    }
-
-    virtual jxx::Ptr<ListIterator<E>> listIterator(jxx::lang::jint index) override {
-        if (index < 0 || index > size_) {
-            throw jxx::lang::IndexOutOfBoundsException();
-        }
-        return jxx::Ptr<ListIterator<E>>(jxx::NEW<SubListIterator>(this, index));
-    }
-
-protected:
-    virtual void removeRange(jxx::lang::jint fromIndex, jxx::lang::jint toIndex) override {
-        if (fromIndex < 0 || toIndex > size_ || fromIndex > toIndex) {
-            throw jxx::lang::IndexOutOfBoundsException();
-        }
-        for (jxx::lang::jint i = 0; i < (toIndex - fromIndex); ++i) {
-            root->remove(offset_ + fromIndex);
-        }
-        size_ -= (toIndex - fromIndex);
-        ++this->modCount;
-    }
-
-private:
-    void rangeCheck(jxx::lang::jint index) {
+    void rangeCheck_(jxx::lang::jint index) const {
         if (index < 0 || index >= size_) {
             throw jxx::lang::IndexOutOfBoundsException();
         }
     }
 
-    void rangeCheckForAddLocal(jxx::lang::jint index) {
+    void rangeCheckForAdd_(jxx::lang::jint index) const {
         if (index < 0 || index > size_) {
             throw jxx::lang::IndexOutOfBoundsException();
         }
     }
+
+    static jxx::lang::jbool equalsObject_(
+        const jxx::Ptr<jxx::lang::Object>& left,
+        const jxx::Ptr<jxx::lang::Object>& right) {
+
+        return left == nullptr
+            ? right == nullptr
+            : left->equals(right);
+    }
+
+    class SubListIterator final
+        : public jxx::lang::ClassBase<
+              SubListIterator,
+              jxx::lang::Object,
+              ListIterator<E>> {
+    private:
+        jxx::Ptr<SubList<E>> owner_;
+        jxx::Ptr<ListIterator<E>> rootIterator_;
+        jxx::lang::jint cursor_ = 0;
+        jxx::lang::jint lastReturned_ = -1;
+        jxx::lang::jint expectedRootSize_ = 0;
+
+        void checkForComodification_() const {
+            if (owner_->root_->size() != expectedRootSize_) {
+                throw ConcurrentModificationException();
+            }
+        }
+
+    public:
+        SubListIterator(
+            const jxx::Ptr<SubList<E>>& owner,
+            jxx::lang::jint index)
+            : owner_(owner)
+            , rootIterator_(owner->root_->listIterator(owner->offset_ + index))
+            , cursor_(index)
+            , lastReturned_(-1)
+            , expectedRootSize_(owner->expectedRootSize_) {
+
+            owner_->rangeCheckForAdd_(index);
+        }
+
+        jxx::lang::jbool hasNext() override {
+            return cursor_ < owner_->size_;
+        }
+
+        jxx::Ptr<E> next() override {
+            checkForComodification_();
+            if (!hasNext()) {
+                throw NoSuchElementException();
+            }
+            const auto value = rootIterator_->next();
+            lastReturned_ = cursor_;
+            ++cursor_;
+            return value;
+        }
+
+        jxx::lang::jbool hasPrevious() override {
+            return cursor_ > 0;
+        }
+
+        jxx::Ptr<E> previous() override {
+            checkForComodification_();
+            if (!hasPrevious()) {
+                throw NoSuchElementException();
+            }
+            const auto value = rootIterator_->previous();
+            --cursor_;
+            lastReturned_ = cursor_;
+            return value;
+        }
+
+        jxx::lang::jint nextIndex() override {
+            return cursor_;
+        }
+
+        jxx::lang::jint previousIndex() override {
+            return cursor_ - 1;
+        }
+
+        void remove() override {
+            checkForComodification_();
+            if (lastReturned_ < 0) {
+                throw jxx::lang::IllegalStateException();
+            }
+
+            rootIterator_->remove();
+            if (lastReturned_ < cursor_) {
+                --cursor_;
+            }
+            lastReturned_ = -1;
+            owner_->updateAfterStructuralChange_(-1);
+            expectedRootSize_ = owner_->expectedRootSize_;
+        }
+
+        void set(const jxx::Ptr<E>& element) override {
+            checkForComodification_();
+            if (lastReturned_ < 0) {
+                throw jxx::lang::IllegalStateException();
+            }
+            rootIterator_->set(element);
+        }
+
+        void add(const jxx::Ptr<E>& element) override {
+            checkForComodification_();
+            rootIterator_->add(element);
+            ++cursor_;
+            lastReturned_ = -1;
+            owner_->updateAfterStructuralChange_(1);
+            expectedRootSize_ = owner_->expectedRootSize_;
+        }
+    };
+
+public:
+    SubList(
+        const jxx::Ptr<List<E>>& root,
+        jxx::lang::jint fromIndex,
+        jxx::lang::jint toIndex)
+        : root_(root)
+        , offset_(fromIndex)
+        , size_(toIndex - fromIndex)
+        , expectedRootSize_(root == nullptr ? 0 : root->size()) {
+
+        if (root_ == nullptr) {
+            throw jxx::lang::NullPointerException();
+        }
+        if (fromIndex < 0 || toIndex < fromIndex ||
+            toIndex > expectedRootSize_) {
+            throw jxx::lang::IndexOutOfBoundsException();
+        }
+    }
+
+    ~SubList() override = default;
+
+    jxx::lang::jint size() override {
+        checkForComodification_();
+        return size_;
+    }
+
+    jxx::lang::jbool isEmpty() override {
+        return size() == 0;
+    }
+
+    jxx::Ptr<E> get(jxx::lang::jint index) const override {
+        checkForComodification_();
+        rangeCheck_(index);
+        return root_->get(offset_ + index);
+    }
+
+    jxx::Ptr<E> set(
+        jxx::lang::jint index,
+        const jxx::Ptr<E>& element) override {
+
+        checkForComodification_();
+        rangeCheck_(index);
+        return root_->set(offset_ + index, element);
+    }
+
+    void add(
+        jxx::lang::jint index,
+        const jxx::Ptr<E>& element) override {
+
+        checkForComodification_();
+        rangeCheckForAdd_(index);
+        root_->add(offset_ + index, element);
+        updateAfterStructuralChange_(1);
+    }
+
+    jxx::lang::jbool add(const jxx::Ptr<E>& element) override {
+        add(size_, element);
+        return true;
+    }
+
+    jxx::Ptr<E> remove(jxx::lang::jint index) override {
+        checkForComodification_();
+        rangeCheck_(index);
+        const auto oldValue = root_->remove(offset_ + index);
+        updateAfterStructuralChange_(-1);
+        return oldValue;
+    }
+
+    jxx::lang::jbool contains(
+        const jxx::Ptr<jxx::lang::Object>& object) override {
+
+        return indexOf(object) >= 0;
+    }
+
+    jxx::lang::jbool remove(
+        const jxx::Ptr<jxx::lang::Object>& object) override {
+
+        const auto index = indexOf(object);
+        if (index < 0) {
+            return false;
+        }
+        remove(index);
+        return true;
+    }
+
+    jxx::lang::jint indexOf(
+        const jxx::Ptr<jxx::lang::Object>& object) override {
+
+        checkForComodification_();
+        for (jxx::lang::jint index = 0; index < size_; ++index) {
+            const auto candidate =
+                jxx::CAST<jxx::lang::Object>(root_->get(offset_ + index));
+            if (equalsObject_(object, candidate)) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+    jxx::lang::jint lastIndexOf(
+        const jxx::Ptr<jxx::lang::Object>& object) override {
+
+        checkForComodification_();
+        for (jxx::lang::jint index = size_ - 1; index >= 0; --index) {
+            const auto candidate =
+                jxx::CAST<jxx::lang::Object>(root_->get(offset_ + index));
+            if (equalsObject_(object, candidate)) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+    jxx::lang::jbool addAll(
+        const jxx::Ptr<wildcard::CollectionExtends<E>>& collection) override {
+
+        return addAll(size_, collection);
+    }
+
+    jxx::lang::jbool addAll(
+        jxx::lang::jint index,
+        const jxx::Ptr<wildcard::CollectionExtends<E>>& collection) override {
+
+        checkForComodification_();
+        rangeCheckForAdd_(index);
+        if (collection == nullptr) {
+            throw jxx::lang::NullPointerException();
+        }
+
+        const auto count = collection->size();
+        if (count == 0) {
+            return false;
+        }
+
+        root_->addAll(offset_ + index, collection);
+        updateAfterStructuralChange_(count);
+        return true;
+    }
+
+    void clear() override {
+        removeRange(0, size_);
+    }
+
+    jxx::Ptr<Iterator<E>> iterator() override {
+        return jxx::CAST<Iterator<E>>(listIterator());
+    }
+
+    jxx::Ptr<ListIterator<E>> listIterator() override {
+        return listIterator(0);
+    }
+
+    jxx::Ptr<ListIterator<E>> listIterator(
+        jxx::lang::jint index) override {
+
+        checkForComodification_();
+        rangeCheckForAdd_(index);
+
+        auto self =
+            jxx::CAST<SubList<E>>(this->thisPtr);
+
+        if (self == nullptr) {
+            throw jxx::lang::IllegalStateException();
+        }
+
+        return jxx::CAST<ListIterator<E>>(
+            jxx::NEW<SubListIterator>(self, index));
+    }
+
+    jxx::Ptr<List<E>> subList(
+        jxx::lang::jint fromIndex,
+        jxx::lang::jint toIndex) override {
+
+        checkForComodification_();
+        if (fromIndex < 0 || toIndex < fromIndex || toIndex > size_) {
+            throw jxx::lang::IndexOutOfBoundsException();
+        }
+
+        auto view = jxx::NEW<SubList<E>>(
+            root_,
+            offset_ + fromIndex,
+            offset_ + toIndex);
+
+        return jxx::CAST<List<E>>(view);
+    }
+
+    jxx::lang::ObjectArray toArray() override {
+        checkForComodification_();
+        auto array = jxx::NEW<jxx::lang::ObjectArrayType>(
+            static_cast<std::uint32_t>(size_));
+
+        for (jxx::lang::jint index = 0; index < size_; ++index) {
+            (*array)[index] = jxx::CAST<jxx::lang::Object>(
+                root_->get(offset_ + index));
+        }
+        return array;
+    }
+
+protected:
+    void removeRange(
+        jxx::lang::jint fromIndex,
+        jxx::lang::jint toIndex) {
+
+        checkForComodification_();
+        if (fromIndex < 0 || toIndex < fromIndex || toIndex > size_) {
+            throw jxx::lang::IndexOutOfBoundsException();
+        }
+
+        const auto count = toIndex - fromIndex;
+        for (jxx::lang::jint index = 0; index < count; ++index) {
+            root_->remove(offset_ + fromIndex);
+        }
+        if (count != 0) {
+            updateAfterStructuralChange_(-count);
+        }
+    }
 };
 
-} // namespace util
-} // namespace jxx
+} // namespace jxx::util

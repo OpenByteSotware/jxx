@@ -1,5 +1,15 @@
 #include "lang/jxx.lang.ClassInfo.h"
 
-// ClassInfo, ClassBase, and InterfaceBase are C++17 templates and therefore
-// remain implemented in the header. This translation unit is intentionally
-// minimal and is provided for JXX package/build-system symmetry.
+namespace jxx::lang {
+
+/*
+ * ClassInfo, ClassBase, and InterfaceBase are C++17 templates.
+ * Their definitions must remain in jxx.lang.ClassInfo.h.
+ *
+ * Ordinary interface descriptors are resolved generically through each
+ * interface's JxxClassInfoMarker. This translation unit intentionally does
+ * not include Serializable, Cloneable, CharSequence, Comparable, or other
+ * interface headers, which prevents reflection include cycles.
+ */
+
+} // namespace jxx::lang
