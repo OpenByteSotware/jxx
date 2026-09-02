@@ -4,8 +4,7 @@
 #include "util/jxx.util.Map.h"
 #include "util/jxx.util.AbstractCollection.h"
 #include "util/jxx.util.AbstractSet.h"
-#include "lang/jxx.lang.UnsupportedOperationException.h"
-#include "lang/jxx.lang.NullPointerException.h"
+#include <exception>
 
 namespace jxx {
 namespace util {
@@ -67,7 +66,7 @@ public:
     }
 
     virtual jxx::Ptr<V> put(const jxx::Ptr<K>&/*key*/, const jxx::Ptr<V>&/*value*/) override {
-        throw jxx::lang::UnsupportedOperationException();
+        throw std::exception();
     }
 
     virtual jxx::Ptr<V> remove(const jxx::Ptr<jxx::lang::Object>& key) override {
@@ -96,7 +95,7 @@ public:
     }
 
     virtual void putAll(const jxx::Ptr<Map<K, V>>& m) override {
-        if (m == nullptr) throw jxx::lang::NullPointerException();
+        if (m == nullptr) throw std::exception();
         auto it = m->entrySet()->iterator();
         while (it->hasNext()) {
             auto e = it->next();
@@ -108,7 +107,7 @@ public:
 
     class KeySet : public AbstractSet<K> {
     private:
-        AbstractMap<K, V>* map_;
+        jxx::Ptr<AbstractMap<K, V>> map_;
         class KeyIterator : public virtual Iterator<K> {
         private:
             jxx::Ptr<Iterator<MapEntry<K, V>>> inner_;
@@ -122,7 +121,7 @@ public:
             virtual void remove() override { inner_->remove(); }
         };
     public:
-        explicit KeySet(AbstractMap<K, V>* map) : map_(map) {}
+        explicit KeySet(const jxx::Ptr<AbstractMap<K, V>>& map) : map_(map) {}
         virtual ~KeySet() = default;
         virtual jxx::lang::jint size() override { return map_->size(); }
         virtual jxx::lang::jbool isEmpty() override { return map_->isEmpty(); }
@@ -145,16 +144,16 @@ public:
             map_->remove(object);
             return true;
         }
-        virtual jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<K>::containsAll(c); }
-        virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<K>> c) override { return AbstractCollection<K>::addAll(c); }
-        virtual jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractSet<K>::removeAll(c); }
-        virtual jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<K>::retainAll(c); }
+        virtual jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny>& c) override { return AbstractCollection<K>::containsAll(c); }
+        virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<K>>& c) override { return AbstractCollection<K>::addAll(c); }
+        virtual jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny>& c) override { return AbstractSet<K>::removeAll(c); }
+        virtual jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny>& c) override { return AbstractCollection<K>::retainAll(c); }
         virtual void clear() override { map_->clear(); }
     };
 
     class Values : public AbstractCollection<V> {
     private:
-        AbstractMap<K, V>* map_;
+        jxx::Ptr<AbstractMap<K, V>> map_;
         class ValueIterator : public virtual Iterator<V> {
         private:
             jxx::Ptr<Iterator<MapEntry<K, V>>> inner_;
@@ -168,7 +167,7 @@ public:
             virtual void remove() override { inner_->remove(); }
         };
     public:
-        explicit Values(AbstractMap<K, V>* map) : map_(map) {}
+        explicit Values(const jxx::Ptr<AbstractMap<K, V>>& map) : map_(map) {}
         virtual ~Values() = default;
         virtual jxx::lang::jint size() override { return map_->size(); }
         virtual jxx::lang::jbool isEmpty() override { return map_->isEmpty(); }
@@ -192,21 +191,28 @@ public:
                 while (it->hasNext()) {
                     auto e = it->next();
                     auto v = e->getValue();
-                    if (v != nullptr && o->equals(jxx::lang::ptr_static_cast<jxx::lang::Object>(v))) { it->remove(); return true; }
+                    if (v != nullptr && o->equals(jxx::CAST<jxx::lang::Object>(v))) { it->remove(); return true; }
                 }
             }
             return false;
         }
-        virtual jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<V>::containsAll(c); }
-        virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<V>> c) override { return AbstractCollection<V>::addAll(c); }
-        virtual jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<V>::removeAll(c); }
-        virtual jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<V>::retainAll(c); }
+        virtual jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny>& c) override { return AbstractCollection<V>::containsAll(c); }
+        virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<V>>& c) override { return AbstractCollection<V>::addAll(c); }
+        virtual jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny>& c) override { return AbstractCollection<V>::removeAll(c); }
+        virtual jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny>& c) override { return AbstractCollection<V>::retainAll(c); }
         virtual void clear() override { map_->clear(); }
     };
 
     virtual jxx::Ptr<Set<K>> keySet() override {
         if (keySetView == nullptr) {
-            auto view = jxx::NEW<KeySet>(this);
+            auto owner =
+                jxx::CAST<AbstractMap<K, V>>(this->thisPtr);
+
+            if (owner == nullptr) {
+                throw jxx::lang::IllegalStateException();
+            }
+
+            auto view = jxx::NEW<KeySet>(owner);
             keySetView = jxx::CAST<Set<K>>(view);
         }
         return keySetView;
@@ -214,7 +220,14 @@ public:
 
     virtual jxx::Ptr<Collection<V>> values() override {
         if (valuesView == nullptr) {
-            auto view = jxx::NEW<Values>(this);
+            auto owner =
+                jxx::CAST<AbstractMap<K, V>>(this->thisPtr);
+
+            if (owner == nullptr) {
+                throw jxx::lang::IllegalStateException();
+            }
+
+            auto view = jxx::NEW<Values>(owner);
             valuesView = jxx::CAST<Collection<V>>(view);
         }
         return valuesView;

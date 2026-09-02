@@ -250,8 +250,7 @@ namespace jxx {
                 }
             }
 
-            virtual void afterNodeInsertion(
-                const jxx::Ptr<K>& key,
+            virtual void afterNodeInsertion(const jxx::Ptr<K>& key,
                 jxx::lang::jbool isNewKey) override {
 
                 if (!isNewKey) {
@@ -293,7 +292,7 @@ namespace jxx {
                       jxx::lang::Object,
                       Iterator<MapEntry<K, V>>> {
             private:
-                LinkedHashMap<K, V>* owner_;
+                jxx::Ptr<LinkedHashMap<K, V>> owner_;
 
                 /*
                  * Keep a snapshot of Java/JXX key references.
@@ -317,7 +316,7 @@ namespace jxx {
 
             public:
                 explicit LinkedEntryIterator(
-                    LinkedHashMap<K, V>* owner)
+                    const jxx::Ptr<LinkedHashMap<K, V>>& owner)
                     : owner_(owner)
                     , keys_()
                     , cursor_(0)
@@ -388,36 +387,62 @@ namespace jxx {
                 }
             };
 
-            class LinkedEntrySet
-                : public HashMap<K, V>::EntrySet {
-            private:
-                LinkedHashMap<K, V>* owner_;
+                using HashMapEntrySet =
+                    typename HashMap<K, V>::EntrySet;
 
-            public:
-                explicit LinkedEntrySet(
-                    LinkedHashMap<K, V>* owner)
-                    : HashMap<K, V>::EntrySet(owner)
-                    , owner_(owner) {}
+                class LinkedEntrySet
+                    : public HashMapEntrySet
+                {
+                private:
+                    jxx::Ptr<LinkedHashMap<K, V>>
+                        owner_;
 
-                virtual ~LinkedEntrySet() = default;
+                public:
+                    explicit LinkedEntrySet(
+                        const jxx::Ptr<
+                            LinkedHashMap<K, V>>&owner)
+                        : HashMapEntrySet(
+                              jxx::CAST<HashMap<K, V>>(
+                                  owner))
+                        , owner_(owner)
+                    {
 
-                virtual jxx::Ptr<
-                    Iterator<MapEntry<K, V>>>
-                    iterator() override {
+                        if (owner_ == nullptr) {
+                            throw jxx::lang::
+                                NullPointerException();
+                        }
+                    }
 
-                    auto iteratorValue =
-                        jxx::NEW<LinkedEntryIterator>(owner_);
+                    ~LinkedEntrySet() override =
+                        default;
 
-                    return jxx::CAST<Iterator<MapEntry<K, V>>>(
-                        iteratorValue);
+                    jxx::Ptr<
+                        Iterator<MapEntry<K, V>>>
+                        iterator() override
+                    {
+
+                        auto iteratorValue =
+                            jxx::NEW<
+                            LinkedEntryIterator>(
+                                owner_);
+
+                        return jxx::CAST<
+                            Iterator<MapEntry<K, V>>>(
+                                iteratorValue);
+                    }
+                };
+             
+            virtual jxx::Ptr<Set<MapEntry<K, V>>> createEntrySetView() override {
+
+                auto owner = jxx::CAST<LinkedHashMap<K, V>>(this->thisPtr);
+
+                if (owner == nullptr) {
+                    throw jxx::lang::IllegalStateException();
                 }
-            };
 
-            virtual jxx::Ptr<
-                Set<MapEntry<K, V>>>
-                createEntrySetView() override {
+                auto view =
+                    jxx::NEW<LinkedEntrySet>(owner);
 
-                auto view = jxx::NEW<LinkedEntrySet>(thisPtr);
                 return jxx::CAST<Set<MapEntry<K, V>>>(view);
             }
 

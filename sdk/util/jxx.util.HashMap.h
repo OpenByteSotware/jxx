@@ -111,8 +111,7 @@ namespace jxx
 			{
 			}
 
-			virtual void afterNodeInsertion(
-                const jxx::Ptr<K>& /*key*/,
+			virtual void afterNodeInsertion(const jxx::Ptr<K>& /*key*/,
 				jxx::lang::jbool /*isNewKey*/)
 			{
 			}
@@ -272,7 +271,8 @@ namespace jxx
 					map_.find(castKey) != map_.end());
 			}
 
-			virtual jxx::lang::jbool containsValue(const jxx::Ptr<jxx::lang::Object>& value) override
+			virtual jxx::lang::jbool containsValue(
+				const jxx::Ptr<jxx::lang::Object>& value) override
 			{
 
 				for (const auto& pair : map_) {
@@ -410,7 +410,7 @@ namespace jxx
                       MapEntry<K, V>>
 			{
 			private:
-				HashMap<K, V>* owner_;
+				jxx::Ptr<HashMap<K, V>> owner_;
 				jxx::Ptr<K> key_;
 
 			public:
@@ -435,7 +435,8 @@ namespace jxx
 						jxx::CAST<jxx::lang::Object>(key_));
 				}
 
-				virtual jxx::Ptr<V> setValue(const jxx::Ptr<V>& value) override
+				virtual jxx::Ptr<V> setValue(
+                    const jxx::Ptr<V>& value) override
 				{
 
 					return owner_->put(key_, value);
@@ -521,7 +522,14 @@ namespace jxx
 			virtual jxx::Ptr<MapEntry<K, V>> makeEntryView(
                 const jxx::Ptr<K>& key)
             {
-                auto entry = jxx::NEW<EntryView>(thisPtr, key);
+                auto owner =
+                    jxx::CAST<HashMap<K, V>>(this->thisPtr);
+
+                if (owner == nullptr) {
+                    throw jxx::lang::IllegalStateException();
+                }
+
+                auto entry = jxx::NEW<EntryView>(owner, key);
                 return jxx::CAST<MapEntry<K, V>>(entry);
             }
 
@@ -532,7 +540,7 @@ namespace jxx
                       Iterator<MapEntry<K, V>>>
 			{
 			private:
-				HashMap<K, V>* owner_;
+				jxx::Ptr<HashMap<K, V>> owner_;
 
 				/*
 				 * Snapshot only the keys. This avoids exposing STL and avoids
@@ -553,7 +561,7 @@ namespace jxx
 				}
 
 			public:
-				explicit EntryIterator(HashMap<K, V>* owner)
+				explicit EntryIterator(const jxx::Ptr<HashMap<K, V>>& owner)
 					: owner_(owner)
 					, keys_()
 					, cursor_(0)
@@ -618,10 +626,10 @@ namespace jxx
                 : public AbstractSet<MapEntry<K, V>>
 			{
 			private:
-				HashMap<K, V>* owner_;
+				jxx::Ptr<HashMap<K, V>> owner_;
 
 			public:
-				explicit EntrySet(HashMap<K, V>* owner)
+				explicit EntrySet(const jxx::Ptr<HashMap<K, V>>& owner)
 					: owner_(owner)
 				{
 				}
@@ -725,7 +733,14 @@ namespace jxx
 			virtual jxx::Ptr<Set<MapEntry<K, V>>>
                 createEntrySetView()
             {
-                auto view = jxx::NEW<EntrySet>(thisPtr);
+                auto owner =
+                    jxx::CAST<HashMap<K, V>>(this->thisPtr);
+
+                if (owner == nullptr) {
+                    throw jxx::lang::IllegalStateException();
+                }
+
+                auto view = jxx::NEW<EntrySet>(owner);
                 return jxx::CAST<Set<MapEntry<K, V>>>(view);
             }
 

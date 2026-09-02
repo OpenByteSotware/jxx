@@ -106,7 +106,7 @@ namespace jxx::util
         }
 
         jxx::lang::jbool containsAll(
-            const jxx::Ptr<wildcard::CollectionAny> collection)
+            const jxx::Ptr<wildcard::CollectionAny>& collection)
             override
         {
 
@@ -123,16 +123,14 @@ namespace jxx::util
             return AbstractCollection<E>::toArray();
         }
 
-        jxx::lang::jbool removeAll(
-            const jxx::Ptr<wildcard::CollectionAny> collection)
+        jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny>& collection)
             override
         {
 
             return AbstractCollection<E>::removeAll(collection);
         }
 
-        jxx::lang::jbool retainAll(
-            const jxx::Ptr<wildcard::CollectionAny> collection)
+        jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny>& collection)
             override
         {
 
@@ -160,8 +158,7 @@ namespace jxx::util
         /**
          * Inserts every element from collection at the end of this list.
          */
-        jxx::lang::jbool addAll(
-            const jxx::Ptr<wildcard::CollectionExtends<E>> collection)
+        jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<E>>& collection)
             override
         {
 
@@ -171,9 +168,8 @@ namespace jxx::util
         /**
          * Inserts the collection's elements beginning at index, preserving order.
          */
-        jxx::lang::jbool addAll(
-            jxx::lang::jint index,
-            const jxx::Ptr<wildcard::CollectionExtends<E>> collection)
+        jxx::lang::jbool addAll(jxx::lang::jint index,
+            const jxx::Ptr<wildcard::CollectionExtends<E>>& collection)
             override
         {
 

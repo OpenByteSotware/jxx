@@ -136,9 +136,7 @@ public:
      * elements have been added, those preceding elements remain added,
      * matching Java's AbstractQueue contract.
      */
-    virtual jxx::lang::jbool addAll(
-        jxx::Ptr<wildcard::CollectionExtends<E>>
-            collection) override {
+    virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<E>>& collection) override {
 
         if (collection == nullptr) {
             throw jxx::lang::NullPointerException();

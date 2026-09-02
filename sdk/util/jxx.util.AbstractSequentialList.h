@@ -56,7 +56,7 @@ namespace jxx::util
         }
 
         jxx::lang::jbool addAll(jxx::lang::jint index,
-                                jxx::Ptr<Collection<E>> c) override
+                                const jxx::Ptr<Collection<E>>& c) override
         {
             if (!c)
                 return false;

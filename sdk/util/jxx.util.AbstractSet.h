@@ -50,23 +50,20 @@ namespace jxx::util {
         }
 
         virtual jxx::lang::jbool containsAll(
-            jxx::Ptr<wildcard::CollectionAny> collection)
+            const jxx::Ptr<wildcard::CollectionAny>& collection)
             override {
 
             return AbstractCollection<E>::containsAll(
                 collection);
         }
 
-        virtual jxx::lang::jbool addAll(
-            jxx::Ptr<wildcard::CollectionExtends<E>>
-            collection) override {
+        virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<E>>& collection) override {
 
             return AbstractCollection<E>::addAll(
                 collection);
         }
 
-        virtual jxx::lang::jbool retainAll(
-            jxx::Ptr<wildcard::CollectionAny> collection)
+        virtual jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny>& collection)
             override {
 
             return AbstractCollection<E>::retainAll(
@@ -137,8 +134,7 @@ namespace jxx::util {
             return hash;
         }
 
-        virtual jxx::lang::jbool removeAll(
-            jxx::Ptr<wildcard::CollectionAny> collection)
+        virtual jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny>& collection)
             override {
 
             if (collection == nullptr) {

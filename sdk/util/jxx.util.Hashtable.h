@@ -275,19 +275,19 @@ namespace jxx::util
 				if (!owner_->containsKey(o)) return false;
 				owner_->remove(o); return true;
 			}
-			jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny> c) override
+			jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny>& c) override
 			{
 				return AbstractCollection<K>::containsAll(c);
 			}
-			jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<K>>) override
+			jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<K>>&) override
 			{
 				throw jxx::lang::UnsupportedOperationException();
 			}
-			jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny> c) override
+			jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny>& c) override
 			{
 				return AbstractSet<K>::removeAll(c);
 			}
-			jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny> c) override
+			jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny>& c) override
 			{
 				return AbstractCollection<K>::retainAll(c);
 			}
@@ -346,19 +346,19 @@ namespace jxx::util
 			{
 				return owner_->removeFirstValue_(o);
 			}
-			jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny> c) override
+			jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny>& c) override
 			{
 				return AbstractCollection<V>::containsAll(c);
 			}
-			jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<V>>) override
+			jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<V>>&) override
 			{
 				throw jxx::lang::UnsupportedOperationException();
 			}
-			jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny> c) override
+			jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny>& c) override
 			{
 				return AbstractCollection<V>::removeAll(c);
 			}
-			jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny> c) override
+			jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny>& c) override
 			{
 				return AbstractCollection<V>::retainAll(c);
 			}
@@ -417,20 +417,20 @@ namespace jxx::util
 				return owner_->remove(jxx::CAST<jxx::lang::Object>(entry->getKey()),
 									  jxx::CAST<jxx::lang::Object>(entry->getValue()));
 			}
-			jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny> c) override
+			jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny>& c) override
 			{
 				return AbstractCollection<MapEntry<K, V>>::containsAll(c);
 			}
 			jxx::lang::jbool addAll(
-				jxx::Ptr<wildcard::CollectionExtends<MapEntry<K, V>>>) override
+				const jxx::Ptr<wildcard::CollectionExtends<MapEntry<K, V>>>&) override
 			{
 				throw jxx::lang::UnsupportedOperationException();
 			}
-			jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny> c) override
+			jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny>& c) override
 			{
 				return AbstractSet<MapEntry<K, V>>::removeAll(c);
 			}
-			jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny> c) override
+			jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny>& c) override
 			{
 				return AbstractCollection<MapEntry<K, V>>::retainAll(c);
 			}

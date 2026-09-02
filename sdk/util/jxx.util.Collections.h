@@ -460,9 +460,8 @@ namespace jxx::util {
         }
 
         template <typename T>
-        static jxx::lang::jbool addAll(
-            jxx::Ptr<Collection<T>> collection,
-            jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<T>, 1U>> elements) {
+        static jxx::lang::jbool addAll(const jxx::Ptr<Collection<T>>& collection,
+            const jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<T>, 1U>>& elements) {
 
             if (collection == nullptr || elements == nullptr) {
                 throw jxx::lang::NullPointerException();

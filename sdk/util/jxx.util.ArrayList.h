@@ -235,12 +235,13 @@ namespace jxx
 				size_ = 0;
 			}
 
-			virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<E>> c) override
+			virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<E>>& c) override
 			{
 				return addAll(size_, c);
 			}
 
-			virtual jxx::lang::jbool addAll(jxx::lang::jint index, jxx::Ptr<wildcard::CollectionExtends<E>> c) override
+			virtual jxx::lang::jbool addAll(jxx::lang::jint index,
+				const jxx::Ptr<wildcard::CollectionExtends<E>>& c) override
 			{
 				rangeCheckForAdd(index);
 				if (c == nullptr) {

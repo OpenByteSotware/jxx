@@ -169,7 +169,7 @@ public:
         return size_;
     }
 
-    virtual jxx::lang::jbool addAll(jxx::lang::jint index, jxx::Ptr<wildcard::CollectionExtends<E>> c) override {
+    virtual jxx::lang::jbool addAll(jxx::lang::jint index, const jxx::Ptr<wildcard::CollectionExtends<E>>& c) override {
         rangeCheckForAddLocal(index);
         if (c == nullptr) {
             throw jxx::lang::NullPointerException();

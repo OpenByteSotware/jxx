@@ -29,16 +29,15 @@ namespace jxx::util {
         virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object>& object) = 0;
 
         virtual jxx::lang::jbool containsAll(
-            jxx::Ptr<wildcard::CollectionAny> collection) = 0;
+            const jxx::Ptr<wildcard::CollectionAny>& collection) = 0;
 
-        virtual jxx::lang::jbool addAll(
-            jxx::Ptr<wildcard::CollectionExtends<E>> collection) = 0;
+        virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<E>>& collection) = 0;
 
         virtual jxx::lang::jbool removeAll(
-            jxx::Ptr<wildcard::CollectionAny> collection) = 0;
+            const jxx::Ptr<wildcard::CollectionAny>& collection) = 0;
 
         virtual jxx::lang::jbool retainAll(
-            jxx::Ptr<wildcard::CollectionAny> collection) = 0;
+            const jxx::Ptr<wildcard::CollectionAny>& collection) = 0;
 
         virtual void clear() = 0;
     };

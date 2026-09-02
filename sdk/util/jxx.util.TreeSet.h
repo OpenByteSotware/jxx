@@ -330,9 +330,7 @@ namespace jxx {
                 ++modCount_;
             }
 
-            virtual jxx::lang::jbool containsAll(
-                jxx::Ptr<wildcard::CollectionAny>
-                collection) override {
+            virtual jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny>& collection) override {
 
                 if (collection == nullptr) {
                     throw jxx::lang::NullPointerException();
@@ -352,9 +350,7 @@ namespace jxx {
                     true);
             }
 
-            virtual jxx::lang::jbool addAll(
-                jxx::Ptr<wildcard::CollectionExtends<E>>
-                collection) override {
+            virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<E>>& collection) override {
 
                 if (collection == nullptr) {
                     throw jxx::lang::NullPointerException();
@@ -377,9 +373,7 @@ namespace jxx {
                 return modified;
             }
 
-            virtual jxx::lang::jbool removeAll(
-                jxx::Ptr<wildcard::CollectionAny>
-                collection) override {
+            virtual jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny>& collection) override {
 
                 if (collection == nullptr) {
                     throw jxx::lang::NullPointerException();
@@ -403,7 +397,7 @@ namespace jxx {
             }
 
             virtual jxx::lang::jbool retainAll(
-                jxx::Ptr<wildcard::CollectionAny>
+                const jxx::Ptr<wildcard::CollectionAny>&
                 collection) override {
 
                 if (collection == nullptr) {

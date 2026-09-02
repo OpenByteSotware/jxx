@@ -382,10 +382,10 @@ protected:
             map_->remove(e->getKey());
             return true;
         }
-        virtual jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<MapEntry<K, V>>::containsAll(c); }
-        virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<MapEntry<K, V>>> /*c*/) override { throw UnsupportedOperationException(); }
-        virtual jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractSet<MapEntry<K, V>>::removeAll(c); }
-        virtual jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny> c) override { return AbstractCollection<MapEntry<K, V>>::retainAll(c); }
+        virtual jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny>& c) override { return AbstractCollection<MapEntry<K, V>>::containsAll(c); }
+        virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<MapEntry<K, V>>>& /*c*/) override { throw UnsupportedOperationException(); }
+        virtual jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny>& c) override { return AbstractSet<MapEntry<K, V>>::removeAll(c); }
+        virtual jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny>& c) override { return AbstractCollection<MapEntry<K, V>>::retainAll(c); }
         virtual void clear() override { map_->clear(); }
     };
 };

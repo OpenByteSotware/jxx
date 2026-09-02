@@ -136,7 +136,7 @@ namespace jxx {
             }
 
             virtual jxx::lang::jbool containsAll(
-                jxx::Ptr<wildcard::CollectionAny> collection)
+                const jxx::Ptr<wildcard::CollectionAny>& collection)
                 override {
 
                 if (collection == nullptr) {
@@ -157,8 +157,7 @@ namespace jxx {
             }
 
             virtual jxx::lang::jbool addAll(
-                jxx::Ptr<wildcard::CollectionExtends<E>>
-                collection) override {
+                const jxx::Ptr<wildcard::CollectionExtends<E>>& collection) override {
 
                 if (collection == nullptr) {
                     throw jxx::lang::NullPointerException();
@@ -182,7 +181,7 @@ namespace jxx {
             }
 
             virtual jxx::lang::jbool removeAll(
-                jxx::Ptr<wildcard::CollectionAny> collection)
+                const jxx::Ptr<wildcard::CollectionAny>& collection)
                 override {
 
                 if (collection == nullptr) {
@@ -216,7 +215,7 @@ namespace jxx {
             }
 
             virtual jxx::lang::jbool retainAll(
-                jxx::Ptr<wildcard::CollectionAny> collection)
+                const jxx::Ptr<wildcard::CollectionAny>& collection)
                 override {
 
                 if (collection == nullptr) {

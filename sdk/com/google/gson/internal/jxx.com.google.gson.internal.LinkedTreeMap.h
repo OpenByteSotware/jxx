@@ -1,7 +1,5 @@
 #pragma once
 
-#include <type_traits>
-
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "util/jxx.util.Comparator.h"
@@ -48,8 +46,7 @@ public:
     jxx::Ptr<V> put(const jxx::Ptr<K>& key, const jxx::Ptr<V>& value) override {
 
         if (key == nullptr) {
-            throw jxx::lang::NullPointerException(
-                jxx::NEW<jxx::lang::String>("key == null"));
+            throw jxx::lang::NullPointerException();
         }
 
         return jxx::util::LinkedHashMap<K, V>::put(
@@ -65,7 +62,24 @@ public:
 protected:
     jxx::Ptr<jxx::lang::Object> cloneImpl() const override
     {
-        return jxx::NEW<LinkedTreeMap<K, V>>(*this);
+        auto result =
+            jxx::NEW<LinkedTreeMap<K, V>>(comparator_);
+
+        auto self =
+            const_cast<LinkedTreeMap<K, V>*>(this);
+
+        auto iterator =
+            self->entrySet()->iterator();
+
+        while (iterator->hasNext()) {
+            const auto entry = iterator->next();
+
+            result->put(
+                entry->getKey(),
+                entry->getValue());
+        }
+
+        return jxx::CAST<jxx::lang::Object>(result);
     }
 
 private:

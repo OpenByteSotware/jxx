@@ -473,7 +473,7 @@ namespace jxx::util {
                 });
         }
 
-        jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<E>> collection) override {
+        jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<E>>& collection) override {
             if (collection == nullptr) {
                 throw jxx::lang::NullPointerException();
             }
@@ -499,7 +499,7 @@ namespace jxx::util {
 
         jxx::lang::jbool addAll(
             jxx::lang::jint index,
-            jxx::Ptr<wildcard::CollectionExtends<E>> collection) override {
+            const jxx::Ptr<wildcard::CollectionExtends<E>>& collection) override {
             if (collection == nullptr) {
                 throw jxx::lang::NullPointerException();
             }
@@ -524,7 +524,7 @@ namespace jxx::util {
                 });
         }
 
-        jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny> collection) override {
+        jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny>& collection) override {
             if (collection == nullptr) {
                 throw jxx::lang::NullPointerException();
             }
@@ -538,7 +538,7 @@ namespace jxx::util {
             return true;
         }
 
-        jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny> collection) override {
+        jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny>& collection) override {
             if (collection == nullptr) {
                 throw jxx::lang::NullPointerException();
             }
@@ -573,7 +573,7 @@ namespace jxx::util {
                 });
         }
 
-        jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny> collection) override {
+        jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny>& collection) override {
             if (collection == nullptr) {
                 throw jxx::lang::NullPointerException();
             }
