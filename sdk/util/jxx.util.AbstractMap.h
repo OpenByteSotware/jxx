@@ -125,7 +125,7 @@ public:
             const jxx::Ptr<AbstractMap<K, V>>& map)
             : map_(map) {
             if (map_ == nullptr) {
-                throw stl::exception();
+                throw std::exception();
             }
         }
         virtual ~KeySet() = default;
@@ -139,7 +139,7 @@ public:
             return jxx::CAST<Iterator<K>>(iteratorValue);
         }
         virtual jxx::lang::ObjectArray toArray() override { return AbstractCollection<K>::toArray(); }
-        virtual jxx::lang::jbool add(const jxx::Ptr<K>& /*element*/) override { throw UnsupportedOperationException(); }
+        virtual jxx::lang::jbool add(const jxx::Ptr<K>& /*element*/) override { throw std::exception(); }
         virtual jxx::lang::jbool remove(
             const jxx::Ptr<jxx::lang::Object>& object) override {
 
@@ -191,7 +191,7 @@ public:
             return jxx::CAST<Iterator<V>>(iteratorValue);
         }
         virtual jxx::lang::ObjectArray toArray() override { return AbstractCollection<V>::toArray(); }
-        virtual jxx::lang::jbool add(const jxx::Ptr<V>& /*element*/) override { throw UnsupportedOperationException(); }
+        virtual jxx::lang::jbool add(const jxx::Ptr<V>& /*element*/) override { throw std::exception(); }
         virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object>& o) override {
             auto it = map_->entrySet()->iterator();
             if (o == nullptr) {
@@ -245,30 +245,103 @@ public:
         return valuesView;
     }
 
-    virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& o) override {
-        auto m = jxx::CAST<Map<K, V>, jxx::lang::Object>(o);
-        if (m == nullptr) return false;
-        if (m->size() != this->size()) return false;
-        auto it = this->entrySet()->iterator();
-        while (it->hasNext()) {
-            auto e = it->next();
-            auto key = e->getKey();
-            auto value = e->getValue();
-            auto otherValue = m->get(key);
+    jxx::lang::jbool equals(
+    const jxx::Ptr<jxx::lang::Object>& object)
+        const override
+    {
+
+        if (object == nullptr) {
+            return false;
+        }
+
+        if (object.get() == this) {
+            return true;
+        }
+
+        auto map =
+            jxx::CAST<Map<K, V>>(object);
+
+        if (map == nullptr) {
+            return false;
+        }
+
+        auto* self =
+            const_cast<AbstractMap<K, V>*>(
+                this);
+
+        if (map->size() != self->size()) {
+            return false;
+        }
+
+        auto entrySetValue =
+            self->entrySet();
+
+        auto iteratorValue =
+            entrySetValue->iterator();
+
+        while (iteratorValue->hasNext()) {
+            auto entry =
+                iteratorValue->next();
+
+            auto keyObject =
+                jxx::CAST<jxx::lang::Object>(
+                    entry->getKey());
+
+            auto value =
+                entry->getValue();
+
+            auto otherValue =
+                map->get(keyObject);
+
             if (value == nullptr) {
-                if (!(otherValue == nullptr && m->containsKey(key))) return false;
-            } else {
-                if (otherValue == nullptr || !value->equals(otherValue)) return false;
+                if (otherValue != nullptr ||
+                    !map->containsKey(keyObject)) {
+
+                    return false;
+                }
+            }
+            else {
+                auto otherObject =
+                    jxx::CAST<jxx::lang::Object>(
+                        otherValue);
+
+                if (otherObject == nullptr ||
+                    !value->equals(otherObject)) {
+
+                    return false;
+                }
             }
         }
+
         return true;
     }
 
-    virtual jxx::lang::jint hashCode() override {
-        jxx::lang::jint h = 0;
-        auto it = entrySet()->iterator();
-        while (it->hasNext()) h += it->next()->hashCode();
-        return h;
+    jxx::lang::jint hashCode()
+        const override
+    {
+
+        auto* self =
+            const_cast<AbstractMap<K, V>*>(
+                this);
+
+        auto entrySetValue =
+            self->entrySet();
+
+        auto iteratorValue =
+            entrySetValue->iterator();
+
+        jxx::lang::jint hash = 0;
+
+        while (iteratorValue->hasNext()) {
+            auto entry =
+                iteratorValue->next();
+
+            if (entry != nullptr) {
+                hash += entry->hashCode();
+            }
+        }
+
+        return hash;
     }
 };
 

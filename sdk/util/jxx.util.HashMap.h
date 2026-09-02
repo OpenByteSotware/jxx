@@ -9,6 +9,7 @@
 #include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.Cloneable.h"
 #include "lang/jxx.lang.Exceptions.h"
+#include "lang/jxx.lang.IllegalStateException.h"
 #include "lang/jxx.lang.Object.h"
 #include "util/jxx.util.AbstractMap.h"
 #include "util/jxx.util.AbstractSet.h"
@@ -111,7 +112,8 @@ namespace jxx
 			{
 			}
 
-			virtual void afterNodeInsertion(const jxx::Ptr<K>& /*key*/,
+			virtual void afterNodeInsertion(
+                const jxx::Ptr<K>& /*key*/,
 				jxx::lang::jbool /*isNewKey*/)
 			{
 			}
@@ -415,12 +417,15 @@ namespace jxx
 
 			public:
 				EntryView(
-					HashMap<K, V>* owner,
-					const jxx::Ptr<K>& key)
-					: owner_(owner)
-					, key_(key)
-				{
-				}
+                    const jxx::Ptr<HashMap<K, V>>& owner,
+                    const jxx::Ptr<K>& key)
+                    : owner_(owner)
+                    , key_(key)
+                {
+                    if (owner_ == nullptr) {
+                        throw jxx::lang::NullPointerException();
+                    }
+                }
 
 				virtual ~EntryView() = default;
 
@@ -522,14 +527,16 @@ namespace jxx
 			virtual jxx::Ptr<MapEntry<K, V>> makeEntryView(
                 const jxx::Ptr<K>& key)
             {
-                auto owner =
+                jxx::Ptr<HashMap<K, V>> owner =
                     jxx::CAST<HashMap<K, V>>(this->thisPtr);
 
                 if (owner == nullptr) {
                     throw jxx::lang::IllegalStateException();
                 }
 
-                auto entry = jxx::NEW<EntryView>(owner, key);
+                auto entry =
+                    jxx::NEW<EntryView>(owner, key);
+
                 return jxx::CAST<MapEntry<K, V>>(entry);
             }
 
@@ -561,17 +568,24 @@ namespace jxx
 				}
 
 			public:
-				explicit EntryIterator(const jxx::Ptr<HashMap<K, V>>& owner)
+				explicit EntryIterator(
+                        const jxx::Ptr<HashMap<K, V>>& owner)
 					: owner_(owner)
 					, keys_()
 					, cursor_(0)
 					, lastReturnedKey_(nullptr)
 					, canRemove_(
 						static_cast<jxx::lang::jbool>(false))
-					, expectedModCount_(owner->modCount_)
+					, expectedModCount_(0)
 				{
 
-					keys_.reserve(owner_->map_.size());
+					if (owner_ == nullptr) {
+                            throw jxx::lang::NullPointerException();
+                        }
+
+                        expectedModCount_ = owner_->modCount_;
+
+                        keys_.reserve(owner_->map_.size());
 
 					for (const auto& pair : owner_->map_) {
 						keys_.push_back(pair.first);
@@ -629,10 +643,14 @@ namespace jxx
 				jxx::Ptr<HashMap<K, V>> owner_;
 
 			public:
-				explicit EntrySet(const jxx::Ptr<HashMap<K, V>>& owner)
-					: owner_(owner)
-				{
-				}
+				explicit EntrySet(
+                        const jxx::Ptr<HashMap<K, V>>& owner)
+                        : owner_(owner)
+                    {
+                        if (owner_ == nullptr) {
+                            throw jxx::lang::NullPointerException();
+                        }
+                    }
 
 				virtual ~EntrySet() = default;
 
@@ -733,14 +751,16 @@ namespace jxx
 			virtual jxx::Ptr<Set<MapEntry<K, V>>>
                 createEntrySetView()
             {
-                auto owner =
+                jxx::Ptr<HashMap<K, V>> owner =
                     jxx::CAST<HashMap<K, V>>(this->thisPtr);
 
                 if (owner == nullptr) {
                     throw jxx::lang::IllegalStateException();
                 }
 
-                auto view = jxx::NEW<EntrySet>(owner);
+                auto view =
+                    jxx::NEW<EntrySet>(owner);
+
                 return jxx::CAST<Set<MapEntry<K, V>>>(view);
             }
 

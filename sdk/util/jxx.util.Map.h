@@ -30,8 +30,8 @@ public:
     virtual jxx::Ptr<Set<K>> keySet() = 0;
     virtual jxx::Ptr<Collection<V>> values() = 0;
     virtual jxx::Ptr<Set<MapEntry<K, V>>> entrySet() = 0;
-    virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& o) = 0;
-    virtual jxx::lang::jint hashCode() = 0;
+    virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& o) const = 0;
+    virtual jxx::lang::jint hashCode() const = 0;
 
     virtual jxx::Ptr<V> getOrDefault(const jxx::Ptr<jxx::lang::Object>& key, const jxx::Ptr<V>& defaultValue) {
         jxx::Ptr<V> v = get(key);

@@ -111,8 +111,8 @@ public:
 	virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<jxx::lang::String>>& c) override { throw jxx::lang::UnsupportedOperationException(); }
 	virtual jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny>& c) override { throw jxx::lang::UnsupportedOperationException(); }
 	virtual jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny>& c) override { throw jxx::lang::UnsupportedOperationException(); }
-    virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& o) override { throw jxx::lang::UnsupportedOperationException(); }
-    virtual jxx::lang::jint hashCode() override { throw jxx::lang::UnsupportedOperationException(); }
+    virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& o) const override { throw jxx::lang::UnsupportedOperationException(); }
+    virtual jxx::lang::jint hashCode() const override { throw jxx::lang::UnsupportedOperationException(); }
 	virtual jxx::Ptr<Spliterator<jxx::lang::String>> spliterator() override { throw jxx::lang::UnsupportedOperationException(); }
 };
 

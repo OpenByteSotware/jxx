@@ -284,7 +284,7 @@ protected:
             return it == map_->map_.end() ? nullptr : it->second;
         }
         virtual jxx::Ptr<V> setValue(const jxx::Ptr<V>& value) override { return map_->put(key_, value); }
-        virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& o) override {
+        virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& o) const override {
             auto other = jxx::CAST<MapEntry<K, V>, jxx::lang::Object>(o);
             if (other == nullptr) return false;
             auto k1 = getKey();
@@ -295,7 +295,7 @@ protected:
             jxx::lang::jbool valueEqual = (v1 == nullptr) ? (v2 == nullptr) : v1->equals(v2);
             return keyEqual && valueEqual;
         }
-        virtual jxx::lang::jint hashCode() override {
+        virtual jxx::lang::jint hashCode() const override {
             jxx::lang::jint kh = (key_ == nullptr) ? 0 : key_->hashCode();
             auto value = getValue();
             jxx::lang::jint vh = (value == nullptr) ? 0 : value->hashCode();

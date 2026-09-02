@@ -224,16 +224,18 @@ namespace jxx::util
 				if (value == nullptr) throw jxx::lang::NullPointerException();
 				return owner_->put(key_, value);
 			}
-			jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& value) override
+			jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& value) const override
 			{
 				auto other = jxx::CAST<MapEntry<K, V>>(value);
 				return other != nullptr &&
 					equalObjects_(object_(key_), jxx::CAST<jxx::lang::Object>(other->getKey())) &&
-					equalObjects_(valueObject_(getValue()), jxx::CAST<jxx::lang::Object>(other->getValue()));
+					equalObjects_(valueObject_(owner_->get(object_(key_))),
+                    jxx::CAST<jxx::lang::Object>(other->getValue()));
 			}
-			jxx::lang::jint hashCode() override
+			jxx::lang::jint hashCode() const override
 			{
-				return hash_(object_(key_)) ^ hash_(valueObject_(getValue()));
+				return hash_(object_(key_)) ^
+                    hash_(valueObject_(owner_->get(object_(key_))));
 			}
 		};
 
@@ -295,11 +297,11 @@ namespace jxx::util
 			{
 				owner_->clear();
 			}
-			jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& o) override
+			jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& o) const override
 			{
 				return AbstractSet<K>::equals(o);
 			}
-			jxx::lang::jint hashCode() override
+			jxx::lang::jint hashCode() const override
 			{
 				return AbstractSet<K>::hashCode();
 			}
@@ -438,11 +440,11 @@ namespace jxx::util
 			{
 				owner_->clear();
 			}
-			jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& o) override
+			jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& o) const override
 			{
 				return AbstractSet<MapEntry<K, V>>::equals(o);
 			}
-			jxx::lang::jint hashCode() override
+			jxx::lang::jint hashCode() const override
 			{
 				return AbstractSet<MapEntry<K, V>>::hashCode();
 			}
@@ -661,16 +663,17 @@ namespace jxx::util
 	});
 		}
 
-		jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& object) override
+		jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& object) const override
 		{
+            auto* self = const_cast<Hashtable<K, V>*>(this);
 			if (object == nullptr)return false; if (object.get() == this)return true;
-			auto other = jxx::CAST<Map<K, V>>(object); if (other == nullptr || other->size() != size())return false;
-			auto it = entrySet()->iterator(); while (it->hasNext()) {
+			auto other = jxx::CAST<Map<K, V>>(object); if (other == nullptr || other->size() != self->size())return false;
+			auto it = self->entrySet()->iterator(); while (it->hasNext()) {
 				auto e = it->next(); auto v = other->get(jxx::CAST<jxx::lang::Object>(e->getKey())); if (!equalObjects_(valueObject_(e->getValue()), valueObject_(v)))return false;
 			}return true;
 		}
 
-		jxx::lang::jint hashCode() override
+		jxx::lang::jint hashCode() const override
 		{
 			return this->synchronized([&]
 	{
