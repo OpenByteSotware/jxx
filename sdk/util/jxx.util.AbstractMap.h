@@ -121,7 +121,13 @@ public:
             virtual void remove() override { inner_->remove(); }
         };
     public:
-        explicit KeySet(const jxx::Ptr<AbstractMap<K, V>>& map) : map_(map) {}
+        explicit KeySet(
+            const jxx::Ptr<AbstractMap<K, V>>& map)
+            : map_(map) {
+            if (map_ == nullptr) {
+                throw stl::exception();
+            }
+        }
         virtual ~KeySet() = default;
         virtual jxx::lang::jint size() override { return map_->size(); }
         virtual jxx::lang::jbool isEmpty() override { return map_->isEmpty(); }
@@ -133,7 +139,7 @@ public:
             return jxx::CAST<Iterator<K>>(iteratorValue);
         }
         virtual jxx::lang::ObjectArray toArray() override { return AbstractCollection<K>::toArray(); }
-        virtual jxx::lang::jbool add(const jxx::Ptr<K>& /*e*/) override { throw UnsupportedOperationException(); }
+        virtual jxx::lang::jbool add(const jxx::Ptr<K>& /*element*/) override { throw UnsupportedOperationException(); }
         virtual jxx::lang::jbool remove(
             const jxx::Ptr<jxx::lang::Object>& object) override {
 
@@ -167,7 +173,13 @@ public:
             virtual void remove() override { inner_->remove(); }
         };
     public:
-        explicit Values(const jxx::Ptr<AbstractMap<K, V>>& map) : map_(map) {}
+        explicit Values(
+            const jxx::Ptr<AbstractMap<K, V>>& map)
+            : map_(map) {
+            if (map_ == nullptr) {
+                throw jxx::lang::NullPointerException();
+            }
+        }
         virtual ~Values() = default;
         virtual jxx::lang::jint size() override { return map_->size(); }
         virtual jxx::lang::jbool isEmpty() override { return map_->isEmpty(); }
@@ -179,7 +191,7 @@ public:
             return jxx::CAST<Iterator<V>>(iteratorValue);
         }
         virtual jxx::lang::ObjectArray toArray() override { return AbstractCollection<V>::toArray(); }
-        virtual jxx::lang::jbool add(const jxx::Ptr<V>& /*e*/) override { throw UnsupportedOperationException(); }
+        virtual jxx::lang::jbool add(const jxx::Ptr<V>& /*element*/) override { throw UnsupportedOperationException(); }
         virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object>& o) override {
             auto it = map_->entrySet()->iterator();
             if (o == nullptr) {
@@ -205,7 +217,7 @@ public:
 
     virtual jxx::Ptr<Set<K>> keySet() override {
         if (keySetView == nullptr) {
-            auto owner =
+            const jxx::Ptr<AbstractMap<K, V>> owner =
                 jxx::CAST<AbstractMap<K, V>>(this->thisPtr);
 
             if (owner == nullptr) {
@@ -220,7 +232,7 @@ public:
 
     virtual jxx::Ptr<Collection<V>> values() override {
         if (valuesView == nullptr) {
-            auto owner =
+            const jxx::Ptr<AbstractMap<K, V>> owner =
                 jxx::CAST<AbstractMap<K, V>>(this->thisPtr);
 
             if (owner == nullptr) {

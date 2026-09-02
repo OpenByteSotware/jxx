@@ -1,9 +1,9 @@
 #pragma once
-
+#include "util/jxx.util.Spliterator.h"
 #include "lang/jxx.lang.ClassCastException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.Object.h"
-
+#include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "util/jxx.util.AbstractCollection.h"
 #include "util/jxx.util.Iterator.h"
 #include "util/jxx.util.Set.h"
@@ -73,6 +73,13 @@ namespace jxx::util {
         virtual void clear() override {
             AbstractCollection<E>::clear();
         }
+
+        jxx::Ptr<Spliterator<E>>
+            spliterator() override
+        {
+            throw jxx::lang::UnsupportedOperationException();
+        }
+
 
         virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& object) const override {
 
