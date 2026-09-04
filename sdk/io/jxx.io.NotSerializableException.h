@@ -3,7 +3,7 @@
 #include <string>
 
 #include "lang/jxx.lang.ClassInfoMarker.h"
-#include "ObjectStreamException.h"
+#include "io/jxx.io.ObjectStreamException.h"
 
 namespace jxx::io {
 

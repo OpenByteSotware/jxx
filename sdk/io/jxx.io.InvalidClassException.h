@@ -28,10 +28,7 @@ public:
     InvalidClassException& operator=(InvalidClassException&&) noexcept = default;
     ~InvalidClassException() override = default;
 
-public:
-    explicit InvalidClassException(
-        const jxx::Ptr<jxx::lang::String>& reason);
-
+public:   
     InvalidClassException(
         const jxx::Ptr<jxx::lang::String>& className,
         const jxx::Ptr<jxx::lang::String>& reason);

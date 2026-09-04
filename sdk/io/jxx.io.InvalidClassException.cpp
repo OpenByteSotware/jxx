@@ -31,13 +31,6 @@ InvalidClassException::InvalidClassException(const std::string& message)
 }
 
 InvalidClassException::InvalidClassException(
-    const jxx::Ptr<jxx::lang::String>& reason)
-    : JxxSuper(reason)
-    , classname(nullptr)
-{
-}
-
-InvalidClassException::InvalidClassException(
     const jxx::Ptr<jxx::lang::String>& className,
     const jxx::Ptr<jxx::lang::String>& reason)
     : JxxSuper(reason)
