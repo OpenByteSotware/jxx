@@ -1,9 +1,9 @@
 #pragma once
-#include "lang/jxx.lang.ClassInfo.h"
 
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.String.h"
 #include "net/jxx.net.SocketAddress.h"
+#include "lang/jxx.lang.ClassInfo.h"
 
 namespace jxx::net
 {

@@ -1,8 +1,8 @@
 #pragma once
-#include "lang/jxx.lang.ClassInfo.h"
 
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.ClassInfo.h"
 
 namespace jxx::net
 {
