@@ -5,11 +5,12 @@
 namespace jxx::lang {
 
 class Object;
+class ClassAny;
 
 template <
     typename Derived,
-    typename JavaSuper,
-    typename... JavaInterfaces>
+    typename JxxSuper,
+    typename... JxxInterfaces>
 class ClassInfo;
 
 namespace class_info_detail {

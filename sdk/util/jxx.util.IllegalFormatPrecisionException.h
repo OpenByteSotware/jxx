@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfoMarker.h"
 
 #include <memory>
 #include "lang/jxx_types.h"
@@ -9,6 +10,18 @@
 namespace jxx::util {
 
 class IllegalFormatPrecisionException : public jxx::util::IllegalFormatException {
+public:
+    using JxxSuper = jxx::util::IllegalFormatException;
+    using JxxClassInfoMarker = jxx::lang::ClassInfo<IllegalFormatPrecisionException, JxxSuper>;
+
+    static jxx::Ptr<jxx::lang::ClassAny> Class();
+
+    IllegalFormatPrecisionException(const IllegalFormatPrecisionException&) = default;
+    IllegalFormatPrecisionException(IllegalFormatPrecisionException&&) noexcept = default;
+    IllegalFormatPrecisionException& operator=(const IllegalFormatPrecisionException&) = default;
+    IllegalFormatPrecisionException& operator=(IllegalFormatPrecisionException&&) noexcept = default;
+    ~IllegalFormatPrecisionException() override = default;
+
 public:
     using jxx::util::IllegalFormatException::IllegalFormatException;
 	IllegalFormatPrecisionException() = default;

@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfoMarker.h"
 
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
@@ -8,6 +9,20 @@ namespace util {
 namespace regex {
 
 class PatternSyntaxException final : public virtual jxx::lang::IllegalArgumentException {
+public:
+    using JxxSuper = jxx::lang::IllegalArgumentException;
+    using JxxClassInfoMarker = jxx::lang::ClassInfo<PatternSyntaxException, JxxSuper>;
+
+    static jxx::Ptr<jxx::lang::ClassAny> Class();
+
+    PatternSyntaxException() = default;
+
+    PatternSyntaxException(const PatternSyntaxException&) = default;
+    PatternSyntaxException(PatternSyntaxException&&) noexcept = default;
+    PatternSyntaxException& operator=(const PatternSyntaxException&) = default;
+    PatternSyntaxException& operator=(PatternSyntaxException&&) noexcept = default;
+    ~PatternSyntaxException() override = default;
+
 public:
     using IllegalArgumentException::IllegalArgumentException;
     
