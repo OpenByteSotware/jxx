@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.Object.h"
@@ -8,33 +9,36 @@ namespace jxx::net
 {
     class URL;
 
-    class URI final : public jxx::lang::Object
-    {
+    class URI final : public jxx::lang::ClassBase<URI, jxx::lang::Object> {
+public:
+    using JavaSuper = jxx::lang::Object;
+    using Super = jxx::lang::ClassBase<URI, jxx::lang::Object>;
+
     public:
-        explicit URI(const jxx::Ptr<jxx::lang::String> str);
-        URI(const jxx::Ptr<jxx::lang::String> scheme,
-            jxx::Ptr<jxx::lang::String> ssp,
-            jxx::Ptr<jxx::lang::String> fragment);
-        URI(const jxx::Ptr<jxx::lang::String> scheme,
-            jxx::Ptr<jxx::lang::String> authority,
-            jxx::Ptr<jxx::lang::String> path,
-            jxx::Ptr<jxx::lang::String> query,
-            jxx::Ptr<jxx::lang::String> fragment);
-        URI(const jxx::Ptr<jxx::lang::String> scheme,
-            jxx::Ptr<jxx::lang::String> host,
-            jxx::Ptr<jxx::lang::String> path,
-            jxx::Ptr<jxx::lang::String> fragment);
-        URI(const jxx::Ptr<jxx::lang::String> scheme,
-            jxx::Ptr<jxx::lang::String> userInfo,
-            jxx::Ptr<jxx::lang::String> host,
+        explicit URI(const jxx::Ptr<jxx::lang::String>& str);
+        URI(const jxx::Ptr<jxx::lang::String>& scheme,
+            const jxx::Ptr<jxx::lang::String>& ssp,
+            const jxx::Ptr<jxx::lang::String>& fragment);
+        URI(const jxx::Ptr<jxx::lang::String>& scheme,
+            const jxx::Ptr<jxx::lang::String>& authority,
+            const jxx::Ptr<jxx::lang::String>& path,
+            const jxx::Ptr<jxx::lang::String>& query,
+            const jxx::Ptr<jxx::lang::String>& fragment);
+        URI(const jxx::Ptr<jxx::lang::String>& scheme,
+            const jxx::Ptr<jxx::lang::String>& host,
+            const jxx::Ptr<jxx::lang::String>& path,
+            const jxx::Ptr<jxx::lang::String>& fragment);
+        URI(const jxx::Ptr<jxx::lang::String>& scheme,
+            const jxx::Ptr<jxx::lang::String>& userInfo,
+            const jxx::Ptr<jxx::lang::String>& host,
             jxx::lang::jint port,
-            jxx::Ptr<jxx::lang::String> path,
-            jxx::Ptr<jxx::lang::String> query,
-            jxx::Ptr<jxx::lang::String> fragment);
+            const jxx::Ptr<jxx::lang::String>& path,
+            const jxx::Ptr<jxx::lang::String>& query,
+            const jxx::Ptr<jxx::lang::String>& fragment);
         ~URI() override = default;
 
     public:
-        static jxx::Ptr<URI> create(const jxx::Ptr<jxx::lang::String> str);
+        static jxx::Ptr<URI> create(const jxx::Ptr<jxx::lang::String>& str);
 
         jxx::lang::jbool isAbsolute() const;
         jxx::lang::jbool isOpaque() const;
@@ -56,9 +60,9 @@ namespace jxx::net
         jxx::Ptr<jxx::lang::String> getRawFragment() const;
 
         jxx::Ptr<URI> normalize() const;
-        jxx::Ptr<URI> resolve(const jxx::Ptr<URI> uri) const;
-        jxx::Ptr<URI> resolve(const jxx::Ptr<jxx::lang::String> str) const;
-        jxx::Ptr<URI> relativize(const jxx::Ptr<URI> uri) const;
+        jxx::Ptr<URI> resolve(const jxx::Ptr<URI>& uri) const;
+        jxx::Ptr<URI> resolve(const jxx::Ptr<jxx::lang::String>& str) const;
+        jxx::Ptr<URI> relativize(const jxx::Ptr<URI>& uri) const;
         jxx::Ptr<URI> parseServerAuthority() const;
         jxx::Ptr<URL> toURL() const;
 
@@ -66,10 +70,10 @@ namespace jxx::net
         jxx::Ptr<jxx::lang::String> toString() const override;
         jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& other) const override;
         jxx::lang::jint hashCode() const override;
-        jxx::lang::jint compareTo(const jxx::Ptr<URI> other) const;
+        jxx::lang::jint compareTo(const jxx::Ptr<URI>& other) const;
 
     private:
-        void parse_(const jxx::Ptr<jxx::lang::String> spec);
+        void parse_(const jxx::Ptr<jxx::lang::String>& spec);
 
     private:
         jxx::Ptr<jxx::lang::String> scheme_;

@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "jxx_types.h"
 #include "jxx.lang.CharSequence.h"
@@ -15,7 +16,8 @@ namespace jxx::lang {
      *
      * JXX rule: reference returns use jxx::Ptr<T>.
      */
-    struct Appendable {
+    class Appendable : public jxx::lang::InterfaceBase<Appendable> {
+    public:
         virtual ~Appendable() = default;
 
         virtual jxx::Ptr<Appendable> append(const jxx::Ptr<CharSequence> csq) = 0;

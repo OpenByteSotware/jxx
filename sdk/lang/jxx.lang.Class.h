@@ -6,13 +6,6 @@
 #include "lang/jxx.lang.ClassInfoMarker.h"
 
 // Exceptions required (as you stated)
-#include "jxx.lang.NullPointerException.h"
-#include "jxx.lang.IllegalArgumentException.h"
-#include "jxx.lang.IllegalStateException.h"
-#include "jxx.lang.ClassNotFoundException.h"
-#include "jxx.lang.ClassCastException.h"
-#include "jxx.lang.InstantiationException.h"
-#include "jxx.lang.IllegalAccessException.h"
 
 #include <string>
 #include <typeindex>

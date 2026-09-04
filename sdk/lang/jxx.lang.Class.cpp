@@ -1,5 +1,12 @@
 #include "jxx.lang.String.h"
 #include "jxx.lang.Class.h"
+#include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.IllegalStateException.h"
+#include "lang/jxx.lang.ClassNotFoundException.h"
+#include "lang/jxx.lang.ClassCastException.h"
+#include "lang/jxx.lang.InstantiationException.h"
+#include "lang/jxx.lang.IllegalAccessException.h"
 
 #include <algorithm>
 

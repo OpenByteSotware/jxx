@@ -17,12 +17,12 @@ namespace
 
 namespace jxx::net
 {
-    jxx::Ptr<jxx::lang::String> IDN::toASCII(const jxx::Ptr<jxx::lang::String> input)
+    jxx::Ptr<jxx::lang::String> IDN::toASCII(const jxx::Ptr<jxx::lang::String>& input)
     {
         return toASCII(std::move(input), 0);
     }
 
-    jxx::Ptr<jxx::lang::String> IDN::toASCII(const jxx::Ptr<jxx::lang::String> input,
+    jxx::Ptr<jxx::lang::String> IDN::toASCII(const jxx::Ptr<jxx::lang::String>& input,
                                              jxx::lang::jint /*flags*/)
     {
         if (!input)
@@ -30,12 +30,12 @@ namespace jxx::net
         return jxx::NEW<jxx::lang::String>(asciiFold_(input->utf8()));
     }
 
-    jxx::Ptr<jxx::lang::String> IDN::toUnicode(const jxx::Ptr<jxx::lang::String> input)
+    jxx::Ptr<jxx::lang::String> IDN::toUnicode(const jxx::Ptr<jxx::lang::String>& input)
     {
         return toUnicode(std::move(input), 0);
     }
 
-    jxx::Ptr<jxx::lang::String> IDN::toUnicode(const jxx::Ptr<jxx::lang::String> input,
+    jxx::Ptr<jxx::lang::String> IDN::toUnicode(const jxx::Ptr<jxx::lang::String>& input,
                                                jxx::lang::jint /*flags*/)
     {
         if (!input)

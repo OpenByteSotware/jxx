@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "jxx_types.h"
 #include "jxx.lang.buildin_array.h"
@@ -9,7 +10,11 @@ namespace jxx::lang {
 
 // Minimal Charset with Java-8-like surface.
 // Supports UTF-8 (default), US-ASCII, ISO-8859-1.
-class Charset final : public Object {
+class Charset final : public jxx::lang::ClassBase<Charset, Object> {
+public:
+    using JavaSuper = Object;
+    using Super = jxx::lang::ClassBase<Charset, Object>;
+
 public:
     enum class Kind { UTF8, ASCII, ISO_8859_1 };
     explicit Charset(Kind k);

@@ -10,7 +10,11 @@ namespace jxx::lang {
  * Minimal java.lang.Package.
  * Java has more metadata; this provides getName()/toString() for parity.
  */
-class Package final : public Object, public jxx::lang::ClassInfo<Package> {
+class Package final : public jxx::lang::ClassBase<Package, Object> {
+public:
+    using JavaSuper = Object;
+    using Super = jxx::lang::ClassBase<Package, Object>;
+
 public:
     explicit Package(const jxx::Ptr<String> name);
 

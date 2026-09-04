@@ -1,11 +1,16 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "lang/jxx.lang.Number.h"
 #include "lang/jxx.lang.String.h"
 
 namespace jxx::lang
 {
-    class Integer final : public Number {
+    class Integer final : public jxx::lang::ClassBase<Integer, Number> {
+public:
+    using JavaSuper = Number;
+    using Super = jxx::lang::ClassBase<Integer, Number>;
+
     public:
         static constexpr jint MIN_VALUE = static_cast<jint>(0x80000000);
         static constexpr jint MAX_VALUE = static_cast<jint>(0x7fffffff);

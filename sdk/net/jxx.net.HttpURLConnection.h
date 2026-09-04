@@ -1,13 +1,17 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "net/jxx.net.URLConnection.h"
 
 namespace jxx::net
 {
-    class HttpURLConnection : public URLConnection
-    {
+    class HttpURLConnection : public jxx::lang::ClassBase<HttpURLConnection, URLConnection> {
+public:
+    using JavaSuper = URLConnection;
+    using Super = jxx::lang::ClassBase<HttpURLConnection, URLConnection>;
+
     protected:
-        explicit HttpURLConnection(const jxx::Ptr<URL> url);
+        explicit HttpURLConnection(const jxx::Ptr<URL>& url);
 
     public:
         ~HttpURLConnection() override = default;
@@ -19,7 +23,7 @@ namespace jxx::net
         void setInstanceFollowRedirects(jxx::lang::jbool followRedirects);
         jxx::lang::jbool getInstanceFollowRedirects() const noexcept;
 
-        void setRequestMethod(const jxx::Ptr<jxx::lang::String> method);
+        void setRequestMethod(const jxx::Ptr<jxx::lang::String>& method);
         jxx::Ptr<jxx::lang::String> getRequestMethod() const;
 
         virtual jxx::lang::jint getResponseCode() const;

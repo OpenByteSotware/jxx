@@ -3,17 +3,20 @@
 namespace jxx::net
 {
     ConnectException::ConnectException()
-        : SocketException("ConnectException")
+        
+    : Super("ConnectException")
     {
     }
 
     ConnectException::ConnectException(const char* message)
-        : SocketException(message ? message : "ConnectException")
+        
+    : Super(message ? message : "ConnectException")
     {
     }
 
     ConnectException::ConnectException(const std::string& message)
-        : SocketException(message)
+        
+    : Super(message)
     {
     }
 }

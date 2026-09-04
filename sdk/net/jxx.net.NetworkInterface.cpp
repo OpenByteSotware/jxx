@@ -728,8 +728,7 @@ namespace jxx::net {
     }
 
     jxx::Ptr<NetworkInterface>
-        NetworkInterface::getByName(
-            jxx::Ptr<jxx::lang::String> name) {
+        NetworkInterface::getByName(const jxx::Ptr<jxx::lang::String>& name) {
 
         if (name == nullptr) {
             throw jxx::lang::
@@ -837,8 +836,7 @@ namespace jxx::net {
     }
 
     jxx::Ptr<NetworkInterface>
-        NetworkInterface::getByInetAddress(
-            jxx::Ptr<InetAddress> address) {
+        NetworkInterface::getByInetAddress(const jxx::Ptr<InetAddress>& address) {
 
         if (address == nullptr) {
             throw jxx::lang::

@@ -1,12 +1,12 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.Object.h"
 
 namespace jxx::net
 {
-    class SocketOptions
-    {
+    class SocketOptions : public jxx::lang::InterfaceBase<SocketOptions> {
     public:
         virtual ~SocketOptions() = default;
 

@@ -169,7 +169,7 @@ inline jxx::Ptr<ClassAny> ensureObjectRegistered() {
             return ClassAny::forType(std::type_index(typeid(Object)));
         } catch (const IllegalStateException&) {
             ClassAny::Meta metadata;
-            metadata.binaryName = "jxx.lang.Object";
+            metadata.binaryName = "java.lang.Object";
             metadata.typeId = std::type_index(typeid(Object));
             metadata.superClass = nullptr;
             metadata.interfaces.clear();
@@ -523,6 +523,8 @@ private:
 
 public:
     using JxxClassInfoMarker = Metadata;
+    using JavaSuperType = JavaSuper;
+    using JavaSuper::JavaSuper;
 
     /**
      * Hides Class() functions inherited from the Java superclass and

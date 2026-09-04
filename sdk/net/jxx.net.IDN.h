@@ -12,11 +12,11 @@ namespace jxx::net
         static constexpr jxx::lang::jint USE_STD3_ASCII_RULES = 0x02;
 
     public:
-        static jxx::Ptr<jxx::lang::String> toASCII(const jxx::Ptr<jxx::lang::String> input);
-        static jxx::Ptr<jxx::lang::String> toASCII(const jxx::Ptr<jxx::lang::String> input,
+        static jxx::Ptr<jxx::lang::String> toASCII(const jxx::Ptr<jxx::lang::String>& input);
+        static jxx::Ptr<jxx::lang::String> toASCII(const jxx::Ptr<jxx::lang::String>& input,
                                                    jxx::lang::jint flags);
-        static jxx::Ptr<jxx::lang::String> toUnicode(const jxx::Ptr<jxx::lang::String> input);
-        static jxx::Ptr<jxx::lang::String> toUnicode(const jxx::Ptr<jxx::lang::String> input,
+        static jxx::Ptr<jxx::lang::String> toUnicode(const jxx::Ptr<jxx::lang::String>& input);
+        static jxx::Ptr<jxx::lang::String> toUnicode(const jxx::Ptr<jxx::lang::String>& input,
                                                      jxx::lang::jint flags);
     };
 }

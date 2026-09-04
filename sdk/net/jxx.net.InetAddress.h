@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.Object.h"
@@ -11,30 +12,34 @@ namespace jxx::net {
     class Inet6Address;
     class NetworkInterface;
 
-    class InetAddress : public jxx::lang::Object {
+    class InetAddress : public jxx::lang::ClassBase<InetAddress, jxx::lang::Object> {
+public:
+    using JavaSuper = jxx::lang::Object;
+    using Super = jxx::lang::ClassBase<InetAddress, jxx::lang::Object>;
+
     public:
         using InetAddressArray = jxx::JxxArray<jxx::Ptr<InetAddress>, 1U>;
 
     protected:
-        InetAddress(const jxx::Ptr<jxx::lang::String> hostName,
-            const jxx::Ptr<jxx::lang::String> hostAddress,
-            const jxx::lang::ByteArray bytes,
+        InetAddress(const jxx::Ptr<jxx::lang::String>& hostName,
+            const jxx::Ptr<jxx::lang::String>& hostAddress,
+            const jxx::lang::ByteArray& bytes,
             jxx::lang::jint family);
 
     public:
         virtual ~InetAddress() override = default;
 
     public:
-        static jxx::Ptr<InetAddress> getByAddress(jxx::lang::ByteArray addr);
+        static jxx::Ptr<InetAddress> getByAddress(const jxx::lang::ByteArray& addr);
 
         static jxx::Ptr<InetAddress> getByAddress(
-            jxx::Ptr<jxx::lang::String> host,
-            jxx::lang::ByteArray addr);
+            const jxx::Ptr<jxx::lang::String>& host,
+            const jxx::lang::ByteArray& addr);
         static jxx::Ptr<InetAddress> getByName(
-            jxx::Ptr<jxx::lang::String> host);
+            const jxx::Ptr<jxx::lang::String>& host);
 
         static jxx::Ptr<InetAddressArray> getAllByName(
-            jxx::Ptr<jxx::lang::String> host);
+            const jxx::Ptr<jxx::lang::String>& host);
 
         static jxx::Ptr<InetAddress> getLoopbackAddress();
 
@@ -63,7 +68,7 @@ namespace jxx::net {
             jxx::lang::jint timeout) const;
 
         virtual jxx::lang::jbool isReachable(
-            jxx::Ptr<NetworkInterface> netif,
+            const jxx::Ptr<NetworkInterface>& netif,
             jxx::lang::jint ttl,
             jxx::lang::jint timeout) const;
 

@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.Object.h"
@@ -6,17 +7,20 @@
 
 namespace jxx::net
 {
-    class SocketPermission final : public jxx::lang::Object
-    {
+    class SocketPermission final : public jxx::lang::ClassBase<SocketPermission, jxx::lang::Object> {
+public:
+    using JavaSuper = jxx::lang::Object;
+    using Super = jxx::lang::ClassBase<SocketPermission, jxx::lang::Object>;
+
     public:
-        SocketPermission(const jxx::Ptr<jxx::lang::String> host,
-                         jxx::Ptr<jxx::lang::String> action);
+        SocketPermission(const jxx::Ptr<jxx::lang::String>& host,
+                         const jxx::Ptr<jxx::lang::String>& action);
         ~SocketPermission() override = default;
 
     public:
         jxx::Ptr<jxx::lang::String> getName() const;
         jxx::Ptr<jxx::lang::String> getActions() const;
-        jxx::lang::jbool implies(const jxx::Ptr<SocketPermission> p) const;
+        jxx::lang::jbool implies(const jxx::Ptr<SocketPermission>& p) const;
 
         jxx::Ptr<jxx::lang::String> toString() const override;
         jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& other) const override;

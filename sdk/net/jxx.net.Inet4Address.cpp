@@ -8,10 +8,11 @@ namespace
 
 namespace jxx::net
 {
-    Inet4Address::Inet4Address(const jxx::Ptr<jxx::lang::String> hostName,
-                               const jxx::Ptr<jxx::lang::String> hostAddress,
-                               const jxx::lang::ByteArray bytes)
-        : InetAddress(std::move(hostName), std::move(hostAddress), bytes, AF_INET)
+    Inet4Address::Inet4Address(const jxx::Ptr<jxx::lang::String>& hostName,
+                               const jxx::Ptr<jxx::lang::String>& hostAddress,
+                               const jxx::lang::ByteArray& bytes)
+        
+    : Super(std::move(hostName), std::move(hostAddress), bytes, AF_INET)
     {
     }
 

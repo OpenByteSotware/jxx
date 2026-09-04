@@ -32,30 +32,43 @@ namespace jxx::net {
 
     } // anonymous namespace
 
-    Inet6Address::Inet6Address(const jxx::Ptr<jxx::lang::String> hostName,
-        const jxx::Ptr<jxx::lang::String> hostAddress,
-        const jxx::lang::ByteArray bytes,
+    Inet6Address::Inet6Address(const jxx::Ptr<jxx::lang::String>& hostName,
+        const jxx::Ptr<jxx::lang::String>& hostAddress,
+        const jxx::lang::ByteArray& bytes,
         jxx::lang::jint scopeId,
-        jxx::Ptr<NetworkInterface> scopedIf)
-        : InetAddress(hostName, hostAddress, bytes, 10)
+        const jxx::Ptr<NetworkInterface>& scopedIf)
+        
+    : Super(hostName, hostAddress, bytes, 10)
         , address_(copyBytes(bytes))
         , scopeId_(scopeId)
         , scopedIf_(scopedIf) {}
 
-    jxx::Ptr<Inet6Address> Inet6Address::getByAddress(
-        jxx::Ptr<jxx::lang::String> host,
-        jxx::lang::ByteArray addr,
-        jxx::lang::jint scopeId) {
-        validateIPv6Address(addr);
+    jxx::Ptr<Inet6Address>  Inet6Address::getByAddress(
+            const jxx::Ptr<jxx::lang::String>& host,
+            const jxx::lang::ByteArray& address,
+            jxx::lang::jint scopeId)
+    {
 
-        return jxx::Ptr<Inet6Address>(
-            new Inet6Address(host, nullptr, addr, scopeId, nullptr));
+        validateIPv6Address(address);
+
+        const jxx::Ptr<jxx::lang::String>
+            hostAddress = nullptr;
+
+        const jxx::Ptr<NetworkInterface>
+            scopedInterface = nullptr;
+
+        return jxx::NEW<Inet6Address>(
+            host,
+            hostAddress,
+            address,
+            scopeId,
+            scopedInterface);
     }
 
     jxx::Ptr<Inet6Address> Inet6Address::getByAddress(
-        jxx::Ptr<jxx::lang::String> host,
-        jxx::lang::ByteArray addr,
-        jxx::Ptr<NetworkInterface> nif) {
+        const jxx::Ptr<jxx::lang::String>& host,
+        const jxx::lang::ByteArray& addr,
+        const jxx::Ptr<NetworkInterface>& nif) {
         validateIPv6Address(addr);
 
         return jxx::Ptr<Inet6Address>(

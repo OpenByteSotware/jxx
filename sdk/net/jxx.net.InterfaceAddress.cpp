@@ -4,8 +4,8 @@
 
 namespace jxx::net
 {
-    InterfaceAddress::InterfaceAddress(const jxx::Ptr<InetAddress> address,
-                                       jxx::Ptr<InetAddress> broadcast,
+    InterfaceAddress::InterfaceAddress(const jxx::Ptr<InetAddress>& address,
+                                       const jxx::Ptr<InetAddress>& broadcast,
                                        jxx::lang::jshort prefixLength)
         : address_(std::move(address)),
           broadcast_(std::move(broadcast)),

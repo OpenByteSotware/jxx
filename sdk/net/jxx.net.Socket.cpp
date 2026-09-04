@@ -101,36 +101,36 @@ namespace jxx::net
     {
     }
 
-    Socket::Socket(const jxx::Ptr<Proxy> proxy)
+    Socket::Socket(const jxx::Ptr<Proxy>& proxy)
         : Socket()
     {
         proxy_ = std::move(proxy);
     }
 
-    Socket::Socket(const jxx::Ptr<jxx::lang::String> host,
+    Socket::Socket(const jxx::Ptr<jxx::lang::String>& host,
                    jxx::lang::jint port)
         : Socket(InetAddress::getByName(std::move(host)), port)
     {
     }
 
-    Socket::Socket(const jxx::Ptr<InetAddress> address,
+    Socket::Socket(const jxx::Ptr<InetAddress>& address,
                    jxx::lang::jint port)
         : Socket()
     {
         connect(jxx::NEW<InetSocketAddress>(std::move(address), port));
     }
 
-    Socket::Socket(const jxx::Ptr<jxx::lang::String> host,
+    Socket::Socket(const jxx::Ptr<jxx::lang::String>& host,
                    jxx::lang::jint port,
-                   jxx::Ptr<InetAddress> localAddr,
+                   const jxx::Ptr<InetAddress>& localAddr,
                    jxx::lang::jint localPort)
         : Socket(InetAddress::getByName(std::move(host)), port, std::move(localAddr), localPort)
     {
     }
 
-    Socket::Socket(const jxx::Ptr<InetAddress> address,
+    Socket::Socket(const jxx::Ptr<InetAddress>& address,
                    jxx::lang::jint port,
-                   jxx::Ptr<InetAddress> localAddr,
+                   const jxx::Ptr<InetAddress>& localAddr,
                    jxx::lang::jint localPort)
         : Socket()
     {
@@ -139,9 +139,9 @@ namespace jxx::net
     }
 
     Socket::Socket(internal::NativeSocket handle,
-                   jxx::Ptr<InetAddress> remoteAddr,
+                   const jxx::Ptr<InetAddress>& remoteAddr,
                    jxx::lang::jint remotePort,
-                   jxx::Ptr<InetAddress> localAddr,
+                   const jxx::Ptr<InetAddress>& localAddr,
                    jxx::lang::jint localPort)
         : state_(jxx::NEW<internal::NativeSocketState>()),
           remoteAddr_(std::move(remoteAddr)),
@@ -159,7 +159,7 @@ namespace jxx::net
         try { close(); } catch (...) {}
     }
 
-    void Socket::setSocketImplFactory(const jxx::Ptr<SocketImplFactory> fac)
+    void Socket::setSocketImplFactory(const jxx::Ptr<SocketImplFactory>& fac)
     {
         g_factory = std::move(fac);
     }
@@ -183,12 +183,12 @@ namespace jxx::net
             throwSE_("socket creation failed");
     }
 
-    void Socket::connect(const jxx::Ptr<SocketAddress> endpoint)
+    void Socket::connect(const jxx::Ptr<SocketAddress>& endpoint)
     {
         connect(std::move(endpoint), 0);
     }
 
-    void Socket::connect(const jxx::Ptr<SocketAddress> endpoint,
+    void Socket::connect(const jxx::Ptr<SocketAddress>& endpoint,
                          jxx::lang::jint /*timeout*/)
     {
         auto isa = std::dynamic_pointer_cast<InetSocketAddress>(endpoint);
@@ -221,7 +221,7 @@ namespace jxx::net
         bound_ = true;
     }
 
-    void Socket::bind(const jxx::Ptr<SocketAddress> bindpoint)
+    void Socket::bind(const jxx::Ptr<SocketAddress>& bindpoint)
     {
         auto isa = std::dynamic_pointer_cast<InetSocketAddress>(bindpoint);
         if (!isa)

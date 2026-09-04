@@ -2,22 +2,22 @@
 
 namespace jxx::net
 {
-    URLPermission::URLPermission(const jxx::Ptr<jxx::lang::String> url)
-        : URLPermission(std::move(url), nullptr)
+    URLPermission::URLPermission(const jxx::Ptr<jxx::lang::String>& url)
+        : URLPermission(url, nullptr)
     {
     }
 
-    URLPermission::URLPermission(const jxx::Ptr<jxx::lang::String> url,
-                                 jxx::Ptr<jxx::lang::String> actions)
-        : url_(std::move(url)),
-          actions_(std::move(actions))
+    URLPermission::URLPermission(const jxx::Ptr<jxx::lang::String>& url,
+                                 const jxx::Ptr<jxx::lang::String>& actions)
+        : url_(url),
+          actions_(actions)
     {
     }
 
     jxx::Ptr<jxx::lang::String> URLPermission::getName() const { return url_; }
     jxx::Ptr<jxx::lang::String> URLPermission::getActions() const { return actions_; }
 
-    jxx::lang::jbool URLPermission::implies(const jxx::Ptr<URLPermission> p) const
+    jxx::lang::jbool URLPermission::implies(const jxx::Ptr<URLPermission>& p) const
     {
         return p &&
             ((!url_ && !p->url_) || (url_ && p->url_ && url_->equals(p->url_))) &&

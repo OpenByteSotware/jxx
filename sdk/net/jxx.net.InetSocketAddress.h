@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.String.h"
@@ -8,18 +9,21 @@ namespace jxx::net
 {
     class InetAddress;
 
-    class InetSocketAddress final : public SocketAddress
-    {
+    class InetSocketAddress final : public jxx::lang::ClassBase<InetSocketAddress, SocketAddress> {
+public:
+    using JavaSuper = SocketAddress;
+    using Super = jxx::lang::ClassBase<InetSocketAddress, SocketAddress>;
+
     public:
         InetSocketAddress(jxx::lang::jint port);
-        InetSocketAddress(const jxx::Ptr<InetAddress> addr,
+        InetSocketAddress(const jxx::Ptr<InetAddress>& addr,
                           jxx::lang::jint port);
-        InetSocketAddress(const jxx::Ptr<jxx::lang::String> hostname,
+        InetSocketAddress(const jxx::Ptr<jxx::lang::String>& hostname,
                           jxx::lang::jint port);
         ~InetSocketAddress() override = default;
 
     public:
-        static jxx::Ptr<InetSocketAddress> createUnresolved(const jxx::Ptr<jxx::lang::String> host,
+        static jxx::Ptr<InetSocketAddress> createUnresolved(const jxx::Ptr<jxx::lang::String>& host,
                                                             jxx::lang::jint port);
 
         jxx::lang::jint getPort() const noexcept;
@@ -33,8 +37,8 @@ namespace jxx::net
         jxx::lang::jint hashCode() const override;
 
     private:
-        InetSocketAddress(const jxx::Ptr<InetAddress> addr,
-                          jxx::Ptr<jxx::lang::String> host,
+        InetSocketAddress(const jxx::Ptr<InetAddress>& addr,
+                          const jxx::Ptr<jxx::lang::String>& host,
                           jxx::lang::jint port,
                           jxx::lang::jbool unresolved);
 

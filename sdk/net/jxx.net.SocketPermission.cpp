@@ -2,17 +2,17 @@
 
 namespace jxx::net
 {
-    SocketPermission::SocketPermission(const jxx::Ptr<jxx::lang::String> host,
-                                       jxx::Ptr<jxx::lang::String> action)
-        : host_(std::move(host)),
-          action_(std::move(action))
+    SocketPermission::SocketPermission(const jxx::Ptr<jxx::lang::String>& host,
+                                       const jxx::Ptr<jxx::lang::String>& action)
+        : host_(host),
+          action_(action)
     {
     }
 
     jxx::Ptr<jxx::lang::String> SocketPermission::getName() const { return host_; }
     jxx::Ptr<jxx::lang::String> SocketPermission::getActions() const { return action_; }
 
-    jxx::lang::jbool SocketPermission::implies(const jxx::Ptr<SocketPermission> p) const
+    jxx::lang::jbool SocketPermission::implies(const jxx::Ptr<SocketPermission>& p) const
     {
         return p &&
             ((!host_ && !p->host_) || (host_ && p->host_ && host_->equals(p->host_))) &&

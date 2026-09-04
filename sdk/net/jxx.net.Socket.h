@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include <memory>
 
@@ -35,37 +36,40 @@ namespace jxx::net
 
     class ServerSocket;
 
-    class Socket final : public jxx::lang::Object
-    {
+    class Socket final : public jxx::lang::ClassBase<Socket, jxx::lang::Object> {
+public:
+    using JavaSuper = jxx::lang::Object;
+    using Super = jxx::lang::ClassBase<Socket, jxx::lang::Object>;
+
     public:
         Socket();
-        explicit Socket(const jxx::Ptr<Proxy> proxy);
-        Socket(const jxx::Ptr<jxx::lang::String> host,
+        explicit Socket(const jxx::Ptr<Proxy>& proxy);
+        Socket(const jxx::Ptr<jxx::lang::String>& host,
                jxx::lang::jint port);
-        Socket(const jxx::Ptr<InetAddress> address,
+        Socket(const jxx::Ptr<InetAddress>& address,
                jxx::lang::jint port);
-        Socket(const jxx::Ptr<jxx::lang::String> host,
+        Socket(const jxx::Ptr<jxx::lang::String>& host,
                jxx::lang::jint port,
-               jxx::Ptr<InetAddress> localAddr,
+               const jxx::Ptr<InetAddress>& localAddr,
                jxx::lang::jint localPort);
-        Socket(const jxx::Ptr<InetAddress> address,
+        Socket(const jxx::Ptr<InetAddress>& address,
                jxx::lang::jint port,
-               jxx::Ptr<InetAddress> localAddr,
+               const jxx::Ptr<InetAddress>& localAddr,
                jxx::lang::jint localPort);
         Socket(internal::NativeSocket handle,
-            jxx::Ptr<InetAddress> remoteAddr,
+            const jxx::Ptr<InetAddress>& remoteAddr,
             jxx::lang::jint remotePort,
-            jxx::Ptr<InetAddress> localAddr,
+            const jxx::Ptr<InetAddress>& localAddr,
             jxx::lang::jint localPort);
         ~Socket() override;
 
     public:
-        static void setSocketImplFactory(const jxx::Ptr<SocketImplFactory> fac);
+        static void setSocketImplFactory(const jxx::Ptr<SocketImplFactory>& fac);
 
-        void connect(const jxx::Ptr<SocketAddress> endpoint);
-        void connect(const jxx::Ptr<SocketAddress> endpoint,
+        void connect(const jxx::Ptr<SocketAddress>& endpoint);
+        void connect(const jxx::Ptr<SocketAddress>& endpoint,
                      jxx::lang::jint timeout);
-        void bind(const jxx::Ptr<SocketAddress> bindpoint);
+        void bind(const jxx::Ptr<SocketAddress>& bindpoint);
 
         jxx::Ptr<InetAddress> getInetAddress() const;
         jxx::Ptr<InetAddress> getLocalAddress() const;

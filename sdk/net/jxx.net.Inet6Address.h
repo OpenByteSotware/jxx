@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.buildin_array.h"
@@ -9,7 +10,11 @@ namespace jxx::net {
 
     class NetworkInterface;
 
-    class Inet6Address final : public InetAddress {
+    class Inet6Address final : public jxx::lang::ClassBase<Inet6Address, InetAddress> {
+public:
+    using JavaSuper = InetAddress;
+    using Super = jxx::lang::ClassBase<Inet6Address, InetAddress>;
+
     private:
 
     private:
@@ -18,24 +23,24 @@ namespace jxx::net {
         jxx::Ptr<NetworkInterface> scopedIf_;
 
     public:
-        Inet6Address(const jxx::Ptr<jxx::lang::String> hostName,
-            const jxx::Ptr<jxx::lang::String> hostAddress,
-            const jxx::lang::ByteArray bytes,
+        Inet6Address(const jxx::Ptr<jxx::lang::String>& hostName,
+            const jxx::Ptr<jxx::lang::String>& hostAddress,
+            const jxx::lang::ByteArray& bytes,
             jxx::lang::jint scopeId,
-            jxx::Ptr<NetworkInterface> scopedIf);
+            const jxx::Ptr<NetworkInterface>& scopedIf);
 
     public:
         virtual ~Inet6Address() override = default;
 
         static jxx::Ptr<Inet6Address> getByAddress(
-            jxx::Ptr<jxx::lang::String> host,
-            jxx::lang::ByteArray addr,
+            const jxx::Ptr<jxx::lang::String>& host,
+            const jxx::lang::ByteArray& addr,
             jxx::lang::jint scopeId);
 
         static jxx::Ptr<Inet6Address> getByAddress(
-            jxx::Ptr<jxx::lang::String> host,
-            jxx::lang::ByteArray addr,
-            jxx::Ptr<NetworkInterface> nif);
+            const jxx::Ptr<jxx::lang::String>& host,
+            const jxx::lang::ByteArray& addr,
+            const jxx::Ptr<NetworkInterface>& nif);
 
         virtual jxx::lang::ByteArray getAddress() const override;
 

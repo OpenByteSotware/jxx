@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 #include "jxx.net.DatagramSocket.h"
 
 #if defined(_WIN32)
@@ -16,20 +17,27 @@
 namespace jxx::net {
     
 
-    class MulticastSocket : public DatagramSocket {
+    class MulticastSocket : public jxx::lang::ClassBase<MulticastSocket, DatagramSocket> {
+public:
+    using JavaSuper = DatagramSocket;
+    using Super = jxx::lang::ClassBase<MulticastSocket, DatagramSocket>;
+
     public:
         // ---- Constructors (mirror Java) ----
         // Unbound (choose family automatically; see notes below)
         MulticastSocket()
-            : DatagramSocket() {}
+            
+        : Super() {}
 
         // Unbound with explicit address family preference
         explicit MulticastSocket(Family fam)
-            : DatagramSocket(fam) {}
+            
+        : Super(fam) {}
 
         // Bind immediately to local port on ANY address (0.0.0.0 or ::)
         explicit MulticastSocket(std::uint16_t localPort, Family fam = Family::Any)
-            : DatagramSocket(fam) {
+            
+        : Super(fam) {
             // Bind to ANY address for the selected family
             if (fam == Family::IPv6) {
                 bind("::", localPort);

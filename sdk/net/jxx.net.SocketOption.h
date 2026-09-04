@@ -4,11 +4,6 @@
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 
-namespace jxx::lang
-{
-    class Class;
-}
-
 namespace jxx::net
 {
     template<typename T>
@@ -25,7 +20,7 @@ namespace jxx::net
     class BasicSocketOption final : public SocketOption<jxx::lang::Object>
     {
     public:
-        explicit BasicSocketOption(const jxx::Ptr<jxx::lang::String> name);
+        explicit BasicSocketOption(const jxx::Ptr<jxx::lang::String>& name);
         ~BasicSocketOption() override = default;
 
     public:

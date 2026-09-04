@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "jxx_types.h"
 #include "jxx.lang.Object.h"
@@ -33,7 +34,11 @@ namespace jxx::lang {
  * NOTE: Bytecode defineClass(...) is not supported in JXX by default.
  * Override findClass(...) in derived loaders to register classes into ClassAny registry.
  */
-class ClassLoader : public Object {
+class ClassLoader : public jxx::lang::ClassBase<ClassLoader, Object> {
+public:
+    using JavaSuper = Object;
+    using Super = jxx::lang::ClassBase<ClassLoader, Object>;
+
 public:
 
     ClassLoader();                           // parent = system
@@ -142,7 +147,11 @@ private:
     static std::weak_ptr<ClassLoader> systemLoader_;
 
     // Lock object used by getClassLoadingLock()
-    class LoadingLock final : public Object {
+    class LoadingLock final : public jxx::lang::ClassBase<LoadingLock, Object> {
+public:
+    using JavaSuper = Object;
+    using Super = jxx::lang::ClassBase<LoadingLock, Object>;
+
     public:
         jxx::Ptr<String> toString() const override {
             return jxx::NEW<String>("ClassLoadingLock");
@@ -151,9 +160,11 @@ private:
 
     // Enumeration implementation for getResources()
     class VectorUrlEnumeration final
-        : public Object
-        , public jxx::util::Enumeration<jxx::net::URL>
-    {
+        : public jxx::lang::ClassBase<VectorUrlEnumeration, Object, jxx::util::Enumeration<jxx::net::URL>> {
+public:
+    using JavaSuper = Object;
+    using Super = jxx::lang::ClassBase<VectorUrlEnumeration, Object, jxx::util::Enumeration<jxx::net::URL>>;
+
     public:
         explicit VectorUrlEnumeration(std::vector<jxx::Ptr<jxx::net::URL>> items);
 

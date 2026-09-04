@@ -6,13 +6,13 @@
 
 namespace jxx::net
 {
-    jxx::Ptr<jxx::lang::String> URLEncoder::encode(const jxx::Ptr<jxx::lang::String> s)
+    jxx::Ptr<jxx::lang::String> URLEncoder::encode(const jxx::Ptr<jxx::lang::String>& s)
     {
         return encode(std::move(s), jxx::NEW<jxx::lang::String>("UTF-8"));
     }
 
-    jxx::Ptr<jxx::lang::String> URLEncoder::encode(const jxx::Ptr<jxx::lang::String> s,
-                                                   jxx::Ptr<jxx::lang::String> /*enc*/)
+    jxx::Ptr<jxx::lang::String> URLEncoder::encode(const jxx::Ptr<jxx::lang::String>& s,
+                                                   const jxx::Ptr<jxx::lang::String>& /*enc*/)
     {
         if (!s)
             throw std::invalid_argument("null input");

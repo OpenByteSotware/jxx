@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.Object.h"
@@ -11,11 +12,14 @@ namespace jxx::net
 {
     class InetAddress;
 
-    class InterfaceAddress final : public jxx::lang::Object
-    {
+    class InterfaceAddress final : public jxx::lang::ClassBase<InterfaceAddress, jxx::lang::Object> {
+public:
+    using JavaSuper = jxx::lang::Object;
+    using Super = jxx::lang::ClassBase<InterfaceAddress, jxx::lang::Object>;
+
     public:
-        InterfaceAddress(const jxx::Ptr<InetAddress> address,
-                         jxx::Ptr<InetAddress> broadcast,
+        InterfaceAddress(const jxx::Ptr<InetAddress>& address,
+                         const jxx::Ptr<InetAddress>& broadcast,
                          jxx::lang::jshort prefixLength);
         virtual ~InterfaceAddress() override = default;
 

@@ -1,8 +1,10 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx_types.h"
 namespace jxx::lang
 {
 	class CharSequence
+        : public jxx::lang::InterfaceBase<CharSequence>
 	{
 	public:
 		virtual ~CharSequence() = default;

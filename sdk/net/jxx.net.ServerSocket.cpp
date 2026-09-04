@@ -123,7 +123,7 @@ namespace jxx::net
         try { close(); } catch (...) {}
     }
 
-    void ServerSocket::setSocketFactory(const jxx::Ptr<SocketImplFactory> fac)
+    void ServerSocket::setSocketFactory(const jxx::Ptr<SocketImplFactory>& fac)
     {
         g_serverFactory = std::move(fac);
     }
@@ -142,12 +142,12 @@ namespace jxx::net
             throwSE_("server socket creation failed");
     }
 
-    void ServerSocket::bind(const jxx::Ptr<SocketAddress> endpoint)
+    void ServerSocket::bind(const jxx::Ptr<SocketAddress>& endpoint)
     {
         bind(std::move(endpoint), 50);
     }
 
-    void ServerSocket::bind(const jxx::Ptr<SocketAddress> endpoint,
+    void ServerSocket::bind(const jxx::Ptr<SocketAddress>& endpoint,
                             jxx::lang::jint backlog)
     {
         auto isa = std::dynamic_pointer_cast<InetSocketAddress>(endpoint);

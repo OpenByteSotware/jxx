@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include <memory>
 
@@ -27,8 +28,11 @@ namespace jxx::nio::channels
 
 namespace jxx::net
 {
-    class ServerSocket final : public jxx::lang::Object
-    {
+    class ServerSocket final : public jxx::lang::ClassBase<ServerSocket, jxx::lang::Object> {
+public:
+    using JavaSuper = jxx::lang::Object;
+    using Super = jxx::lang::ClassBase<ServerSocket, jxx::lang::Object>;
+
     public:
         ServerSocket();
         explicit ServerSocket(jxx::lang::jint port);
@@ -40,10 +44,10 @@ namespace jxx::net
         ~ServerSocket() override;
 
     public:
-        static void setSocketFactory(const jxx::Ptr<SocketImplFactory> fac);
+        static void setSocketFactory(const jxx::Ptr<SocketImplFactory>& fac);
 
-        void bind(const jxx::Ptr<SocketAddress> endpoint);
-        void bind(const jxx::Ptr<SocketAddress> endpoint,
+        void bind(const jxx::Ptr<SocketAddress>& endpoint);
+        void bind(const jxx::Ptr<SocketAddress>& endpoint,
                   jxx::lang::jint backlog);
         jxx::Ptr<InetAddress> getInetAddress() const;
         jxx::lang::jint getLocalPort() const noexcept;

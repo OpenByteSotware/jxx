@@ -1,11 +1,16 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "lang/jxx.lang.Number.h"
 #include "lang/jxx.lang.String.h"
 
 namespace jxx::lang
 {
-    class Float final : public Number {
+    class Float final : public jxx::lang::ClassBase<Float, Number> {
+public:
+    using JavaSuper = Number;
+    using Super = jxx::lang::ClassBase<Float, Number>;
+
     public:
         explicit Float(jfloat value);
 

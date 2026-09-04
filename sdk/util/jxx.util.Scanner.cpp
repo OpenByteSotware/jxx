@@ -12,6 +12,9 @@
 #include "util/jxx.util.NoSuchElementException.h"
 #include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "util/jxx.util.Scanner.h"
+#include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.StringBuilder.h"
+#include "lang/jxx.lang.NullPointerException.h"
 
 namespace jxx {
 namespace util {

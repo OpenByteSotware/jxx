@@ -13,7 +13,7 @@ namespace
     class SimpleFileNameMap final : public jxx::net::FileNameMap
     {
     public:
-        jxx::Ptr<jxx::lang::String> getContentTypeFor(const jxx::Ptr<jxx::lang::String> fileName) override
+        jxx::Ptr<jxx::lang::String> getContentTypeFor(const jxx::Ptr<jxx::lang::String>& fileName) override
         {
             if (!fileName)
                 return nullptr;
@@ -24,7 +24,7 @@ namespace
     class StreamContentHandler final : public jxx::net::ContentHandler
     {
     public:
-        jxx::Ptr<jxx::lang::Object> getContent(const jxx::Ptr<jxx::net::URLConnection> urlc) override
+        jxx::Ptr<jxx::lang::Object> getContent(const jxx::Ptr<jxx::net::URLConnection>& urlc) override
         {
 			if (!urlc)
                 return nullptr;
@@ -42,21 +42,21 @@ namespace
 
 namespace jxx::net
 {
-    URLConnection::URLConnection(const jxx::Ptr<URL> url)
-        : url_(std::move(url))
+    URLConnection::URLConnection(const jxx::Ptr<URL>& url)
+        : url_(url)
     {
     }
 
     jxx::Ptr<FileNameMap> URLConnection::getFileNameMap() { return g_fileNameMap; }
-    void URLConnection::setFileNameMap(const jxx::Ptr<FileNameMap> map) { if (map) g_fileNameMap = map; }
-    void URLConnection::setContentHandlerFactory(const jxx::Ptr<ContentHandlerFactory> fac) { g_contentHandlerFactory = std::move(fac); }
+    void URLConnection::setFileNameMap(const jxx::Ptr<FileNameMap>& map) { if (map) g_fileNameMap = map; }
+    void URLConnection::setContentHandlerFactory(const jxx::Ptr<ContentHandlerFactory>& fac) { g_contentHandlerFactory = fac; }
 
-    jxx::Ptr<jxx::lang::String> URLConnection::guessContentTypeFromName(const jxx::Ptr<jxx::lang::String> fname)
+    jxx::Ptr<jxx::lang::String> URLConnection::guessContentTypeFromName(const jxx::Ptr<jxx::lang::String>& fname)
     {
-        return g_fileNameMap ? g_fileNameMap->getContentTypeFor(std::move(fname)) : nullptr;
+        return g_fileNameMap ? g_fileNameMap->getContentTypeFor(fname) : nullptr;
     }
 
-    jxx::Ptr<jxx::lang::String> URLConnection::guessContentTypeFromStream(const jxx::Ptr<jxx::io::InputStream> /*is*/)
+    jxx::Ptr<jxx::lang::String> URLConnection::guessContentTypeFromStream(const jxx::Ptr<jxx::io::InputStream>& /*is*/)
     {
         return nullptr;
     }
@@ -71,7 +71,7 @@ namespace jxx::net
     jxx::lang::jlong URLConnection::getDate() const { return 0; }
     jxx::lang::jlong URLConnection::getLastModified() const { return 0; }
 
-    jxx::Ptr<jxx::lang::String> URLConnection::getHeaderField(const jxx::Ptr<jxx::lang::String> name) const
+    jxx::Ptr<jxx::lang::String> URLConnection::getHeaderField(const jxx::Ptr<jxx::lang::String>& name) const
     {
         if (!name)
             return nullptr;
@@ -99,14 +99,14 @@ namespace jxx::net
         return jxx::NEW<jxx::lang::String>(it->first);
     }
 
-    jxx::lang::jlong URLConnection::getHeaderFieldDate(const jxx::Ptr<jxx::lang::String> name,
+    jxx::lang::jlong URLConnection::getHeaderFieldDate(const jxx::Ptr<jxx::lang::String>& name,
                                                        jxx::lang::jlong defaultValue) const
     {
         (void)name;
         return defaultValue;
     }
 
-    jxx::lang::jint URLConnection::getHeaderFieldInt(const jxx::Ptr<jxx::lang::String> name,
+    jxx::lang::jint URLConnection::getHeaderFieldInt(const jxx::Ptr<jxx::lang::String>& name,
                                                      jxx::lang::jint defaultValue) const
     {
         auto v = getHeaderField(std::move(name));
@@ -115,7 +115,7 @@ namespace jxx::net
         try { return std::stoi(v->utf8()); } catch (...) { return defaultValue; }
     }
 
-    jxx::lang::jlong URLConnection::getHeaderFieldLong(const jxx::Ptr<jxx::lang::String> name,
+    jxx::lang::jlong URLConnection::getHeaderFieldLong(const jxx::Ptr<jxx::lang::String>& name,
                                                        jxx::lang::jlong defaultValue) const
     {
         auto v = getHeaderField(std::move(name));
@@ -145,10 +145,10 @@ namespace jxx::net
         return h ? h->getContent(jxx::CAST<URLConnection, jxx::lang::Object>(this->thisPtr)) : nullptr;
     }
 
-    jxx::Ptr<jxx::lang::Object> URLConnection::getContent(const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Class>, 1U>> classes)
+    jxx::Ptr<jxx::lang::Object> URLConnection::getContent(const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Class>, 1U>>& classes)
     {
         auto h = getContentHandler_();
-        return h ? h->getContent(jxx::CAST<URLConnection, jxx::lang::Object>(this->thisPtr), std::move(classes)) : nullptr;
+        return h ? h->getContent(jxx::CAST<URLConnection, jxx::lang::Object>(this->thisPtr), classes) : nullptr;
     }
 
     jxx::Ptr<jxx::io::InputStream> URLConnection::getInputStream()
@@ -178,21 +178,21 @@ namespace jxx::net
     jxx::lang::jint URLConnection::getReadTimeout() const noexcept { return readTimeout_; }
     void URLConnection::setReadTimeout(jxx::lang::jint x) { readTimeout_ = x; }
 
-    void URLConnection::setRequestProperty(const jxx::Ptr<jxx::lang::String> key,
-                                           jxx::Ptr<jxx::lang::String> value)
+    void URLConnection::setRequestProperty(const jxx::Ptr<jxx::lang::String>& key,
+                                           const jxx::Ptr<jxx::lang::String>& value)
     {
         if (!key)
             throw std::invalid_argument("null key");
         requestProps_[key->utf8()] = value ? value->utf8() : std::string();
     }
 
-    void URLConnection::addRequestProperty(const jxx::Ptr<jxx::lang::String> key,
-                                           jxx::Ptr<jxx::lang::String> value)
+    void URLConnection::addRequestProperty(const jxx::Ptr<jxx::lang::String>& key,
+                                           const jxx::Ptr<jxx::lang::String>& value)
     {
-        setRequestProperty(std::move(key), std::move(value));
+        setRequestProperty(key, value);
     }
 
-    jxx::Ptr<jxx::lang::String> URLConnection::getRequestProperty(const jxx::Ptr<jxx::lang::String> key) const
+    jxx::Ptr<jxx::lang::String> URLConnection::getRequestProperty(const jxx::Ptr<jxx::lang::String>& key) const
     {
         if (!key)
             return nullptr;

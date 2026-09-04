@@ -6,6 +6,7 @@
 
 #include "lang/jxx_types.h"
 #include "jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.ClassInfo.h"
 #include "jxx.lang.Object.h"
 #include "jxx.lang.CharSequence.h"
 #include "jxx.lang.Comparable.h"
@@ -42,10 +43,11 @@ namespace jxx::lang {
      * Internal storage: UTF-16 code units (std::u16string)
      */
     class String final
-        : public Object
-        , public virtual CharSequence
-        , public virtual Comparable<String>
-        , public virtual jxx::io::Serializable {
+        : public jxx::lang::ClassBase<String, Object, CharSequence, Comparable<String>, jxx::io::Serializable> {
+public:
+    using JavaSuper = Object;
+    using Super = jxx::lang::ClassBase<String, Object, CharSequence, Comparable<String>, jxx::io::Serializable>;
+
     public:
         static jxx::Ptr<ClassAny> Class();
 

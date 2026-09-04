@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include <vector>
 #if defined(_WIN32)
@@ -11,12 +12,15 @@
 
 namespace jxx::net
 {
-    class Inet4Address final : public InetAddress
-    {
+    class Inet4Address final : public jxx::lang::ClassBase<Inet4Address, InetAddress> {
+public:
+    using JavaSuper = InetAddress;
+    using Super = jxx::lang::ClassBase<Inet4Address, InetAddress>;
+
     public:
-        Inet4Address(const jxx::Ptr<jxx::lang::String> hostName,
-                     const jxx::Ptr<jxx::lang::String> hostAddress,
-                     const jxx::lang::ByteArray bytes);
+        Inet4Address(const jxx::Ptr<jxx::lang::String>& hostName,
+                     const jxx::Ptr<jxx::lang::String>& hostAddress,
+                     const jxx::lang::ByteArray& bytes);
         ~Inet4Address() override = default;
 
     public:

@@ -1,180 +1,176 @@
 #pragma once
 
 #include <exception>
-#include <memory>
-#include <string>
-#include <vector>
 #include <ostream>
+#include <string>
 #include <utility>
+#include <vector>
+
+#include "lang/jxx.lang.ClassInfoMarker.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.StackTrace.h"
 
-namespace jxx::lang {
+namespace jxx::lang
+{
 
+    class ClassAny;
     class String;
+
     class NullPointerException;
     class IllegalArgumentException;
 
-    /**
-     * Helper throwers for addSuppressed() exact Java semantics.
-     *
-     * Implement these in a .cpp that includes:
-     *   #include "jxx/lang/NullPointerException.h"
-     *   #include "jxx/lang/IllegalArgumentException.h"
-     *
-     * This avoids header include cycles while still throwing the correct types.
-     */
-    //void throwNullSuppressed();
-    //void throwSelfSuppressed();
+    template <
+        typename Derived,
+        typename JxxSuper,
+        typename... JxxInterfaces>
+    class ClassInfo;
 
     /**
-     * Java-parity Throwable for C++17:
-     *   - extends Object (Java parity)
-     *   - supports cause chain and suppressed exceptions
-     *   - captures stack trace at construction (best-effort, symbol-only)
-     *   - provides toString() and what()
+     * Root JXX throwable type.
      *
-     * NOTE about cloning:
-     *   Object::clone() returns shared_ptr<Object>. shared_ptr is NOT covariant.
-     *   Therefore Throwable::clone() also returns shared_ptr<Object>.
-     *   Use cloneThrowable() when you specifically need shared_ptr<Throwable>.
+     * This is a bootstrap class and therefore inherits Object directly.
+     * It does not include ClassInfo.h and does not inherit ClassBase.
+     *
+     * Metadata registration is implemented out of line after the type is
+     * complete.
      */
-    class Throwable : public Object, public std::exception {
+    class Throwable
+        : public Object
+        , public std::exception
+    {
     public:
-        //using Ptr = std::shared_ptr<Throwable>;
+        using JxxSuper = Object;
+
+        using JxxClassInfoMarker =
+            ClassInfo<
+            Throwable,
+            JxxSuper>;
+
+        static jxx::Ptr<ClassAny> Class();
 
         /**
-         * Java parity knobs (Throwable has a protected constructor in Java that can disable these):
-         *   - enableSuppression: if false, addSuppressed is a no-op
-         *  - writableStackTrace: if false, stack trace is empty and fillInStackTrace is a no-op
-         */        
+         * Creates an empty throwable with stack capture enabled.
+         */
+        Throwable();
 
-        explicit Throwable(const jxx::Ptr<String> message = jxx::NEW<String>(""),
-            jxx::Ptr<Throwable> cause = nullptr,
-            bool enableSuppression = true,
-            bool writableStackTrace = true);
+        /**
+         * Creates a throwable with a message and optional cause.
+         */
+        explicit Throwable(
+            const jxx::Ptr<String>& message,
+            const jxx::Ptr<Throwable>& cause = nullptr,
+            jbool enableSuppression = true,
+            jbool writableStackTrace = true);
 
-        explicit Throwable(const char* message,
-            jxx::Ptr<Throwable> cause = nullptr,
-            bool enableSuppression = true,
-            bool writableStackTrace = true);
+        /**
+         * Native string convenience overload.
+         */
+        explicit Throwable(
+            const char* message,
+            const jxx::Ptr<Throwable>& cause = nullptr,
+            jbool enableSuppression = true,
+            jbool writableStackTrace = true);
 
-        explicit Throwable(std::string message,
-            jxx::Ptr<Throwable> cause = nullptr,
-            bool enableSuppression = true,
-            bool writableStackTrace = true);
+        /**
+         * Native string convenience overload.
+         */
+        explicit Throwable(
+            const std::string& message,
+            const jxx::Ptr<Throwable>& cause = nullptr,
+            jbool enableSuppression = true,
+            jbool writableStackTrace = true);
 
-        Throwable(const jxx::Ptr<Throwable> other);
-        // Copy constructor
-        Throwable(const Throwable& other);
-        
-        // Move constructor
-        Throwable(Throwable&& other) noexcept;
-        
-        // Copy assignment
-        Throwable& operator=(const Throwable& other);
-        
-        // Move assignment
-        Throwable& operator=(Throwable&& other) noexcept;
+        /**
+         * Creates a shallow throwable copy from a JXX reference.
+         */
+        explicit Throwable(
+            const jxx::Ptr<Throwable>& other);
 
-        virtual ~Throwable() = default;
+        /**
+         * C++ implementation copy support.
+         *
+         * Object identity and synchronization state are not copied.
+         */
+        Throwable(
+            const Throwable& other);
 
-        // ---- Java-like message/cause API ----
+        /**
+         * C++ implementation move support.
+         *
+         * Object identity and synchronization state are not moved.
+         */
+        Throwable(
+            Throwable&& other) noexcept;
+
+        Throwable& operator=(
+            const Throwable& other);
+
+        Throwable& operator=(
+            Throwable&& other) noexcept;
+
+        ~Throwable() override = default;
+
         const jxx::Ptr<String>& getMessage() const;
+
         jxx::Ptr<Throwable> getCause() const;
 
-        /**
-         * Java's initCause has constraints (can only be set once, cannot set self, etc.).
-         * This is a permissive version; tighten if you want exact rules.
-         */
-        void initCause(const jxx::Ptr<Throwable> cause);
+        void initCause(
+            const jxx::Ptr<Throwable>& cause);
 
-        // ---- Suppressed exceptions (Java 7+, present in Java 8) ----
-        /**
-         * Java rules:
-         *   - addSuppressed(null) => NullPointerException
-         *   - addSuppressed(this) => IllegalArgumentException
-         *   - if suppression disabled => no-op
-         */
-        void addSuppressed(const jxx::Ptr<Throwable> ex);
+        void addSuppressed(
+            const jxx::Ptr<Throwable>& exception);
 
         /**
-         * Java returns a copy of the internal array.
-         * Returning by value matches that semantic well.
+         * Transitional native representation.
+         *
+         * A later strict public-API migration can return a JxxArray reference
+         * without changing the internal storage.
          */
-        std::vector<jxx::Ptr<Throwable>> getSuppressed() const;
+        std::vector<jxx::Ptr<Throwable>>
+            getSuppressed() const;
 
-        // ---- Stack trace (symbol-only, Windows+Linux) ----
-        /**
-         * Java: fillInStackTrace() captures and returns this.
-         */
         Throwable& fillInStackTrace();
 
-        const std::vector<StackTraceElement>& getStackTrace() const;
-
         /**
-         * Java-like printing:
-         *   ExceptionType: message
-         *     at dotted.symbol(...) [0xADDR]
-         * Suppressed + Cause chain are printed recursively.
-         *
-         * Note: StackTraceElement::symbol is already formatted by your StackTrace module
-         * (dotted, template compression, operator() prettify, etc.).
+         * Transitional native representation.
          */
-        void printStackTrace(std::ostream& os) const;
+        const std::vector<StackTraceElement>&
+            getStackTrace() const;
 
-        // ---- Stringification ----
-        /**
-         * Java-like toString():
-         *   ClassName
-         *   ClassName: message   (when message is non-empty)
-         *
-         * Returns a stable const char* valid until the next toString() call
-         * (or object destruction).
-         */
-        virtual jxx::Ptr<jxx::lang::String> toString() const;
+        void printStackTrace(
+            std::ostream& output) const;
 
-        /**
-         * std::exception bridge. Same caching rationale as toString().
-         */
-        const char* what() const noexcept override;
+        jxx::Ptr<String> toString()
+            const override;
 
-        
-        /**
-         * Typed helper for exception cause wrapping:
-         * returns shared_ptr<Throwable> while preserving dynamic type.
-         */
-        jxx::Ptr<Throwable> cloneThrowable() const;
+        const char* what()
+            const noexcept override;
+
+        jxx::Ptr<Throwable>
+            cloneThrowable() const;
 
     protected:
+        jxx::Ptr<Object>
+            cloneImpl() const override;
 
-        // ---- Cloning ----
-        /**
-         * IMPORTANT: shared_ptr is not covariant, so this must match Object::clone().
-         * All Throwable-derived exceptions should implement this using the macro below.
-         */
-        jxx::Ptr<jxx::lang::Object> cloneImpl() const override;
-
-        /**
-         * Override in derived exceptions for exact Java naming.
-         * If you want max Java parity, return fully-qualified names like:
-         *   "java.io.IOException"
-         * Otherwise short names like "IOException" are fine.
-         */
-        virtual const char* typeName() const noexcept;
+        virtual const char*
+            typeName() const noexcept;
 
     private:
         jxx::Ptr<String> message_;
         jxx::Ptr<Throwable> cause_;
 
-        bool enableSuppression_;
-        bool writableStackTrace_;
+        jbool enableSuppression_ = true;
+        jbool writableStackTrace_ = true;
 
-        std::vector<jxx::Ptr<Throwable>> suppressed_;
-        std::vector<StackTraceElement> stack_;
+        std::vector<jxx::Ptr<Throwable>>
+            suppressed_;
 
-        // Separate caches so what() and toString() don't trample each other
+        std::vector<StackTraceElement>
+            stack_;
+
         mutable std::string cachedWhat_;
         mutable std::string cachedToString_;
     };
-}
+
+} // namespace jxx::lang

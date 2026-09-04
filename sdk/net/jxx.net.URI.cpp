@@ -16,28 +16,28 @@ namespace
 
 namespace jxx::net
 {
-    URI::URI(const jxx::Ptr<jxx::lang::String> str)
+    URI::URI(const jxx::Ptr<jxx::lang::String>& str)
     {
-        parse_(std::move(str));
+        parse_(str);
     }
 
-    URI::URI(const jxx::Ptr<jxx::lang::String> scheme,
-             jxx::Ptr<jxx::lang::String> ssp,
-             jxx::Ptr<jxx::lang::String> fragment)
-        : scheme_(std::move(scheme)),
-          schemeSpecificPart_(std::move(ssp)),
-          fragment_(std::move(fragment)),
+    URI::URI(const jxx::Ptr<jxx::lang::String>& scheme,
+             const jxx::Ptr<jxx::lang::String>& ssp,
+             const jxx::Ptr<jxx::lang::String>& fragment)
+        : scheme_(scheme),
+          schemeSpecificPart_(ssp),
+          fragment_(fragment),
           opaque_(true)
     {
     }
 
-    URI::URI(const jxx::Ptr<jxx::lang::String> scheme,
-             jxx::Ptr<jxx::lang::String> authority,
-             jxx::Ptr<jxx::lang::String> path,
-             jxx::Ptr<jxx::lang::String> query,
-             jxx::Ptr<jxx::lang::String> fragment)
-        : scheme_(std::move(scheme)),
-          authority_(std::move(authority)),
+    URI::URI(const jxx::Ptr<jxx::lang::String>& scheme,
+             const jxx::Ptr<jxx::lang::String>& authority,
+             const jxx::Ptr<jxx::lang::String>& path,
+             const jxx::Ptr<jxx::lang::String>& query,
+             const jxx::Ptr<jxx::lang::String>& fragment)
+        : scheme_(scheme),
+          authority_(authority  ),
           path_(std::move(path)),
           query_(std::move(query)),
           fragment_(std::move(fragment))
@@ -45,28 +45,28 @@ namespace jxx::net
         schemeSpecificPart_ = jxx::NEW<jxx::lang::String>((authority_ ? std::string("//") + authority_->utf8() : std::string()) + (path_ ? path_->utf8() : std::string()) + (query_ ? std::string("?") + query_->utf8() : std::string()));
     }
 
-    URI::URI(const jxx::Ptr<jxx::lang::String> scheme,
-             jxx::Ptr<jxx::lang::String> host,
-             jxx::Ptr<jxx::lang::String> path,
-             jxx::Ptr<jxx::lang::String> fragment)
-        : URI(std::move(scheme), nullptr, std::move(host), -1, std::move(path), nullptr, std::move(fragment))
+    URI::URI(const jxx::Ptr<jxx::lang::String>& scheme,
+             const jxx::Ptr<jxx::lang::String>& host,
+             const jxx::Ptr<jxx::lang::String>& path,
+             const jxx::Ptr<jxx::lang::String>& fragment)
+        : URI(scheme, nullptr, host, -1, path, nullptr, fragment)
     {
     }
 
-    URI::URI(const jxx::Ptr<jxx::lang::String> scheme,
-             jxx::Ptr<jxx::lang::String> userInfo,
-             jxx::Ptr<jxx::lang::String> host,
+    URI::URI(const jxx::Ptr<jxx::lang::String>& scheme,
+             const jxx::Ptr<jxx::lang::String>& userInfo,
+             const jxx::Ptr<jxx::lang::String>& host,
              jxx::lang::jint port,
-             jxx::Ptr<jxx::lang::String> path,
-             jxx::Ptr<jxx::lang::String> query,
-             jxx::Ptr<jxx::lang::String> fragment)
-        : scheme_(std::move(scheme)),
-          userInfo_(std::move(userInfo)),
-          host_(std::move(host)),
+             const jxx::Ptr<jxx::lang::String>& path,
+             const jxx::Ptr<jxx::lang::String>& query,
+             const jxx::Ptr<jxx::lang::String>& fragment)
+        : scheme_(scheme),
+          userInfo_(userInfo),
+          host_(host),
           port_(port),
-          path_(std::move(path)),
-          query_(std::move(query)),
-          fragment_(std::move(fragment))
+          path_(path),
+          query_(query),
+          fragment_(fragment)
     {
         std::string authority;
         if (userInfo_)
@@ -79,7 +79,7 @@ namespace jxx::net
         schemeSpecificPart_ = jxx::NEW<jxx::lang::String>((authority_ ? std::string("//") + authority_->utf8() : std::string()) + (path_ ? path_->utf8() : std::string()) + (query_ ? std::string("?") + query_->utf8() : std::string()));
     }
 
-    void URI::parse_(const jxx::Ptr<jxx::lang::String> spec)
+    void URI::parse_(const jxx::Ptr<jxx::lang::String>& spec)
     {
         if (!spec)
             throw URISyntaxException(nullptr, jxx::NEW<jxx::lang::String>("null URI"));
@@ -96,9 +96,9 @@ namespace jxx::net
         opaque_ = p.opaque;
     }
 
-    jxx::Ptr<URI> URI::create(const jxx::Ptr<jxx::lang::String> str)
+    jxx::Ptr<URI> URI::create(const jxx::Ptr<jxx::lang::String>& str)
     {
-        return jxx::NEW<URI>(std::move(str));
+        return jxx::NEW<URI>(str);
     }
 
     jxx::lang::jbool URI::isAbsolute() const { return scheme_ != nullptr; }
@@ -131,7 +131,7 @@ namespace jxx::net
         return u;
     }
 
-    jxx::Ptr<URI> URI::resolve(const jxx::Ptr<URI> uri) const
+    jxx::Ptr<URI> URI::resolve(const jxx::Ptr<URI>& uri) const
     {
         if (!uri)
             return jxx::NEW<URI>(toString());
@@ -149,12 +149,12 @@ namespace jxx::net
         return jxx::NEW<URI>(rebuilt);
     }
 
-    jxx::Ptr<URI> URI::resolve(const jxx::Ptr<jxx::lang::String> str) const
+    jxx::Ptr<URI> URI::resolve(const jxx::Ptr<jxx::lang::String>& str) const
     {
-        return resolve(jxx::NEW<URI>(std::move(str)));
+        return resolve(jxx::NEW<URI>(str));
     }
 
-    jxx::Ptr<URI> URI::relativize(const jxx::Ptr<URI> uri) const
+    jxx::Ptr<URI> URI::relativize(const jxx::Ptr<URI>& uri) const
     {
         if (!uri)
             return nullptr;
@@ -204,7 +204,7 @@ namespace jxx::net
 
     jxx::lang::jint URI::hashCode() const { return toString()->hashCode(); }
 
-    jxx::lang::jint URI::compareTo(const jxx::Ptr<URI> other) const
+    jxx::lang::jint URI::compareTo(const jxx::Ptr<URI>& other) const
     {
         if (!other)
             return 1;

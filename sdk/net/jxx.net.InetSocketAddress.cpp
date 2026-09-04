@@ -11,13 +11,13 @@ namespace jxx::net
     {
     }
 
-    InetSocketAddress::InetSocketAddress(const jxx::Ptr<InetAddress> addr,
+    InetSocketAddress::InetSocketAddress(const jxx::Ptr<InetAddress>& addr,
                                          jxx::lang::jint port)
         : InetSocketAddress(std::move(addr), nullptr, port, false)
     {
     }
 
-    InetSocketAddress::InetSocketAddress(const jxx::Ptr<jxx::lang::String> hostname,
+    InetSocketAddress::InetSocketAddress(const jxx::Ptr<jxx::lang::String>& hostname,
                                          jxx::lang::jint port)
         : InetSocketAddress(nullptr, std::move(hostname), port, false)
     {
@@ -34,8 +34,8 @@ namespace jxx::net
         }
     }
 
-    InetSocketAddress::InetSocketAddress(const jxx::Ptr<InetAddress> addr,
-                                         jxx::Ptr<jxx::lang::String> host,
+    InetSocketAddress::InetSocketAddress(const jxx::Ptr<InetAddress>& addr,
+                                         const jxx::Ptr<jxx::lang::String>& host,
                                          jxx::lang::jint port,
                                          jxx::lang::jbool unresolved)
         : addr_(std::move(addr)),
@@ -47,7 +47,7 @@ namespace jxx::net
             throw std::invalid_argument("port out of range");
     }
 
-    jxx::Ptr<InetSocketAddress> InetSocketAddress::createUnresolved(const jxx::Ptr<jxx::lang::String> host,
+    jxx::Ptr<InetSocketAddress> InetSocketAddress::createUnresolved(const jxx::Ptr<jxx::lang::String>& host,
                                                                     jxx::lang::jint port)
     {
         return std::shared_ptr<InetSocketAddress>(new InetSocketAddress(nullptr, std::move(host), port, true));

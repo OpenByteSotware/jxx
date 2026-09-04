@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include <vector>
 #include "lang/jxx.lang.buildin_array.h"
@@ -16,15 +17,18 @@ namespace jxx::net
     class InetAddress;
     class InterfaceAddress;
 
-    class NetworkInterface final : public jxx::lang::Object
-    {
+    class NetworkInterface final : public jxx::lang::ClassBase<NetworkInterface, jxx::lang::Object> {
+public:
+    using JavaSuper = jxx::lang::Object;
+    using Super = jxx::lang::ClassBase<NetworkInterface, jxx::lang::Object>;
+
     public:
         virtual ~NetworkInterface() override = default;
 
     public:
-        static jxx::Ptr<NetworkInterface> getByName(const jxx::Ptr<jxx::lang::String> name);
+        static jxx::Ptr<NetworkInterface> getByName(const jxx::Ptr<jxx::lang::String>& name);
         static jxx::Ptr<NetworkInterface> getByIndex(jxx::lang::jint index);
-        static jxx::Ptr<NetworkInterface> getByInetAddress(const jxx::Ptr<InetAddress> addr);
+        static jxx::Ptr<NetworkInterface> getByInetAddress(const jxx::Ptr<InetAddress>& addr);
         static jxx::Ptr<jxx::util::Enumeration<NetworkInterface>> getNetworkInterfaces();
 
         jxx::Ptr<jxx::util::Enumeration<InetAddress>> getInetAddresses() const;

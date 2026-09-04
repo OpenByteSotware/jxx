@@ -1,11 +1,16 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "lang/jxx.lang.Number.h"
 #include "lang/jxx.lang.String.h"
 
 namespace jxx::lang
 {
-    class Double final : public Number {
+    class Double final : public jxx::lang::ClassBase<Double, Number> {
+public:
+    using JavaSuper = Number;
+    using Super = jxx::lang::ClassBase<Double, Number>;
+
     public:
         explicit Double(jdouble value);
 

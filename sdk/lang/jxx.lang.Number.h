@@ -1,8 +1,13 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
 
 namespace jxx::lang {
-class Number : public Object {
+class Number : public jxx::lang::ClassBase<Number, Object, jxx::io::Serializable> {
+public:
+    using JavaSuper = Object;
+    using Super = jxx::lang::ClassBase<Number, Object, jxx::io::Serializable>;
+
 public:
     virtual ~Number() override = default;
 

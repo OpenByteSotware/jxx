@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include <string>
 
@@ -19,10 +20,11 @@ namespace jxx::lang {
 class StringBuffer;
 
 class StringBuilder final
-    : public Object
-    , public virtual jxx::io::SerializableI
-    , public virtual Appendable
-    , public virtual CharSequence {
+    : public jxx::lang::ClassBase<StringBuilder, Object, jxx::io::SerializableI, Appendable, CharSequence> {
+public:
+    using JavaSuper = Object;
+    using Super = jxx::lang::ClassBase<StringBuilder, Object, jxx::io::SerializableI, Appendable, CharSequence>;
+
 public:
     StringBuilder();
     explicit StringBuilder(jint capacity);

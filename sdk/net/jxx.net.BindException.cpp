@@ -3,17 +3,20 @@
 namespace jxx::net
 {
     BindException::BindException()
-        : SocketException("BindException")
+        
+    : Super("BindException")
     {
     }
 
     BindException::BindException(const char* message)
-        : SocketException(message ? message : "BindException")
+        
+    : Super(message ? message : "BindException")
     {
     }
 
     BindException::BindException(const std::string& message)
-        : SocketException(message)
+        
+    : Super(message)
     {
     }
 }

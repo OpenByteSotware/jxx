@@ -76,9 +76,9 @@ namespace
 
 namespace jxx::net
 {
-    InetAddress::InetAddress(const jxx::Ptr<jxx::lang::String> hostName,
-        const jxx::Ptr<jxx::lang::String> hostAddress,
-        const jxx::lang::ByteArray bytes,
+    InetAddress::InetAddress(const jxx::Ptr<jxx::lang::String>& hostName,
+        const jxx::Ptr<jxx::lang::String>& hostAddress,
+        const jxx::lang::ByteArray& bytes,
         jxx::lang::jint family)
         : hostName_(std::move(hostName)),
         hostAddress_(std::move(hostAddress)),
@@ -86,13 +86,13 @@ namespace jxx::net
         family_(family)
     {}
 
-    jxx::Ptr<InetAddress> InetAddress::getByAddress(const jxx::lang::ByteArray addr)
+    jxx::Ptr<InetAddress> InetAddress::getByAddress(const jxx::lang::ByteArray& addr)
     {
         return getByAddress(nullptr, addr);
     }
 
-    jxx::Ptr<InetAddress> InetAddress::getByAddress(const jxx::Ptr<jxx::lang::String> host,
-        const jxx::lang::ByteArray addr)
+    jxx::Ptr<InetAddress> InetAddress::getByAddress(const jxx::Ptr<jxx::lang::String>& host,
+        const jxx::lang::ByteArray& addr)
     {
         auto bytes = fromByteArray_(addr);
         if (bytes.size() == 4)
@@ -102,7 +102,7 @@ namespace jxx::net
         throw UnknownHostException("invalid address length");
     }
 
-    jxx::Ptr<InetAddress> InetAddress::getByName(const jxx::Ptr<jxx::lang::String> host)
+    jxx::Ptr<InetAddress> InetAddress::getByName(const jxx::Ptr<jxx::lang::String>& host)
     {
         auto all = getAllByName(host);
         if (!all || all->size() == 0)
@@ -110,7 +110,7 @@ namespace jxx::net
         return (*all)(0);
     }
 
-    jxx::Ptr<jxx::JxxArray<jxx::Ptr<InetAddress>, 1U>> InetAddress::getAllByName(const jxx::Ptr<jxx::lang::String> host)
+    jxx::Ptr<jxx::JxxArray<jxx::Ptr<InetAddress>, 1U>> InetAddress::getAllByName(const jxx::Ptr<jxx::lang::String>& host)
     {
         internal::ensureNetworkInitialized();
 
@@ -196,7 +196,7 @@ namespace jxx::net
     jxx::lang::jbool InetAddress::isMCOrgLocal() const { return false; }
 
     jxx::lang::jbool InetAddress::isReachable(jxx::lang::jint /*timeout*/) const { return true; }
-    jxx::lang::jbool InetAddress::isReachable(const jxx::Ptr<NetworkInterface> /*netif*/, jxx::lang::jint /*ttl*/, jxx::lang::jint /*timeout*/) const { return true; }
+    jxx::lang::jbool InetAddress::isReachable(const jxx::Ptr<NetworkInterface>& /*netif*/, jxx::lang::jint /*ttl*/, jxx::lang::jint /*timeout*/) const { return true; }
 
     jxx::Ptr<jxx::lang::String> InetAddress::toString() const
     {

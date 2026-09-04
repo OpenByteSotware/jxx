@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "net/jxx.net.URLConnection.h"
 
@@ -6,10 +7,13 @@ namespace jxx::net
 {
     class URL;
 
-    class JarURLConnection : public URLConnection
-    {
+    class JarURLConnection : public jxx::lang::ClassBase<JarURLConnection, URLConnection> {
+public:
+    using JavaSuper = URLConnection;
+    using Super = jxx::lang::ClassBase<JarURLConnection, URLConnection>;
+
     protected:
-        explicit JarURLConnection(const jxx::Ptr<URL> url);
+        explicit JarURLConnection(const jxx::Ptr<URL>& url);
 
     public:
         ~JarURLConnection() override = default;

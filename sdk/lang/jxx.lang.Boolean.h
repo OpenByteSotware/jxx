@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 #include "jxx_types.h"
 #include "jxx.lang.Object.h"
 
@@ -6,7 +7,11 @@
 namespace jxx::lang {
 	class String;
 
-class Boolean : public Object {
+class Boolean : public jxx::lang::ClassBase<Boolean, Object> {
+public:
+    using JavaSuper = Object;
+    using Super = jxx::lang::ClassBase<Boolean, Object>;
+
 private:
     bool value;
 

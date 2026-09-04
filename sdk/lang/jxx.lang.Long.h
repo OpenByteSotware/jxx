@@ -1,11 +1,16 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "lang/jxx.lang.Number.h"
 #include "lang/jxx.lang.String.h"
 
 namespace jxx::lang
 {
-    class Long final : public Number {
+    class Long final : public jxx::lang::ClassBase<Long, Number> {
+public:
+    using JavaSuper = Number;
+    using Super = jxx::lang::ClassBase<Long, Number>;
+
     public:
         static constexpr jlong MIN_VALUE = static_cast<jlong>(0x8000000000000000LL);
         static constexpr jlong MAX_VALUE = static_cast<jlong>(0x7fffffffffffffffLL);

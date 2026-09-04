@@ -10,8 +10,9 @@ namespace
 
 namespace jxx::net
 {
-    HttpURLConnection::HttpURLConnection(const jxx::Ptr<URL> url)
-        : URLConnection(std::move(url)),
+    HttpURLConnection::HttpURLConnection(const jxx::Ptr<URL>& url)
+        
+    : Super(std::move(url)),
           method_(jxx::NEW<jxx::lang::String>("GET")),
           responseMessage_(jxx::NEW<jxx::lang::String>("Not Connected"))
     {
@@ -23,7 +24,7 @@ namespace jxx::net
     void HttpURLConnection::setInstanceFollowRedirects(jxx::lang::jbool x) { instanceFollowRedirects_ = x; }
     jxx::lang::jbool HttpURLConnection::getInstanceFollowRedirects() const noexcept { return instanceFollowRedirects_; }
 
-    void HttpURLConnection::setRequestMethod(const jxx::Ptr<jxx::lang::String> method)
+    void HttpURLConnection::setRequestMethod(const jxx::Ptr<jxx::lang::String>& method)
     {
         if (!method)
             throw std::invalid_argument("null method");

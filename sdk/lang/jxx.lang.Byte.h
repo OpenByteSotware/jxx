@@ -1,10 +1,15 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 #include "jxx.lang.buildin_array.h"
 #include "lang/jxx.lang.Number.h"
 #include "lang/jxx.lang.String.h"
 
 namespace jxx::lang {
-    class Byte final : public Number {
+    class Byte final : public jxx::lang::ClassBase<Byte, Number> {
+public:
+    using JavaSuper = Number;
+    using Super = jxx::lang::ClassBase<Byte, Number>;
+
     public:
         static constexpr jbyte MIN_VALUE = static_cast<jbyte>(-128);
         static constexpr jbyte MAX_VALUE = static_cast<jbyte>(127);

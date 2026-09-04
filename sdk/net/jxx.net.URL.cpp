@@ -107,7 +107,7 @@ namespace
         }
 
     protected:
-        jxx::Ptr<jxx::net::URLConnection> openConnection(const jxx::Ptr<jxx::net::URL> u) override
+        jxx::Ptr<jxx::net::URLConnection> openConnection(const jxx::Ptr<jxx::net::URL>& u) override
         {
             const auto proto = protocol_;
             if (proto == "file")
@@ -149,28 +149,30 @@ namespace
 
 namespace jxx::net
 {
-    URL::URL(const jxx::Ptr<jxx::lang::String> spec)
+    URL::URL(const jxx::Ptr<jxx::lang::String>& spec)
     {
-        parse_(nullptr, std::move(spec), nullptr);
+        jxx::Ptr<URLStreamHandler> handler = nullptr;
+        parse_(nullptr, spec, handler);
     }
 
-    URL::URL(const jxx::Ptr<URL> context,
-             jxx::Ptr<jxx::lang::String> spec)
+    URL::URL(const jxx::Ptr<URL>& context,
+             const jxx::Ptr<jxx::lang::String>& spec)
     {
-        parse_(std::move(context), std::move(spec), nullptr);
+		jxx::Ptr<URLStreamHandler> handler = nullptr;
+        parse_(context, spec, handler);
     }
 
-    URL::URL(const jxx::Ptr<URL> context,
-             jxx::Ptr<jxx::lang::String> spec,
-             jxx::Ptr<URLStreamHandler> handler)
+    URL::URL(const jxx::Ptr<URL>& context,
+             const jxx::Ptr<jxx::lang::String>& spec,
+             const jxx::Ptr<URLStreamHandler>& handler)
     {
-        parse_(std::move(context), std::move(spec), std::move(handler));
+        parse_(context, spec, handler);
     }
 
-    URL::URL(const jxx::Ptr<jxx::lang::String> protocol,
-             jxx::Ptr<jxx::lang::String> host,
+    URL::URL(const jxx::Ptr<jxx::lang::String>& protocol,
+             const jxx::Ptr<jxx::lang::String>& host,
              jxx::lang::jint port,
-             jxx::Ptr<jxx::lang::String> file)
+             const jxx::Ptr<jxx::lang::String>& file)
     {
         std::string spec = (protocol ? protocol->utf8() : std::string()) + "://" + (host ? host->utf8() : std::string());
         if (port >= 0)
@@ -179,19 +181,19 @@ namespace jxx::net
         parse_(nullptr, jxx::NEW<jxx::lang::String>(spec), nullptr);
     }
 
-    URL::URL(const jxx::Ptr<jxx::lang::String> protocol,
-             jxx::Ptr<jxx::lang::String> host,
-             jxx::Ptr<jxx::lang::String> file)
-        : URL(std::move(protocol), std::move(host), -1, std::move(file))
+    URL::URL(const jxx::Ptr<jxx::lang::String>& protocol,
+             const jxx::Ptr<jxx::lang::String>& host,
+             const jxx::Ptr<jxx::lang::String>& file)
+        : URL(protocol, host, -1, file)
     {
     }
 
-    void URL::setURLStreamHandlerFactory(const jxx::Ptr<URLStreamHandlerFactory> fac)
+    void URL::setURLStreamHandlerFactory(const jxx::Ptr<URLStreamHandlerFactory>& fac)
     {
         g_factory = std::move(fac);
     }
 
-    jxx::Ptr<URLStreamHandler> URL::handlerFor_(const jxx::Ptr<jxx::lang::String> protocol) const
+    jxx::Ptr<URLStreamHandler> URL::handlerFor_(const jxx::Ptr<jxx::lang::String>& protocol) const
     {
         if (g_factory && protocol)
         {
@@ -202,9 +204,9 @@ namespace jxx::net
         return jxx::NEW<DefaultURLStreamHandler>(protocol ? protocol->utf8() : std::string());
     }
 
-    void URL::parse_(const jxx::Ptr<URL> context,
-                     jxx::Ptr<jxx::lang::String> spec,
-                     jxx::Ptr<URLStreamHandler> handler)
+    void URL::parse_(const jxx::Ptr<URL>& context,
+                     const jxx::Ptr<jxx::lang::String>& spec,
+                     const jxx::Ptr<URLStreamHandler>& handler)
     {
         if (!spec)
             throw MalformedURLException("null URL");
@@ -253,11 +255,11 @@ namespace jxx::net
         return handler_->openConnection(jxx::CAST<URL, jxx::lang::Object>(this->thisPtr));
     }
 
-    jxx::Ptr<URLConnection> URL::openConnection(const jxx::Ptr<Proxy> p)
+    jxx::Ptr<URLConnection> URL::openConnection(const jxx::Ptr<Proxy>& p)
     {
         if (!handler_)
             throw MalformedURLException("no stream handler");
-        return handler_->openConnection(jxx::CAST<URL, jxx::lang::Object>(this->thisPtr), std::move(p));
+        return handler_->openConnection(jxx::CAST<URL, jxx::lang::Object>(this->thisPtr), p);
     }
 
     jxx::Ptr<jxx::io::InputStream> URL::openStream()
@@ -272,7 +274,7 @@ namespace jxx::net
         return c ? c->getContent() : nullptr;
     }
 
-    jxx::lang::jbool URL::sameFile(const jxx::Ptr<URL> other) const
+    jxx::lang::jbool URL::sameFile(const jxx::Ptr<URL>& other) const
     {
         if (!other)
             return false;
