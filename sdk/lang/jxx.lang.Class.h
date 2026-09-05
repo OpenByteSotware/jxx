@@ -1,18 +1,15 @@
 #pragma once
-
-#include "lang/jxx_types.h"
-#include "lang/jxx.lang.Object.h"
-#include "io/jxx.io.Serializable.h"
-#include "lang/jxx.lang.ClassInfoMarker.h"
-
-// Exceptions required (as you stated)
-
 #include <string>
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
 #include <mutex>
 #include <functional>
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.Object.h"
+#include "io/jxx.io.Serializable.h"
+#include "lang/jxx.lang.ClassInfoMarker.h"
 
 namespace jxx::lang {
 
@@ -117,7 +114,7 @@ namespace jxx::lang {
         jbool isSynthetic() const;
 
         jxx::Ptr<ClassAny> getSuperclass() const;
-        jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> getInterfaces() const;
+        jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<ClassAny>, 1U>> getInterfaces() const;
         jxx::Ptr<ClassAny> getComponentType() const;
 
         jbool isAssignableFrom(const jxx::Ptr<ClassAny> cls) const;

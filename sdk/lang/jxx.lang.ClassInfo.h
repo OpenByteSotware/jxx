@@ -18,8 +18,8 @@ namespace jxx::lang {
 
 template <
     typename Derived,
-    typename JavaSuper,
-    typename... JavaInterfaces>
+    typename JxxSuper,
+    typename... JxxInterfaces>
 class ClassInfo;
 
 namespace class_info_detail {
@@ -169,7 +169,7 @@ inline jxx::Ptr<ClassAny> ensureObjectRegistered() {
             return ClassAny::forType(std::type_index(typeid(Object)));
         } catch (const IllegalStateException&) {
             ClassAny::Meta metadata;
-            metadata.binaryName = "java.lang.Object";
+            metadata.binaryName = "jxx.lang.Object";
             metadata.typeId = std::type_index(typeid(Object));
             metadata.superClass = nullptr;
             metadata.interfaces.clear();
@@ -205,7 +205,7 @@ jxx::Ptr<ClassAny> superclassDescriptor() {
     } else {
         static_assert(
             HasClassInfo<SuperType>::value,
-            "Every non-Object Java superclass must inherit ClassBase "
+            "Every non-Object JXX superclass must inherit ClassBase "
             "or expose JxxClassInfoMarker.");
 
         using ExactSuperClassInfo =
@@ -294,9 +294,9 @@ jxx::Ptr<ClassAny> interfaceDescriptor() {
 } // namespace class_info_detail
 
 /**
- * Metadata-only mixin for JXX Java classes and interfaces.
+ * Metadata-only mixin for JXX classes and interfaces.
  *
- * Java class:
+ * JXX class:
  *
  *   class Device
  *       : public Object
@@ -305,7 +305,7 @@ jxx::Ptr<ClassAny> interfaceDescriptor() {
  *       , public virtual Stoppable {
  *   };
  *
- * Java interface extending multiple interfaces:
+ * JXX interface extending multiple interfaces:
  *
  *   class ManagedDevice
  *       : public ClassInfo<ManagedDevice, Object, Startable, Stoppable>
@@ -313,22 +313,22 @@ jxx::Ptr<ClassAny> interfaceDescriptor() {
  *       , public virtual Stoppable {
  *   };
  *
- * JavaSuper is ignored when Derived does not inherit Object. It remains in the
+ * JxxSuper is ignored when Derived does not inherit Object. It remains in the
  * template position so one ClassInfo template supports classes and interfaces.
  */
 template <
     typename Derived,
-    typename JavaSuper = Object,
-    typename... JavaInterfaces>
+    typename JxxSuper = Object,
+    typename... JxxInterfaces>
 class ClassInfo {
 public:
     using JxxClassInfoMarker =
         ClassInfo<
             Derived,
-            JavaSuper,
-            JavaInterfaces...>;
+            JxxSuper,
+            JxxInterfaces...>;
     using DerivedType = Derived;
-    using SuperType = JavaSuper;
+    using SuperType = JxxSuper;
 
     static jxx::Ptr<ClassAny> Class() {
         return ensureRegistered();
@@ -353,28 +353,28 @@ public:
     }
 
     static jxx::Ptr<ClassAny> ensureRegistered() {
-        constexpr bool isJavaClass =
+        constexpr bool isJxxClass =
             std::is_base_of_v<Object, Derived>;
 
         static_assert(
-            isJavaClass || std::is_polymorphic_v<Derived>,
+            isJxxClass || std::is_polymorphic_v<Derived>,
             "A JXX interface must be polymorphic."
         );
 
-        if constexpr (isJavaClass) {
+        if constexpr (isJxxClass) {
             static_assert(
-                std::is_base_of_v<Object, JavaSuper>,
-                "The declared Java superclass must derive from Object."
+                std::is_base_of_v<Object, JxxSuper>,
+                "The declared JXX superclass must derive from Object."
             );
 
             static_assert(
-                std::is_base_of_v<JavaSuper, Derived>,
-                "Derived must inherit its declared Java superclass."
+                std::is_base_of_v<JxxSuper, Derived>,
+                "Derived must inherit its declared JXX superclass."
             );
         }
 
         static_assert(
-            (std::is_base_of_v<JavaInterfaces, Derived> && ...),
+            (std::is_base_of_v<JxxInterfaces, Derived> && ...),
             "Derived must inherit every interface listed in ClassInfo."
         );
 
@@ -386,7 +386,7 @@ public:
             metadata.binaryName = staticClassName();
             metadata.typeId = std::type_index(typeid(Derived));
             metadata.interfaces = {
-                class_info_detail::interfaceDescriptor<JavaInterfaces>()...
+                class_info_detail::interfaceDescriptor<JxxInterfaces>()...
             };
             metadata.isInterface = !isClass;
             metadata.isPrimitive = false;
@@ -398,7 +398,7 @@ public:
 
             if constexpr (isClass) {
                 metadata.superClass =
-                    class_info_detail::superclassDescriptor<JavaSuper>();
+                    class_info_detail::superclassDescriptor<JxxSuper>();
                 metadata.modifiers = 0x0001;
 
                 if constexpr (std::is_abstract_v<Derived>) {
@@ -450,13 +450,13 @@ protected:
 };
 
 /**
- * ClassInfo is the single metadata mixin for both Java classes and Java
+ * ClassInfo is the single metadata mixin for both JXX classes and JXX
  * interfaces. A non-Object Derived is automatically registered as an
  * interface, while an Object-derived Derived is registered as a class.
  */
 
 /**
- * Unified base for a JXX Java interface.
+ * Unified base for a JXX interface.
  *
  * This wrapper does not inherit Object. It supplies the exact ClassInfo marker,
  * exposes Interface::Class(), and virtually inherits all parent interfaces.
@@ -497,37 +497,36 @@ protected:
 };
 
 /**
- * Unified base for a JXX Java class.
+ * Unified base for a JXX class.
  *
- * This wrapper inherits the declared Java superclass, supplies the exact
+ * This wrapper inherits the declared JXX superclass, supplies the exact
  * ClassInfo marker, exposes Derived::Class(), and virtually inherits all
- * directly implemented Java interfaces.
+ * directly implemented JXX interfaces.
  */
 template <
     typename Derived,
-    typename JavaSuper = Object,
-    typename... JavaInterfaces>
+    typename JxxSuper = Object,
+    typename... JxxInterfaces>
 class ClassBase
-    : public JavaSuper
+    : public JxxSuper
     , public ClassInfo<
           Derived,
-          JavaSuper,
-          JavaInterfaces...>
-    , public virtual JavaInterfaces... {
+          JxxSuper,
+          JxxInterfaces...>
+    , public virtual JxxInterfaces... {
 private:
     using Metadata =
         ClassInfo<
             Derived,
-            JavaSuper,
-            JavaInterfaces...>;
+            JxxSuper,
+            JxxInterfaces...>;
 
 public:
     using JxxClassInfoMarker = Metadata;
-    using JavaSuperType = JavaSuper;
-    using JavaSuper::JavaSuper;
+    using JxxSuperType = JxxSuper;
 
     /**
-     * Hides Class() functions inherited from the Java superclass and
+     * Hides Class() functions inherited from the JXX superclass and
      * implemented interfaces.
      */
     static jxx::Ptr<ClassAny> Class() {
@@ -546,14 +545,12 @@ protected:
 
     template <
         typename... SuperArguments,
-        typename = std::enable_if_t<
-            (sizeof...(SuperArguments) > 0) &&
-            std::is_constructible_v<
-                JavaSuper,
-                SuperArguments...>>>
+        std::enable_if_t<
+            (sizeof...(SuperArguments) > 0U),
+            int> = 0>
     explicit ClassBase(
         SuperArguments&&... arguments)
-        : JavaSuper(
+        : JxxSuper(
               std::forward<SuperArguments>(arguments)...) {
     }
 };
