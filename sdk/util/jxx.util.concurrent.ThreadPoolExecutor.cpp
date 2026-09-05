@@ -46,7 +46,7 @@ namespace jxx::util::concurrent
 	void ThreadPoolExecutor::reject_(const jxx::Ptr<jxx::lang::Runnable>& command)
 	{
 		auto h = handler_; if (h != nullptr) {
-			auto self = jxx::CAST<ThreadPoolExecutor>(thisPtr); h->rejectedExecution(command, self); return;
+			auto self = jxx::CAST<ThreadPoolExecutor>(this->thisPtr()); h->rejectedExecution(command, self); return;
 		}throw RejectedExecutionException();
 	}
 	void ThreadPoolExecutor::execute(const jxx::Ptr<jxx::lang::Runnable>& command)

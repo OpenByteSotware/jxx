@@ -1140,8 +1140,8 @@ namespace jxx::util
 
     inline jxx::Ptr<Formatter> selfPtr_(Formatter* self)
     {
-        if (self->thisPtr)
-            return std::static_pointer_cast<Formatter>(self->thisPtr);
+        if (self->thisPtr())
+            return std::static_pointer_cast<Formatter>(self->thisPtr());
 
         return std::static_pointer_cast<Formatter>(self->shared_from_this());
     }

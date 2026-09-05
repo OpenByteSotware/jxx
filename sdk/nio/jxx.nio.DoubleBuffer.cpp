@@ -66,7 +66,7 @@ namespace jxx::nio
 
     jxx::Ptr<DoubleBuffer> DoubleBuffer::self__()
     {
-        return jxx::CAST<DoubleBuffer, jxx::lang::Object>(this->thisPtr);
+        return jxx::CAST<DoubleBuffer, jxx::lang::Object>(this->thisPtr());
     }
 
     void DoubleBuffer::checkWritable_() const

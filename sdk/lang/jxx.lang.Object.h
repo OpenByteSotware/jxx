@@ -1,6 +1,6 @@
 #pragma once
-#ifndef __JXX_OJBECT_H__
-#define __JXX_OJBECT_H__
+#ifndef __JXX_OBJECT_H__
+#define __JXX_OBJECT_H__
 
 #include <cstddef>
 #include <functional>
@@ -27,8 +27,8 @@
 #include <cstdlib>
 #endif
 
-#include "jxx.lang.ByteType.h"
-#include "jxx_types.h"
+#include "lang/jxx.lang.ByteType.h"
+#include "lang/jxx_types.h"
 #include "lang/jxx.lang.ClassInfoMarker.h"
 
 namespace jxx::lang {
@@ -54,23 +54,27 @@ namespace jxx::lang {
 
  
     // =============== Object (root) ===============
-    // Java-like root of the class hierarchy:
+    // JXX-style root of the class hierarchy:
     // - Polymorphic for RTTI and dynamic_cast
-    //  - Provides Java-like equals(), hashCode(), toString(), getClass(), and cloning semantics
-    //  - Provides Java-like monitor methods: wait(), notify(), notifyAll() using condition_variable
-    //  - Note: Java's Object is not thread-safe by default, but these methods allow you to use it as a monitor if desired. 
-    //  - For Java-like synchronized blocks, use synchronized(obj, [&] { ... });
-    //  - For Java-like synchronized methods, inherit from Synchronized below.
-    //  - For Java-like polymorphic collections, use PolySet/PolyMap below.
-    //  - For Java-like cloning, derive from Cloneable and implement cloneImpl() for deep copy. Object::clone() checks for Cloneable and delegates to cloneImpl().
-    //  Note: we do NOT make Object copyable or assignable by default, since Java's Object is not. If you want copy semantics, derive from Cloneable and implement cloneImpl() for deep copy.
+    //  - Provides JXX-style equals(), hashCode(), toString(), getClass(), and cloning semantics
+    //  - Provides JXX-style monitor methods: wait(), notify(), notifyAll() using condition_variable
+    //  - Note: JXX Object is not thread-safe by default, but these methods allow you to use it as a monitor if desired. 
+    //  - For JXX-style synchronized blocks, use synchronized(obj, [&] { ... });
+    //  - For JXX-style synchronized methods, inherit from Synchronized below.
+    //  - For JXX-style polymorphic collections, use PolySet/PolyMap below.
+    //  - For JXX-style cloning, derive from Cloneable and implement cloneImpl() for deep copy. Object::clone() checks for Cloneable and delegates to cloneImpl().
+    //  Note: we do NOT make Object copyable or assignable by default, since JXX Object is not. If you want copy semantics, derive from Cloneable and implement cloneImpl() for deep copy.
     //  - Because this pointer may be used as return need to inherit from enable_shared_from_this for safe shared_ptr creation in clone() and getClass()
 
     class Object : public std::enable_shared_from_this<Object> {
     public:
-        // use thisPtr to return from methods if required to return this.  this cannot be retured as it is not a shared ptr
-        // always use thisPtr when returning (if needed).  this->variable is ok to return, just cannot return this
-        std::shared_ptr<Object> thisPtr;
+        
+        /**
+         * Returns this object through the owning control block established by
+         * jxx::NEW. The stored self handle is weak, so it does not create an
+         * ownership cycle.
+         */
+        jxx::Ptr<Object> thisPtr() const;
 
         Object() = default;
 
@@ -87,10 +91,10 @@ namespace jxx::lang {
         Object(Object&&) noexcept = default;
         Object& operator=(Object&&) noexcept = default;
 
-        // Java-like: logical equality (default identity)
+        // JXX-style: logical equality (default identity)
         virtual jbool equals(const jxx::Ptr<Object>& other) const;
 
-        // Java-like: hashCode (default identity-based)
+        // JXX-style: hashCode (default identity-based)
         virtual jxx::lang::jint hashCode() const;
 
         jxx::Ptr<jxx::lang::ClassAny> getClass() const;
@@ -98,7 +102,7 @@ namespace jxx::lang {
         // Class name (demangled where supported); override if you prefer custom names
         virtual jxx::Ptr<jxx::lang::String> getClassName() const;
 
-        // Java-like: "Class@hexHash"
+        // JXX-style: "Class@hexHash"
         virtual jxx::Ptr<jxx::lang::String> toString() const;
 
         // Identity check (reference equality)
@@ -119,7 +123,7 @@ namespace jxx::lang {
         // Virtual clone method
         virtual jxx::Ptr<jxx::lang::Object> clone() const;
 
-        // mimic Java 8 syncrhonized blocks: obj.synchronized([&] { ... });
+        // mimic JXX syncrhonized blocks: obj.synchronized([&] { ... });
         template <typename F>
         auto synchronized(F&& f) const -> decltype(f()) {
             std::lock_guard<std::recursive_mutex> guard(mutex_);
@@ -131,22 +135,40 @@ namespace jxx::lang {
         virtual jxx::Ptr<jxx::lang::Object> cloneImpl() const;
 
         template <typename T>
-        std::shared_ptr<T> getThis() {
-            static_assert(std::is_base_of<jxx::lang::Object, T>::value,
+        jxx::Ptr<T> getThis() {
+            static_assert(
+                std::is_base_of_v<jxx::lang::Object, T>,
                 "T must derive from Object");
-            return std::dynamic_pointer_cast<T>(thisPtr);
-        }        
+
+            return std::dynamic_pointer_cast<T>(
+                thisPtr());
+        }
+
+        template <typename T>
+        jxx::Ptr<const T> getThis() const {
+            static_assert(
+                std::is_base_of_v<jxx::lang::Object, T>,
+                "T must derive from Object");
+
+            return std::dynamic_pointer_cast<const T>(
+                thisPtr());
+        }
 
         mutable std::mutex mtx_;
         std::condition_variable cv_;
 
     protected:
-        // release thisPtr as it was a reference to this object and we are being destroyed, so break the cycle
+        // release thisPtr_ as it was a reference to this object and we are being destroyed, so break the cycle
         void releaseSelf();
 
         jxx::Ptr<jxx::lang::String> getClassName_() const;
 
         mutable std::recursive_mutex mutex_;
+
+    private:
+        // Use thisPtr_() when a method must return the current object as jxx::Ptr<Object>.
+        // The internal thisPtr__ member is weak and must not be returned directly.
+        std::weak_ptr<Object> thisPtr_;
     };
 
     // =============== Polymorphic hashing/equality for smart pointers ===============
@@ -257,16 +279,16 @@ namespace jxx {
                 T,
                 std::void_t<
                 decltype(
-                    std::declval<T&>().thisPtr)>>
+                    std::declval<T&>().thisPtr_)>>
                 : std::true_type {
             };
 
             template <typename T>
-            void initializeThisPtr(
+            void initializethisPtr_(
                 const std::shared_ptr<T>& object) {
 
                 if constexpr (has_this_ptr<T>::value) {
-                    object->thisPtr = object;
+                    object->thisPtr() = object;
                 }
             }
 
@@ -284,7 +306,6 @@ namespace jxx {
          */
         template <typename T, typename... Args>  std::shared_ptr<T> NEW(Args&&... args)
         {
-
             static_assert(
                 !std::is_array_v<T>,
                 "jxx::NEW<T> does not accept "
@@ -318,7 +339,7 @@ namespace jxx {
                     std::forward<Args>(
                         args)...);
 
-            detail::initializeThisPtr(
+            detail::initializethisPtr_(
                 object);
 
             return object;
@@ -332,7 +353,7 @@ namespace jxx {
 namespace jxx {
 
     // ---------------------------
-    // Java-style instanceof
+    // JXX-style instanceof
     // ---------------------------
     //
     // Usage:
@@ -349,25 +370,25 @@ namespace jxx {
     }
 
     // ---------------------------
-    // Java-style cast: (To) obj
+    // JXX-style cast: (To) obj
     // ---------------------------
     //
     // Usage:
     //   auto foo = cast_as<Foo>(obj);     // returns null if obj is null; throws ClassCastException if incompatible
     //
     // Semantics:
-    //   - if obj == null: returns null (same as Java)
+    //   - if obj == null: returns null (same as JXX)
     //   - else if compatible: returns casted pointer
     //   - else: throws ClassCastException
     //
     template <class To, class From>
     inline jxx::Ptr<To> cast_as(const jxx::Ptr<From>& obj) {
-        if (!obj) return jxx::Ptr<To>{}; // Java: (T)null == null
+        if (!obj) return jxx::Ptr<To>{}; // JXX: (T)null == null
 
         auto casted = std::dynamic_pointer_cast<To>(obj);
         if (casted) return casted;
 
-        // Java: ClassCastException. Message text is not specified strictly; keep simple and stable.
+        // JXX: ClassCastException. Message text is not specified strictly; keep simple and stable.
         // If you want richer messages, you can use a registry or typeName() from Throwable/Object metadata.
         throw std::runtime_error("ClassCastException: incompatible cast");
     }
@@ -385,43 +406,32 @@ namespace jxx {
     jxx::Ptr<To> CAST(
         const jxx::Ptr<From>& ptr)
     {
+        using ToType = std::remove_cv_t<To>;
+        using FromType = std::remove_cv_t<From>;
 
         if (ptr == nullptr) {
             return nullptr;
         }
 
-        if constexpr (
-            std::is_base_of_v<
-                To,
-                From>) {
-
+        if constexpr (std::is_same_v<ToType, FromType>) {
+            return ptr;
+        }
+        else if constexpr (std::is_base_of_v<ToType, FromType>) {
             /*
-             * From derives from To:
-             *
-             *     Ptr<Derived> -> Ptr<Base>
-             *
-             * This is an upcast.
+             * Derived to base conversion.
              */
-            return std::static_pointer_cast<To>(
-                ptr);
-
+            return std::static_pointer_cast<To>(ptr);
         }
         else {
             /*
-             * This includes:
-             *
-             * - Base -> Derived downcasts
-             * - Object -> interface cross-casts
-             * - Interface -> implementing class casts
-             * - Sibling-interface cross-casts
+             * Checked base-to-derived and interface cross-casts.
              */
             static_assert(
-                std::is_polymorphic_v<From>,
-                "jxx::CAST requires a polymorphic "
-                "source type for checked casts.");
+                std::is_polymorphic_v<FromType>,
+                "jxx::CAST requires a polymorphic source type "
+                "for checked casts.");
 
-            return std::dynamic_pointer_cast<To>(
-                ptr);
+            return std::dynamic_pointer_cast<To>(ptr);
         }
     }
 

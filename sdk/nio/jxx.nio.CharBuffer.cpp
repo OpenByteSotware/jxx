@@ -73,7 +73,7 @@ namespace jxx::nio
 
     jxx::Ptr<CharBuffer> CharBuffer::self__()
     {
-        return jxx::CAST<CharBuffer, jxx::lang::Object>(this->thisPtr);
+        return jxx::CAST<CharBuffer, jxx::lang::Object>(this->thisPtr());
     }
 
     void CharBuffer::checkWritable_() const

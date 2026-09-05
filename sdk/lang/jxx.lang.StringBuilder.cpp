@@ -48,7 +48,7 @@ namespace jxx::lang
 
 	jxx::Ptr<StringBuilder> StringBuilder::self_()
 	{
-		return jxx::CAST<StringBuilder>(thisPtr);
+		return jxx::CAST<StringBuilder>(this->thisPtr());
 	}
 
 	StringBuilder::StringBuilder() : value_(), capacity_(DEFAULT_CAPACITY)

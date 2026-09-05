@@ -347,7 +347,7 @@ public:
     }
 
     jxx::Ptr<Enumeration<E>> elements() {
-        auto self = jxx::CAST<Vector<E>>(this->thisPtr);
+        auto self = jxx::CAST<Vector<E>>(this->thisPtr());
         if (self == nullptr) {
             throw jxx::lang::IllegalStateException();
         }
@@ -586,7 +586,7 @@ public:
     }
 
     jxx::Ptr<ListIterator<E>> listIterator(jxx::lang::jint index) override {
-        auto self = jxx::CAST<Vector<E>>(this->thisPtr);
+        auto self = jxx::CAST<Vector<E>>(this->thisPtr());
         if (self == nullptr) {
             throw jxx::lang::IllegalStateException();
         }
@@ -602,7 +602,7 @@ public:
             throw jxx::lang::IndexOutOfBoundsException();
         }
 
-        auto self = jxx::CAST<Vector<E>>(this->thisPtr);
+        auto self = jxx::CAST<Vector<E>>(this->thisPtr());
         if (self == nullptr) {
             throw jxx::lang::IllegalStateException();
         }

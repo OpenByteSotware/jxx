@@ -65,7 +65,7 @@ protected:
     jxx::Ptr<jxx::lang::Object> cloneImpl() const override {
         auto result = jxx::NEW<LinkedTreeMap<K, V>>(comparator_);
 
-        auto self = jxx::CAST<LinkedTreeMap<K, V>>(this->thisPtr);
+        auto self = jxx::CAST<LinkedTreeMap<K, V>>(this->thisPtr());
         if (self == nullptr) {
             throw jxx::lang::IllegalStateException();
         }

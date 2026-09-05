@@ -83,7 +83,7 @@ namespace jxx::nio::channels
 
     jxx::Ptr<FileChannel> FileChannel::self_FileChannel_()
     {
-        return jxx::CAST<FileChannel>(thisPtr);
+        return jxx::CAST<FileChannel>(this->thisPtr());
         
     }
 

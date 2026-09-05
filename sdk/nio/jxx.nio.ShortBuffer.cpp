@@ -66,8 +66,8 @@ namespace jxx::nio
 
     jxx::Ptr<ShortBuffer> ShortBuffer::self__()
     {
-        if (thisPtr)
-            return std::static_pointer_cast<ShortBuffer>(thisPtr);
+        if (this->thisPtr())
+            return std::static_pointer_cast<ShortBuffer>(this->thisPtr());
         return std::static_pointer_cast<ShortBuffer>(shared_from_this());
     }
 

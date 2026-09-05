@@ -445,7 +445,7 @@ public:
         rangeCheckForAdd_(index);
 
         auto self =
-            jxx::CAST<ArrayList<E>>(this->thisPtr);
+            jxx::CAST<ArrayList<E>>(this->thisPtr());
 
         if (self == nullptr) {
             throw jxx::lang::IllegalStateException();
@@ -466,7 +466,7 @@ public:
         }
 
         auto self =
-            jxx::CAST<ArrayList<E>>(this->thisPtr);
+            jxx::CAST<ArrayList<E>>(this->thisPtr());
 
         if (self == nullptr) {
             throw jxx::lang::IllegalStateException();

@@ -41,7 +41,7 @@ namespace jxx::nio
 
     jxx::Ptr<Buffer> Buffer::self_()
     {
-        return jxx::CAST<Buffer, jxx::lang::Object>(this->thisPtr);
+        return jxx::CAST<Buffer, jxx::lang::Object>(this->thisPtr());
     }
 
     jxx::Ptr<Buffer> Buffer::position(jxx::lang::jint newPosition)

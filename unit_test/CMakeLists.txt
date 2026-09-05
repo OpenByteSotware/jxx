@@ -27,7 +27,11 @@ file(GLOB_RECURSE TEST_SOURCES
 )
 
 # Create a single test executable
-add_executable(all_tests ${TEST_SOURCES})
+add_executable(
+    all_tests
+    ${CMAKE_CURRENT_SOURCE_DIR}/jxx_unit_test_main.cpp
+    ${TEST_SOURCES}
+)
 
 add_compile_definitions(_HAS_STD_BYTE=0)
 target_compile_features(jxxsdk PRIVATE cxx_std_17)
@@ -55,9 +59,11 @@ target_include_directories(all_tests
 )
 
 # Link GoogleTest and pthread (Linux/Unix)
-target_link_libraries(all_tests
+target_link_libraries(
+    all_tests
     PRIVATE
-        jxxsdk GTest::gtest GTest::gmock GTest::gtest_main
+        GTest::gtest
+        GTest::gmock
 )
 
 if(UNIX AND NOT APPLE)
@@ -68,4 +74,9 @@ target_link_libraries(all_tests PRIVATE fmt::fmt Microsoft.GSL::GSL unicode::uni
 
 # Automatically discover tests in the executable
 include(GoogleTest)
-gtest_discover_tests(all_tests)
+
+gtest_discover_tests(
+    all_tests
+    DISCOVERY_MODE PRE_TEST
+    DISCOVERY_TIMEOUT 60
+)

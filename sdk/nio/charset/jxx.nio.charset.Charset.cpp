@@ -73,12 +73,12 @@ namespace jxx::nio::charset
 
     jxx::Ptr<CharsetDecoder> Charset::newDecoder()
     {
-        return jxx::NEW<CharsetDecoder>(jxx::CAST<Charset, jxx::lang::Object>(this->thisPtr));
+        return jxx::NEW<CharsetDecoder>(jxx::CAST<Charset, jxx::lang::Object>(this->thisPtr()));
     }
 
     jxx::Ptr<CharsetEncoder> Charset::newEncoder()
     {
-        return jxx::NEW<CharsetEncoder>(jxx::CAST<Charset, jxx::lang::Object>(this->thisPtr));
+        return jxx::NEW<CharsetEncoder>(jxx::CAST<Charset, jxx::lang::Object>(this->thisPtr()));
     }
 
     jxx::Ptr<jxx::lang::String> Charset::toString() const { return canonicalName_; }

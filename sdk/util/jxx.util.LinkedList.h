@@ -54,7 +54,7 @@ public:
         }
 
         auto self =
-            jxx::CAST<LinkedList<E>>(this->thisPtr);
+            jxx::CAST<LinkedList<E>>(this->thisPtr());
 
         if (self == nullptr) {
             throw jxx::lang::IllegalStateException();
@@ -93,7 +93,7 @@ public:
             throw jxx::lang::IndexOutOfBoundsException();
         }
 
-        auto self = jxx::CAST<LinkedList<E>>(this->thisPtr);
+        auto self = jxx::CAST<LinkedList<E>>(this->thisPtr());
         if (self == nullptr) {
             throw jxx::lang::IllegalStateException();
         }

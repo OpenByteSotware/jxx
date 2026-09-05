@@ -528,7 +528,7 @@ namespace jxx
                 const jxx::Ptr<K>& key)
             {
                 jxx::Ptr<HashMap<K, V>> owner =
-                    jxx::CAST<HashMap<K, V>>(this->thisPtr);
+                    jxx::CAST<HashMap<K, V>>(this->thisPtr());
 
                 if (owner == nullptr) {
                     throw jxx::lang::IllegalStateException();
@@ -752,7 +752,7 @@ namespace jxx
                 createEntrySetView()
             {
                 jxx::Ptr<HashMap<K, V>> owner =
-                    jxx::CAST<HashMap<K, V>>(this->thisPtr);
+                    jxx::CAST<HashMap<K, V>>(this->thisPtr());
 
                 if (owner == nullptr) {
                     throw jxx::lang::IllegalStateException();

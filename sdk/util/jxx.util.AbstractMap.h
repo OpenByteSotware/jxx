@@ -218,7 +218,7 @@ public:
     virtual jxx::Ptr<Set<K>> keySet() override {
         if (keySetView == nullptr) {
             const jxx::Ptr<AbstractMap<K, V>> owner =
-                jxx::CAST<AbstractMap<K, V>>(this->thisPtr);
+                jxx::CAST<AbstractMap<K, V>>(this->thisPtr());
 
             if (owner == nullptr) {
                 throw jxx::lang::IllegalStateException();
@@ -233,7 +233,7 @@ public:
     virtual jxx::Ptr<Collection<V>> values() override {
         if (valuesView == nullptr) {
             const jxx::Ptr<AbstractMap<K, V>> owner =
-                jxx::CAST<AbstractMap<K, V>>(this->thisPtr);
+                jxx::CAST<AbstractMap<K, V>>(this->thisPtr());
 
             if (owner == nullptr) {
                 throw jxx::lang::IllegalStateException();

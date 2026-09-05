@@ -66,8 +66,8 @@ namespace jxx::nio
 
     jxx::Ptr<IntBuffer> IntBuffer::self__()
     {
-        if (thisPtr)
-            return std::static_pointer_cast<IntBuffer>(thisPtr);
+        if (this->thisPtr())
+            return std::static_pointer_cast<IntBuffer>(this->thisPtr());
         return std::static_pointer_cast<IntBuffer>(shared_from_this());
     }
 

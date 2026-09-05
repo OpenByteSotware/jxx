@@ -1,10 +1,10 @@
 //#include "jxx.lang.ClassNotFoundException.h"
-#include "jxx.lang.String.h"
-#include "jxx.lang.ClassRegistration.h"
-#include "jxx.lang.Class.h"
-#include "jxx.lang.Cast.h"
-#include "jxx.lang.Cloneable.h"
-#include "jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.ClassRegistration.h"
+#include "lang/jxx.lang.Class.h"
+#include "lang/jxx.lang.Cast.h"
+#include "lang/jxx.lang.Cloneable.h"
+#include "lang/jxx.lang.Object.h"
 
 
 namespace jxx::lang {
@@ -15,27 +15,26 @@ namespace jxx::lang {
     }
 
     // Copy constructor: default-construct mutex and cv since they cannot be copied
-    Object::Object(const Object& other) 
-        : std::enable_shared_from_this<Object>(), // reinitialize shared_from_this
-          thisPtr(nullptr), // Don't copy thisPtr, it will be set later
-          mtx_(),             // default-construct mutex
-          cv_(),              // default-construct condition_variable
-          mutex_()            // default-construct recursive_mutex
+    Object::Object(const Object& /*other*/)
+        : std::enable_shared_from_this<Object>()
+        , thisPtr_()
+        , mtx_()
+        , cv_()
+        , mutex_()
     {
-		thisPtr = std::make_shared<Object>(*this); // Set thisPtr to a shared_ptr to this object
     }
 
     // Copy assignment: similar to copy constructor
     Object& Object::operator=(const Object& other) {
         if (this != &other) {
-            // Don't copy thisPtr, mtx_, cv_, or mutex_ - they represent this object's identity
+            // Don't copy thisPtr_, mtx_, cv_, or mutex_ - they represent this object's identity
             // Derived classes will handle their own member copying through their copy assignment
         }
         return *this;
     }
 
     jxx::Ptr<jxx::lang::ClassAny> Object::getClass() const {
-        // Exact Java semantics: runtime class of the *dynamic* object.
+        // Exact JXX semantics: runtime class of the *dynamic* object.
         // Requires RTTI enabled (typeid on polymorphic type).
         return ClassAny::forType(std::type_index(typeid(*this)));
     }
@@ -43,7 +42,7 @@ namespace jxx::lang {
     // Virtual clone method
     jxx::Ptr<jxx::lang::Object> Object::clone() const {
         // Check if this object is Cloneable
-        if (std::dynamic_pointer_cast<Cloneable>(thisPtr) == nullptr) {
+        if (std::dynamic_pointer_cast<Cloneable>(thisPtr()) == nullptr) {
             throw std::runtime_error("CloneNotSupportedException");
         }
 
@@ -51,20 +50,34 @@ namespace jxx::lang {
         return cloneImpl();
     }
 
+    jxx::Ptr<Object> Object::thisPtr() const {
+        if (auto existing = thisPtr_.lock()) {
+            return existing;
+        }
+
+        try {
+            return std::const_pointer_cast<Object>(shared_from_this());
+        }
+        catch (const std::bad_weak_ptr&) {
+            throw std::logic_error(
+                "Object is not owned by jxx::NEW");
+        }
+    }
+
     void Object::releaseSelf() {
         // This method is called when the last shared_ptr to this object is destroyed.
         // this object is being destroyed since this method is called from the destructor
-        thisPtr.reset();
+        thisPtr_.reset();
     }
 
-    // Java-like: logical equality (default identity)
+    // JXX-style: logical equality (default identity)
     jbool Object::equals(const jxx::Ptr<Object>& other) const {
         return this == other.get();
     }
 
-    // Java-like: hashCode (default identity-based)
+    // JXX-style: hashCode (default identity-based)
     jxx::lang::jint Object::hashCode() const {
-        return std::hash<const void*>{}(thisPtr.get());
+        return std::hash<const void*>{}(this);
     }
 
     // Class name (demangled where supported); override if you prefer custom names
@@ -72,7 +85,7 @@ namespace jxx::lang {
         return this->getClassName_();
     }
 
-    // Java-like: "Class@hexHash"
+    // JXX-style: "Class@hexHash"
     jxx::Ptr<jxx::lang::String>  Object::toString() const {
         std::ostringstream oss;
         oss << getClassName_() << "@0x" << std::hex << hashCode();
@@ -81,7 +94,7 @@ namespace jxx::lang {
 
     // Identity check (reference equality)
     bool Object::same(const jxx::Ptr<Object>& other) const {
-        return thisPtr == other;
+        return this == other.get();
     }
 
     void Object::wait() {

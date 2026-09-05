@@ -316,7 +316,7 @@ public:
         rangeCheckForAdd_(index);
 
         auto self =
-            jxx::CAST<SubList<E>>(this->thisPtr);
+            jxx::CAST<SubList<E>>(this->thisPtr());
 
         if (self == nullptr) {
             throw jxx::lang::IllegalStateException();

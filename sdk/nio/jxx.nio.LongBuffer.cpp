@@ -66,8 +66,8 @@ namespace jxx::nio
 
     jxx::Ptr<LongBuffer> LongBuffer::self__()
     {
-        if (thisPtr)
-            return std::static_pointer_cast<LongBuffer>(thisPtr);
+        if (this->thisPtr())
+            return std::static_pointer_cast<LongBuffer>(this->thisPtr());
         return std::static_pointer_cast<LongBuffer>(shared_from_this());
     }
 

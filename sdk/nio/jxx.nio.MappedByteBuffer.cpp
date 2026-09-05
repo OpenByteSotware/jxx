@@ -61,8 +61,8 @@ namespace jxx::nio
 
     jxx::Ptr<MappedByteBuffer> MappedByteBuffer::self_Mapped_()
     {
-        if (thisPtr)
-            return std::static_pointer_cast<MappedByteBuffer>(thisPtr);
+        if (this->thisPtr())
+            return std::static_pointer_cast<MappedByteBuffer>(this->thisPtr());
         return std::static_pointer_cast<MappedByteBuffer>(shared_from_this());
     }
 

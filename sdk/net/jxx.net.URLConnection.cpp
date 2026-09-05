@@ -31,7 +31,7 @@ namespace
 
 			jxx::Ptr<jxx::io::InputStream> inputs = urlc->getInputStream();
             
-            return inputs->thisPtr;
+            return inputs->thisPtr();
         }
     };
 
@@ -142,13 +142,13 @@ namespace jxx::net
     jxx::Ptr<jxx::lang::Object> URLConnection::getContent()
     {
         auto h = getContentHandler_();
-        return h ? h->getContent(jxx::CAST<URLConnection, jxx::lang::Object>(this->thisPtr)) : nullptr;
+        return h ? h->getContent(jxx::CAST<URLConnection, jxx::lang::Object>(this->thisPtr())) : nullptr;
     }
 
     jxx::Ptr<jxx::lang::Object> URLConnection::getContent(const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Class>, 1U>>& classes)
     {
         auto h = getContentHandler_();
-        return h ? h->getContent(jxx::CAST<URLConnection, jxx::lang::Object>(this->thisPtr), classes) : nullptr;
+        return h ? h->getContent(jxx::CAST<URLConnection, jxx::lang::Object>(this->thisPtr()), classes) : nullptr;
     }
 
     jxx::Ptr<jxx::io::InputStream> URLConnection::getInputStream()

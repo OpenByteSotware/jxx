@@ -66,8 +66,8 @@ namespace jxx::nio
 
     jxx::Ptr<FloatBuffer> FloatBuffer::self__()
     {
-        if (thisPtr)
-            return std::static_pointer_cast<FloatBuffer>(thisPtr);
+        if (this->thisPtr())
+            return std::static_pointer_cast<FloatBuffer>(this->thisPtr());
         return std::static_pointer_cast<FloatBuffer>(shared_from_this());
     }
 

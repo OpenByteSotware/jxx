@@ -319,7 +319,7 @@ protected:
     jxx::Ptr<Set<MapEntry<K, V>>>
     createEntrySetView() override {
         auto owner =
-            jxx::CAST<LinkedHashMap<K, V>>(this->thisPtr);
+            jxx::CAST<LinkedHashMap<K, V>>(this->thisPtr());
 
         if (owner == nullptr) {
             throw jxx::lang::IllegalStateException();

@@ -39,7 +39,7 @@ namespace jxx::util::logging
 	
 	jxx::Ptr<Logger>Logger::getLogger(const jxx::Ptr<jxx::lang::String>& n, const jxx::Ptr<jxx::lang::String>& b)
 	{
-		if (n == nullptr)throw jxx::lang::NullPointerException(); std::lock_guard<std::recursive_mutex>l(registryMutex); auto key = n->utf8(); if (auto p = registry[key].lock())return p; auto x = jxx::Ptr<Logger>(new Logger(n, b)); x->thisPtr = x; registry[key] = x; return x;
+		if (n == nullptr)throw jxx::lang::NullPointerException(); std::lock_guard<std::recursive_mutex>l(registryMutex); auto key = n->utf8(); if (auto p = registry[key].lock())return p; auto x = jxx::Ptr<Logger>(new Logger(n, b)); x->thisPtr() = x; registry[key] = x; return x;
 	}
 	
 	jxx::Ptr<Logger>Logger::getAnonymousLogger()
@@ -49,7 +49,7 @@ namespace jxx::util::logging
 	
 	jxx::Ptr<Logger>Logger::getAnonymousLogger(const jxx::Ptr<jxx::lang::String>& b)
 	{
-		auto x = jxx::Ptr<Logger>(new Logger(nullptr, b)); x->thisPtr = x; return x;
+		auto x = jxx::Ptr<Logger>(new Logger(nullptr, b)); x->thisPtr() = x; return x;
 	}
 	jxx::Ptr<Level>Logger::effectiveLevel_()const
 	{

@@ -80,7 +80,7 @@ namespace jxx::nio
 
     jxx::Ptr<ByteBuffer> ByteBuffer::self_Byte_()
     {
-        return jxx::CAST<ByteBuffer, jxx::lang::Object>(this->thisPtr);
+        return jxx::CAST<ByteBuffer, jxx::lang::Object>(this->thisPtr());
     }
 
     void ByteBuffer::checkWritable_() const
