@@ -71,6 +71,12 @@ namespace jxx::lang {
         return loadClass(name, false);
     }
 
+    jxx::Ptr<String> ClassLoader::findLibrary(
+    const jxx::Ptr<String>& /*libraryName*/)
+    {
+        return nullptr;
+    }
+
     jxx::Ptr<ClassAny> ClassLoader::loadClass(const jxx::Ptr<String> name, jbool resolve) {
         if (!name) throw NullPointerException(jxx::NEW<String>("name"));
         const std::string n = name->utf8();

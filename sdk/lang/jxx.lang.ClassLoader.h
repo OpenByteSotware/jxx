@@ -119,7 +119,7 @@ protected:
     static jbool registerAsParallelCapable();
 
     // JXX API protected: findLibrary(String libname) -> String
-    virtual jxx::Ptr<String> findLibrary(const jxx::Ptr<String> libname);
+    virtual jxx::Ptr<String> findLibrary(const jxx::Ptr<String>& libraryName);
 
     // JXX-only: in-memory resource store
     void addResource(
