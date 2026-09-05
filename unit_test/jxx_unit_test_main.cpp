@@ -1,6 +1,6 @@
 #include <cstdio>
 #include <gtest/gtest.h>
-#include "lang/jxx.lang.initialize.h"
+#include "jxx.initialize.h"
 
 int main(
     int argc,
@@ -11,7 +11,7 @@ int main(
         "[all_tests] entered main\n");
     std::fflush(stderr);
 
-    jxx::lang::initialize();
+    jxx::initialize();
 
     std::fprintf(
         stderr,

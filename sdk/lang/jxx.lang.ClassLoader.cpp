@@ -1,11 +1,14 @@
 
 #include "io/jxx.io.ByteArrayInputStream.h"
-#include "jxx.lang.NullPointerException.h"
-#include "jxx.lang.ClassNotFoundException.h"
+#include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.ClassNotFoundException.h"
+#include "lang/jxx.lang.IndexOutOfBoundsException.h"
+#include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "util/jxx.util.NoSuchElementException.h"
-#include "jxx.lang.ClassLoader.h"
+#include "lang/jxx.lang.ClassLoader.h"
 
 namespace jxx::lang {
+    std::mutex ClassLoader::systemMutex_{};
     std::weak_ptr<ClassLoader> ClassLoader::systemLoader_{};
 
     ClassLoader::VectorUrlEnumeration::VectorUrlEnumeration(std::vector<jxx::Ptr<jxx::net::URL>> items)
@@ -27,8 +30,8 @@ namespace jxx::lang {
         parent_ = getSystemClassLoader();
     }
 
-    ClassLoader::ClassLoader(const jxx::Ptr<ClassLoader> parent)
-        : parent_(std::move(parent)) {}
+    ClassLoader::ClassLoader(const jxx::Ptr<ClassLoader>& parent)
+        : parent_(parent) {}
 
     jxx::Ptr<ClassLoader> ClassLoader::getParent() const { return parent_; }
 
@@ -134,11 +137,60 @@ namespace jxx::lang {
         throw ClassNotFoundException(name);
     }
 
+    jxx::Ptr<ClassAny> ClassLoader::defineClass(
+        const jxx::Ptr<String>& name,
+        const jxx::lang::ByteArray& bytes,
+        jint offset,
+        jint length) {
+
+        if (bytes == nullptr) {
+            throw NullPointerException(
+                jxx::NEW<String>("bytes"));
+        }
+
+        if (offset < 0 ||
+            length < 0 ||
+            offset > bytes->length - length) {
+
+            throw IndexOutOfBoundsException(
+                jxx::NEW<String>(
+                    "Invalid class byte range"));
+        }
+
+        const std::string className =
+            name == nullptr
+            ? std::string("<unnamed>")
+            : name->utf8();
+
+        throw UnsupportedOperationException(
+            jxx::NEW<String>(
+                std::string(
+                    "ClassLoader.defineClass is not supported for ") +
+                className));
+    }
+
+    jxx::Ptr<ClassAny> ClassLoader::defineClass(
+        const jxx::lang::ByteArray& bytes,
+        jint offset,
+        jint length) {
+
+        const jxx::Ptr<String> unnamedClass =
+            nullptr;
+
+        return defineClass(
+            unnamedClass,
+            bytes,
+            offset,
+            length);
+    }
+
     void ClassLoader::resolveClass(const jxx::Ptr<ClassAny>) {
         // no-op in JXX
     }
 
-    void ClassLoader::addResource(const jxx::Ptr<String> name, jxx::Ptr<jxx::lang::ByteArray> bytes) {
+    void ClassLoader::addResource(
+        const jxx::Ptr<String>& name,
+        const jxx::lang::ByteArray& bytes) {
         if (!name) throw NullPointerException(jxx::NEW<String>("name"));
         const std::string n = name->utf8();
         std::lock_guard<std::mutex> lk(resourceMutex_);

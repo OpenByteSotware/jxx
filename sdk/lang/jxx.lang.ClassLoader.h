@@ -1,11 +1,11 @@
 #pragma once
 #include "lang/jxx.lang.ClassInfo.h"
 
-#include "jxx_types.h"
-#include "jxx.lang.Object.h"
-#include "jxx.lang.String.h"
-#include "jxx.lang.Class.h"
-#include "jxx.lang.Package.h"
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.Class.h"
+#include "lang/jxx.lang.Package.h"
 
 
 #include "util/jxx.util.Enumeration.h"
@@ -21,7 +21,7 @@ namespace jxx::io { class InputStream; }
 namespace jxx::lang {
 
 /**
- * Java 8 parity: java.lang.ClassLoader
+ * JXX API parity: jxx.lang.ClassLoader
  *
  * - Class type => inherits Object
  * - Parent-first delegation model
@@ -36,17 +36,17 @@ namespace jxx::lang {
  */
 class ClassLoader : public jxx::lang::ClassBase<ClassLoader, Object> {
 public:
-    using JavaSuper = Object;
+    using JxxSuper = Object;
     using Super = jxx::lang::ClassBase<ClassLoader, Object>;
 
 public:
 
     ClassLoader();                           // parent = system
-    explicit ClassLoader(const jxx::Ptr<ClassLoader> parent);
+    explicit ClassLoader(const jxx::Ptr<ClassLoader>& parent);
     virtual ~ClassLoader() = default;
 
     // -------------------------
-    // Java 8 public API
+    // JXX API public API
     // -------------------------
 
     jxx::Ptr<ClassLoader> getParent() const;
@@ -64,20 +64,20 @@ public:
     virtual jxx::Ptr<jxx::util::Enumeration<jxx::net::URL>> getResources(const jxx::Ptr<String> name);
     virtual jxx::Ptr<jxx::io::InputStream> getResourceAsStream(const jxx::Ptr<String> name);
 
-    // Assertions (Java 8)
+    // Assertions (JXX API)
     void setDefaultAssertionStatus(jbool enabled);
     void setPackageAssertionStatus(const jxx::Ptr<String> packageName, jbool enabled);
     void setClassAssertionStatus(const jxx::Ptr<String> className, jbool enabled);
     void clearAssertionStatus();
     jbool desiredAssertionStatus(const jxx::Ptr<ClassAny> clazz) const;
 
-    // Packages (Java 8)
+    // Packages (JXX API)
     jxx::Ptr<Package> getPackage(const jxx::Ptr<String> name);
     jxx::Ptr<JxxArray<jxx::Ptr<Package>, 1>> getPackages();
 
 protected:
     // -------------------------
-    // Java 8 protected API
+    // JXX API protected API
     // -------------------------
 
    
@@ -92,8 +92,15 @@ protected:
     virtual jxx::Ptr<ClassAny> findLoadedClass(const jxx::Ptr<String> name);
 
     // Bytecode defineClass - unsupported by default (override if you build a bytecode pipeline)
-    virtual jxx::Ptr<ClassAny> defineClass(const jxx::Ptr<String> name, jxx::Ptr<jxx::lang::ByteArray> b, jint off, jint len);
-    virtual jxx::Ptr<ClassAny> defineClass(const jxx::Ptr<jxx::lang::ByteArray> b, jint off, jint len);
+    virtual jxx::Ptr<ClassAny> defineClass(
+        const jxx::Ptr<String>& name,
+        const jxx::lang::ByteArray& bytes,
+        jint offset,
+        jint length);
+    virtual jxx::Ptr<ClassAny> defineClass(
+        const jxx::lang::ByteArray& bytes,
+        jint offset,
+        jint length);
 
     // Resource hooks
     virtual jxx::Ptr<jxx::net::URL> findResource(const jxx::Ptr<String> name);
@@ -102,20 +109,22 @@ protected:
     // System class lookup (bootstrap-ish). In JXX we forward to ClassAny registry.
     virtual jxx::Ptr<ClassAny> findSystemClass(const jxx::Ptr<String> name);
 
-    // Java 7+: per-name loading lock
+    // JXX: per-name loading lock
     virtual jxx::Ptr<Object> getClassLoadingLock(const jxx::Ptr<String> className);
 
     // Package definition helper
     virtual jxx::Ptr<Package> definePackage(const jxx::Ptr<String> name);
 
-    // Java 8 protected: registerAsParallelCapable()
+    // JXX API protected: registerAsParallelCapable()
     static jbool registerAsParallelCapable();
 
-    // Java 8 protected: findLibrary(String libname) -> String
+    // JXX API protected: findLibrary(String libname) -> String
     virtual jxx::Ptr<String> findLibrary(const jxx::Ptr<String> libname);
 
     // JXX-only: in-memory resource store
-    void addResource(const jxx::Ptr<String> name, jxx::Ptr<jxx::lang::ByteArray> bytes);
+    void addResource(
+        const jxx::Ptr<String>& name,
+        const jxx::lang::ByteArray& bytes);
 
 private:
     jxx::Ptr<ClassLoader> parent_;
@@ -149,7 +158,7 @@ private:
     // Lock object used by getClassLoadingLock()
     class LoadingLock final : public jxx::lang::ClassBase<LoadingLock, Object> {
 public:
-    using JavaSuper = Object;
+    using JxxSuper = Object;
     using Super = jxx::lang::ClassBase<LoadingLock, Object>;
 
     public:
@@ -162,7 +171,7 @@ public:
     class VectorUrlEnumeration final
         : public jxx::lang::ClassBase<VectorUrlEnumeration, Object, jxx::util::Enumeration<jxx::net::URL>> {
 public:
-    using JavaSuper = Object;
+    using JxxSuper = Object;
     using Super = jxx::lang::ClassBase<VectorUrlEnumeration, Object, jxx::util::Enumeration<jxx::net::URL>>;
 
     public:
