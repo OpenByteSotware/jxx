@@ -1,6 +1,6 @@
 #include <cstdio>
-
 #include <gtest/gtest.h>
+#include "lang/jxx.lang.initialize.h"
 
 int main(
     int argc,
@@ -9,7 +9,13 @@ int main(
     std::fprintf(
         stderr,
         "[all_tests] entered main\n");
+    std::fflush(stderr);
 
+    jxx::lang::initialize();
+
+    std::fprintf(
+        stderr,
+        "[all_tests] JXX initialized\n");
     std::fflush(stderr);
 
     ::testing::InitGoogleTest(
@@ -18,8 +24,7 @@ int main(
 
     std::fprintf(
         stderr,
-        "[all_tests] initialized test runtime\n");
-
+        "[all_tests] test runtime initialized\n");
     std::fflush(stderr);
 
     return RUN_ALL_TESTS();

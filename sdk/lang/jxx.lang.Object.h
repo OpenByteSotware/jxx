@@ -304,7 +304,9 @@ namespace jxx {
          *   jxx::NEW<IntArrayType>(10)
          *   jxx::NEW<IntArray2DType>(2, 3)
          */
-        template <typename T, typename... Args>  std::shared_ptr<T> NEW(Args&&... args)
+        template <typename T, typename... Args>
+        jxx::Ptr<T> NEW(
+            Args&&... arguments)
         {
             static_assert(
                 !std::is_array_v<T>,
@@ -320,24 +322,10 @@ namespace jxx {
                 "constructible from the "
                 "supplied arguments.");
 
-            /*
-             * Automatically register an Object-derived class when it
-             * also inherits ClassInfo<T>.
-             */
-            if constexpr (
-                std::is_base_of_v<
-                    jxx::lang::Object,
-                    T> &&
-                jxx::lang::class_info_detail::
-                    HasClassInfo<T>::value) {
-
-                T::Class();
-            }
-
             auto object =
                 std::make_shared<T>(
                     std::forward<Args>(
-                        args)...);
+                        arguments)...);
 
             detail::initializethisPtr_(
                 object);

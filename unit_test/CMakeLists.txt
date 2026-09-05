@@ -1,79 +1,107 @@
 cmake_minimum_required(VERSION 3.16)
-project(unittests LANGUAGES CXX)
 
-# Enable testing
+project(
+    unittests
+    LANGUAGES CXX
+)
+
 enable_testing()
 
-# Require C++17 (or higher)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Find GoogleTest (installed or via FetchContent) for 1.17.0 release commit
 include(FetchContent)
+
 FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/52eb8108c5bdec04579160ae17225d66034bd723.zip
+    googletest
+    URL
+        https://github.com/google/googletest/archive/52eb8108c5bdec04579160ae17225d66034bd723.zip
 )
+
+if(WIN32 AND MSVC)
+    set(
+        gtest_force_shared_crt
+        ON
+        CACHE BOOL ""
+        FORCE
+    )
+endif()
+
 FetchContent_MakeAvailable(googletest)
 
-# Prevent GoogleTest from overriding compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
-
-# Recursively find all test source files (*.cpp) in "tests" folder
-file(GLOB_RECURSE TEST_SOURCES
+file(
+    GLOB_RECURSE TEST_SOURCES
     CONFIGURE_DEPENDS
-    ${CMAKE_CURRENT_SOURCE_DIR}/jxx_*.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/jxx_*.cpp"
 )
 
-# Create a single test executable
 add_executable(
     all_tests
-    ${CMAKE_CURRENT_SOURCE_DIR}/jxx_unit_test_main.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/jxx_unit_test_main.cpp"
     ${TEST_SOURCES}
 )
 
-add_compile_definitions(_HAS_STD_BYTE=0)
-target_compile_features(jxxsdk PRIVATE cxx_std_17)
-if(WIN32 AND MSVC)
-    # Add the definition for all targets
-        add_compile_definitions(WIN32_LEAN_AND_MEAN)
-        add_definitions(-DNOMINMAX)   # Avoid min/max macro conflicts
-        add_compile_options(/MP)      # Enable multi-core compilation
-
-endif()
-
-target_include_directories(all_tests
+target_compile_features(
+    all_tests
     PRIVATE
-
-        ${CMAKE_SOURCE_DIR}/sdk   # Path to your headers
-		${CMAKE_SOURCE_DIR}/sdk/defines
-		${CMAKE_SOURCE_DIR}/sdk/lang
-		${CMAKE_SOURCE_DIR}/sdk/util
-		${CMAKE_SOURCE_DIR}/sdk/io
-		${CMAKE_SOURCE_DIR}/sdk/math
-		${CMAKE_SOURCE_DIR}/sdk/net	
-        ${CMAKE_SOURCE_DIR}/sdk/nio
-		${CMAKE_SOURCE_DIR}/sdk/security	
-        
+        cxx_std_17
 )
 
-# Link GoogleTest and pthread (Linux/Unix)
+target_compile_definitions(
+    all_tests
+    PRIVATE
+        _HAS_STD_BYTE=0
+)
+
+if(WIN32 AND MSVC)
+    target_compile_definitions(
+        all_tests
+        PRIVATE
+            WIN32_LEAN_AND_MEAN
+            NOMINMAX
+    )
+
+    target_compile_options(
+        all_tests
+        PRIVATE
+            /MP
+    )
+endif()
+
+target_include_directories(
+    all_tests
+    PRIVATE
+        "${CMAKE_SOURCE_DIR}/sdk"
+        "${CMAKE_SOURCE_DIR}/sdk/defines"
+        "${CMAKE_SOURCE_DIR}/sdk/lang"
+        "${CMAKE_SOURCE_DIR}/sdk/util"
+        "${CMAKE_SOURCE_DIR}/sdk/io"
+        "${CMAKE_SOURCE_DIR}/sdk/math"
+        "${CMAKE_SOURCE_DIR}/sdk/net"
+        "${CMAKE_SOURCE_DIR}/sdk/nio"
+        "${CMAKE_SOURCE_DIR}/sdk/security"
+)
+
 target_link_libraries(
     all_tests
     PRIVATE
-	    jxxsdk
+        jxxsdk
         GTest::gtest
         GTest::gmock
+        fmt::fmt
+        Microsoft.GSL::GSL
+        unicode::unicode
 )
 
 if(UNIX AND NOT APPLE)
-    target_link_libraries(all_tests PRIVATE dl)
+    target_link_libraries(
+        all_tests
+        PRIVATE
+            dl
+    )
 endif()
 
-target_link_libraries(all_tests PRIVATE fmt::fmt Microsoft.GSL::GSL unicode::unicode)
-
-# Automatically discover tests in the executable
 include(GoogleTest)
 
 gtest_discover_tests(
