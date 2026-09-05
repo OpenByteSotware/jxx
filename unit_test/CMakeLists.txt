@@ -62,6 +62,7 @@ target_include_directories(all_tests
 target_link_libraries(
     all_tests
     PRIVATE
+	    jxxsdk
         GTest::gtest
         GTest::gmock
 )
@@ -77,6 +78,6 @@ include(GoogleTest)
 
 gtest_discover_tests(
     all_tests
-    DISCOVERY_MODE PRE_TEST
+    DISCOVERY_MODE POST_BUILD
     DISCOVERY_TIMEOUT 60
 )
