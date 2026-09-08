@@ -1,32 +1,67 @@
 #pragma once
-#include "lang/jxx.lang.ClassInfoMarker.h"
 
-#include <memory>
+#include <string>
+
+#include "lang/jxx.lang.ClassInfoMarker.h"
 #include "lang/jxx.lang.Exception.h"
 
 namespace jxx::lang {
 
-    class RuntimeException : public jxx::lang::Exception {
+class ClassAny;
+class String;
+class Throwable;
+
+template <
+    typename Derived,
+    typename JxxSuper,
+    typename... JxxInterfaces>
+class ClassInfo;
+
+class RuntimeException
+    : public Exception {
 public:
-    using JxxSuper = jxx::lang::Exception;
-    using JxxClassInfoMarker = jxx::lang::ClassInfo<RuntimeException, JxxSuper>;
+    using JxxSuper = Exception;
 
-    static jxx::Ptr<jxx::lang::ClassAny> Class();
+    using JxxClassInfoMarker =
+        ClassInfo<RuntimeException, JxxSuper>;
 
-    RuntimeException() = default;
+    static jxx::Ptr<ClassAny> Class();
 
-    RuntimeException(const RuntimeException&) = default;
-    RuntimeException(RuntimeException&&) noexcept = default;
-    RuntimeException& operator=(const RuntimeException&) = default;
-    RuntimeException& operator=(RuntimeException&&) noexcept = default;
-    ~RuntimeException() override = default;
+    RuntimeException();
 
-    public:
-        using jxx::lang::Exception::Exception;
-        
-    protected:
-        JXX_OBJECT_CLONE(RuntimeException)
-        const char* typeName() const noexcept override { return "RuntimeException"; }
-    };
+    explicit RuntimeException(
+        const jxx::Ptr<String>& message);
+
+    RuntimeException(
+        const jxx::Ptr<String>& message,
+        const jxx::Ptr<Throwable>& cause);
+
+    explicit RuntimeException(
+        const jxx::Ptr<Throwable>& cause);
+
+    explicit RuntimeException(
+        const char* message);
+
+    explicit RuntimeException(
+        const std::string& message);
+
+    RuntimeException(
+        const RuntimeException& other);
+
+    RuntimeException(
+        RuntimeException&& other) noexcept;
+
+    RuntimeException& operator=(
+        const RuntimeException& other);
+
+    RuntimeException& operator=(
+        RuntimeException&& other) noexcept;
+
+    ~RuntimeException() override;
+
+protected:
+    jxx::Ptr<Object> cloneImpl() const override;
+    const char* typeName() const noexcept override;
+};
 
 } // namespace jxx::lang

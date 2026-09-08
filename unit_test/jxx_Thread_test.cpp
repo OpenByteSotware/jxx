@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.IllegalStateException.h"
 #include "lang/jxx.lang.Runnable.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Thread.h"

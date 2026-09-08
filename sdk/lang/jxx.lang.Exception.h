@@ -1,53 +1,63 @@
 #pragma once
-#include "lang/jxx.lang.ClassInfoMarker.h"
 
-#include <stdexcept>
 #include <string>
+
+#include "lang/jxx.lang.ClassInfoMarker.h"
 #include "lang/jxx.lang.Throwable.h"
 
 namespace jxx::lang {
-    class Exception : public jxx::lang::Throwable {
+
+class ClassAny;
+class String;
+
+template <
+    typename Derived,
+    typename JxxSuper,
+    typename... JxxInterfaces>
+class ClassInfo;
+
+class Exception
+    : public Throwable {
 public:
-    using JxxSuper = jxx::lang::Throwable;
-    using JxxClassInfoMarker = jxx::lang::ClassInfo<Exception, JxxSuper>;
+    using JxxSuper = Throwable;
 
-    static jxx::Ptr<jxx::lang::ClassAny> Class();
+    using JxxClassInfoMarker =
+        ClassInfo<Exception, JxxSuper>;
 
-    Exception() = default;
+    static jxx::Ptr<ClassAny> Class();
 
-    Exception(const Exception&) = default;
-    Exception(Exception&&) noexcept = default;
-    Exception& operator=(const Exception&) = default;
-    Exception& operator=(Exception&&) noexcept = default;
-    ~Exception() override = default;
+    Exception();
 
-    public:
-        using jxx::lang::Throwable::Throwable;
-        
-    protected:
-        JXX_OBJECT_CLONE(jxx::lang::Exception)
-        const char* typeName() const noexcept override { return "Exception"; }
-    };
+    explicit Exception(
+        const jxx::Ptr<String>& message);
 
-    class InvocationTargetException : public Exception {
-public:
-    using JxxSuper = Exception;
-    using JxxClassInfoMarker = jxx::lang::ClassInfo<InvocationTargetException, JxxSuper>;
+    Exception(
+        const jxx::Ptr<String>& message,
+        const jxx::Ptr<Throwable>& cause);
 
-    static jxx::Ptr<jxx::lang::ClassAny> Class();
+    explicit Exception(
+        const jxx::Ptr<Throwable>& cause);
 
-    InvocationTargetException(const InvocationTargetException&) = default;
-    InvocationTargetException(InvocationTargetException&&) noexcept = default;
-    InvocationTargetException& operator=(const InvocationTargetException&) = default;
-    InvocationTargetException& operator=(InvocationTargetException&&) noexcept = default;
-    ~InvocationTargetException() override = default;
+    explicit Exception(
+        const char* message);
 
-    public:
-        InvocationTargetException(const jxx::Ptr<String> message, jxx::Ptr<Throwable> cause)
-            : Exception(message, cause) {}
-        
-    protected:
-        JXX_OBJECT_CLONE(InvocationTargetException)
-        const char* typeName() const noexcept override { return "InvocationTargetException"; }
-    };
-}
+    explicit Exception(
+        const std::string& message);
+
+    Exception(const Exception& other);
+    Exception(Exception&& other) noexcept;
+
+    Exception& operator=(
+        const Exception& other);
+
+    Exception& operator=(
+        Exception&& other) noexcept;
+
+    ~Exception() override;
+
+protected:
+    jxx::Ptr<Object> cloneImpl() const override;
+    const char* typeName() const noexcept override;
+};
+
+} // namespace jxx::lang

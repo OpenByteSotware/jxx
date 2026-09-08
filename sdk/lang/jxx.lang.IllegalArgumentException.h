@@ -5,76 +5,63 @@
 #include "lang/jxx.lang.ClassInfoMarker.h"
 #include "lang/jxx.lang.RuntimeException.h"
 
-namespace jxx::lang
-{
+namespace jxx::lang {
 
-    class ClassAny;
-    class String;
-    class Throwable;
+class ClassAny;
+class String;
+class Throwable;
 
-    template <
-        typename Derived,
-        typename JxxSuper,
-        typename... JxxInterfaces>
-    class ClassInfo;
+template <
+    typename Derived,
+    typename JxxSuper,
+    typename... JxxInterfaces>
+class ClassInfo;
 
-    class IllegalArgumentException
-        : public RuntimeException
-    {
-    public:
-        using JxxSuper =
-            RuntimeException;
+class IllegalArgumentException
+    : public RuntimeException {
+public:
+    using JxxSuper = RuntimeException;
 
-        using JxxClassInfoMarker =
-            ClassInfo<
-            IllegalArgumentException,
-            JxxSuper>;
+    using JxxClassInfoMarker =
+        ClassInfo<IllegalArgumentException, JxxSuper>;
 
-        static jxx::Ptr<ClassAny> Class();
+    static jxx::Ptr<ClassAny> Class();
 
-        IllegalArgumentException();
+    IllegalArgumentException();
 
-        explicit IllegalArgumentException(
-            const jxx::Ptr<String>& message);
+    explicit IllegalArgumentException(
+        const jxx::Ptr<String>& message);
 
-        explicit IllegalArgumentException(
-            const char* message);
+    IllegalArgumentException(
+        const jxx::Ptr<String>& message,
+        const jxx::Ptr<Throwable>& cause);
 
-        explicit IllegalArgumentException(
-            const std::string& message);
+    explicit IllegalArgumentException(
+        const jxx::Ptr<Throwable>& cause);
 
-        IllegalArgumentException(
-            const jxx::Ptr<String>& message,
-            const jxx::Ptr<Throwable>& cause);
+    explicit IllegalArgumentException(
+        const char* message);
 
-        explicit IllegalArgumentException(
-            const jxx::Ptr<Throwable>& cause);
+    explicit IllegalArgumentException(
+        const std::string& message);
 
-        IllegalArgumentException(
-            const IllegalArgumentException&) =
-            default;
+    IllegalArgumentException(
+        const IllegalArgumentException& other);
 
-        IllegalArgumentException(
-            IllegalArgumentException&&) noexcept =
-            default;
+    IllegalArgumentException(
+        IllegalArgumentException&& other) noexcept;
 
-        IllegalArgumentException& operator=(
-            const IllegalArgumentException&) =
-            default;
+    IllegalArgumentException& operator=(
+        const IllegalArgumentException& other);
 
-        IllegalArgumentException& operator=(
-            IllegalArgumentException&&) noexcept =
-            default;
+    IllegalArgumentException& operator=(
+        IllegalArgumentException&& other) noexcept;
 
-        ~IllegalArgumentException() override =
-            default;
+    ~IllegalArgumentException() override;
 
-    protected:
-        jxx::Ptr<Object>
-            cloneImpl() const override;
-
-        const char*
-            typeName() const noexcept override;
-    };
+protected:
+    jxx::Ptr<Object> cloneImpl() const override;
+    const char* typeName() const noexcept override;
+};
 
 } // namespace jxx::lang

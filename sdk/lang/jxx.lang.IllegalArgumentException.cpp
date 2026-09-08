@@ -1,78 +1,90 @@
 #include "lang/jxx.lang.IllegalArgumentException.h"
+
+#include <utility>
+
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Throwable.h"
 
-namespace jxx::lang
-{
+namespace jxx::lang {
 
-    jxx::Ptr<ClassAny>
-        IllegalArgumentException::Class()
-    {
-        return JxxClassInfoMarker::Class();
+jxx::Ptr<ClassAny> IllegalArgumentException::Class() {
+    return JxxClassInfoMarker::Class();
+}
+
+IllegalArgumentException::IllegalArgumentException()
+    : RuntimeException() {
+}
+
+IllegalArgumentException::IllegalArgumentException(
+    const jxx::Ptr<String>& message)
+    : RuntimeException(message) {
+}
+
+IllegalArgumentException::IllegalArgumentException(
+    const jxx::Ptr<String>& message,
+    const jxx::Ptr<Throwable>& cause)
+    : RuntimeException(message, cause) {
+}
+
+IllegalArgumentException::IllegalArgumentException(
+    const jxx::Ptr<Throwable>& cause)
+    : RuntimeException(cause) {
+}
+
+IllegalArgumentException::IllegalArgumentException(
+    const char* message)
+    : RuntimeException(message) {
+}
+
+IllegalArgumentException::IllegalArgumentException(
+    const std::string& message)
+    : RuntimeException(message) {
+}
+
+IllegalArgumentException::IllegalArgumentException(
+    const IllegalArgumentException& other)
+    : RuntimeException(other) {
+}
+
+IllegalArgumentException::IllegalArgumentException(
+    IllegalArgumentException&& other) noexcept
+    : RuntimeException(std::move(other)) {
+}
+
+IllegalArgumentException&
+IllegalArgumentException::operator=(
+    const IllegalArgumentException& other) {
+
+    if (this != &other) {
+        RuntimeException::operator=(other);
     }
 
-    IllegalArgumentException::
-        IllegalArgumentException()
-        : RuntimeException()
-    {
+    return *this;
+}
+
+IllegalArgumentException&
+IllegalArgumentException::operator=(
+    IllegalArgumentException&& other) noexcept {
+
+    if (this != &other) {
+        RuntimeException::operator=(std::move(other));
     }
 
-    IllegalArgumentException::
-        IllegalArgumentException(
-            const jxx::Ptr<String>& message)
-        : RuntimeException(message)
-    {
-    }
+    return *this;
+}
 
-    IllegalArgumentException::
-        IllegalArgumentException(
-            const char* message)
-        : RuntimeException(message)
-    {
-    }
+IllegalArgumentException::~IllegalArgumentException() = default;
 
-    IllegalArgumentException::
-        IllegalArgumentException(
-            const std::string& message)
-        : RuntimeException(message)
-    {
-    }
+jxx::Ptr<Object>
+IllegalArgumentException::cloneImpl() const {
+    return jxx::CAST<Object>(
+        jxx::NEW<IllegalArgumentException>(*this));
+}
 
-    IllegalArgumentException::
-        IllegalArgumentException(
-            const jxx::Ptr<String>& message,
-            const jxx::Ptr<Throwable>& cause)
-        : RuntimeException(
-              message,
-              cause)
-    {
-    }
-
-    IllegalArgumentException::
-        IllegalArgumentException(
-            const jxx::Ptr<Throwable>& cause)
-        : RuntimeException(cause)
-    {
-    }
-
-    jxx::Ptr<Object>
-        IllegalArgumentException::cloneImpl() const
-    {
-        auto result =
-            jxx::NEW<
-            IllegalArgumentException>(
-                *this);
-
-        return jxx::CAST<Object>(
-            result);
-    }
-
-    const char*
-        IllegalArgumentException::typeName()
-        const noexcept
-    {
-        return "IllegalArgumentException";
-    }
+const char*
+IllegalArgumentException::typeName() const noexcept {
+    return "IllegalArgumentException";
+}
 
 } // namespace jxx::lang
