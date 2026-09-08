@@ -1,184 +1,198 @@
+#include <atomic>
+#include <chrono>
+#include <thread>
+
 #include <gtest/gtest.h>
-#include "lang/jxx.lang.Object.h"
-#include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
-#include "lang/jxx_types.h"
-#include "io/jxx.io.Serializable.h"
-#include "lang/jxx.lang.CharSequence.h"
-#include "lang/jxx.lang.Comparable.h"
-#include "jxx_memory_detect.h"
+
 #include "lang/jxx.lang.Runnable.h"
+#include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Thread.h"
-#include "lang/jxx.lang.Exceptions.h"
 
-using namespace jxx::lang;
+namespace {
 
-class TheadTest : public jxx::lang::Thread {
-    int value_{ 0 };
-    bool runThread_{ true };
+using jxx::lang::Runnable;
+using jxx::lang::String;
+using jxx::lang::Thread;
+
+class CountingRunnable final
+    : public jxx::lang::ClassBase<
+          CountingRunnable,
+          jxx::lang::Object,
+          Runnable> {
 public:
-    using Thread::Thread;
-    
-    virtual ~TheadTest() {
+    explicit CountingRunnable(
+        std::atomic<int>& count)
+        : count_(count) {
     }
 
-    int intValue() const noexcept { return value_; }
-    void stop() { runThread_ = false; }
+    void run() override {
+        ++count_;
+    }
 
-    virtual void run() override {
-        while (runThread_) {
-            value_++;
-            jxx::lang::Thread::sleep(300);
+private:
+    std::atomic<int>& count_;
+};
+
+TEST(ThreadTest, RunnableExecutesOnce) {
+    std::atomic<int> count{0};
+
+    auto target =
+        jxx::NEW<CountingRunnable>(count);
+
+    auto thread =
+        jxx::NEW<Thread>(
+            jxx::CAST<Runnable>(target));
+
+    thread->start();
+    thread->join();
+
+    EXPECT_EQ(count.load(), 1);
+    EXPECT_FALSE(thread->isAlive());
+    EXPECT_EQ(
+        thread->getState(),
+        Thread::State::TERMINATED);
+}
+
+TEST(ThreadTest, ThisPtrKeepsThreadAliveDuringExecution) {
+    std::atomic<bool> entered{false};
+    std::atomic<bool> release{false};
+
+    class WaitingRunnable final
+        : public jxx::lang::ClassBase<
+              WaitingRunnable,
+              jxx::lang::Object,
+              Runnable> {
+    public:
+        WaitingRunnable(
+            std::atomic<bool>& entered,
+            std::atomic<bool>& release)
+            : entered_(entered)
+            , release_(release) {
         }
-    }   
- 
-};
 
-class Thead2Test : public jxx::lang::Thread {
-    int value_{ 0 };
-    bool runThread_{ true };
-public:
-    using Thread::Thread;
-
-    virtual ~Thead2Test() {
-    }
-
-    int intValue() const noexcept { return value_; }
-    void stop() { runThread_ = false; }
-
-    virtual void run() override {
-        while (runThread_) {
-            value_++;
-            jxx::lang::Thread::sleep(300);
+        void run() override {
+            entered_.store(true);
+            while (!release_.load()) {
+                std::this_thread::yield();
+            }
         }
+
+    private:
+        std::atomic<bool>& entered_;
+        std::atomic<bool>& release_;
+    };
+
+    auto target =
+        jxx::NEW<WaitingRunnable>(
+            entered,
+            release);
+
+    auto thread =
+        jxx::NEW<Thread>(
+            jxx::CAST<Runnable>(target));
+
+    std::weak_ptr<Thread> observer = thread;
+
+    thread->start();
+
+    while (!entered.load()) {
+        std::this_thread::yield();
     }
 
-};
-class RunnableTest : public jxx::lang::Runnable {
-    int value_{ 0 };
-    bool runThread_{ true };
-public:
+    thread.reset();
 
-    int intValue() const noexcept { return value_; }
-    void stop() { runThread_ = false; }
+    EXPECT_FALSE(observer.expired());
 
-    virtual void run() override {
-        while (runThread_) {
-            value_++;
+    release.store(true);
+
+    auto retained = observer.lock();
+    ASSERT_NE(retained, nullptr);
+    retained->join();
+    retained.reset();
+
+    EXPECT_TRUE(observer.expired());
+}
+
+TEST(ThreadTest, StartTwiceThrows) {
+    auto thread = jxx::NEW<Thread>();
+
+    thread->start();
+    thread->join();
+
+    EXPECT_THROW(
+        thread->start(),
+        jxx::lang::IllegalStateException);
+}
+
+TEST(ThreadTest, NamePriorityAndDaemonRoundTrip) {
+    auto thread = jxx::NEW<Thread>();
+
+    thread->setName(
+        jxx::NEW<String>("worker"));
+    thread->setPriority(7);
+    thread->setDaemon(true);
+
+    EXPECT_EQ(thread->getName()->utf8(), "worker");
+    EXPECT_EQ(thread->getPriority(), 7);
+    EXPECT_TRUE(thread->isDaemon());
+}
+
+TEST(ThreadTest, PriorityRangeIsValidated) {
+    auto thread = jxx::NEW<Thread>();
+
+    EXPECT_THROW(
+        thread->setPriority(0),
+        jxx::lang::IllegalArgumentException);
+
+    EXPECT_THROW(
+        thread->setPriority(11),
+        jxx::lang::IllegalArgumentException);
+}
+
+TEST(ThreadTest, CurrentThreadIsAvailableInsideRun) {
+    std::atomic<bool> found{false};
+
+    class CurrentRunnable final
+        : public jxx::lang::ClassBase<
+              CurrentRunnable,
+              jxx::lang::Object,
+              Runnable> {
+    public:
+        explicit CurrentRunnable(
+            std::atomic<bool>& found)
+            : found_(found) {
         }
-    }
-};
 
-class TestTheadTest : public testing::Test {
-protected:
-    // You can remove any or all of the following functions if their bodies would
-    // be empty.
+        void run() override {
+            found_.store(
+                Thread::currentThread() != nullptr);
+        }
 
-    TestTheadTest() {
-        // You can do set-up work for each test here.
-    }
+    private:
+        std::atomic<bool>& found_;
+    };
 
-    ~TestTheadTest() override {
-        // You can do clean-up work that doesn't throw exceptions here.
-    } 
+    auto target =
+        jxx::NEW<CurrentRunnable>(found);
 
-    // If the constructor and destructor are not enough for setting up
-    // and cleaning up each test, you can define the following methods:
+    auto thread =
+        jxx::NEW<Thread>(
+            jxx::CAST<Runnable>(target));
 
-    void SetUp() override {
-       }
+    thread->start();
+    thread->join();
 
-    void TearDown() override {
-     }
-
-    // Class members declared here can be used by all tests in the test suite
-    // for Foo.
-};
-
-// Demonstrate some basic assertions.
-TEST(TestTheadTest, BasicAssertions) {
-    auto t = jxx::NEW<TheadTest>();
-    EXPECT_EQ(0, t->intValue());
-    t->start();
-    jxx::lang::Thread::sleep(500);    
-    EXPECT_EQ(2, t->intValue());
-    t->stop();
-    jxx::lang::Thread::sleep(1000);
-    EXPECT_EQ(2, t->intValue());
-    jxx::lang::Thread::sleep(1000);
-    EXPECT_EQ(2, t->intValue());
+    EXPECT_TRUE(found.load());
 }
 
-TEST(TestTheadTest, Runnable) {
-    auto r = jxx::NEW<RunnableTest>();
-    auto t = jxx::NEW<Thread>(r);
-      
-    // Start the thread
-    t->start();
-    EXPECT_EQ(0, r->intValue());
-    jxx::lang::Thread::sleep(500);
-    
-    EXPECT_EQ(2, r->intValue());
-    r->stop();
-    jxx::lang::Thread::sleep(1000);
-    EXPECT_EQ(2, r->intValue());
-    jxx::lang::Thread::sleep(1000);
-    EXPECT_EQ(2, r->intValue());
-    t->join();
-}
-TEST(TestTheadTest, MultiThread) {
+TEST(ThreadTest, InterruptStatusCanBeObserved) {
+    auto thread = jxx::NEW<Thread>();
 
-    auto r = jxx::NEW<RunnableTest>();
-    auto t1 = jxx::NEW<jxx::lang::Thread>(r, "Worker1");
-    auto t2 = jxx::NEW<jxx::lang::Thread>(r, "Worker2");
-    auto t3 = jxx::NEW<jxx::lang::Thread>(r, "Worker3");
+    EXPECT_FALSE(thread->isInterrupted());
 
-    EXPECT_EQ(0, r->intValue());
+    thread->interrupt();
 
-    // Start the thread
-    t1->start();
-    t2->start();
-    t3->start();
-    r->stop();
-
-    jxx::lang::Thread::sleep(500);
-   
- 
-    // we waited for 2 seconds, count should be 6
-    // all 3 threads should run twice
-    EXPECT_EQ(6, r->intValue());
-
-    try {
-        // Wait for both threads to finish
-        t1->join();
-        t2->join();
-        t3->join();
-    }
-    catch (jxx::lang::Exception *e) {
-    }
+    EXPECT_TRUE(thread->isInterrupted());
 }
 
-TEST(TestTheadTest, IntValueTestScope) {
-      
-    auto t = jxx::NEW<TheadTest>();
-    auto t2 = jxx::NEW<Thead2Test>();
-    EXPECT_EQ(0, t->intValue());
-    EXPECT_EQ(0, t2->intValue());
-    t->start();
-    t2->start();
-    jxx::lang::Thread::sleep(500);
-   
-    EXPECT_EQ(2, t->intValue());
-    EXPECT_EQ(2, t2->intValue());
-    t->stop();
-    t2->stop();
-    jxx::lang::Thread::sleep(1000);
-    EXPECT_EQ(2, t->intValue());
-    EXPECT_EQ(2, t2->intValue());
-    jxx::lang::Thread::sleep(1000);
-    EXPECT_EQ(2, t->intValue());
-    EXPECT_EQ(2, t2->intValue());
-
-    t->join();
-    t2->join();
-}
+} // namespace
