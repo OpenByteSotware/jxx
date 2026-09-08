@@ -92,6 +92,7 @@ target_link_libraries(
         fmt::fmt
         Microsoft.GSL::GSL
         unicode::unicode
+        pugixml::pugixml
 )
 
 if(UNIX AND NOT APPLE)

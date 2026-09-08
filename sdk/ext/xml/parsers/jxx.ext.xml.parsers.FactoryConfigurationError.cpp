@@ -1,0 +1,2 @@
+#include "ext/xml/parsers/jxx.ext.xml.parsers.FactoryConfigurationError.h"
+namespace jxx::ext::xml::parsers { FactoryConfigurationError::FactoryConfigurationError()=default; FactoryConfigurationError::FactoryConfigurationError(const jxx::Ptr<jxx::lang::String>& m):jxx::lang::Error(m){} const char* FactoryConfigurationError::typeName()const noexcept{return "FactoryConfigurationError";} jxx::Ptr<jxx::lang::Object> FactoryConfigurationError::cloneImpl()const{return jxx::CAST<jxx::lang::Object>(jxx::NEW<FactoryConfigurationError>(*this));} }

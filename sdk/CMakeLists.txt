@@ -23,7 +23,11 @@ target_include_directories(jxxsdk
 		${CMAKE_SOURCE_DIR}/math		
 		${CMAKE_SOURCE_DIR}/net		
 		${CMAKE_SOURCE_DIR}/nio		
-		${CMAKE_SOURCE_DIR}/security	
+		${CMAKE_SOURCE_DIR}/security
+		${CMAKE_SOURCE_DIR}/org
+		${CMAKE_SOURCE_DIR}/com
+		${CMAKE_SOURCE_DIR}/ext
+	
 )
 
  add_compile_definitions(_HAS_STD_BYTE=0)
@@ -43,6 +47,7 @@ target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/gsl/include)
 target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/fmt/include)
 target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/libunicode/src)
+target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/pugixml/src)
 
 target_compile_features(jxxsdk PRIVATE cxx_std_17)
 target_compile_options(jxxsdk PRIVATE /utf-8)
