@@ -99,20 +99,39 @@ public:
         , node_(node) {
     }
 
+    DomNode(
+        std::shared_ptr<Store> store,
+        pugi::xml_node owner,
+        pugi::xml_attribute attribute)
+        : store_(std::move(store))
+        , node_(owner)
+        , attribute_(attribute)
+        , attributeNode_(true) {
+    }
+
     ::jxx::Ptr<String> getNodeName() const override {
-        return ::jxx::NEW<String>(node_.name());
+        return ::jxx::NEW<String>(
+            attributeNode_ ? attribute_.name() : node_.name());
     }
 
     ::jxx::Ptr<String> getNodeValue() const override {
-        return ::jxx::NEW<String>(node_.value());
+        return ::jxx::NEW<String>(
+            attributeNode_ ? attribute_.value() : node_.value());
     }
 
     void setNodeValue(
         const ::jxx::Ptr<String>& value) override {
+        if (attributeNode_) {
+            attribute_.set_value(value ? value->utf8().c_str() : "");
+            return;
+        }
         node_.set_value(value ? value->utf8().c_str() : "");
     }
 
     ::jxx::lang::jshort getNodeType() const override {
+        if (attributeNode_) {
+            return Node::ATTRIBUTE_NODE;
+        }
         switch (node_.type()) {
         case pugi::node_document: return Node::DOCUMENT_NODE;
         case pugi::node_element: return Node::ELEMENT_NODE;
@@ -125,6 +144,9 @@ public:
     }
 
     ::jxx::Ptr<Node> getParentNode() const override {
+        if (attributeNode_) {
+            return nullptr;
+        }
         return wrap(store_, node_.parent());
     }
 
@@ -461,6 +483,8 @@ public:
 
     std::shared_ptr<Store> store_;
     pugi::xml_node node_;
+    pugi::xml_attribute attribute_;
+    bool attributeNode_ = false;
 };
 
 class NamedNodeMapImpl final
@@ -477,25 +501,70 @@ public:
     }
 
     ::jxx::Ptr<Node> getNamedItem(
-        const ::jxx::Ptr<String>&) const override {
-        return nullptr;
+        const ::jxx::Ptr<String>& name) const override {
+        if (name == nullptr) {
+            return nullptr;
+        }
+        const auto attribute = node_.attribute(name->utf8().c_str());
+        if (!attribute) {
+            return nullptr;
+        }
+        return ::jxx::CAST<Node>(
+            ::jxx::NEW<DomNode>(store_, node_, attribute));
     }
 
     ::jxx::Ptr<Node> setNamedItem(
-        const ::jxx::Ptr<Node>&) override {
-        throw DOMException(
-            DOMException::NOT_SUPPORTED_ERR,
-            ::jxx::NEW<String>("Attribute nodes are not mutable"));
+        const ::jxx::Ptr<Node>& value) override {
+        const auto attributeNode = ::jxx::CAST<DomNode>(value);
+        if (attributeNode == nullptr || !attributeNode->attributeNode_) {
+            throw DOMException(
+                DOMException::HIERARCHY_REQUEST_ERR,
+                ::jxx::NEW<String>("Node is not an attribute"));
+        }
+        const auto name = attributeNode->attribute_.name();
+        const auto previous = node_.attribute(name);
+        ::jxx::Ptr<Node> result;
+        if (previous) {
+            result = ::jxx::CAST<Node>(
+                ::jxx::NEW<DomNode>(store_, node_, previous));
+        }
+        auto destination = previous;
+        if (!destination) {
+            destination = node_.append_attribute(name);
+        }
+        destination.set_value(attributeNode->attribute_.value());
+        return result;
     }
 
     ::jxx::Ptr<Node> removeNamedItem(
         const ::jxx::Ptr<String>& name) override {
-        node_.remove_attribute(name->utf8().c_str());
-        return nullptr;
+        const auto attribute =
+            name == nullptr ? pugi::xml_attribute()
+                            : node_.attribute(name->utf8().c_str());
+        if (!attribute) {
+            throw DOMException(
+                DOMException::NOT_FOUND_ERR,
+                ::jxx::NEW<String>("Attribute was not found"));
+        }
+        const auto result = ::jxx::CAST<Node>(
+            ::jxx::NEW<DomNode>(store_, node_, attribute));
+        node_.remove_attribute(attribute);
+        return result;
     }
 
     ::jxx::Ptr<Node> item(
-        ::jxx::lang::jint) const override {
+        ::jxx::lang::jint index) const override {
+        if (index < 0) {
+            return nullptr;
+        }
+        ::jxx::lang::jint current = 0;
+        for (const auto& attribute : node_.attributes()) {
+            if (current == index) {
+                return ::jxx::CAST<Node>(
+                    ::jxx::NEW<DomNode>(store_, node_, attribute));
+            }
+            ++current;
+        }
         return nullptr;
     }
 
