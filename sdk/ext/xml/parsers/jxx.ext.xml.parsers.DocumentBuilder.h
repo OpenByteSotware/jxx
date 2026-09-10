@@ -1,7 +1,71 @@
 #pragma once
+
 #include "lang/jxx.lang.ClassInfo.h"
-namespace jxx::io { class File; class InputStream; }
-namespace jxx::lang { class String; }
-namespace jxx::org::w3c::dom { class Document; class DOMImplementation; }
-namespace jxx::org::xml::sax { class InputSource; class EntityResolver; class ErrorHandler; }
-namespace jxx::ext::xml::parsers { class DocumentBuilder : public jxx::lang::ClassBase<DocumentBuilder,jxx::lang::Object> { public: virtual jxx::Ptr<jxx::org::w3c::dom::Document> parse(const jxx::Ptr<jxx::org::xml::sax::InputSource>& input)=0; jxx::Ptr<jxx::org::w3c::dom::Document> parse(const jxx::Ptr<jxx::io::InputStream>& input); jxx::Ptr<jxx::org::w3c::dom::Document> parse(const jxx::Ptr<jxx::io::InputStream>& input,const jxx::Ptr<jxx::lang::String>& systemId); jxx::Ptr<jxx::org::w3c::dom::Document> parse(const jxx::Ptr<jxx::io::File>& file); jxx::Ptr<jxx::org::w3c::dom::Document> parse(const jxx::Ptr<jxx::lang::String>& uri); virtual jxx::Ptr<jxx::org::w3c::dom::Document> newDocument()=0; virtual jxx::Ptr<jxx::org::w3c::dom::DOMImplementation> getDOMImplementation()=0; virtual void setEntityResolver(const jxx::Ptr<jxx::org::xml::sax::EntityResolver>& resolver)=0; virtual void setErrorHandler(const jxx::Ptr<jxx::org::xml::sax::ErrorHandler>& handler)=0; virtual jxx::lang::jbool isNamespaceAware()const=0; virtual jxx::lang::jbool isValidating()const=0; virtual void reset(); protected: DocumentBuilder()=default; }; }
+
+namespace jxx::ext::xml::validation {
+class Schema;
+}
+
+namespace jxx::io {
+class File;
+class InputStream;
+}
+
+namespace jxx::lang {
+class String;
+}
+
+namespace jxx::org::w3c::dom {
+class Document;
+class DOMImplementation;
+}
+
+namespace jxx::org::xml::sax {
+class EntityResolver;
+class ErrorHandler;
+class InputSource;
+}
+
+namespace jxx::ext::xml::parsers {
+
+class DocumentBuilder
+    : public ::jxx::lang::ClassBase<
+          DocumentBuilder,
+          ::jxx::lang::Object> {
+public:
+    using JxxSuper = ::jxx::lang::Object;
+    using Super = ::jxx::lang::ClassBase<DocumentBuilder, JxxSuper>;
+
+    ~DocumentBuilder() override;
+
+    virtual ::jxx::Ptr<::jxx::org::w3c::dom::Document> parse(
+        const ::jxx::Ptr<::jxx::org::xml::sax::InputSource>& input) = 0;
+
+    ::jxx::Ptr<::jxx::org::w3c::dom::Document> parse(
+        const ::jxx::Ptr<::jxx::io::InputStream>& input);
+
+    ::jxx::Ptr<::jxx::org::w3c::dom::Document> parse(
+        const ::jxx::Ptr<::jxx::io::InputStream>& input,
+        const ::jxx::Ptr<::jxx::lang::String>& systemId);
+
+    ::jxx::Ptr<::jxx::org::w3c::dom::Document> parse(
+        const ::jxx::Ptr<::jxx::io::File>& file);
+
+    ::jxx::Ptr<::jxx::org::w3c::dom::Document> parse(
+        const ::jxx::Ptr<::jxx::lang::String>& uri);
+
+    virtual ::jxx::Ptr<::jxx::org::w3c::dom::Document> newDocument() = 0;
+    virtual ::jxx::Ptr<::jxx::org::w3c::dom::DOMImplementation> getDOMImplementation() = 0;
+    virtual void setEntityResolver(const ::jxx::Ptr<::jxx::org::xml::sax::EntityResolver>& resolver) = 0;
+    virtual void setErrorHandler(const ::jxx::Ptr<::jxx::org::xml::sax::ErrorHandler>& handler) = 0;
+    virtual ::jxx::lang::jbool isNamespaceAware() const = 0;
+    virtual ::jxx::lang::jbool isValidating() const = 0;
+    virtual ::jxx::Ptr<::jxx::ext::xml::validation::Schema> getSchema() const = 0;
+    virtual ::jxx::lang::jbool isXIncludeAware() const = 0;
+    virtual void reset();
+
+protected:
+    DocumentBuilder();
+};
+
+} // namespace jxx::ext::xml::parsers
