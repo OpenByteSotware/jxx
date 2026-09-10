@@ -558,6 +558,95 @@ public:
         return match ? ::jxx::CAST<Element>(wrap(store_, match)) : nullptr;
     }
 
+    ::jxx::Ptr<Node> importNode(
+        const ::jxx::Ptr<Node>& importedNode,
+        ::jxx::lang::jbool deep) override {
+        const auto source = ::jxx::CAST<DomNode>(importedNode);
+        if (source == nullptr || source->attributeNode_) {
+            throw DOMException(
+                DOMException::NOT_SUPPORTED_ERR,
+                ::jxx::NEW<String>("Unsupported node type for import"));
+        }
+
+        auto copied = store_->document.append_copy(source->node_);
+        if (!deep) {
+            while (copied.first_child()) {
+                copied.remove_child(copied.first_child());
+            }
+        }
+        return wrap(store_, copied);
+    }
+
+    ::jxx::Ptr<Node> adoptNode(
+        const ::jxx::Ptr<Node>& sourceNode) override {
+        const auto source = ::jxx::CAST<DomNode>(sourceNode);
+        if (source == nullptr || source->attributeNode_) {
+            throw DOMException(
+                DOMException::NOT_SUPPORTED_ERR,
+                ::jxx::NEW<String>("Unsupported node type for adoption"));
+        }
+
+        if (source->store_ == store_) {
+            return sourceNode;
+        }
+
+        auto adopted = store_->document.append_copy(source->node_);
+        auto parent = source->node_.parent();
+        if (parent) {
+            parent.remove_child(source->node_);
+        }
+        return wrap(store_, adopted);
+    }
+
+    ::jxx::Ptr<Node> renameNode(
+        const ::jxx::Ptr<Node>& sourceNode,
+        const ::jxx::Ptr<String>& namespaceURI,
+        const ::jxx::Ptr<String>& qualifiedName) override {
+        const auto source = ::jxx::CAST<DomNode>(sourceNode);
+        if (source == nullptr || source->store_ != store_) {
+            throw DOMException(
+                DOMException::WRONG_DOCUMENT_ERR,
+                ::jxx::NEW<String>("Node belongs to another document"));
+        }
+        if (qualifiedName == nullptr || qualifiedName->utf8().empty()) {
+            throw DOMException(
+                DOMException::INVALID_CHARACTER_ERR,
+                ::jxx::NEW<String>("qualifiedName is null or empty"));
+        }
+
+        const std::string name = qualifiedName->utf8();
+        const std::string uri = namespaceURI ? namespaceURI->utf8() : std::string();
+        const auto separator = name.find(':');
+        if (separator != std::string::npos && uri.empty()) {
+            throw DOMException(
+                DOMException::NAMESPACE_ERR,
+                ::jxx::NEW<String>("A prefixed name requires a namespace URI"));
+        }
+
+        if (source->attributeNode_) {
+            source->attribute_.set_name(name.c_str());
+        }
+        else {
+            source->node_.set_name(name.c_str());
+        }
+
+        if (!uri.empty()) {
+            const std::string prefix = prefixPart(name);
+            const std::string declarationName = prefix.empty()
+                ? std::string("xmlns")
+                : std::string("xmlns:") + prefix;
+            pugi::xml_node declarationOwner = source->attributeNode_
+                ? source->node_
+                : source->node_;
+            auto declaration = declarationOwner.attribute(declarationName.c_str());
+            if (!declaration) {
+                declaration = declarationOwner.append_attribute(declarationName.c_str());
+            }
+            declaration.set_value(uri.c_str());
+        }
+        return sourceNode;
+    }
+
     ::jxx::Ptr<String> getInputEncoding() const override { return store_->inputEncoding; }
     ::jxx::Ptr<String> getXmlEncoding() const override { return store_->xmlEncoding; }
     ::jxx::lang::jbool getXmlStandalone() const override { return store_->xmlStandalone; }
@@ -743,7 +832,7 @@ public:
     ::jxx::Ptr<Element> getOwnerElement() const override {
         return attributeNode_ ? ::jxx::CAST<Element>(wrap(store_, node_)) : nullptr;
     }
-
+      
     ::jxx::lang::jbool isId() const override {
         return attributeNode_ && store_->idAttributes.count(attribute_.name()) != 0;
     }
