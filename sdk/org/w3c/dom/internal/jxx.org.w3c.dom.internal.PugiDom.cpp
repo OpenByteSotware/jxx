@@ -15,6 +15,8 @@
 #include "lang/jxx_types.h"
 #include "org/w3c/dom/internal/jxx.org.w3c.dom.internal.DOMImplementationImpl.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Attr.h"
+#include "org/w3c/dom/jxx.org.w3c.dom.CDATASection.h"
+#include "org/w3c/dom/jxx.org.w3c.dom.Comment.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.DOMException.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.DOMImplementation.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Document.h"
@@ -23,6 +25,7 @@
 #include "org/w3c/dom/jxx.org.w3c.dom.NamedNodeMap.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Node.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.NodeList.h"
+#include "org/w3c/dom/jxx.org.w3c.dom.ProcessingInstruction.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Text.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.TypeInfo.h"
 
@@ -33,9 +36,12 @@ using Node = ::jxx::org::w3c::dom::Node;
 using Document = ::jxx::org::w3c::dom::Document;
 using Element = ::jxx::org::w3c::dom::Element;
 using Attr = ::jxx::org::w3c::dom::Attr;
+using CDATASection = ::jxx::org::w3c::dom::CDATASection;
+using Comment = ::jxx::org::w3c::dom::Comment;
 using Text = ::jxx::org::w3c::dom::Text;
 using NodeList = ::jxx::org::w3c::dom::NodeList;
 using NamedNodeMap = ::jxx::org::w3c::dom::NamedNodeMap;
+using ProcessingInstruction = ::jxx::org::w3c::dom::ProcessingInstruction;
 using DOMImplementation = ::jxx::org::w3c::dom::DOMImplementation;
 using DOMException = ::jxx::org::w3c::dom::DOMException;
 
@@ -80,10 +86,23 @@ pugi::xml_attribute findAttributeNS(pugi::xml_node node, const std::string& uri,
 }
 
 class DomNode;
+class NamedNodeMapImpl;
 
 ::jxx::Ptr<Document> newDocument();
 
 ::jxx::Ptr<Node> wrap(
+    const std::shared_ptr<Store>& store,
+    pugi::xml_node node);
+
+::jxx::Ptr<Comment> wrapComment(
+    const std::shared_ptr<Store>& store,
+    pugi::xml_node node);
+
+::jxx::Ptr<CDATASection> wrapCDATASection(
+    const std::shared_ptr<Store>& store,
+    pugi::xml_node node);
+
+::jxx::Ptr<ProcessingInstruction> wrapProcessingInstruction(
     const std::shared_ptr<Store>& store,
     pugi::xml_node node);
 
@@ -122,7 +141,7 @@ private:
     std::vector<pugi::xml_node> nodes_;
 };
 
-class DomNode final
+class DomNode
     : public ::jxx::lang::ClassBase<
           DomNode,
           ::jxx::lang::Object,
@@ -264,77 +283,47 @@ public:
             static_cast<bool>(node_.first_attribute()));
     }
 
-    ::jxx::Ptr<String>
-        getNamespaceURI() const override
-    {
+    ::jxx::Ptr<String> getNamespaceURI() const override {
         const std::string qualifiedName =
             attributeNode_
-            ? std::string(attribute_.name())
-            : std::string(node_.name());
+                ? std::string(attribute_.name())
+                : std::string(node_.name());
 
         if (qualifiedName.empty()) {
             return nullptr;
         }
 
-        const std::string prefix =
-            prefixPart(qualifiedName);
+        const std::string prefix = prefixPart(qualifiedName);
 
-        /*
-         * Namespace declaration attributes have fixed namespace semantics.
-         */
-        if (qualifiedName == "xmlns" ||
-            prefix == "xmlns") {
-
+        if (qualifiedName == "xmlns" || prefix == "xmlns") {
             return ::jxx::NEW<String>(
                 "http://www.w3.org/2000/xmlns/");
         }
 
-        /*
-         * The xml prefix is implicitly bound and does not require an
-         * explicit declaration.
-         */
         if (prefix == "xml") {
             return ::jxx::NEW<String>(
                 "http://www.w3.org/XML/1998/namespace");
         }
 
-        /*
-         * Unprefixed attributes do not inherit the default namespace.
-         */
         if (attributeNode_ && prefix.empty()) {
             return nullptr;
         }
 
         const std::string namespaceURI =
-            resolveNamespace(
-                node_,
-                qualifiedName);
+            resolveNamespace(node_, qualifiedName);
 
-        if (namespaceURI.empty()) {
-            return nullptr;
-        }
-
-        return ::jxx::NEW<String>(
-            namespaceURI);
+        return namespaceURI.empty()
+            ? nullptr
+            : ::jxx::NEW<String>(namespaceURI);
     }
 
-    ::jxx::Ptr<String>
-        getPrefix() const override
-    {
+    ::jxx::Ptr<String> getPrefix() const override {
         const std::string qualifiedName =
             attributeNode_
-            ? std::string(attribute_.name())
-            : std::string(node_.name());
-
-        const std::string prefix =
-            prefixPart(qualifiedName);
-
-        if (prefix.empty()) {
-            return nullptr;
-        }
-
-        return ::jxx::NEW<String>(
-            prefix);
+                ? std::string(attribute_.name())
+                : std::string(node_.name());
+        const std::string prefix = prefixPart(qualifiedName);
+        return prefix.empty() ? nullptr : ::jxx::NEW<String>(prefix);
     }
 
     void setPrefix(
@@ -344,20 +333,14 @@ public:
             ::jxx::NEW<String>("Prefix mutation is not supported"));
     }
 
-    ::jxx::Ptr<String>
-        getLocalName() const override
-    {
+    ::jxx::Ptr<String> getLocalName() const override {
         const std::string qualifiedName =
             attributeNode_
-            ? std::string(attribute_.name())
-            : std::string(node_.name());
-
-        if (qualifiedName.empty()) {
-            return nullptr;
-        }
-
-        return ::jxx::NEW<String>(
-            localPart(qualifiedName));
+                ? std::string(attribute_.name())
+                : std::string(node_.name());
+        return qualifiedName.empty()
+            ? nullptr
+            : ::jxx::NEW<String>(localPart(qualifiedName));
     }
 
     ::jxx::Ptr<String> getTextContent() const override {
@@ -520,6 +503,35 @@ public:
         auto value = store_->document.append_child(pugi::node_pcdata);
         value.set_value(data ? data->utf8().c_str() : "");
         return ::jxx::CAST<Text>(wrap(store_, value));
+    }
+
+    ::jxx::Ptr<Comment> createComment(
+        const ::jxx::Ptr<String>& data) override {
+        auto value = store_->document.append_child(pugi::node_comment);
+        value.set_value(data ? data->utf8().c_str() : "");
+        return wrapComment(store_, value);
+    }
+
+    ::jxx::Ptr<CDATASection> createCDATASection(
+        const ::jxx::Ptr<String>& data) override {
+        auto value = store_->document.append_child(pugi::node_cdata);
+        value.set_value(data ? data->utf8().c_str() : "");
+        return wrapCDATASection(store_, value);
+    }
+
+    ::jxx::Ptr<ProcessingInstruction>
+    createProcessingInstruction(
+        const ::jxx::Ptr<String>& target,
+        const ::jxx::Ptr<String>& data) override {
+        if (target == nullptr || target->utf8().empty()) {
+            throw DOMException(
+                DOMException::INVALID_CHARACTER_ERR,
+                ::jxx::NEW<String>("Processing instruction target is empty"));
+        }
+        auto value = store_->document.append_child(pugi::node_pi);
+        value.set_name(target->utf8().c_str());
+        value.set_value(data ? data->utf8().c_str() : "");
+        return wrapProcessingInstruction(store_, value);
     }
 
     ::jxx::Ptr<Attr> createAttribute(
@@ -900,7 +912,7 @@ public:
     ::jxx::Ptr<Element> getOwnerElement() const override {
         return attributeNode_ ? ::jxx::CAST<Element>(wrap(store_, node_)) : nullptr;
     }
-      
+
     ::jxx::lang::jbool isId() const override {
         return attributeNode_ && store_->idAttributes.count(attribute_.name()) != 0;
     }
@@ -1023,10 +1035,63 @@ public:
         return ::jxx::CAST<Text>(thisPtr());
     }
 
+private:
+    friend class NamedNodeMapImpl;
+
+protected:
     std::shared_ptr<Store> store_;
     pugi::xml_node node_;
     pugi::xml_attribute attribute_;
     bool attributeNode_ = false;
+};
+
+class CommentNode final
+    : public DomNode
+    , public virtual Comment {
+public:
+    CommentNode(
+        const std::shared_ptr<Store>& store,
+        pugi::xml_node node)
+        : DomNode(store, node) {
+    }
+};
+
+class CDATASectionNode final
+    : public DomNode
+    , public virtual CDATASection {
+public:
+    CDATASectionNode(
+        const std::shared_ptr<Store>& store,
+        pugi::xml_node node)
+        : DomNode(store, node) {
+    }
+};
+
+class ProcessingInstructionNode final
+    : public DomNode
+    , public virtual ProcessingInstruction {
+public:
+    ProcessingInstructionNode(
+        const std::shared_ptr<Store>& store,
+        pugi::xml_node node)
+        : DomNode(store, node) {
+    }
+
+    ::jxx::Ptr<String> getTarget() const override {
+        return ::jxx::NEW<String>(node_.name());
+    }
+
+    ::jxx::Ptr<String> getData() const override {
+        return ::jxx::NEW<String>(node_.value());
+    }
+
+    void setData(
+        const ::jxx::Ptr<String>& data) override {
+        node_.set_value(
+            data != nullptr
+                ? data->utf8().c_str()
+                : "");
+    }
 };
 
 class NamedNodeMapImpl final
@@ -1199,12 +1264,54 @@ private:
     return child;
 }
 
-::jxx::Ptr<Node> wrap(
+::jxx::Ptr<Comment> wrapComment(
     const std::shared_ptr<Store>& store,
     pugi::xml_node node) {
     return node
-        ? ::jxx::CAST<Node>(::jxx::NEW<DomNode>(store, node))
+        ? ::jxx::CAST<Comment>(::jxx::NEW<CommentNode>(store, node))
         : nullptr;
+}
+
+::jxx::Ptr<CDATASection> wrapCDATASection(
+    const std::shared_ptr<Store>& store,
+    pugi::xml_node node) {
+    return node
+        ? ::jxx::CAST<CDATASection>(
+              ::jxx::NEW<CDATASectionNode>(store, node))
+        : nullptr;
+}
+
+::jxx::Ptr<ProcessingInstruction> wrapProcessingInstruction(
+    const std::shared_ptr<Store>& store,
+    pugi::xml_node node) {
+    return node
+        ? ::jxx::CAST<ProcessingInstruction>(
+              ::jxx::NEW<ProcessingInstructionNode>(store, node))
+        : nullptr;
+}
+
+::jxx::Ptr<Node> wrap(
+    const std::shared_ptr<Store>& store,
+    pugi::xml_node node) {
+    if (!node) {
+        return nullptr;
+    }
+
+    switch (node.type()) {
+    case pugi::node_comment:
+        return ::jxx::CAST<Node>(wrapComment(store, node));
+
+    case pugi::node_cdata:
+        return ::jxx::CAST<Node>(wrapCDATASection(store, node));
+
+    case pugi::node_pi:
+        return ::jxx::CAST<Node>(
+            wrapProcessingInstruction(store, node));
+
+    default:
+        return ::jxx::CAST<Node>(
+            ::jxx::NEW<DomNode>(store, node));
+    }
 }
 
 ::jxx::Ptr<Document> parseDocument(

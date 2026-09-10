@@ -7,10 +7,13 @@
 namespace jxx::org::w3c::dom {
 
 class Attr;
+class CDATASection;
+class Comment;
 class DOMImplementation;
 class DocumentType;
 class Element;
 class NodeList;
+class ProcessingInstruction;
 class Text;
 
 class Document : public ::jxx::lang::InterfaceBase<Document, Node> {
@@ -25,6 +28,17 @@ public:
         const ::jxx::Ptr<::jxx::lang::String>& tagName) = 0;
 
     virtual ::jxx::Ptr<Text> createTextNode(
+        const ::jxx::Ptr<::jxx::lang::String>& data) = 0;
+
+    virtual ::jxx::Ptr<Comment> createComment(
+        const ::jxx::Ptr<::jxx::lang::String>& data) = 0;
+
+    virtual ::jxx::Ptr<CDATASection> createCDATASection(
+        const ::jxx::Ptr<::jxx::lang::String>& data) = 0;
+
+    virtual ::jxx::Ptr<ProcessingInstruction>
+    createProcessingInstruction(
+        const ::jxx::Ptr<::jxx::lang::String>& target,
         const ::jxx::Ptr<::jxx::lang::String>& data) = 0;
 
     virtual ::jxx::Ptr<Attr> createAttribute(
