@@ -6,6 +6,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <unordered_set>
 
 #include <pugixml.hpp>
 
@@ -22,6 +23,7 @@
 #include "org/w3c/dom/jxx.org.w3c.dom.Node.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.NodeList.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Text.h"
+#include "org/w3c/dom/jxx.org.w3c.dom.TypeInfo.h"
 
 namespace jxx::org::w3c::dom::internal {
 
@@ -38,7 +40,37 @@ using DOMException = ::jxx::org::w3c::dom::DOMException;
 
 struct Store {
     pugi::xml_document document;
+    std::unordered_set<std::string> idAttributes;
 };
+
+std::string localPart(const std::string& qualifiedName) {
+    const auto position = qualifiedName.find(':');
+    return position == std::string::npos ? qualifiedName : qualifiedName.substr(position + 1);
+}
+
+std::string prefixPart(const std::string& qualifiedName) {
+    const auto position = qualifiedName.find(':');
+    return position == std::string::npos ? std::string() : qualifiedName.substr(0, position);
+}
+
+std::string resolveNamespace(pugi::xml_node node, const std::string& qualifiedName) {
+    const auto prefix = prefixPart(qualifiedName);
+    const std::string declaration = prefix.empty() ? "xmlns" : "xmlns:" + prefix;
+    for (auto current = node; current; current = current.parent()) {
+        const auto value = current.attribute(declaration.c_str());
+        if (value) return value.value();
+    }
+    return {};
+}
+
+pugi::xml_attribute findAttributeNS(pugi::xml_node node, const std::string& uri, const std::string& local) {
+    for (const auto& attribute : node.attributes()) {
+        const std::string name = attribute.name();
+        if (name == "xmlns" || name.rfind("xmlns:", 0) == 0) continue;
+        if (localPart(name) == local && resolveNamespace(node, name) == uri) return attribute;
+    }
+    return {};
+}
 
 class DomNode;
 
@@ -350,6 +382,86 @@ public:
             static_cast<bool>(node_.attribute(name->utf8().c_str())));
     }
 
+
+    ::jxx::Ptr<Attr> getAttributeNode(const ::jxx::Ptr<String>& name) const override {
+        if (name == nullptr) return nullptr;
+        auto attribute = node_.attribute(name->utf8().c_str());
+        return attribute ? ::jxx::CAST<Attr>(::jxx::NEW<DomNode>(store_, node_, attribute)) : nullptr;
+    }
+
+    ::jxx::Ptr<Attr> setAttributeNode(const ::jxx::Ptr<Attr>& attribute) override {
+        auto previous = getAttributeNode(attribute->getName());
+        setAttribute(attribute->getName(), attribute->getValue());
+        return previous;
+    }
+
+    ::jxx::Ptr<Attr> removeAttributeNode(const ::jxx::Ptr<Attr>& attribute) override {
+        if (attribute == nullptr || !node_.remove_attribute(attribute->getName()->utf8().c_str())) {
+            throw DOMException(DOMException::NOT_FOUND_ERR, ::jxx::NEW<String>("Attribute was not found"));
+        }
+        return attribute;
+    }
+
+    ::jxx::Ptr<String> getAttributeNS(const ::jxx::Ptr<String>& uri, const ::jxx::Ptr<String>& local) const override {
+        auto attribute = findAttributeNS(node_, uri ? uri->utf8() : std::string(), local ? local->utf8() : std::string());
+        return ::jxx::NEW<String>(attribute ? attribute.value() : "");
+    }
+
+    void setAttributeNS(const ::jxx::Ptr<String>&, const ::jxx::Ptr<String>& qualifiedName, const ::jxx::Ptr<String>& value) override {
+        setAttribute(qualifiedName, value);
+    }
+
+    void removeAttributeNS(const ::jxx::Ptr<String>& uri, const ::jxx::Ptr<String>& local) override {
+        auto attribute = findAttributeNS(node_, uri ? uri->utf8() : std::string(), local ? local->utf8() : std::string());
+        if (attribute) node_.remove_attribute(attribute);
+    }
+
+    ::jxx::Ptr<Attr> getAttributeNodeNS(const ::jxx::Ptr<String>& uri, const ::jxx::Ptr<String>& local) const override {
+        auto attribute = findAttributeNS(node_, uri ? uri->utf8() : std::string(), local ? local->utf8() : std::string());
+        return attribute ? ::jxx::CAST<Attr>(::jxx::NEW<DomNode>(store_, node_, attribute)) : nullptr;
+    }
+
+    ::jxx::Ptr<Attr> setAttributeNodeNS(const ::jxx::Ptr<Attr>& attribute) override { return setAttributeNode(attribute); }
+
+    ::jxx::Ptr<NodeList> getElementsByTagNameNS(const ::jxx::Ptr<String>& uri, const ::jxx::Ptr<String>& local) const override {
+        std::vector<pugi::xml_node> nodes;
+        const auto wantedUri = uri ? uri->utf8() : std::string();
+        const auto wantedLocal = local ? local->utf8() : std::string();
+        std::function<void(pugi::xml_node)> scan = [&](pugi::xml_node current) {
+            for (const auto& child : current.children()) {
+                const std::string name = child.name();
+                if (child.type() == pugi::node_element &&
+                    (wantedLocal == "*" || localPart(name) == wantedLocal) &&
+                    (wantedUri == "*" || resolveNamespace(child, name) == wantedUri)) nodes.push_back(child);
+                scan(child);
+            }
+        };
+        scan(node_);
+        return ::jxx::NEW<NodeListImpl>(store_, std::move(nodes));
+    }
+
+    ::jxx::lang::jbool hasAttributeNS(const ::jxx::Ptr<String>& uri, const ::jxx::Ptr<String>& local) const override {
+        return static_cast<::jxx::lang::jbool>(static_cast<bool>(findAttributeNS(node_, uri ? uri->utf8() : std::string(), local ? local->utf8() : std::string())));
+    }
+
+    ::jxx::Ptr<::jxx::org::w3c::dom::TypeInfo> getSchemaTypeInfo() const override { return nullptr; }
+
+    void setIdAttribute(const ::jxx::Ptr<String>& name, ::jxx::lang::jbool isIdValue) override {
+        if (!hasAttribute(name)) throw DOMException(DOMException::NOT_FOUND_ERR, ::jxx::NEW<String>("Attribute was not found"));
+        if (isIdValue) store_->idAttributes.insert(name->utf8()); else store_->idAttributes.erase(name->utf8());
+    }
+
+    void setIdAttributeNS(const ::jxx::Ptr<String>& uri, const ::jxx::Ptr<String>& local, ::jxx::lang::jbool isIdValue) override {
+        auto attribute = getAttributeNodeNS(uri, local);
+        if (!attribute) throw DOMException(DOMException::NOT_FOUND_ERR, ::jxx::NEW<String>("Attribute was not found"));
+        setIdAttribute(attribute->getName(), isIdValue);
+    }
+
+    void setIdAttributeNode(const ::jxx::Ptr<Attr>& attribute, ::jxx::lang::jbool isIdValue) override {
+        if (!attribute) throw DOMException(DOMException::NOT_FOUND_ERR, ::jxx::NEW<String>("Attribute was not found"));
+        setIdAttribute(attribute->getName(), isIdValue);
+    }
+
     ::jxx::Ptr<String> getName() const override {
         return getNodeName();
     }
@@ -361,6 +473,16 @@ public:
     void setValue(
         const ::jxx::Ptr<String>& value) override {
         setNodeValue(value);
+    }
+
+    ::jxx::lang::jbool getSpecified() const override { return true; }
+
+    ::jxx::Ptr<Element> getOwnerElement() const override {
+        return attributeNode_ ? ::jxx::CAST<Element>(wrap(store_, node_)) : nullptr;
+    }
+
+    ::jxx::lang::jbool isId() const override {
+        return attributeNode_ && store_->idAttributes.count(attribute_.name()) != 0;
     }
 
     ::jxx::Ptr<String> getData() const override {
@@ -566,6 +688,21 @@ public:
             ++current;
         }
         return nullptr;
+    }
+
+    ::jxx::Ptr<Node> getNamedItemNS(const ::jxx::Ptr<String>& uri, const ::jxx::Ptr<String>& local) const override {
+        auto attribute = findAttributeNS(node_, uri ? uri->utf8() : std::string(), local ? local->utf8() : std::string());
+        return attribute ? ::jxx::CAST<Node>(::jxx::NEW<DomNode>(store_, node_, attribute)) : nullptr;
+    }
+
+    ::jxx::Ptr<Node> setNamedItemNS(const ::jxx::Ptr<Node>& value) override { return setNamedItem(value); }
+
+    ::jxx::Ptr<Node> removeNamedItemNS(const ::jxx::Ptr<String>& uri, const ::jxx::Ptr<String>& local) override {
+        auto attribute = findAttributeNS(node_, uri ? uri->utf8() : std::string(), local ? local->utf8() : std::string());
+        if (!attribute) throw DOMException(DOMException::NOT_FOUND_ERR, ::jxx::NEW<String>("Attribute was not found"));
+        auto result = ::jxx::CAST<Node>(::jxx::NEW<DomNode>(store_, node_, attribute));
+        node_.remove_attribute(attribute);
+        return result;
     }
 
     ::jxx::lang::jint getLength() const override {

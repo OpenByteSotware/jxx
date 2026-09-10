@@ -7,6 +7,7 @@
 #include "org/w3c/dom/jxx.org.w3c.dom.Document.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Element.h"
 #include "org/xml/sax/jxx.org.xml.sax.InputSource.h"
+#include "ext/xml/parsers/jxx.ext.xml.parsers.DocumentBuilder.h"
 
 TEST(XmlParserStage, ParsesCharacterStream) {
     auto factory = ::jxx::ext::xml::parsers::DocumentBuilderFactory::newInstance();
