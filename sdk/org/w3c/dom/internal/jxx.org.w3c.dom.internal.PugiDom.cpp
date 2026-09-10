@@ -264,16 +264,77 @@ public:
             static_cast<bool>(node_.first_attribute()));
     }
 
-    ::jxx::Ptr<String> getNamespaceURI() const override {
-        return nullptr;
+    ::jxx::Ptr<String>
+        getNamespaceURI() const override
+    {
+        const std::string qualifiedName =
+            attributeNode_
+            ? std::string(attribute_.name())
+            : std::string(node_.name());
+
+        if (qualifiedName.empty()) {
+            return nullptr;
+        }
+
+        const std::string prefix =
+            prefixPart(qualifiedName);
+
+        /*
+         * Namespace declaration attributes have fixed namespace semantics.
+         */
+        if (qualifiedName == "xmlns" ||
+            prefix == "xmlns") {
+
+            return ::jxx::NEW<String>(
+                "http://www.w3.org/2000/xmlns/");
+        }
+
+        /*
+         * The xml prefix is implicitly bound and does not require an
+         * explicit declaration.
+         */
+        if (prefix == "xml") {
+            return ::jxx::NEW<String>(
+                "http://www.w3.org/XML/1998/namespace");
+        }
+
+        /*
+         * Unprefixed attributes do not inherit the default namespace.
+         */
+        if (attributeNode_ && prefix.empty()) {
+            return nullptr;
+        }
+
+        const std::string namespaceURI =
+            resolveNamespace(
+                node_,
+                qualifiedName);
+
+        if (namespaceURI.empty()) {
+            return nullptr;
+        }
+
+        return ::jxx::NEW<String>(
+            namespaceURI);
     }
 
-    ::jxx::Ptr<String> getPrefix() const override {
-        const std::string name = node_.name();
-        const auto separator = name.find(':');
-        return separator == std::string::npos
-            ? nullptr
-            : ::jxx::NEW<String>(name.substr(0, separator));
+    ::jxx::Ptr<String>
+        getPrefix() const override
+    {
+        const std::string qualifiedName =
+            attributeNode_
+            ? std::string(attribute_.name())
+            : std::string(node_.name());
+
+        const std::string prefix =
+            prefixPart(qualifiedName);
+
+        if (prefix.empty()) {
+            return nullptr;
+        }
+
+        return ::jxx::NEW<String>(
+            prefix);
     }
 
     void setPrefix(
@@ -283,13 +344,20 @@ public:
             ::jxx::NEW<String>("Prefix mutation is not supported"));
     }
 
-    ::jxx::Ptr<String> getLocalName() const override {
-        const std::string name = node_.name();
-        const auto separator = name.find(':');
+    ::jxx::Ptr<String>
+        getLocalName() const override
+    {
+        const std::string qualifiedName =
+            attributeNode_
+            ? std::string(attribute_.name())
+            : std::string(node_.name());
+
+        if (qualifiedName.empty()) {
+            return nullptr;
+        }
+
         return ::jxx::NEW<String>(
-            separator == std::string::npos
-                ? name
-                : name.substr(separator + 1));
+            localPart(qualifiedName));
     }
 
     ::jxx::Ptr<String> getTextContent() const override {

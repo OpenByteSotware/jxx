@@ -1,5 +1,11 @@
 #include "org/w3c/dom/internal/jxx.org.w3c.dom.internal.DOMImplementationImpl.h"
 
+#include "org/w3c/dom/internal/jxx.org.w3c.dom.internal.PugiDom.h"
+#include "org/w3c/dom/jxx.org.w3c.dom.DOMException.h"
+#include "org/w3c/dom/jxx.org.w3c.dom.Document.h"
+#include "org/w3c/dom/jxx.org.w3c.dom.Element.h"
+#include "org/w3c/dom/jxx.org.w3c.dom.Node.h"
+
 #include <algorithm>
 #include <cctype>
 #include <string>
@@ -94,11 +100,28 @@ DOMImplementationImpl::createDocument(
     const ::jxx::Ptr<
         ::jxx::org::w3c::dom::DocumentType>& documentType) {
 
-    (void)namespaceURI;
-    (void)qualifiedName;
-    (void)documentType;
+    if (documentType != nullptr) {
+        throw ::jxx::org::w3c::dom::DOMException(
+            ::jxx::org::w3c::dom::DOMException::NOT_SUPPORTED_ERR,
+            ::jxx::NEW<::jxx::lang::String>(
+                "DocumentType attachment is not implemented in this stage"));
+    }
 
-    return nullptr;
+    const auto document =
+        ::jxx::org::w3c::dom::internal::newDocument();
+
+    if (qualifiedName != nullptr &&
+        !qualifiedName->utf8().empty()) {
+
+        const auto root = document->createElementNS(
+            namespaceURI,
+            qualifiedName);
+
+        document->appendChild(
+            ::jxx::CAST<::jxx::org::w3c::dom::Node>(root));
+    }
+
+    return document;
 }
 
 ::jxx::Ptr<::jxx::lang::Object>
