@@ -1,10 +1,64 @@
 #pragma once
+
 #include "lang/jxx.lang.ClassInfo.h"
-#include "lang/jxx.lang.String.h"
 #include "lang/jxx_types.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Node.h"
+
 namespace jxx::org::w3c::dom {
 
-class Element; class Text; class Attr; class NodeList; class DOMImplementation;
-class Document : public jxx::lang::InterfaceBase<Document,Node> { public: ~Document() override=default; virtual jxx::Ptr<Element> getDocumentElement() const=0; virtual jxx::Ptr<Element> createElement(const jxx::Ptr<jxx::lang::String>& tagName)=0; virtual jxx::Ptr<Text> createTextNode(const jxx::Ptr<jxx::lang::String>& data)=0; virtual jxx::Ptr<Attr> createAttribute(const jxx::Ptr<jxx::lang::String>& name)=0; virtual jxx::Ptr<NodeList> getElementsByTagName(const jxx::Ptr<jxx::lang::String>& tagName) const=0; virtual jxx::Ptr<DOMImplementation> getImplementation() const=0; };
+class Attr;
+class DOMImplementation;
+class DocumentType;
+class Element;
+class NodeList;
+class Text;
+
+class Document : public ::jxx::lang::InterfaceBase<Document, Node> {
+public:
+    ~Document() override = default;
+
+    virtual ::jxx::Ptr<DocumentType> getDoctype() const = 0;
+    virtual ::jxx::Ptr<DOMImplementation> getImplementation() const = 0;
+    virtual ::jxx::Ptr<Element> getDocumentElement() const = 0;
+
+    virtual ::jxx::Ptr<Element> createElement(
+        const ::jxx::Ptr<::jxx::lang::String>& tagName) = 0;
+
+    virtual ::jxx::Ptr<Text> createTextNode(
+        const ::jxx::Ptr<::jxx::lang::String>& data) = 0;
+
+    virtual ::jxx::Ptr<Attr> createAttribute(
+        const ::jxx::Ptr<::jxx::lang::String>& name) = 0;
+
+    virtual ::jxx::Ptr<NodeList> getElementsByTagName(
+        const ::jxx::Ptr<::jxx::lang::String>& tagName) const = 0;
+
+    virtual ::jxx::Ptr<Element> createElementNS(
+        const ::jxx::Ptr<::jxx::lang::String>& namespaceURI,
+        const ::jxx::Ptr<::jxx::lang::String>& qualifiedName) = 0;
+
+    virtual ::jxx::Ptr<Attr> createAttributeNS(
+        const ::jxx::Ptr<::jxx::lang::String>& namespaceURI,
+        const ::jxx::Ptr<::jxx::lang::String>& qualifiedName) = 0;
+
+    virtual ::jxx::Ptr<NodeList> getElementsByTagNameNS(
+        const ::jxx::Ptr<::jxx::lang::String>& namespaceURI,
+        const ::jxx::Ptr<::jxx::lang::String>& localName) const = 0;
+
+    virtual ::jxx::Ptr<Element> getElementById(
+        const ::jxx::Ptr<::jxx::lang::String>& elementId) const = 0;
+
+    virtual ::jxx::Ptr<::jxx::lang::String> getInputEncoding() const = 0;
+    virtual ::jxx::Ptr<::jxx::lang::String> getXmlEncoding() const = 0;
+    virtual ::jxx::lang::jbool getXmlStandalone() const = 0;
+    virtual void setXmlStandalone(::jxx::lang::jbool standalone) = 0;
+    virtual ::jxx::Ptr<::jxx::lang::String> getXmlVersion() const = 0;
+    virtual void setXmlVersion(const ::jxx::Ptr<::jxx::lang::String>& version) = 0;
+    virtual ::jxx::lang::jbool getStrictErrorChecking() const = 0;
+    virtual void setStrictErrorChecking(::jxx::lang::jbool strict) = 0;
+    virtual ::jxx::Ptr<::jxx::lang::String> getDocumentURI() const = 0;
+    virtual void setDocumentURI(const ::jxx::Ptr<::jxx::lang::String>& uri) = 0;
+    virtual void normalizeDocument() = 0;
+};
+
 } // namespace jxx::org::w3c::dom

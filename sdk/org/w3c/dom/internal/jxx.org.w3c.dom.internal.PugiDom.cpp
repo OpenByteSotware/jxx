@@ -18,6 +18,7 @@
 #include "org/w3c/dom/jxx.org.w3c.dom.DOMException.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.DOMImplementation.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Document.h"
+#include "org/w3c/dom/jxx.org.w3c.dom.DocumentType.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Element.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.NamedNodeMap.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Node.h"
@@ -41,6 +42,12 @@ using DOMException = ::jxx::org::w3c::dom::DOMException;
 struct Store {
     pugi::xml_document document;
     std::unordered_set<std::string> idAttributes;
+    ::jxx::Ptr<String> inputEncoding;
+    ::jxx::Ptr<String> xmlEncoding;
+    ::jxx::Ptr<String> xmlVersion = ::jxx::NEW<String>("1.0");
+    ::jxx::Ptr<String> documentURI;
+    ::jxx::lang::jbool xmlStandalone = false;
+    ::jxx::lang::jbool strictErrorChecking = true;
 };
 
 std::string localPart(const std::string& qualifiedName) {
@@ -301,6 +308,10 @@ public:
             value && value->store_ == store_ && value->node_ == node_);
     }
 
+    ::jxx::Ptr<::jxx::org::w3c::dom::DocumentType> getDoctype() const override {
+        return nullptr;
+    }
+
     ::jxx::Ptr<Element> getDocumentElement() const override {
         if (node_.type() != pugi::node_document) {
             return nullptr;
@@ -350,6 +361,58 @@ public:
     ::jxx::Ptr<DOMImplementation> getImplementation() const override {
         return ::jxx::org::w3c::dom::internal::implementation();
     }
+
+
+    ::jxx::Ptr<Element> createElementNS(
+        const ::jxx::Ptr<String>&,
+        const ::jxx::Ptr<String>& qualifiedName) override {
+        return createElement(qualifiedName);
+    }
+
+    ::jxx::Ptr<Attr> createAttributeNS(
+        const ::jxx::Ptr<String>&,
+        const ::jxx::Ptr<String>& qualifiedName) override {
+        return createAttribute(qualifiedName);
+    }
+
+    ::jxx::Ptr<Element> getElementById(
+        const ::jxx::Ptr<String>& elementId) const override {
+        if (elementId == nullptr) return nullptr;
+        std::function<pugi::xml_node(pugi::xml_node)> scan = [&](pugi::xml_node current) -> pugi::xml_node {
+            if (current.type() == pugi::node_element) {
+                for (const auto& name : store_->idAttributes) {
+                    auto attribute = current.attribute(name.c_str());
+                    if (attribute && attribute.value() == elementId->utf8()) return current;
+                }
+            }
+            for (const auto& child : current.children()) {
+                auto match = scan(child);
+                if (match) return match;
+            }
+            return {};
+        };
+        auto match = scan(store_->document);
+        return match ? ::jxx::CAST<Element>(wrap(store_, match)) : nullptr;
+    }
+
+    ::jxx::Ptr<String> getInputEncoding() const override { return store_->inputEncoding; }
+    ::jxx::Ptr<String> getXmlEncoding() const override { return store_->xmlEncoding; }
+    ::jxx::lang::jbool getXmlStandalone() const override { return store_->xmlStandalone; }
+    void setXmlStandalone(::jxx::lang::jbool value) override { store_->xmlStandalone = value; }
+    ::jxx::Ptr<String> getXmlVersion() const override { return store_->xmlVersion; }
+
+    void setXmlVersion(const ::jxx::Ptr<String>& version) override {
+        if (version == nullptr || (version->utf8() != "1.0" && version->utf8() != "1.1")) {
+            throw DOMException(DOMException::NOT_SUPPORTED_ERR, ::jxx::NEW<String>("Unsupported XML version"));
+        }
+        store_->xmlVersion = version;
+    }
+
+    ::jxx::lang::jbool getStrictErrorChecking() const override { return store_->strictErrorChecking; }
+    void setStrictErrorChecking(::jxx::lang::jbool value) override { store_->strictErrorChecking = value; }
+    ::jxx::Ptr<String> getDocumentURI() const override { return store_->documentURI; }
+    void setDocumentURI(const ::jxx::Ptr<String>& uri) override { store_->documentURI = uri; }
+    void normalizeDocument() override { normalize(); }
 
     ::jxx::Ptr<String> getTagName() const override {
         return getNodeName();
