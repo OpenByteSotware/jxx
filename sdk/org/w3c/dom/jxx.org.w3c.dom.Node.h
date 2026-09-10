@@ -200,8 +200,30 @@ public:
     virtual void setTextContent(
         const ::jxx::Ptr<::jxx::lang::String>& text) = 0;
 
+    virtual ::jxx::Ptr<::jxx::lang::String>
+    getBaseURI() const = 0;
+
+    virtual ::jxx::lang::jshort compareDocumentPosition(
+        const ::jxx::Ptr<Node>& other) const = 0;
+
+    virtual ::jxx::lang::jbool isSupported(
+        const ::jxx::Ptr<::jxx::lang::String>& feature,
+        const ::jxx::Ptr<::jxx::lang::String>& version) const = 0;
+
     virtual ::jxx::lang::jbool isSameNode(
         const ::jxx::Ptr<Node>& other) const = 0;
+
+    virtual ::jxx::lang::jbool isEqualNode(
+        const ::jxx::Ptr<Node>& other) const = 0;
+
+    virtual ::jxx::Ptr<::jxx::lang::String> lookupPrefix(
+        const ::jxx::Ptr<::jxx::lang::String>& namespaceURI) const = 0;
+
+    virtual ::jxx::lang::jbool isDefaultNamespace(
+        const ::jxx::Ptr<::jxx::lang::String>& namespaceURI) const = 0;
+
+    virtual ::jxx::Ptr<::jxx::lang::String> lookupNamespaceURI(
+        const ::jxx::Ptr<::jxx::lang::String>& prefix) const = 0;
 };
 
 } // namespace jxx::org::w3c::dom

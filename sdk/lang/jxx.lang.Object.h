@@ -288,7 +288,7 @@ namespace jxx {
                 const std::shared_ptr<T>& object) {
 
                 if constexpr (has_this_ptr<T>::value) {
-                    object->thisPtr() = object;
+                    object->thisPtr = object;
                 }
             }
 

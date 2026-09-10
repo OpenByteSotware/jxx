@@ -301,6 +301,124 @@ public:
         node_.text().set(text ? text->utf8().c_str() : "");
     }
 
+    ::jxx::Ptr<String> getBaseURI() const override {
+        return store_->documentURI;
+    }
+
+    ::jxx::lang::jshort compareDocumentPosition(
+        const ::jxx::Ptr<Node>& other) const override {
+        const auto value = ::jxx::CAST<DomNode>(other);
+        if (!value || value->store_ != store_) {
+            return Node::DOCUMENT_POSITION_DISCONNECTED |
+                Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC;
+        }
+        if (value->node_ == node_) return 0;
+        for (auto parent = value->node_.parent(); parent; parent = parent.parent()) {
+            if (parent == node_) return Node::DOCUMENT_POSITION_CONTAINED_BY |
+                Node::DOCUMENT_POSITION_FOLLOWING;
+        }
+        for (auto parent = node_.parent(); parent; parent = parent.parent()) {
+            if (parent == value->node_) return Node::DOCUMENT_POSITION_CONTAINS |
+                Node::DOCUMENT_POSITION_PRECEDING;
+        }
+        bool foundCurrent = false;
+        bool foundOther = false;
+        ::jxx::lang::jshort relativePosition =
+            Node::DOCUMENT_POSITION_DISCONNECTED;
+
+        std::function<void(pugi::xml_node)> visitInDocumentOrder =
+            [&](pugi::xml_node current) {
+                if (foundOther) {
+                    return;
+                }
+
+                for (auto currentChild = current.first_child();
+                     currentChild;
+                     currentChild = currentChild.next_sibling()) {
+
+                    if (currentChild == node_) {
+                        foundCurrent = true;
+                    }
+
+                    if (currentChild == value->node_) {
+                        relativePosition =
+                            foundCurrent
+                                ? Node::DOCUMENT_POSITION_FOLLOWING
+                                : Node::DOCUMENT_POSITION_PRECEDING;
+                        foundOther = true;
+                        return;
+                    }
+
+                    visitInDocumentOrder(currentChild);
+
+                    if (foundOther) {
+                        return;
+                    }
+                }
+            };
+
+        if (store_->document == node_) {
+            foundCurrent = true;
+        }
+
+        if (store_->document == value->node_) {
+            return foundCurrent
+                ? Node::DOCUMENT_POSITION_FOLLOWING
+                : Node::DOCUMENT_POSITION_PRECEDING;
+        }
+
+        visitInDocumentOrder(store_->document);
+        return relativePosition;
+    }
+
+    ::jxx::lang::jbool isSupported(
+        const ::jxx::Ptr<String>& feature,
+        const ::jxx::Ptr<String>& version) const override {
+        return implementation()->hasFeature(feature, version);
+    }
+
+    ::jxx::lang::jbool isEqualNode(
+        const ::jxx::Ptr<Node>& other) const override {
+        const auto value = ::jxx::CAST<DomNode>(other);
+        if (!value || getNodeType() != value->getNodeType()) return false;
+        return getNodeName()->equals(value->getNodeName()) &&
+            getNodeValue()->equals(value->getNodeValue()) &&
+            getTextContent()->equals(value->getTextContent());
+    }
+
+    ::jxx::Ptr<String> lookupPrefix(
+        const ::jxx::Ptr<String>& namespaceURI) const override {
+        if (!namespaceURI) return nullptr;
+        const std::string wanted = namespaceURI->utf8();
+        for (auto current = node_; current; current = current.parent()) {
+            for (const auto& attribute : current.attributes()) {
+                const std::string name = attribute.name();
+                if (name.rfind("xmlns:", 0) == 0 && attribute.value() == wanted) {
+                    return ::jxx::NEW<String>(name.substr(6));
+                }
+            }
+        }
+        return nullptr;
+    }
+
+    ::jxx::lang::jbool isDefaultNamespace(
+        const ::jxx::Ptr<String>& namespaceURI) const override {
+        const auto resolved = lookupNamespaceURI(nullptr);
+        if (!resolved) return namespaceURI == nullptr || namespaceURI->utf8().empty();
+        return namespaceURI != nullptr && resolved->equals(namespaceURI);
+    }
+
+    ::jxx::Ptr<String> lookupNamespaceURI(
+        const ::jxx::Ptr<String>& prefix) const override {
+        const std::string wanted = prefix ? prefix->utf8() : std::string();
+        const std::string declaration = wanted.empty() ? "xmlns" : "xmlns:" + wanted;
+        for (auto current = node_; current; current = current.parent()) {
+            const auto attribute = current.attribute(declaration.c_str());
+            if (attribute) return ::jxx::NEW<String>(attribute.value());
+        }
+        return nullptr;
+    }
+
     ::jxx::lang::jbool isSameNode(
         const ::jxx::Ptr<Node>& other) const override {
         const auto value = ::jxx::CAST<DomNode>(other);
@@ -364,9 +482,54 @@ public:
 
 
     ::jxx::Ptr<Element> createElementNS(
-        const ::jxx::Ptr<String>&,
+        const ::jxx::Ptr<String>& namespaceURI,
         const ::jxx::Ptr<String>& qualifiedName) override {
-        return createElement(qualifiedName);
+
+        if (qualifiedName == nullptr || qualifiedName->utf8().empty()) {
+            throw DOMException(
+                DOMException::INVALID_CHARACTER_ERR,
+                ::jxx::NEW<String>("qualifiedName is null or empty"));
+        }
+
+        const std::string qualifiedNameValue = qualifiedName->utf8();
+        const std::string namespaceValue =
+            namespaceURI == nullptr
+                ? std::string()
+                : namespaceURI->utf8();
+        const auto separator = qualifiedNameValue.find(':');
+
+        if (separator == 0 ||
+            separator == qualifiedNameValue.size() - 1 ||
+            (separator != std::string::npos &&
+             qualifiedNameValue.find(':', separator + 1) != std::string::npos)) {
+            throw DOMException(
+                DOMException::NAMESPACE_ERR,
+                ::jxx::NEW<String>("Invalid qualified name"));
+        }
+
+        if (separator != std::string::npos && namespaceValue.empty()) {
+            throw DOMException(
+                DOMException::NAMESPACE_ERR,
+                ::jxx::NEW<String>(
+                    "A prefixed element requires a namespace URI"));
+        }
+
+        auto element = store_->document.append_child(
+            qualifiedNameValue.c_str());
+
+        if (!namespaceValue.empty()) {
+            const std::string prefix = prefixPart(qualifiedNameValue);
+            const std::string declarationName =
+                prefix.empty()
+                    ? std::string("xmlns")
+                    : std::string("xmlns:") + prefix;
+
+            auto declaration =
+                element.append_attribute(declarationName.c_str());
+            declaration.set_value(namespaceValue.c_str());
+        }
+
+        return ::jxx::CAST<Element>(wrap(store_, element));
     }
 
     ::jxx::Ptr<Attr> createAttributeNS(
@@ -470,7 +633,44 @@ public:
         return ::jxx::NEW<String>(attribute ? attribute.value() : "");
     }
 
-    void setAttributeNS(const ::jxx::Ptr<String>&, const ::jxx::Ptr<String>& qualifiedName, const ::jxx::Ptr<String>& value) override {
+    void setAttributeNS(
+        const ::jxx::Ptr<String>& namespaceURI,
+        const ::jxx::Ptr<String>& qualifiedName,
+        const ::jxx::Ptr<String>& value) override {
+
+        if (qualifiedName == nullptr || qualifiedName->utf8().empty()) {
+            throw DOMException(
+                DOMException::INVALID_CHARACTER_ERR,
+                ::jxx::NEW<String>("qualifiedName is null or empty"));
+        }
+
+        const std::string qualifiedNameValue = qualifiedName->utf8();
+        const std::string namespaceValue =
+            namespaceURI == nullptr
+                ? std::string()
+                : namespaceURI->utf8();
+        const auto separator = qualifiedNameValue.find(':');
+
+        if (separator != std::string::npos) {
+            if (separator == 0 ||
+                separator == qualifiedNameValue.size() - 1 ||
+                qualifiedNameValue.find(':', separator + 1) != std::string::npos ||
+                namespaceValue.empty()) {
+                throw DOMException(
+                    DOMException::NAMESPACE_ERR,
+                    ::jxx::NEW<String>(
+                        "Invalid namespaced attribute name"));
+            }
+
+            const std::string declarationName =
+                std::string("xmlns:") + prefixPart(qualifiedNameValue);
+            auto declaration = node_.attribute(declarationName.c_str());
+            if (!declaration) {
+                declaration = node_.append_attribute(declarationName.c_str());
+            }
+            declaration.set_value(namespaceValue.c_str());
+        }
+
         setAttribute(qualifiedName, value);
     }
 
@@ -791,9 +991,20 @@ private:
     const auto value = ::jxx::CAST<DomNode>(child);
     if (!value) {
         throw DOMException(
-            DOMException::WRONG_DOCUMENT_ERR,
+            DOMException::HIERARCHY_REQUEST_ERR,
             ::jxx::NEW<String>("Unsupported node"));
     }
+
+    if (value->store_ != store_) {
+        throw DOMException(
+            DOMException::WRONG_DOCUMENT_ERR,
+            ::jxx::NEW<String>("Node belongs to another document"));
+    }
+
+    if (value->node_.parent() == node_) {
+        return child;
+    }
+
     return wrap(store_, node_.append_copy(value->node_));
 }
 

@@ -3,6 +3,7 @@
 #include "lang/jxx.lang.CharSequence.h"
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
 #include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 
 namespace jxx::io {
@@ -18,9 +19,12 @@ void checkBounds(
         throw ::jxx::lang::NullPointerException();
     }
 
+    const auto bufferLength =
+        static_cast<::jxx::lang::jint>(buffer->length);
+
     if (offset < 0 ||
         length < 0 ||
-        offset > static_cast<::jxx::lang::jint>(buffer->length) - length) {
+        offset > bufferLength - length) {
         throw ::jxx::lang::IndexOutOfBoundsException();
     }
 }
@@ -40,14 +44,16 @@ void checkSequenceBounds(
 } // namespace
 
 Writer::Writer()
-    : lock_(thisPtr()) {
+    : Super()
+    , lock(::jxx::NEW<::jxx::lang::Object>()) {
 }
 
 Writer::Writer(
-    const ::jxx::Ptr<::jxx::lang::Object>& lock)
-    : lock_(lock) {
+    const ::jxx::Ptr<::jxx::lang::Object>& lockObject)
+    : Super()
+    , lock(lockObject) {
 
-    if (lock_ == nullptr) {
+    if (lock == nullptr) {
         throw ::jxx::lang::NullPointerException();
     }
 }
@@ -55,7 +61,7 @@ Writer::Writer(
 void Writer::write(
     ::jxx::lang::jint value) {
 
-    auto buffer =
+    const auto buffer =
         ::jxx::NEW<::jxx::lang::CharArrayType>(1);
 
     (*buffer)[0] =
@@ -67,8 +73,12 @@ void Writer::write(
 void Writer::write(
     const ::jxx::lang::CharArray& buffer) {
 
+    if (buffer == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+
     const auto length =
-        static_cast<::jxx::lang::jint>(buffer == nullptr ? 0 : buffer->length);
+        static_cast<::jxx::lang::jint>(buffer->length);
 
     checkBounds(buffer, 0, length);
     write(buffer, 0, length);
@@ -111,11 +121,8 @@ void Writer::write(
         return ::jxx::CAST<Writer>(thisPtr());
     }
 
-    const ::jxx::lang::jint length =
-        sequence->length();
-
     for (::jxx::lang::jint index = 0;
-         index < length;
+         index < sequence->length();
          ++index) {
         write(static_cast<::jxx::lang::jint>(
             sequence->charAt(index)));
@@ -133,10 +140,7 @@ void Writer::write(
         const auto nullText =
             ::jxx::NEW<::jxx::lang::String>("null");
 
-        checkSequenceBounds(
-            nullText->length(),
-            start,
-            end);
+        checkSequenceBounds(nullText->length(), start, end);
 
         for (::jxx::lang::jint index = start;
              index < end;
@@ -148,10 +152,7 @@ void Writer::write(
         return ::jxx::CAST<Writer>(thisPtr());
     }
 
-    checkSequenceBounds(
-        sequence->length(),
-        start,
-        end);
+    checkSequenceBounds(sequence->length(), start, end);
 
     for (::jxx::lang::jint index = start;
          index < end;
