@@ -14,7 +14,7 @@ TEST(XmlParserStage, ParsesCharacterStream) {
     auto reader = ::jxx::NEW<::jxx::io::StringReader>(
         ::jxx::NEW<::jxx::lang::String>("<root><item/></root>"));
     auto source = ::jxx::NEW<::jxx::org::xml::sax::InputSource>(reader);
-    auto document = builder.get()->parse(source);
+    auto document = builder->parse(source);
     ASSERT_NE(document, nullptr);
     ASSERT_NE(document->getDocumentElement(), nullptr);
     EXPECT_EQ(document->getDocumentElement()->getTagName()->utf8(), "root");
