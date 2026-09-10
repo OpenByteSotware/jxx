@@ -1,7 +1,2 @@
 #pragma once
-
-namespace jxx::io {
-
-void initializeClasses();
-
-} // namespace jxx::io
+namespace jxx::io { void initializeClasses(); }

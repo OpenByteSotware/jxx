@@ -1,139 +1,127 @@
-#include <algorithm>
-#include <stdexcept>
 #include "io/jxx.io.PushbackReader.h"
 
+#include <algorithm>
+#include <cstdint>
 
-namespace
-{
-    [[noreturn]] void throwIAE_(const char* msg)
-    {
-        throw std::invalid_argument(msg);
+#include "io/jxx.io.IOException.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.IndexOutOfBoundsException.h"
+#include "lang/jxx.lang.NullPointerException.h"
+
+namespace jxx::io {
+
+PushbackReader::PushbackReader(const ::jxx::Ptr<Reader>& input)
+    : PushbackReader(input, 1) {
+}
+
+PushbackReader::PushbackReader(
+    const ::jxx::Ptr<Reader>& input,
+    ::jxx::lang::jint size)
+    : Super(input)
+    , buffer_(::jxx::NEW<::jxx::lang::CharArrayType>(
+          static_cast<std::uint32_t>(validateSize_(size))))
+    , position_(size) {
+}
+
+PushbackReader::~PushbackReader() = default;
+
+::jxx::lang::jint PushbackReader::validateSize_(::jxx::lang::jint size) {
+    if (size <= 0) throw ::jxx::lang::IllegalArgumentException();
+    return size;
+}
+
+void PushbackReader::ensureOpen_() const {
+    if (closed_ || buffer_ == nullptr || in_ == nullptr) throw IOException();
+}
+
+::jxx::lang::jint PushbackReader::read() {
+    ensureOpen_();
+    if (position_ < static_cast<::jxx::lang::jint>(buffer_->length)) {
+        return static_cast<::jxx::lang::jint>((*buffer_)[position_++]);
     }
+    return in_->read();
+}
 
-    [[noreturn]] void throwIOE_(const char* msg)
-    {
-        throw std::runtime_error(msg);
+::jxx::lang::jint PushbackReader::read(
+    const ::jxx::lang::CharArray& buffer,
+    ::jxx::lang::jint offset,
+    ::jxx::lang::jint length) {
+    ensureOpen_();
+    if (!buffer) throw ::jxx::lang::NullPointerException();
+    if (offset < 0 || length < 0 ||
+        offset > static_cast<::jxx::lang::jint>(buffer->length) - length) {
+        throw ::jxx::lang::IndexOutOfBoundsException();
+    }
+    if (length == 0) return 0;
+
+    const auto pushed = static_cast<::jxx::lang::jint>(buffer_->length) - position_;
+    const auto copied = std::min(length, pushed);
+    for (::jxx::lang::jint i = 0; i < copied; ++i) {
+        (*buffer)[offset + i] = (*buffer_)[position_ + i];
+    }
+    position_ += copied;
+    if (copied == length) return copied;
+    const auto count = in_->read(buffer, offset + copied, length - copied);
+    return count < 0 ? (copied == 0 ? -1 : copied) : copied + count;
+}
+
+void PushbackReader::unread(::jxx::lang::jint value) {
+    ensureOpen_();
+    if (position_ == 0) throw IOException();
+    (*buffer_)[--position_] = static_cast<::jxx::lang::jchar>(value);
+}
+
+void PushbackReader::unread(const ::jxx::lang::CharArray& buffer) {
+    if (!buffer) throw ::jxx::lang::NullPointerException();
+    unread(buffer, 0, static_cast<::jxx::lang::jint>(buffer->length));
+}
+
+void PushbackReader::unread(
+    const ::jxx::lang::CharArray& buffer,
+    ::jxx::lang::jint offset,
+    ::jxx::lang::jint length) {
+    ensureOpen_();
+    if (!buffer) throw ::jxx::lang::NullPointerException();
+    if (offset < 0 || length < 0 ||
+        offset > static_cast<::jxx::lang::jint>(buffer->length) - length) {
+        throw ::jxx::lang::IndexOutOfBoundsException();
+    }
+    if (length > position_) throw IOException();
+    position_ -= length;
+    for (::jxx::lang::jint i = 0; i < length; ++i) {
+        (*buffer_)[position_ + i] = (*buffer)[offset + i];
     }
 }
 
-namespace jxx::io
-{
-    PushbackReader::PushbackReader(const jxx::Ptr<Reader> in)
-        : PushbackReader(std::move(in), 1)
-    {
-    }
+::jxx::lang::jbool PushbackReader::ready() {
+    ensureOpen_();
+    return position_ < static_cast<::jxx::lang::jint>(buffer_->length) || in_->ready();
+}
 
-    PushbackReader::PushbackReader(const jxx::Ptr<Reader> in, jxx::lang::jint size)
-        : FilterReader(std::move(in))
-    {
-        if (size <= 0)
-            throwIAE_("size <= 0");
-        buf_ = jxx::NEW<jxx::lang::CharArrayType>(size);
-        pos_ = size;
-    }
+::jxx::lang::jlong PushbackReader::skip(::jxx::lang::jlong count) {
+    ensureOpen_();
+    if (count < 0) throw ::jxx::lang::IllegalArgumentException();
+    const auto pushed = static_cast<::jxx::lang::jlong>(buffer_->length) - position_;
+    const auto first = std::min(count, pushed);
+    position_ += static_cast<::jxx::lang::jint>(first);
+    return first == count ? first : first + in_->skip(count - first);
+}
 
-    jxx::lang::jint PushbackReader::read()
-    {
-        if (closed_)
-            throwIOE_("reader closed");
-        if (pos_ < buf_->length)
-            return static_cast<jxx::lang::jint>((*buf_)[pos_++]);
-        return in_->read();
-    }
+::jxx::lang::jbool PushbackReader::markSupported() const { return false; }
+void PushbackReader::mark(::jxx::lang::jint readAheadLimit) {
+    (void)readAheadLimit;
+    throw IOException();
+}
+void PushbackReader::reset() { throw IOException(); }
 
-    jxx::lang::jint PushbackReader::read(const jxx::lang::CharArray cbuf,
-                                         jxx::lang::jint off,
-                                         jxx::lang::jint len)
-    {
-        if (closed_)
-            throwIOE_("reader closed");
-        if (!cbuf)
-            throwIAE_("null char array");
-        if (off < 0 || len < 0 || off > cbuf->length - len)
-            throwIAE_("index out of bounds");
-
-        const jxx::lang::jint avail = buf_->length - pos_;
-        if (avail > 0)
-        {
-            const auto copyLen = std::min(len, avail);
-            for (jxx::lang::jint i = 0; i < copyLen; ++i)
-                (*cbuf)[off + i] = (*buf_)[pos_ + i];
-            pos_ += copyLen;
-            if (copyLen == len)
-                return len;
-            const auto n = in_->read(cbuf, off + copyLen, len - copyLen);
-            return n < 0 ? copyLen : copyLen + n;
-        }
-
-        return in_->read(cbuf, off, len);
-    }
-
-    void PushbackReader::unread(jxx::lang::jint c)
-    {
-        if (closed_)
-            throwIOE_("reader closed");
-        if (pos_ == 0)
-            throwIOE_("pushback buffer full");
-        (*buf_)[--pos_] = static_cast<jxx::lang::jchar>(c);
-    }
-
-    void PushbackReader::unread(const jxx::lang::CharArray cbuf)
-    {
-        if (!cbuf)
-            throwIAE_("null char array");
-        unread(cbuf, 0, cbuf->length);
-    }
-
-    void PushbackReader::unread(const jxx::lang::CharArray cbuf,
-                                jxx::lang::jint off,
-                                jxx::lang::jint len)
-    {
-        if (closed_)
-            throwIOE_("reader closed");
-        if (!cbuf)
-            throwIAE_("null char array");
-        if (off < 0 || len < 0 || off > cbuf->length - len)
-            throwIAE_("index out of bounds");
-        if (len > pos_)
-            throwIOE_("pushback buffer full");
-
-        for (jxx::lang::jint i = len - 1; i >= 0; --i)
-            (*buf_)[--pos_] = (*cbuf)[off + i];
-    }
-
-    jxx::lang::jbool PushbackReader::ready()
-    {
-        if (closed_)
-            throwIOE_("reader closed");
-        return (pos_ < buf_->length) || in_->ready();
-    }
-
-    jxx::lang::jbool PushbackReader::markSupported() const { return false; }
-
-    jxx::lang::jlong PushbackReader::skip(jxx::lang::jlong n)
-    {
-        if (closed_)
-            throwIOE_("reader closed");
-        if (n < 0)
-            throwIAE_("skip value is negative");
-
-        const auto avail = buf_->length - pos_;
-        if (avail > 0)
-        {
-            const auto skipped = static_cast<jxx::lang::jint>(std::min<jxx::lang::jlong>(n, avail));
-            pos_ += skipped;
-            return skipped;
-        }
-        return in_->skip(n);
-    }
-
-    void PushbackReader::close()
-    {
-        if (!closed_)
-        {
-            closed_ = true;
-            buf_ = nullptr;
-            in_->close();
-        }
+void PushbackReader::close() {
+    if (closed_) return;
+    closed_ = true;
+    buffer_.reset();
+    if (in_ != nullptr) {
+        in_->close();
+        in_.reset();
     }
 }
+
+} // namespace jxx::io

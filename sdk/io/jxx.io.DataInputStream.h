@@ -1,36 +1,4 @@
 #pragma once
-
-#include "lang/jxx_types.h"
-#include "lang/jxx.lang.buildin_array.h"
-#include "jxx.io.FilterInputStream.h"
-
-namespace jxx::io {
-
-class DataInputStream final : public FilterInputStream {
-public:
-    explicit DataInputStream(const jxx::Ptr<InputStream> in);
-
-    void readFully(jxx::lang::ByteArray b);
-    void readFully(jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len);
-
-    jxx::lang::jint skipBytes(jxx::lang::jint n);
-
-    jxx::lang::jbool readBoolean();
-    jxx::lang::jbyte readByte();
-    jxx::lang::jint readUnsignedByte();
-    jxx::lang::jshort readShort();
-    jxx::lang::jint readUnsignedShort();
-    jxx::lang::jchar readChar();
-    jxx::lang::jint readInt();
-    jxx::lang::jlong readLong();
-    jxx::lang::jfloat readFloat();
-    jxx::lang::jdouble readDouble();
-    jxx::Ptr<jxx::lang::String> readLine();
-    jxx::Ptr<jxx::lang::String> readUTF();
-
-private:
-    void readFullyRaw_(jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len);
-    jxx::lang::jint readUnsignedShortBE_();
-};
-
-} // namespace jxx::io
+#include "io/jxx.io.DataInput.h"
+#include "io/jxx.io.FilterInputStream.h"
+namespace jxx::io { class DataInputStream : public ::jxx::lang::ClassBase<DataInputStream,FilterInputStream,DataInput> { public: using JxxSuper=FilterInputStream; using Super=::jxx::lang::ClassBase<DataInputStream,JxxSuper,DataInput>; explicit DataInputStream(const ::jxx::Ptr<InputStream>& input); void readFully(const ::jxx::lang::ByteArray& b)override; void readFully(const ::jxx::lang::ByteArray& b,::jxx::lang::jint off,::jxx::lang::jint len)override; ::jxx::lang::jint skipBytes(::jxx::lang::jint n)override; ::jxx::lang::jbool readBoolean()override; ::jxx::lang::jbyte readByte()override; ::jxx::lang::jint readUnsignedByte()override; ::jxx::lang::jshort readShort()override; ::jxx::lang::jint readUnsignedShort()override; ::jxx::lang::jchar readChar()override; ::jxx::lang::jint readInt()override; ::jxx::lang::jlong readLong()override; ::jxx::lang::jfloat readFloat()override; ::jxx::lang::jdouble readDouble()override; ::jxx::Ptr<::jxx::lang::String> readLine()override; ::jxx::Ptr<::jxx::lang::String> readUTF()override; static ::jxx::Ptr<::jxx::lang::String> readUTF(const ::jxx::Ptr<DataInput>& input); private: ::jxx::lang::jint required(); }; }

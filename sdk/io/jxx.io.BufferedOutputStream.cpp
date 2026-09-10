@@ -1,56 +1,149 @@
+#include "io/jxx.io.BufferedOutputStream.h"
+
+#include <cstdint>
+
+#include "io/jxx.io.IOException.h"
+#include "io/jxx.io.IOHelper.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
-#include "jxx.io.IOHelper.h"
-#include "lang/jxx.lang.String.h"
-#include "jxx.io.BufferedOutputStream.h"
 
-namespace jxx::io {
+namespace jxx::io
+{
 
-static constexpr jxx::lang::jint DEFAULT_BUF_SIZE = 8192;
+	BufferedOutputStream::BufferedOutputStream(
+		const ::jxx::Ptr<OutputStream>& output)
+		: BufferedOutputStream(output, 8192)
+	{
+	}
 
-BufferedOutputStream::BufferedOutputStream(const jxx::Ptr<OutputStream> out)
-    : BufferedOutputStream(std::move(out), DEFAULT_BUF_SIZE) {}
+	BufferedOutputStream::BufferedOutputStream(
+		const ::jxx::Ptr<OutputStream>& output,
+		::jxx::lang::jint size)
+		: Super(output)
+		, buffer_(
+			  ::jxx::NEW<::jxx::lang::ByteArrayType>(
+				  static_cast<std::uint32_t>(
+					  validateBufferSize_(size))))
+	{
+	}
 
-BufferedOutputStream::BufferedOutputStream(const jxx::Ptr<OutputStream> out, jxx::lang::jint size)
-    : FilterOutputStream(std::move(out)) {
-    if (size <= 0) throw jxx::lang::IllegalArgumentException(jxx::NEW<jxx::lang::String>("size <= 0"));
-    buf_ = jxx::NEW<jxx::lang::ByteArrayType>((std::uint32_t)size);
-}
+	BufferedOutputStream::~BufferedOutputStream() = default;
 
-void BufferedOutputStream::flushBuffer_() {
-    if (count_ > 0) {
-        out_->write(buf_, 0, count_);
-        count_ = 0;
-    }
-}
+	::jxx::lang::jint
+		BufferedOutputStream::validateBufferSize_(
+			::jxx::lang::jint size)
+	{
 
-void BufferedOutputStream::write(jxx::lang::jint b) {
-    if (count_ >= (jxx::lang::jint)buf_->length) flushBuffer_();
-    (*buf_)[count_++] = (jxx::lang::jbyte)(b & 0xFF);
-}
+		if (size <= 0) {
+			throw ::jxx::lang::IllegalArgumentException();
+		}
 
-void BufferedOutputStream::write(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) {
-    IOHelper::checkBounds_(b, off, len);
+		return size;
+	}
 
-    if (len >= (jxx::lang::jint)buf_->length) {
-        flushBuffer_();
-        out_->write(b, off, len);
-        return;
-    }
+	void BufferedOutputStream::ensureOpen_() const
+	{
+		if (closed_ || buffer_ == nullptr || out_ == nullptr) {
+			throw IOException();
+		}
+	}
 
-    if (len > (jxx::lang::jint)buf_->length - count_) flushBuffer_();
+	void BufferedOutputStream::flushBuffer_()
+	{
+		ensureOpen_();
 
-    for (jxx::lang::jint i = 0; i < len; ++i) (*buf_)[count_ + i] = (*b)[off + i];
-    count_ += len;
-}
+		if (count_ <= 0) {
+			return;
+		}
 
-void BufferedOutputStream::flush() {
-    flushBuffer_();
-    out_->flush();
-}
+		out_->write(buffer_, 0, count_);
+		count_ = 0;
+	}
 
-void BufferedOutputStream::close() {
-    try { flush(); } catch (...) {}
-    out_->close();
-}
+	void BufferedOutputStream::write(
+		::jxx::lang::jint value)
+	{
+
+		ensureOpen_();
+
+		if (count_ ==
+			static_cast<::jxx::lang::jint>(buffer_->length)) {
+			flushBuffer_();
+		}
+
+		(*buffer_)[count_++] =
+			static_cast<::jxx::lang::jbyte>(value);
+	}
+
+	void BufferedOutputStream::write(
+		const ::jxx::lang::ByteArray& buffer,
+		::jxx::lang::jint offset,
+		::jxx::lang::jint length)
+	{
+
+		ensureOpen_();
+		IOHelper::checkBounds(buffer, offset, length);
+
+		if (length == 0) {
+			return;
+		}
+
+		const auto capacity =
+			static_cast<::jxx::lang::jint>(buffer_->length);
+
+		if (length >= capacity) {
+			flushBuffer_();
+			out_->write(buffer, offset, length);
+			return;
+		}
+
+		if (length > capacity - count_) {
+			flushBuffer_();
+		}
+
+		for (::jxx::lang::jint index = 0;
+			 index < length;
+			 ++index) {
+			(*buffer_)[count_ + index] =
+				(*buffer)[offset + index];
+		}
+
+		count_ += length;
+	}
+
+	void BufferedOutputStream::flush()
+	{
+		ensureOpen_();
+		flushBuffer_();
+		out_->flush();
+	}
+
+	void BufferedOutputStream::close()
+	{
+		if (closed_) {
+			return;
+		}
+
+		try {
+			flushBuffer_();
+			out_->flush();
+		}
+		catch (...) {
+			try {
+				out_->close();
+			}
+			catch (...) {
+			}
+
+			closed_ = true;
+			buffer_.reset();
+			out_.reset();
+			throw;
+		}
+
+		out_->close();
+		closed_ = true;
+		buffer_.reset();
+		out_.reset();
+	}
 
 } // namespace jxx::io

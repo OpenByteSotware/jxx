@@ -1,121 +1,218 @@
-
-#include <algorithm>
-#include <stdexcept>
 #include "io/jxx.io.PushbackInputStream.h"
 
-namespace
-{
-    void throwIAE_(const char* msg)
-    {
-        throw std::invalid_argument(msg);
+#include <algorithm>
+#include <cstdint>
+
+#include "io/jxx.io.IOException.h"
+#include "io/jxx.io.IOHelper.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.NullPointerException.h"
+
+namespace jxx::io {
+
+PushbackInputStream::PushbackInputStream(
+    const ::jxx::Ptr<InputStream>& input)
+    : PushbackInputStream(input, 1) {
+}
+
+PushbackInputStream::PushbackInputStream(
+    const ::jxx::Ptr<InputStream>& input,
+    ::jxx::lang::jint size)
+    : Super(input)
+    , buffer_(
+          ::jxx::NEW<::jxx::lang::ByteArrayType>(
+              static_cast<std::uint32_t>(
+                  validateBufferSize_(size))))
+    , position_(size)
+    , closed_(false) {
+}
+
+PushbackInputStream::~PushbackInputStream() = default;
+
+::jxx::lang::jint
+PushbackInputStream::validateBufferSize_(
+    ::jxx::lang::jint size) {
+
+    if (size <= 0) {
+        throw ::jxx::lang::IllegalArgumentException();
     }
 
-    void throwIOE_(const char* msg)
-    {
-        throw std::runtime_error(msg);
+    return size;
+}
+
+void PushbackInputStream::ensureOpen() const {
+    if (closed_ || buffer_ == nullptr || in_ == nullptr) {
+        throw IOException();
     }
 }
 
-namespace jxx::io
-{
-    PushbackInputStream::PushbackInputStream(const jxx::Ptr<InputStream> in)
-        : PushbackInputStream(std::move(in), 1)
-    {
+::jxx::lang::jint PushbackInputStream::read() {
+    ensureOpen();
+
+    if (position_ <
+        static_cast<::jxx::lang::jint>(buffer_->length)) {
+        return static_cast<::jxx::lang::jint>(
+            static_cast<unsigned char>((*buffer_)[position_++]));
     }
 
-    PushbackInputStream::PushbackInputStream(const jxx::Ptr<InputStream> in, jxx::lang::jint size)
-        : FilterInputStream(std::move(in))
-    {
-        if (size <= 0)
-            throwIAE_("size <= 0");
-
-        buf_ = jxx::NEW<jxx::lang::ByteArrayType>(size);
-        pos_ = size;
-    }
-
-    jxx::lang::jint PushbackInputStream::read()
-    {
-        if (pos_ < buf_->length)
-            return (*buf_)[pos_++] & 0xFF;
-        return in_->read();
-    }
-
-    jxx::lang::jint PushbackInputStream::read(const jxx::lang::ByteArray b,
-                                              jxx::lang::jint off,
-                                              jxx::lang::jint len)
-    {
-        if (!b)
-            throwIAE_("null byte array");
-        if (off < 0 || len < 0 || off > b->length - len)
-            throwIAE_("index out of bounds");
-
-        const jxx::lang::jint avail = buf_->length - pos_;
-        if (avail > 0)
-        {
-            const jxx::lang::jint copyLen = std::min(len, avail);
-            for (jxx::lang::jint i = 0; i < copyLen; ++i)
-                (*b)[off + i] = (*buf_)[pos_ + i];
-
-            pos_ += copyLen;
-            if (copyLen == len)
-                return len;
-
-            const jxx::lang::jint n = in_->read(b, off + copyLen, len - copyLen);
-            return (n < 0) ? copyLen : copyLen + n;
-        }
-
-        return in_->read(b, off, len);
-    }
-
-    void PushbackInputStream::unread(jxx::lang::jint b)
-    {
-        if (pos_ == 0)
-            throwIOE_("push back buffer is full");
-        (*buf_)[--pos_] = static_cast<jxx::lang::jbyte>(b);
-    }
-
-    void PushbackInputStream::unread(const jxx::lang::ByteArray b)
-    {
-        if (!b)
-            throwIAE_("null byte array");
-        unread(b, 0, b->length);
-    }
-
-    void PushbackInputStream::unread(const jxx::lang::ByteArray b,
-                                     jxx::lang::jint off,
-                                     jxx::lang::jint len)
-    {
-        if (!b)
-            throwIAE_("null byte array");
-        if (off < 0 || len < 0 || off > b->length - len)
-            throwIAE_("index out of bounds");
-        if (len > pos_)
-            throwIOE_("push back buffer is full");
-
-        for (jxx::lang::jint i = len - 1; i >= 0; --i)
-            (*buf_)[--pos_] = (*b)[off + i];
-    }
-
-    jxx::lang::jint PushbackInputStream::available()
-    {
-        return (buf_->length - pos_) + in_->available();
-    }
-
-    jxx::lang::jlong PushbackInputStream::skip(jxx::lang::jlong n)
-    {
-        if (n <= 0)
-            return 0;
-
-        const jxx::lang::jint avail = buf_->length - pos_;
-        if (avail > 0)
-        {
-            const jxx::lang::jint skipped = static_cast<jxx::lang::jint>(std::min<jxx::lang::jlong>(n, avail));
-            pos_ += skipped;
-            return skipped;
-        }
-
-        return in_->skip(n);
-    }
-
-    jxx::lang::jbool PushbackInputStream::markSupported() const { return false; }
+    return in_->read();
 }
+
+::jxx::lang::jint PushbackInputStream::read(
+    const ::jxx::lang::ByteArray& buffer,
+    ::jxx::lang::jint offset,
+    ::jxx::lang::jint length) {
+
+    ensureOpen();
+    IOHelper::checkBounds(buffer, offset, length);
+
+    if (length == 0) {
+        return 0;
+    }
+
+    const auto buffered =
+        static_cast<::jxx::lang::jint>(buffer_->length) -
+        position_;
+
+    const auto copied =
+        std::min(length, buffered);
+
+    for (::jxx::lang::jint index = 0;
+         index < copied;
+         ++index) {
+        (*buffer)[offset + index] =
+            (*buffer_)[position_ + index];
+    }
+
+    position_ += copied;
+
+    if (copied == length) {
+        return copied;
+    }
+
+    const auto readCount =
+        in_->read(
+            buffer,
+            offset + copied,
+            length - copied);
+
+    if (readCount < 0) {
+        return copied == 0 ? -1 : copied;
+    }
+
+    return copied + readCount;
+}
+
+void PushbackInputStream::unread(
+    ::jxx::lang::jint value) {
+
+    ensureOpen();
+
+    if (position_ == 0) {
+        throw IOException();
+    }
+
+    (*buffer_)[--position_] =
+        static_cast<::jxx::lang::jbyte>(value);
+}
+
+void PushbackInputStream::unread(
+    const ::jxx::lang::ByteArray& buffer) {
+
+    if (buffer == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+
+    unread(
+        buffer,
+        0,
+        static_cast<::jxx::lang::jint>(buffer->length));
+}
+
+void PushbackInputStream::unread(
+    const ::jxx::lang::ByteArray& buffer,
+    ::jxx::lang::jint offset,
+    ::jxx::lang::jint length) {
+
+    ensureOpen();
+    IOHelper::checkBounds(buffer, offset, length);
+
+    if (length > position_) {
+        throw IOException();
+    }
+
+    position_ -= length;
+
+    for (::jxx::lang::jint index = 0;
+         index < length;
+         ++index) {
+        (*buffer_)[position_ + index] =
+            (*buffer)[offset + index];
+    }
+}
+
+::jxx::lang::jint PushbackInputStream::available() {
+    ensureOpen();
+
+    return
+        static_cast<::jxx::lang::jint>(buffer_->length) -
+        position_ +
+        in_->available();
+}
+
+::jxx::lang::jlong PushbackInputStream::skip(
+    ::jxx::lang::jlong count) {
+
+    ensureOpen();
+
+    if (count <= 0) {
+        return 0;
+    }
+
+    const auto buffered =
+        static_cast<::jxx::lang::jlong>(buffer_->length) -
+        position_;
+
+    const auto bufferedSkip =
+        std::min(count, buffered);
+
+    position_ +=
+        static_cast<::jxx::lang::jint>(bufferedSkip);
+
+    if (bufferedSkip == count) {
+        return bufferedSkip;
+    }
+
+    return bufferedSkip +
+        in_->skip(count - bufferedSkip);
+}
+
+::jxx::lang::jbool
+PushbackInputStream::markSupported() const {
+    return false;
+}
+
+void PushbackInputStream::mark(
+    ::jxx::lang::jint readLimit) {
+    (void)readLimit;
+}
+
+void PushbackInputStream::reset() {
+    throw IOException();
+}
+
+void PushbackInputStream::close() {
+    if (closed_) {
+        return;
+    }
+
+    closed_ = true;
+    buffer_.reset();
+
+    if (in_ != nullptr) {
+        in_->close();
+        in_.reset();
+    }
+}
+
+} // namespace jxx::io

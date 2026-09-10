@@ -1,52 +1,27 @@
 #pragma once
-
+#include "io/jxx.io.Closeable.h"
+#include "io/jxx.io.Flushable.h"
+#include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.buildin_array.h"
 #include "lang/jxx_types.h"
-#include "lang/jxx.lang.Object.h"
-#include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.CharSequence.h"
-
-#include "lang/jxx.lang.NullPointerException.h"
-#include "lang/jxx.lang.IndexOutOfBoundsException.h"
-
-#include "jxx.io.Closeable.h"
-#include "jxx.io.Flushable.h"
-#include "jxx.io.IOException.h"
-
+namespace jxx::lang { class CharSequence; class String; }
 namespace jxx::io {
-
-/**
- * Java 8 parity: java.io.Writer
- *
- * Note: Java Writer implements Appendable. We model append(...) methods here.
- */
-class Writer : public jxx::lang::Object, public Closeable, public Flushable {
+class Writer : public ::jxx::lang::ClassBase<Writer,::jxx::lang::Object,Closeable,Flushable> {
 public:
-    virtual ~Writer() = default;
-
-    // abstract
-    virtual void write(jxx::lang::jint c) = 0;
-
-    // overloads
-    virtual void write(const jxx::lang::CharArray cbuf);
-    virtual void write(const jxx::lang::CharArray cbuf, jxx::lang::jint off, jxx::lang::jint len);
-
-    virtual void write(const jxx::Ptr<jxx::lang::String> str);
-    virtual void write(const jxx::Ptr<jxx::lang::String> str, jxx::lang::jint off, jxx::lang::jint len);
-
-    // append
-    virtual jxx::Ptr<Writer> append(const jxx::Ptr<jxx::lang::CharSequence> csq);
-    virtual jxx::Ptr<Writer> append(const jxx::Ptr<jxx::lang::CharSequence> csq, jxx::lang::jint start, jxx::lang::jint end);
-    virtual jxx::Ptr<Writer> append(jxx::lang::jchar c);
-
-    // default no-op
-    void flush() override;
-    void close() override;
-
+ using JxxSuper=::jxx::lang::Object; using Super=::jxx::lang::ClassBase<Writer,JxxSuper,Closeable,Flushable>;
+ ~Writer() override=default;
+ virtual void write(::jxx::lang::jint value);
+ virtual void write(const ::jxx::lang::CharArray& buffer);
+ virtual void write(const ::jxx::lang::CharArray& buffer,::jxx::lang::jint offset,::jxx::lang::jint length)=0;
+ virtual void write(const ::jxx::Ptr<::jxx::lang::String>& value);
+ virtual void write(const ::jxx::Ptr<::jxx::lang::String>& value,::jxx::lang::jint offset,::jxx::lang::jint length);
+ virtual ::jxx::Ptr<Writer> append(const ::jxx::Ptr<::jxx::lang::CharSequence>& value);
+ virtual ::jxx::Ptr<Writer> append(const ::jxx::Ptr<::jxx::lang::CharSequence>& value,::jxx::lang::jint start,::jxx::lang::jint end);
+ virtual ::jxx::Ptr<Writer> append(::jxx::lang::jchar value);
+ virtual void flush() override=0;
+ virtual void close() override=0;
 protected:
-    static void checkBounds_(const jxx::lang::CharArray cbuf, jxx::lang::jint off, jxx::lang::jint len);
-    static void checkStringBounds_(const jxx::Ptr<jxx::lang::String> s, jxx::lang::jint off, jxx::lang::jint len);
-
-    jxx::Ptr<Writer> self_();
+ Writer(); explicit Writer(const ::jxx::Ptr<::jxx::lang::Object>& lock);
+ ::jxx::Ptr<::jxx::lang::Object> lock_;
 };
-
 } // namespace jxx::io

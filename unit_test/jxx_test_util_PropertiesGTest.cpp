@@ -3,6 +3,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <cstddef>
 
 #include <gtest/gtest.h>
 
@@ -15,6 +16,10 @@
 #include "io/jxx.io.Writer.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.IndexOutOfBoundsException.h"
+#include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx_types.h"
 
 namespace {
 
@@ -26,65 +31,290 @@ static Ptr<String> S(const char* s) {
     return std::make_shared<String>(s);
 }
 
-class MemoryReader : public jxx::io::Reader {
-private:
-    std::u16string text_;
-    std::size_t pos_;
-public:
-    explicit MemoryReader(std::u16string text)
-        : text_(std::move(text)), pos_(0) {
-    }
-    virtual ~MemoryReader() = default;
-    virtual jxx::lang::jint read() override {
-        if (pos_ >= text_.size()) return static_cast<jxx::lang::jint>(-1);
-        return static_cast<jxx::lang::jint>(text_[pos_++]);
-    }
-    virtual void close() override {}
-};
 
-class MemoryInputStream : public jxx::io::InputStream {
-private:
-    std::vector<unsigned char> bytes_;
-    std::size_t pos_;
-public:
-    explicit MemoryInputStream(std::vector<unsigned char> bytes)
-        : bytes_(std::move(bytes)), pos_(0) {
-    }
-    virtual ~MemoryInputStream() = default;
-    virtual jxx::lang::jint read() override {
-        if (pos_ >= bytes_.size()) return static_cast<jxx::lang::jint>(-1);
-        return static_cast<jxx::lang::jint>(bytes_[pos_++]);
-    }
-    virtual void close() override {}
-};
+namespace
+{
 
-class MemoryWriter : public jxx::io::Writer {
-private:
-    std::u16string text_;
-    bool flushed_;
-public:
-    MemoryWriter() : text_(), flushed_(false) {}
-    virtual ~MemoryWriter() = default;
-    virtual void write(jxx::lang::jint c) override { text_.push_back(static_cast<char16_t>(c)); }
-    virtual void flush() override { flushed_ = true; }
-    virtual void close() override {}
-    std::string utf8() const { return jxx::NEW<String>(text_)->utf8(); }
-    bool flushed() const { return flushed_; }
-};
+    class MemoryReader final
+        : public ::jxx::io::Reader
+    {
+    public:
+        explicit MemoryReader(
+            std::u16string text)
+            : text_(std::move(text))
+            , position_(0)
+        {
+        }
 
-class MemoryOutputStream : public jxx::io::OutputStream {
-private:
-    std::vector<unsigned char> bytes_;
-    bool flushed_;
-public:
-    MemoryOutputStream() : bytes_(), flushed_(false) {}
-    virtual ~MemoryOutputStream() = default;
-    virtual void write(jxx::lang::jint b) override { bytes_.push_back(static_cast<unsigned char>(b & 0xFF)); }
-    virtual void flush() override { flushed_ = true; }
-    virtual void close() override {}
-    std::string bytesAsString() const { return std::string(bytes_.begin(), bytes_.end()); }
-    bool flushed() const { return flushed_; }
-};
+        ~MemoryReader() override = default;
+
+        using ::jxx::io::Reader::read;
+
+        ::jxx::lang::jint read() override
+        {
+            if (position_ >= text_.size()) {
+                return -1;
+            }
+
+            return static_cast<::jxx::lang::jint>(
+                text_[position_++]);
+        }
+
+        ::jxx::lang::jint read(
+            const ::jxx::lang::CharArray& buffer,
+            ::jxx::lang::jint offset,
+            ::jxx::lang::jint length) override
+        {
+
+            validateBounds_(
+                buffer,
+                offset,
+                length);
+
+            if (length == 0) {
+                return 0;
+            }
+
+            if (position_ >= text_.size()) {
+                return -1;
+            }
+
+            const auto remaining =
+                text_.size() - position_;
+
+            const auto requested =
+                static_cast<std::size_t>(length);
+
+            const auto count =
+                remaining < requested
+                ? remaining
+                : requested;
+
+            for (std::size_t index = 0;
+                 index < count;
+                 ++index) {
+
+                (*buffer)[
+                    offset +
+                        static_cast<::jxx::lang::jint>(index)] =
+                    static_cast<::jxx::lang::jchar>(
+                        text_[position_ + index]);
+            }
+
+            position_ += count;
+
+            return static_cast<::jxx::lang::jint>(
+                count);
+        }
+
+        void close() override
+        {
+        }
+
+    private:
+        static void validateBounds_(
+            const ::jxx::lang::CharArray& buffer,
+            ::jxx::lang::jint offset,
+            ::jxx::lang::jint length)
+        {
+
+            if (buffer == nullptr) {
+                throw ::jxx::lang::
+                    NullPointerException();
+            }
+
+            const auto bufferLength =
+                static_cast<::jxx::lang::jint>(
+                    buffer->length);
+
+            if (offset < 0 ||
+                length < 0 ||
+                offset > bufferLength - length) {
+
+                throw ::jxx::lang::
+                    IndexOutOfBoundsException();
+            }
+        }
+
+        std::u16string text_;
+        std::size_t position_;
+    };
+
+    class MemoryInputStream final
+        : public ::jxx::io::InputStream
+    {
+    public:
+        explicit MemoryInputStream(
+            std::vector<unsigned char> bytes)
+            : bytes_(std::move(bytes))
+            , position_(0)
+        {
+        }
+
+        ~MemoryInputStream() override = default;
+
+        using ::jxx::io::InputStream::read;
+
+        ::jxx::lang::jint read() override
+        {
+            if (position_ >= bytes_.size()) {
+                return -1;
+            }
+
+            return static_cast<::jxx::lang::jint>(
+                bytes_[position_++]);
+        }
+
+        void close() override
+        {
+        }
+
+    private:
+        std::vector<unsigned char> bytes_;
+        std::size_t position_;
+    };
+
+    class MemoryWriter final
+        : public ::jxx::io::Writer
+    {
+    public:
+        MemoryWriter()
+            : flushed_(false)
+        {
+        }
+
+        ~MemoryWriter() override = default;
+
+        using ::jxx::io::Writer::write;
+
+        void write(
+            ::jxx::lang::jint value) override
+        {
+
+            text_.push_back(
+                static_cast<char16_t>(value));
+        }
+
+        void write(
+            const ::jxx::lang::CharArray& buffer,
+            ::jxx::lang::jint offset,
+            ::jxx::lang::jint length) override
+        {
+
+            validateBounds_(
+                buffer,
+                offset,
+                length);
+
+            for (::jxx::lang::jint index = 0;
+                 index < length;
+                 ++index) {
+
+                text_.push_back(
+                    static_cast<char16_t>(
+                        (*buffer)[offset + index]));
+            }
+        }
+
+        void flush() override
+        {
+            flushed_ = true;
+        }
+
+        void close() override
+        {
+        }
+
+        std::string utf8() const
+        {
+            return ::jxx::NEW<
+                ::jxx::lang::String>(
+                    text_)->utf8();
+        }
+
+        bool flushed() const
+        {
+            return flushed_;
+        }
+
+    private:
+        static void validateBounds_(
+            const ::jxx::lang::CharArray& buffer,
+            ::jxx::lang::jint offset,
+            ::jxx::lang::jint length)
+        {
+
+            if (buffer == nullptr) {
+                throw ::jxx::lang::
+                    NullPointerException();
+            }
+
+            const auto bufferLength =
+                static_cast<::jxx::lang::jint>(
+                    buffer->length);
+
+            if (offset < 0 ||
+                length < 0 ||
+                offset > bufferLength - length) {
+
+                throw ::jxx::lang::
+                    IndexOutOfBoundsException();
+            }
+        }
+
+        std::u16string text_;
+        bool flushed_;
+    };
+
+    class MemoryOutputStream final
+        : public ::jxx::io::OutputStream
+    {
+    public:
+        MemoryOutputStream()
+            : flushed_(false)
+        {
+        }
+
+        ~MemoryOutputStream() override = default;
+
+        using ::jxx::io::OutputStream::write;
+
+        void write(
+            ::jxx::lang::jint value) override
+        {
+
+            bytes_.push_back(
+                static_cast<unsigned char>(
+                    value & 0xFF));
+        }
+
+        void flush() override
+        {
+            flushed_ = true;
+        }
+
+        void close() override
+        {
+        }
+
+        std::string bytesAsString() const
+        {
+            return std::string(
+                bytes_.begin(),
+                bytes_.end());
+        }
+
+        bool flushed() const
+        {
+            return flushed_;
+        }
+
+    private:
+        std::vector<unsigned char> bytes_;
+        bool flushed_;
+    };
+
+} // namespace
 
 static std::vector<unsigned char> bytesFromAscii(const std::string& s) {
     return std::vector<unsigned char>(s.begin(), s.end());

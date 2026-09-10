@@ -1,43 +1,89 @@
 #pragma once
 
-#include <sstream>
-#include <locale>
-#include "jxx.io.FilterOutputStream.h"
-
+#include "io/jxx.io.FilterOutputStream.h"
+#include "lang/jxx_types.h"
 
 namespace jxx::lang {
-    class String;
+class Object;
+class String;
 }
 
 namespace jxx::io {
 
-// Java 8: java.io.PrintStream (minimal; writes UTF-8 from String::utf8())
-class PrintStream final : public FilterOutputStream {
+class PrintStream final
+    : public ::jxx::lang::ClassBase<
+          PrintStream,
+          FilterOutputStream> {
 public:
-    explicit PrintStream(const jxx::Ptr<OutputStream> out, jxx::lang::jbool autoFlush = false);
+    using JxxSuper = FilterOutputStream;
+
+    using Super =
+        ::jxx::lang::ClassBase<
+            PrintStream,
+            JxxSuper>;
+
+    explicit PrintStream(
+        const ::jxx::Ptr<OutputStream>& output);
+
+    PrintStream(
+        const ::jxx::Ptr<OutputStream>& output,
+        ::jxx::lang::jbool autoFlush);
+
+    ~PrintStream() override;
 
     void flush() override;
     void close() override;
 
-    jxx::lang::jbool checkError() const;
+    ::jxx::lang::jbool checkError();
 
-    void print(const jxx::Ptr<jxx::lang::String> s);
-    void print(jxx::lang::jbool b);
-    void print(jxx::lang::jint i);
-    void print(jxx::lang::jlong l);
-    void print(jxx::lang::jfloat f);
-    void print(jxx::lang::jdouble d);
-    void print(jxx::lang::jchar c);
+    void write(
+        ::jxx::lang::jint value) override;
+
+    void write(
+        const ::jxx::lang::ByteArray& buffer,
+        ::jxx::lang::jint offset,
+        ::jxx::lang::jint length) override;
+
+    void print(
+        const ::jxx::Ptr<::jxx::lang::String>& value);
+
+    void print(
+        const ::jxx::Ptr<::jxx::lang::Object>& value);
+
+    void print(::jxx::lang::jbool value);
+    void print(::jxx::lang::jchar value);
+    void print(::jxx::lang::jint value);
+    void print(::jxx::lang::jlong value);
+    void print(::jxx::lang::jfloat value);
+    void print(::jxx::lang::jdouble value);
 
     void println();
-    void println(const jxx::Ptr<jxx::lang::String> s);
+
+    void println(
+        const ::jxx::Ptr<::jxx::lang::String>& value);
+
+    void println(
+        const ::jxx::Ptr<::jxx::lang::Object>& value);
+
+    void println(::jxx::lang::jbool value);
+    void println(::jxx::lang::jchar value);
+    void println(::jxx::lang::jint value);
+    void println(::jxx::lang::jlong value);
+    void println(::jxx::lang::jfloat value);
+    void println(::jxx::lang::jdouble value);
 
 private:
-    jxx::lang::jbool autoFlush_;
-    mutable jxx::lang::jbool trouble_ = false;
+    void ensureOpen_() const;
 
-    void writeBytes_(const std::string& bytes);
-    void setTrouble_() const { trouble_ = true; }
+    void text_(
+        const ::jxx::Ptr<::jxx::lang::String>& value);
+
+    void newLine_();
+    void setError_() noexcept;
+
+    ::jxx::lang::jbool autoFlush_ = false;
+    ::jxx::lang::jbool trouble_ = false;
+    ::jxx::lang::jbool closed_ = false;
 };
 
 } // namespace jxx::io

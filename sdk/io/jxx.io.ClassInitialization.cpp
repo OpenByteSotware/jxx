@@ -1,67 +1,27 @@
 #include "io/jxx.io.ClassInitialization.h"
-
 #include <mutex>
-
+#include "io/jxx.io.ByteArrayInputStream.h"
+#include "io/jxx.io.ByteArrayOutputStream.h"
+#include "io/jxx.io.BufferedInputStream.h"
+#include "io/jxx.io.BufferedOutputStream.h"
+#include "io/jxx.io.BufferedReader.h"
+#include "io/jxx.io.BufferedWriter.h"
+#include "io/jxx.io.Console.h"
+#include "io/jxx.io.DataInputStream.h"
+#include "io/jxx.io.DataOutputStream.h"
+#include "io/jxx.io.File.h"
+#include "io/jxx.io.FileInputStream.h"
+#include "io/jxx.io.FileOutputStream.h"
+#include "io/jxx.io.FileReader.h"
+#include "io/jxx.io.FileWriter.h"
+#include "io/jxx.io.InputStreamReader.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "io/jxx.io.OutputStreamWriter.h"
+#include "io/jxx.io.PrintStream.h"
+#include "io/jxx.io.PrintWriter.h"
+#include "io/jxx.io.PushbackInputStream.h"
+#include "io/jxx.io.SequenceInputStream.h"
+#include "io/jxx.io.StringReader.h"
 #include "lang/jxx.lang.ClassInfo.h"
-#include "io/jxx.io.IOException.h"
-#include "io/jxx.io.CharConversionException.h"
-#include "io/jxx.io.EOFException.h"
-#include "io/jxx.io.FileNotFoundException.h"
-#include "io/jxx.io.InterruptedIOException.h"
-#include "io/jxx.io.ObjectStreamException.h"
-#include "io/jxx.io.InvalidClassException.h"
-#include "io/jxx.io.InvalidObjectException.h"
-#include "io/jxx.io.NotActiveException.h"
-#include "io/jxx.io.NotSerializableException.h"
-#include "io/jxx.io.OptionalDataException.h"
-#include "io/jxx.io.StreamCorruptedException.h"
-#include "io/jxx.io.WriteAbortedException.h"
-#include "io/jxx.io.SyncFailedException.h"
-#include "io/jxx.io.UnsupportedEncodingException.h"
-#include "io/jxx.io.UTFDataFormatException.h"
-#include "io/jxx.io.UncheckedIOException.h"
-#include "io/jxx.io.IOError.h"
-#include "io/jxx.io.SerializableI.h"
-
-namespace jxx::io {
-
-namespace {
-
-template <typename T>
-void registerType()
-{
-    jxx::lang::class_info_detail::registerClassInfo<T>();
-}
-
-} // namespace
-
-void initializeClasses()
-{
-    static std::once_flag flag;
-
-    std::call_once(
-        flag,
-        [] {
-            registerType<IOException>();
-            registerType<CharConversionException>();
-            registerType<EOFException>();
-            registerType<FileNotFoundException>();
-            registerType<InterruptedIOException>();
-            registerType<ObjectStreamException>();
-            registerType<InvalidClassException>();
-            registerType<InvalidObjectException>();
-            registerType<NotActiveException>();
-            registerType<NotSerializableException>();
-            registerType<OptionalDataException>();
-            registerType<StreamCorruptedException>();
-            registerType<WriteAbortedException>();
-            registerType<SyncFailedException>();
-            registerType<UnsupportedEncodingException>();
-            registerType<UTFDataFormatException>();
-            registerType<UncheckedIOException>();
-            registerType<IOError>();
-            registerType<SerializableI>();
-        });
-}
-
-} // namespace jxx::io
+namespace jxx::io { namespace { template<typename T> void reg(){::jxx::lang::class_info_detail::registerClassInfo<T>();} } void initializeClasses(){static std::once_flag once;std::call_once(once,[]{reg<ByteArrayInputStream>();reg<ByteArrayOutputStream>();reg<BufferedInputStream>();reg<BufferedOutputStream>();reg<BufferedReader>();reg<BufferedWriter>();reg<Console>();reg<DataInputStream>();reg<DataOutputStream>();reg<File>();reg<FileInputStream>();reg<FileOutputStream>();reg<FileReader>();reg<FileWriter>();reg<InputStreamReader>();reg<ObjectInputStream>();reg<ObjectOutputStream>();reg<OutputStreamWriter>();reg<PrintStream>();reg<PrintWriter>();reg<PushbackInputStream>();reg<SequenceInputStream>();reg<StringReader>();});} }

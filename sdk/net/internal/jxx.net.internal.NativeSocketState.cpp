@@ -31,7 +31,7 @@ namespace jxx::net::internal
         return n <= 0 ? -1 : static_cast<jxx::lang::jint>((*arr)[0] & 0xFF);
     }
 
-    jxx::lang::jint NativeSocketInputStream::read(const jxx::lang::ByteArray b,
+    jxx::lang::jint NativeSocketInputStream::read(const jxx::lang::ByteArray& b,
                                                   jxx::lang::jint off,
                                                   jxx::lang::jint len)
     {
@@ -95,7 +95,7 @@ namespace jxx::net::internal
         write(arr, 0, 1);
     }
 
-    void NativeSocketOutputStream::write(const jxx::lang::ByteArray b,
+    void NativeSocketOutputStream::write(const jxx::lang::ByteArray& b,
                                          jxx::lang::jint off,
                                          jxx::lang::jint len)
     {

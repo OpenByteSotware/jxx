@@ -1,48 +1,40 @@
-#include <cstdio>
+#include "io/jxx.io.Console.h"
+#include "io/jxx.io.BufferedReader.h"
+#include "io/jxx.io.PrintWriter.h"
+#include "io/jxx.io.Reader.h"
+#include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
-#include "jxx.io.BufferedReader.h"
-#include "lang/jxx.lang.System.h"
-#include "jxx.io.Console.h"
-
-using namespace jxx::io;
-
-static std::shared_ptr<jxx::io::Console> __console_instance;
-
-std::shared_ptr<jxx::io::Console> jxx::io::Console::console(){
-    if(!__console_instance) __console_instance = jxx::NEW<jxx::io::Console>();
-    return __console_instance;
+namespace jxx::io
+{
+	Console::Console(const ::jxx::Ptr<Reader>& r, const ::jxx::Ptr<PrintWriter>& w) :reader_(r), writer_(w)
+	{
+		if (!r || !w)throw ::jxx::lang::NullPointerException();
+	} ::jxx::Ptr<PrintWriter> Console::writer()const
+	{
+		return writer_;
+	} ::jxx::Ptr<Reader> Console::reader()const
+	{
+		return reader_;
+	} Console& Console::format(const ::jxx::Ptr<::jxx::lang::String>& f)
+	{
+		writer_->print(f); return *this;
+	} Console& Console::printf(const ::jxx::Ptr<::jxx::lang::String>& f)
+	{
+		return format(f);
+	} ::jxx::Ptr<::jxx::lang::String> Console::readLine()
+	{
+		auto b = ::jxx::NEW<BufferedReader>(reader_); return b->readLine();
+	} ::jxx::Ptr<::jxx::lang::String> Console::readLine(const ::jxx::Ptr<::jxx::lang::String>& f)
+	{
+		writer_->print(f); writer_->flush(); return readLine();
+	} ::jxx::lang::CharArray Console::readPassword()
+	{
+		auto s = readLine(); return s ? s->toCharArray() : nullptr;
+	} ::jxx::lang::CharArray Console::readPassword(const ::jxx::Ptr<::jxx::lang::String>& f)
+	{
+		writer_->print(f); writer_->flush(); return readPassword();
+	} void Console::flush()
+	{
+		writer_->flush();
+	}
 }
-
-std::shared_ptr<Reader> jxx::io::Console::reader(){
-    return jxx::NEW<InputStreamReader>(jxx::lang::System::in);
-}
-
-std::shared_ptr<PrintStream> jxx::io::Console::out(){
-    return jxx::lang::System::out;
-}
-
-void jxx::io::Console::printf(const char* fmt, ...){
-    if(!fmt) return;
-    char tmp[1024];
-    va_list ap; va_start(ap, fmt);
-    int n = vsnprintf(tmp, sizeof(tmp), fmt, ap);
-    va_end(ap);
-    if(n < 0) return;
-    if(n < (int)sizeof(tmp)){
-        jxx::lang::System::out->print(jxx::NEW<jxx::lang::String>(std::string(tmp, (size_t)n)));
-        return;
-    }
-    std::vector<char> buf((int)n + 1);
-    va_start(ap, fmt);
-    vsnprintf(buf.data(), buf.size(), fmt, ap);
-    va_end(ap);
-    jxx::lang::System::out->print(jxx::NEW<jxx::lang::String>(std::string(buf.data(), (size_t)n)));
-}
-
-jxx::Ptr<jxx::lang::String> jxx::io::Console::readLine(){
-    auto isr = jxx::NEW<InputStreamReader>(jxx::lang::System::in);
-    BufferedReader br(isr);
-    return br.readLine();
-}
-
-

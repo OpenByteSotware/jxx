@@ -1,12 +1,9 @@
 #pragma once
-
+#include "lang/jxx.lang.ClassInfo.h"
 namespace jxx::io {
-
-// Java 8: java.io.Flushable (interface)
-class Flushable {
+class Flushable : public ::jxx::lang::InterfaceBase<Flushable> {
 public:
-    virtual ~Flushable() = default;
+    ~Flushable() override = default;
     virtual void flush() = 0;
 };
-
 } // namespace jxx::io

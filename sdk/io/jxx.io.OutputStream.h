@@ -1,30 +1,21 @@
 #pragma once
-
-#include "lang/jxx_types.h"
+#include "io/jxx.io.Closeable.h"
+#include "io/jxx.io.Flushable.h"
+#include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.buildin_array.h"
-#include "lang/jxx.lang.Object.h"
-#include "jxx.io.Closeable.h"
-#include "jxx.io.Flushable.h"
-#include "jxx.io.IOException.h"
-
+#include "lang/jxx_types.h"
 namespace jxx::io {
-
-// Java 8: java.io.OutputStream
-class OutputStream : public jxx::lang::Object, public Closeable, public Flushable {
+class OutputStream : public ::jxx::lang::ClassBase<OutputStream, ::jxx::lang::Object, Closeable, Flushable> {
 public:
-    virtual ~OutputStream() = default;
-
-    // Writes the low 8 bits.
-    virtual void write(jxx::lang::jint b) = 0;
-
-    virtual void write(const jxx::lang::ByteArray b);
-    virtual void write(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len);
-
+    using JxxSuper = ::jxx::lang::Object;
+    using Super = ::jxx::lang::ClassBase<OutputStream, JxxSuper, Closeable, Flushable>;
+    ~OutputStream() override = default;
+    virtual void write(::jxx::lang::jint value) = 0;
+    virtual void write(const ::jxx::lang::ByteArray& buffer);
+    virtual void write(const ::jxx::lang::ByteArray& buffer, ::jxx::lang::jint offset, ::jxx::lang::jint length);
     void flush() override;
     void close() override;
-
 protected:
-    static void checkBounds_(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len);
+    OutputStream() = default;
 };
-
 } // namespace jxx::io

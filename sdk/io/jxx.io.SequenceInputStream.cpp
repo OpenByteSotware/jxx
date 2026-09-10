@@ -1,11 +1,75 @@
-
 #include "io/jxx.io.SequenceInputStream.h"
 
-namespace jxx { namespace io {
-SequenceInputStream::SequenceInputStream(std::shared_ptr<InputStream> s1, std::shared_ptr<InputStream> s2) : seq{std::move(s1),std::move(s2)}, idx(0){}
-SequenceInputStream::SequenceInputStream(std::vector<std::shared_ptr<InputStream>> streams) : seq(std::move(streams)), idx(0){}
-jxx::lang::jint SequenceInputStream::read(){ while(idx<seq.size()){ jxx::lang::jint c=seq[idx]->read(); if(c!=-1) return c; ++idx;} return -1; }
-jxx::lang::jint SequenceInputStream::read(jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len){ if(len==0) return 0; jxx::lang::jint total=0; while(len>0 && idx<seq.size()){ auto r=seq[idx]->read(b,off,len); if(r==-1){ ++idx; continue; } off+=r; len-=r; total+=r; if(r>0) break; } return (total>0)? total : -1; }
-jxx::lang::jint SequenceInputStream::available(){ if(idx>=seq.size()) return 0; return seq[idx]->available(); }
-void SequenceInputStream::close(){ for(auto&s:seq) if(s) s->close(); }
-}}
+#include "io/jxx.io.IOHelper.h"
+#include "lang/jxx.lang.NullPointerException.h"
+
+namespace jxx::io {
+
+SequenceInputStream::SequenceInputStream(
+    const ::jxx::Ptr<::jxx::util::Enumeration<InputStream>>& streams)
+    : Super() {
+    if (streams == nullptr) throw ::jxx::lang::NullPointerException();
+    while (streams->hasMoreElements()) {
+        auto stream = streams->nextElement();
+        if (stream == nullptr) throw ::jxx::lang::NullPointerException();
+        streams_.push_back(stream);
+    }
+}
+
+SequenceInputStream::SequenceInputStream(
+    const ::jxx::Ptr<InputStream>& first,
+    const ::jxx::Ptr<InputStream>& second)
+    : Super() {
+    if (first == nullptr || second == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+    streams_.push_back(first);
+    streams_.push_back(second);
+}
+
+SequenceInputStream::~SequenceInputStream() = default;
+
+void SequenceInputStream::advance_() {
+    if (index_ < streams_.size()) {
+        streams_[index_]->close();
+        ++index_;
+    }
+}
+
+::jxx::lang::jint SequenceInputStream::read() {
+    while (!closed_ && index_ < streams_.size()) {
+        const auto value = streams_[index_]->read();
+        if (value >= 0) return value;
+        advance_();
+    }
+    return -1;
+}
+
+::jxx::lang::jint SequenceInputStream::read(
+    const ::jxx::lang::ByteArray& buffer,
+    ::jxx::lang::jint offset,
+    ::jxx::lang::jint length) {
+    IOHelper::checkBounds(buffer, offset, length);
+    if (length == 0) return 0;
+    while (!closed_ && index_ < streams_.size()) {
+        const auto count = streams_[index_]->read(buffer, offset, length);
+        if (count >= 0) return count;
+        advance_();
+    }
+    return -1;
+}
+
+::jxx::lang::jint SequenceInputStream::available() {
+    return !closed_ && index_ < streams_.size()
+        ? streams_[index_]->available()
+        : 0;
+}
+
+void SequenceInputStream::close() {
+    if (closed_) return;
+    closed_ = true;
+    while (index_ < streams_.size()) advance_();
+    streams_.clear();
+}
+
+} // namespace jxx::io

@@ -1,33 +1,66 @@
 #pragma once
 
-#include "lang/jxx_types.h"
+#include "io/jxx.io.Writer.h"
 #include "lang/jxx.lang.buildin_array.h"
-#include "jxx.io.Writer.h"
-#include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx_types.h"
+
+namespace jxx::lang {
+class String;
+}
 
 namespace jxx::io {
 
-// Java 8 parity: java.io.BufferedWriter
-class BufferedWriter final : public Writer {
+class BufferedWriter
+    : public ::jxx::lang::ClassBase<
+          BufferedWriter,
+          Writer> {
 public:
-    explicit BufferedWriter(const jxx::Ptr<Writer> out);
-    BufferedWriter(const jxx::Ptr<Writer> out, jxx::lang::jint sz);
+    using JxxSuper = Writer;
 
-    virtual void write(jxx::lang::jint c) override;
-    virtual void write(const jxx::lang::CharArray cbuf, jxx::lang::jint off, jxx::lang::jint len) override;
-    virtual void write(const jxx::Ptr<jxx::lang::String> str, jxx::lang::jint off, jxx::lang::jint len) override;
+    using Super =
+        ::jxx::lang::ClassBase<
+            BufferedWriter,
+            JxxSuper>;
+
+    using JxxSuper::write;
+
+    explicit BufferedWriter(
+        const ::jxx::Ptr<Writer>& output);
+
+    BufferedWriter(
+        const ::jxx::Ptr<Writer>& output,
+        ::jxx::lang::jint size);
+
+    ~BufferedWriter() override;
+
+    void write(
+        ::jxx::lang::jint value) override;
+
+    void write(
+        const ::jxx::lang::CharArray& buffer,
+        ::jxx::lang::jint offset,
+        ::jxx::lang::jint length) override;
+
+    void write(
+        const ::jxx::Ptr<::jxx::lang::String>& value,
+        ::jxx::lang::jint offset,
+        ::jxx::lang::jint length) override;
 
     void newLine();
-
     void flush() override;
     void close() override;
 
 private:
-    jxx::Ptr<Writer> out_;
-    jxx::Ptr<jxx::lang::CharArrayType> buf_;
-    jxx::lang::jint count_ = 0;
+    static ::jxx::lang::jint validateBufferSize_(
+        ::jxx::lang::jint size);
 
+    void ensureOpen_() const;
     void flushBuffer_();
+
+    ::jxx::Ptr<Writer> output_;
+    ::jxx::lang::CharArray buffer_;
+    ::jxx::lang::jint count_ = 0;
+    ::jxx::lang::jbool closed_ = false;
 };
 
 } // namespace jxx::io

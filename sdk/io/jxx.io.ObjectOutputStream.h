@@ -1,43 +1,41 @@
 #pragma once
 
-#include "lang/jxx_types.h"
-#include "lang/jxx.lang.Object.h"
-#include "lang/jxx.lang.String.h"
-#include "jxx.io.OutputStream.h"
-#include "jxx.io.ObjectOutput.h"
+#include "io/jxx.io.DataOutputStream.h"
+#include "io/jxx.io.ObjectOutput.h"
 
-namespace jxx::io
-{
-    class ObjectOutputStream : public OutputStream, public ObjectOutput
-    {
-    public:
-        explicit ObjectOutputStream(const jxx::Ptr<OutputStream> out);
-        ~ObjectOutputStream() override = default;
-
-    public:
-        void write(jxx::lang::jint b) override;
-        void write(const jxx::lang::ByteArray b,
-            jxx::lang::jint off,
-            jxx::lang::jint len) override;
-        void flush() override;
-        void close() override;
-
-        void writeBoolean(jxx::lang::jbool v) override;
-        void writeByte(jxx::lang::jint v) override;
-        void writeShort(jxx::lang::jint v) override;
-        void writeChar(jxx::lang::jint v) override;
-        void writeInt(jxx::lang::jint v) override;
-        void writeLong(jxx::lang::jlong v) override;
-        void writeFloat(jxx::lang::jfloat v) override;
-        void writeDouble(jxx::lang::jdouble v) override;
-        void writeBytes(const jxx::Ptr<jxx::lang::String> s) override;
-        void writeChars(const jxx::Ptr<jxx::lang::String> s) override;
-        void writeUTF(const jxx::Ptr<jxx::lang::String> s) override;
-
-        virtual void writeObject(const jxx::Ptr<jxx::lang::Object> obj);
-        virtual void writeUnshared(const jxx::Ptr<jxx::lang::Object> obj);
-
-    protected:
-        jxx::Ptr<OutputStream> out_;
-    };
+namespace jxx::lang {
+class Object;
 }
+
+namespace jxx::io {
+
+class ObjectOutputStream
+    : public ::jxx::lang::ClassBase<
+          ObjectOutputStream,
+          DataOutputStream,
+          ObjectOutput> {
+public:
+    using JxxSuper = DataOutputStream;
+
+    using Super =
+        ::jxx::lang::ClassBase<
+            ObjectOutputStream,
+            JxxSuper,
+            ObjectOutput>;
+
+    explicit ObjectOutputStream(
+        const ::jxx::Ptr<OutputStream>& output);
+
+    ~ObjectOutputStream() override;
+
+    void writeObject(
+        const ::jxx::Ptr<::jxx::lang::Object>& object) override;
+
+    virtual void writeUnshared(
+        const ::jxx::Ptr<::jxx::lang::Object>& object);
+
+protected:
+    ObjectOutputStream();
+};
+
+} // namespace jxx::io

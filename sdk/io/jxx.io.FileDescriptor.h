@@ -1,49 +1,14 @@
 #pragma once
-
-#include "lang/jxx_types.h"
-#include "lang/jxx.lang.Object.h"
-
-namespace jxx::io
-{
-    class FileInputStream;
-    class FileOutputStream;
-
-    /**
-     * Java 8 parity: java.io.FileDescriptor
-     *
-     * Practical POSIX-oriented implementation storing a native integer file
-     * descriptor when available.
-     */
-    class FileDescriptor final : public jxx::lang::Object
-    {
-    public:
-        static jxx::Ptr<FileDescriptor> in;
-        static jxx::Ptr<FileDescriptor> out;
-        static jxx::Ptr<FileDescriptor> err;
-
-    public:
-        FileDescriptor();
-        explicit FileDescriptor(jxx::lang::jint fd);
-        ~FileDescriptor() override = default;
-
-    public:
-        jxx::lang::jbool valid() const;
-        void sync();
-
-        jxx::Ptr<jxx::lang::String> toString() const override;
-        jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& other) const override;
-        jxx::lang::jint hashCode() const override;
-
-    private:        
-
-        void setNativeFd_(jxx::lang::jint fd) noexcept { fd_ = fd; }
-        jxx::lang::jint nativeFd_() const noexcept { return fd_; }
-
-    private:
-        jxx::lang::jint fd_ = -1;
-
-    private:
-        friend class FileInputStream;
-        friend class FileOutputStream;
-    };
-}
+#include <cstdio>
+#include "lang/jxx.lang.ClassInfo.h"
+namespace jxx::io {
+class FileDescriptor final : public ::jxx::lang::ClassBase<FileDescriptor,::jxx::lang::Object> {
+public:
+ using JxxSuper=::jxx::lang::Object; using Super=::jxx::lang::ClassBase<FileDescriptor,JxxSuper>;
+ static ::jxx::Ptr<FileDescriptor> in; static ::jxx::Ptr<FileDescriptor> out; static ::jxx::Ptr<FileDescriptor> err;
+ FileDescriptor(); explicit FileDescriptor(std::FILE* handle,::jxx::lang::jbool owned=false); ~FileDescriptor() override;
+ ::jxx::lang::jbool valid() const; void sync();
+ std::FILE* nativeHandle() const;
+private: std::FILE* handle_=nullptr; ::jxx::lang::jbool owned_=false;
+};
+} // namespace jxx::io

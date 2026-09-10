@@ -27,7 +27,7 @@ namespace jxx::net::internal
 
     public:
         jxx::lang::jint read() override;
-        jxx::lang::jint read(const jxx::lang::ByteArray b,
+        jxx::lang::jint read(const jxx::lang::ByteArray& b,
                              jxx::lang::jint off,
                              jxx::lang::jint len) override;
         jxx::lang::jint available() override;
@@ -45,7 +45,7 @@ namespace jxx::net::internal
 
     public:
         void write(jxx::lang::jint b) override;
-        void write(const jxx::lang::ByteArray b,
+        void write(const jxx::lang::ByteArray& b,
                    jxx::lang::jint off,
                    jxx::lang::jint len) override;
         void flush() override;

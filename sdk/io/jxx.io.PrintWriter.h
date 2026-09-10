@@ -1,51 +1,13 @@
-
 #pragma once
-#include <memory>
-#include <string>
-#include "lang/jxx.lang.internal.h"
 #include "io/jxx.io.Writer.h"
-#include "io/jxx.io.OutputStream.h"
-#include "io/jxx.io.OutputStreamWriter.h"
-
-namespace jxx { namespace io {
-
-class PrintWriter : public jxx::lang::Object, public Flushable, public Closeable {
-    std::shared_ptr<Writer> out;
-    jxx::lang::jbool autoFlush = false;
-    jxx::lang::jbool error_ = false;
-    std::string lineSep = "\n";
-
-    void setError() { error_ = true; }
-    void doWrite(const std::u16string& s);
+namespace jxx::lang { class Object; class String; }
+namespace jxx::io { class OutputStream;
+class PrintWriter final : public ::jxx::lang::ClassBase<PrintWriter,Writer> {
 public:
-    explicit PrintWriter(const jxx::Ptr<Writer> w, bool autoFlush_ = false);
-    explicit PrintWriter(const jxx::Ptr<OutputStream> os, bool autoFlush_ = false, const std::string& charset = "UTF-8");
-
-    void flush() override;
-    void close() override;
-    bool checkError() const { return error_; }
-
-    // write/print/println
-    void write(const jxx::lang::jchar* buf, int off, int len);
-    void write(const std::u16string& s);
-
-    void print(const std::string& s);
-    void print(const char* s);
-    void print(const std::u16string& s);
-    void print(jxx::lang::jbool v);
-    void print(jxx::lang::jint v);
-    void print(jxx::lang::jlong v);
-    void print(jxx::lang::jfloat v);
-    void print(jxx::lang::jdouble v);
-    void println();
-    void println(const std::string& s);
-    void println(const char* s);
-    void println(const std::u16string& s);
-    void println(jxx::lang::jbool v);
-    void println(jxx::lang::jint v);
-    void println(jxx::lang::jlong v);
-    void println(jxx::lang::jfloat v);
-    void println(jxx::lang::jdouble v);
-};
-
-}}
+ using JxxSuper=Writer; using Super=::jxx::lang::ClassBase<PrintWriter,JxxSuper>;
+ explicit PrintWriter(const ::jxx::Ptr<Writer>& output); PrintWriter(const ::jxx::Ptr<Writer>& output,::jxx::lang::jbool autoFlush); explicit PrintWriter(const ::jxx::Ptr<OutputStream>& output); PrintWriter(const ::jxx::Ptr<OutputStream>& output,::jxx::lang::jbool autoFlush); ~PrintWriter()override;
+ void flush()override; void close()override; ::jxx::lang::jbool checkError(); void write(::jxx::lang::jint value)override; void write(const ::jxx::lang::CharArray& buffer,::jxx::lang::jint offset,::jxx::lang::jint length)override; void write(const ::jxx::Ptr<::jxx::lang::String>& value,::jxx::lang::jint offset,::jxx::lang::jint length)override;
+ void print(const ::jxx::Ptr<::jxx::lang::String>& value); void print(const ::jxx::Ptr<::jxx::lang::Object>& value); void print(::jxx::lang::jbool value); void print(::jxx::lang::jchar value); void print(::jxx::lang::jint value); void print(::jxx::lang::jlong value); void print(::jxx::lang::jfloat value); void print(::jxx::lang::jdouble value); void println(); void println(const ::jxx::Ptr<::jxx::lang::String>& value); void println(const ::jxx::Ptr<::jxx::lang::Object>& value); void println(::jxx::lang::jbool value); void println(::jxx::lang::jchar value); void println(::jxx::lang::jint value); void println(::jxx::lang::jlong value); void println(::jxx::lang::jfloat value); void println(::jxx::lang::jdouble value);
+protected: void setError(); void clearError();
+private: void text(const ::jxx::Ptr<::jxx::lang::String>& value); ::jxx::Ptr<Writer> out_; ::jxx::lang::jbool autoFlush_=false,trouble_=false,closed_=false;
+}; }

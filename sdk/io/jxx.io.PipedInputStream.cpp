@@ -1,126 +1,137 @@
+#include "io/jxx.io.PipedInputStream.h"
 
+#include <algorithm>
+#include <cstdint>
+#include <memory>
+
+#include "io/jxx.io.IOException.h"
+#include "io/jxx.io.IOHelper.h"
+#include "io/jxx.io.PipeState.h"
+#include "io/jxx.io.PipedOutputStream.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
-#include "lang/jxx.lang.String.h"
-#include "jxx.io.PipedInputStream.h"
-#include "jxx.io.PipedOutputStream.h"
 
 namespace jxx::io {
 
-static constexpr jxx::lang::jint DEFAULT_PIPE_SIZE = 1024;
-
-void PipedInputStream::initPipe_(jxx::lang::jint pipeSize) {
-    if (pipeSize <= 0) throw jxx::lang::IllegalArgumentException(jxx::NEW<jxx::lang::String>("pipeSize <= 0"));
-    buffer_.assign((std::size_t)pipeSize, (jxx::lang::jbyte)0);
-    in_ = -1;
-    out_ = 0;
+PipedInputStream::PipedInputStream()
+    : PipedInputStream(PIPE_SIZE) {
 }
 
-PipedInputStream::PipedInputStream() { initPipe_(DEFAULT_PIPE_SIZE); }
-PipedInputStream::PipedInputStream(const jxx::Ptr<PipedOutputStream> src) : PipedInputStream() { connect(src); }
-PipedInputStream::PipedInputStream(jxx::lang::jint pipeSize) { initPipe_(pipeSize); }
-PipedInputStream::PipedInputStream(const jxx::Ptr<PipedOutputStream> src, jxx::lang::jint pipeSize) {
-    initPipe_(pipeSize);
-    connect(src);
+PipedInputStream::PipedInputStream(::jxx::lang::jint pipeSize)
+    : Super()
+    , state_(std::make_shared<internal::PipeState>(
+          validatePipeSize_(pipeSize))) {
 }
 
-void PipedInputStream::connect(const jxx::Ptr<PipedOutputStream> src) {
-    if (!src) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("src"));
-    src->connect(jxx::CAST<PipedInputStream, jxx::lang::Object>(this->thisPtr()));
+PipedInputStream::PipedInputStream(
+    const ::jxx::Ptr<PipedOutputStream>& source)
+    : PipedInputStream(source, PIPE_SIZE) {
 }
 
-void PipedInputStream::receive_(jxx::lang::jint b) {
-    if (!connected_) throw IOException(jxx::NEW<jxx::lang::String>("Pipe not connected"));
-    if (closedByReader_) throw IOException(jxx::NEW<jxx::lang::String>("Pipe closed"));
+PipedInputStream::PipedInputStream(
+    const ::jxx::Ptr<PipedOutputStream>& source,
+    ::jxx::lang::jint pipeSize)
+    : PipedInputStream(pipeSize) {
+    connect(source);
+}
 
-    std::unique_lock<std::recursive_mutex> lk(this->mutex_);
+PipedInputStream::~PipedInputStream() = default;
 
-    while (in_ == out_) {
-        if (closedByReader_) throw IOException(jxx::NEW<jxx::lang::String>("Pipe closed"));
-        notFull_.wait(lk);
+::jxx::lang::jint PipedInputStream::validatePipeSize_(
+    ::jxx::lang::jint pipeSize) {
+    if (pipeSize <= 0) {
+        throw ::jxx::lang::IllegalArgumentException();
     }
-
-    if (in_ < 0) {
-        in_ = 0;
-        out_ = 0;
-    }
-
-    buffer_[(std::size_t)in_] = (jxx::lang::jbyte)(b & 0xFF);
-    in_ = (in_ + 1) % (jxx::lang::jint)buffer_.size();
-
-    notEmpty_.notify_all();
+    return pipeSize;
 }
 
-void PipedInputStream::receive_(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) {
-    InputStream::checkBounds_(b, off, len);
-    for (jxx::lang::jint i = 0; i < len; ++i) {
-        receive_(((jxx::lang::jint)(*b)[off + i]) & 0xFF);
+void PipedInputStream::attach_(
+    const std::shared_ptr<internal::PipeState>& state) {
+    if (!state) {
+        throw ::jxx::lang::NullPointerException();
+    }
+    if (state_ != state) {
+        throw IOException();
     }
 }
 
-void PipedInputStream::receivedLast_() {
-    std::lock_guard<std::recursive_mutex> lk(mutex_);
-    closedByWriter_ = true;
-    notEmpty_.notify_all();
+void PipedInputStream::connect(
+    const ::jxx::Ptr<PipedOutputStream>& source) {
+    if (source == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+    source->connect(::jxx::CAST<PipedInputStream>(thisPtr()));
 }
 
-jxx::lang::jint PipedInputStream::read() {
-    std::unique_lock<std::recursive_mutex> lk(mutex_);
+::jxx::lang::jint PipedInputStream::read() {
+    auto state = state_;
+    std::unique_lock<std::mutex> lock(state->mutex);
 
-    if (!connected_) throw IOException(jxx::NEW<jxx::lang::String>("Pipe not connected"));
-    if (closedByReader_) throw IOException(jxx::NEW<jxx::lang::String>("Pipe closed"));
-
-    while (in_ < 0) {
-        if (closedByWriter_) return -1;
-        notEmpty_.wait(lk);
+    if (!state->connected || state->inputClosed) {
+        throw IOException();
     }
 
-    jxx::lang::jint ret = ((jxx::lang::jint)buffer_[(std::size_t)out_]) & 0xFF;
-    out_ = (out_ + 1) % (jxx::lang::jint)buffer_.size();
-    if (out_ == in_) in_ = -1;
+    state->readable.wait(lock, [&] {
+        return state->count > 0 || state->outputClosed || state->inputClosed;
+    });
 
-    notFull_.notify_all();
-    return ret;
+    if (state->inputClosed) {
+        throw IOException();
+    }
+    if (state->count == 0 && state->outputClosed) {
+        return -1;
+    }
+
+    const auto value = static_cast<::jxx::lang::jint>(
+        static_cast<unsigned char>(state->buffer[state->readPosition]));
+    state->readPosition = (state->readPosition + 1) % state->buffer.size();
+    --state->count;
+    lock.unlock();
+    state->writable.notify_all();
+    return value;
 }
 
-jxx::lang::jint PipedInputStream::read(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) {
-    InputStream::checkBounds_(b, off, len);
-    if (len == 0) return 0;
+::jxx::lang::jint PipedInputStream::read(
+    const ::jxx::lang::ByteArray& buffer,
+    ::jxx::lang::jint offset,
+    ::jxx::lang::jint length) {
+    IOHelper::checkBounds(buffer, offset, length);
+    if (length == 0) return 0;
 
-    jxx::lang::jint first = read();
+    const auto first = read();
     if (first < 0) return -1;
-    (*b)[off] = (jxx::lang::jbyte)(first & 0xFF);
+    (*buffer)[offset] = static_cast<::jxx::lang::jbyte>(first);
 
-    jxx::lang::jint i = 1;
-    for (; i < len; ++i) {
-        std::lock_guard<std::recursive_mutex> lk(mutex_);
-        if (in_ < 0) break;
-        jxx::lang::jint v = ((jxx::lang::jint)buffer_[(std::size_t)out_]) & 0xFF;
-        out_ = (out_ + 1) % (jxx::lang::jint)buffer_.size();
-        if (out_ == in_) in_ = -1;
-        (*b)[off + i] = (jxx::lang::jbyte)(v & 0xFF);
-        notFull_.notify_all();
+    ::jxx::lang::jint total = 1;
+    auto state = state_;
+    std::unique_lock<std::mutex> lock(state->mutex);
+    while (total < length && state->count > 0) {
+        (*buffer)[offset + total] = state->buffer[state->readPosition];
+        state->readPosition = (state->readPosition + 1) % state->buffer.size();
+        --state->count;
+        ++total;
     }
-
-    return i;
+    lock.unlock();
+    state->writable.notify_all();
+    return total;
 }
 
-jxx::lang::jint PipedInputStream::available() {
-    std::lock_guard<std::recursive_mutex> lk(mutex_);
-    if (in_ < 0) return 0;
-    if (in_ == out_) return (jxx::lang::jint)buffer_.size();
-    if (in_ > out_) return in_ - out_;
-    return (jxx::lang::jint)buffer_.size() - out_ + in_;
+::jxx::lang::jint PipedInputStream::available() {
+    auto state = state_;
+    std::lock_guard<std::mutex> lock(state->mutex);
+    if (state->inputClosed) throw IOException();
+    return static_cast<::jxx::lang::jint>(state->count);
 }
 
 void PipedInputStream::close() {
-    std::lock_guard<std::recursive_mutex> lk(mutex_);
-    closedByReader_ = true;
-    in_ = -1;
-    notFull_.notify_all();
-    notEmpty_.notify_all();
+    auto state = state_;
+    {
+        std::lock_guard<std::mutex> lock(state->mutex);
+        if (state->inputClosed) return;
+        state->inputClosed = true;
+    }
+    state->readable.notify_all();
+    state->writable.notify_all();
 }
-
-jxx::lang::jbool PipedInputStream::markSupported() const { return false; }
 
 } // namespace jxx::io

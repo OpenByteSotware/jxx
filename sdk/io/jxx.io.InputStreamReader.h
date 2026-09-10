@@ -1,36 +1,10 @@
 #pragma once
 #include <string>
-
-#include "lang/jxx_types.h"
-#include "lang/jxx.lang.buildin_array.h"
-#include "jxx.io.Reader.h"
-#include "jxx.io.InputStream.h"
-
-namespace jxx::lang {
-    class Charset;
-	class String;
-}
-namespace jxx::io {
-
-class InputStreamReader : public Reader {
+#include "io/jxx.io.Reader.h"
+namespace jxx::io { class InputStream;
+class InputStreamReader : public ::jxx::lang::ClassBase<InputStreamReader,Reader> {
 public:
-    explicit InputStreamReader(const jxx::Ptr<InputStream> in);
-    InputStreamReader(const jxx::Ptr<InputStream> in, const jxx::Ptr<jxx::lang::Charset> cs);
-
-    jxx::lang::jint read() override;
-    jxx::lang::jint read(const jxx::lang::CharArray cbuf, jxx::lang::jint off, jxx::lang::jint len) override;
-
-    jxx::lang::jbool ready() override;
-    void close() override;
-
-private:
-    jxx::Ptr<InputStream> in_;
-    jxx::Ptr<jxx::lang::Charset> cs_;
-
-    std::u16string decoded_;
-    std::size_t dpos_ = 0;
-
-    jxx::lang::jbool refill_();
-};
-
-} // namespace jxx::io
+ using JxxSuper=Reader; using Super=::jxx::lang::ClassBase<InputStreamReader,JxxSuper>;
+ explicit InputStreamReader(const ::jxx::Ptr<InputStream>& input); InputStreamReader(const ::jxx::Ptr<InputStream>& input,const ::jxx::Ptr<::jxx::lang::String>& charsetName); ::jxx::lang::jint read() override; ::jxx::lang::jint read(const ::jxx::lang::CharArray& buffer,::jxx::lang::jint offset,::jxx::lang::jint length) override; ::jxx::lang::jbool ready() override; void close() override; ::jxx::Ptr<::jxx::lang::String> getEncoding() const;
+private: void decodeAll(); ::jxx::Ptr<InputStream> in_; ::jxx::Ptr<::jxx::lang::String> encoding_; ::jxx::Ptr<::jxx::lang::String> decoded_; ::jxx::lang::jint position_=0;
+}; }

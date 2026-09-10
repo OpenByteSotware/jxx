@@ -1,81 +1,173 @@
-#include "lang/jxx.lang.String.h"
+#include "io/jxx.io.Writer.h"
+
 #include "lang/jxx.lang.CharSequence.h"
-#include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
-#include "jxx.io.IOException.h"
-#include "jxx.io.Writer.h"
+#include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.String.h"
 
 namespace jxx::io {
 
-jxx::Ptr<Writer> Writer::self_() {
-    return jxx::CAST<Writer, jxx::lang::Object>(this->thisPtr());
-}
+namespace {
 
-void Writer::checkBounds_(const jxx::lang::CharArray cbuf, jxx::lang::jint off, jxx::lang::jint len) {
-    if (!cbuf) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("cbuf"));
-    if (off < 0 || len < 0 || (std::uint32_t)(off + len) > cbuf->length) {
-        throw jxx::lang::IndexOutOfBoundsException(jxx::NEW<jxx::lang::String>("off/len"));
+void checkBounds(
+    const ::jxx::lang::CharArray& buffer,
+    ::jxx::lang::jint offset,
+    ::jxx::lang::jint length) {
+
+    if (buffer == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+
+    if (offset < 0 ||
+        length < 0 ||
+        offset > static_cast<::jxx::lang::jint>(buffer->length) - length) {
+        throw ::jxx::lang::IndexOutOfBoundsException();
     }
 }
 
-void Writer::checkStringBounds_(const jxx::Ptr<jxx::lang::String> s, jxx::lang::jint off, jxx::lang::jint len) {
-    if (!s) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("str"));
-    if (off < 0 || len < 0 || off + len > s->length()) {
-        throw jxx::lang::IndexOutOfBoundsException(jxx::NEW<jxx::lang::String>("off/len"));
+void checkSequenceBounds(
+    ::jxx::lang::jint sequenceLength,
+    ::jxx::lang::jint start,
+    ::jxx::lang::jint end) {
+
+    if (start < 0 ||
+        end < start ||
+        end > sequenceLength) {
+        throw ::jxx::lang::IndexOutOfBoundsException();
     }
 }
 
-void Writer::write(const jxx::lang::CharArray cbuf) {
-    if (!cbuf) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("cbuf"));
-    write(cbuf, 0, (jxx::lang::jint)cbuf->length);
+} // namespace
+
+Writer::Writer()
+    : lock_(thisPtr()) {
 }
 
-void Writer::write(const jxx::lang::CharArray cbuf, jxx::lang::jint off, jxx::lang::jint len) {
-    checkBounds_(cbuf, off, len);
-    for (jxx::lang::jint i = 0; i < len; ++i) write((jxx::lang::jint)(*cbuf)[off + i]);
-}
+Writer::Writer(
+    const ::jxx::Ptr<::jxx::lang::Object>& lock)
+    : lock_(lock) {
 
-void Writer::write(const jxx::Ptr<jxx::lang::String> str) {
-    if (!str) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("str"));
-    write(str, 0, str->length());
-}
-
-void Writer::write(const jxx::Ptr<jxx::lang::String> str, jxx::lang::jint off, jxx::lang::jint len) {
-    checkStringBounds_(str, off, len);
-    const auto& u16 = str->utf16();
-    for (jxx::lang::jint i = 0; i < len; ++i) write((jxx::lang::jint)u16[(std::size_t)(off + i)]);
-}
-
-jxx::Ptr<Writer> Writer::append(const jxx::Ptr<jxx::lang::CharSequence> csq) {
-    if (!csq) {
-        write(jxx::NEW<jxx::lang::String>("null"));
-        return self_();
+    if (lock_ == nullptr) {
+        throw ::jxx::lang::NullPointerException();
     }
-    // write entire sequence
-    auto a = jxx::NEW<jxx::lang::CharArrayType>((std::uint32_t)csq->length());
-    for (jxx::lang::jint i = 0; i < csq->length(); ++i) (*a)[i] = csq->charAt(i);
-    write(a);
-    return self_();
 }
 
-jxx::Ptr<Writer> Writer::append(const jxx::Ptr<jxx::lang::CharSequence> csq, jxx::lang::jint start, jxx::lang::jint end) {
-    jxx::Ptr<jxx::lang::CharSequence> csq2 = csq;
-    if (!csq2) csq2 = jxx::NEW<jxx::lang::String>("null");
-    if (start < 0 || end < start || end > csq2->length()) {
-        throw jxx::lang::IndexOutOfBoundsException(jxx::NEW<jxx::lang::String>("start/end"));
+void Writer::write(
+    ::jxx::lang::jint value) {
+
+    auto buffer =
+        ::jxx::NEW<::jxx::lang::CharArrayType>(1);
+
+    (*buffer)[0] =
+        static_cast<::jxx::lang::jchar>(value);
+
+    write(buffer, 0, 1);
+}
+
+void Writer::write(
+    const ::jxx::lang::CharArray& buffer) {
+
+    const auto length =
+        static_cast<::jxx::lang::jint>(buffer == nullptr ? 0 : buffer->length);
+
+    checkBounds(buffer, 0, length);
+    write(buffer, 0, length);
+}
+
+void Writer::write(
+    const ::jxx::Ptr<::jxx::lang::String>& value) {
+
+    if (value == nullptr) {
+        throw ::jxx::lang::NullPointerException();
     }
-    auto a = jxx::NEW<jxx::lang::CharArrayType>((std::uint32_t)(end - start));
-    for (jxx::lang::jint i = 0; i < (end - start); ++i) (*a)[i] = csq->charAt(start + i);
-    write(a);
-    return self_();
+
+    write(value, 0, value->length());
 }
 
-jxx::Ptr<Writer> Writer::append(jxx::lang::jchar c) {
-    write((jxx::lang::jint)c);
-    return self_();
+void Writer::write(
+    const ::jxx::Ptr<::jxx::lang::String>& value,
+    ::jxx::lang::jint offset,
+    ::jxx::lang::jint length) {
+
+    if (value == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+
+    if (offset < 0 ||
+        length < 0 ||
+        offset > value->length() - length) {
+        throw ::jxx::lang::IndexOutOfBoundsException();
+    }
+
+    const auto buffer = value->toCharArray();
+    write(buffer, offset, length);
 }
 
-void Writer::flush() {}
-void Writer::close() {}
+::jxx::Ptr<Writer> Writer::append(
+    const ::jxx::Ptr<::jxx::lang::CharSequence>& sequence) {
+
+    if (sequence == nullptr) {
+        write(::jxx::NEW<::jxx::lang::String>("null"));
+        return ::jxx::CAST<Writer>(thisPtr());
+    }
+
+    const ::jxx::lang::jint length =
+        sequence->length();
+
+    for (::jxx::lang::jint index = 0;
+         index < length;
+         ++index) {
+        write(static_cast<::jxx::lang::jint>(
+            sequence->charAt(index)));
+    }
+
+    return ::jxx::CAST<Writer>(thisPtr());
+}
+
+::jxx::Ptr<Writer> Writer::append(
+    const ::jxx::Ptr<::jxx::lang::CharSequence>& sequence,
+    ::jxx::lang::jint start,
+    ::jxx::lang::jint end) {
+
+    if (sequence == nullptr) {
+        const auto nullText =
+            ::jxx::NEW<::jxx::lang::String>("null");
+
+        checkSequenceBounds(
+            nullText->length(),
+            start,
+            end);
+
+        for (::jxx::lang::jint index = start;
+             index < end;
+             ++index) {
+            write(static_cast<::jxx::lang::jint>(
+                nullText->charAt(index)));
+        }
+
+        return ::jxx::CAST<Writer>(thisPtr());
+    }
+
+    checkSequenceBounds(
+        sequence->length(),
+        start,
+        end);
+
+    for (::jxx::lang::jint index = start;
+         index < end;
+         ++index) {
+        write(static_cast<::jxx::lang::jint>(
+            sequence->charAt(index)));
+    }
+
+    return ::jxx::CAST<Writer>(thisPtr());
+}
+
+::jxx::Ptr<Writer> Writer::append(
+    ::jxx::lang::jchar value) {
+
+    write(static_cast<::jxx::lang::jint>(value));
+    return ::jxx::CAST<Writer>(thisPtr());
+}
 
 } // namespace jxx::io

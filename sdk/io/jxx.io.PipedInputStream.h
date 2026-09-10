@@ -1,53 +1,41 @@
 #pragma once
-#include <condition_variable>
-#include <vector>
-#include "jxx.io.InputStream.h"
-#include "jxx.io.IOException.h"
 
-namespace jxx::lang {
-    class Integer;
-    class String;
-}
-namespace jxx::io {
+#include <memory>
 
-class PipedOutputStream;
+#include "io/jxx.io.InputStream.h"
+#include "lang/jxx_types.h"
 
-// Java 8: java.io.PipedInputStream
-class PipedInputStream final : public InputStream {
+namespace jxx::io::internal { struct PipeState; }
+namespace jxx::io { class PipedOutputStream;
+
+class PipedInputStream
+    : public ::jxx::lang::ClassBase<PipedInputStream, InputStream> {
 public:
+    using JxxSuper = InputStream;
+    using Super = ::jxx::lang::ClassBase<PipedInputStream, JxxSuper>;
+
+    static constexpr ::jxx::lang::jint PIPE_SIZE = 1024;
+
     PipedInputStream();
-    explicit PipedInputStream(const jxx::Ptr<PipedOutputStream> src);
-    explicit PipedInputStream(jxx::lang::jint pipeSize);
-    PipedInputStream(const jxx::Ptr<PipedOutputStream> src, jxx::lang::jint pipeSize);
+    explicit PipedInputStream(::jxx::lang::jint pipeSize);
+    explicit PipedInputStream(const ::jxx::Ptr<PipedOutputStream>& source);
+    PipedInputStream(const ::jxx::Ptr<PipedOutputStream>& source,
+                     ::jxx::lang::jint pipeSize);
+    ~PipedInputStream() override;
 
-    void connect(const jxx::Ptr<PipedOutputStream> src);
-
-    jxx::lang::jint read() override;
-    jxx::lang::jint read(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) override;
-
-    jxx::lang::jint available() override;
+    void connect(const ::jxx::Ptr<PipedOutputStream>& source);
+    ::jxx::lang::jint read() override;
+    ::jxx::lang::jint read(const ::jxx::lang::ByteArray& buffer,
+                           ::jxx::lang::jint offset,
+                           ::jxx::lang::jint length) override;
+    ::jxx::lang::jint available() override;
     void close() override;
-    jxx::lang::jbool markSupported() const override;
 
 private:
     friend class PipedOutputStream;
-
-    void receive_(jxx::lang::jint b);
-    void receive_(const jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len);
-    void receivedLast_();
-
-    void initPipe_(jxx::lang::jint pipeSize);
-
-    std::condition_variable_any notEmpty_;
-    std::condition_variable_any notFull_;
-
-    std::vector<jxx::lang::jbyte> buffer_;
-    jxx::lang::jint in_ = -1;   // -1 means empty
-    jxx::lang::jint out_ = 0;
-
-    jxx::lang::jbool closedByWriter_ = false;
-    jxx::lang::jbool closedByReader_ = false;
-    jxx::lang::jbool connected_ = false;
+    static ::jxx::lang::jint validatePipeSize_(::jxx::lang::jint pipeSize);
+    void attach_(const std::shared_ptr<internal::PipeState>& state);
+    std::shared_ptr<internal::PipeState> state_;
 };
 
 } // namespace jxx::io

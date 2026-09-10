@@ -1,32 +1,126 @@
-
 #include "io/jxx.io.PrintWriter.h"
-#include "io/jxx.io.UTF8.h"
+#include <string>
+#include "io/jxx.io.OutputStream.h"
+#include "io/jxx.io.OutputStreamWriter.h"
+#include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
-#include <sstream>
-namespace jxx { namespace io {
-PrintWriter::PrintWriter(const jxx::Ptr<Writer> w, bool autoFlush_) : out(std::move(w)), autoFlush(autoFlush_) {}
-PrintWriter::PrintWriter(const jxx::Ptr<OutputStream> os, bool autoFlush_, const std::string& charset) : 
-	out(jxx::NEW<OutputStreamWriter>(std::move(os), jxx::NEW<jxx::lang::String>(charset))), autoFlush(autoFlush_) {}
-void PrintWriter::flush(){ try{ out->flush(); } catch(...){ setError(); } }
-void PrintWriter::close(){ try{ out->close(); } catch(...){ setError(); } }
-void PrintWriter::doWrite(const std::u16string& s) {} //try{ //out->write(s);} catch(...){ setError(); } }
-void PrintWriter::write(const jxx::lang::jchar* buf, int off, int len) {}// try{ out->write(buf,off,len);} catch(...){ setError(); } }
-void PrintWriter::write(const std::u16string& s){ doWrite(s); }
-void PrintWriter::print(const std::string& s){ std::u16string u; u.reserve(s.size()); for(unsigned char c: s) u.push_back((jxx::lang::jchar)c); doWrite(u);} 
-void PrintWriter::print(const char* s){ print(s? std::string(s) : std::string("null")); }
-void PrintWriter::print(const std::u16string& s){ doWrite(s);} 
-void PrintWriter::print(bool v){ print(v? std::string("true") : std::string("false")); }
-void PrintWriter::print(int v){ std::ostringstream oss; oss<<v; print(oss.str()); }
-void PrintWriter::print(long long v){ std::ostringstream oss; oss<<v; print(oss.str()); }
-void PrintWriter::print(float v){ std::ostringstream oss; oss<<v; print(oss.str()); }
-void PrintWriter::print(double v){ std::ostringstream oss; oss<<v; print(oss.str()); }
-void PrintWriter::println(){ print(""); if(autoFlush) flush(); }
-void PrintWriter::println(const std::string& s){ print(s); println(); }
-void PrintWriter::println(const char* s){ print(s); println(); }
-void PrintWriter::println(const std::u16string& s){ print(s); println(); }
-void PrintWriter::println(bool v){ print(v); println(); }
-void PrintWriter::println(int v){ print(v); println(); }
-void PrintWriter::println(long long v){ print(v); println(); }
-void PrintWriter::println(float v){ print(v); println(); }
-void PrintWriter::println(double v){ print(v); println(); }
-}}
+namespace jxx::io
+{
+	PrintWriter::PrintWriter(const ::jxx::Ptr<Writer>& o) :PrintWriter(o, false)
+	{
+	} PrintWriter::PrintWriter(const ::jxx::Ptr<Writer>& o, ::jxx::lang::jbool a) :out_(o), autoFlush_(a)
+	{
+		if (!o)throw ::jxx::lang::NullPointerException();
+	} PrintWriter::PrintWriter(const ::jxx::Ptr<OutputStream>& o) :PrintWriter(o, false)
+	{
+	} PrintWriter::PrintWriter(const ::jxx::Ptr<OutputStream>& o, ::jxx::lang::jbool a) :PrintWriter(::jxx::NEW<OutputStreamWriter>(o), a)
+	{
+	} PrintWriter::~PrintWriter()
+	{
+		close();
+	} void PrintWriter::flush()
+	{
+		if (!out_)return; try {
+			out_->flush();
+		}
+		catch (...) {
+			setError();
+		}
+	} void PrintWriter::close()
+	{
+		if (closed_)return; flush(); try {
+			if (out_)out_->close();
+		}
+		catch (...) {
+			setError();
+		}out_.reset(); closed_ = true;
+	} ::jxx::lang::jbool PrintWriter::checkError()
+	{
+		flush(); return trouble_;
+	} void PrintWriter::write(::jxx::lang::jint v)
+	{
+		try {
+			out_->write(v);
+		}
+		catch (...) {
+			setError();
+		}
+	} void PrintWriter::write(const ::jxx::lang::CharArray& b, ::jxx::lang::jint o, ::jxx::lang::jint l)
+	{
+		try {
+			out_->write(b, o, l);
+		}
+		catch (...) {
+			setError();
+		}
+	} void PrintWriter::write(const ::jxx::Ptr<::jxx::lang::String>& s, ::jxx::lang::jint o, ::jxx::lang::jint l)
+	{
+		try {
+			out_->write(s, o, l);
+		}
+		catch (...) {
+			setError();
+		}
+	} void PrintWriter::text(const ::jxx::Ptr<::jxx::lang::String>& s)
+	{
+		auto v = s ? s : jxx::NEW<::jxx::lang::String>("null"); write(v, 0, v->length());
+	} void PrintWriter::print(const ::jxx::Ptr<::jxx::lang::String>& v)
+	{
+		text(v);
+	} void PrintWriter::print(const ::jxx::Ptr<::jxx::lang::Object>& v)
+	{
+		text(v ? v->toString() : nullptr);
+	} void PrintWriter::print(::jxx::lang::jbool v)
+	{
+		text(::jxx::NEW<::jxx::lang::String>(v ? "true" : "false"));
+	} void PrintWriter::print(::jxx::lang::jchar v)
+	{
+		text(::jxx::NEW<::jxx::lang::String>(std::u16string(1, v)));
+	} void PrintWriter::print(::jxx::lang::jint v)
+	{
+		text(::jxx::NEW<::jxx::lang::String>(std::to_string(v)));
+	} void PrintWriter::print(::jxx::lang::jlong v)
+	{
+		text(::jxx::NEW<::jxx::lang::String>(std::to_string(v)));
+	} void PrintWriter::print(::jxx::lang::jfloat v)
+	{
+		text(::jxx::NEW<::jxx::lang::String>(std::to_string(v)));
+	} void PrintWriter::print(::jxx::lang::jdouble v)
+	{
+		text(::jxx::NEW<::jxx::lang::String>(std::to_string(v)));
+	} void PrintWriter::println()
+	{
+		text(::jxx::NEW<::jxx::lang::String>("\n")); if (autoFlush_)flush();
+	} void PrintWriter::println(const ::jxx::Ptr<::jxx::lang::String>& v)
+	{
+		print(v); println();
+	} void PrintWriter::println(const ::jxx::Ptr<::jxx::lang::Object>& v)
+	{
+		print(v); println();
+	} void PrintWriter::println(::jxx::lang::jbool v)
+	{
+		print(v); println();
+	} void PrintWriter::println(::jxx::lang::jchar v)
+	{
+		print(v); println();
+	} void PrintWriter::println(::jxx::lang::jint v)
+	{
+		print(v); println();
+	} void PrintWriter::println(::jxx::lang::jlong v)
+	{
+		print(v); println();
+	} void PrintWriter::println(::jxx::lang::jfloat v)
+	{
+		print(v); println();
+	} void PrintWriter::println(::jxx::lang::jdouble v)
+	{
+		print(v); println();
+	} void PrintWriter::setError()
+	{
+		trouble_ = true;
+	} void PrintWriter::clearError()
+	{
+		trouble_ = false;
+	}
+}

@@ -1,62 +1,13 @@
-#include "jxx.io.IOHelper.h"
-#include "lang/jxx.lang.String.h"
+#include "io/jxx.io.ByteArrayOutputStream.h"
+#include <algorithm>
+#include "io/jxx.io.IOHelper.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
-#include "jxx.io.ByteArrayOutputStream.h"
-
+#include "lang/jxx.lang.String.h"
 namespace jxx::io {
-
-static constexpr std::uint32_t DEFAULT_BAOS_SIZE = 32;
-
-ByteArrayOutputStream::ByteArrayOutputStream()
-    : buf_(jxx::NEW<jxx::lang::ByteArrayType>(DEFAULT_BAOS_SIZE)), count_(0) {}
-
-ByteArrayOutputStream::ByteArrayOutputStream(jxx::lang::jint size)
-    : buf_(nullptr), count_(0) {
-    if (size < 0) throw jxx::lang::IllegalArgumentException(jxx::NEW<jxx::lang::String>("negative size"));
-    buf_ = jxx::NEW<jxx::lang::ByteArrayType>((std::uint32_t)size);
-}
-
-void ByteArrayOutputStream::ensureCapacity_(jxx::lang::jint minCapacity) {
-    if (!buf_) buf_ = jxx::NEW<jxx::lang::ByteArrayType>(DEFAULT_BAOS_SIZE);
-    if (minCapacity <= (jxx::lang::jint)buf_->length) return;
-
-    std::uint32_t oldCap = buf_->length;
-    std::uint32_t newCap = oldCap ? oldCap * 2 : DEFAULT_BAOS_SIZE;
-    if ((jxx::lang::jint)newCap < minCapacity) newCap = (std::uint32_t)minCapacity;
-
-    auto nb = jxx::NEW<jxx::lang::ByteArrayType>(newCap);
-    for (std::uint32_t i = 0; i < oldCap; ++i) (*nb)[(jxx::lang::jint)i] = (*buf_)[(jxx::lang::jint)i];
-    buf_ = nb;
-}
-
-void ByteArrayOutputStream::write(jxx::lang::jint b) {
-    ensureCapacity_(count_ + 1);
-    (*buf_)[count_++] = (jxx::lang::jbyte)(b & 0xFF);
-}
-
-void ByteArrayOutputStream::write(jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) {
-    IOHelper::checkBounds_(b, off, len);
-    ensureCapacity_(count_ + len);
-    for (jxx::lang::jint i = 0; i < len; ++i) (*buf_)[count_ + i] = (*b)[off + i];
-    count_ += len;
-}
-
-void ByteArrayOutputStream::reset() { count_ = 0; }
-
-jxx::lang::jint ByteArrayOutputStream::size() const { return count_; }
-
-jxx::lang::ByteArray ByteArrayOutputStream::toByteArray() const {
-    auto out = jxx::NEW<jxx::lang::ByteArrayType>((std::uint32_t)count_);
-    for (jxx::lang::jint i = 0; i < count_; ++i) (*out)[i] = (*buf_)[i];
-    return out;
-}
-
-void ByteArrayOutputStream::writeTo(const jxx::Ptr<OutputStream> out) const {
-    if (!out) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("out"));
-    out->write(buf_, 0, count_);
-}
-
-void ByteArrayOutputStream::close() {}
-
+ByteArrayOutputStream::ByteArrayOutputStream():ByteArrayOutputStream(32){} ByteArrayOutputStream::ByteArrayOutputStream(::jxx::lang::jint s){if(s<0)throw ::jxx::lang::IllegalArgumentException();buffer_=::jxx::NEW<::jxx::lang::ByteArrayType>(static_cast<std::uint32_t>(s));}
+void ByteArrayOutputStream::ensureCapacity(::jxx::lang::jint c){if(c<=static_cast<::jxx::lang::jint>(buffer_->length))return;auto n=std::max(c,static_cast<::jxx::lang::jint>(buffer_->length)*2);auto b=::jxx::NEW<::jxx::lang::ByteArrayType>(static_cast<std::uint32_t>(n));for(::jxx::lang::jint i=0;i<count_;++i)(*b)[i]=(*buffer_)[i];buffer_=b;}
+void ByteArrayOutputStream::write(::jxx::lang::jint v){ensureCapacity(count_+1);(*buffer_)[count_++]=static_cast<::jxx::lang::jbyte>(v);}
+void ByteArrayOutputStream::write(const ::jxx::lang::ByteArray& b,::jxx::lang::jint o,::jxx::lang::jint l){IOHelper::checkBounds(b,o,l);ensureCapacity(count_+l);for(::jxx::lang::jint i=0;i<l;++i)(*buffer_)[count_+i]=(*b)[o+i];count_+=l;}
+void ByteArrayOutputStream::writeTo(const ::jxx::Ptr<OutputStream>& o)const{if(!o)throw ::jxx::lang::NullPointerException();o->write(buffer_,0,count_);} void ByteArrayOutputStream::reset(){count_=0;} ::jxx::lang::ByteArray ByteArrayOutputStream::toByteArray()const{auto b=::jxx::NEW<::jxx::lang::ByteArrayType>(static_cast<std::uint32_t>(count_));for(::jxx::lang::jint i=0;i<count_;++i)(*b)[i]=(*buffer_)[i];return b;} ::jxx::lang::jint ByteArrayOutputStream::size()const{return count_;} ::jxx::Ptr<::jxx::lang::String> ByteArrayOutputStream::toString()const{return ::jxx::NEW<::jxx::lang::String>(toByteArray());} void ByteArrayOutputStream::close(){}
 } // namespace jxx::io

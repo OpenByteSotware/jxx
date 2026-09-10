@@ -683,7 +683,7 @@ void Properties::list(const jxx::Ptr<jxx::io::PrintWriter> out) {
     if (out == nullptr) {
         throw jxx::lang::NullPointerException();
     }
-    out->println(std::u16string(u"-- listing properties --"));
+    out->println(jxx::NEW<jxx::lang::String>(u"-- listing properties --"));
     auto names = propertyNames();
     while (names->hasMoreElements()) {
         auto keyObj = names->nextElement();
@@ -692,7 +692,7 @@ void Properties::list(const jxx::Ptr<jxx::io::PrintWriter> out) {
         if (keyStr == nullptr || valueStr == nullptr) {
             continue;
         }
-        out->println(keyStr->utf16() + u"=" + abbreviateForList(valueStr->utf16()));
+        out->println(jxx::NEW<jxx::lang::String>(keyStr->utf16() + u"=" + abbreviateForList(valueStr->utf16())));
     }
 }
 

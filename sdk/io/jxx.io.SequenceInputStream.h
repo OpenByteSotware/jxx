@@ -1,23 +1,39 @@
-
 #pragma once
-#include <memory>
+
+#include <cstddef>
 #include <vector>
-#include "lang/jxx.lang.internal.h"
+
 #include "io/jxx.io.InputStream.h"
+#include "lang/jxx_types.h"
+#include "util/jxx.util.Enumeration.h"
 
-namespace jxx { namespace io {
+namespace jxx::io {
 
-class SequenceInputStream : public InputStream {
-    std::vector<std::shared_ptr<InputStream>> seq;
-    std::size_t idx = 0;
+class SequenceInputStream
+    : public ::jxx::lang::ClassBase<SequenceInputStream, InputStream> {
 public:
-    SequenceInputStream(std::shared_ptr<InputStream> s1, std::shared_ptr<InputStream> s2);
-    explicit SequenceInputStream(std::vector<std::shared_ptr<InputStream>> streams);
+    using JxxSuper = InputStream;
+    using Super = ::jxx::lang::ClassBase<SequenceInputStream, JxxSuper>;
+    using JxxSuper::read;
 
-    jxx::lang::jint read() override;
-    jxx::lang::jint read(jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) override;
-    jxx::lang::jint available() override;
+    explicit SequenceInputStream(
+        const ::jxx::Ptr<::jxx::util::Enumeration<InputStream>>& streams);
+    SequenceInputStream(const ::jxx::Ptr<InputStream>& first,
+                        const ::jxx::Ptr<InputStream>& second);
+    ~SequenceInputStream() override;
+
+    ::jxx::lang::jint read() override;
+    ::jxx::lang::jint read(const ::jxx::lang::ByteArray& buffer,
+                           ::jxx::lang::jint offset,
+                           ::jxx::lang::jint length) override;
+    ::jxx::lang::jint available() override;
     void close() override;
+
+private:
+    void advance_();
+    std::vector<::jxx::Ptr<InputStream>> streams_;
+    std::size_t index_ = 0;
+    ::jxx::lang::jbool closed_ = false;
 };
 
-}}
+} // namespace jxx::io

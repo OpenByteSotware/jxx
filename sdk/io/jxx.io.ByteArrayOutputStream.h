@@ -1,27 +1,11 @@
 #pragma once
-#include "jxx.io.OutputStream.h"
-
+#include "io/jxx.io.OutputStream.h"
+namespace jxx::lang { class String; }
 namespace jxx::io {
-
-class ByteArrayOutputStream final : public OutputStream {
+class ByteArrayOutputStream final : public ::jxx::lang::ClassBase<ByteArrayOutputStream,OutputStream> {
 public:
-    ByteArrayOutputStream();
-    explicit ByteArrayOutputStream(jxx::lang::jint size);
-
-    void write(jxx::lang::jint b) override;
-    void write(jxx::lang::ByteArray b, jxx::lang::jint off, jxx::lang::jint len) override;
-
-    void reset();
-    jxx::lang::jint size() const;
-    jxx::lang::ByteArray toByteArray() const;
-    void writeTo(const jxx::Ptr<OutputStream> out) const;
-
-    void close() override;
-
-private:
-    jxx::Ptr<jxx::lang::ByteArrayType> buf_;
-    jxx::lang::jint count_ = 0;
-    void ensureCapacity_(jxx::lang::jint minCapacity);
+ using JxxSuper=OutputStream; using Super=::jxx::lang::ClassBase<ByteArrayOutputStream,JxxSuper>;
+ ByteArrayOutputStream(); explicit ByteArrayOutputStream(::jxx::lang::jint size); void write(::jxx::lang::jint value) override; void write(const ::jxx::lang::ByteArray& buffer,::jxx::lang::jint offset,::jxx::lang::jint length) override; void writeTo(const ::jxx::Ptr<OutputStream>& output) const; void reset(); ::jxx::lang::ByteArray toByteArray() const; ::jxx::lang::jint size() const; ::jxx::Ptr<::jxx::lang::String> toString() const override; void close() override;
+private: void ensureCapacity(::jxx::lang::jint capacity); ::jxx::lang::ByteArray buffer_; ::jxx::lang::jint count_=0;
 };
-
 } // namespace jxx::io
