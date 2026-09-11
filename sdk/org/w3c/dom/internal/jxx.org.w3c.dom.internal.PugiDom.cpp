@@ -98,6 +98,7 @@ std::string prefixPart(const std::string& qualifiedName) {
 }
 
 std::u16string utf16Value(
+    const ::jxx::Ptr<String>& value) {
     std::u16string result;
 
     if (value == nullptr) {
