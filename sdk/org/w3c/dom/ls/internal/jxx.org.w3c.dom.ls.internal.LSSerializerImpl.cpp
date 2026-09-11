@@ -118,14 +118,22 @@ void appendNode(
             }
         }
         const auto children = node->getChildNodes();
-        if (children == nullptr || children->getLength() == 0) {
+        std::string childOutput;
+        if (children != nullptr) {
+            for (::jxx::lang::jint index = 0; index < children->getLength(); ++index) {
+                appendNode(
+                    children->item(index),
+                    filter,
+                    configuration,
+                    childOutput);
+            }
+        }
+        if (childOutput.empty()) {
             output += "/>";
             return;
         }
         output += '>';
-        for (::jxx::lang::jint index = 0; index < children->getLength(); ++index) {
-            appendNode(children->item(index), filter, configuration, output);
-        }
+        output += childOutput;
         output += "</" + name + '>';
         return;
     }
@@ -148,6 +156,37 @@ void appendNode(
         if (!value.empty()) output += ' ' + value;
         output += "?>";
     }
+}
+
+std::string prettyPrint(const std::string& compact, const std::string& newLine) {
+    std::string output;
+    std::size_t index = 0;
+    int depth = 0;
+    while (index < compact.size()) {
+        const auto open = compact.find('<', index);
+        if (open == std::string::npos) {
+            output += compact.substr(index);
+            break;
+        }
+        const auto close = compact.find('>', open);
+        if (close == std::string::npos) {
+            output += compact.substr(index);
+            break;
+        }
+        const std::string text = compact.substr(index, open - index);
+        const std::string tag = compact.substr(open, close - open + 1);
+        const bool closing = tag.size() > 1 && tag[1] == '/';
+        const bool declaration = tag.size() > 1 && (tag[1] == '?' || tag[1] == '!');
+        const bool empty = tag.size() > 2 && tag[tag.size() - 2] == '/';
+        if (!text.empty()) output += text;
+        if (closing) --depth;
+        if (!output.empty() && text.empty()) output += newLine;
+        if (text.empty()) output.append(static_cast<std::size_t>(depth * 2), ' ');
+        output += tag;
+        if (!closing && !empty && !declaration) ++depth;
+        index = close + 1;
+    }
+    return output;
 }
 
 } // namespace
@@ -252,6 +291,17 @@ void LSSerializerImpl::setFilter(const ::jxx::Ptr<::jxx::org::w3c::dom::ls::LSSe
     const ::jxx::Ptr<::jxx::org::w3c::dom::Node>& nodeArg) {
     std::string output;
     appendNode(nodeArg, filter_, domConfig_, output);
+    if (nodeArg != nullptr &&
+        nodeArg->getNodeType() == ::jxx::org::w3c::dom::Node::DOCUMENT_NODE &&
+        configurationFlag(domConfig_, "xml-declaration", true)) {
+        output = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+            (newLine_ == nullptr ? std::string() : newLine_->utf8()) + output;
+    }
+    if (configurationFlag(domConfig_, "format-pretty-print", false)) {
+        const std::string lineBreak =
+            newLine_ == nullptr ? std::string("\n") : newLine_->utf8();
+        output = prettyPrint(output, lineBreak);
+    }
     return ::jxx::NEW<::jxx::lang::String>(output.c_str());
 }
 

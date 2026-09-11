@@ -3,6 +3,7 @@
 #include "ext/xml/parsers/jxx.ext.xml.parsers.DocumentBuilder.h"
 #include "ext/xml/parsers/jxx.ext.xml.parsers.DocumentBuilderFactory.h"
 #include "io/jxx.io.StringReader.h"
+#include "lang/jxx.lang.Boolean.h"
 #include "lang/jxx.lang.String.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Document.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Element.h"
@@ -22,6 +23,35 @@ namespace {
     return ::jxx::org::w3c::dom::ls::LSException(
         ::jxx::org::w3c::dom::ls::LSException::PARSE_ERR,
         ::jxx::NEW<::jxx::lang::String>(message));
+}
+
+bool configurationFlag(
+    const ::jxx::Ptr<::jxx::org::w3c::dom::DOMConfiguration>& configuration,
+    const char* name,
+    bool defaultValue) {
+    if (configuration == nullptr) {
+        return defaultValue;
+    }
+    const auto value = configuration->getParameter(
+        ::jxx::NEW<::jxx::lang::String>(name));
+    const auto booleanValue = ::jxx::CAST<::jxx::lang::Boolean>(value);
+    return booleanValue == nullptr
+        ? defaultValue
+        : booleanValue->booleanValue();
+}
+
+::jxx::Ptr<::jxx::ext::xml::parsers::DocumentBuilder> createBuilder(
+    const ::jxx::Ptr<::jxx::org::w3c::dom::DOMConfiguration>& configuration) {
+    const auto factory =
+        ::jxx::ext::xml::parsers::DocumentBuilderFactory::newInstance();
+    factory->setNamespaceAware(
+        configurationFlag(configuration, "namespaces", true));
+    factory->setIgnoringComments(
+        !configurationFlag(configuration, "comments", true));
+    factory->setValidating(
+        configurationFlag(configuration, "validate", false) ||
+        configurationFlag(configuration, "validate-if-schema", false));
+    return factory->newDocumentBuilder();
 }
 
 ::jxx::lang::jint visibilityMask(
@@ -214,9 +244,7 @@ void LSParserImpl::setFilter(
         source->setPublicId(input->getPublicId());
         source->setSystemId(input->getSystemId());
 
-        const auto builder =
-            ::jxx::ext::xml::parsers::DocumentBuilderFactory::newInstance()
-                ->newDocumentBuilder();
+        const auto builder = createBuilder(domConfig_);
         const auto document = builder->parse(source);
         if (abortRequested_) {
             throw parseFailure("Parsing aborted");
@@ -242,10 +270,7 @@ void LSParserImpl::setFilter(
         ::jxx::NEW<::jxx::org::xml::sax::InputSource>(uri);
     try {
         busy_ = true;
-        const auto document =
-            ::jxx::ext::xml::parsers::DocumentBuilderFactory::newInstance()
-                ->newDocumentBuilder()
-                ->parse(input);
+        const auto document = createBuilder(domConfig_)->parse(input);
         busy_ = false;
         return document;
     } catch (...) {

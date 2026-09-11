@@ -5,6 +5,7 @@
 #include "org/w3c/dom/jxx.org.w3c.dom.Document.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Element.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Node.h"
+#include "org/w3c/dom/ls/internal/jxx.org.w3c.dom.ls.internal.DOMImplementationLSImpl.h"
 
 #include <algorithm>
 #include <cctype>
@@ -45,7 +46,9 @@ std::string normalizedFeatureName(
 bool isSupportedFeature(
     const std::string& feature) noexcept {
 
-    return feature == "core" || feature == "xml";
+    return feature == "core" ||
+        feature == "xml" ||
+        feature == "ls";
 }
 
 bool isSupportedVersion(
@@ -131,6 +134,12 @@ DOMImplementationImpl::getFeature(
 
     if (!hasFeature(feature, version)) {
         return nullptr;
+    }
+
+    const auto normalized = normalizedFeatureName(feature);
+    if (normalized == "ls") {
+        return ::jxx::CAST<::jxx::lang::Object>(
+            ::jxx::org::w3c::dom::ls::internal::loadSaveImplementation());
     }
 
     return thisPtr();

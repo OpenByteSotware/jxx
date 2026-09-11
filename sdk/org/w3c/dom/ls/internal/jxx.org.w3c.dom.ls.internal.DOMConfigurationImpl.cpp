@@ -1,8 +1,10 @@
 #include "org/w3c/dom/ls/internal/jxx.org.w3c.dom.ls.internal.DOMConfigurationImpl.h"
 
 #include <algorithm>
+#include <cctype>
 #include <utility>
 
+#include "lang/jxx.lang.Boolean.h"
 #include "lang/jxx.lang.String.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.DOMException.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.DOMStringList.h"
@@ -25,32 +27,69 @@ public:
     ::jxx::lang::jint getLength() const override {
         return static_cast<::jxx::lang::jint>(values_.size());
     }
-    ::jxx::lang::jbool contains(const ::jxx::Ptr<::jxx::lang::String>& value) const override {
-        return value != nullptr &&
-            std::find(values_.begin(), values_.end(), value->utf8()) != values_.end();
+    ::jxx::lang::jbool contains(
+        const ::jxx::Ptr<::jxx::lang::String>& value) const override {
+        if (value == nullptr) {
+            return false;
+        }
+        std::string candidate = value->utf8();
+        std::transform(
+            candidate.begin(),
+            candidate.end(),
+            candidate.begin(),
+            [](unsigned char character) {
+                return static_cast<char>(std::tolower(character));
+            });
+        return std::find(values_.begin(), values_.end(), candidate) != values_.end();
     }
 private:
     std::vector<std::string> values_;
 };
 
 std::string keyOf(const ::jxx::Ptr<::jxx::lang::String>& name) {
-    return name == nullptr ? std::string() : name->utf8();
+    std::string key = name == nullptr ? std::string() : name->utf8();
+    std::transform(key.begin(), key.end(), key.begin(),
+        [](unsigned char value) {
+            return static_cast<char>(std::tolower(value));
+        });
+    return key;
+}
+
+bool defaultBooleanValue(const std::string& name) {
+    return name == "cdata-sections" ||
+        name == "comments" ||
+        name == "entities" ||
+        name == "namespace-declarations" ||
+        name == "namespaces" ||
+        name == "well-formed" ||
+        name == "xml-declaration";
 }
 } // namespace
 
 DOMConfigurationImpl::DOMConfigurationImpl(const std::vector<std::string>& names)
-    : parameterNames_(names) {}
+    : parameterNames_(names) {
+    for (const auto& name : parameterNames_) {
+        values_[name] = ::jxx::CAST<::jxx::lang::Object>(
+            ::jxx::lang::Boolean::valueOf(defaultBooleanValue(name)));
+    }
+}
 DOMConfigurationImpl::~DOMConfigurationImpl() = default;
 
 void DOMConfigurationImpl::setParameter(
     const ::jxx::Ptr<::jxx::lang::String>& name,
     const ::jxx::Ptr<::jxx::lang::Object>& value) {
-    if (!canSetParameter(name, value)) {
+    const auto key = keyOf(name);
+    if (std::find(parameterNames_.begin(), parameterNames_.end(), key) == parameterNames_.end()) {
         throw ::jxx::org::w3c::dom::DOMException(
             ::jxx::org::w3c::dom::DOMException::NOT_FOUND_ERR,
             ::jxx::NEW<::jxx::lang::String>("Unsupported configuration parameter"));
     }
-    values_[keyOf(name)] = value;
+    if (::jxx::CAST<::jxx::lang::Boolean>(value) == nullptr) {
+        throw ::jxx::org::w3c::dom::DOMException(
+            ::jxx::org::w3c::dom::DOMException::TYPE_MISMATCH_ERR,
+            ::jxx::NEW<::jxx::lang::String>("Configuration parameter requires Boolean"));
+    }
+    values_[key] = value;
 }
 
 ::jxx::Ptr<::jxx::lang::Object> DOMConfigurationImpl::getParameter(
@@ -67,9 +106,10 @@ void DOMConfigurationImpl::setParameter(
 
 ::jxx::lang::jbool DOMConfigurationImpl::canSetParameter(
     const ::jxx::Ptr<::jxx::lang::String>& name,
-    const ::jxx::Ptr<::jxx::lang::Object>&) const {
+    const ::jxx::Ptr<::jxx::lang::Object>& value) const {
     const auto key = keyOf(name);
-    return std::find(parameterNames_.begin(), parameterNames_.end(), key) != parameterNames_.end();
+    return std::find(parameterNames_.begin(), parameterNames_.end(), key) != parameterNames_.end() &&
+        ::jxx::CAST<::jxx::lang::Boolean>(value) != nullptr;
 }
 
 ::jxx::Ptr<::jxx::org::w3c::dom::DOMStringList>
