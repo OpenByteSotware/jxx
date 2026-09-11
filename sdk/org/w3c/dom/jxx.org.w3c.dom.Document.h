@@ -9,6 +9,7 @@ namespace jxx::org::w3c::dom {
 class Attr;
 class CDATASection;
 class Comment;
+class DOMConfiguration;
 class DOMImplementation;
 class DocumentType;
 class Element;
@@ -84,6 +85,7 @@ public:
     virtual void setStrictErrorChecking(::jxx::lang::jbool strict) = 0;
     virtual ::jxx::Ptr<::jxx::lang::String> getDocumentURI() const = 0;
     virtual void setDocumentURI(const ::jxx::Ptr<::jxx::lang::String>& uri) = 0;
+    virtual ::jxx::Ptr<DOMConfiguration> getDomConfig() const = 0;
     virtual void normalizeDocument() = 0;
 };
 

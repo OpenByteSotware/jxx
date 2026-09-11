@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <functional>
+#include <algorithm>
+#include <cctype>
 #include <memory>
 #include <string>
 #include <utility>
@@ -11,6 +13,7 @@
 #include <pugixml.hpp>
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.Boolean.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx_types.h"
 #include "org/w3c/dom/internal/jxx.org.w3c.dom.internal.DOMImplementationImpl.h"
@@ -18,6 +21,8 @@
 #include "org/w3c/dom/jxx.org.w3c.dom.CDATASection.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Comment.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.DOMException.h"
+#include "org/w3c/dom/jxx.org.w3c.dom.DOMConfiguration.h"
+#include "org/w3c/dom/jxx.org.w3c.dom.DOMStringList.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.DOMImplementation.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Document.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.DocumentType.h"
@@ -45,6 +50,8 @@ using NamedNodeMap = ::jxx::org::w3c::dom::NamedNodeMap;
 using ProcessingInstruction = ::jxx::org::w3c::dom::ProcessingInstruction;
 using DOMImplementation = ::jxx::org::w3c::dom::DOMImplementation;
 using DOMException = ::jxx::org::w3c::dom::DOMException;
+using DOMConfiguration = ::jxx::org::w3c::dom::DOMConfiguration;
+using DOMStringList = ::jxx::org::w3c::dom::DOMStringList;
 using UserDataHandler = ::jxx::org::w3c::dom::UserDataHandler;
 
 struct UserDataEntry {
@@ -64,6 +71,20 @@ struct Store {
     ::jxx::Ptr<String> documentURI;
     ::jxx::lang::jbool xmlStandalone = false;
     ::jxx::lang::jbool strictErrorChecking = true;
+    std::unordered_map<std::string, ::jxx::lang::jbool> domBooleanParameters{
+        {"canonical-form", false},
+        {"cdata-sections", true},
+        {"comments", true},
+        {"element-content-whitespace", true},
+        {"entities", true},
+        {"namespace-declarations", true},
+        {"namespaces", true},
+        {"normalize-characters", false},
+        {"split-cdata-sections", true},
+        {"validate", false},
+        {"validate-if-schema", false},
+        {"well-formed", true}
+    };
 };
 
 std::string localPart(const std::string& qualifiedName) {
@@ -136,6 +157,139 @@ void notifyUserDataHandlers(
         }
     }
 }
+
+class DOMStringListImpl final
+    : public ::jxx::lang::ClassBase<
+          DOMStringListImpl,
+          ::jxx::lang::Object,
+          DOMStringList> {
+public:
+    explicit DOMStringListImpl(std::vector<std::string> values)
+        : values_(std::move(values)) {
+    }
+
+    ::jxx::Ptr<String> item(::jxx::lang::jint index) const override {
+        if (index < 0 || static_cast<std::size_t>(index) >= values_.size()) {
+            return nullptr;
+        }
+        return ::jxx::NEW<String>(values_[static_cast<std::size_t>(index)]);
+    }
+
+    ::jxx::lang::jint getLength() const override {
+        return static_cast<::jxx::lang::jint>(values_.size());
+    }
+
+    ::jxx::lang::jbool contains(
+        const ::jxx::Ptr<String>& value) const override {
+        if (value == nullptr) {
+            return false;
+        }
+        return std::find(values_.begin(), values_.end(), value->utf8()) !=
+            values_.end();
+    }
+
+private:
+    std::vector<std::string> values_;
+};
+
+class DOMConfigurationImpl final
+    : public ::jxx::lang::ClassBase<
+          DOMConfigurationImpl,
+          ::jxx::lang::Object,
+          DOMConfiguration> {
+public:
+    explicit DOMConfigurationImpl(const std::shared_ptr<Store>& store)
+        : store_(store) {
+    }
+
+    void setParameter(
+        const ::jxx::Ptr<String>& name,
+        const ::jxx::Ptr<::jxx::lang::Object>& value) override {
+        const auto normalized = normalizeName_(name);
+        const auto found = store_->domBooleanParameters.find(normalized);
+        if (found == store_->domBooleanParameters.end()) {
+            throw DOMException(
+                DOMException::NOT_FOUND_ERR,
+                ::jxx::NEW<String>("Unrecognized DOM configuration parameter"));
+        }
+
+        const auto booleanValue = ::jxx::CAST<::jxx::lang::Boolean>(value);
+        if (booleanValue == nullptr) {
+            throw DOMException(
+                DOMException::TYPE_MISMATCH_ERR,
+                ::jxx::NEW<String>("DOM configuration parameter requires Boolean"));
+        }
+
+        const auto requested = booleanValue->booleanValue();
+        if (!canSetParameter(name, value)) {
+            throw DOMException(
+                DOMException::NOT_SUPPORTED_ERR,
+                ::jxx::NEW<String>("Unsupported DOM configuration value"));
+        }
+        found->second = requested;
+    }
+
+    ::jxx::Ptr<::jxx::lang::Object> getParameter(
+        const ::jxx::Ptr<String>& name) const override {
+        const auto found = store_->domBooleanParameters.find(normalizeName_(name));
+        if (found == store_->domBooleanParameters.end()) {
+            throw DOMException(
+                DOMException::NOT_FOUND_ERR,
+                ::jxx::NEW<String>("Unrecognized DOM configuration parameter"));
+        }
+        return ::jxx::CAST<::jxx::lang::Object>(
+            ::jxx::lang::Boolean::valueOf(found->second));
+    }
+
+    ::jxx::lang::jbool canSetParameter(
+        const ::jxx::Ptr<String>& name,
+        const ::jxx::Ptr<::jxx::lang::Object>& value) const override {
+        const auto normalized = normalizeName_(name);
+        const auto found = store_->domBooleanParameters.find(normalized);
+        if (found == store_->domBooleanParameters.end()) {
+            return false;
+        }
+        const auto booleanValue = ::jxx::CAST<::jxx::lang::Boolean>(value);
+        if (booleanValue == nullptr) {
+            return false;
+        }
+        const auto requested = booleanValue->booleanValue();
+        if (requested &&
+            (normalized == "canonical-form" ||
+             normalized == "normalize-characters" ||
+             normalized == "validate" ||
+             normalized == "validate-if-schema")) {
+            return false;
+        }
+        return true;
+    }
+
+    ::jxx::Ptr<DOMStringList> getParameterNames() const override {
+        std::vector<std::string> names;
+        names.reserve(store_->domBooleanParameters.size());
+        for (const auto& entry : store_->domBooleanParameters) {
+            names.push_back(entry.first);
+        }
+        std::sort(names.begin(), names.end());
+        return ::jxx::NEW<DOMStringListImpl>(std::move(names));
+    }
+
+private:
+    static std::string normalizeName_(const ::jxx::Ptr<String>& name) {
+        if (name == nullptr) {
+            throw ::jxx::lang::NullPointerException();
+        }
+        auto value = name->utf8();
+        std::transform(
+            value.begin(), value.end(), value.begin(),
+            [](unsigned char character) {
+                return static_cast<char>(std::tolower(character));
+            });
+        return value;
+    }
+
+    std::shared_ptr<Store> store_;
+};
 
 class DomNode;
 class NamedNodeMapImpl;
@@ -852,7 +1006,71 @@ public:
     void setStrictErrorChecking(::jxx::lang::jbool value) override { store_->strictErrorChecking = value; }
     ::jxx::Ptr<String> getDocumentURI() const override { return store_->documentURI; }
     void setDocumentURI(const ::jxx::Ptr<String>& uri) override { store_->documentURI = uri; }
-    void normalizeDocument() override { normalize(); }
+    ::jxx::Ptr<DOMConfiguration> getDomConfig() const override {
+        return ::jxx::NEW<DOMConfigurationImpl>(store_);
+    }
+
+    void normalizeDocument() override {
+        const auto comments =
+            store_->domBooleanParameters["comments"];
+        const auto cdataSections =
+            store_->domBooleanParameters["cdata-sections"];
+
+        std::function<void(pugi::xml_node)> normalizeChildren;
+        normalizeChildren = [&](pugi::xml_node parent) {
+            for (auto child = parent.first_child(); child;) {
+                auto next = child.next_sibling();
+
+                if (child.type() == pugi::node_comment && !comments) {
+                    parent.remove_child(child);
+                    child = next;
+                    continue;
+                }
+
+                if (child.type() == pugi::node_element) {
+                    normalizeChildren(child);
+                }
+
+                if (child.type() == pugi::node_cdata && !cdataSections) {
+                    auto text = parent.insert_child_before(
+                        pugi::node_pcdata,
+                        child);
+                    text.set_value(child.value());
+                    parent.remove_child(child);
+                    child = text;
+                    next = child.next_sibling();
+                }
+
+                if (child.type() == pugi::node_pcdata) {
+                    std::string combined = child.value();
+                    auto adjacent = child.next_sibling();
+
+                    while (adjacent &&
+                           (adjacent.type() == pugi::node_pcdata ||
+                            (!cdataSections &&
+                             adjacent.type() == pugi::node_cdata))) {
+                        combined += adjacent.value();
+                        auto afterAdjacent = adjacent.next_sibling();
+                        parent.remove_child(adjacent);
+                        adjacent = afterAdjacent;
+                    }
+
+                    if (combined.empty()) {
+                        parent.remove_child(child);
+                    }
+                    else {
+                        child.set_value(combined.c_str());
+                    }
+                    child = adjacent;
+                    continue;
+                }
+
+                child = next;
+            }
+        };
+
+        normalizeChildren(store_->document);
+    }
 
     ::jxx::Ptr<::jxx::lang::Object> setUserData(
         const ::jxx::Ptr<String>& key,
