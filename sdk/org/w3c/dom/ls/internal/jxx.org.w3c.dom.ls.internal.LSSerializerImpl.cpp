@@ -6,12 +6,14 @@
 #include "io/jxx.io.OutputStream.h"
 #include "io/jxx.io.Writer.h"
 
+#include "lang/jxx.lang.Boolean.h"
 #include "lang/jxx.lang.String.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Document.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Element.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.NamedNodeMap.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Node.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.NodeList.h"
+#include "org/w3c/dom/ls/internal/jxx.org.w3c.dom.ls.internal.DOMConfigurationImpl.h"
 #include "org/w3c/dom/ls/jxx.org.w3c.dom.ls.LSException.h"
 #include "org/w3c/dom/ls/jxx.org.w3c.dom.ls.LSOutput.h"
 #include "org/w3c/dom/ls/jxx.org.w3c.dom.ls.LSSerializerFilter.h"
@@ -38,9 +40,21 @@ std::string escapeText(const std::string& input, bool attribute) {
     return result;
 }
 
+bool configurationFlag(
+    const ::jxx::Ptr<::jxx::org::w3c::dom::DOMConfiguration>& configuration,
+    const char* name,
+    bool defaultValue) {
+    if (configuration == nullptr) return defaultValue;
+    const auto value = configuration->getParameter(
+        ::jxx::NEW<::jxx::lang::String>(name));
+    const auto booleanValue = ::jxx::CAST<::jxx::lang::Boolean>(value);
+    return booleanValue == nullptr ? defaultValue : booleanValue->booleanValue();
+}
+
 void appendNode(
     const ::jxx::Ptr<::jxx::org::w3c::dom::Node>& node,
     const ::jxx::Ptr<::jxx::org::w3c::dom::ls::LSSerializerFilter>& filter,
+    const ::jxx::Ptr<::jxx::org::w3c::dom::DOMConfiguration>& configuration,
     std::string& output) {
     using Node = ::jxx::org::w3c::dom::Node;
     using NodeFilter = ::jxx::org::w3c::dom::traversal::NodeFilter;
@@ -58,7 +72,7 @@ void appendNode(
             const auto children = node->getChildNodes();
             if (children != nullptr) {
                 for (::jxx::lang::jint index = 0; index < children->getLength(); ++index) {
-                    appendNode(children->item(index), filter, output);
+                    appendNode(children->item(index), filter, configuration, output);
                 }
             }
             return;
@@ -74,6 +88,7 @@ void appendNode(
                 ::jxx::CAST<::jxx::org::w3c::dom::Node>(
                     document->getDocumentElement()),
                 filter,
+                configuration,
                 output);
         }
         return;
@@ -83,7 +98,7 @@ void appendNode(
         const auto children = node->getChildNodes();
         if (children != nullptr) {
             for (::jxx::lang::jint index = 0; index < children->getLength(); ++index) {
-                appendNode(children->item(index), filter, output);
+                appendNode(children->item(index), filter, configuration, output);
             }
         }
         return;
@@ -109,7 +124,7 @@ void appendNode(
         }
         output += '>';
         for (::jxx::lang::jint index = 0; index < children->getLength(); ++index) {
-            appendNode(children->item(index), filter, output);
+            appendNode(children->item(index), filter, configuration, output);
         }
         output += "</" + name + '>';
         return;
@@ -118,9 +133,15 @@ void appendNode(
     if (type == Node::TEXT_NODE) {
         output += escapeText(textOf(node->getNodeValue()), false);
     } else if (type == Node::CDATA_SECTION_NODE) {
-        output += "<![CDATA[" + textOf(node->getNodeValue()) + "]]>";
+        if (configurationFlag(configuration, "cdata-sections", true)) {
+            output += "<![CDATA[" + textOf(node->getNodeValue()) + "]]>";
+        } else {
+            output += escapeText(textOf(node->getNodeValue()), false);
+        }
     } else if (type == Node::COMMENT_NODE) {
-        output += "<!--" + textOf(node->getNodeValue()) + "-->";
+        if (configurationFlag(configuration, "comments", true)) {
+            output += "<!--" + textOf(node->getNodeValue()) + "-->";
+        }
     } else if (type == Node::PROCESSING_INSTRUCTION_NODE) {
         output += "<?" + textOf(node->getNodeName());
         const auto value = textOf(node->getNodeValue());
@@ -132,13 +153,17 @@ void appendNode(
 } // namespace
 
 LSSerializerImpl::LSSerializerImpl()
-    : Super() {
+    : Super()
+    , domConfig_(::jxx::CAST<::jxx::org::w3c::dom::DOMConfiguration>(
+          ::jxx::NEW<DOMConfigurationImpl>(std::vector<std::string>{
+              "cdata-sections", "comments", "entities",
+              "format-pretty-print", "well-formed", "xml-declaration"}))) {
 }
 
 LSSerializerImpl::~LSSerializerImpl() = default;
 
 ::jxx::Ptr<::jxx::org::w3c::dom::DOMConfiguration>
-LSSerializerImpl::getDomConfig() const { return nullptr; }
+LSSerializerImpl::getDomConfig() const { return domConfig_; }
 
 ::jxx::Ptr<::jxx::lang::String> LSSerializerImpl::getNewLine() const { return newLine_; }
 void LSSerializerImpl::setNewLine(const ::jxx::Ptr<::jxx::lang::String>& value) { newLine_ = value; }
@@ -226,7 +251,7 @@ void LSSerializerImpl::setFilter(const ::jxx::Ptr<::jxx::org::w3c::dom::ls::LSSe
 ::jxx::Ptr<::jxx::lang::String> LSSerializerImpl::writeToString(
     const ::jxx::Ptr<::jxx::org::w3c::dom::Node>& nodeArg) {
     std::string output;
-    appendNode(nodeArg, filter_, output);
+    appendNode(nodeArg, filter_, domConfig_, output);
     return ::jxx::NEW<::jxx::lang::String>(output.c_str());
 }
 

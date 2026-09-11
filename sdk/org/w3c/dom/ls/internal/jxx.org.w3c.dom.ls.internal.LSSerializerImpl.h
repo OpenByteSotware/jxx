@@ -39,6 +39,7 @@ public:
         const ::jxx::Ptr<::jxx::org::w3c::dom::Node>& nodeArg) override;
 
 private:
+    ::jxx::Ptr<::jxx::org::w3c::dom::DOMConfiguration> domConfig_;
     ::jxx::Ptr<::jxx::lang::String> newLine_;
     ::jxx::Ptr<::jxx::org::w3c::dom::ls::LSSerializerFilter> filter_;
 };

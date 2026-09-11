@@ -2,6 +2,7 @@
 
 #include "org/w3c/dom/ls/internal/jxx.org.w3c.dom.ls.internal.LSInputImpl.h"
 #include "org/w3c/dom/ls/internal/jxx.org.w3c.dom.ls.internal.LSOutputImpl.h"
+#include "org/w3c/dom/ls/internal/jxx.org.w3c.dom.ls.internal.LSParserImpl.h"
 #include "org/w3c/dom/ls/internal/jxx.org.w3c.dom.ls.internal.LSSerializerImpl.h"
 
 namespace jxx::org::w3c::dom::ls::internal {
@@ -14,9 +15,14 @@ DOMImplementationLSImpl::~DOMImplementationLSImpl() = default;
 
 ::jxx::Ptr<::jxx::org::w3c::dom::ls::LSParser>
 DOMImplementationLSImpl::createLSParser(
-    ::jxx::lang::jshort,
-    const ::jxx::Ptr<::jxx::lang::String>&) {
-    return nullptr;
+    ::jxx::lang::jshort mode,
+    const ::jxx::Ptr<::jxx::lang::String>& schemaType) {
+    if (mode != ::jxx::org::w3c::dom::ls::DOMImplementationLS::MODE_SYNCHRONOUS ||
+        schemaType != nullptr) {
+        return nullptr;
+    }
+    return ::jxx::CAST<::jxx::org::w3c::dom::ls::LSParser>(
+        ::jxx::NEW<LSParserImpl>());
 }
 
 ::jxx::Ptr<::jxx::org::w3c::dom::ls::LSSerializer>

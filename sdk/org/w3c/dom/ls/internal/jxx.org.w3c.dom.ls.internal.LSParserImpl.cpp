@@ -1,0 +1,268 @@
+#include "org/w3c/dom/ls/internal/jxx.org.w3c.dom.ls.internal.LSParserImpl.h"
+
+#include "ext/xml/parsers/jxx.ext.xml.parsers.DocumentBuilder.h"
+#include "ext/xml/parsers/jxx.ext.xml.parsers.DocumentBuilderFactory.h"
+#include "io/jxx.io.StringReader.h"
+#include "lang/jxx.lang.String.h"
+#include "org/w3c/dom/jxx.org.w3c.dom.Document.h"
+#include "org/w3c/dom/jxx.org.w3c.dom.Element.h"
+#include "org/w3c/dom/jxx.org.w3c.dom.Node.h"
+#include "org/w3c/dom/ls/jxx.org.w3c.dom.ls.LSParserFilter.h"
+#include "org/w3c/dom/traversal/jxx.org.w3c.dom.traversal.NodeFilter.h"
+#include "org/w3c/dom/ls/internal/jxx.org.w3c.dom.ls.internal.DOMConfigurationImpl.h"
+#include "org/w3c/dom/ls/jxx.org.w3c.dom.ls.LSException.h"
+#include "org/w3c/dom/ls/jxx.org.w3c.dom.ls.LSInput.h"
+#include "org/xml/sax/jxx.org.xml.sax.InputSource.h"
+
+namespace jxx::org::w3c::dom::ls::internal {
+namespace {
+
+::jxx::org::w3c::dom::ls::LSException parseFailure(
+    const char* message) {
+    return ::jxx::org::w3c::dom::ls::LSException(
+        ::jxx::org::w3c::dom::ls::LSException::PARSE_ERR,
+        ::jxx::NEW<::jxx::lang::String>(message));
+}
+
+::jxx::lang::jint visibilityMask(
+    ::jxx::lang::jshort nodeType) {
+    if (nodeType < 1 || nodeType > 32) {
+        return 0;
+    }
+    return static_cast<::jxx::lang::jint>(1U << (nodeType - 1));
+}
+
+bool isVisible(
+    const ::jxx::Ptr<::jxx::org::w3c::dom::ls::LSParserFilter>& filter,
+    const ::jxx::Ptr<::jxx::org::w3c::dom::Node>& node) {
+    if (filter == nullptr || node == nullptr) {
+        return false;
+    }
+    const auto whatToShow = filter->getWhatToShow();
+    return whatToShow ==
+            ::jxx::org::w3c::dom::traversal::NodeFilter::SHOW_ALL ||
+        (whatToShow & visibilityMask(node->getNodeType())) != 0;
+}
+
+void checkInterrupt(::jxx::lang::jshort decision) {
+    if (decision ==
+        ::jxx::org::w3c::dom::ls::LSParserFilter::FILTER_INTERRUPT) {
+        throw parseFailure("Parsing interrupted by filter");
+    }
+}
+
+void removeNode(
+    const ::jxx::Ptr<::jxx::org::w3c::dom::Node>& node) {
+    if (node == nullptr) {
+        return;
+    }
+    const auto parent = node->getParentNode();
+    if (parent != nullptr) {
+        parent->removeChild(node);
+    }
+}
+
+void promoteChildrenAndRemove(
+    const ::jxx::Ptr<::jxx::org::w3c::dom::Node>& node) {
+    if (node == nullptr) {
+        return;
+    }
+    const auto parent = node->getParentNode();
+    if (parent == nullptr) {
+        return;
+    }
+    while (node->getFirstChild() != nullptr) {
+        parent->insertBefore(node->getFirstChild(), node);
+    }
+    parent->removeChild(node);
+}
+
+void applyFilterToNode(
+    const ::jxx::Ptr<::jxx::org::w3c::dom::Node>& node,
+    const ::jxx::Ptr<::jxx::org::w3c::dom::ls::LSParserFilter>& filter) {
+    using Filter = ::jxx::org::w3c::dom::ls::LSParserFilter;
+    using Node = ::jxx::org::w3c::dom::Node;
+
+    if (node == nullptr || filter == nullptr) {
+        return;
+    }
+
+    if (node->getNodeType() == Node::ELEMENT_NODE && isVisible(filter, node)) {
+        const auto decision = filter->startElement(
+            ::jxx::CAST<::jxx::org::w3c::dom::Element>(node));
+        checkInterrupt(decision);
+        if (decision == Filter::FILTER_REJECT) {
+            removeNode(node);
+            return;
+        }
+        if (decision == Filter::FILTER_SKIP) {
+            auto child = node->getFirstChild();
+            while (child != nullptr) {
+                const auto next = child->getNextSibling();
+                applyFilterToNode(child, filter);
+                child = next;
+            }
+            promoteChildrenAndRemove(node);
+            return;
+        }
+    }
+
+    auto child = node->getFirstChild();
+    while (child != nullptr) {
+        const auto next = child->getNextSibling();
+        applyFilterToNode(child, filter);
+        child = next;
+    }
+
+    if (!isVisible(filter, node)) {
+        return;
+    }
+
+    const auto decision = filter->acceptNode(node);
+    checkInterrupt(decision);
+    if (decision == Filter::FILTER_REJECT) {
+        removeNode(node);
+    } else if (decision == Filter::FILTER_SKIP) {
+        promoteChildrenAndRemove(node);
+    }
+}
+
+void applyFilter(
+    const ::jxx::Ptr<::jxx::org::w3c::dom::Document>& document,
+    const ::jxx::Ptr<::jxx::org::w3c::dom::ls::LSParserFilter>& filter) {
+    if (document == nullptr || filter == nullptr) {
+        return;
+    }
+    auto child = document->getFirstChild();
+    while (child != nullptr) {
+        const auto next = child->getNextSibling();
+        applyFilterToNode(child, filter);
+        child = next;
+    }
+}
+
+} // namespace
+
+LSParserImpl::LSParserImpl()
+    : Super()
+    , domConfig_(::jxx::CAST<::jxx::org::w3c::dom::DOMConfiguration>(
+          ::jxx::NEW<DOMConfigurationImpl>(std::vector<std::string>{
+              "comments", "namespaces", "namespace-declarations",
+              "validate", "validate-if-schema", "well-formed"})))
+    , busy_(false)
+    , abortRequested_(false) {
+}
+
+LSParserImpl::~LSParserImpl() = default;
+
+::jxx::Ptr<::jxx::org::w3c::dom::DOMConfiguration>
+LSParserImpl::getDomConfig() const {
+    return domConfig_;
+}
+
+::jxx::Ptr<::jxx::org::w3c::dom::ls::LSParserFilter>
+LSParserImpl::getFilter() const {
+    return filter_;
+}
+
+void LSParserImpl::setFilter(
+    const ::jxx::Ptr<::jxx::org::w3c::dom::ls::LSParserFilter>& value) {
+    filter_ = value;
+}
+
+::jxx::lang::jbool LSParserImpl::getAsync() const {
+    return false;
+}
+
+::jxx::lang::jbool LSParserImpl::getBusy() const {
+    return busy_;
+}
+
+::jxx::Ptr<::jxx::org::w3c::dom::Document> LSParserImpl::parse(
+    const ::jxx::Ptr<::jxx::org::w3c::dom::ls::LSInput>& input) {
+    if (input == nullptr) {
+        throw parseFailure("No input specified");
+    }
+    if (busy_) {
+        throw parseFailure("Parser is busy");
+    }
+
+    busy_ = true;
+    abortRequested_ = false;
+    try {
+        const auto source = ::jxx::NEW<::jxx::org::xml::sax::InputSource>();
+        const auto characterStream = input->getCharacterStream();
+        const auto byteStream = input->getByteStream();
+        const auto stringData = input->getStringData();
+
+        if (characterStream != nullptr) {
+            source->setCharacterStream(characterStream);
+        } else if (byteStream != nullptr) {
+            source->setByteStream(byteStream);
+        } else if (stringData != nullptr && !stringData->utf8().empty()) {
+            source->setCharacterStream(
+                ::jxx::NEW<::jxx::io::StringReader>(stringData));
+        } else if (input->getSystemId() != nullptr) {
+            source->setSystemId(input->getSystemId());
+        } else if (input->getPublicId() != nullptr) {
+            source->setPublicId(input->getPublicId());
+        } else {
+            throw parseFailure("No input specified");
+        }
+
+        source->setEncoding(input->getEncoding());
+        source->setPublicId(input->getPublicId());
+        source->setSystemId(input->getSystemId());
+
+        const auto builder =
+            ::jxx::ext::xml::parsers::DocumentBuilderFactory::newInstance()
+                ->newDocumentBuilder();
+        const auto document = builder->parse(source);
+        if (abortRequested_) {
+            throw parseFailure("Parsing aborted");
+        }
+        applyFilter(document, filter_);
+        busy_ = false;
+        return document;
+    } catch (const ::jxx::org::w3c::dom::ls::LSException&) {
+        busy_ = false;
+        throw;
+    } catch (...) {
+        busy_ = false;
+        throw parseFailure("Unable to parse input");
+    }
+}
+
+::jxx::Ptr<::jxx::org::w3c::dom::Document> LSParserImpl::parseURI(
+    const ::jxx::Ptr<::jxx::lang::String>& uri) {
+    if (uri == nullptr || uri->utf8().empty()) {
+        throw parseFailure("No URI specified");
+    }
+    const auto input =
+        ::jxx::NEW<::jxx::org::xml::sax::InputSource>(uri);
+    try {
+        busy_ = true;
+        const auto document =
+            ::jxx::ext::xml::parsers::DocumentBuilderFactory::newInstance()
+                ->newDocumentBuilder()
+                ->parse(input);
+        busy_ = false;
+        return document;
+    } catch (...) {
+        busy_ = false;
+        throw parseFailure("Unable to parse URI");
+    }
+}
+
+::jxx::Ptr<::jxx::org::w3c::dom::Node> LSParserImpl::parseWithContext(
+    const ::jxx::Ptr<::jxx::org::w3c::dom::ls::LSInput>&,
+    const ::jxx::Ptr<::jxx::org::w3c::dom::Node>&,
+    ::jxx::lang::jshort) {
+    throw parseFailure("Context parsing is not available");
+}
+
+void LSParserImpl::abort() {
+    abortRequested_ = true;
+}
+
+} // namespace jxx::org::w3c::dom::ls::internal

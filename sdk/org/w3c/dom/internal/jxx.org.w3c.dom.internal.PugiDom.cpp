@@ -1702,7 +1702,10 @@ private:
         return child;
     }
 
-    return wrap(store_, node_.append_copy(value->node_));
+    const auto moved = value->node_.parent()
+        ? node_.append_move(value->node_)
+        : node_.append_copy(value->node_);
+    return wrap(store_, moved);
 }
 
 ::jxx::Ptr<Node> DomNode::insertBefore(
@@ -1715,9 +1718,21 @@ private:
             DOMException::NOT_FOUND_ERR,
             ::jxx::NEW<String>("Invalid child or reference"));
     }
-    return wrap(
-        store_,
-        node_.insert_copy_before(value->node_, before->node_));
+    if (before->node_.parent() != node_) {
+        throw DOMException(
+            DOMException::NOT_FOUND_ERR,
+            ::jxx::NEW<String>("Reference is not a child"));
+    }
+    if (value->store_ != store_) {
+        throw DOMException(
+            DOMException::WRONG_DOCUMENT_ERR,
+            ::jxx::NEW<String>("Node belongs to another document"));
+    }
+
+    const auto moved = value->node_.parent()
+        ? node_.insert_move_before(value->node_, before->node_)
+        : node_.insert_copy_before(value->node_, before->node_);
+    return wrap(store_, moved);
 }
 
 ::jxx::Ptr<Node> DomNode::replaceChild(
