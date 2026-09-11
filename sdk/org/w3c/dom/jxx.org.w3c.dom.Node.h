@@ -77,6 +77,7 @@ namespace jxx::org::w3c::dom {
 class Document;
 class NamedNodeMap;
 class NodeList;
+class UserDataHandler;
 
 /**
  * Root DOM node interface.
@@ -224,6 +225,15 @@ public:
 
     virtual ::jxx::Ptr<::jxx::lang::String> lookupNamespaceURI(
         const ::jxx::Ptr<::jxx::lang::String>& prefix) const = 0;
+
+
+    virtual ::jxx::Ptr<::jxx::lang::Object> setUserData(
+        const ::jxx::Ptr<::jxx::lang::String>& key,
+        const ::jxx::Ptr<::jxx::lang::Object>& data,
+        const ::jxx::Ptr<UserDataHandler>& handler) = 0;
+
+    virtual ::jxx::Ptr<::jxx::lang::Object> getUserData(
+        const ::jxx::Ptr<::jxx::lang::String>& key) const = 0;
 };
 
 } // namespace jxx::org::w3c::dom

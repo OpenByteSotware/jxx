@@ -9,7 +9,7 @@
 #include <unordered_set>
 
 #include <pugixml.hpp>
-
+#include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx_types.h"
@@ -26,6 +26,7 @@
 #include "org/w3c/dom/jxx.org.w3c.dom.Node.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.NodeList.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.ProcessingInstruction.h"
+#include "org/w3c/dom/jxx.org.w3c.dom.UserDataHandler.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Text.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.TypeInfo.h"
 
@@ -44,10 +45,19 @@ using NamedNodeMap = ::jxx::org::w3c::dom::NamedNodeMap;
 using ProcessingInstruction = ::jxx::org::w3c::dom::ProcessingInstruction;
 using DOMImplementation = ::jxx::org::w3c::dom::DOMImplementation;
 using DOMException = ::jxx::org::w3c::dom::DOMException;
+using UserDataHandler = ::jxx::org::w3c::dom::UserDataHandler;
+
+struct UserDataEntry {
+    ::jxx::Ptr<::jxx::lang::Object> data;
+    ::jxx::Ptr<UserDataHandler> handler;
+};
 
 struct Store {
     pugi::xml_document document;
     std::unordered_set<std::string> idAttributes;
+    std::unordered_map<
+        std::size_t,
+        std::unordered_map<std::string, UserDataEntry>> userData;
     ::jxx::Ptr<String> inputEncoding;
     ::jxx::Ptr<String> xmlEncoding;
     ::jxx::Ptr<String> xmlVersion = ::jxx::NEW<String>("1.0");
@@ -83,6 +93,48 @@ pugi::xml_attribute findAttributeNS(pugi::xml_node node, const std::string& uri,
         if (localPart(name) == local && resolveNamespace(node, name) == uri) return attribute;
     }
     return {};
+}
+
+std::size_t userDataNodeKey(
+    pugi::xml_node node,
+    pugi::xml_attribute attribute,
+    bool attributeNode) {
+    if (attributeNode) {
+        return attribute.hash_value() ^
+            (node.hash_value() + static_cast<std::size_t>(0x9e3779b9U));
+    }
+    return node.hash_value();
+}
+
+void notifyUserDataHandlers(
+    const std::shared_ptr<Store>& store,
+    std::size_t nodeKey,
+    ::jxx::lang::jshort operation,
+    const ::jxx::Ptr<Node>& source,
+    const ::jxx::Ptr<Node>& destination) {
+    const auto values = store->userData.find(nodeKey);
+    if (values == store->userData.end()) {
+        return;
+    }
+
+    const auto snapshot = values->second;
+    for (const auto& entry : snapshot) {
+        if (entry.second.handler == nullptr) {
+            continue;
+        }
+
+        try {
+            entry.second.handler->handle(
+                operation,
+                ::jxx::NEW<String>(entry.first),
+                entry.second.data,
+                source,
+                destination);
+        }
+        catch (...) {
+            // User-data callbacks must not interrupt the DOM operation.
+        }
+    }
 }
 
 class DomNode;
@@ -272,7 +324,16 @@ public:
                 copied.remove_child(copied.first_child());
             }
         }
-        return wrap(target->store_, copied);
+
+        const auto destination = wrap(target->store_, copied);
+        notifyUserDataHandlers(
+            store_,
+            userDataNodeKey(node_, attribute_, attributeNode_),
+            UserDataHandler::NODE_CLONED,
+            ::jxx::CAST<Node>(
+                const_cast<DomNode*>(this)->thisPtr()),
+            destination);
+        return destination;
     }
 
     void normalize() override {
@@ -648,13 +709,24 @@ public:
                 ::jxx::NEW<String>("Unsupported node type for import"));
         }
 
-        auto copied = store_->document.append_copy(source->node_);
+        auto imported = store_->document.append_copy(source->node_);
         if (!deep) {
-            while (copied.first_child()) {
-                copied.remove_child(copied.first_child());
+            while (imported.first_child()) {
+                imported.remove_child(imported.first_child());
             }
         }
-        return wrap(store_, copied);
+
+        const auto destination = wrap(store_, imported);
+        notifyUserDataHandlers(
+            source->store_,
+            userDataNodeKey(
+                source->node_,
+                source->attribute_,
+                source->attributeNode_),
+            UserDataHandler::NODE_IMPORTED,
+            importedNode,
+            destination);
+        return destination;
     }
 
     ::jxx::Ptr<Node> adoptNode(
@@ -666,16 +738,43 @@ public:
                 ::jxx::NEW<String>("Unsupported node type for adoption"));
         }
 
+        const auto sourceKey = userDataNodeKey(
+            source->node_,
+            source->attribute_,
+            source->attributeNode_);
+
         if (source->store_ == store_) {
+            notifyUserDataHandlers(
+                source->store_,
+                sourceKey,
+                UserDataHandler::NODE_ADOPTED,
+                sourceNode,
+                nullptr);
             return sourceNode;
         }
 
         auto adopted = store_->document.append_copy(source->node_);
+        const auto destination = wrap(store_, adopted);
+
+        const auto values = source->store_->userData.find(sourceKey);
+        if (values != source->store_->userData.end()) {
+            store_->userData[userDataNodeKey(adopted, {}, false)] =
+                values->second;
+        }
+
+        notifyUserDataHandlers(
+            source->store_,
+            sourceKey,
+            UserDataHandler::NODE_ADOPTED,
+            sourceNode,
+            destination);
+
         auto parent = source->node_.parent();
         if (parent) {
             parent.remove_child(source->node_);
         }
-        return wrap(store_, adopted);
+        source->store_->userData.erase(sourceKey);
+        return destination;
     }
 
     ::jxx::Ptr<Node> renameNode(
@@ -724,6 +823,15 @@ public:
             }
             declaration.set_value(uri.c_str());
         }
+        notifyUserDataHandlers(
+            source->store_,
+            userDataNodeKey(
+                source->node_,
+                source->attribute_,
+                source->attributeNode_),
+            UserDataHandler::NODE_RENAMED,
+            sourceNode,
+            sourceNode);
         return sourceNode;
     }
 
@@ -745,6 +853,55 @@ public:
     ::jxx::Ptr<String> getDocumentURI() const override { return store_->documentURI; }
     void setDocumentURI(const ::jxx::Ptr<String>& uri) override { store_->documentURI = uri; }
     void normalizeDocument() override { normalize(); }
+
+    ::jxx::Ptr<::jxx::lang::Object> setUserData(
+        const ::jxx::Ptr<String>& key,
+        const ::jxx::Ptr<::jxx::lang::Object>& data,
+        const ::jxx::Ptr<UserDataHandler>& handler) override {
+        if (key == nullptr) {
+            throw ::jxx::lang::NullPointerException();
+        }
+
+        const auto nodeKey = userDataNodeKey(
+            node_, attribute_, attributeNode_);
+        auto& values = store_->userData[nodeKey];
+        const auto found = values.find(key->utf8());
+        const auto previous = found == values.end()
+            ? nullptr
+            : found->second.data;
+
+        if (data == nullptr) {
+            if (found != values.end()) {
+                values.erase(found);
+            }
+            if (values.empty()) {
+                store_->userData.erase(nodeKey);
+            }
+        }
+        else {
+            values[key->utf8()] = UserDataEntry{data, handler};
+        }
+
+        return previous;
+    }
+
+    ::jxx::Ptr<::jxx::lang::Object> getUserData(
+        const ::jxx::Ptr<String>& key) const override {
+        if (key == nullptr) {
+            throw ::jxx::lang::NullPointerException();
+        }
+
+        const auto values = store_->userData.find(
+            userDataNodeKey(node_, attribute_, attributeNode_));
+        if (values == store_->userData.end()) {
+            return nullptr;
+        }
+
+        const auto found = values->second.find(key->utf8());
+        return found == values->second.end()
+            ? nullptr
+            : found->second.data;
+    }
 
     ::jxx::Ptr<String> getTagName() const override {
         return getNodeName();
