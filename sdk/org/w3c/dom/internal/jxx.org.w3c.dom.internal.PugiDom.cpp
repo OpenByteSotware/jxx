@@ -97,6 +97,37 @@ std::string prefixPart(const std::string& qualifiedName) {
     return position == std::string::npos ? std::string() : qualifiedName.substr(0, position);
 }
 
+std::u16string utf16Value(
+    std::u16string result;
+
+    if (value == nullptr) {
+        return result;
+    }
+
+    const auto length = value->length();
+    result.reserve(static_cast<std::size_t>(length));
+
+    for (::jxx::lang::jint index = 0;
+         index < length;
+         ++index) {
+        result.push_back(
+            static_cast<char16_t>(
+                value->charAt(index)));
+    }
+
+    return result;
+}
+
+void setNativeCharacterData(
+    pugi::xml_node node,
+    const std::u16string& value) {
+    const auto converted =
+        ::jxx::NEW<String>(value);
+
+    node.set_value(
+        converted->utf8().c_str());
+}
+
 std::string resolveNamespace(pugi::xml_node node, const std::string& qualifiedName) {
     const auto prefix = prefixPart(qualifiedName);
     const std::string declaration = prefix.empty() ? "xmlns" : "xmlns:" + prefix;
@@ -1302,98 +1333,166 @@ public:
     }
 
     ::jxx::lang::jint getLength() const override {
-        const auto value =
-            ::jxx::NEW<String>(node_.value());
-
-        return value->length();
+        return ::jxx::NEW<String>(
+            node_.value())->length();
     }
 
     ::jxx::Ptr<String> substringData(
         ::jxx::lang::jint offset,
         ::jxx::lang::jint count) const override {
-        const std::string value = node_.value();
-        if (offset < 0 || count < 0 ||
-            static_cast<std::size_t>(offset) > value.size()) {
+        const auto value =
+            ::jxx::NEW<String>(node_.value());
+
+        const auto length = value->length();
+
+        if (offset < 0 ||
+            count < 0 ||
+            offset > length) {
             throw DOMException(
                 DOMException::INDEX_SIZE_ERR,
-                ::jxx::NEW<String>("Invalid character-data range"));
+                ::jxx::NEW<String>(
+                    "Invalid character-data range"));
         }
-        return ::jxx::NEW<String>(
-            value.substr(
-                static_cast<std::size_t>(offset),
-                static_cast<std::size_t>(count)));
+
+        const auto actualCount =
+            std::min(count, length - offset);
+
+        return value->substring(
+            offset,
+            offset + actualCount);
     }
 
     void appendData(
         const ::jxx::Ptr<String>& data) override {
-        std::string value = node_.value();
-        if (data) value += data->utf8();
-        node_.set_value(value.c_str());
+        auto value =
+            utf16Value(
+                ::jxx::NEW<String>(node_.value()));
+
+        value.append(
+            utf16Value(data));
+
+        setNativeCharacterData(
+            node_,
+            value);
     }
 
     void insertData(
         ::jxx::lang::jint offset,
         const ::jxx::Ptr<String>& data) override {
-        std::string value = node_.value();
-        if (offset < 0 || static_cast<std::size_t>(offset) > value.size()) {
+        auto value =
+            utf16Value(
+                ::jxx::NEW<String>(node_.value()));
+
+        if (offset < 0 ||
+            static_cast<std::size_t>(offset) >
+                value.size()) {
             throw DOMException(
                 DOMException::INDEX_SIZE_ERR,
-                ::jxx::NEW<String>("Invalid character-data offset"));
+                ::jxx::NEW<String>(
+                    "Invalid character-data offset"));
         }
+
         value.insert(
             static_cast<std::size_t>(offset),
-            data ? data->utf8() : std::string());
-        node_.set_value(value.c_str());
+            utf16Value(data));
+
+        setNativeCharacterData(
+            node_,
+            value);
     }
 
     void deleteData(
         ::jxx::lang::jint offset,
         ::jxx::lang::jint count) override {
-        std::string value = node_.value();
-        if (offset < 0 || count < 0 ||
-            static_cast<std::size_t>(offset) > value.size()) {
+        auto value =
+            utf16Value(
+                ::jxx::NEW<String>(node_.value()));
+
+        if (offset < 0 ||
+            count < 0 ||
+            static_cast<std::size_t>(offset) >
+                value.size()) {
             throw DOMException(
                 DOMException::INDEX_SIZE_ERR,
-                ::jxx::NEW<String>("Invalid character-data range"));
+                ::jxx::NEW<String>(
+                    "Invalid character-data range"));
         }
+
         value.erase(
             static_cast<std::size_t>(offset),
             static_cast<std::size_t>(count));
-        node_.set_value(value.c_str());
+
+        setNativeCharacterData(
+            node_,
+            value);
     }
 
     void replaceData(
         ::jxx::lang::jint offset,
         ::jxx::lang::jint count,
         const ::jxx::Ptr<String>& data) override {
-        std::string value = node_.value();
-        if (offset < 0 || count < 0 ||
-            static_cast<std::size_t>(offset) > value.size()) {
+        auto value =
+            utf16Value(
+                ::jxx::NEW<String>(node_.value()));
+
+        if (offset < 0 ||
+            count < 0 ||
+            static_cast<std::size_t>(offset) >
+                value.size()) {
             throw DOMException(
                 DOMException::INDEX_SIZE_ERR,
-                ::jxx::NEW<String>("Invalid character-data range"));
+                ::jxx::NEW<String>(
+                    "Invalid character-data range"));
         }
+
         value.replace(
             static_cast<std::size_t>(offset),
             static_cast<std::size_t>(count),
-            data ? data->utf8() : std::string());
-        node_.set_value(value.c_str());
+            utf16Value(data));
+
+        setNativeCharacterData(
+            node_,
+            value);
     }
 
     ::jxx::Ptr<Text> splitText(
         ::jxx::lang::jint offset) override {
-        std::string value = node_.value();
-        if (offset < 0 || static_cast<std::size_t>(offset) > value.size()) {
+        auto value =
+            utf16Value(
+                ::jxx::NEW<String>(node_.value()));
+
+        if (offset < 0 ||
+            static_cast<std::size_t>(offset) >
+                value.size()) {
             throw DOMException(
                 DOMException::INDEX_SIZE_ERR,
-                ::jxx::NEW<String>("Invalid text offset"));
+                ::jxx::NEW<String>(
+                    "Invalid text offset"));
         }
-        const std::string tail = value.substr(static_cast<std::size_t>(offset));
-        value.erase(static_cast<std::size_t>(offset));
-        node_.set_value(value.c_str());
-        auto next = node_.parent().insert_child_after(pugi::node_pcdata, node_);
-        next.set_value(tail.c_str());
-        return ::jxx::CAST<Text>(wrap(store_, next));
+
+        const auto position =
+            static_cast<std::size_t>(offset);
+
+        const std::u16string tail =
+            value.substr(position);
+
+        value.erase(position);
+
+        setNativeCharacterData(
+            node_,
+            value);
+
+        auto next =
+            node_.parent().insert_child_after(
+                pugi::node_pcdata,
+                node_);
+
+        setNativeCharacterData(
+            next,
+            tail);
+
+        return ::jxx::CAST<Text>(
+            wrap(store_, next));
     }
 
     ::jxx::lang::jbool isElementContentWhitespace() const override {
