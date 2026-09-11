@@ -7,6 +7,7 @@
 #include "lang/jxx.lang.Exception.h"
 #include "lang/jxx.lang.RuntimeException.h"
 #include "lang/jxx.lang.Error.h"
+#include "lang/jxx.lang.EmptyStackException.h"
 #include "lang/jxx.lang.ReflectiveOperationException.h"
 #include "lang/jxx.lang.LinkageError.h"
 #include "lang/jxx.lang.IncompatibleClassChangeError.h"
@@ -108,6 +109,7 @@ void initializeClasses()
             registerType<CloneNotSupportedException>();
             registerType<EnumConstantNotPresentException>();
             registerType<ExceptionInInitializerError>();
+            registerType<EmptyStackException>();
             registerType<IllegalAccessError>();
             registerType<IllegalAccessException>();
             registerType<IllegalArgumentException>();
