@@ -40,6 +40,25 @@ std::string escapeText(const std::string& input, bool attribute) {
     return result;
 }
 
+::jxx::lang::jint visibilityMask(::jxx::lang::jshort nodeType) {
+    if (nodeType < 1 || nodeType > 32) {
+        return 0;
+    }
+    return static_cast<::jxx::lang::jint>(1U << (nodeType - 1));
+}
+
+bool filterShowsNode(
+    const ::jxx::Ptr<::jxx::org::w3c::dom::ls::LSSerializerFilter>& filter,
+    const ::jxx::Ptr<::jxx::org::w3c::dom::Node>& node) {
+    if (filter == nullptr || node == nullptr) {
+        return false;
+    }
+    const auto whatToShow = filter->getWhatToShow();
+    return whatToShow ==
+            ::jxx::org::w3c::dom::traversal::NodeFilter::SHOW_ALL ||
+        (whatToShow & visibilityMask(node->getNodeType())) != 0;
+}
+
 bool configurationFlag(
     const ::jxx::Ptr<::jxx::org::w3c::dom::DOMConfiguration>& configuration,
     const char* name,
@@ -63,7 +82,7 @@ void appendNode(
         return;
     }
 
-    if (filter != nullptr) {
+    if (filterShowsNode(filter, node)) {
         const auto decision = filter->acceptNode(node);
         if (decision == NodeFilter::FILTER_REJECT) {
             return;
