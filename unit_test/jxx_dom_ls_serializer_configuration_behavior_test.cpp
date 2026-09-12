@@ -22,8 +22,8 @@ TEST(XmlDomLsSerializerConfigurationBehaviorStage, OmitsCommentsWhenDisabled) {
     serializer->getDomConfig()->setParameter(
         ::jxx::NEW<::jxx::lang::String>("comments"),
         ::jxx::CAST<::jxx::lang::Object>(::jxx::lang::Boolean::valueOf(false)));
-    EXPECT_EQ(serializer->writeToString(
-        ::jxx::CAST<::jxx::org::w3c::dom::Node>(document))->utf8(), "<root/>");
+    EXPECT_EQ(serializer->writeToString(::jxx::CAST<::jxx::org::w3c::dom::Node>(document))->utf8(),
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?><root/>");
 }
 
 TEST(XmlDomLsSerializerConfigurationBehaviorStage, ConvertsCdataWhenDisabled) {
@@ -36,7 +36,9 @@ TEST(XmlDomLsSerializerConfigurationBehaviorStage, ConvertsCdataWhenDisabled) {
     serializer->getDomConfig()->setParameter(
         ::jxx::NEW<::jxx::lang::String>("cdata-sections"),
         ::jxx::CAST<::jxx::lang::Object>(::jxx::lang::Boolean::valueOf(false)));
-    EXPECT_EQ(serializer->writeToString(
+    EXPECT_EQ(
+    serializer->writeToString(
         ::jxx::CAST<::jxx::org::w3c::dom::Node>(document))->utf8(),
-        "<root>x &lt; y</root>");
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+    "<root>x &lt; y</root>");
 }

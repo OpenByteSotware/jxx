@@ -36,7 +36,7 @@ TEST(XmlDomLsSerializerStage, SerializesElementAttributesAndEscapedText) {
         ::jxx::CAST<::jxx::org::w3c::dom::Node>(document));
 
     ASSERT_NE(result, nullptr);
-    EXPECT_EQ(result->utf8(), "<root id=\"A&amp;B\">x &lt; y</root>");
+    EXPECT_EQ(result->utf8(),"<?xml version=\"1.0\" encoding=\"UTF-8\"?>""<root id=\"A&amp;B\">x &lt; y</root>");
 }
 
 TEST(XmlDomLsSerializerStage, RetainsNewLineProperty) {

@@ -27,7 +27,7 @@ TEST(XmlDomLsSerializerOutputStage, WritesUtf8ToByteStream) {
     EXPECT_TRUE(serializer->write(
         ::jxx::CAST<::jxx::org::w3c::dom::Node>(document),
         output));
-    EXPECT_EQ(bytes->toString()->utf8(), "<root/>");
+    EXPECT_EQ(bytes->toString()->utf8(), "<?xml version=\"1.0\" encoding=\"UTF-8\"?><root/>");
 }
 
 TEST(XmlDomLsSerializerOutputStage, RejectsMissingDestination) {

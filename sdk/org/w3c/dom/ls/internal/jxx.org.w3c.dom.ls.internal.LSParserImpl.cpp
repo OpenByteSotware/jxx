@@ -280,10 +280,122 @@ void LSParserImpl::setFilter(
 }
 
 ::jxx::Ptr<::jxx::org::w3c::dom::Node> LSParserImpl::parseWithContext(
-    const ::jxx::Ptr<::jxx::org::w3c::dom::ls::LSInput>&,
-    const ::jxx::Ptr<::jxx::org::w3c::dom::Node>&,
-    ::jxx::lang::jshort) {
-    throw parseFailure("Context parsing is not available");
+    const ::jxx::Ptr<::jxx::org::w3c::dom::ls::LSInput>& input,
+    const ::jxx::Ptr<::jxx::org::w3c::dom::Node>& contextArg,
+    ::jxx::lang::jshort action) {
+    using Node = ::jxx::org::w3c::dom::Node;
+    using Parser = ::jxx::org::w3c::dom::ls::LSParser;
+
+    if (input == nullptr || contextArg == nullptr) {
+        throw parseFailure("Missing input or context node");
+    }
+    if (busy_) {
+        throw parseFailure("Parser is busy");
+    }
+    if (action < Parser::ACTION_APPEND_AS_CHILDREN ||
+        action > Parser::ACTION_REPLACE) {
+        throw parseFailure("Invalid context action");
+    }
+
+    const auto stringData = input->getStringData();
+    if (stringData == nullptr) {
+        throw parseFailure("Context parsing requires string data");
+    }
+
+    const auto targetDocument =
+        contextArg->getNodeType() == Node::DOCUMENT_NODE
+            ? ::jxx::CAST<::jxx::org::w3c::dom::Document>(contextArg)
+            : contextArg->getOwnerDocument();
+    if (targetDocument == nullptr) {
+        throw parseFailure("Context node has no owner document");
+    }
+
+    const std::string wrapped =
+        "<jxx_fragment_root>" + stringData->utf8() +
+        "</jxx_fragment_root>";
+    const auto wrappedInput =
+        ::jxx::NEW<::jxx::org::xml::sax::InputSource>(
+            ::jxx::NEW<::jxx::io::StringReader>(
+                ::jxx::NEW<::jxx::lang::String>(wrapped.c_str())));
+
+    ::jxx::Ptr<::jxx::org::w3c::dom::Document> parsed;
+    try {
+        busy_ = true;
+        parsed = createBuilder(domConfig_)->parse(wrappedInput);
+        busy_ = false;
+    } catch (...) {
+        busy_ = false;
+        throw parseFailure("Unable to parse context fragment");
+    }
+
+    const auto wrapper = parsed->getDocumentElement();
+    if (wrapper == nullptr || wrapper->getFirstChild() == nullptr) {
+        return nullptr;
+    }
+
+    ::jxx::Ptr<Node> firstResult;
+    ::jxx::Ptr<Node> reference;
+    ::jxx::Ptr<Node> parent;
+
+    if (action == Parser::ACTION_APPEND_AS_CHILDREN ||
+        action == Parser::ACTION_REPLACE_CHILDREN) {
+        parent = contextArg;
+        if (action == Parser::ACTION_REPLACE_CHILDREN) {
+            while (contextArg->getFirstChild() != nullptr) {
+                contextArg->removeChild(contextArg->getFirstChild());
+            }
+        }
+    } else {
+        parent = contextArg->getParentNode();
+        if (parent == nullptr) {
+            throw parseFailure("Context node has no parent");
+        }
+        if (action == Parser::ACTION_INSERT_BEFORE ||
+            action == Parser::ACTION_REPLACE) {
+            reference = contextArg;
+        } else {
+            reference = contextArg->getNextSibling();
+        }
+    }
+
+    auto sourceChild = wrapper->getFirstChild();
+    ::jxx::Ptr<Node> previousInserted;
+    while (sourceChild != nullptr) {
+        const auto next = sourceChild->getNextSibling();
+        const auto imported = targetDocument->importNode(sourceChild, true);
+        if (firstResult == nullptr) {
+            firstResult = imported;
+        }
+
+        if (action == Parser::ACTION_REPLACE && previousInserted == nullptr) {
+            parent->replaceChild(imported, contextArg);
+        } else if (action == Parser::ACTION_REPLACE) {
+            const auto afterPrevious = previousInserted->getNextSibling();
+            if (afterPrevious != nullptr) {
+                parent->insertBefore(imported, afterPrevious);
+            } else {
+                parent->appendChild(imported);
+            }
+        } else if (reference != nullptr) {
+            parent->insertBefore(imported, reference);
+        } else {
+            parent->appendChild(imported);
+        }
+
+        previousInserted = imported;
+        sourceChild = next;
+    }
+
+    if (filter_ != nullptr) {
+        auto current = firstResult;
+        while (current != nullptr) {
+            const auto next = current->getNextSibling();
+            applyFilterToNode(current, filter_);
+            current = next;
+        }
+    }
+
+    return firstResult;
 }
 
 void LSParserImpl::abort() {

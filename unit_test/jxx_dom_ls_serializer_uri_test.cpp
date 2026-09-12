@@ -44,7 +44,9 @@ TEST(XmlDomLsSerializerUriStage, WritesDirectlyToPath) {
     EXPECT_TRUE(serializer->writeToURI(
         createDocumentNode(),
         ::jxx::NEW<::jxx::lang::String>(path.c_str())));
-    EXPECT_EQ(readFile(path), "<root/>");
+    EXPECT_EQ(
+    readFile(path),
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?><root/>");
     std::remove(path.c_str());
 }
 
@@ -59,7 +61,9 @@ TEST(XmlDomLsSerializerUriStage, RoutesOutputSystemIdToUriWriter) {
 
     EXPECT_TRUE(factory->createLSSerializer()->write(
         createDocumentNode(), output));
-    EXPECT_EQ(readFile(path), "<root/>");
+    EXPECT_EQ(
+    readFile(path),
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?><root/>");
     std::remove(path.c_str());
 }
 
