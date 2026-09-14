@@ -47,6 +47,7 @@ void PushbackInputStream::ensureOpen() const {
 }
 
 ::jxx::lang::jint PushbackInputStream::read() {
+    return synchronized([&]() -> ::jxx::lang::jint {
     ensureOpen();
 
     if (position_ <
@@ -56,12 +57,15 @@ void PushbackInputStream::ensureOpen() const {
     }
 
     return in_->read();
+
+    });
 }
 
 ::jxx::lang::jint PushbackInputStream::read(
     const ::jxx::lang::ByteArray& buffer,
     ::jxx::lang::jint offset,
     ::jxx::lang::jint length) {
+    return synchronized([&]() -> ::jxx::lang::jint {
 
     ensureOpen();
     IOHelper::checkBounds(buffer, offset, length);
@@ -101,10 +105,13 @@ void PushbackInputStream::ensureOpen() const {
     }
 
     return copied + readCount;
+
+    });
 }
 
 void PushbackInputStream::unread(
     ::jxx::lang::jint value) {
+    synchronized([&] {
 
     ensureOpen();
 
@@ -114,10 +121,13 @@ void PushbackInputStream::unread(
 
     (*buffer_)[--position_] =
         static_cast<::jxx::lang::jbyte>(value);
+
+    });
 }
 
 void PushbackInputStream::unread(
     const ::jxx::lang::ByteArray& buffer) {
+    synchronized([&] {
 
     if (buffer == nullptr) {
         throw ::jxx::lang::NullPointerException();
@@ -127,12 +137,15 @@ void PushbackInputStream::unread(
         buffer,
         0,
         static_cast<::jxx::lang::jint>(buffer->length));
+
+    });
 }
 
 void PushbackInputStream::unread(
     const ::jxx::lang::ByteArray& buffer,
     ::jxx::lang::jint offset,
     ::jxx::lang::jint length) {
+    synchronized([&] {
 
     ensureOpen();
     IOHelper::checkBounds(buffer, offset, length);
@@ -149,19 +162,25 @@ void PushbackInputStream::unread(
         (*buffer_)[position_ + index] =
             (*buffer)[offset + index];
     }
+
+    });
 }
 
 ::jxx::lang::jint PushbackInputStream::available() {
+    return synchronized([&]() -> ::jxx::lang::jint {
     ensureOpen();
 
     return
         static_cast<::jxx::lang::jint>(buffer_->length) -
         position_ +
         in_->available();
+
+    });
 }
 
 ::jxx::lang::jlong PushbackInputStream::skip(
     ::jxx::lang::jlong count) {
+    return synchronized([&]() -> ::jxx::lang::jlong {
 
     ensureOpen();
 
@@ -185,6 +204,8 @@ void PushbackInputStream::unread(
 
     return bufferedSkip +
         in_->skip(count - bufferedSkip);
+
+    });
 }
 
 ::jxx::lang::jbool
@@ -194,14 +215,21 @@ PushbackInputStream::markSupported() const {
 
 void PushbackInputStream::mark(
     ::jxx::lang::jint readLimit) {
+    synchronized([&] {
     (void)readLimit;
+
+    });
 }
 
 void PushbackInputStream::reset() {
+    synchronized([&] {
     throw IOException();
+
+    });
 }
 
 void PushbackInputStream::close() {
+    synchronized([&] {
     if (closed_) {
         return;
     }
@@ -213,6 +241,8 @@ void PushbackInputStream::close() {
         in_->close();
         in_.reset();
     }
+
+    });
 }
 
 } // namespace jxx::io

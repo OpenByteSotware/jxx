@@ -88,6 +88,7 @@ void BufferedInputStream::ensureOpen_() const {
 }
 
 ::jxx::lang::jint BufferedInputStream::read() {
+    return synchronized([&]() -> ::jxx::lang::jint {
     ensureOpen_();
 
     if (position_ >= count_ && fill_() < 0) {
@@ -96,12 +97,15 @@ void BufferedInputStream::ensureOpen_() const {
 
     return static_cast<::jxx::lang::jint>(
         static_cast<unsigned char>((*buffer_)[position_++]));
+
+    });
 }
 
 ::jxx::lang::jint BufferedInputStream::read(
     const ::jxx::lang::ByteArray& buffer,
     ::jxx::lang::jint offset,
     ::jxx::lang::jint length) {
+    return synchronized([&]() -> ::jxx::lang::jint {
 
     ensureOpen_();
     IOHelper::checkBounds(buffer, offset, length);
@@ -134,10 +138,13 @@ void BufferedInputStream::ensureOpen_() const {
     }
 
     return total == 0 ? -1 : total;
+
+    });
 }
 
 ::jxx::lang::jlong BufferedInputStream::skip(
     ::jxx::lang::jlong count) {
+    return synchronized([&]() -> ::jxx::lang::jlong {
 
     ensureOpen_();
 
@@ -169,14 +176,20 @@ void BufferedInputStream::ensureOpen_() const {
 
     position_ += static_cast<::jxx::lang::jint>(amount);
     return amount;
+
+    });
 }
 
 ::jxx::lang::jint BufferedInputStream::available() {
+    return synchronized([&]() -> ::jxx::lang::jint {
     ensureOpen_();
     return count_ - position_ + in_->available();
+
+    });
 }
 
 void BufferedInputStream::close() {
+    synchronized([&] {
     if (closed_) {
         return;
     }
@@ -188,16 +201,22 @@ void BufferedInputStream::close() {
         in_->close();
         in_.reset();
     }
+
+    });
 }
 
 void BufferedInputStream::mark(
     ::jxx::lang::jint readLimit) {
+    synchronized([&] {
 
     markLimit_ = readLimit;
     markPosition_ = position_;
+
+    });
 }
 
 void BufferedInputStream::reset() {
+    synchronized([&] {
     ensureOpen_();
 
     if (markPosition_ < 0) {
@@ -205,6 +224,8 @@ void BufferedInputStream::reset() {
     }
 
     position_ = markPosition_;
+
+    });
 }
 
 ::jxx::lang::jbool

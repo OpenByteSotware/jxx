@@ -3,4 +3,49 @@
 #include "io/jxx.io.ModifiedUTF.h"
 #include "lang/jxx.lang.String.h"
 #include "io/jxx.io.UTFDataFormatException.h"
-namespace jxx::io { DataOutputStream::DataOutputStream(const ::jxx::Ptr<OutputStream>& o): Super(o) {} void DataOutputStream::write(::jxx::lang::jint b){out_->write(b);++written_;} void DataOutputStream::write(const ::jxx::lang::ByteArray& b){write(b,0,static_cast<::jxx::lang::jint>(b->length));} void DataOutputStream::write(const ::jxx::lang::ByteArray& b,::jxx::lang::jint o,::jxx::lang::jint l){out_->write(b,o,l);written_+=l;} void DataOutputStream::writeBoolean(::jxx::lang::jbool v){write(v?1:0);} void DataOutputStream::writeByte(::jxx::lang::jint v){write(v);} void DataOutputStream::writeShort(::jxx::lang::jint v){write(v>>8);write(v);} void DataOutputStream::writeChar(::jxx::lang::jint v){writeShort(v);} void DataOutputStream::writeInt(::jxx::lang::jint v){write(v>>24);write(v>>16);write(v>>8);write(v);} void DataOutputStream::writeLong(::jxx::lang::jlong v){writeInt(static_cast<::jxx::lang::jint>(v>>32));writeInt(static_cast<::jxx::lang::jint>(v));} void DataOutputStream::writeFloat(::jxx::lang::jfloat v){std::uint32_t n;std::memcpy(&n,&v,sizeof(v));writeInt(static_cast<::jxx::lang::jint>(n));} void DataOutputStream::writeDouble(::jxx::lang::jdouble v){std::uint64_t n;std::memcpy(&n,&v,sizeof(v));writeLong(static_cast<::jxx::lang::jlong>(n));} void DataOutputStream::writeBytes(const ::jxx::Ptr<::jxx::lang::String>& s){for(::jxx::lang::jint i=0;i<s->length();++i)writeByte(s->charAt(i));} void DataOutputStream::writeChars(const ::jxx::Ptr<::jxx::lang::String>& s){for(::jxx::lang::jint i=0;i<s->length();++i)writeChar(s->charAt(i));} void DataOutputStream::writeUTF(const ::jxx::Ptr<::jxx::lang::String>& s){auto b=ModifiedUTF::encode(s);if(b->length>65535)throw UTFDataFormatException();writeShort(static_cast<::jxx::lang::jint>(b->length));write(b);} ::jxx::lang::jint DataOutputStream::size()const{return written_;} }
+namespace jxx::io { DataOutputStream::DataOutputStream(const ::jxx::Ptr<OutputStream>& o): Super(o) {} void DataOutputStream::write(::jxx::lang::jint b){
+    synchronized([&] {out_->write(b);++written_;
+    });
+} void DataOutputStream::write(const ::jxx::lang::ByteArray& b){
+    synchronized([&] {write(b,0,static_cast<::jxx::lang::jint>(b->length));
+    });
+} void DataOutputStream::write(const ::jxx::lang::ByteArray& b,::jxx::lang::jint o,::jxx::lang::jint l){
+    synchronized([&] {out_->write(b,o,l);written_+=l;
+    });
+} void DataOutputStream::writeBoolean(::jxx::lang::jbool v){
+    synchronized([&] {write(v?1:0);
+    });
+} void DataOutputStream::writeByte(::jxx::lang::jint v){
+    synchronized([&] {write(v);
+    });
+} void DataOutputStream::writeShort(::jxx::lang::jint v){
+    synchronized([&] {write(v>>8);write(v);
+    });
+} void DataOutputStream::writeChar(::jxx::lang::jint v){
+    synchronized([&] {writeShort(v);
+    });
+} void DataOutputStream::writeInt(::jxx::lang::jint v){
+    synchronized([&] {write(v>>24);write(v>>16);write(v>>8);write(v);
+    });
+} void DataOutputStream::writeLong(::jxx::lang::jlong v){
+    synchronized([&] {writeInt(static_cast<::jxx::lang::jint>(v>>32));writeInt(static_cast<::jxx::lang::jint>(v));
+    });
+} void DataOutputStream::writeFloat(::jxx::lang::jfloat v){
+    synchronized([&] {std::uint32_t n;std::memcpy(&n,&v,sizeof(v));writeInt(static_cast<::jxx::lang::jint>(n));
+    });
+} void DataOutputStream::writeDouble(::jxx::lang::jdouble v){
+    synchronized([&] {std::uint64_t n;std::memcpy(&n,&v,sizeof(v));writeLong(static_cast<::jxx::lang::jlong>(n));
+    });
+} void DataOutputStream::writeBytes(const ::jxx::Ptr<::jxx::lang::String>& s){
+    synchronized([&] {for(::jxx::lang::jint i=0;i<s->length();++i)writeByte(s->charAt(i));
+    });
+} void DataOutputStream::writeChars(const ::jxx::Ptr<::jxx::lang::String>& s){
+    synchronized([&] {for(::jxx::lang::jint i=0;i<s->length();++i)writeChar(s->charAt(i));
+    });
+} void DataOutputStream::writeUTF(const ::jxx::Ptr<::jxx::lang::String>& s){
+    synchronized([&] {auto b=ModifiedUTF::encode(s);if(b->length>65535)throw UTFDataFormatException();writeShort(static_cast<::jxx::lang::jint>(b->length));write(b);
+    });
+} ::jxx::lang::jint DataOutputStream::size()const{
+    return synchronized([&]() -> ::jxx::lang::jint {return written_;
+    });
+} }

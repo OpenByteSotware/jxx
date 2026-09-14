@@ -62,6 +62,7 @@ namespace jxx::io
 	void BufferedOutputStream::write(
 		::jxx::lang::jint value)
 	{
+    synchronized([&] {
 
 		ensureOpen_();
 
@@ -72,13 +73,16 @@ namespace jxx::io
 
 		(*buffer_)[count_++] =
 			static_cast<::jxx::lang::jbyte>(value);
-	}
+	
+    });
+}
 
 	void BufferedOutputStream::write(
 		const ::jxx::lang::ByteArray& buffer,
 		::jxx::lang::jint offset,
 		::jxx::lang::jint length)
 	{
+    synchronized([&] {
 
 		ensureOpen_();
 		IOHelper::checkBounds(buffer, offset, length);
@@ -108,17 +112,23 @@ namespace jxx::io
 		}
 
 		count_ += length;
-	}
+	
+    });
+}
 
 	void BufferedOutputStream::flush()
 	{
+    synchronized([&] {
 		ensureOpen_();
 		flushBuffer_();
 		out_->flush();
-	}
+	
+    });
+}
 
 	void BufferedOutputStream::close()
 	{
+    synchronized([&] {
 		if (closed_) {
 			return;
 		}
@@ -144,6 +154,8 @@ namespace jxx::io
 		closed_ = true;
 		buffer_.reset();
 		out_.reset();
-	}
+	
+    });
+}
 
 } // namespace jxx::io
