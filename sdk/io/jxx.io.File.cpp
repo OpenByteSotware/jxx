@@ -2,14 +2,57 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <cstdlib>
 #include <functional>
+#include <mutex>
+#include <vector>
 #include <string>
 #include "io/jxx.io.IOException.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
 namespace jxx::io
 {
 	namespace fs = std::filesystem;
+
+	namespace {
+		std::mutex& deleteOnExitMutex()
+		{
+			static std::mutex value;
+			return value;
+		}
+
+		std::vector<fs::path>& deleteOnExitPaths()
+		{
+			static auto* value = new std::vector<fs::path>();
+			return *value;
+		}
+
+		void deleteRegisteredPaths() noexcept
+		{
+			std::vector<fs::path> paths;
+			{
+				std::lock_guard<std::mutex> guard(deleteOnExitMutex());
+				paths.swap(deleteOnExitPaths());
+			}
+			for (auto iterator = paths.rbegin();
+				 iterator != paths.rend(); ++iterator) {
+				std::error_code error;
+				fs::remove(*iterator, error);
+			}
+		}
+
+		void registerDeleteOnExit(const fs::path& path)
+		{
+			static const bool registered = [] {
+				std::atexit(deleteRegisteredPaths);
+				return true;
+			}();
+			(void)registered;
+			std::lock_guard<std::mutex> guard(deleteOnExitMutex());
+			deleteOnExitPaths().push_back(path);
+		}
+	} // namespace
 #ifdef _WIN32
 	const ::jxx::lang::jchar File::separatorChar = u'\\'; const ::jxx::lang::jchar File::pathSeparatorChar = u';';
 #else
@@ -22,9 +65,26 @@ namespace jxx::io
 	} File::File(const ::jxx::Ptr<::jxx::lang::String>& p) :path_(p)
 	{
 		if (!p)throw ::jxx::lang::NullPointerException();
-	} File::File(const ::jxx::Ptr<::jxx::lang::String>& p, const ::jxx::Ptr<::jxx::lang::String>& c) :File(::jxx::NEW<::jxx::lang::String>((native(p) / native(c)).u8string()))
+	} File::File(
+		const ::jxx::Ptr<::jxx::lang::String>& parent,
+		const ::jxx::Ptr<::jxx::lang::String>& child)
+		: File([&]() -> ::jxx::Ptr<::jxx::lang::String> {
+			if (child == nullptr) {
+				throw ::jxx::lang::NullPointerException();
+			}
+			if (parent == nullptr) {
+				return child;
+			}
+			return ::jxx::NEW<::jxx::lang::String>(
+				(native(parent) / native(child)).u8string());
+		}())
 	{
-	} File::File(const ::jxx::Ptr<File>& p, const ::jxx::Ptr<::jxx::lang::String>& c) :File(p ? p->getPath() : nullptr, c)
+	} File::File(
+		const ::jxx::Ptr<File>& parent,
+		const ::jxx::Ptr<::jxx::lang::String>& child)
+		: File(
+			parent == nullptr ? nullptr : parent->getPath(),
+			child)
 	{
 	}
 	::jxx::Ptr<::jxx::lang::String> File::getName()const
@@ -95,6 +155,7 @@ namespace jxx::io
 		std::error_code e; return fs::remove(native(path_), e);
 	} void File::deleteOnExit()
 	{
+		registerDeleteOnExit(native(path_));
 	} ::jxx::lang::jbool File::mkdir()
 	{
 		std::error_code e; return fs::create_directory(native(path_), e);
@@ -104,9 +165,21 @@ namespace jxx::io
 	} ::jxx::lang::jbool File::renameTo(const ::jxx::Ptr<File>& d)
 	{
 		if (!d)return false; std::error_code e; fs::rename(native(path_), native(d->path_), e); return !e;
-	} ::jxx::lang::jbool File::setLastModified(::jxx::lang::jlong)
+	} ::jxx::lang::jbool File::setLastModified(::jxx::lang::jlong time)
 	{
-		return false;
+		if (time < 0) {
+			throw ::jxx::lang::IllegalArgumentException();
+		}
+
+		std::error_code error;
+		const auto systemTime =
+			std::chrono::system_clock::time_point(
+				std::chrono::milliseconds(time));
+		const auto fileTime =
+			fs::file_time_type::clock::now() +
+			(systemTime - std::chrono::system_clock::now());
+		fs::last_write_time(native(path_), fileTime, error);
+		return !error;
 	} ::jxx::lang::jbool File::setReadOnly()
 	{
 		std::error_code e; fs::permissions(native(path_), fs::perms::owner_write | fs::perms::group_write | fs::perms::others_write, fs::perm_options::remove, e); return !e;
