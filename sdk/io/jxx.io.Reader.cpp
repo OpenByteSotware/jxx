@@ -50,62 +50,68 @@ Reader::Reader(
 }
 
 ::jxx::lang::jint Reader::read() {
-    const auto buffer =
-        ::jxx::NEW<::jxx::lang::CharArrayType>(1);
+    return lock->synchronized([&]() -> ::jxx::lang::jint {
+        const auto buffer =
+            ::jxx::NEW<::jxx::lang::CharArrayType>(1);
 
-    const auto count = read(buffer, 0, 1);
+        const auto count = read(buffer, 0, 1);
 
-    if (count < 0) {
-        return -1;
-    }
+        if (count < 0) {
+            return -1;
+        }
 
-    return static_cast<::jxx::lang::jint>((*buffer)[0]);
+        return static_cast<::jxx::lang::jint>((*buffer)[0]);
+    });
 }
 
 ::jxx::lang::jint Reader::read(
     const ::jxx::lang::CharArray& buffer) {
 
-    if (buffer == nullptr) {
-        throw ::jxx::lang::NullPointerException();
-    }
+    return lock->synchronized([&]() -> ::jxx::lang::jint {
+        if (buffer == nullptr) {
+            throw ::jxx::lang::NullPointerException();
+        }
 
-    const auto length =
-        static_cast<::jxx::lang::jint>(buffer->length);
+        const auto length =
+            static_cast<::jxx::lang::jint>(buffer->length);
 
-    checkBounds(buffer, 0, length);
-    return read(buffer, 0, length);
+        checkBounds(buffer, 0, length);
+        return read(buffer, 0, length);
+    });
 }
 
 ::jxx::lang::jlong Reader::skip(
     ::jxx::lang::jlong count) {
 
-    if (count < 0) {
-        throw ::jxx::lang::IllegalArgumentException();
-    }
-
-    const auto buffer =
-        ::jxx::NEW<::jxx::lang::CharArrayType>(8192);
-
-    ::jxx::lang::jlong total = 0;
-
-    while (total < count) {
-        const auto requested =
-            static_cast<::jxx::lang::jint>(
-                std::min<::jxx::lang::jlong>(
-                    count - total,
-                    8192));
-
-        const auto readCount =
-            read(buffer, 0, requested);
-
-        if (readCount < 0) {
-            break;
+    return lock->synchronized([&]() -> ::jxx::lang::jlong {
+        if (count < 0) {
+            throw ::jxx::lang::IllegalArgumentException();
         }
 
-        total += readCount;
-    }
+        const auto buffer =
+            ::jxx::NEW<::jxx::lang::CharArrayType>(8192);
 
-    return total;
+        ::jxx::lang::jlong total = 0;
+
+        while (total < count) {
+            const auto requested =
+                static_cast<::jxx::lang::jint>(
+                    std::min<::jxx::lang::jlong>(
+                        count - total,
+                        8192));
+
+            const auto readCount =
+                read(buffer, 0, requested);
+
+            if (readCount < 0) {
+                break;
+            }
+
+            total += readCount;
+        }
+
+        return total;
+    });
 }
 
 ::jxx::lang::jbool Reader::ready() {
@@ -118,6 +124,7 @@ Reader::Reader(
 
 void Reader::mark(
     ::jxx::lang::jint readAheadLimit) {
+
     (void)readAheadLimit;
     throw IOException();
 }

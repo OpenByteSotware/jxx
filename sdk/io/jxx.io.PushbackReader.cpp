@@ -35,17 +35,21 @@ void PushbackReader::ensureOpen_() const {
 }
 
 ::jxx::lang::jint PushbackReader::read() {
+    return lock->synchronized([&]() -> ::jxx::lang::jint {
     ensureOpen_();
     if (position_ < static_cast<::jxx::lang::jint>(buffer_->length)) {
         return static_cast<::jxx::lang::jint>((*buffer_)[position_++]);
     }
     return in_->read();
+
+    });
 }
 
 ::jxx::lang::jint PushbackReader::read(
     const ::jxx::lang::CharArray& buffer,
     ::jxx::lang::jint offset,
     ::jxx::lang::jint length) {
+    return lock->synchronized([&]() -> ::jxx::lang::jint {
     ensureOpen_();
     if (!buffer) throw ::jxx::lang::NullPointerException();
     if (offset < 0 || length < 0 ||
@@ -63,23 +67,32 @@ void PushbackReader::ensureOpen_() const {
     if (copied == length) return copied;
     const auto count = in_->read(buffer, offset + copied, length - copied);
     return count < 0 ? (copied == 0 ? -1 : copied) : copied + count;
+
+    });
 }
 
 void PushbackReader::unread(::jxx::lang::jint value) {
+    lock->synchronized([&] {
     ensureOpen_();
     if (position_ == 0) throw IOException();
     (*buffer_)[--position_] = static_cast<::jxx::lang::jchar>(value);
+
+    });
 }
 
 void PushbackReader::unread(const ::jxx::lang::CharArray& buffer) {
+    lock->synchronized([&] {
     if (!buffer) throw ::jxx::lang::NullPointerException();
     unread(buffer, 0, static_cast<::jxx::lang::jint>(buffer->length));
+
+    });
 }
 
 void PushbackReader::unread(
     const ::jxx::lang::CharArray& buffer,
     ::jxx::lang::jint offset,
     ::jxx::lang::jint length) {
+    lock->synchronized([&] {
     ensureOpen_();
     if (!buffer) throw ::jxx::lang::NullPointerException();
     if (offset < 0 || length < 0 ||
@@ -91,30 +104,45 @@ void PushbackReader::unread(
     for (::jxx::lang::jint i = 0; i < length; ++i) {
         (*buffer_)[position_ + i] = (*buffer)[offset + i];
     }
+
+    });
 }
 
 ::jxx::lang::jbool PushbackReader::ready() {
+    return lock->synchronized([&]() -> ::jxx::lang::jbool {
     ensureOpen_();
     return position_ < static_cast<::jxx::lang::jint>(buffer_->length) || in_->ready();
+
+    });
 }
 
 ::jxx::lang::jlong PushbackReader::skip(::jxx::lang::jlong count) {
+    return lock->synchronized([&]() -> ::jxx::lang::jlong {
     ensureOpen_();
     if (count < 0) throw ::jxx::lang::IllegalArgumentException();
     const auto pushed = static_cast<::jxx::lang::jlong>(buffer_->length) - position_;
     const auto first = std::min(count, pushed);
     position_ += static_cast<::jxx::lang::jint>(first);
     return first == count ? first : first + in_->skip(count - first);
+
+    });
 }
 
 ::jxx::lang::jbool PushbackReader::markSupported() const { return false; }
 void PushbackReader::mark(::jxx::lang::jint readAheadLimit) {
+    lock->synchronized([&] {
     (void)readAheadLimit;
     throw IOException();
+
+    });
 }
-void PushbackReader::reset() { throw IOException(); }
+void PushbackReader::reset() {
+    lock->synchronized([&] { throw IOException(); 
+    });
+}
 
 void PushbackReader::close() {
+    lock->synchronized([&] {
     if (closed_) return;
     closed_ = true;
     buffer_.reset();
@@ -122,6 +150,8 @@ void PushbackReader::close() {
         in_->close();
         in_.reset();
     }
+
+    });
 }
 
 } // namespace jxx::io

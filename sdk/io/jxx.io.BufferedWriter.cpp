@@ -62,6 +62,7 @@ void BufferedWriter::flushBuffer_() {
 
 void BufferedWriter::write(
     ::jxx::lang::jint value) {
+    lock->synchronized([&] {
 
     ensureOpen_();
 
@@ -72,12 +73,15 @@ void BufferedWriter::write(
 
     (*buffer_)[count_++] =
         static_cast<::jxx::lang::jchar>(value);
+
+    });
 }
 
 void BufferedWriter::write(
     const ::jxx::lang::CharArray& buffer,
     ::jxx::lang::jint offset,
     ::jxx::lang::jint length) {
+    lock->synchronized([&] {
 
     ensureOpen_();
 
@@ -97,12 +101,15 @@ void BufferedWriter::write(
         write(static_cast<::jxx::lang::jint>(
             (*buffer)[offset + index]));
     }
+
+    });
 }
 
 void BufferedWriter::write(
     const ::jxx::Ptr<::jxx::lang::String>& value,
     ::jxx::lang::jint offset,
     ::jxx::lang::jint length) {
+    lock->synchronized([&] {
 
     ensureOpen_();
 
@@ -122,20 +129,29 @@ void BufferedWriter::write(
         write(static_cast<::jxx::lang::jint>(
             value->charAt(offset + index)));
     }
+
+    });
 }
 
 void BufferedWriter::newLine() {
+    lock->synchronized([&] {
     JxxSuper::write(
         static_cast<::jxx::lang::jint>('\n'));
+
+    });
 }
 
 void BufferedWriter::flush() {
+    lock->synchronized([&] {
     ensureOpen_();
     flushBuffer_();
     output_->flush();
+
+    });
 }
 
 void BufferedWriter::close() {
+    lock->synchronized([&] {
     if (closed_) {
         return;
     }
@@ -161,6 +177,8 @@ void BufferedWriter::close() {
     closed_ = true;
     output_.reset();
     buffer_.reset();
+
+    });
 }
 
 } // namespace jxx::io

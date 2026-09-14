@@ -9,7 +9,7 @@ namespace jxx::io
 {
 	PrintWriter::PrintWriter(const ::jxx::Ptr<Writer>& o) :PrintWriter(o, false)
 	{
-	} PrintWriter::PrintWriter(const ::jxx::Ptr<Writer>& o, ::jxx::lang::jbool a) :out_(o), autoFlush_(a)
+	} PrintWriter::PrintWriter(const ::jxx::Ptr<Writer>& o, ::jxx::lang::jbool a) :Super(o), out_(o), autoFlush_(a)
 	{
 		if (!o)throw ::jxx::lang::NullPointerException();
 	} PrintWriter::PrintWriter(const ::jxx::Ptr<OutputStream>& o) :PrintWriter(o, false)
@@ -21,106 +21,184 @@ namespace jxx::io
 		close();
 	} void PrintWriter::flush()
 	{
+		lock->synchronized([&] {
 		if (!out_)return; try {
 			out_->flush();
 		}
 		catch (...) {
 			setError();
 		}
+	
+		});
 	} void PrintWriter::close()
 	{
+		lock->synchronized([&] {
 		if (closed_)return; flush(); try {
 			if (out_)out_->close();
 		}
 		catch (...) {
 			setError();
 		}out_.reset(); closed_ = true;
+	
+		});
 	} ::jxx::lang::jbool PrintWriter::checkError()
 	{
+		return lock->synchronized([&]() -> ::jxx::lang::jbool {
 		flush(); return trouble_;
+	
+		});
 	} void PrintWriter::write(::jxx::lang::jint v)
 	{
+		lock->synchronized([&] {
 		try {
 			out_->write(v);
 		}
 		catch (...) {
 			setError();
 		}
+	
+		});
 	} void PrintWriter::write(const ::jxx::lang::CharArray& b, ::jxx::lang::jint o, ::jxx::lang::jint l)
 	{
+		lock->synchronized([&] {
 		try {
 			out_->write(b, o, l);
 		}
 		catch (...) {
 			setError();
 		}
+	
+		});
 	} void PrintWriter::write(const ::jxx::Ptr<::jxx::lang::String>& s, ::jxx::lang::jint o, ::jxx::lang::jint l)
 	{
+		lock->synchronized([&] {
 		try {
 			out_->write(s, o, l);
 		}
 		catch (...) {
 			setError();
 		}
+	
+		});
 	} void PrintWriter::text(const ::jxx::Ptr<::jxx::lang::String>& s)
 	{
+		lock->synchronized([&] {
 		auto v = s ? s : jxx::NEW<::jxx::lang::String>("null"); write(v, 0, v->length());
+	
+		});
 	} void PrintWriter::print(const ::jxx::Ptr<::jxx::lang::String>& v)
 	{
+		lock->synchronized([&] {
 		text(v);
+	
+		});
 	} void PrintWriter::print(const ::jxx::Ptr<::jxx::lang::Object>& v)
 	{
+		lock->synchronized([&] {
 		text(v ? v->toString() : nullptr);
+	
+		});
 	} void PrintWriter::print(::jxx::lang::jbool v)
 	{
+		lock->synchronized([&] {
 		text(::jxx::NEW<::jxx::lang::String>(v ? "true" : "false"));
+	
+		});
 	} void PrintWriter::print(::jxx::lang::jchar v)
 	{
+		lock->synchronized([&] {
 		text(::jxx::NEW<::jxx::lang::String>(std::u16string(1, v)));
+	
+		});
 	} void PrintWriter::print(::jxx::lang::jint v)
 	{
+		lock->synchronized([&] {
 		text(::jxx::NEW<::jxx::lang::String>(std::to_string(v)));
+	
+		});
 	} void PrintWriter::print(::jxx::lang::jlong v)
 	{
+		lock->synchronized([&] {
 		text(::jxx::NEW<::jxx::lang::String>(std::to_string(v)));
+	
+		});
 	} void PrintWriter::print(::jxx::lang::jfloat v)
 	{
+		lock->synchronized([&] {
 		text(::jxx::NEW<::jxx::lang::String>(std::to_string(v)));
+	
+		});
 	} void PrintWriter::print(::jxx::lang::jdouble v)
 	{
+		lock->synchronized([&] {
 		text(::jxx::NEW<::jxx::lang::String>(std::to_string(v)));
+	
+		});
 	} void PrintWriter::println()
 	{
+		lock->synchronized([&] {
 		text(::jxx::NEW<::jxx::lang::String>("\n")); if (autoFlush_)flush();
+	
+		});
 	} void PrintWriter::println(const ::jxx::Ptr<::jxx::lang::String>& v)
 	{
+		lock->synchronized([&] {
 		print(v); println();
+	
+		});
 	} void PrintWriter::println(const ::jxx::Ptr<::jxx::lang::Object>& v)
 	{
+		lock->synchronized([&] {
 		print(v); println();
+	
+		});
 	} void PrintWriter::println(::jxx::lang::jbool v)
 	{
+		lock->synchronized([&] {
 		print(v); println();
+	
+		});
 	} void PrintWriter::println(::jxx::lang::jchar v)
 	{
+		lock->synchronized([&] {
 		print(v); println();
+	
+		});
 	} void PrintWriter::println(::jxx::lang::jint v)
 	{
+		lock->synchronized([&] {
 		print(v); println();
+	
+		});
 	} void PrintWriter::println(::jxx::lang::jlong v)
 	{
+		lock->synchronized([&] {
 		print(v); println();
+	
+		});
 	} void PrintWriter::println(::jxx::lang::jfloat v)
 	{
+		lock->synchronized([&] {
 		print(v); println();
+	
+		});
 	} void PrintWriter::println(::jxx::lang::jdouble v)
 	{
+		lock->synchronized([&] {
 		print(v); println();
+	
+		});
 	} void PrintWriter::setError()
 	{
+		lock->synchronized([&] {
 		trouble_ = true;
+	
+		});
 	} void PrintWriter::clearError()
 	{
+		lock->synchronized([&] {
 		trouble_ = false;
+	
+		});
 	}
 }

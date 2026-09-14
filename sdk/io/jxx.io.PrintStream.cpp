@@ -31,6 +31,7 @@ void PrintStream::setError_() noexcept {
 }
 
 void PrintStream::flush() {
+    synchronized([&] {
     try {
         ensureOpen_();
         out_->flush();
@@ -38,9 +39,12 @@ void PrintStream::flush() {
     catch (...) {
         setError_();
     }
+
+    });
 }
 
 void PrintStream::close() {
+    synchronized([&] {
     if (closed_) {
         return;
     }
@@ -55,18 +59,24 @@ void PrintStream::close() {
 
     closed_ = true;
     out_.reset();
+
+    });
 }
 
 ::jxx::lang::jbool PrintStream::checkError() {
+    return synchronized([&]() -> ::jxx::lang::jbool {
     if (!closed_) {
         flush();
     }
 
     return trouble_;
+
+    });
 }
 
 void PrintStream::write(
     ::jxx::lang::jint value) {
+    synchronized([&] {
 
     try {
         ensureOpen_();
@@ -79,12 +89,15 @@ void PrintStream::write(
     catch (...) {
         setError_();
     }
+
+    });
 }
 
 void PrintStream::write(
     const ::jxx::lang::ByteArray& buffer,
     ::jxx::lang::jint offset,
     ::jxx::lang::jint length) {
+    synchronized([&] {
 
     try {
         ensureOpen_();
@@ -97,10 +110,13 @@ void PrintStream::write(
     catch (...) {
         setError_();
     }
+
+    });
 }
 
 void PrintStream::text_(
     const ::jxx::Ptr<::jxx::lang::String>& value) {
+    synchronized([&] {
 
     ::jxx::Ptr<::jxx::lang::String> actual = value;
 
@@ -116,9 +132,12 @@ void PrintStream::text_(
         0,
         static_cast<::jxx::lang::jint>(
             bytes->length));
+
+    });
 }
 
 void PrintStream::newLine_() {
+    synchronized([&] {
     write(static_cast<::jxx::lang::jint>('\n'));
 
     if (autoFlush_ && !closed_ && out_ != nullptr) {
@@ -129,15 +148,21 @@ void PrintStream::newLine_() {
             setError_();
         }
     }
+
+    });
 }
 
 void PrintStream::print(
     const ::jxx::Ptr<::jxx::lang::String>& value) {
+    synchronized([&] {
     text_(value);
+
+    });
 }
 
 void PrintStream::print(
     const ::jxx::Ptr<::jxx::lang::Object>& value) {
+    synchronized([&] {
 
     if (value == nullptr) {
         text_(nullptr);
@@ -145,96 +170,143 @@ void PrintStream::print(
     }
 
     text_(value->toString());
+
+    });
 }
 
 void PrintStream::print(
     ::jxx::lang::jbool value) {
+    synchronized([&] {
 
     text_(::jxx::NEW<::jxx::lang::String>(
         value ? "true" : "false"));
+
+    });
 }
 
 void PrintStream::print(
     ::jxx::lang::jchar value) {
+    synchronized([&] {
 
     text_(::jxx::NEW<::jxx::lang::String>(
         std::u16string(1, value)));
+
+    });
 }
 
 void PrintStream::print(
     ::jxx::lang::jint value) {
+    synchronized([&] {
     text_(::jxx::NEW<::jxx::lang::String>(
         std::to_string(value)));
+
+    });
 }
 
 void PrintStream::print(
     ::jxx::lang::jlong value) {
+    synchronized([&] {
     text_(::jxx::NEW<::jxx::lang::String>(
         std::to_string(value)));
+
+    });
 }
 
 void PrintStream::print(
     ::jxx::lang::jfloat value) {
+    synchronized([&] {
     text_(::jxx::NEW<::jxx::lang::String>(
         std::to_string(value)));
+
+    });
 }
 
 void PrintStream::print(
     ::jxx::lang::jdouble value) {
+    synchronized([&] {
     text_(::jxx::NEW<::jxx::lang::String>(
         std::to_string(value)));
+
+    });
 }
 
 void PrintStream::println() {
+    synchronized([&] {
     newLine_();
+
+    });
 }
 
 void PrintStream::println(
     const ::jxx::Ptr<::jxx::lang::String>& value) {
+    synchronized([&] {
     print(value);
     newLine_();
+
+    });
 }
 
 void PrintStream::println(
     const ::jxx::Ptr<::jxx::lang::Object>& value) {
+    synchronized([&] {
     print(value);
     newLine_();
+
+    });
 }
 
 void PrintStream::println(
     ::jxx::lang::jbool value) {
+    synchronized([&] {
     print(value);
     newLine_();
+
+    });
 }
 
 void PrintStream::println(
     ::jxx::lang::jchar value) {
+    synchronized([&] {
     print(value);
     newLine_();
+
+    });
 }
 
 void PrintStream::println(
     ::jxx::lang::jint value) {
+    synchronized([&] {
     print(value);
     newLine_();
+
+    });
 }
 
 void PrintStream::println(
     ::jxx::lang::jlong value) {
+    synchronized([&] {
     print(value);
     newLine_();
+
+    });
 }
 
 void PrintStream::println(
     ::jxx::lang::jfloat value) {
+    synchronized([&] {
     print(value);
     newLine_();
+
+    });
 }
 
 void PrintStream::println(
     ::jxx::lang::jdouble value) {
+    synchronized([&] {
     print(value);
     newLine_();
+
+    });
 }
 
 } // namespace jxx::io
