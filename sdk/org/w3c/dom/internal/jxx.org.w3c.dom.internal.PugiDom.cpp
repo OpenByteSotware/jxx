@@ -42,6 +42,9 @@
 #include "org/w3c/dom/jxx.org.w3c.dom.UserDataHandler.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Text.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.TypeInfo.h"
+#include "org/w3c/dom/views/internal/jxx.org.w3c.dom.views.internal.AbstractViewImpl.h"
+#include "org/w3c/dom/views/jxx.org.w3c.dom.views.AbstractView.h"
+#include "org/w3c/dom/views/jxx.org.w3c.dom.views.DocumentView.h"
 
 namespace jxx::org::w3c::dom::internal {
 
@@ -1243,6 +1246,21 @@ public:
     void setDocumentURI(const ::jxx::Ptr<String>& uri) override { store_->documentURI = uri; }
     ::jxx::Ptr<DOMConfiguration> getDomConfig() const override {
         return ::jxx::NEW<DOMConfigurationImpl>(store_);
+    }
+
+    ::jxx::Ptr<::jxx::org::w3c::dom::views::AbstractView>
+    getDefaultView() const override {
+        if (node_.type() != pugi::node_document) {
+            return nullptr;
+        }
+        const auto documentView = ::jxx::CAST<
+            ::jxx::org::w3c::dom::views::DocumentView>(
+                const_cast<DomNode*>(this)->thisPtr());
+        return ::jxx::CAST<
+            ::jxx::org::w3c::dom::views::AbstractView>(
+                ::jxx::NEW<
+                    ::jxx::org::w3c::dom::views::internal::
+                        AbstractViewImpl>(documentView));
     }
 
     ::jxx::Ptr<::jxx::org::w3c::dom::events::Event> createEvent(

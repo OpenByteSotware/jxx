@@ -4,6 +4,7 @@
 #include "lang/jxx_types.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Node.h"
 #include "org/w3c/dom/events/jxx.org.w3c.dom.events.DocumentEvent.h"
+#include "org/w3c/dom/views/jxx.org.w3c.dom.views.DocumentView.h"
 
 namespace jxx::org::w3c::dom {
 
@@ -20,7 +21,8 @@ class Text;
 
 class Document
     : public ::jxx::lang::InterfaceBase<Document, Node>
-    , public virtual ::jxx::org::w3c::dom::events::DocumentEvent {
+    , public virtual ::jxx::org::w3c::dom::events::DocumentEvent
+    , public virtual ::jxx::org::w3c::dom::views::DocumentView {
 public:
     ~Document() override = default;
 
