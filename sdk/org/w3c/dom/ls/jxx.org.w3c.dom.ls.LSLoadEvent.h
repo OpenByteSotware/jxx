@@ -9,7 +9,7 @@ class Document;
 namespace jxx::org::w3c::dom::ls {
 class LSInput;
 
-class LSLoadEvent : public ::jxx::org::w3c::dom::events::Event {
+class LSLoadEvent : public virtual ::jxx::org::w3c::dom::events::Event {
 public:
     ~LSLoadEvent() override = default;
     virtual ::jxx::Ptr<::jxx::org::w3c::dom::Document> getNewDocument() const = 0;

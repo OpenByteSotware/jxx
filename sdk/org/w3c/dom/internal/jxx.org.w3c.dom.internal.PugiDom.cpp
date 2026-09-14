@@ -19,6 +19,7 @@
 #include "org/w3c/dom/internal/jxx.org.w3c.dom.internal.DOMImplementationImpl.h"
 #include "org/w3c/dom/events/internal/jxx.org.w3c.dom.events.internal.EventImpl.h"
 #include "org/w3c/dom/events/internal/jxx.org.w3c.dom.events.internal.MouseEventImpl.h"
+#include "org/w3c/dom/events/internal/jxx.org.w3c.dom.events.internal.MutationEventImpl.h"
 #include "org/w3c/dom/events/internal/jxx.org.w3c.dom.events.internal.UIEventImpl.h"
 #include "org/w3c/dom/events/jxx.org.w3c.dom.events.Event.h"
 #include "org/w3c/dom/events/jxx.org.w3c.dom.events.EventException.h"
@@ -1277,6 +1278,10 @@ public:
         if (normalized == "mouseevent" || normalized == "mouseevents") {
             return ::jxx::CAST<::jxx::org::w3c::dom::events::Event>(
                 ::jxx::NEW<::jxx::org::w3c::dom::events::internal::MouseEventImpl>());
+        }
+        if (normalized == "mutationevent" || normalized == "mutationevents") {
+            return ::jxx::CAST<::jxx::org::w3c::dom::events::Event>(
+                ::jxx::NEW<::jxx::org::w3c::dom::events::internal::MutationEventImpl>());
         }
         throw DOMException(
             DOMException::NOT_SUPPORTED_ERR,
