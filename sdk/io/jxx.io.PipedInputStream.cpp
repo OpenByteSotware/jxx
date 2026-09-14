@@ -57,13 +57,17 @@ void PipedInputStream::attach_(
 
 void PipedInputStream::connect(
     const ::jxx::Ptr<PipedOutputStream>& source) {
+    synchronized([&] {
     if (source == nullptr) {
         throw ::jxx::lang::NullPointerException();
     }
     source->connect(::jxx::CAST<PipedInputStream>(thisPtr()));
+
+    });
 }
 
 ::jxx::lang::jint PipedInputStream::read() {
+    return synchronized([&]() -> ::jxx::lang::jint {
     auto state = state_;
     std::unique_lock<std::mutex> lock(state->mutex);
 
@@ -89,12 +93,15 @@ void PipedInputStream::connect(
     lock.unlock();
     state->writable.notify_all();
     return value;
+
+    });
 }
 
 ::jxx::lang::jint PipedInputStream::read(
     const ::jxx::lang::ByteArray& buffer,
     ::jxx::lang::jint offset,
     ::jxx::lang::jint length) {
+    return synchronized([&]() -> ::jxx::lang::jint {
     IOHelper::checkBounds(buffer, offset, length);
     if (length == 0) return 0;
 
@@ -114,16 +121,22 @@ void PipedInputStream::connect(
     lock.unlock();
     state->writable.notify_all();
     return total;
+
+    });
 }
 
 ::jxx::lang::jint PipedInputStream::available() {
+    return synchronized([&]() -> ::jxx::lang::jint {
     auto state = state_;
     std::lock_guard<std::mutex> lock(state->mutex);
     if (state->inputClosed) throw IOException();
     return static_cast<::jxx::lang::jint>(state->count);
+
+    });
 }
 
 void PipedInputStream::close() {
+    synchronized([&] {
     auto state = state_;
     {
         std::lock_guard<std::mutex> lock(state->mutex);
@@ -132,6 +145,8 @@ void PipedInputStream::close() {
     }
     state->readable.notify_all();
     state->writable.notify_all();
+
+    });
 }
 
 } // namespace jxx::io

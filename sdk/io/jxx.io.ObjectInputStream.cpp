@@ -18,14 +18,20 @@ ObjectInputStream::~ObjectInputStream() = default;
 
 ::jxx::Ptr<::jxx::lang::Object>
 ObjectInputStream::readObject() {
+    return synchronized([&]() -> ::jxx::Ptr<::jxx::lang::Object> {
     throw IOException(
         ::jxx::NEW<::jxx::lang::String>(
             "Object graph input is not implemented"));
+
+    });
 }
 
 ::jxx::Ptr<::jxx::lang::Object>
 ObjectInputStream::readUnshared() {
+    return synchronized([&]() -> ::jxx::Ptr<::jxx::lang::Object> {
     return readObject();
+
+    });
 }
 
 } // namespace jxx::io

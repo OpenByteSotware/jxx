@@ -18,17 +18,23 @@ ObjectOutputStream::~ObjectOutputStream() = default;
 
 void ObjectOutputStream::writeObject(
     const ::jxx::Ptr<::jxx::lang::Object>& object) {
+    synchronized([&] {
 
     (void)object;
 
     throw IOException(
         ::jxx::NEW<::jxx::lang::String>(
             "Object graph output is not implemented"));
+
+    });
 }
 
 void ObjectOutputStream::writeUnshared(
     const ::jxx::Ptr<::jxx::lang::Object>& object) {
+    synchronized([&] {
     writeObject(object);
+
+    });
 }
 
 } // namespace jxx::io
