@@ -1,11 +1,11 @@
 #include "org/w3c/dom/internal/jxx.org.w3c.dom.internal.PugiDom.h"
 
 #include <algorithm>
-#include <functional>
-#include <algorithm>
 #include <cctype>
+#include <functional>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 #include <unordered_set>
@@ -17,6 +17,8 @@
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx_types.h"
 #include "org/w3c/dom/internal/jxx.org.w3c.dom.internal.DOMImplementationImpl.h"
+#include "org/w3c/dom/events/internal/jxx.org.w3c.dom.events.internal.EventImpl.h"
+#include "org/w3c/dom/events/jxx.org.w3c.dom.events.Event.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Attr.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.CDATASection.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Comment.h"
@@ -1040,6 +1042,43 @@ public:
     void setDocumentURI(const ::jxx::Ptr<String>& uri) override { store_->documentURI = uri; }
     ::jxx::Ptr<DOMConfiguration> getDomConfig() const override {
         return ::jxx::NEW<DOMConfigurationImpl>(store_);
+    }
+
+    ::jxx::Ptr<::jxx::org::w3c::dom::events::Event> createEvent(
+        const ::jxx::Ptr<String>& eventType) override {
+        if (node_.type() != pugi::node_document) {
+            throw DOMException(
+                DOMException::NOT_SUPPORTED_ERR,
+                ::jxx::NEW<String>(
+                    "Event creation requires a document node"));
+        }
+
+        std::string normalized =
+            eventType == nullptr
+                ? std::string()
+                : eventType->utf8();
+
+        std::transform(
+            normalized.begin(),
+            normalized.end(),
+            normalized.begin(),
+            [](unsigned char value) {
+                return static_cast<char>(std::tolower(value));
+            });
+
+        if (normalized != "event" &&
+            normalized != "events") {
+            throw DOMException(
+                DOMException::NOT_SUPPORTED_ERR,
+                ::jxx::NEW<String>(
+                    "Unsupported event interface"));
+        }
+
+        return ::jxx::CAST<
+            ::jxx::org::w3c::dom::events::Event>(
+                ::jxx::NEW<
+                    ::jxx::org::w3c::dom::events::internal::
+                        EventImpl>());
     }
 
     void normalizeDocument() override {

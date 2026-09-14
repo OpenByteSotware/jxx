@@ -3,6 +3,7 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx_types.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Node.h"
+#include "org/w3c/dom/events/jxx.org.w3c.dom.events.DocumentEvent.h"
 
 namespace jxx::org::w3c::dom {
 
@@ -17,7 +18,9 @@ class NodeList;
 class ProcessingInstruction;
 class Text;
 
-class Document : public ::jxx::lang::InterfaceBase<Document, Node> {
+class Document
+    : public ::jxx::lang::InterfaceBase<Document, Node>
+    , public virtual ::jxx::org::w3c::dom::events::DocumentEvent {
 public:
     ~Document() override = default;
 
