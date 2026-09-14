@@ -18,7 +18,12 @@
 #include "lang/jxx_types.h"
 #include "org/w3c/dom/internal/jxx.org.w3c.dom.internal.DOMImplementationImpl.h"
 #include "org/w3c/dom/events/internal/jxx.org.w3c.dom.events.internal.EventImpl.h"
+#include "org/w3c/dom/events/internal/jxx.org.w3c.dom.events.internal.MouseEventImpl.h"
+#include "org/w3c/dom/events/internal/jxx.org.w3c.dom.events.internal.UIEventImpl.h"
 #include "org/w3c/dom/events/jxx.org.w3c.dom.events.Event.h"
+#include "org/w3c/dom/events/jxx.org.w3c.dom.events.EventException.h"
+#include "org/w3c/dom/events/jxx.org.w3c.dom.events.EventListener.h"
+#include "org/w3c/dom/events/jxx.org.w3c.dom.events.EventTarget.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Attr.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.CDATASection.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Comment.h"
@@ -55,15 +60,31 @@ using DOMException = ::jxx::org::w3c::dom::DOMException;
 using DOMConfiguration = ::jxx::org::w3c::dom::DOMConfiguration;
 using DOMStringList = ::jxx::org::w3c::dom::DOMStringList;
 using UserDataHandler = ::jxx::org::w3c::dom::UserDataHandler;
+using Event = ::jxx::org::w3c::dom::events::Event;
+using EventListener = ::jxx::org::w3c::dom::events::EventListener;
+using EventTarget = ::jxx::org::w3c::dom::events::EventTarget;
+using EventException = ::jxx::org::w3c::dom::events::EventException;
 
 struct UserDataEntry {
     ::jxx::Ptr<::jxx::lang::Object> data;
     ::jxx::Ptr<UserDataHandler> handler;
 };
 
+struct EventListenerEntry {
+    ::jxx::Ptr<EventListener> listener;
+    ::jxx::lang::jbool useCapture = false;
+};
+
+using EventListenerMap = std::unordered_map<
+    std::string,
+    std::vector<EventListenerEntry>>;
+
 struct Store {
     pugi::xml_document document;
     std::unordered_set<std::string> idAttributes;
+    std::unordered_map<
+        std::size_t,
+        EventListenerMap> eventListeners;
     std::unordered_map<
         std::size_t,
         std::unordered_map<std::string, UserDataEntry>> userData;
@@ -97,6 +118,21 @@ std::string localPart(const std::string& qualifiedName) {
 std::string prefixPart(const std::string& qualifiedName) {
     const auto position = qualifiedName.find(':');
     return position == std::string::npos ? std::string() : qualifiedName.substr(0, position);
+}
+
+std::string normalizedEventType(
+    const ::jxx::Ptr<String>& type) {
+    std::string result = type == nullptr
+        ? std::string()
+        : type->utf8();
+    std::transform(
+        result.begin(),
+        result.end(),
+        result.begin(),
+        [](unsigned char value) {
+            return static_cast<char>(std::tolower(value));
+        });
+    return result;
 }
 
 std::u16string utf16Value(
@@ -405,6 +441,170 @@ public:
         , node_(owner)
         , attribute_(attribute)
         , attributeNode_(true) {
+    }
+
+    void addEventListener(
+        const ::jxx::Ptr<String>& type,
+        const ::jxx::Ptr<EventListener>& listener,
+        ::jxx::lang::jbool useCapture) override {
+        if (listener == nullptr) {
+            return;
+        }
+        const auto normalized = normalizedEventType(type);
+        if (normalized.empty()) {
+            return;
+        }
+        auto& entries = store_->eventListeners[
+            userDataNodeKey(node_, attribute_, attributeNode_)][normalized];
+        const auto duplicate = std::find_if(
+            entries.begin(),
+            entries.end(),
+            [&](const EventListenerEntry& entry) {
+                return entry.listener == listener &&
+                    entry.useCapture == useCapture;
+            });
+        if (duplicate == entries.end()) {
+            entries.push_back(EventListenerEntry{listener, useCapture});
+        }
+    }
+
+    void removeEventListener(
+        const ::jxx::Ptr<String>& type,
+        const ::jxx::Ptr<EventListener>& listener,
+        ::jxx::lang::jbool useCapture) override {
+        const auto nodeKey = userDataNodeKey(
+            node_, attribute_, attributeNode_);
+        const auto nodeListeners = store_->eventListeners.find(nodeKey);
+        if (nodeListeners == store_->eventListeners.end()) {
+            return;
+        }
+        const auto normalized = normalizedEventType(type);
+        const auto typedListeners =
+            nodeListeners->second.find(normalized);
+        if (typedListeners == nodeListeners->second.end()) {
+            return;
+        }
+        auto& entries = typedListeners->second;
+        entries.erase(
+            std::remove_if(
+                entries.begin(),
+                entries.end(),
+                [&](const EventListenerEntry& entry) {
+                    return entry.listener == listener &&
+                        entry.useCapture == useCapture;
+                }),
+            entries.end());
+        if (entries.empty()) {
+            nodeListeners->second.erase(typedListeners);
+        }
+        if (nodeListeners->second.empty()) {
+            store_->eventListeners.erase(nodeListeners);
+        }
+    }
+
+    ::jxx::lang::jbool dispatchEvent(
+        const ::jxx::Ptr<Event>& event) override {
+        if (event == nullptr || event->getType() == nullptr ||
+            event->getType()->utf8().empty()) {
+            throw EventException(
+                EventException::UNSPECIFIED_EVENT_TYPE_ERR,
+                ::jxx::NEW<String>("Event type is required"));
+        }
+
+        const auto concrete = ::jxx::CAST<
+            ::jxx::org::w3c::dom::events::internal::EventImpl>(event);
+        if (concrete == nullptr) {
+            throw DOMException(
+                DOMException::NOT_SUPPORTED_ERR,
+                ::jxx::NEW<String>("Unsupported event implementation"));
+        }
+
+        const auto target = ::jxx::CAST<EventTarget>(thisPtr());
+        const auto eventType = normalizedEventType(event->getType());
+        std::vector<pugi::xml_node> ancestors;
+        if (!attributeNode_) {
+            for (auto parent = node_.parent(); parent; parent = parent.parent()) {
+                ancestors.push_back(parent);
+            }
+        }
+
+        const auto invokeListeners = [&]
+            (pugi::xml_node currentNode,
+             bool currentIsAttribute,
+             ::jxx::lang::jshort phase,
+             ::jxx::lang::jbool useCapture) {
+            const auto currentNodeObject = currentIsAttribute
+                ? ::jxx::CAST<Node>(thisPtr())
+                : wrap(store_, currentNode);
+            const auto currentTarget =
+                ::jxx::CAST<EventTarget>(currentNodeObject);
+            concrete->setDispatchContext(target, currentTarget, phase);
+
+            const auto listenerSet = store_->eventListeners.find(
+                userDataNodeKey(currentNode, attribute_, currentIsAttribute));
+            if (listenerSet == store_->eventListeners.end()) {
+                return;
+            }
+            const auto typedListeners = listenerSet->second.find(eventType);
+            if (typedListeners == listenerSet->second.end()) {
+                return;
+            }
+            const auto snapshot = typedListeners->second;
+            for (const auto& entry : snapshot) {
+                if (entry.listener != nullptr &&
+                    entry.useCapture == useCapture) {
+                    entry.listener->handleEvent(event);
+                }
+            }
+        };
+
+        try {
+            for (auto current = ancestors.rbegin();
+                 current != ancestors.rend();
+                 ++current) {
+                invokeListeners(
+                    *current,
+                    false,
+                    Event::CAPTURING_PHASE,
+                    true);
+                if (concrete->isPropagationStopped()) {
+                    concrete->clearDispatchContext();
+                    return !concrete->isDefaultPrevented();
+                }
+            }
+
+            invokeListeners(
+                node_,
+                attributeNode_,
+                Event::AT_TARGET,
+                true);
+            invokeListeners(
+                node_,
+                attributeNode_,
+                Event::AT_TARGET,
+                false);
+
+            if (event->getBubbles() &&
+                !concrete->isPropagationStopped()) {
+                for (const auto& current : ancestors) {
+                    invokeListeners(
+                        current,
+                        false,
+                        Event::BUBBLING_PHASE,
+                        false);
+                    if (concrete->isPropagationStopped()) {
+                        break;
+                    }
+                }
+            }
+        }
+        catch (...) {
+            concrete->clearDispatchContext();
+            throw;
+        }
+
+        concrete->clearDispatchContext();
+        return !concrete->isDefaultPrevented();
     }
 
     ::jxx::Ptr<String> getNodeName() const override {
@@ -1066,19 +1266,21 @@ public:
                 return static_cast<char>(std::tolower(value));
             });
 
-        if (normalized != "event" &&
-            normalized != "events") {
-            throw DOMException(
-                DOMException::NOT_SUPPORTED_ERR,
-                ::jxx::NEW<String>(
-                    "Unsupported event interface"));
+        if (normalized == "event" || normalized == "events") {
+            return ::jxx::CAST<::jxx::org::w3c::dom::events::Event>(
+                ::jxx::NEW<::jxx::org::w3c::dom::events::internal::EventImpl>());
         }
-
-        return ::jxx::CAST<
-            ::jxx::org::w3c::dom::events::Event>(
-                ::jxx::NEW<
-                    ::jxx::org::w3c::dom::events::internal::
-                        EventImpl>());
+        if (normalized == "uievent" || normalized == "uievents") {
+            return ::jxx::CAST<::jxx::org::w3c::dom::events::Event>(
+                ::jxx::NEW<::jxx::org::w3c::dom::events::internal::UIEventImpl>());
+        }
+        if (normalized == "mouseevent" || normalized == "mouseevents") {
+            return ::jxx::CAST<::jxx::org::w3c::dom::events::Event>(
+                ::jxx::NEW<::jxx::org::w3c::dom::events::internal::MouseEventImpl>());
+        }
+        throw DOMException(
+            DOMException::NOT_SUPPORTED_ERR,
+            ::jxx::NEW<String>("Unsupported event interface"));
     }
 
     void normalizeDocument() override {

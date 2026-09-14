@@ -6,7 +6,7 @@
 
 namespace jxx::org::w3c::dom::events::internal {
 
-class EventImpl final
+class EventImpl
     : public ::jxx::lang::ClassBase<
           EventImpl,
           ::jxx::lang::Object,

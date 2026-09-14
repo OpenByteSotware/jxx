@@ -2,6 +2,7 @@
 
 #include "lang/jxx.lang.ClassInfoMarker.h"
 #include "lang/jxx_types.h"
+#include "org/w3c/dom/events/jxx.org.w3c.dom.events.EventTarget.h"
 
 #ifdef ELEMENT_NODE
 #undef ELEMENT_NODE
@@ -86,7 +87,8 @@ class UserDataHandler;
  * metadata implementation. Concrete node implementations inherit Object
  * through ClassBase and implement this interface.
  */
-class Node {
+class Node
+    : public virtual ::jxx::org::w3c::dom::events::EventTarget {
 public:
     using JxxClassInfoMarker =
         ::jxx::lang::ClassInfo<
