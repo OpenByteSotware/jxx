@@ -5,7 +5,7 @@
 
 namespace jxx::lang {
 
-    struct StackTraceElement {
+    struct NativeStackFrame {
         std::string symbol;          // formatted symbol string
         std::uintptr_t address = 0;  // program counter
     };
@@ -32,7 +32,7 @@ namespace jxx::lang {
     std::uint32_t getStackTraceSymbolFormatFlags();
 
     // Capture stack trace (symbol names only)
-    std::vector<StackTraceElement>
+    std::vector<NativeStackFrame>
         captureStackTrace(std::size_t skipFrames = 0, std::size_t maxFrames = 64);
 
 } // namespace jxx::lang

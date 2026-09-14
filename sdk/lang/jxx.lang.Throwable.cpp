@@ -1,16 +1,38 @@
-#include "jxx.lang.Throwable.h"
+#include "lang/jxx.lang.Throwable.h"
 
 #include <cstring>
 #include <iomanip>
 #include <utility>
 
-#include "jxx.lang.ClassInfo.h"
-#include "jxx.lang.IllegalArgumentException.h"
-#include "jxx.lang.NullPointerException.h"
-#include "jxx.lang.String.h"
+#include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.StackTraceElement.h"
 
 namespace jxx::lang
 {
+
+    namespace {
+
+    std::vector<::jxx::Ptr<StackTraceElement>> capturePublicStackTrace(
+        std::size_t skipFrames) {
+        std::vector<::jxx::Ptr<StackTraceElement>> result;
+        const auto nativeFrames = captureStackTrace(skipFrames + 1);
+        result.reserve(nativeFrames.size());
+
+        for (const auto& frame : nativeFrames) {
+            result.push_back(
+                ::jxx::NEW<StackTraceElement>(
+                    ::jxx::NEW<String>(frame.symbol.empty() ? "unknown" : frame.symbol),
+                    ::jxx::NEW<String>("unknown"),
+                    nullptr,
+                    -1));
+        }
+        return result;
+    }
+
+    } // namespace
 
     jxx::Ptr<ClassAny> Throwable::Class()
     {
@@ -29,7 +51,7 @@ namespace jxx::lang
         , cachedWhat_()
         , cachedToString_()
     {
-        stack_ = captureStackTrace(1);
+        stack_ = capturePublicStackTrace(1);
     }
 
     Throwable::Throwable(
@@ -52,7 +74,7 @@ namespace jxx::lang
         , cachedToString_()
     {
         if (writableStackTrace_) {
-            stack_ = captureStackTrace(1);
+            stack_ = capturePublicStackTrace(1);
         }
     }
 
@@ -112,7 +134,7 @@ namespace jxx::lang
         , stack_(
               other != nullptr
                   ? other->stack_
-                  : std::vector<StackTraceElement>{})
+                  : std::vector<::jxx::Ptr<StackTraceElement>>{})
         , cachedWhat_(
               other != nullptr
                   ? other->cachedWhat_
@@ -245,15 +267,40 @@ namespace jxx::lang
     Throwable& Throwable::fillInStackTrace()
     {
         if (writableStackTrace_) {
-            stack_ = captureStackTrace(1);
+            stack_ = capturePublicStackTrace(1);
         }
 
         return *this;
     }
 
-    const std::vector<StackTraceElement>& Throwable::getStackTrace() const
+    Throwable::StackTraceArray Throwable::getStackTrace() const
     {
-        return stack_;
+        auto result = ::jxx::NEW<StackTraceArrayType>(
+            static_cast<jint>(stack_.size()));
+
+        for (std::size_t index = 0; index < stack_.size(); ++index) {
+            (*result)[static_cast<jint>(index)] = stack_[index];
+        }
+        return result;
+    }
+
+    void Throwable::setStackTrace(
+        const StackTraceArray& stackTrace)
+    {
+        if (stackTrace == nullptr) {
+            throw NullPointerException();
+        }
+
+        std::vector<::jxx::Ptr<StackTraceElement>> replacement;
+        replacement.reserve(stackTrace->length);
+        for (jint index = 0; index < static_cast<jint>(stackTrace->length); ++index) {
+            const auto element = (*stackTrace)[index];
+            if (element == nullptr) {
+                throw NullPointerException();
+            }
+            replacement.push_back(element);
+        }
+        stack_ = std::move(replacement);
     }
 
     void Throwable::printStackTrace(
@@ -272,14 +319,11 @@ namespace jxx::lang
         output << '\n';
 
         for (const auto& element : stack_) {
-            output
-                << "\tat "
-                << element.symbol
-                << " [0x"
-                << std::hex
-                << element.address
-                << std::dec
-                << "]\n";
+            output << "\tat ";
+            if (element != nullptr) {
+                output << element->toString()->utf8();
+            }
+            output << '\n';
         }
 
         for (const auto& exception : suppressed_) {

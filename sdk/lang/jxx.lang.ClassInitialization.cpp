@@ -47,6 +47,7 @@
 #include "lang/jxx.lang.OutOfMemoryError.h"
 #include "lang/jxx.lang.SecurityException.h"
 #include "lang/jxx.lang.StackOverflowError.h"
+#include "lang/jxx.lang.StackTraceElement.h"
 #include "lang/jxx.lang.StringIndexOutOfBoundsException.h"
 #include "lang/jxx.lang.TypeNotPresentException.h"
 #include "lang/jxx.lang.UnknownError.h"
@@ -54,6 +55,7 @@
 #include "lang/jxx.lang.UnsupportedClassVersionError.h"
 #include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "lang/jxx.lang.VerifyError.h"
+#include "lang/jxx.lang.Void.h"
 #include "lang/jxx.lang.Boolean.h"
 #include "lang/jxx.lang.Byte.h"
 #include "lang/jxx.lang.Character.h"
@@ -132,6 +134,7 @@ void initializeClasses()
             registerType<OutOfMemoryError>();
             registerType<SecurityException>();
             registerType<StackOverflowError>();
+            registerType<StackTraceElement>();
             registerType<StringIndexOutOfBoundsException>();
             registerType<TypeNotPresentException>();
             registerType<UnknownError>();
@@ -139,6 +142,7 @@ void initializeClasses()
             registerType<UnsupportedClassVersionError>();
             registerType<UnsupportedOperationException>();
             registerType<VerifyError>();
+            (void)Void::TYPE;
             registerType<Boolean>();
             registerType<Byte>();
             registerType<Character>();

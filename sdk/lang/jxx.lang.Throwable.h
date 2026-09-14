@@ -9,12 +9,14 @@
 #include "lang/jxx.lang.ClassInfoMarker.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.StackTrace.h"
+#include "lang/jxx.lang.buildin_array.h"
 
 namespace jxx::lang
 {
 
     class ClassAny;
     class String;
+    class StackTraceElement;
 
     class NullPointerException;
     class IllegalArgumentException;
@@ -131,11 +133,14 @@ namespace jxx::lang
 
         Throwable& fillInStackTrace();
 
-        /**
-         * Transitional native representation.
-         */
-        const std::vector<StackTraceElement>&
-            getStackTrace() const;
+        using StackTraceArrayType =
+            ::jxx::lang::JxxArray<::jxx::Ptr<StackTraceElement>, 1U>;
+        using StackTraceArray = ::jxx::Ptr<StackTraceArrayType>;
+
+        StackTraceArray getStackTrace() const;
+
+        void setStackTrace(
+            const StackTraceArray& stackTrace);
 
         void printStackTrace(
             std::ostream& output) const;
@@ -166,7 +171,7 @@ namespace jxx::lang
         std::vector<jxx::Ptr<Throwable>>
             suppressed_;
 
-        std::vector<StackTraceElement>
+        std::vector<::jxx::Ptr<StackTraceElement>>
             stack_;
 
         mutable std::string cachedWhat_;

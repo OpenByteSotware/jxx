@@ -19,7 +19,7 @@
 #include <cstdlib>
 #endif
 
-#include "jxx.lang.StackTrace.h"
+#include "lang/jxx.lang.StackTrace.h"
 
 namespace jxx::lang {
 
@@ -167,9 +167,9 @@ namespace jxx::lang {
 #endif
 
     // -------------------- Public API: captureStackTrace --------------------
-    std::vector<StackTraceElement>
+    std::vector<NativeStackFrame>
         captureStackTrace(std::size_t skipFrames, std::size_t maxFrames) {
-        std::vector<StackTraceElement> out;
+        std::vector<NativeStackFrame> out;
 
 #if defined(_WIN32)
 
@@ -185,7 +185,7 @@ namespace jxx::lang {
         out.reserve(captured);
         for (USHORT i = 0; i < captured; ++i) {
             std::uintptr_t addr = reinterpret_cast<std::uintptr_t>(frames[i]);
-            StackTraceElement e;
+            NativeStackFrame e;
             e.address = addr;
 
             std::string sym = windowsSymbolFromAddress(addr);
@@ -207,7 +207,7 @@ namespace jxx::lang {
         out.reserve(static_cast<std::size_t>(n) - start);
 
         for (std::size_t i = start; i < static_cast<std::size_t>(n); ++i) {
-            StackTraceElement e;
+            NativeStackFrame e;
             e.address = reinterpret_cast<std::uintptr_t>(frames[i]);
             e.symbol = formatLinuxSymbol(syms[i]);
             out.push_back(std::move(e));
