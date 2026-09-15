@@ -118,6 +118,11 @@ namespace jxx::lang {
         jbool isInstance(const jxx::Ptr<Object>& obj) const;
         jxx::Ptr<Object> cast(const jxx::Ptr<Object>& obj) const;
 
+        jxx::Ptr<ClassAny> asSubclass(
+            const jxx::Ptr<ClassAny>& clazz) const;
+
+        jbool desiredAssertionStatus() const;
+
         // Java 8 (deprecated later): newInstance()
         jxx::Ptr<Object> newInstance() const;
 

@@ -359,6 +359,29 @@ namespace jxx::lang {
                 message));
     }
 
+    jxx::Ptr<ClassAny> ClassAny::asSubclass(
+        const jxx::Ptr<ClassAny>& clazz) const {
+        if (clazz == nullptr) {
+            throw NullPointerException(
+                jxx::NEW<String>("clazz"));
+        }
+
+        auto thisClass = forName(getName());
+        if (!clazz->isAssignableFrom(thisClass)) {
+            throw ClassCastException(
+                jxx::NEW<String>(
+                    meta_.binaryName +
+                    " cannot be cast to " +
+                    clazz->meta_.binaryName));
+        }
+
+        return thisClass;
+    }
+
+    jbool ClassAny::desiredAssertionStatus() const {
+        return false;
+    }
+
     jxx::Ptr<Object> ClassAny::newInstance() const {
         // Java-ish checks
         if (meta_.isInterface || meta_.isPrimitive || meta_.isArray) {
@@ -376,9 +399,14 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<String> ClassAny::toString() const {
-        std::string s = meta_.isInterface ? "interface " : "class ";
-        s += meta_.binaryName;
-        return jxx::NEW<String>(s.c_str());
+        std::string value;
+        if (!meta_.isPrimitive) {
+            value = meta_.isInterface
+                ? "interface "
+                : "class ";
+        }
+        value += meta_.binaryName;
+        return jxx::NEW<String>(value);
     }
 
     // -------- Array class creation helpers --------
