@@ -1,16 +1,24 @@
 #pragma once
+
 #include "lang/jxx.lang.ClassInfoMarker.h"
-#include "lang/jxx_types.h"
 #include "lang/jxx.lang.Throwable.h"
+
 namespace jxx::lang {
+
 class Error : public Throwable {
 public:
     using JxxSuper = Throwable;
-    using JxxClassInfoMarker = jxx::lang::ClassInfo<Error, JxxSuper>;
+    using JxxClassInfoMarker = ClassInfo<Error, JxxSuper>;
 
-    static jxx::Ptr<jxx::lang::ClassAny> Class();
+    static ::jxx::Ptr<ClassAny> Class();
 
-    Error() = default;
+    Error();
+    explicit Error(const ::jxx::Ptr<String>& message);
+    explicit Error(const char* message);
+    Error(
+        const ::jxx::Ptr<String>& message,
+        const ::jxx::Ptr<Throwable>& cause);
+    explicit Error(const ::jxx::Ptr<Throwable>& cause);
 
     Error(const Error&) = default;
     Error(Error&&) noexcept = default;
@@ -18,18 +26,9 @@ public:
     Error& operator=(Error&&) noexcept = default;
     ~Error() override = default;
 
-public:
-    using Throwable::Throwable;
-
-    explicit Error(const ::jxx::Ptr<Throwable>& cause)
-        : Throwable(cause) {}
-
-    Error(const ::jxx::Ptr<String>& message,
-          const ::jxx::Ptr<Throwable>& cause)
-        : Throwable(message, cause) {}
-    protected:
+protected:
     JXX_OBJECT_CLONE(Error)
-
-    const char* typeName() const noexcept override { return "Error"; }
+    const char* typeName() const noexcept override;
 };
-}
+
+} // namespace jxx::lang
