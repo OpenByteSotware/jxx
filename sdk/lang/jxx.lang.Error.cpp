@@ -30,6 +30,18 @@ Error::Error(const ::jxx::Ptr<Throwable>& cause)
     : JxxSuper(cause) {
 }
 
+Error::Error(
+    const ::jxx::Ptr<String>& message,
+    const ::jxx::Ptr<Throwable>& cause,
+    jbool enableSuppression,
+    jbool writableStackTrace)
+    : JxxSuper(
+          message,
+          cause,
+          enableSuppression,
+          writableStackTrace) {
+}
+
 const char* Error::typeName() const noexcept {
     return "Error";
 }

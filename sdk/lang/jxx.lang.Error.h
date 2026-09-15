@@ -27,6 +27,12 @@ public:
     ~Error() override = default;
 
 protected:
+    Error(
+        const ::jxx::Ptr<String>& message,
+        const ::jxx::Ptr<Throwable>& cause,
+        jbool enableSuppression,
+        jbool writableStackTrace);
+
     JXX_OBJECT_CLONE(Error)
     const char* typeName() const noexcept override;
 };
