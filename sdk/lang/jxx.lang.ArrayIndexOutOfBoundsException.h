@@ -2,7 +2,7 @@
 #include "lang/jxx.lang.ClassInfoMarker.h"
 
 #include <memory>
-#include "jxx.lang.IndexOutOfBoundsException.h"
+#include "lang/jxx.lang.IndexOutOfBoundsException.h"
 
 namespace jxx::lang {
 
@@ -27,6 +27,9 @@ public:
         const ::jxx::Ptr<::jxx::lang::String>& message);
 
     explicit ArrayIndexOutOfBoundsException(const char* message);
+
+    explicit ArrayIndexOutOfBoundsException(
+        ::jxx::lang::jint index);
     
 protected:
     JXX_OBJECT_CLONE(ArrayIndexOutOfBoundsException)

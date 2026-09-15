@@ -2,7 +2,7 @@
 #include "lang/jxx.lang.ClassInfoMarker.h"
 
 #include <memory>
-#include "jxx.lang.Exception.h"
+#include "lang/jxx.lang.Exception.h"
 
 namespace jxx::lang {
 

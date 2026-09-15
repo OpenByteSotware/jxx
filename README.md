@@ -167,6 +167,19 @@ auto strings =
 			
 			
 # Java GUI vs JXX GUI
+
+Interally uses wxWidgets for GUI applications
+Wxwidgets is a cross platform GUI toolkit with active changes and is on github.
+
+build wxwidgets first with 
+C:\<jxxlocation>\3rdparty\wxWidgets>cmake -B build_wx -DwxUSE_STL=ON -DwxUSE_WEBVIEW=OFF
+
+if you want static link
+cmake -B build_wx -DwxUSE_STL=ON -DwxUSE_WEBVIEW=OFF -DwxBUILD_SHARED=OFF
+
+if you don't want to use STC disable it, see wxWidget docs for details. 
+-DwxUSE_STC=OFF
+
 # java code
 public class Main
 

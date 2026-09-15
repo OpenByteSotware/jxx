@@ -2,7 +2,7 @@
 #include "lang/jxx.lang.ClassInfoMarker.h"
 
 #include <memory>
-#include "jxx.lang.ReflectiveOperationException.h"
+#include "lang/jxx.lang.ReflectiveOperationException.h"
 
 namespace jxx::lang {
 

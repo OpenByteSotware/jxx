@@ -2,7 +2,7 @@
 #include "lang/jxx.lang.ClassInfoMarker.h"
 
 #include <memory>
-#include "jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
 
 namespace jxx::lang {
 

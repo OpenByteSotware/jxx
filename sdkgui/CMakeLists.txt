@@ -49,28 +49,7 @@ target_link_libraries(
     jxx_gui
     PUBLIC
         jxxsdk
-)
-
-#
-# wxWidgets dependency.
-#
-find_package(wxWidgets REQUIRED)
-
-include(${wxWidgets_USE_FILE})
-
-target_link_libraries(
-    jxx_gui
-    PUBLIC
-        ${wxWidgets_LIBRARIES}
-)
-
-#
-# Public include directories.
-#
-target_include_directories(
-    jxx_gui
-    PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}
+		${wxWidgets_LIBRARIES}
 )
 
 #
@@ -91,18 +70,14 @@ target_include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/../org
         ${CMAKE_CURRENT_SOURCE_DIR}/../com
         ${CMAKE_CURRENT_SOURCE_DIR}/../ext
-)
-
-#
-# Match JXX third-party include layout.
-#
-target_include_directories(
-    jxx_gui
-    PUBLIC
+		${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/gsl/include
         ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/fmt/include
         ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/libunicode/src
         ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/pugixml/src
+		${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/wxWidgets/include
+		${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/wxWidgets/include
+		${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/wxWidgets/build_wx/lib/vc_x64_lib/mswud
 )
 
 #
