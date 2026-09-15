@@ -200,10 +200,24 @@ namespace jxx::lang {
     void ClassLoader::addResource(
         const jxx::Ptr<String>& name,
         const jxx::lang::ByteArray& bytes) {
-        if (!name) throw NullPointerException(jxx::NEW<String>("name"));
-        const std::string n = name->utf8();
-        std::lock_guard<std::mutex> lk(resourceMutex_);
-        // TODO resources_[n] = bytes;
+        if (name == nullptr) {
+            throw NullPointerException("name");
+        }
+        if (bytes == nullptr) {
+            throw NullPointerException("bytes");
+        }
+
+        auto stored = jxx::NEW<jxx::lang::ByteArrayType>(
+            static_cast<std::uint32_t>(bytes->length));
+        for (std::uint32_t index = 0;
+             index < static_cast<std::uint32_t>(bytes->length);
+             ++index) {
+            (*stored)[static_cast<jint>(index)] =
+                (*bytes)[static_cast<jint>(index)];
+        }
+
+        std::lock_guard<std::mutex> lock(resourceMutex_);
+        resources_[name->utf8()] = stored;
     }
 
     jxx::Ptr<jxx::net::URL> ClassLoader::findResource(const jxx::Ptr<String>& name) {
