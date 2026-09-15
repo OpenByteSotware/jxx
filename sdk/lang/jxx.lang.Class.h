@@ -113,6 +113,9 @@ namespace jxx::lang {
         jxx::Ptr<ClassAny> getSuperclass() const;
         jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<ClassAny>, 1U>> getInterfaces() const;
         jxx::Ptr<ClassAny> getComponentType() const;
+        jxx::Ptr<ClassAny> getDeclaringClass() const;
+        jxx::Ptr<ClassAny> getEnclosingClass() const;
+        jbool isMemberClass() const;
 
         jbool isAssignableFrom(const jxx::Ptr<ClassAny>& cls) const;
         jbool isInstance(const jxx::Ptr<Object>& obj) const;

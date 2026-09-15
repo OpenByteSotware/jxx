@@ -1,24 +1,20 @@
 #pragma once
 
-#include "jxx_types.h"
-#include "jxx.lang.ClassInfo.h"
-#include "jxx.lang.String.h"
+#include "lang/jxx.lang.ClassInfo.h"
 
 namespace jxx::lang {
 
-/**
- * Minimal java.lang.Package.
- * Java has more metadata; this provides getName()/toString() for parity.
- */
-class Package final : public jxx::lang::ClassBase<Package, Object> {
-public:
-    using JavaSuper = Object;
-    using Super = jxx::lang::ClassBase<Package, Object>;
+class String;
 
+class Package final : public ClassBase<Package, Object> {
 public:
-    explicit Package(const jxx::Ptr<String> name);
+    using JxxSuper = Object;
+    using Super = ClassBase<Package, JxxSuper>;
+
+    explicit Package(const jxx::Ptr<String>& name);
 
     jxx::Ptr<String> getName() const;
+    jxx::Ptr<String> toString() const override;
 
 private:
     jxx::Ptr<String> name_;

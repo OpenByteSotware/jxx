@@ -1,6 +1,7 @@
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Class.h"
 #include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.Package.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.IllegalStateException.h"
 #include "lang/jxx.lang.ClassNotFoundException.h"
@@ -186,6 +187,30 @@ namespace jxx::lang {
 
     jxx::Ptr<ClassAny> ClassAny::getComponentType() const {
         return meta_.componentType;
+    }
+
+    jxx::Ptr<ClassAny> ClassAny::getDeclaringClass() const {
+        if (meta_.isArray || meta_.isPrimitive) {
+            return nullptr;
+        }
+        const auto separator = meta_.binaryName.find_last_of('$');
+        if (separator == std::string::npos || separator == 0U) {
+            return nullptr;
+        }
+        const auto name = meta_.binaryName.substr(0U, separator);
+        std::lock_guard<std::mutex> lock(registryMutex_);
+        const auto found = registryByName_.find(name);
+        return found == registryByName_.end()
+            ? nullptr
+            : found->second.lock();
+    }
+
+    jxx::Ptr<ClassAny> ClassAny::getEnclosingClass() const {
+        return getDeclaringClass();
+    }
+
+    jbool ClassAny::isMemberClass() const {
+        return getDeclaringClass() != nullptr;
     }
 
     // Java array assignability special cases:
@@ -479,7 +504,27 @@ namespace jxx::lang {
         return jxx::NEW<JxxArray<jxx::Ptr<Annotation>, 1>>(0);
     }
 
-    jxx::Ptr<Package> ClassAny::getPackage() const { return nullptr; }
+    jxx::Ptr<Package> ClassAny::getPackage() const {
+        if (meta_.isArray) {
+            return meta_.componentType == nullptr
+                ? nullptr
+                : meta_.componentType->getPackage();
+        }
+
+        if (meta_.isPrimitive) {
+            return nullptr;
+        }
+
+        const auto separator =
+            meta_.binaryName.find_last_of('.');
+        if (separator == std::string::npos) {
+            return nullptr;
+        }
+
+        return jxx::NEW<Package>(
+            jxx::NEW<String>(
+                meta_.binaryName.substr(0U, separator)));
+    }
     jxx::Ptr<ClassLoader> ClassAny::getClassLoader() const { return nullptr; }
     /*
     void ClassAny::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out) {
