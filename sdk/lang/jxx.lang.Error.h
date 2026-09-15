@@ -20,6 +20,13 @@ public:
 
 public:
     using Throwable::Throwable;
+
+    explicit Error(const ::jxx::Ptr<Throwable>& cause)
+        : Throwable(cause) {}
+
+    Error(const ::jxx::Ptr<String>& message,
+          const ::jxx::Ptr<Throwable>& cause)
+        : Throwable(message, cause) {}
     protected:
     JXX_OBJECT_CLONE(Error)
 

@@ -1,18 +1,24 @@
 #pragma once
+
 #include "lang/jxx.lang.ClassInfoMarker.h"
 #include "lang/jxx.lang.LinkageError.h"
-namespace jxx::lang
-{
-	class BootstrapMethodError :
-		public LinkageError
-	{
+
+namespace jxx::lang {
+
+class BootstrapMethodError : public LinkageError {
 public:
     using JxxSuper = LinkageError;
-    using JxxClassInfoMarker = jxx::lang::ClassInfo<BootstrapMethodError, JxxSuper>;
+    using JxxClassInfoMarker = ClassInfo<BootstrapMethodError, JxxSuper>;
 
-    static jxx::Ptr<jxx::lang::ClassAny> Class();
+    static ::jxx::Ptr<ClassAny> Class();
 
-    BootstrapMethodError() = default;
+    BootstrapMethodError();
+    explicit BootstrapMethodError(const ::jxx::Ptr<String>& message);
+    explicit BootstrapMethodError(const char* message);
+    explicit BootstrapMethodError(const ::jxx::Ptr<Throwable>& cause);
+    BootstrapMethodError(
+        const ::jxx::Ptr<String>& message,
+        const ::jxx::Ptr<Throwable>& cause);
 
     BootstrapMethodError(const BootstrapMethodError&) = default;
     BootstrapMethodError(BootstrapMethodError&&) noexcept = default;
@@ -20,13 +26,9 @@ public:
     BootstrapMethodError& operator=(BootstrapMethodError&&) noexcept = default;
     ~BootstrapMethodError() override = default;
 
-	public:
-		using LinkageError::LinkageError;
-	protected:
-		JXX_OBJECT_CLONE(BootstrapMethodError)
-			const char* typeName() const noexcept override
-		{
-			return "BootstrapMethodError";
-		}
-	};
-}
+protected:
+    JXX_OBJECT_CLONE(BootstrapMethodError)
+    const char* typeName() const noexcept override;
+};
+
+} // namespace jxx::lang

@@ -23,6 +23,13 @@ public:
         const ::jxx::Ptr<::jxx::lang::String>& message);
 
     explicit LinkageError(const char* message);
+
+    explicit LinkageError(const ::jxx::Ptr<Throwable>& cause)
+        : JxxSuper(cause) {}
+
+    LinkageError(const ::jxx::Ptr<String>& message,
+                 const ::jxx::Ptr<Throwable>& cause)
+        : JxxSuper(message, cause) {}
 protected:
     JXX_OBJECT_CLONE(LinkageError)
 

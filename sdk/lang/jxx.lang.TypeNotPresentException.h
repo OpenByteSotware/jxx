@@ -1,19 +1,23 @@
 #pragma once
-#include "lang/jxx.lang.ClassInfoMarker.h"
 
-#include <memory>
+#include "lang/jxx.lang.ClassInfoMarker.h"
 #include "lang/jxx.lang.RuntimeException.h"
 
 namespace jxx::lang {
 
-    class TypeNotPresentException : public RuntimeException {
+class TypeNotPresentException : public RuntimeException {
 public:
     using JxxSuper = RuntimeException;
-    using JxxClassInfoMarker = jxx::lang::ClassInfo<TypeNotPresentException, JxxSuper>;
+    using JxxClassInfoMarker = ClassInfo<TypeNotPresentException, JxxSuper>;
 
-    static jxx::Ptr<jxx::lang::ClassAny> Class();
+    static ::jxx::Ptr<ClassAny> Class();
 
-    TypeNotPresentException() = default;
+    TypeNotPresentException(
+        const ::jxx::Ptr<String>& typeName,
+        const ::jxx::Ptr<Throwable>& cause);
+    TypeNotPresentException(
+        const char* typeName,
+        const ::jxx::Ptr<Throwable>& cause);
 
     TypeNotPresentException(const TypeNotPresentException&) = default;
     TypeNotPresentException(TypeNotPresentException&&) noexcept = default;
@@ -21,11 +25,14 @@ public:
     TypeNotPresentException& operator=(TypeNotPresentException&&) noexcept = default;
     ~TypeNotPresentException() override = default;
 
-    public:
-        using RuntimeException::RuntimeException;
-        JXX_OBJECT_CLONE(TypeNotPresentException)
-    protected:
-        const char* typeName() const noexcept override { return "TypeNotPresentException"; }
-    };
+    ::jxx::Ptr<String> getTypeName() const;
+
+protected:
+    JXX_OBJECT_CLONE(TypeNotPresentException)
+    const char* typeName() const noexcept override;
+
+private:
+    ::jxx::Ptr<String> typeName_;
+};
 
 } // namespace jxx::lang

@@ -162,3 +162,36 @@ auto strings =
             2,
             3,
             4);
+			
+			
+			
+			
+# Java GUI vs JXX GUI
+# java code
+public class Main
+
+{
+
+public static void main(String[] args)
+
+{
+
+JFrame frame = new JFrame("Demo");
+
+frame.setVisible(true);
+
+}
+
+}
+
+#C++ jxx code for the same thing
+int main()
+{
+    auto frame =
+        jxx::NEW<jxx::swing::JFrame>(
+            JXX_STR("Demo"));
+
+    frame->setVisible(true);
+
+    return jxx::swing::SwingUtilities::run();
+}
