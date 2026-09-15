@@ -1,19 +1,24 @@
 #pragma once
-#include "lang/jxx.lang.ClassInfoMarker.h"
 
-#include <memory>
+#include "lang/jxx.lang.ClassInfoMarker.h"
 #include "lang/jxx.lang.ReflectiveOperationException.h"
 
 namespace jxx::lang {
 
-    class ClassNotFoundException : public jxx::lang::ReflectiveOperationException {
+class ClassNotFoundException : public ReflectiveOperationException {
 public:
-    using JxxSuper = jxx::lang::ReflectiveOperationException;
-    using JxxClassInfoMarker = jxx::lang::ClassInfo<ClassNotFoundException, JxxSuper>;
+    using JxxSuper = ReflectiveOperationException;
+    using JxxClassInfoMarker =
+        ClassInfo<ClassNotFoundException, JxxSuper>;
 
-    static jxx::Ptr<jxx::lang::ClassAny> Class();
+    static ::jxx::Ptr<ClassAny> Class();
 
-    ClassNotFoundException() = default;
+    ClassNotFoundException();
+    explicit ClassNotFoundException(const ::jxx::Ptr<String>& message);
+    explicit ClassNotFoundException(const char* message);
+    ClassNotFoundException(
+        const ::jxx::Ptr<String>& message,
+        const ::jxx::Ptr<Throwable>& exception);
 
     ClassNotFoundException(const ClassNotFoundException&) = default;
     ClassNotFoundException(ClassNotFoundException&&) noexcept = default;
@@ -21,12 +26,15 @@ public:
     ClassNotFoundException& operator=(ClassNotFoundException&&) noexcept = default;
     ~ClassNotFoundException() override = default;
 
-    public:
-        using ReflectiveOperationException::ReflectiveOperationException;
-        
-    protected:
-        JXX_OBJECT_CLONE(ClassNotFoundException)
-        const char* typeName() const noexcept override { return "ClassNotFoundException"; }
-    };
+    ::jxx::Ptr<Throwable> getException() const;
+    ::jxx::Ptr<Throwable> getCause() const;
+
+protected:
+    JXX_OBJECT_CLONE(ClassNotFoundException)
+    const char* typeName() const noexcept override;
+
+private:
+    ::jxx::Ptr<Throwable> exception_;
+};
 
 } // namespace jxx::lang
