@@ -525,7 +525,7 @@ namespace jxx::lang {
             return nullptr;
         }
 
-        return jxx::NEW<Package>(
+        return Package::definePackage(
             jxx::NEW<String>(
                 meta_.binaryName.substr(0U, separator)));
     }

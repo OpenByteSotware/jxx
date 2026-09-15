@@ -265,7 +265,7 @@ namespace jxx::lang {
         if (auto it = packages_.find(n); it != packages_.end()) {
             if (auto p = it->second.lock()) return p;
         }
-        auto p = jxx::NEW<Package>(name);
+        auto p = Package::definePackage(name);
         packages_[n] = p;
         return p;
     }
