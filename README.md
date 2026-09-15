@@ -43,11 +43,12 @@ There are two parts to this project:
 1) Java to C++ converter (python)
 2) C++ Java SDK - JXX (c++)
 
-The JXX is a mimic (as close as possible) to java.
+The JXX is a mimic (as close as possible) to java 8 SDK.
 Thread class in Java is Thread class in c++ (namespace jxx::lang)
 All non GUI classes are mapped and semantically the same as java.  So that when java code is converted it should run out of the box with no modifications.
 There are some caviats like serialization and thread priority.  But if an application just runs with queues and threads, there should be no refactor of the C++ generated code.
 
+The Java to C++ comverter
 The python converter will take a single file or directory structure and convert every .java file to a .h and .cpp with same name
 And can optionally generate a cmake file to build your new converted project.
 Here are cmake options

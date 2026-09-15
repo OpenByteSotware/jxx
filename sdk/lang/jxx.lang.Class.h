@@ -14,9 +14,6 @@
 namespace jxx::lang {
 
     // Forward declarations for reflection types (optional / stubbed)
-    class Field;
-    class Method;
-    class Constructor;
     class Annotation;
     class Package;
     class ClassLoader;
@@ -85,10 +82,10 @@ namespace jxx::lang {
         static jxx::Ptr<ClassAny> registerClass(const Meta& meta);
 
         // Look up by Java name (binary name)
-        static jxx::Ptr<ClassAny> forName(const jxx::Ptr<String> className);
+        static jxx::Ptr<ClassAny> forName(const jxx::Ptr<String>& className);
 
         // Java overloads exist in Java 8; we keep signature parity but ignore loader/initialize
-        static jxx::Ptr<ClassAny> forName(const jxx::Ptr<String> className, jbool initialize, jxx::Ptr<ClassLoader> loader);
+        static jxx::Ptr<ClassAny> forName(const jxx::Ptr<String>& className, jbool initialize, const jxx::Ptr<ClassLoader>& loader);
 
         // Look up by RTTI key (used by Object::getClass())
         static jxx::Ptr<ClassAny> forType(const std::type_index& tid);
@@ -117,9 +114,9 @@ namespace jxx::lang {
         jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<ClassAny>, 1U>> getInterfaces() const;
         jxx::Ptr<ClassAny> getComponentType() const;
 
-        jbool isAssignableFrom(const jxx::Ptr<ClassAny> cls) const;
-        jbool isInstance(const jxx::Ptr<Object> obj) const;
-        jxx::Ptr<Object> cast(const jxx::Ptr<Object> obj) const;
+        jbool isAssignableFrom(const jxx::Ptr<ClassAny>& cls) const;
+        jbool isInstance(const jxx::Ptr<Object>& obj) const;
+        jxx::Ptr<Object> cast(const jxx::Ptr<Object>& obj) const;
 
         // Java 8 (deprecated later): newInstance()
         jxx::Ptr<Object> newInstance() const;
@@ -130,26 +127,9 @@ namespace jxx::lang {
         // ---------------------------------------------------------------------
         // Array class helper (creates/returns canonical array ClassAny)
         // ---------------------------------------------------------------------
-        static jxx::Ptr<ClassAny> arrayOf(const jxx::Ptr<ClassAny> component);
+        static jxx::Ptr<ClassAny> arrayOf(const jxx::Ptr<ClassAny>& component);
 
-        // ---------------------------------------------------------------------
-        // Reflection-heavy Java 8 APIs (declared for parity; stubbed in .cpp)
-        // ---------------------------------------------------------------------
-        jxx::Ptr<JxxArray<jxx::Ptr<Field>, 1>> getFields() const;
-        jxx::Ptr<JxxArray<jxx::Ptr<Field>, 1>> getDeclaredFields() const;
-        jxx::Ptr<Field> getField(const jxx::Ptr<String> name) const;
-        jxx::Ptr<Field> getDeclaredField(const jxx::Ptr<String> name) const;
-
-        jxx::Ptr<JxxArray<jxx::Ptr<Method>, 1>> getMethods() const;
-        jxx::Ptr<JxxArray<jxx::Ptr<Method>, 1>> getDeclaredMethods() const;
-        jxx::Ptr<Method> getMethod(const jxx::Ptr<String> name, jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> parameterTypes) const;
-        jxx::Ptr<Method> getDeclaredMethod(const jxx::Ptr<String> name, jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> parameterTypes) const;
-
-        jxx::Ptr<JxxArray<jxx::Ptr<Constructor>, 1>> getConstructors() const;
-        jxx::Ptr<JxxArray<jxx::Ptr<Constructor>, 1>> getDeclaredConstructors() const;
-        jxx::Ptr<Constructor> getConstructor(const jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> parameterTypes) const;
-        jxx::Ptr<Constructor> getDeclaredConstructor(const jxx::Ptr<JxxArray<jxx::Ptr<ClassAny>, 1>> parameterTypes) const;
-
+        // Class-level annotation and loading information.
         jxx::Ptr<JxxArray<jxx::Ptr<Annotation>, 1>> getAnnotations() const;
         jxx::Ptr<JxxArray<jxx::Ptr<Annotation>, 1>> getDeclaredAnnotations() const;
 
