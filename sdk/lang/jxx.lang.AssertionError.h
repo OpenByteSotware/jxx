@@ -1,17 +1,30 @@
 #pragma once
+
 #include "lang/jxx.lang.ClassInfoMarker.h"
 #include "lang/jxx.lang.Error.h"
-namespace jxx::lang
-{
-	class AssertionError : public Error
-	{
+#include "lang/jxx_types.h"
+
+namespace jxx::lang {
+
+class AssertionError : public Error {
 public:
     using JxxSuper = Error;
-    using JxxClassInfoMarker = jxx::lang::ClassInfo<AssertionError, JxxSuper>;
+    using JxxClassInfoMarker = ClassInfo<AssertionError, JxxSuper>;
 
-    static jxx::Ptr<jxx::lang::ClassAny> Class();
+    static ::jxx::Ptr<ClassAny> Class();
 
-    AssertionError() = default;
+    AssertionError();
+    explicit AssertionError(jbool detailMessage);
+    explicit AssertionError(jchar detailMessage);
+    explicit AssertionError(jdouble detailMessage);
+    explicit AssertionError(jfloat detailMessage);
+    explicit AssertionError(jint detailMessage);
+    explicit AssertionError(jlong detailMessage);
+    explicit AssertionError(const ::jxx::Ptr<Object>& detailMessage);
+    explicit AssertionError(const char* detailMessage);
+    AssertionError(
+        const ::jxx::Ptr<String>& message,
+        const ::jxx::Ptr<Throwable>& cause);
 
     AssertionError(const AssertionError&) = default;
     AssertionError(AssertionError&&) noexcept = default;
@@ -19,14 +32,9 @@ public:
     AssertionError& operator=(AssertionError&&) noexcept = default;
     ~AssertionError() override = default;
 
-	public:
-		using Error::Error;
+protected:
+    JXX_OBJECT_CLONE(AssertionError)
+    const char* typeName() const noexcept override;
+};
 
-	protected:
-		JXX_OBJECT_CLONE(AssertionError)
-			const char* typeName() const noexcept override
-		{
-			return "AssertionError";
-		}
-	};
-}
+} // namespace jxx::lang

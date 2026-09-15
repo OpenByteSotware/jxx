@@ -195,3 +195,24 @@ int main()
 
     return jxx::swing::SwingUtilities::run();
 }
+
+
+
+
+#example
+int main()
+{
+    auto frame =
+        jxx::NEW<jxx::swing::JFrame>(
+            JXX_STR("Hello"));
+
+    frame->setSize(
+        jxx::NEW<jxx::awt::Dimension>(
+            800,
+            600));
+
+    frame->setVisible(true);
+
+    return jxx::swing::SwingUtilities::run();
+}
+`
