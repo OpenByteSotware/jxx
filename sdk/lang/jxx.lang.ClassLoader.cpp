@@ -256,6 +256,72 @@ namespace jxx::lang {
         return jxx::NEW<jxx::io::ByteArrayInputStream>(it->second);
     }
 
+
+    void ClassLoader::setDefaultAssertionStatus(jbool enabled) {
+        std::lock_guard<std::mutex> lock(assertionMutex_);
+        defaultAssertionStatus_ = enabled;
+    }
+
+    void ClassLoader::setPackageAssertionStatus(
+        const jxx::Ptr<String>& packageName,
+        jbool enabled) {
+        std::lock_guard<std::mutex> lock(assertionMutex_);
+        packageAssertion_[
+            packageName == nullptr
+                ? std::string()
+                : packageName->utf8()] = enabled;
+    }
+
+    void ClassLoader::setClassAssertionStatus(
+        const jxx::Ptr<String>& className,
+        jbool enabled) {
+        if (className == nullptr) {
+            throw NullPointerException("className");
+        }
+        std::lock_guard<std::mutex> lock(assertionMutex_);
+        classAssertion_[className->utf8()] = enabled;
+    }
+
+    void ClassLoader::clearAssertionStatus() {
+        std::lock_guard<std::mutex> lock(assertionMutex_);
+        classAssertion_.clear();
+        packageAssertion_.clear();
+        defaultAssertionStatus_ = false;
+    }
+
+    jbool ClassLoader::desiredAssertionStatus(
+        const jxx::Ptr<ClassAny>& clazz) const {
+        if (clazz == nullptr) {
+            throw NullPointerException("clazz");
+        }
+
+        const auto className = clazz->getName()->utf8();
+        std::lock_guard<std::mutex> lock(assertionMutex_);
+
+        const auto classSetting = classAssertion_.find(className);
+        if (classSetting != classAssertion_.end()) {
+            return classSetting->second;
+        }
+
+        auto packageEnd = className.find_last_of('.');
+        while (packageEnd != std::string::npos) {
+            const auto packageName =
+                className.substr(0U, packageEnd);
+            const auto packageSetting =
+                packageAssertion_.find(packageName);
+            if (packageSetting != packageAssertion_.end()) {
+                return packageSetting->second;
+            }
+            packageEnd = packageName.find_last_of('.');
+        }
+
+        const auto unnamedSetting =
+            packageAssertion_.find(std::string());
+        return unnamedSetting != packageAssertion_.end()
+            ? unnamedSetting->second
+            : defaultAssertionStatus_;
+    }
+
     // Packages
     jxx::Ptr<Package> ClassLoader::definePackage(const jxx::Ptr<String> name) {
         if (!name) throw NullPointerException(jxx::NEW<String>("name"));

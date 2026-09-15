@@ -66,10 +66,10 @@ public:
 
     // Assertions (JXX API)
     void setDefaultAssertionStatus(jbool enabled);
-    void setPackageAssertionStatus(const jxx::Ptr<String> packageName, jbool enabled);
-    void setClassAssertionStatus(const jxx::Ptr<String> className, jbool enabled);
+    void setPackageAssertionStatus(const jxx::Ptr<String>& packageName, jbool enabled);
+    void setClassAssertionStatus(const jxx::Ptr<String>& className, jbool enabled);
     void clearAssertionStatus();
-    jbool desiredAssertionStatus(const jxx::Ptr<ClassAny> clazz) const;
+    jbool desiredAssertionStatus(const jxx::Ptr<ClassAny>& clazz) const;
 
     // Packages (JXX API)
     jxx::Ptr<Package> getPackage(const jxx::Ptr<String> name);

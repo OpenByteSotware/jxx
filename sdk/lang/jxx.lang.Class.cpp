@@ -408,7 +408,12 @@ namespace jxx::lang {
     }
 
     jbool ClassAny::desiredAssertionStatus() const {
-        return false;
+        auto loader = getClassLoader();
+        if (loader == nullptr) {
+            return false;
+        }
+        return loader->desiredAssertionStatus(
+            forName(getName()));
     }
 
     jxx::Ptr<Object> ClassAny::newInstance() const {
