@@ -18,7 +18,11 @@ public:
     ~StackOverflowError() override = default;
 
 public:
-	using VirtualMachineError::VirtualMachineError;
+
+    explicit StackOverflowError(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit StackOverflowError(const char* message);
 protected:
     JXX_OBJECT_CLONE(StackOverflowError)
 

@@ -22,7 +22,11 @@ public:
     ~InstantiationException() override = default;
 
 public:
-    using ReflectiveOperationException::ReflectiveOperationException;
+
+    explicit InstantiationException(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit InstantiationException(const char* message);
     
 protected:
     JXX_OBJECT_CLONE(InstantiationException)

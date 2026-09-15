@@ -5,3 +5,10 @@ jxx::Ptr<jxx::lang::ClassAny> jxx::lang::ClassCastException::Class()
 {
     return JxxClassInfoMarker::Class();
 }
+
+jxx::lang::ClassCastException::ClassCastException(const ::jxx::Ptr<::jxx::lang::String>& message)
+    : jxx::lang::ClassCastException::JxxSuper(message) {}
+
+jxx::lang::ClassCastException::ClassCastException(const char* message)
+    : jxx::lang::ClassCastException::JxxSuper(message) {
+}

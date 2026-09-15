@@ -22,7 +22,11 @@ public:
     ~IllegalStateException() override = default;
 
     public:
-        using RuntimeException::RuntimeException;
+
+    explicit IllegalStateException(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit IllegalStateException(const char* message);
         
     protected:
         JXX_OBJECT_CLONE(IllegalStateException)

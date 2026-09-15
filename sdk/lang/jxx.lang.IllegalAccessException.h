@@ -22,7 +22,11 @@ public:
     ~IllegalAccessException() override = default;
 
 public:
-    using ReflectiveOperationException::ReflectiveOperationException;
+
+    explicit IllegalAccessException(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit IllegalAccessException(const char* message);
     JXX_OBJECT_CLONE(IllegalAccessException)
 protected:
     const char* typeName() const noexcept override { return "IllegalAccessException"; }

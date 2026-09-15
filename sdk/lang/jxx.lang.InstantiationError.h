@@ -18,7 +18,11 @@ public:
     ~InstantiationError() override = default;
 
 public:
-	using IncompatibleClassChangeError::IncompatibleClassChangeError;
+
+    explicit InstantiationError(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit InstantiationError(const char* message);
 protected:
     JXX_OBJECT_CLONE(InstantiationError)
 

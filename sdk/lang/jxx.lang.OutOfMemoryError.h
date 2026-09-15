@@ -18,7 +18,11 @@ public:
     ~OutOfMemoryError() override = default;
 
 public:
-	using VirtualMachineError::VirtualMachineError;
+
+    explicit OutOfMemoryError(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit OutOfMemoryError(const char* message);
 protected:
     JXX_OBJECT_CLONE(OutOfMemoryError)
 

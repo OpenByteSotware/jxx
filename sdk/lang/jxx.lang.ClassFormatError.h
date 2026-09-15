@@ -18,7 +18,11 @@ public:
     ~ClassFormatError() override = default;
 
 public:
-	using LinkageError::LinkageError;    
+
+    explicit ClassFormatError(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit ClassFormatError(const char* message);    
 protected:
     JXX_OBJECT_CLONE(ClassFormatError)
 

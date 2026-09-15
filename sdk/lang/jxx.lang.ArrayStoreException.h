@@ -22,7 +22,11 @@ public:
     ~ArrayStoreException() override = default;
 
     public:
-        using RuntimeException::RuntimeException;
+
+    explicit ArrayStoreException(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit ArrayStoreException(const char* message);
         
     protected:
         JXX_OBJECT_CLONE(ArrayStoreException)

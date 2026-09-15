@@ -18,7 +18,11 @@ public:
     ~AbstractMethodError() override = default;
 
 public:
-	using IncompatibleClassChangeError::IncompatibleClassChangeError;
+
+    explicit AbstractMethodError(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit AbstractMethodError(const char* message);
 protected:
     JXX_OBJECT_CLONE(AbstractMethodError)
 

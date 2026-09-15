@@ -22,7 +22,11 @@ public:
     ~ArithmeticException() override = default;
 
 public:
-    using RuntimeException::RuntimeException;
+
+    explicit ArithmeticException(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit ArithmeticException(const char* message);
     
 protected:
     JXX_OBJECT_CLONE(ArithmeticException)

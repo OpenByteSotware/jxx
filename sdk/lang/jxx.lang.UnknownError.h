@@ -18,7 +18,11 @@ public:
     ~UnknownError() override = default;
 
 public:
-	using VirtualMachineError::VirtualMachineError;
+
+    explicit UnknownError(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit UnknownError(const char* message);
 protected:
     JXX_OBJECT_CLONE(UnknownError)
 

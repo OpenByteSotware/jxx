@@ -22,7 +22,11 @@ public:
     ~NullPointerException() override = default;
 
     public:
-        using RuntimeException::RuntimeException;
+
+    explicit NullPointerException(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit NullPointerException(const char* message);
         
     protected:
         JXX_OBJECT_CLONE(NullPointerException)

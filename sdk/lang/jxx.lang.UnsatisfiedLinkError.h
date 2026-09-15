@@ -18,7 +18,11 @@ public:
     ~UnsatisfiedLinkError() override = default;
 
 public:
-	using jxx::lang::LinkageError::LinkageError;
+
+    explicit UnsatisfiedLinkError(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit UnsatisfiedLinkError(const char* message);
 protected:
     JXX_OBJECT_CLONE(UnsatisfiedLinkError)
 

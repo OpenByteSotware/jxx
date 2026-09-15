@@ -22,7 +22,11 @@ public:
     ~NoSuchFieldException() override = default;
 
 public:
-    using ReflectiveOperationException::ReflectiveOperationException;
+
+    explicit NoSuchFieldException(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit NoSuchFieldException(const char* message);
     
 protected:
     JXX_OBJECT_CLONE(NoSuchFieldException)

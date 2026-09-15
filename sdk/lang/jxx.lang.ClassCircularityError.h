@@ -18,7 +18,11 @@ public:
     ~ClassCircularityError() override = default;
 
 public:
-	using LinkageError::LinkageError;
+
+    explicit ClassCircularityError(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit ClassCircularityError(const char* message);
 protected:
     JXX_OBJECT_CLONE(ClassCircularityError)
 

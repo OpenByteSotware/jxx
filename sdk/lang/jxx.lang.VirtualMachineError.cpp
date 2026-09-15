@@ -5,3 +5,10 @@ jxx::Ptr<jxx::lang::ClassAny> jxx::lang::VirtualMachineError::Class()
 {
     return JxxClassInfoMarker::Class();
 }
+
+jxx::lang::VirtualMachineError::VirtualMachineError(const ::jxx::Ptr<::jxx::lang::String>& message)
+    : jxx::lang::VirtualMachineError::JxxSuper(message) {}
+
+jxx::lang::VirtualMachineError::VirtualMachineError(const char* message)
+    : jxx::lang::VirtualMachineError::JxxSuper(message) {
+}

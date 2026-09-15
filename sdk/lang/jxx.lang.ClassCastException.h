@@ -22,7 +22,11 @@ public:
     ~ClassCastException() override = default;
 
 public:
-    using jxx::lang::RuntimeException::RuntimeException;
+
+    explicit ClassCastException(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit ClassCastException(const char* message);
     
 protected:
     JXX_OBJECT_CLONE(ClassCastException)

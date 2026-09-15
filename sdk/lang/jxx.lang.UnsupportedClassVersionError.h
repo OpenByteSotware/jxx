@@ -18,7 +18,11 @@ public:
     ~UnsupportedClassVersionError() override = default;
 
 public:
-	using ClassFormatError::ClassFormatError;
+
+    explicit UnsupportedClassVersionError(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit UnsupportedClassVersionError(const char* message);
 protected:
     JXX_OBJECT_CLONE(UnsupportedClassVersionError)
 

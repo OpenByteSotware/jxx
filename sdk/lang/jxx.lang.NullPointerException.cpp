@@ -5,3 +5,10 @@ jxx::Ptr<jxx::lang::ClassAny> jxx::lang::NullPointerException::Class()
 {
     return JxxClassInfoMarker::Class();
 }
+
+jxx::lang::NullPointerException::NullPointerException(const ::jxx::Ptr<::jxx::lang::String>& message)
+    : jxx::lang::NullPointerException::JxxSuper(message) {}
+
+jxx::lang::NullPointerException::NullPointerException(const char* message)
+    : jxx::lang::NullPointerException::JxxSuper(message) {
+}

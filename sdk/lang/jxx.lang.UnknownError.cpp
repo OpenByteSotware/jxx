@@ -5,3 +5,10 @@ jxx::Ptr<jxx::lang::ClassAny> jxx::lang::UnknownError::Class()
 {
     return JxxClassInfoMarker::Class();
 }
+
+jxx::lang::UnknownError::UnknownError(const ::jxx::Ptr<::jxx::lang::String>& message)
+    : jxx::lang::UnknownError::JxxSuper(message) {}
+
+jxx::lang::UnknownError::UnknownError(const char* message)
+    : jxx::lang::UnknownError::JxxSuper(message) {
+}

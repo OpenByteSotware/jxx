@@ -22,7 +22,11 @@ public:
     ~CloneNotSupportedException() override = default;
 
 public:
-    using Exception::Exception;
+
+    explicit CloneNotSupportedException(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit CloneNotSupportedException(const char* message);
     JXX_OBJECT_CLONE(CloneNotSupportedException)
 protected:
     const char* typeName() const noexcept override { return "CloneNotSupportedException"; }

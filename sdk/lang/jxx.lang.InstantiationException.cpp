@@ -5,3 +5,10 @@ jxx::Ptr<jxx::lang::ClassAny> jxx::lang::InstantiationException::Class()
 {
     return JxxClassInfoMarker::Class();
 }
+
+jxx::lang::InstantiationException::InstantiationException(const ::jxx::Ptr<::jxx::lang::String>& message)
+    : jxx::lang::InstantiationException::JxxSuper(message) {}
+
+jxx::lang::InstantiationException::InstantiationException(const char* message)
+    : jxx::lang::InstantiationException::JxxSuper(message) {
+}

@@ -22,7 +22,11 @@ public:
     ~IndexOutOfBoundsException() override = default;
 
 public:
-    using RuntimeException::RuntimeException;
+
+    explicit IndexOutOfBoundsException(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit IndexOutOfBoundsException(const char* message);
     
 
 protected:

@@ -18,7 +18,11 @@ public:
     ~NoSuchFieldError() override = default;
 
 public:
-	using IncompatibleClassChangeError::IncompatibleClassChangeError;
+
+    explicit NoSuchFieldError(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit NoSuchFieldError(const char* message);
 protected:
     JXX_OBJECT_CLONE(NoSuchFieldError)
 

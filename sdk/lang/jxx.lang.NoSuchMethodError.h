@@ -18,7 +18,11 @@ public:
     ~NoSuchMethodError() override = default;
 
 public:
-	using IncompatibleClassChangeError::IncompatibleClassChangeError;
+
+    explicit NoSuchMethodError(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit NoSuchMethodError(const char* message);
 protected:
     JXX_OBJECT_CLONE(NoSuchMethodError)
 

@@ -22,7 +22,11 @@ public:
     ~SecurityException() override = default;
 
 public:
-    using RuntimeException::RuntimeException;
+
+    explicit SecurityException(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit SecurityException(const char* message);
     JXX_OBJECT_CLONE(SecurityException)
 protected:
     const char* typeName() const noexcept override { return "SecurityException"; }

@@ -22,7 +22,11 @@ public:
     ~NumberFormatException() override = default;
 
 public:
-    using IllegalArgumentException::IllegalArgumentException;
+
+    explicit NumberFormatException(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit NumberFormatException(const char* message);
     
 protected:
 	JXX_OBJECT_CLONE(NumberFormatException)

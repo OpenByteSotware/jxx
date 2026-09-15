@@ -18,7 +18,11 @@ public:
     ~LinkageError() override = default;
 
 public:
-    using jxx::lang::Error::Error;
+
+    explicit LinkageError(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit LinkageError(const char* message);
 protected:
     JXX_OBJECT_CLONE(LinkageError)
 

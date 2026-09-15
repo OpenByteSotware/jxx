@@ -18,7 +18,11 @@ public:
     ~IllegalAccessError() override = default;
 
 public:
-	using IncompatibleClassChangeError::IncompatibleClassChangeError;
+
+    explicit IllegalAccessError(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit IllegalAccessError(const char* message);
 protected:
     JXX_OBJECT_CLONE(IllegalAccessError)
 

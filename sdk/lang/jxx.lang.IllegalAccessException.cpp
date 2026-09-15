@@ -5,3 +5,10 @@ jxx::Ptr<jxx::lang::ClassAny> jxx::lang::IllegalAccessException::Class()
 {
     return JxxClassInfoMarker::Class();
 }
+
+jxx::lang::IllegalAccessException::IllegalAccessException(const ::jxx::Ptr<::jxx::lang::String>& message)
+    : jxx::lang::IllegalAccessException::JxxSuper(message) {}
+
+jxx::lang::IllegalAccessException::IllegalAccessException(const char* message)
+    : jxx::lang::IllegalAccessException::JxxSuper(message) {
+}

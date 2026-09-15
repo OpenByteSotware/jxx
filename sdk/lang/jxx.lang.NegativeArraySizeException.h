@@ -22,7 +22,11 @@ public:
     ~NegativeArraySizeException() override = default;
 
     public:
-        using RuntimeException::RuntimeException;
+
+    explicit NegativeArraySizeException(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit NegativeArraySizeException(const char* message);
         
     protected:
         JXX_OBJECT_CLONE(NegativeArraySizeException)

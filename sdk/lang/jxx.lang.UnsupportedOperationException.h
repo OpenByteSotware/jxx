@@ -22,7 +22,11 @@ public:
     ~UnsupportedOperationException() override = default;
 
 public:
-    using RuntimeException::RuntimeException;
+
+    explicit UnsupportedOperationException(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit UnsupportedOperationException(const char* message);
     JXX_OBJECT_CLONE(UnsupportedOperationException)
 protected:
     const char* typeName() const noexcept override { return "UnsupportedOperationException"; }

@@ -18,7 +18,11 @@ public:
     ~NoClassDefFoundError() override = default;
 
 public:
-	using jxx::lang::LinkageError::LinkageError;
+
+    explicit NoClassDefFoundError(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit NoClassDefFoundError(const char* message);
 protected:
     JXX_OBJECT_CLONE(NoClassDefFoundError)
 

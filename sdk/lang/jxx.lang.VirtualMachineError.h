@@ -18,7 +18,11 @@ public:
     ~VirtualMachineError() override = default;
 
 public:
-	using Error::Error;
+
+    explicit VirtualMachineError(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit VirtualMachineError(const char* message);
 protected:
     JXX_OBJECT_CLONE(VirtualMachineError)
 

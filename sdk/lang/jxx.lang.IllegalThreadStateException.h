@@ -22,7 +22,11 @@ public:
     ~IllegalThreadStateException() override = default;
 
     public:
-        using IllegalArgumentException::IllegalArgumentException;
+
+    explicit IllegalThreadStateException(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit IllegalThreadStateException(const char* message);
         JXX_OBJECT_CLONE(IllegalThreadStateException)
     protected:
         const char* typeName() const noexcept override { return "IllegalThreadStateException"; }

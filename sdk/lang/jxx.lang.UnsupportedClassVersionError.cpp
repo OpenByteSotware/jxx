@@ -5,3 +5,10 @@ jxx::Ptr<jxx::lang::ClassAny> jxx::lang::UnsupportedClassVersionError::Class()
 {
     return JxxClassInfoMarker::Class();
 }
+
+jxx::lang::UnsupportedClassVersionError::UnsupportedClassVersionError(const ::jxx::Ptr<::jxx::lang::String>& message)
+    : jxx::lang::UnsupportedClassVersionError::JxxSuper(message) {}
+
+jxx::lang::UnsupportedClassVersionError::UnsupportedClassVersionError(const char* message)
+    : jxx::lang::UnsupportedClassVersionError::JxxSuper(message) {
+}

@@ -5,3 +5,10 @@ jxx::Ptr<jxx::lang::ClassAny> jxx::lang::InterruptedException::Class()
 {
     return JxxClassInfoMarker::Class();
 }
+
+jxx::lang::InterruptedException::InterruptedException(const ::jxx::Ptr<::jxx::lang::String>& message)
+    : jxx::lang::InterruptedException::JxxSuper(message) {}
+
+jxx::lang::InterruptedException::InterruptedException(const char* message)
+    : jxx::lang::InterruptedException::JxxSuper(message) {
+}

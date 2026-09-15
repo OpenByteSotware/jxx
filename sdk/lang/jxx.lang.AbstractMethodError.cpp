@@ -5,3 +5,10 @@ jxx::Ptr<jxx::lang::ClassAny> jxx::lang::AbstractMethodError::Class()
 {
     return JxxClassInfoMarker::Class();
 }
+
+jxx::lang::AbstractMethodError::AbstractMethodError(const ::jxx::Ptr<::jxx::lang::String>& message)
+    : jxx::lang::AbstractMethodError::JxxSuper(message) {}
+
+jxx::lang::AbstractMethodError::AbstractMethodError(const char* message)
+    : jxx::lang::AbstractMethodError::JxxSuper(message) {
+}

@@ -22,7 +22,11 @@ public:
     ~NoSuchMethodException() override = default;
 
 public:
-    using ReflectiveOperationException::ReflectiveOperationException;
+
+    explicit NoSuchMethodException(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit NoSuchMethodException(const char* message);
     
 protected:
     JXX_OBJECT_CLONE(NoSuchMethodException)

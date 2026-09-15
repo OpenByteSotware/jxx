@@ -5,3 +5,10 @@ jxx::Ptr<jxx::lang::ClassAny> jxx::lang::ArithmeticException::Class()
 {
     return JxxClassInfoMarker::Class();
 }
+
+jxx::lang::ArithmeticException::ArithmeticException(const ::jxx::Ptr<::jxx::lang::String>& message)
+    : jxx::lang::ArithmeticException::JxxSuper(message) {}
+
+jxx::lang::ArithmeticException::ArithmeticException(const char* message)
+    : jxx::lang::ArithmeticException::JxxSuper(message) {
+}

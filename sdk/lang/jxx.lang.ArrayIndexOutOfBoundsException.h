@@ -22,7 +22,11 @@ public:
     ~ArrayIndexOutOfBoundsException() override = default;
 
 public:
-    using IndexOutOfBoundsException::IndexOutOfBoundsException;
+
+    explicit ArrayIndexOutOfBoundsException(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit ArrayIndexOutOfBoundsException(const char* message);
     
 protected:
     JXX_OBJECT_CLONE(ArrayIndexOutOfBoundsException)

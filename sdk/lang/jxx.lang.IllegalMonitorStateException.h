@@ -22,7 +22,11 @@ public:
     ~IllegalMonitorStateException() override = default;
 
     public:
-        using RuntimeException::RuntimeException;
+
+    explicit IllegalMonitorStateException(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit IllegalMonitorStateException(const char* message);
         
     protected:
         JXX_OBJECT_CLONE(IllegalMonitorStateException)

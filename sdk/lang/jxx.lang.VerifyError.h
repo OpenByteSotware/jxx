@@ -18,7 +18,11 @@ public:
     ~VerifyError() override = default;
 
 public:
-	using LinkageError::LinkageError;
+
+    explicit VerifyError(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit VerifyError(const char* message);
 protected:
     JXX_OBJECT_CLONE(VerifyError)
 

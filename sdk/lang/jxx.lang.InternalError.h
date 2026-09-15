@@ -18,7 +18,11 @@ public:
     ~InternalError() override = default;
 
 public:
-	using VirtualMachineError::VirtualMachineError;
+
+    explicit InternalError(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit InternalError(const char* message);
 protected:
     JXX_OBJECT_CLONE(InternalError)
 

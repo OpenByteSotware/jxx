@@ -22,7 +22,11 @@ public:
     ~InterruptedException() override = default;
 
 public:
-    using Exception::Exception;
+
+    explicit InterruptedException(
+        const ::jxx::Ptr<::jxx::lang::String>& message);
+
+    explicit InterruptedException(const char* message);
     JXX_OBJECT_CLONE(InterruptedException)
 protected:
     const char* typeName() const noexcept override { return "InterruptedException"; }
