@@ -117,6 +117,9 @@ namespace jxx::lang {
             auto c = findClass(name);
             if (!c) throw ClassNotFoundException(name);
 
+            c->meta_.classLoader =
+                ::jxx::CAST<ClassLoader>(thisPtr());
+
             {
                 std::lock_guard<std::mutex> lk2(loadedMutex_);
                 loadedByName_[n] = c;

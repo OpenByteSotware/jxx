@@ -6,6 +6,7 @@
 #include "lang/jxx.lang.IllegalStateException.h"
 #include "lang/jxx.lang.ClassNotFoundException.h"
 #include "lang/jxx.lang.ClassCastException.h"
+#include "lang/jxx.lang.ClassLoader.h"
 #include "lang/jxx.lang.InstantiationException.h"
 #include "lang/jxx.lang.IllegalAccessException.h"
 
@@ -74,11 +75,14 @@ namespace jxx::lang {
             jxx::NEW<String>(key));
     }
 
-    jxx::Ptr<ClassAny>  ClassAny::forName(const jxx::Ptr<String>& className,
-            jbool /* initialize */,
-            const jxx::Ptr<ClassLoader>& /* loader */)
+    jxx::Ptr<ClassAny> ClassAny::forName(
+        const jxx::Ptr<String>& className,
+        jbool /* initialize */,
+        const jxx::Ptr<ClassLoader>& loader)
     {
-        return forName(className);
+        return loader == nullptr
+            ? forName(className)
+            : loader->loadClass(className);
     }
 
     jxx::Ptr<ClassAny> ClassAny::forType(const std::type_index& tid) {
@@ -525,7 +529,17 @@ namespace jxx::lang {
             jxx::NEW<String>(
                 meta_.binaryName.substr(0U, separator)));
     }
-    jxx::Ptr<ClassLoader> ClassAny::getClassLoader() const { return nullptr; }
+    jxx::Ptr<ClassLoader> ClassAny::getClassLoader() const {
+        if (meta_.isArray) {
+            return meta_.componentType == nullptr
+                ? nullptr
+                : meta_.componentType->getClassLoader();
+        }
+        if (meta_.isPrimitive) {
+            return nullptr;
+        }
+        return meta_.classLoader.lock();
+    }
     /*
     void ClassAny::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out) {
     }

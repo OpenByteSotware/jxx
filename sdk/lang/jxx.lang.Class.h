@@ -57,6 +57,9 @@ namespace jxx::lang {
             jxx::Ptr<ClassAny>
                 componentType;
 
+            std::weak_ptr<ClassLoader>
+                classLoader;
+
             jint modifiers = 0;
 
             FactoryFn factory;
@@ -154,7 +157,8 @@ namespace jxx::lang {
         //void readObjectNoData();
 
     private:
-        
+        friend class ClassLoader;
+
         Meta meta_;
 
         // canonical registry
