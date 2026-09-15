@@ -53,16 +53,16 @@ public:
 
     static jxx::Ptr<ClassLoader> getSystemClassLoader();
 
-    static jxx::Ptr<jxx::net::URL> getSystemResource(const jxx::Ptr<String> name);
-    static jxx::Ptr<jxx::util::Enumeration<jxx::net::URL>> getSystemResources(const jxx::Ptr<String> name);
-    static jxx::Ptr<jxx::io::InputStream> getSystemResourceAsStream(const jxx::Ptr<String> name);
+    static jxx::Ptr<jxx::net::URL> getSystemResource(const jxx::Ptr<String>& name);
+    static jxx::Ptr<jxx::util::Enumeration<jxx::net::URL>> getSystemResources(const jxx::Ptr<String>& name);
+    static jxx::Ptr<jxx::io::InputStream> getSystemResourceAsStream(const jxx::Ptr<String>& name);
 
-    jxx::Ptr<ClassAny> loadClass(const jxx::Ptr<String> name);
-    virtual jxx::Ptr<ClassAny> loadClass(const jxx::Ptr<String> name, jbool resolve);
+    jxx::Ptr<ClassAny> loadClass(const jxx::Ptr<String>& name);
+    virtual jxx::Ptr<ClassAny> loadClass(const jxx::Ptr<String>& name, jbool resolve);
 
-    virtual jxx::Ptr<jxx::net::URL> getResource(const jxx::Ptr<String> name);
-    virtual jxx::Ptr<jxx::util::Enumeration<jxx::net::URL>> getResources(const jxx::Ptr<String> name);
-    virtual jxx::Ptr<jxx::io::InputStream> getResourceAsStream(const jxx::Ptr<String> name);
+    virtual jxx::Ptr<jxx::net::URL> getResource(const jxx::Ptr<String>& name);
+    virtual jxx::Ptr<jxx::util::Enumeration<jxx::net::URL>> getResources(const jxx::Ptr<String>& name);
+    virtual jxx::Ptr<jxx::io::InputStream> getResourceAsStream(const jxx::Ptr<String>& name);
 
     // Assertions (JXX API)
     void setDefaultAssertionStatus(jbool enabled);
@@ -72,7 +72,7 @@ public:
     jbool desiredAssertionStatus(const jxx::Ptr<ClassAny>& clazz) const;
 
     // Packages (JXX API)
-    jxx::Ptr<Package> getPackage(const jxx::Ptr<String> name);
+    jxx::Ptr<Package> getPackage(const jxx::Ptr<String>& name);
     jxx::Ptr<JxxArray<jxx::Ptr<Package>, 1>> getPackages();
 
 protected:
@@ -83,13 +83,13 @@ protected:
    
 
     // Override point: provide actual class loading
-    virtual jxx::Ptr<ClassAny> findClass(const jxx::Ptr<String> name);
+    virtual jxx::Ptr<ClassAny> findClass(const jxx::Ptr<String>& name);
 
     // Link/resolve hook (no-op in JXX)
-    virtual void resolveClass(const jxx::Ptr<ClassAny> c);
+    virtual void resolveClass(const jxx::Ptr<ClassAny>& c);
 
     // Cache lookup (per loader)
-    virtual jxx::Ptr<ClassAny> findLoadedClass(const jxx::Ptr<String> name);
+    virtual jxx::Ptr<ClassAny> findLoadedClass(const jxx::Ptr<String>& name);
 
     // Bytecode defineClass - unsupported by default (override if you build a bytecode pipeline)
     virtual jxx::Ptr<ClassAny> defineClass(
@@ -103,17 +103,17 @@ protected:
         jint length);
 
     // Resource hooks
-    virtual jxx::Ptr<jxx::net::URL> findResource(const jxx::Ptr<String> name);
-    virtual jxx::Ptr<jxx::util::Enumeration<jxx::net::URL>> findResources(const jxx::Ptr<String> name);
+    virtual jxx::Ptr<jxx::net::URL> findResource(const jxx::Ptr<String>& name);
+    virtual jxx::Ptr<jxx::util::Enumeration<jxx::net::URL>> findResources(const jxx::Ptr<String>& name);
 
     // System class lookup (bootstrap-ish). In JXX we forward to ClassAny registry.
-    virtual jxx::Ptr<ClassAny> findSystemClass(const jxx::Ptr<String> name);
+    virtual jxx::Ptr<ClassAny> findSystemClass(const jxx::Ptr<String>& name);
 
     // JXX: per-name loading lock
-    virtual jxx::Ptr<Object> getClassLoadingLock(const jxx::Ptr<String> className);
+    virtual jxx::Ptr<Object> getClassLoadingLock(const jxx::Ptr<String>& className);
 
     // Package definition helper
-    virtual jxx::Ptr<Package> definePackage(const jxx::Ptr<String> name);
+    virtual jxx::Ptr<Package> definePackage(const jxx::Ptr<String>& name);
 
     // JXX API protected: registerAsParallelCapable()
     static jbool registerAsParallelCapable();
