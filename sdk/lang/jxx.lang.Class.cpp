@@ -105,41 +105,61 @@ namespace jxx::lang {
         return jxx::NEW<String>(meta_.binaryName.c_str());
     }
 
-    std::string ClassAny::simpleNameFromBinary_(const std::string& bin) {
-        // For array binary names ([I, [Ljava.lang.String;), Java simple name is complicated.
-        // We return a practical approximation:
-        //  - For normal names, substring after last '.'
-        //  - For arrays, use component simple name + "[]"
-        if (!bin.empty() && bin[0] == '[') {
-            // decode one-dimensional for display
-            if (bin.size() >= 2 && bin[1] != 'L') {
-                // primitive array code
-                return std::string(1, bin[1]) + "[]";
-            }
-            // ref array: "[Lpkg.Type;"
-            auto semi = bin.find(';');
-            auto inner = (semi == std::string::npos) ? bin : bin.substr(2, semi - 2);
-            auto pos = inner.find_last_of('.');
-            auto leaf = (pos == std::string::npos) ? inner : inner.substr(pos + 1);
-            return leaf + "[]";
-        }
+    std::string ClassAny::simpleNameFromBinary_(
+        const std::string& binaryName) {
+        const auto packageSeparator =
+            binaryName.find_last_of('.');
+        const auto nestedSeparator =
+            binaryName.find_last_of('$');
 
-        auto pos = bin.find_last_of('.');
-        if (pos == std::string::npos) return bin;
-        return bin.substr(pos + 1);
+        const auto separator =
+            packageSeparator == std::string::npos
+                ? nestedSeparator
+                : nestedSeparator == std::string::npos
+                      ? packageSeparator
+                      : std::max(
+                            packageSeparator,
+                            nestedSeparator);
+
+        return separator == std::string::npos
+            ? binaryName
+            : binaryName.substr(separator + 1U);
     }
 
     jxx::Ptr<String> ClassAny::getSimpleName() const {
-        return jxx::NEW<String>(simpleNameFromBinary_(meta_.binaryName).c_str());
+        if (meta_.isArray && meta_.componentType != nullptr) {
+            const auto componentName =
+                meta_.componentType->getSimpleName();
+            return jxx::NEW<String>(
+                componentName->utf8() + "[]");
+        }
+
+        return jxx::NEW<String>(
+            simpleNameFromBinary_(meta_.binaryName));
     }
 
     jxx::Ptr<String> ClassAny::getCanonicalName() const {
-        // Java returns null for anonymous/local classes. If you track that, change here.
+        if (meta_.isArray && meta_.componentType != nullptr) {
+            const auto componentName =
+                meta_.componentType->getCanonicalName();
+            if (componentName == nullptr) {
+                return nullptr;
+            }
+            return jxx::NEW<String>(
+                componentName->utf8() + "[]");
+        }
+
         return getName();
     }
 
     jxx::Ptr<String> ClassAny::getTypeName() const {
-        // Java 8: for Class, getTypeName equals getName for most cases.
+        if (meta_.isArray && meta_.componentType != nullptr) {
+            const auto componentName =
+                meta_.componentType->getTypeName();
+            return jxx::NEW<String>(
+                componentName->utf8() + "[]");
+        }
+
         return getName();
     }
 
