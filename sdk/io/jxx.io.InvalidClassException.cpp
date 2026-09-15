@@ -1,61 +1,50 @@
 #include "io/jxx.io.InvalidClassException.h"
 
+#include <string>
+
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.String.h"
 
 namespace jxx::io {
 
-jxx::Ptr<jxx::lang::ClassAny> InvalidClassException::Class()
-{
+::jxx::Ptr<::jxx::lang::ClassAny> InvalidClassException::Class() {
     return JxxClassInfoMarker::Class();
 }
 
-InvalidClassException::InvalidClassException()
-    : JxxSuper()
-{
-}
-
-InvalidClassException::InvalidClassException(const jxx::Ptr<jxx::lang::String>& message)
-    : JxxSuper(message)
-{
-}
-
-InvalidClassException::InvalidClassException(const char* message)
-    : JxxSuper(message)
-{
-}
-
-InvalidClassException::InvalidClassException(const std::string& message)
-    : JxxSuper(message)
-{
+InvalidClassException::InvalidClassException(
+    const ::jxx::Ptr<::jxx::lang::String>& reason)
+    : JxxSuper(reason) {
 }
 
 InvalidClassException::InvalidClassException(
-    const jxx::Ptr<jxx::lang::String>& className,
-    const jxx::Ptr<jxx::lang::String>& reason)
+    const ::jxx::Ptr<::jxx::lang::String>& className,
+    const ::jxx::Ptr<::jxx::lang::String>& reason)
     : JxxSuper(reason)
-    , classname(className)
-{
+    , classname(className) {
 }
 
-jxx::Ptr<jxx::lang::String> InvalidClassException::getMessage() const
-{
-    const auto baseMessage = JxxSuper::getMessage();
+::jxx::Ptr<::jxx::lang::String>
+InvalidClassException::getMessage() const {
+    const auto reason = JxxSuper::getMessage();
     if (classname == nullptr) {
-        return baseMessage;
+        return reason;
     }
-    const std::string value = classname->utf8() + "; " +
-        (baseMessage == nullptr ? std::string() : baseMessage->utf8());
-    return jxx::NEW<jxx::lang::String>(value);
+
+    std::string message = classname->utf8();
+    message += "; ";
+    if (reason != nullptr) {
+        message += reason->utf8();
+    }
+    return ::jxx::NEW<::jxx::lang::String>(message);
 }
 
-jxx::Ptr<jxx::lang::Object> InvalidClassException::cloneImpl() const
-{
-    return jxx::CAST<jxx::lang::Object>(jxx::NEW<InvalidClassException>(*this));
+::jxx::Ptr<::jxx::lang::Object>
+InvalidClassException::cloneImpl() const {
+    return ::jxx::CAST<::jxx::lang::Object>(
+        ::jxx::NEW<InvalidClassException>(*this));
 }
 
-const char* InvalidClassException::typeName() const noexcept
-{
+const char* InvalidClassException::typeName() const noexcept {
     return "InvalidClassException";
 }
 

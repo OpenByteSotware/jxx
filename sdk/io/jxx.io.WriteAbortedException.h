@@ -1,9 +1,8 @@
 #pragma once
 
-#include <string>
-
-#include "lang/jxx.lang.ClassInfoMarker.h"
 #include "io/jxx.io.ObjectStreamException.h"
+#include "lang/jxx.lang.ClassInfoMarker.h"
+#include "lang/jxx.lang.Exception.h"
 
 namespace jxx::io {
 
@@ -11,35 +10,29 @@ class WriteAbortedException : public ObjectStreamException {
 public:
     using JxxSuper = ObjectStreamException;
     using JxxClassInfoMarker =
-        jxx::lang::ClassInfo<WriteAbortedException, JxxSuper>;
+        ::jxx::lang::ClassInfo<WriteAbortedException, JxxSuper>;
 
-    static jxx::Ptr<jxx::lang::ClassAny> Class();
+    static ::jxx::Ptr<::jxx::lang::ClassAny> Class();
 
-public:
-    WriteAbortedException();
-    explicit WriteAbortedException(const jxx::Ptr<jxx::lang::String>& message);
-    explicit WriteAbortedException(const char* message);
-    explicit WriteAbortedException(const std::string& message);
+    WriteAbortedException(
+        const ::jxx::Ptr<::jxx::lang::String>& message,
+        const ::jxx::Ptr<::jxx::lang::Exception>& exception);
 
-public:
     WriteAbortedException(const WriteAbortedException&) = default;
     WriteAbortedException(WriteAbortedException&&) noexcept = default;
-    WriteAbortedException& operator=(const WriteAbortedException&) = default;
-    WriteAbortedException& operator=(WriteAbortedException&&) noexcept = default;
+    WriteAbortedException& operator=(
+        const WriteAbortedException&) = default;
+    WriteAbortedException& operator=(
+        WriteAbortedException&&) noexcept = default;
     ~WriteAbortedException() override = default;
 
-public:
-    WriteAbortedException(
-        const jxx::Ptr<jxx::lang::String>& message,
-        const jxx::Ptr<jxx::lang::Throwable>& detail);
+    ::jxx::Ptr<::jxx::lang::Throwable> getCause() const;
+    ::jxx::Ptr<::jxx::lang::String> getMessage() const;
 
-    jxx::Ptr<jxx::lang::Throwable> getCause() const;
-    jxx::Ptr<jxx::lang::String> getMessage() const;
-
-    jxx::Ptr<jxx::lang::Throwable> detail;
+    ::jxx::Ptr<::jxx::lang::Exception> detail;
 
 protected:
-    jxx::Ptr<jxx::lang::Object> cloneImpl() const override;
+    ::jxx::Ptr<::jxx::lang::Object> cloneImpl() const override;
     const char* typeName() const noexcept override;
 };
 

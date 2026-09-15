@@ -1,69 +1,52 @@
 #include "io/jxx.io.WriteAbortedException.h"
 
+#include <string>
+
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.String.h"
 
 namespace jxx::io {
 
-jxx::Ptr<jxx::lang::ClassAny> WriteAbortedException::Class()
-{
+::jxx::Ptr<::jxx::lang::ClassAny> WriteAbortedException::Class() {
     return JxxClassInfoMarker::Class();
 }
 
-WriteAbortedException::WriteAbortedException()
-    : JxxSuper()
-{
-}
-
-WriteAbortedException::WriteAbortedException(const jxx::Ptr<jxx::lang::String>& message)
-    : JxxSuper(message)
-{
-}
-
-WriteAbortedException::WriteAbortedException(const char* message)
-    : JxxSuper(message)
-{
-}
-
-WriteAbortedException::WriteAbortedException(const std::string& message)
-    : JxxSuper(message)
-{
-}
-
 WriteAbortedException::WriteAbortedException(
-    const jxx::Ptr<jxx::lang::String>& message,
-    const jxx::Ptr<jxx::lang::Throwable>& detailValue)
+    const ::jxx::Ptr<::jxx::lang::String>& message,
+    const ::jxx::Ptr<::jxx::lang::Exception>& exception)
     : JxxSuper(message)
-    , detail(detailValue)
-{
+    , detail(exception) {
 }
 
-jxx::Ptr<jxx::lang::Throwable> WriteAbortedException::getCause() const
-{
+::jxx::Ptr<::jxx::lang::Throwable>
+WriteAbortedException::getCause() const {
     return detail;
 }
 
-jxx::Ptr<jxx::lang::String> WriteAbortedException::getMessage() const
-{
-    const auto baseMessage = JxxSuper::getMessage();
+::jxx::Ptr<::jxx::lang::String>
+WriteAbortedException::getMessage() const {
+    const auto message = JxxSuper::getMessage();
     if (detail == nullptr) {
-        return baseMessage;
+        return message;
     }
+
     const auto detailText = detail->toString();
-    const std::string value =
-        (baseMessage == nullptr ? std::string() : baseMessage->utf8()) +
-        "; " +
-        (detailText == nullptr ? std::string() : detailText->utf8());
-    return jxx::NEW<jxx::lang::String>(value);
+    std::string result =
+        message == nullptr ? std::string() : message->utf8();
+    result += "; ";
+    if (detailText != nullptr) {
+        result += detailText->utf8();
+    }
+    return ::jxx::NEW<::jxx::lang::String>(result);
 }
 
-jxx::Ptr<jxx::lang::Object> WriteAbortedException::cloneImpl() const
-{
-    return jxx::CAST<jxx::lang::Object>(jxx::NEW<WriteAbortedException>(*this));
+::jxx::Ptr<::jxx::lang::Object>
+WriteAbortedException::cloneImpl() const {
+    return ::jxx::CAST<::jxx::lang::Object>(
+        ::jxx::NEW<WriteAbortedException>(*this));
 }
 
-const char* WriteAbortedException::typeName() const noexcept
-{
+const char* WriteAbortedException::typeName() const noexcept {
     return "WriteAbortedException";
 }
 
