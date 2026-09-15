@@ -337,35 +337,77 @@ namespace jxx::lang {
     }
 
     // Packages
-    jxx::Ptr<Package> ClassLoader::definePackage(const jxx::Ptr<String>& name) {
-        if (!name) throw NullPointerException(jxx::NEW<String>("name"));
-        const std::string n = name->utf8();
-
-        std::lock_guard<std::mutex> lk(pkgMutex_);
-        if (auto it = packages_.find(n); it != packages_.end()) {
-            if (auto p = it->second.lock()) return p;
+    jxx::Ptr<Package> ClassLoader::definePackage(
+        const jxx::Ptr<String>& name) {
+        if (name == nullptr) {
+            throw NullPointerException("name");
         }
-        auto p = Package::definePackage(name);
-        packages_[n] = p;
-        return p;
+        const auto packageName = name->utf8();
+        std::lock_guard<std::mutex> lock(pkgMutex_);
+        const auto existing = packages_.find(packageName);
+        if (existing != packages_.end()) {
+            return existing->second;
+        }
+        auto result = Package::definePackage(name);
+        packages_[packageName] = result;
+        return result;
     }
 
-    jxx::Ptr<Package> ClassLoader::getPackage(const jxx::Ptr<String>& name) {
-        if (!name) throw NullPointerException(jxx::NEW<String>("name"));
-        const std::string n = name->utf8();
-        std::lock_guard<std::mutex> lk(pkgMutex_);
-        auto it = packages_.find(n);
-        if (it == packages_.end()) return nullptr;
-        return it->second.lock();
+    jxx::Ptr<Package> ClassLoader::getPackage(
+        const jxx::Ptr<String>& name) {
+        if (name == nullptr) {
+            throw NullPointerException("name");
+        }
+        {
+            std::lock_guard<std::mutex> lock(pkgMutex_);
+            const auto existing = packages_.find(name->utf8());
+            if (existing != packages_.end()) {
+                return existing->second;
+            }
+        }
+        return parent_ == nullptr
+            ? nullptr
+            : parent_->getPackage(name);
     }
 
-    jxx::Ptr<JxxArray<jxx::Ptr<Package>, 1>> ClassLoader::getPackages() {
-        std::lock_guard<std::mutex> lk(pkgMutex_);
-        std::vector<jxx::Ptr<Package>> alive;
-        for (auto& kv : packages_) if (auto p = kv.second.lock()) alive.push_back(p);
-        auto arr = jxx::NEW<JxxArray<jxx::Ptr<Package>, 1>>((std::uint32_t)alive.size());
-        for (std::uint32_t i = 0; i < (std::uint32_t)alive.size(); ++i) (*arr)[(jint)i] = alive[i];
-        return arr;
+    jxx::Ptr<JxxArray<jxx::Ptr<Package>, 1>>
+    ClassLoader::getPackages() {
+        std::vector<jxx::Ptr<Package>> values;
+        std::unordered_set<std::string> names;
+
+        {
+            std::lock_guard<std::mutex> lock(pkgMutex_);
+            values.reserve(packages_.size());
+            for (const auto& entry : packages_) {
+                names.insert(entry.first);
+                values.push_back(entry.second);
+            }
+        }
+
+        if (parent_ != nullptr) {
+            const auto inherited = parent_->getPackages();
+            for (std::uint32_t index = 0;
+                 index < inherited->length;
+                 ++index) {
+                const auto packageValue =
+                    (*inherited)[static_cast<jint>(index)];
+                const auto packageName =
+                    packageValue->getName()->utf8();
+                if (names.insert(packageName).second) {
+                    values.push_back(packageValue);
+                }
+            }
+        }
+
+        auto result =
+            jxx::NEW<JxxArray<jxx::Ptr<Package>, 1>>(
+                static_cast<std::uint32_t>(values.size()));
+        for (std::uint32_t index = 0;
+             index < static_cast<std::uint32_t>(values.size());
+             ++index) {
+            (*result)[static_cast<jint>(index)] = values[index];
+        }
+        return result;
     }
 
 } // namespace jxx::lang

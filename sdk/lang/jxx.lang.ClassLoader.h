@@ -12,6 +12,7 @@
 #include "net/jxx.net.URL.h"
 
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <mutex>
 #include <string>
@@ -149,7 +150,7 @@ private:
 
     // packages
     mutable std::mutex pkgMutex_;
-    std::unordered_map<std::string, std::weak_ptr<Package>> packages_;
+    std::unordered_map<std::string, jxx::Ptr<Package>> packages_;
 
     // system loader singleton
     static std::mutex systemMutex_;
