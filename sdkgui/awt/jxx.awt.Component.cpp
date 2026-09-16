@@ -184,7 +184,7 @@ namespace jxx::awt
         });
         nativeComponent_->setMouseWheelCallback([self](::jxx::lang::jint amount, ::jxx::lang::jint rotation, ::jxx::lang::jint, ::jxx::lang::jdouble precise)
         {
-            if (auto owner = self.lock()) owner->processMouseWheelEvent(::jxx::NEW<::jxx::awt::event::MouseWheelEvent>(owner, 507, 0, 0, 0, 0, 0, false, ::jxx::awt::event::MouseWheelEvent::WHEEL_UNIT_SCROLL, amount, rotation, precise));
+            if (auto owner = self.lock()) owner->processMouseWheelEvent(::jxx::NEW<::jxx::awt::event::MouseWheelEvent>(owner, ::jxx::awt::event::MouseEvent::MOUSE_WHEEL, 0, 0, 0, 0, 0, false, ::jxx::awt::event::MouseWheelEvent::WHEEL_UNIT_SCROLL, amount, rotation, precise));
         });
     }
     void Component::invalidate() { valid_=false; }
