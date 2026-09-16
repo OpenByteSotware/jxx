@@ -79,6 +79,7 @@ namespace jxx::gui::internal
 
         if (auto* text = dynamic_cast<wxTextCtrl*>(window_))
         {
+            text->Bind(wxEVT_TEXT, [this, text](wxCommandEvent& event) { if (textCallback_) textCallback_(::jxx::NEW<::jxx::lang::String>(text->GetValue().ToUTF8().data())); event.Skip(); });
             text->Bind(wxEVT_TEXT_ENTER, [this](wxCommandEvent& event)
             {
                 if (actionCallback_) actionCallback_();
@@ -100,6 +101,7 @@ namespace jxx::gui::internal
         keyCallback_ = {};
         mouseCallback_ = {};
         mouseWheelCallback_ = {};
+        textCallback_ = {};
     }
 
     void WxComponentPeer::destroy()
@@ -206,6 +208,7 @@ namespace jxx::gui::internal
         window_->Refresh();
     }
 
+    void WxComponentPeer::setTextCallback(TextCallback callback){textCallback_=std::move(callback);}
     void WxComponentPeer::setMouseWheelCallback(MouseWheelCallback callback){mouseWheelCallback_=std::move(callback);}
     void WxComponentPeer::setMouseCallback(MouseCallback callback){mouseCallback_=std::move(callback);}
     void WxComponentPeer::setKeyCallback(KeyCallback callback){keyCallback_=std::move(callback);}

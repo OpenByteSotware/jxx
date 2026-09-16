@@ -14,6 +14,7 @@
 #include "awt/event/jxx.awt.event.MouseWheelEvent.h"
 #include "awt/event/jxx.awt.event.MouseWheelListener.h"
 #include "awt/jxx.awt.Container.h"
+#include "awt/jxx.awt.TextComponent.h"
 #include "gui/internal/jxx.gui.internal.NativeComponent.h"
 
 namespace jxx::awt
@@ -186,6 +187,8 @@ namespace jxx::awt
         {
             if (auto owner = self.lock()) owner->processMouseWheelEvent(::jxx::NEW<::jxx::awt::event::MouseWheelEvent>(owner, ::jxx::awt::event::MouseEvent::MOUSE_WHEEL, 0, 0, 0, 0, 0, false, ::jxx::awt::event::MouseWheelEvent::WHEEL_UNIT_SCROLL, amount, rotation, precise));
         });
+        std::weak_ptr<TextComponent> textOwner = ::jxx::CAST<TextComponent>(thisPtr());
+        nativeComponent_->setTextCallback([textOwner](const ::jxx::Ptr<::jxx::lang::String>& text) { if (auto owner = textOwner.lock()) owner->setTextFromNative(text); });
     }
     void Component::invalidate() { valid_=false; }
     void Component::validate() { valid_=true; }
