@@ -1,19 +1,20 @@
 #include "jxx.lang.Character.h"
 
 #include <memory>
-#include <stdexcept>
+
 
 #include <gsl/util>
 #include <gsl/narrow>
 
 #include "jxx.lang.String.h"
+#include "jxx.lang.IllegalArgumentException.h"
 #include "jxx.unicode_bridge.h"
 
 namespace
 {
     [[noreturn]] void throwIAE_(const char* message)
     {
-        throw std::invalid_argument(message);
+        throw jxx::lang::IllegalArgumentException(message);
     }
 }
 

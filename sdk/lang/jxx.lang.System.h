@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include <cstring>
+#include "lang/jxx.lang.IndexOutOfBoundsException.h"
 #include <chrono>
 #include "lang/jxx.lang.internal.h"
 #include "io/jxx.io.InputStream.h"
@@ -32,7 +33,7 @@ struct System {
         if (srcPos < 0 || destPos < 0 || length < 0 ||
             (size_t)srcPos + (size_t)length > src.size() ||
             (size_t)destPos + (size_t)length > dest.size()) {
-            throw std::out_of_range("System.arraycopy: index out of bounds");
+            throw jxx::lang::IndexOutOfBoundsException("System.arraycopy: index out of bounds");
         }
         if (length == 0) return;
         std::memmove(&dest[(size_t)destPos],
