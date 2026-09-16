@@ -10,6 +10,8 @@
 
 namespace jxx::lang {
 
+class ThreadGroup;
+
 class Thread final
     : public jxx::lang::ClassBase<
           Thread,
@@ -48,6 +50,18 @@ public:
         const jxx::Ptr<Runnable>& target,
         const jxx::Ptr<String>& name);
 
+    Thread(const jxx::Ptr<ThreadGroup>& group,
+           const jxx::Ptr<Runnable>& target);
+    Thread(const jxx::Ptr<ThreadGroup>& group,
+           const jxx::Ptr<String>& name);
+    Thread(const jxx::Ptr<ThreadGroup>& group,
+           const jxx::Ptr<Runnable>& target,
+           const jxx::Ptr<String>& name);
+    Thread(const jxx::Ptr<ThreadGroup>& group,
+           const jxx::Ptr<Runnable>& target,
+           const jxx::Ptr<String>& name,
+           jlong stackSize);
+
     Thread(const Thread&) = delete;
     Thread& operator=(const Thread&) = delete;
     Thread(Thread&&) = delete;
@@ -75,6 +89,7 @@ public:
     static jxx::Ptr<Thread> currentThread();
 
     jlong getId() const;
+    jxx::Ptr<ThreadGroup> getThreadGroup() const;
 
     jxx::Ptr<String> getName() const;
     void setName(const jxx::Ptr<String>& name);

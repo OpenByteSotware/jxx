@@ -69,6 +69,7 @@
 #include "lang/jxx.lang.Short.h"
 #include "lang/jxx.lang.StringBuffer.h"
 #include "lang/jxx.lang.StringBuilder.h"
+#include "lang/jxx.lang.ThreadGroup.h"
 
 namespace jxx::lang {
 
@@ -156,6 +157,7 @@ void initializeClasses()
             registerType<Short>();
             registerType<StringBuffer>();
             registerType<StringBuilder>();
+            registerType<ThreadGroup>();
         });
 }
 

@@ -15,6 +15,7 @@
 #include "lang/jxx.lang.InterruptedException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.ThreadLocalSupport.h"
+#include "lang/jxx.lang.ThreadGroup.h"
 
 namespace jxx::lang {
 
@@ -36,6 +37,7 @@ struct Thread::NativeState {
     std::atomic<jbool> daemon{false};
 
     jlong id = 0;
+    jxx::Ptr<ThreadGroup> group;
     std::vector<std::function<void()>> inheritedValues;
 };
 
@@ -71,38 +73,38 @@ std::chrono::nanoseconds toDuration(
 } // namespace
 
 Thread::Thread()
-    : Super()
-    , state_(std::make_unique<NativeState>()) {
-
-    state_->id = nextThreadId.fetch_add(1);
-    state_->name = defaultThreadName(state_->id);
-    state_->inheritedValues =
-        thread_local_detail::captureInheritedValues();
-}
-
-Thread::Thread(
-    const jxx::Ptr<Runnable>& target)
-    : Thread(target, nullptr) {
-}
-
-Thread::Thread(
-    const jxx::Ptr<String>& name)
-    : Thread(nullptr, name) {
-}
-
-Thread::Thread(
-    const jxx::Ptr<Runnable>& target,
-    const jxx::Ptr<String>& name)
-    : Thread() {
-
+    : Thread(jxx::Ptr<ThreadGroup>{}, jxx::Ptr<Runnable>{}, jxx::Ptr<String>{}, 0) {}
+Thread::Thread(const jxx::Ptr<Runnable>& target)
+    : Thread(jxx::Ptr<ThreadGroup>{}, target, jxx::Ptr<String>{}, 0) {}
+Thread::Thread(const jxx::Ptr<String>& name)
+    : Thread(jxx::Ptr<ThreadGroup>{}, jxx::Ptr<Runnable>{}, name, 0) {}
+Thread::Thread(const jxx::Ptr<Runnable>& target, const jxx::Ptr<String>& name)
+    : Thread(jxx::Ptr<ThreadGroup>{}, target, name, 0) {}
+Thread::Thread(const jxx::Ptr<ThreadGroup>& group, const jxx::Ptr<Runnable>& target)
+    : Thread(group, target, jxx::Ptr<String>{}, 0) {}
+Thread::Thread(const jxx::Ptr<ThreadGroup>& group, const jxx::Ptr<String>& name)
+    : Thread(group, jxx::Ptr<Runnable>{}, name, 0) {}
+Thread::Thread(const jxx::Ptr<ThreadGroup>& group, const jxx::Ptr<Runnable>& target,
+               const jxx::Ptr<String>& name)
+    : Thread(group, target, name, 0) {}
+Thread::Thread(const jxx::Ptr<ThreadGroup>& group, const jxx::Ptr<Runnable>& target,
+               const jxx::Ptr<String>& name, jlong stackSize)
+    : Super(), state_(std::make_unique<NativeState>()) {
+    (void)stackSize;
     state_->target = target;
-
-    if (name != nullptr) {
-        state_->name = name;
-    }
+    state_->id = nextThreadId.fetch_add(1);
+    state_->name = name == nullptr ? defaultThreadName(state_->id) : name;
+    auto current = currentThread();
+    state_->group = group != nullptr ? group
+        : (current != nullptr && current->state_->group != nullptr
+            ? current->state_->group : ThreadGroup::systemThreadGroup());
+    state_->priority.store(std::min(state_->priority.load(), state_->group->getMaxPriority()));
+    state_->group->addThread_(this);
+    state_->inheritedValues = thread_local_detail::captureInheritedValues();
 }
 
 Thread::~Thread() {
+    if (state_ != nullptr && state_->group != nullptr) state_->group->removeThread_(this);
     if (state_ != nullptr &&
         state_->nativeThread.joinable()) {
 
@@ -273,6 +275,10 @@ jlong Thread::getId() const {
     return state_->id;
 }
 
+jxx::Ptr<ThreadGroup> Thread::getThreadGroup() const {
+    return state_->finished.load() ? nullptr : state_->group;
+}
+
 jxx::Ptr<String> Thread::getName() const {
     std::lock_guard<std::mutex> lock(
         state_->mutex);
@@ -304,7 +310,7 @@ void Thread::setPriority(jint priority) {
         throw IllegalArgumentException();
     }
 
-    state_->priority.store(priority);
+    state_->priority.store(std::min(priority, state_->group->getMaxPriority()));
 }
 
 jbool Thread::isDaemon() const {
