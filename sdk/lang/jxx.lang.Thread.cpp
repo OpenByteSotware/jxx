@@ -14,6 +14,7 @@
 #include "lang/jxx.lang.IllegalStateException.h"
 #include "lang/jxx.lang.InterruptedException.h"
 #include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.ThreadLocalSupport.h"
 
 namespace jxx::lang {
 
@@ -35,6 +36,7 @@ struct Thread::NativeState {
     std::atomic<jbool> daemon{false};
 
     jlong id = 0;
+    std::vector<std::function<void()>> inheritedValues;
 };
 
 thread_local std::weak_ptr<Thread>
@@ -74,6 +76,8 @@ Thread::Thread()
 
     state_->id = nextThreadId.fetch_add(1);
     state_->name = defaultThreadName(state_->id);
+    state_->inheritedValues =
+        thread_local_detail::captureInheritedValues();
 }
 
 Thread::Thread(
@@ -127,6 +131,11 @@ void Thread::entry_(
     const jxx::Ptr<Thread>& self) {
 
     currentThread_ = self;
+
+    for (auto& install : self->state_->inheritedValues) {
+        install();
+    }
+    self->state_->inheritedValues.clear();
 
     self->state_->running.store(true);
 
