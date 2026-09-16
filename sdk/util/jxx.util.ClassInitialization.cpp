@@ -16,6 +16,7 @@
 #include "util/jxx.util.IllegalFormatWidthException.h"
 #include "util/jxx.util.InputMismatchException.h"
 #include "util/jxx.util.MissingFormatArgumentException.h"
+#include "util/jxx.util.MissingResourceException.h"
 #include "util/jxx.util.NoSuchElementException.h"
 #include "util/jxx.util.TooManyListenersException.h"
 #include "util/jxx.util.UnknownFormatConversionException.h"
@@ -60,6 +61,7 @@ void initializeClasses()
             registerType<IllegalFormatWidthException>();
             registerType<InputMismatchException>();
             registerType<MissingFormatArgumentException>();
+            registerType<MissingResourceException>();
             registerType<NoSuchElementException>();
             registerType<TooManyListenersException>();
             registerType<UnknownFormatConversionException>();

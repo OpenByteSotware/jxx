@@ -31,6 +31,7 @@ namespace jxx::gui::internal
         void setBackground(const ::jxx::Ptr<::jxx::awt::Color>& color) override;
         void setFont(const ::jxx::Ptr<::jxx::awt::Font>& font) override;
 
+        void setMouseWheelCallback(MouseWheelCallback callback) override;
         void setMouseCallback(MouseCallback callback) override;
         void setKeyCallback(KeyCallback callback) override;
         void requestFocus() override;
@@ -47,5 +48,6 @@ namespace jxx::gui::internal
         FocusCallback focusCallback_;
         KeyCallback keyCallback_;
         MouseCallback mouseCallback_;
+        MouseWheelCallback mouseWheelCallback_;
     };
 }

@@ -65,6 +65,7 @@ namespace jxx::gui::internal
             window_->Bind(wxEVT_MOTION, mouseHandler);
             window_->Bind(wxEVT_ENTER_WINDOW, mouseHandler);
             window_->Bind(wxEVT_LEAVE_WINDOW, mouseHandler);
+            window_->Bind(wxEVT_MOUSEWHEEL, [this](wxMouseEvent& event) { if (mouseWheelCallback_) { const int delta = event.GetWheelDelta(); const int rotation = delta != 0 ? event.GetWheelRotation() / delta : 0; const double precise = delta != 0 ? static_cast<double>(event.GetWheelRotation()) / static_cast<double>(delta) : 0.0; mouseWheelCallback_(event.GetLinesPerAction(), rotation, event.GetWheelAxis(), precise); } event.Skip(); });
             window_->Bind(wxEVT_CHAR,[this](wxKeyEvent& event){if(keyCallback_)keyCallback_(400,0,static_cast<::jxx::lang::jchar>(event.GetUnicodeKey()),event.GetModifiers());event.Skip();});
         }
         if (auto* button = dynamic_cast<wxButton*>(window_))
@@ -98,6 +99,7 @@ namespace jxx::gui::internal
         focusCallback_ = {};
         keyCallback_ = {};
         mouseCallback_ = {};
+        mouseWheelCallback_ = {};
     }
 
     void WxComponentPeer::destroy()
@@ -204,6 +206,7 @@ namespace jxx::gui::internal
         window_->Refresh();
     }
 
+    void WxComponentPeer::setMouseWheelCallback(MouseWheelCallback callback){mouseWheelCallback_=std::move(callback);}
     void WxComponentPeer::setMouseCallback(MouseCallback callback){mouseCallback_=std::move(callback);}
     void WxComponentPeer::setKeyCallback(KeyCallback callback){keyCallback_=std::move(callback);}
     void WxComponentPeer::requestFocus(){if(window_!=nullptr)window_->SetFocus();}
