@@ -151,6 +151,32 @@ WinHandle openRedirectFile(const jxx::Ptr<ProcessBuilder::Redirect>& redirect, b
 #else
 using NativeHandle=int;
 static constexpr NativeHandle invalidHandle=-1;
+
+class PosixDescriptor final {
+public:
+    PosixDescriptor() = default;
+    explicit PosixDescriptor(int value) : value_(value) {}
+    ~PosixDescriptor() { reset(); }
+    PosixDescriptor(const PosixDescriptor&) = delete;
+    PosixDescriptor& operator=(const PosixDescriptor&) = delete;
+    PosixDescriptor(PosixDescriptor&& other) noexcept : value_(other.release()) {}
+    PosixDescriptor& operator=(PosixDescriptor&& other) noexcept {
+        if (this != &other) reset(other.release());
+        return *this;
+    }
+    int get() const noexcept { return value_; }
+    int release() noexcept { const int value=value_; value_=-1; return value; }
+    void reset(int value=-1) noexcept { if(value_>=0)::close(value_); value_=value; }
+private:
+    int value_=-1;
+};
+
+void createPosixPipe(PosixDescriptor& readEnd, PosixDescriptor& writeEnd) {
+    int values[2];
+    if (::pipe(values) != 0) throw jxx::io::IOException(jxx::NEW<String>(std::strerror(errno)));
+    readEnd.reset(values[0]);
+    writeEnd.reset(values[1]);
+}
 #endif
 
 class NullInputStream final : public jxx::io::InputStream {
@@ -265,6 +291,7 @@ public:
             throwWindowsIOException("DuplicateHandle");
         }
         auto completion = completion_;
+        try {
         std::thread([waitHandle, completion] {
             WinHandle owner(waitHandle);
             const DWORD wait = WaitForSingleObject(waitHandle, INFINITE);
@@ -284,6 +311,14 @@ public:
             completion->done = true;
             completion->condition.notify_all();
         }).detach();
+        }
+        catch (const std::system_error& error) {
+            CloseHandle(waitHandle);
+            TerminateProcess(process_, 1);
+            CloseHandle(process_);
+            process_=nullptr;
+            throw jxx::io::IOException(jxx::NEW<String>(error.what()));
+        }
     }
     ~NativeProcess() override {
         if (process_) CloseHandle(process_);
@@ -297,6 +332,7 @@ public:
         : process_(process), input_(output), error_(error), output_(input),
           completion_(std::make_shared<Completion>()) {
         auto completion = completion_;
+        try {
         std::thread([process, completion] {
             int status = 0;
             pid_t result;
@@ -320,6 +356,13 @@ public:
             completion->done = true;
             completion->condition.notify_all();
         }).detach();
+        }
+        catch (const std::system_error& error) {
+            ::kill(process, SIGKILL);
+            int status=0;
+            while(::waitpid(process,&status,0)<0&&errno==EINTR) {}
+            throw jxx::io::IOException(jxx::NEW<String>(error.what()));
+        }
     }
 #endif
 
@@ -505,37 +548,51 @@ jxx::Ptr<Process> ProcessBuilder::start(){
  jxx::Ptr<jxx::io::InputStream> error=(!redirectErrorStream_&&errorRedirect_->type()==Redirect::Type::PIPE)?jxx::CAST<jxx::io::InputStream>(jxx::NEW<PipeInput>(parentError.release())):jxx::CAST<jxx::io::InputStream>(jxx::NEW<NullInputStream>());
  return jxx::CAST<Process>(jxx::NEW<NativeProcess>(processHandle.release(),input,output,error));
 #else
- int inPipe[2],outPipe[2],errPipe[2],startup[2];
- if(pipe(inPipe)||pipe(outPipe)||pipe(errPipe)||pipe(startup))throw jxx::io::IOException();
- fcntl(startup[1],F_SETFD,FD_CLOEXEC);
+ PosixDescriptor inRead,inWrite,outRead,outWrite,errRead,errWrite,startupRead,startupWrite;
+ createPosixPipe(inRead,inWrite);createPosixPipe(outRead,outWrite);createPosixPipe(errRead,errWrite);createPosixPipe(startupRead,startupWrite);
+ if(fcntl(startupWrite.get(),F_SETFD,FD_CLOEXEC)<0)throw jxx::io::IOException(jxx::NEW<String>(std::strerror(errno)));
+
+ const auto inputType=inputRedirect_->type();
+ const auto outputType=outputRedirect_->type();
+ const auto errorType=errorRedirect_->type();
+ const std::string inputPath=inputRedirect_->file()?inputRedirect_->file()->getPath()->utf8():std::string();
+ const std::string outputPath=outputRedirect_->file()?outputRedirect_->file()->getPath()->utf8():std::string();
+ const std::string errorPath=errorRedirect_->file()?errorRedirect_->file()->getPath()->utf8():std::string();
+ const std::string workingDirectory=directory_?directory_->getPath()->utf8():std::string();
+ std::vector<std::string> envStrings;envStrings.reserve(environment_.size());for(const auto& value:environment_)envStrings.push_back(value.first+"="+value.second);
+ std::vector<char*> argv;argv.reserve(command_.size()+1);for(auto& value:command_)argv.push_back(const_cast<char*>(value.c_str()));argv.push_back(nullptr);
+ std::vector<char*> envp;envp.reserve(envStrings.size()+1);for(auto& value:envStrings)envp.push_back(const_cast<char*>(value.c_str()));envp.push_back(nullptr);
+ std::string executable=command_[0];
+ if(executable.find('/')==std::string::npos){auto found=environment_.find("PATH");const std::string path=found==environment_.end()?"/bin:/usr/bin":found->second;std::size_t begin=0;while(begin<=path.size()){const auto split=path.find(':',begin);const auto directory=path.substr(begin,split==std::string::npos?std::string::npos:split-begin);const auto candidate=(directory.empty()?".":directory)+"/"+executable;if(access(candidate.c_str(),X_OK)==0){executable=candidate;break;}if(split==std::string::npos)break;begin=split+1;}}
+
  pid_t pid=fork();
- if(pid<0)throw jxx::io::IOException();
+ if(pid<0)throw jxx::io::IOException(jxx::NEW<String>(std::strerror(errno)));
  if(pid==0){
-   close(startup[0]);
-   auto configure=[&](const jxx::Ptr<Redirect>& r,int standardFd,int pipeFd,bool input){
-     if(r->type()==Redirect::Type::PIPE){dup2(pipeFd,standardFd);return;}
-     if(r->type()==Redirect::Type::INHERIT)return;
-     int flags=input?O_RDONLY:(O_WRONLY|O_CREAT|(r->type()==Redirect::Type::APPEND?O_APPEND:O_TRUNC));
-     int fd=open(r->file()->getPath()->utf8().c_str(),flags,0666);if(fd<0){int e=errno;write(startup[1],&e,sizeof(e));_exit(127);}dup2(fd,standardFd);close(fd);
+   const int startupFd=startupWrite.get();
+   auto fail=[&](int error){const int saved=error;ssize_t written;do{written=::write(startupFd,&saved,sizeof(saved));}while(written<0&&errno==EINTR);_exit(127);};
+   auto redirect=[&](Redirect::Type type,const char* path,int standardFd,int pipeFd,bool input){
+     if(type==Redirect::Type::INHERIT)return;
+     int source=pipeFd;
+     if(type!=Redirect::Type::PIPE){const int flags=input?O_RDONLY:(O_WRONLY|O_CREAT|(type==Redirect::Type::APPEND?O_APPEND:O_TRUNC));source=::open(path,flags,0666);if(source<0)fail(errno);}
+     if(::dup2(source,standardFd)<0)fail(errno);
+     if(type!=Redirect::Type::PIPE)::close(source);
    };
-   configure(inputRedirect_,STDIN_FILENO,inPipe[0],true);
-   configure(outputRedirect_,STDOUT_FILENO,outPipe[1],false);
-   configure(redirectErrorStream_?outputRedirect_:errorRedirect_,STDERR_FILENO,redirectErrorStream_?outPipe[1]:errPipe[1],false);
-   close(inPipe[0]);close(inPipe[1]);close(outPipe[0]);close(outPipe[1]);close(errPipe[0]);close(errPipe[1]);
-   if(directory_&&chdir(directory_->getPath()->utf8().c_str())!=0){int e=errno;write(startup[1],&e,sizeof(e));_exit(127);}
-   std::vector<std::string> envStrings;for(const auto&v:environment_)envStrings.push_back(v.first+"="+v.second);
-   std::vector<char*>argv,envp;for(auto&s:command_)argv.push_back(const_cast<char*>(s.c_str()));argv.push_back(nullptr);for(auto&s:envStrings)envp.push_back(const_cast<char*>(s.c_str()));envp.push_back(nullptr);
-   std::string executable=command_[0];
-   if(executable.find('/')==std::string::npos){auto it=environment_.find("PATH");std::string path=it==environment_.end()?"/bin:/usr/bin":it->second;size_t begin=0;while(begin<=path.size()){size_t split=path.find(':',begin);std::string dir=path.substr(begin,split==std::string::npos?std::string::npos:split-begin);std::string candidate=(dir.empty()?".":dir)+"/"+executable;if(access(candidate.c_str(),X_OK)==0){executable=candidate;break;}if(split==std::string::npos)break;begin=split+1;}}
-   execve(executable.c_str(),argv.data(),envp.data());int e=errno;write(startup[1],&e,sizeof(e));_exit(127);
+   redirect(inputType,inputPath.c_str(),STDIN_FILENO,inRead.get(),true);
+   redirect(outputType,outputPath.c_str(),STDOUT_FILENO,outWrite.get(),false);
+   redirect(redirectErrorStream_?outputType:errorType,(redirectErrorStream_?outputPath:errorPath).c_str(),STDERR_FILENO,redirectErrorStream_?outWrite.get():errWrite.get(),false);
+   ::close(inRead.get());::close(inWrite.get());::close(outRead.get());::close(outWrite.get());::close(errRead.get());::close(errWrite.get());::close(startupRead.get());
+   if(!workingDirectory.empty()&&::chdir(workingDirectory.c_str())!=0)fail(errno);
+   ::execve(executable.c_str(),argv.data(),envp.data());fail(errno);
  }
- close(startup[1]);close(inPipe[0]);close(outPipe[1]);close(errPipe[1]);
- int childError=0;ssize_t count;do{count=read(startup[0],&childError,sizeof(childError));}while(count<0&&errno==EINTR);close(startup[0]);
- if(count>0){close(inPipe[1]);close(outPipe[0]);close(errPipe[0]);int status=0;waitpid(pid,&status,0);throw jxx::io::IOException(jxx::NEW<String>(std::strerror(childError)));}
- jxx::Ptr<jxx::io::OutputStream> input;if(inputRedirect_->type()==Redirect::Type::PIPE)input=jxx::NEW<PipeOutput>(inPipe[1]);else{close(inPipe[1]);input=jxx::NEW<NullOutputStream>();}
- jxx::Ptr<jxx::io::InputStream> output;if(outputRedirect_->type()==Redirect::Type::PIPE)output=jxx::NEW<PipeInput>(outPipe[0]);else{close(outPipe[0]);output=jxx::NEW<NullInputStream>();}
- jxx::Ptr<jxx::io::InputStream> error;if(!redirectErrorStream_&&errorRedirect_->type()==Redirect::Type::PIPE)error=jxx::NEW<PipeInput>(errPipe[0]);else{close(errPipe[0]);error=jxx::NEW<NullInputStream>();}
- return jxx::CAST<Process>(jxx::NEW<NativeProcess>(pid,input,output,error));
+ startupWrite.reset();inRead.reset();outWrite.reset();errWrite.reset();
+ int childError=0;ssize_t count;do{count=::read(startupRead.get(),&childError,sizeof(childError));}while(count<0&&errno==EINTR);startupRead.reset();
+ if(count<0){::kill(pid,SIGKILL);int status=0;while(::waitpid(pid,&status,0)<0&&errno==EINTR){}throw jxx::io::IOException(jxx::NEW<String>(std::strerror(errno)));}
+ if(count>0){::kill(pid,SIGKILL);int status=0;while(::waitpid(pid,&status,0)<0&&errno==EINTR){}throw jxx::io::IOException(jxx::NEW<String>(std::strerror(childError)));}
+ jxx::Ptr<jxx::io::OutputStream> input;if(inputType==Redirect::Type::PIPE)input=jxx::NEW<PipeOutput>(inWrite.release());else input=jxx::NEW<NullOutputStream>();
+ jxx::Ptr<jxx::io::InputStream> output;if(outputType==Redirect::Type::PIPE)output=jxx::NEW<PipeInput>(outRead.release());else output=jxx::NEW<NullInputStream>();
+ jxx::Ptr<jxx::io::InputStream> error;if(!redirectErrorStream_&&errorType==Redirect::Type::PIPE)error=jxx::NEW<PipeInput>(errRead.release());else error=jxx::NEW<NullInputStream>();
+ try{return jxx::CAST<Process>(jxx::NEW<NativeProcess>(pid,input,output,error));}
+ catch(...){::kill(pid,SIGKILL);int status=0;while(::waitpid(pid,&status,0)<0&&errno==EINTR){}throw;}
 #endif
 }
 } // namespace jxx::lang
