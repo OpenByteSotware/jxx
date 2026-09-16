@@ -43,6 +43,7 @@ public:
     void interrupt();
     void destroy();
     void list() const;
+    void list_(jint indent) const;
     jbool allowThreadSuspension(jbool value);
     void uncaughtException(const jxx::Ptr<Thread>& thread,
                            const jxx::Ptr<Throwable>& throwable);

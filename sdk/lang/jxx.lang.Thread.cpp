@@ -144,8 +144,23 @@ void Thread::entry_(
     try {
         self->run();
     }
+    catch (const Throwable& throwable) {
+        try {
+            self->state_->group->uncaughtException(self, throwable.cloneThrowable());
+        }
+        catch (...) {
+        }
+        thread_local_detail::clearCurrentThreadValues();
+        self->state_->group->removeThread_(self.get());
+        self->state_->running.store(false);
+        self->state_->finished.store(true);
+        self->state_->finishedCondition.notify_all();
+        currentThread_.reset();
+        return;
+    }
     catch (...) {
         thread_local_detail::clearCurrentThreadValues();
+        self->state_->group->removeThread_(self.get());
         self->state_->running.store(false);
         self->state_->finished.store(true);
         self->state_->finishedCondition.notify_all();
@@ -154,6 +169,7 @@ void Thread::entry_(
     }
 
     thread_local_detail::clearCurrentThreadValues();
+    self->state_->group->removeThread_(self.get());
     self->state_->running.store(false);
     self->state_->finished.store(true);
     self->state_->finishedCondition.notify_all();

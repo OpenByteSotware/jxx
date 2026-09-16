@@ -101,12 +101,56 @@ void ThreadGroup::destroy() {
     groups_.clear(); destroyed_ = true;
     if (parent_) parent_->removeGroup_(this);
 }
-void ThreadGroup::list() const { std::cout << toString()->utf8() << std::endl; }
+void ThreadGroup::list() const { list_(0); }
+void ThreadGroup::list_(jint indent) const {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    std::cout << std::string(static_cast<std::size_t>(indent), ' ')
+              << toString()->utf8() << std::endl;
+    for (auto* thread : threads_) {
+        if (thread != nullptr && thread->isAlive()) {
+            std::cout << std::string(static_cast<std::size_t>(indent + 4), ' ')
+                      << thread->toString()->utf8() << std::endl;
+        }
+    }
+    for (auto* group : groups_) {
+        if (group != nullptr && !group->isDestroyed()) group->list_(indent + 4);
+    }
+}
 jbool ThreadGroup::allowThreadSuspension(jbool) { return true; }
-void ThreadGroup::uncaughtException(const jxx::Ptr<Thread>&, const jxx::Ptr<Throwable>& e) { if (parent_) parent_->uncaughtException(nullptr,e); }
+void ThreadGroup::uncaughtException(
+    const jxx::Ptr<Thread>& thread,
+    const jxx::Ptr<Throwable>& throwable) {
+    if (throwable == nullptr) return;
+    if (parent_ != nullptr) {
+        parent_->uncaughtException(thread, throwable);
+        return;
+    }
+    std::cerr << "Exception in thread "
+              << (thread == nullptr ? std::string("unknown") : thread->getName()->utf8())
+              << ": " << throwable->toString()->utf8() << std::endl;
+    throwable->printStackTrace(std::cerr);
+}
 jxx::Ptr<String> ThreadGroup::toString() const { std::ostringstream s; s << "ThreadGroup[name=" << name_->utf8() << ",maxpri=" << getMaxPriority() << ']'; return jxx::NEW<String>(s.str()); }
 void ThreadGroup::addThread_(Thread* t) { std::lock_guard<std::recursive_mutex> l(mutex_); if(destroyed_)throw IllegalThreadStateException(); threads_.push_back(t); }
-void ThreadGroup::removeThread_(Thread* t) { std::lock_guard<std::recursive_mutex> l(mutex_); erasePointer(threads_,t); }
+void ThreadGroup::removeThread_(Thread* thread) {
+    jbool autoDestroy = false;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        erasePointer(threads_, thread);
+        autoDestroy = daemon_ && !destroyed_ && threads_.empty() && groups_.empty() && parent_ != nullptr;
+        if (autoDestroy) destroyed_ = true;
+    }
+    if (autoDestroy) parent_->removeGroup_(this);
+}
 void ThreadGroup::addGroup_(ThreadGroup* g) { std::lock_guard<std::recursive_mutex> l(mutex_); if(destroyed_)throw IllegalThreadStateException(); groups_.push_back(g); }
-void ThreadGroup::removeGroup_(ThreadGroup* g) { std::lock_guard<std::recursive_mutex> l(mutex_); erasePointer(groups_,g); }
+void ThreadGroup::removeGroup_(ThreadGroup* group) {
+    jbool autoDestroy = false;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        erasePointer(groups_, group);
+        autoDestroy = daemon_ && !destroyed_ && threads_.empty() && groups_.empty() && parent_ != nullptr;
+        if (autoDestroy) destroyed_ = true;
+    }
+    if (autoDestroy) parent_->removeGroup_(this);
+}
 } // namespace jxx::lang
