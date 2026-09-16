@@ -15,8 +15,8 @@ public:
         explicit Float(jfloat value);
 
         static jxx::Ptr<Float> valueOf(jfloat value);
-        static jxx::Ptr<Float> valueOf(const jxx::Ptr<String> s);
-        static jfloat parseFloat(const jxx::Ptr<String> s);
+        static jxx::Ptr<Float> valueOf(const jxx::Ptr<String>& s);
+        static jfloat parseFloat(const jxx::Ptr<String>& s);
 
     public:
         jbyte byteValue() const override;

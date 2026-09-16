@@ -1,7 +1,9 @@
 #include <algorithm>
-#include <stdexcept>
+
 #include "jxx.lang.String.h"
 #include "jxx.lang.Charset.h"
+#include "jxx.lang.NullPointerException.h"
+#include "jxx.lang.IllegalArgumentException.h"
 
 namespace jxx::lang {
 
@@ -17,15 +19,15 @@ jxx::Ptr<Charset> Charset::defaultCharset() {
     return cs;
 }
 
-jxx::Ptr<Charset> Charset::forName(const jxx::Ptr<String> n) {
-    if (!n) throw std::invalid_argument("NullPointerException: Charset.forName(null)");
+jxx::Ptr<Charset> Charset::forName(const jxx::Ptr<String>& n) {
+    if (!n) throw NullPointerException();
 
     std::string name = to_upper_ascii(n->utf8());
     if (name == "UTF-8" || name == "UTF8") return jxx::NEW<Charset>(Kind::UTF8);
     if (name == "US-ASCII" || name == "ASCII") return jxx::NEW<Charset>(Kind::ASCII);
     if (name == "ISO-8859-1" || name == "ISO8859-1" || name == "LATIN1") return jxx::NEW<Charset>(Kind::ISO_8859_1);
 
-    throw std::invalid_argument("UnsupportedCharsetException");
+    throw IllegalArgumentException(n);
 }
 
 jxx::Ptr<String> Charset::name() const {
@@ -37,8 +39,8 @@ jxx::Ptr<String> Charset::name() const {
     return jxx::NEW<String>("UTF-8");
 }
 
-jxx::lang::ByteArray Charset::encode(const jxx::Ptr<String> s) const {
-    if (!s) throw std::invalid_argument("NullPointerException: Charset.encode(null)");
+jxx::lang::ByteArray Charset::encode(const jxx::Ptr<String>& s) const {
+    if (!s) throw NullPointerException();
 
     if (kind_ == Kind::UTF8) {
         return s->getBytes();
@@ -63,8 +65,8 @@ jxx::lang::ByteArray Charset::encode(const jxx::Ptr<String> s) const {
     return out;
 }
 
-jxx::Ptr<String> Charset::decode(const jxx::lang::ByteArray bytes) const {
-    if (!bytes) throw std::invalid_argument("NullPointerException: Charset.decode(null)");
+jxx::Ptr<String> Charset::decode(const jxx::lang::ByteArray& bytes) const {
+    if (!bytes) throw NullPointerException();
 
     if (kind_ == Kind::UTF8) {
         std::string s;

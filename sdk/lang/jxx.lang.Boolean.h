@@ -27,10 +27,10 @@ public:
 
     // Constructors
     static jxx::Ptr<Boolean> valueOf(jbool b);
-    static jxx::Ptr<Boolean> valueOf(const jxx::Ptr<String> s);
+    static jxx::Ptr<Boolean> valueOf(const jxx::Ptr<String>& s);
 
     // Parsing
-    static jbool parseBoolean(const jxx::Ptr<String> s);
+    static jbool parseBoolean(const jxx::Ptr<String>& s);
 
     // Instance methods
     jbool booleanValue() const;

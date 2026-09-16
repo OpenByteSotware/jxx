@@ -15,8 +15,8 @@ public:
         explicit Double(jdouble value);
 
         static jxx::Ptr<Double> valueOf(jdouble value);
-        static jxx::Ptr<Double> valueOf(const jxx::Ptr<String> s);
-        static jdouble parseDouble(const jxx::Ptr<String> s);
+        static jxx::Ptr<Double> valueOf(const jxx::Ptr<String>& s);
+        static jdouble parseDouble(const jxx::Ptr<String>& s);
 
     public:
         jbyte byteValue() const override;

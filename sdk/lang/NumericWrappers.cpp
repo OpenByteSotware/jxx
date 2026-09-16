@@ -258,14 +258,22 @@ namespace jxx::lang
         return jxx::NEW<Float>(value);
     }
 
-    jxx::Ptr<Float> Float::valueOf(const jxx::Ptr<String> s)
+    jxx::Ptr<Float> Float::valueOf(const jxx::Ptr<String>& s)
     {
         return jxx::NEW<Float>(parseFloat(s));
     }
 
-    jfloat Float::parseFloat(const jxx::Ptr<String> s)
+    jfloat Float::parseFloat(const jxx::Ptr<String>& s)
     {
-        return static_cast<jfloat>(std::stof(narrowAscii_(s)));
+        try {
+            return static_cast<jfloat>(std::stof(narrowAscii_(s)));
+        }
+        catch (const NumberFormatException&) {
+            throw;
+        }
+        catch (const std::exception&) {
+            throw NumberFormatException("Invalid floating-point value");
+        }
     }
 
     jbyte Float::byteValue() const { return static_cast<jbyte>(value_); }
@@ -302,14 +310,22 @@ namespace jxx::lang
         return jxx::NEW<Double>(value);
     }
 
-    jxx::Ptr<Double> Double::valueOf(const jxx::Ptr<String> s)
+    jxx::Ptr<Double> Double::valueOf(const jxx::Ptr<String>& s)
     {
         return jxx::NEW<Double>(parseDouble(s));
     }
 
-    jdouble Double::parseDouble(const jxx::Ptr<String> s)
+    jdouble Double::parseDouble(const jxx::Ptr<String>& s)
     {
-        return static_cast<jdouble>(std::stod(narrowAscii_(s)));
+        try {
+            return static_cast<jdouble>(std::stod(narrowAscii_(s)));
+        }
+        catch (const NumberFormatException&) {
+            throw;
+        }
+        catch (const std::exception&) {
+            throw NumberFormatException("Invalid floating-point value");
+        }
     }
 
     jbyte Double::byteValue() const { return static_cast<jbyte>(value_); }

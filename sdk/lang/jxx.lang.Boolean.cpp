@@ -15,12 +15,12 @@ namespace jxx::lang {
         return b ? TRUE : FALSE;
     }
 
-    jxx::Ptr<Boolean> Boolean::valueOf(const jxx::Ptr<String> s) {
+    jxx::Ptr<Boolean> Boolean::valueOf(const jxx::Ptr<String>& s) {
         return parseBoolean(s) ? TRUE : FALSE;
     }
 
     // ---- parseBoolean ----
-    jbool Boolean::parseBoolean(const jxx::Ptr<String> s) {
+    jbool Boolean::parseBoolean(const jxx::Ptr<String>& s) {
         if (!s) return false;
 
         // assuming String has equalsIgnoreCase

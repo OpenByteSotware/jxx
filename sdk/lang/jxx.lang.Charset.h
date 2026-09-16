@@ -12,7 +12,7 @@ namespace jxx::lang {
 // Supports UTF-8 (default), US-ASCII, ISO-8859-1.
 class Charset final : public jxx::lang::ClassBase<Charset, Object> {
 public:
-    using JavaSuper = Object;
+    using JxxSuper = Object;
     using Super = jxx::lang::ClassBase<Charset, Object>;
 
 public:
@@ -21,12 +21,12 @@ public:
     virtual ~Charset() = default;
 
     static jxx::Ptr<Charset> defaultCharset();
-    static jxx::Ptr<Charset> forName(const jxx::Ptr<String> name);
+    static jxx::Ptr<Charset> forName(const jxx::Ptr<String>& name);
 
     jxx::Ptr<String> name() const;
 
-    jxx::lang::ByteArray encode(const jxx::Ptr<String> s) const;
-    jxx::Ptr<String> decode(const jxx::lang::ByteArray bytes) const;
+    jxx::lang::ByteArray encode(const jxx::Ptr<String>& s) const;
+    jxx::Ptr<String> decode(const jxx::lang::ByteArray& bytes) const;
 
     jbool equals(const jxx::Ptr<Object>& o) const override;
     jint hashCode() const override;
