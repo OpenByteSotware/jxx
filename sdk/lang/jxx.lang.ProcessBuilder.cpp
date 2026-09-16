@@ -240,69 +240,175 @@ private:
 };
 
 class NativeProcess final : public Process {
+private:
+    struct Completion final {
+        std::mutex mutex;
+        std::condition_variable condition;
+        jbool done = false;
+        jint exitCode = 0;
+        jxx::Ptr<jxx::lang::Throwable> failure;
+    };
+
 public:
 #ifdef _WIN32
- NativeProcess(HANDLE process,const jxx::Ptr<jxx::io::OutputStream>& in,const jxx::Ptr<jxx::io::InputStream>& out,const jxx::Ptr<jxx::io::InputStream>& err):process_(process),input_(out),error_(err),output_(in){}
- ~NativeProcess() override { if(process_)CloseHandle(process_); }
+    NativeProcess(
+        HANDLE process,
+        const jxx::Ptr<jxx::io::OutputStream>& input,
+        const jxx::Ptr<jxx::io::InputStream>& output,
+        const jxx::Ptr<jxx::io::InputStream>& error)
+        : process_(process), input_(output), error_(error), output_(input),
+          completion_(std::make_shared<Completion>()) {
+        HANDLE waitHandle = nullptr;
+        if (!DuplicateHandle(GetCurrentProcess(), process_, GetCurrentProcess(),
+                &waitHandle, SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION,
+                FALSE, 0)) {
+            throwWindowsIOException("DuplicateHandle");
+        }
+        auto completion = completion_;
+        std::thread([waitHandle, completion] {
+            WinHandle owner(waitHandle);
+            const DWORD wait = WaitForSingleObject(waitHandle, INFINITE);
+            std::lock_guard<std::mutex> lock(completion->mutex);
+            if (wait == WAIT_OBJECT_0) {
+                DWORD code = 0;
+                if (GetExitCodeProcess(waitHandle, &code)) {
+                    completion->exitCode = static_cast<jint>(code);
+                }
+                else {
+                    completion->failure = jxx::NEW<jxx::io::IOException>();
+                }
+            }
+            else {
+                completion->failure = jxx::NEW<jxx::io::IOException>();
+            }
+            completion->done = true;
+            completion->condition.notify_all();
+        }).detach();
+    }
+    ~NativeProcess() override {
+        if (process_) CloseHandle(process_);
+    }
 #else
- NativeProcess(pid_t process,const jxx::Ptr<jxx::io::OutputStream>& in,const jxx::Ptr<jxx::io::InputStream>& out,const jxx::Ptr<jxx::io::InputStream>& err):process_(process),input_(out),error_(err),output_(in){}
+    NativeProcess(
+        pid_t process,
+        const jxx::Ptr<jxx::io::OutputStream>& input,
+        const jxx::Ptr<jxx::io::InputStream>& output,
+        const jxx::Ptr<jxx::io::InputStream>& error)
+        : process_(process), input_(output), error_(error), output_(input),
+          completion_(std::make_shared<Completion>()) {
+        auto completion = completion_;
+        std::thread([process, completion] {
+            int status = 0;
+            pid_t result;
+            do { result = waitpid(process, &status, 0); }
+            while (result < 0 && errno == EINTR);
+
+            std::lock_guard<std::mutex> lock(completion->mutex);
+            if (result < 0) {
+                completion->failure = jxx::NEW<jxx::io::IOException>(
+                    jxx::NEW<String>(std::strerror(errno)));
+            }
+            else if (WIFEXITED(status)) {
+                completion->exitCode = WEXITSTATUS(status);
+            }
+            else if (WIFSIGNALED(status)) {
+                completion->exitCode = 128 + WTERMSIG(status);
+            }
+            else {
+                completion->failure = jxx::NEW<jxx::io::IOException>();
+            }
+            completion->done = true;
+            completion->condition.notify_all();
+        }).detach();
+    }
 #endif
- jxx::Ptr<jxx::io::OutputStream> getOutputStream() override{return output_;}
- jxx::Ptr<jxx::io::InputStream> getInputStream() override{return input_;}
- jxx::Ptr<jxx::io::InputStream> getErrorStream() override{return error_;}
- jint waitFor() override {
-  std::lock_guard<std::mutex>l(mutex_);if(done_)return exit_;
+
+    jxx::Ptr<jxx::io::OutputStream> getOutputStream() override { return output_; }
+    jxx::Ptr<jxx::io::InputStream> getInputStream() override { return input_; }
+    jxx::Ptr<jxx::io::InputStream> getErrorStream() override { return error_; }
+
+    jint waitFor() override {
+        std::unique_lock<std::mutex> lock(completion_->mutex);
+        completion_->condition.wait(lock, [&] { return completion_->done; });
+        return completedExitValue_();
+    }
+
+    jbool waitFor(
+        jlong timeout,
+        const jxx::Ptr<jxx::util::concurrent::TimeUnit>& unit) override {
+        if (unit == nullptr) throw NullPointerException();
+        std::unique_lock<std::mutex> lock(completion_->mutex);
+        if (!completion_->condition.wait_for(
+                lock, unit->toChrono(timeout),
+                [&] { return completion_->done; })) {
+            return false;
+        }
+        (void)completedExitValue_();
+        return true;
+    }
+
+    jint exitValue() override {
+        std::lock_guard<std::mutex> lock(completion_->mutex);
+        if (!completion_->done) throw IllegalThreadStateException();
+        return completedExitValue_();
+    }
+
+    jbool isAlive() override {
+        std::lock_guard<std::mutex> lock(completion_->mutex);
+        return !completion_->done;
+    }
+
+    void destroy() override {
+        if (!isAlive()) return;
 #ifdef _WIN32
-  WaitForSingleObject(process_,INFINITE);DWORD code=0;GetExitCodeProcess(process_,&code);exit_=static_cast<jint>(code);
+        if (!TerminateProcess(process_, 1)) {
+            const DWORD error = GetLastError();
+            if (error != ERROR_ACCESS_DENIED || isAlive()) {
+                throwWindowsIOException("TerminateProcess", error);
+            }
+        }
 #else
-  int status=0;while(waitpid(process_,&status,0)<0&&errno==EINTR){} exit_=WIFEXITED(status)?WEXITSTATUS(status):128+WTERMSIG(status);
+        if (::kill(process_, SIGTERM) != 0 && errno != ESRCH) {
+            throw jxx::io::IOException(jxx::NEW<String>(std::strerror(errno)));
+        }
 #endif
-  done_=true;return exit_;
- }
- jbool waitFor(jlong timeout, const jxx::Ptr<jxx::util::concurrent::TimeUnit>& unit) override {
-  if(unit==nullptr)throw NullPointerException();
+    }
+
+    jxx::Ptr<Process> destroyForcibly() override {
+        if (isAlive()) {
 #ifdef _WIN32
-  const auto millis=unit->toMillis(timeout);
-  const DWORD wait=WaitForSingleObject(process_,millis<=0?0:(millis>static_cast<jlong>(INFINITE-1)?INFINITE-1:static_cast<DWORD>(millis)));
-  if(wait==WAIT_TIMEOUT)return false;
-  if(wait!=WAIT_OBJECT_0)throw jxx::io::IOException();
-  (void)exitValue();return true;
+            if (!TerminateProcess(process_, 1)) {
+                const DWORD error = GetLastError();
+                if (error != ERROR_ACCESS_DENIED || isAlive()) {
+                    throwWindowsIOException("TerminateProcess", error);
+                }
+            }
 #else
-  const auto deadline=std::chrono::steady_clock::now()+unit->toChrono(timeout);
-  for(;;){try{(void)exitValue();return true;}catch(const IllegalThreadStateException&){if(std::chrono::steady_clock::now()>=deadline)return false;std::this_thread::sleep_for(std::chrono::milliseconds(1));}}
+            if (::kill(process_, SIGKILL) != 0 && errno != ESRCH) {
+                throw jxx::io::IOException(jxx::NEW<String>(std::strerror(errno)));
+            }
 #endif
- }
- jint exitValue() override {
-  std::lock_guard<std::mutex>l(mutex_);if(done_)return exit_;
-#ifdef _WIN32
-  const DWORD wait=WaitForSingleObject(process_,0);if(wait==WAIT_TIMEOUT)throw IllegalThreadStateException();if(wait!=WAIT_OBJECT_0)throwWindowsIOException("WaitForSingleObject");DWORD code=0;if(!GetExitCodeProcess(process_,&code))throwWindowsIOException("GetExitCodeProcess");exit_=static_cast<jint>(code);
-#else
-  int status=0;auto r=waitpid(process_,&status,WNOHANG);if(r==0)throw IllegalThreadStateException();if(r<0)throw IllegalThreadStateException();exit_=WIFEXITED(status)?WEXITSTATUS(status):128+WTERMSIG(status);
-#endif
-  done_=true;return exit_;
- }
- void destroy() override {
-#ifdef _WIN32
-  if(WaitForSingleObject(process_,0)==WAIT_TIMEOUT&&!TerminateProcess(process_,1))throwWindowsIOException("TerminateProcess");
-#else
-  ::kill(process_,SIGTERM);
-#endif
- }
- jxx::Ptr<Process> destroyForcibly() override {
-#ifdef _WIN32
-  if(WaitForSingleObject(process_,0)==WAIT_TIMEOUT&&!TerminateProcess(process_,1))throwWindowsIOException("TerminateProcess");
-#else
-  ::kill(process_,SIGKILL);
-#endif
-  return jxx::CAST<Process>(thisPtr());
- }
+        }
+        return jxx::CAST<Process>(thisPtr());
+    }
+
 private:
+    jint completedExitValue_() const {
+        if (completion_->failure != nullptr) {
+            throw *jxx::CAST<jxx::io::IOException>(completion_->failure);
+        }
+        return completion_->exitCode;
+    }
+
 #ifdef _WIN32
- HANDLE process_;
+    HANDLE process_;
 #else
- pid_t process_;
+    pid_t process_;
 #endif
- jxx::Ptr<jxx::io::InputStream> input_,error_;jxx::Ptr<jxx::io::OutputStream> output_;std::mutex mutex_;jbool done_=false;jint exit_=0;
+    jxx::Ptr<jxx::io::InputStream> input_;
+    jxx::Ptr<jxx::io::InputStream> error_;
+    jxx::Ptr<jxx::io::OutputStream> output_;
+    std::shared_ptr<Completion> completion_;
 };
 
 std::unordered_map<std::string,std::string> currentEnvironment(){std::unordered_map<std::string,std::string> result;
@@ -349,7 +455,10 @@ jxx::Ptr<ProcessBuilder> ProcessBuilder::inheritIO(){inputRedirect_=Redirect::IN
 jbool ProcessBuilder::redirectErrorStream()const{return redirectErrorStream_;}
 jxx::Ptr<ProcessBuilder> ProcessBuilder::redirectErrorStream(jbool v){redirectErrorStream_=v;return jxx::CAST<ProcessBuilder>(thisPtr());}
 
-jxx::Ptr<Process> ProcessBuilder::start(){if(command_.empty())throw IllegalArgumentException();
+jxx::Ptr<Process> ProcessBuilder::start(){
+ if(command_.empty() || command_[0].empty())throw IllegalArgumentException();
+ for(const auto& argument:command_)if(argument.find('\0')!=std::string::npos)throw IllegalArgumentException();
+ for(const auto& item:environment_){if(item.first.empty()||item.first.find('=')!=std::string::npos||item.first.find('\0')!=std::string::npos||item.second.find('\0')!=std::string::npos)throw IllegalArgumentException();}
 #ifdef _WIN32
  WinHandle childInput,parentInput,childOutput,parentOutput,childError,parentError;
  auto configureInput=[&]{
