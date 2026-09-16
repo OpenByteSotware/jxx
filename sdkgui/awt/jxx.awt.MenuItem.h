@@ -3,6 +3,7 @@
 #include "awt/jxx.awt.MenuComponent.h"
 #include "awt/jxx.awt.MenuShortcut.h"
 namespace jxx::awt::event { class ActionEvent; class ActionListener; }
+namespace jxx::gui::internal { class WxFramePeer; }
 namespace jxx::awt {
 class MenuItem : public ::jxx::lang::ClassBase<MenuItem,MenuComponent> {
 public:
@@ -14,5 +15,7 @@ public:
  void setActionCommand(const ::jxx::Ptr<::jxx::lang::String>& command); ::jxx::Ptr<::jxx::lang::String> getActionCommand() const;
  void addActionListener(const ::jxx::Ptr<::jxx::awt::event::ActionListener>& listener); void removeActionListener(const ::jxx::Ptr<::jxx::awt::event::ActionListener>& listener);
 protected: virtual void processActionEvent(const ::jxx::Ptr<::jxx::awt::event::ActionEvent>& event); void fireActionPerformed();
-private: ::jxx::Ptr<::jxx::lang::String> label_; ::jxx::Ptr<::jxx::lang::String> actionCommand_; ::jxx::Ptr<MenuShortcut> shortcut_; ::jxx::lang::jbool enabled_; std::vector<::jxx::Ptr<::jxx::awt::event::ActionListener>> listeners_;
+private:
+ friend class ::jxx::gui::internal::WxFramePeer;
+ ::jxx::Ptr<::jxx::lang::String> label_; ::jxx::Ptr<::jxx::lang::String> actionCommand_; ::jxx::Ptr<MenuShortcut> shortcut_; ::jxx::lang::jbool enabled_; std::vector<::jxx::Ptr<::jxx::awt::event::ActionListener>> listeners_;
 }; }
