@@ -63,6 +63,7 @@ namespace jxx::awt
             const ::jxx::Ptr<::jxx::awt::event::AdjustmentListener>& listener) override;
 
     protected:
+        ::jxx::Ptr<::jxx::lang::String> paramString() const;
         virtual void processAdjustmentEvent(
             const ::jxx::Ptr<::jxx::awt::event::AdjustmentEvent>& event);
 

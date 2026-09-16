@@ -34,6 +34,7 @@ file(
     GLOB_RECURSE TEST_SOURCES
     CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/jxx_*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/lang/jxx_*.cpp"
 )
 
 add_executable(

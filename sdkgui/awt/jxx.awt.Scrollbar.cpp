@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <sstream>
 
 #include "awt/event/jxx.awt.event.AdjustmentEvent.h"
 #include "awt/event/jxx.awt.event.AdjustmentListener.h"
@@ -124,6 +125,19 @@ namespace jxx::awt
             ::jxx::CAST<Adjustable>(thisPtr()),
             ::jxx::awt::event::AdjustmentEvent::ADJUSTMENT_VALUE_CHANGED,
             adjustmentType, value_, valueIsAdjusting_));
+    }
+
+    ::jxx::Ptr<::jxx::lang::String> Scrollbar::paramString() const
+    {
+        std::ostringstream out;
+        out << "val=" << value_
+            << ",vis=" << visibleAmount_
+            << ",min=" << minimum_
+            << ",max=" << maximum_
+            << ",orient=" << (orientation_ == HORIZONTAL
+                ? "horizontal" : "vertical")
+            << ",isAdjusting=" << (valueIsAdjusting_ ? "true" : "false");
+        return ::jxx::NEW<::jxx::lang::String>(out.str());
     }
 
     void Scrollbar::processAdjustmentEvent(
