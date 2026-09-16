@@ -29,12 +29,12 @@ namespace jxx::lang {
         value_.reserve((std::size_t)capacity);
     }
 
-    StringBuffer::StringBuffer(const jxx::Ptr<String> str) : value_() {
+    StringBuffer::StringBuffer(const jxx::Ptr<String>& str) : value_() {
         if (!str) throwNPE_();
         value_ = str->utf16();
     }
 
-    StringBuffer::StringBuffer(const jxx::Ptr<CharSequence> seq) : value_() {
+    StringBuffer::StringBuffer(const jxx::Ptr<CharSequence>& seq) : value_() {
         if (!seq) throwNPE_();
         value_ = toUtf16_(seq);
     }
@@ -105,7 +105,7 @@ namespace jxx::lang {
     }
 
     // ---- utf16 helpers ----
-    std::u16string StringBuffer::toUtf16_(const jxx::Ptr<CharSequence> s) {
+    std::u16string StringBuffer::toUtf16_(const jxx::Ptr<CharSequence>& s) {
         if (!s) throwNPE_();
         std::u16string out;
         out.reserve((std::size_t)s->length());
@@ -153,19 +153,19 @@ namespace jxx::lang {
         return self_();
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::appendSB(const jxx::Ptr<CharSequence> s) {
+    jxx::Ptr<StringBuffer> StringBuffer::appendSB(const jxx::Ptr<CharSequence>& s) {
         if (!s) return append(jxx::NEW<String>("null"));
         this->synchronized([&] { appendUtf16_(toUtf16_(s)); });
         return self_();
     }
 
-    jxx::Ptr<Appendable> StringBuffer::append(const jxx::Ptr<CharSequence> s) {
+    jxx::Ptr<Appendable> StringBuffer::append(const jxx::Ptr<CharSequence>& s) {
         if (!s) return append(jxx::NEW<String>("null"));
         this->synchronized([&] { appendUtf16_(toUtf16_(s)); });
         return self_();
     }
 
-    jxx::Ptr<Appendable> StringBuffer::append(const jxx::Ptr<CharSequence> s, jint start, jint end)
+    jxx::Ptr<Appendable> StringBuffer::append(const jxx::Ptr<CharSequence>& s, jint start, jint end)
     {
         // Make a mutable local copy (important!)
         jxx::Ptr<CharSequence> seq = s;
@@ -192,7 +192,7 @@ namespace jxx::lang {
         return self_();
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::appendSB(const jxx::Ptr<CharSequence> s, jint start, jint end)
+    jxx::Ptr<StringBuffer> StringBuffer::appendSB(const jxx::Ptr<CharSequence>& s, jint start, jint end)
     {
         // Mutable local copy (required to avoid modifying const parameter in lambda)
         jxx::Ptr<CharSequence> seq = s;
@@ -232,17 +232,17 @@ namespace jxx::lang {
     jxx::Ptr<StringBuffer> StringBuffer::append(jint i) { return append(jxx::NEW<String>(std::to_string(i).c_str())); }
     jxx::Ptr<StringBuffer> StringBuffer::append(jlong lng) { return append(jxx::NEW<String>(std::to_string((long long)lng).c_str())); }
 
-    jxx::Ptr<StringBuffer> StringBuffer::append(const jxx::Ptr<Object> obj) {
+    jxx::Ptr<StringBuffer> StringBuffer::append(const jxx::Ptr<Object>& obj) {
         if (!obj) return append(jxx::NEW<String>("null"));
         return append_(obj->toString());
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::append_(const jxx::Ptr<String> str) {
+    jxx::Ptr<StringBuffer> StringBuffer::append_(const jxx::Ptr<String>& str) {
         if (!str) return append(jxx::NEW<String>("null"));
         return append_(str->toString());
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::append(const jxx::Ptr<String> str) {
+    jxx::Ptr<StringBuffer> StringBuffer::append(const jxx::Ptr<String>& str) {
         this->synchronized([&] {
             jxx::Ptr<String> str2 = str;
             if (!str2) str2 = jxx::NEW<String>("null");
@@ -352,12 +352,14 @@ namespace jxx::lang {
         return self_();
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::replace(jint start, jint end, jxx::Ptr<String> str) {
+    jxx::Ptr<StringBuffer> StringBuffer::replace(jint start, jint end, const jxx::Ptr<String>& str) {
         this->synchronized([&] {
             if (start < 0 || start > end || end > (jint)value_.size()) throwSIOOBE_();
-            if (!str) str = jxx::NEW<String>("null");
+            const auto replacement = str == nullptr
+                ? jxx::NEW<String>("null")
+                : str;
             value_.erase(value_.begin() + start, value_.begin() + end);
-            insertUtf16_(start, str->utf16());
+            insertUtf16_(start, replacement->utf16());
             });
         return self_();
     }
@@ -403,15 +405,17 @@ namespace jxx::lang {
         return self_();
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::insert(jint dstOffset, jxx::Ptr<CharSequence> s) {
+    jxx::Ptr<StringBuffer> StringBuffer::insert(jint dstOffset, const jxx::Ptr<CharSequence>& s) {
         this->synchronized([&] {
-            if (!s) s = jxx::NEW<String>("null");
-            insertUtf16_(dstOffset, toUtf16_(s));
+            const auto sequence = s == nullptr
+                ? jxx::CAST<CharSequence>(jxx::NEW<String>("null"))
+                : s;
+            insertUtf16_(dstOffset, toUtf16_(sequence));
             });
         return self_();
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::insert(jint dstOffset, const jxx::Ptr<CharSequence> s,
+    jxx::Ptr<StringBuffer> StringBuffer::insert(jint dstOffset, const jxx::Ptr<CharSequence>& s,
         jint start,
         jint end)
     {
@@ -453,17 +457,17 @@ namespace jxx::lang {
     jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, jint i) { return insert(offset, jxx::NEW<String>(std::to_string(i).c_str())); }
     jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, jlong l) { return insert(offset, jxx::NEW<String>(std::to_string((long long)l).c_str())); }
 
-    jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, const jxx::Ptr<Object> obj) {
+    jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, const jxx::Ptr<Object>& obj) {
         if (!obj) return insert(offset, jxx::NEW<String>("null"));
         return insert_(offset, obj->toString());
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::insert_(jint offset, const jxx::Ptr<String> str) {
+    jxx::Ptr<StringBuffer> StringBuffer::insert_(jint offset, const jxx::Ptr<String>& str) {
         if (!str) return insert(offset, jxx::NEW<String>("null"));
         return insert(offset, str->toString());
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, const jxx::Ptr<String> str)
+    jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, const jxx::Ptr<String>& str)
     {
         // Mutable local copy (required)
         jxx::Ptr<String> localStr = str;
@@ -493,9 +497,9 @@ namespace jxx::lang {
     }
 
     // ---- indexOf / lastIndexOf ----
-    jint StringBuffer::indexOf(const jxx::Ptr<String> str) const { return indexOf(str, 0); }
+    jint StringBuffer::indexOf(const jxx::Ptr<String>& str) const { return indexOf(str, 0); }
 
-    jint StringBuffer::indexOf(const jxx::Ptr<String> str, jint fromIndex) const {
+    jint StringBuffer::indexOf(const jxx::Ptr<String>& str, jint fromIndex) const {
         return this->synchronized([&]()->jint {
             if (!str) throwNPE_();
             if (fromIndex < 0) fromIndex = 0;
@@ -507,9 +511,9 @@ namespace jxx::lang {
             });
     }
 
-    jint StringBuffer::lastIndexOf(const jxx::Ptr<String> str) const { return lastIndexOf(str, (jint)length()); }
+    jint StringBuffer::lastIndexOf(const jxx::Ptr<String>& str) const { return lastIndexOf(str, (jint)length()); }
 
-    jint StringBuffer::lastIndexOf(const jxx::Ptr<String> str, jint fromIndex) const {
+    jint StringBuffer::lastIndexOf(const jxx::Ptr<String>& str, jint fromIndex) const {
         return this->synchronized([&]()->jint {
             if (!str) throwNPE_();
             const auto& needle = str->utf16();

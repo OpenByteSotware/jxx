@@ -37,16 +37,16 @@ public:
     jxx::Ptr<StringBuilder> appendSB(jchar value);
     jxx::Ptr<StringBuilder> append(const CharArray& value);
     jxx::Ptr<StringBuilder> append(const CharArray& value, jint offset, jint length);
-    jxx::Ptr<Appendable> append(const jxx::Ptr<CharSequence> value) override;
-    jxx::Ptr<StringBuilder> appendSB(const jxx::Ptr<CharSequence> value);
-    jxx::Ptr<Appendable> append(const jxx::Ptr<CharSequence> value, jint start, jint end) override;
-    jxx::Ptr<StringBuilder> appendSB(const jxx::Ptr<CharSequence> value, jint start, jint end);
+    jxx::Ptr<Appendable> append(const jxx::Ptr<CharSequence>& value) override;
+    jxx::Ptr<StringBuilder> appendSB(const jxx::Ptr<CharSequence>& value);
+    jxx::Ptr<Appendable> append(const jxx::Ptr<CharSequence>& value, jint start, jint end) override;
+    jxx::Ptr<StringBuilder> appendSB(const jxx::Ptr<CharSequence>& value, jint start, jint end);
     jxx::Ptr<StringBuilder> append(jdouble value);
     jxx::Ptr<StringBuilder> append(jfloat value);
     jxx::Ptr<StringBuilder> append(jint value);
     jxx::Ptr<StringBuilder> append(jlong value);
-    jxx::Ptr<StringBuilder> append(const jxx::Ptr<Object> value);
-    jxx::Ptr<StringBuilder> append(const jxx::Ptr<String> value);
+    jxx::Ptr<StringBuilder> append(const jxx::Ptr<Object>& value);
+    jxx::Ptr<StringBuilder> append(const jxx::Ptr<String>& value);
     jxx::Ptr<StringBuilder> append(const jxx::Ptr<StringBuffer> value);
     jxx::Ptr<StringBuilder> appendCodePoint(jint codePoint);
 
@@ -72,14 +72,14 @@ public:
     jxx::Ptr<StringBuilder> insert(jint offset, jchar value);
     jxx::Ptr<StringBuilder> insert(jint offset, const CharArray value);
     jxx::Ptr<StringBuilder> insert(jint index, const CharArray value, jint offset, jint length);
-    jxx::Ptr<StringBuilder> insert(jint offset, const jxx::Ptr<CharSequence> value);
-    jxx::Ptr<StringBuilder> insert(jint offset, const jxx::Ptr<CharSequence> value, jint start, jint end);
+    jxx::Ptr<StringBuilder> insert(jint offset, const jxx::Ptr<CharSequence>& value);
+    jxx::Ptr<StringBuilder> insert(jint offset, const jxx::Ptr<CharSequence>& value, jint start, jint end);
     jxx::Ptr<StringBuilder> insert(jint offset, jdouble value);
     jxx::Ptr<StringBuilder> insert(jint offset, jfloat value);
     jxx::Ptr<StringBuilder> insert(jint offset, jint value);
     jxx::Ptr<StringBuilder> insert(jint offset, jlong value);
-    jxx::Ptr<StringBuilder> insert(jint offset, const jxx::Ptr<Object> value);
-    jxx::Ptr<StringBuilder> insert(jint offset, const jxx::Ptr<String> value);
+    jxx::Ptr<StringBuilder> insert(jint offset, const jxx::Ptr<Object>& value);
+    jxx::Ptr<StringBuilder> insert(jint offset, const jxx::Ptr<String>& value);
 
     void getChars(jint srcBegin, jint srcEnd, const CharArray& destination, jint dstBegin) const;
     jint indexOf(const jxx::Ptr<String>& string) const;
