@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include "awt/event/jxx.awt.event.ContainerEvent.h"
+#include "awt/event/jxx.awt.event.ContainerListener.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
 #include "lang/jxx.lang.NullPointerException.h"
@@ -11,7 +13,8 @@ namespace jxx::awt
     Container::Container() = default;
     Container::~Container() { removeAll(); }
 
-    ::jxx::Ptr<Component> Container::add(const ::jxx::Ptr<Component>& component)
+    ::jxx::Ptr<Component> Container::add(
+        const ::jxx::Ptr<Component>& component)
     {
         return add(component, getComponentCount());
     }
@@ -20,14 +23,19 @@ namespace jxx::awt
         const ::jxx::Ptr<Component>& component,
         ::jxx::lang::jint index)
     {
-        if (!component) throw ::jxx::lang::NullPointerException("component");
+        if (!component)
+            throw ::jxx::lang::NullPointerException("component");
         if (index < 0 || index > getComponentCount())
             throw ::jxx::lang::IllegalArgumentException("index");
         if (auto old = component->getParent()) old->remove(component);
+
         components_.insert(components_.begin() + index, component);
         component->setParentInternal(::jxx::CAST<Container>(thisPtr()));
         if (layout_) layout_->addLayoutComponent(nullptr, component);
         invalidate();
+        fireContainerEvent(
+            ::jxx::awt::event::ContainerEvent::COMPONENT_ADDED,
+            component);
         return component;
     }
 
@@ -44,12 +52,16 @@ namespace jxx::awt
     {
         if (index < 0 || index >= getComponentCount())
             throw ::jxx::lang::IndexOutOfBoundsException("index");
+
         auto component = components_[static_cast<std::size_t>(index)];
         if (layout_) layout_->removeLayoutComponent(component);
         component->setNativeComponentInternal(nullptr);
         component->setParentInternal(nullptr);
         components_.erase(components_.begin() + index);
         invalidate();
+        fireContainerEvent(
+            ::jxx::awt::event::ContainerEvent::COMPONENT_REMOVED,
+            component);
     }
 
     void Container::remove(const ::jxx::Ptr<Component>& component)
@@ -70,11 +82,55 @@ namespace jxx::awt
         return static_cast<::jxx::lang::jint>(components_.size());
     }
 
-    ::jxx::Ptr<Component> Container::getComponent(::jxx::lang::jint index) const
+    ::jxx::Ptr<Component> Container::getComponent(
+        ::jxx::lang::jint index) const
     {
         if (index < 0 || index >= getComponentCount())
             throw ::jxx::lang::IndexOutOfBoundsException("index");
         return components_[static_cast<std::size_t>(index)];
+    }
+
+    void Container::addContainerListener(
+        const ::jxx::Ptr<::jxx::awt::event::ContainerListener>& listener)
+    {
+        if (listener != nullptr &&
+            std::find(containerListeners_.begin(), containerListeners_.end(), listener)
+                == containerListeners_.end())
+            containerListeners_.push_back(listener);
+    }
+
+    void Container::removeContainerListener(
+        const ::jxx::Ptr<::jxx::awt::event::ContainerListener>& listener)
+    {
+        containerListeners_.erase(
+            std::remove(containerListeners_.begin(), containerListeners_.end(), listener),
+            containerListeners_.end());
+    }
+
+    void Container::fireContainerEvent(
+        ::jxx::lang::jint id,
+        const ::jxx::Ptr<Component>& child)
+    {
+        if (containerListeners_.empty()) return;
+        processContainerEvent(::jxx::NEW<::jxx::awt::event::ContainerEvent>(
+            ::jxx::CAST<Container>(thisPtr()), id, child));
+    }
+
+    void Container::processContainerEvent(
+        const ::jxx::Ptr<::jxx::awt::event::ContainerEvent>& event)
+    {
+        if (event == nullptr) return;
+        const auto listeners = containerListeners_;
+        for (const auto& listener : listeners)
+        {
+            if (listener == nullptr) continue;
+            if (event->getID() ==
+                ::jxx::awt::event::ContainerEvent::COMPONENT_ADDED)
+                listener->componentAdded(event);
+            else if (event->getID() ==
+                ::jxx::awt::event::ContainerEvent::COMPONENT_REMOVED)
+                listener->componentRemoved(event);
+        }
     }
 
     void Container::setLayout(const ::jxx::Ptr<LayoutManager>& layout)
@@ -100,6 +156,7 @@ namespace jxx::awt
 
     void Container::doLayout()
     {
-        if (layout_) layout_->layoutContainer(::jxx::CAST<Container>(thisPtr()));
+        if (layout_)
+            layout_->layoutContainer(::jxx::CAST<Container>(thisPtr()));
     }
 }
