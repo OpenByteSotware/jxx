@@ -8,6 +8,9 @@
 #include "awt/event/jxx.awt.event.FocusListener.h"
 #include "awt/event/jxx.awt.event.KeyEvent.h"
 #include "awt/event/jxx.awt.event.KeyListener.h"
+#include "awt/event/jxx.awt.event.MouseEvent.h"
+#include "awt/event/jxx.awt.event.MouseListener.h"
+#include "awt/event/jxx.awt.event.MouseMotionListener.h"
 #include "awt/jxx.awt.Container.h"
 #include "gui/internal/jxx.gui.internal.NativeComponent.h"
 
@@ -146,6 +149,12 @@ namespace jxx::awt
     void Component::addKeyListener(const ::jxx::Ptr<::jxx::awt::event::KeyListener>& listener){if(listener&&std::find(keyListeners_.begin(),keyListeners_.end(),listener)==keyListeners_.end())keyListeners_.push_back(listener);}
     void Component::removeKeyListener(const ::jxx::Ptr<::jxx::awt::event::KeyListener>& listener){keyListeners_.erase(std::remove(keyListeners_.begin(),keyListeners_.end(),listener),keyListeners_.end());}
     void Component::processKeyEvent(const ::jxx::Ptr<::jxx::awt::event::KeyEvent>& event){const auto listeners=keyListeners_;for(const auto& listener:listeners){if(!listener)continue;if(event->getID()==::jxx::awt::event::KeyEvent::KEY_TYPED)listener->keyTyped(event);else if(event->getID()==::jxx::awt::event::KeyEvent::KEY_PRESSED)listener->keyPressed(event);else if(event->getID()==::jxx::awt::event::KeyEvent::KEY_RELEASED)listener->keyReleased(event);}}
+    void Component::addMouseListener(const ::jxx::Ptr<::jxx::awt::event::MouseListener>& listener) { if (listener && std::find(mouseListeners_.begin(), mouseListeners_.end(), listener) == mouseListeners_.end()) mouseListeners_.push_back(listener); }
+    void Component::removeMouseListener(const ::jxx::Ptr<::jxx::awt::event::MouseListener>& listener) { mouseListeners_.erase(std::remove(mouseListeners_.begin(), mouseListeners_.end(), listener), mouseListeners_.end()); }
+    void Component::addMouseMotionListener(const ::jxx::Ptr<::jxx::awt::event::MouseMotionListener>& listener) { if (listener && std::find(mouseMotionListeners_.begin(), mouseMotionListeners_.end(), listener) == mouseMotionListeners_.end()) mouseMotionListeners_.push_back(listener); }
+    void Component::removeMouseMotionListener(const ::jxx::Ptr<::jxx::awt::event::MouseMotionListener>& listener) { mouseMotionListeners_.erase(std::remove(mouseMotionListeners_.begin(), mouseMotionListeners_.end(), listener), mouseMotionListeners_.end()); }
+    void Component::processMouseEvent(const ::jxx::Ptr<::jxx::awt::event::MouseEvent>& event) { const auto mouse = mouseListeners_; for (const auto& listener : mouse) { if (!listener) continue; switch (event->getID()) { case 500: listener->mouseClicked(event); break; case 501: listener->mousePressed(event); break; case 502: listener->mouseReleased(event); break; case 504: listener->mouseEntered(event); break; case 505: listener->mouseExited(event); break; default: break; } } const auto motion = mouseMotionListeners_; for (const auto& listener : motion) { if (!listener) continue; if (event->getID() == 503) listener->mouseMoved(event); else if (event->getID() == 506) listener->mouseDragged(event); } }
+
     void Component::requestFocus(){if(nativeComponent_)nativeComponent_->requestFocus();}
     ::jxx::lang::jbool Component::isFocusOwner() const{return nativeComponent_&&nativeComponent_->hasFocus();}
     void Component::processFocusEvent(const ::jxx::Ptr<::jxx::awt::event::FocusEvent>& event){const auto listeners=focusListeners_;for(const auto& listener:listeners){if(!listener)continue;if(event->getID()==::jxx::awt::event::FocusEvent::FOCUS_GAINED)listener->focusGained(event);else if(event->getID()==::jxx::awt::event::FocusEvent::FOCUS_LOST)listener->focusLost(event);}}
@@ -166,6 +175,7 @@ namespace jxx::awt
         std::weak_ptr<Component> self=::jxx::CAST<Component>(thisPtr());
         nativeComponent_->setFocusCallback([self](::jxx::lang::jbool gained){if(auto owner=self.lock())owner->processFocusEvent(::jxx::NEW<::jxx::awt::event::FocusEvent>(owner,gained?::jxx::awt::event::FocusEvent::FOCUS_GAINED : ::jxx::awt::event::FocusEvent::FOCUS_LOST));});
         nativeComponent_->setKeyCallback([self](::jxx::lang::jint id,::jxx::lang::jint code,::jxx::lang::jchar character,::jxx::lang::jint modifiers){if(auto owner=self.lock())owner->processKeyEvent(::jxx::NEW<::jxx::awt::event::KeyEvent>(owner,id,0,modifiers,code,character));});
+        nativeComponent_->setMouseCallback([self](::jxx::lang::jint id, ::jxx::lang::jint x, ::jxx::lang::jint y, ::jxx::lang::jint button, ::jxx::lang::jint clicks, ::jxx::lang::jbool popup) { if (auto owner = self.lock()) owner->processMouseEvent(::jxx::NEW<::jxx::awt::event::MouseEvent>(owner, id, 0, 0, x, y, clicks, popup, button)); });
     }
 
     void Component::invalidate() { valid_=false; }

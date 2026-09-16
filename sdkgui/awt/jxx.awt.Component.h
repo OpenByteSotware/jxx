@@ -16,6 +16,7 @@ namespace jxx::awt::event
     class FocusListener;
     class KeyEvent;
     class KeyListener;
+    class MouseEvent; class MouseListener; class MouseMotionListener;
 }
 
 namespace jxx::gui::internal
@@ -73,6 +74,7 @@ namespace jxx::awt
         virtual void removeFocusListener(const ::jxx::Ptr<::jxx::awt::event::FocusListener>& listener);
         virtual void addKeyListener(const ::jxx::Ptr<::jxx::awt::event::KeyListener>& listener);
         virtual void removeKeyListener(const ::jxx::Ptr<::jxx::awt::event::KeyListener>& listener);
+        virtual void addMouseListener(const ::jxx::Ptr<::jxx::awt::event::MouseListener>&); virtual void removeMouseListener(const ::jxx::Ptr<::jxx::awt::event::MouseListener>&); virtual void addMouseMotionListener(const ::jxx::Ptr<::jxx::awt::event::MouseMotionListener>&); virtual void removeMouseMotionListener(const ::jxx::Ptr<::jxx::awt::event::MouseMotionListener>&);
         virtual void requestFocus();
         virtual ::jxx::lang::jbool isFocusOwner() const;
 
@@ -85,6 +87,7 @@ namespace jxx::awt
         virtual void processComponentEvent(
             const ::jxx::Ptr<::jxx::awt::event::ComponentEvent>& event);
         virtual void processFocusEvent(const ::jxx::Ptr<::jxx::awt::event::FocusEvent>& event);
+        virtual void processMouseEvent(const ::jxx::Ptr<::jxx::awt::event::MouseEvent>& event);
         virtual void processKeyEvent(const ::jxx::Ptr<::jxx::awt::event::KeyEvent>& event);
 
         ::jxx::Ptr<::jxx::gui::internal::NativeComponent> nativeComponent_;
@@ -113,6 +116,6 @@ namespace jxx::awt
         std::vector<::jxx::Ptr<::jxx::awt::event::ComponentListener>>
             componentListeners_;
         std::vector<::jxx::Ptr<::jxx::awt::event::FocusListener>> focusListeners_;
-        std::vector<::jxx::Ptr<::jxx::awt::event::KeyListener>> keyListeners_;
+        std::vector<::jxx::Ptr<::jxx::awt::event::KeyListener>> keyListeners_; std::vector<::jxx::Ptr<::jxx::awt::event::MouseListener>> mouseListeners_; std::vector<::jxx::Ptr<::jxx::awt::event::MouseMotionListener>> mouseMotionListeners_;
     };
 }

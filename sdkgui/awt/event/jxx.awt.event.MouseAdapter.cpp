@@ -1,0 +1,2 @@
+#include "awt/event/jxx.awt.event.MouseAdapter.h"
+namespace jxx::awt::event {void MouseAdapter::mouseClicked(const ::jxx::Ptr<MouseEvent>&){}void MouseAdapter::mousePressed(const ::jxx::Ptr<MouseEvent>&){}void MouseAdapter::mouseReleased(const ::jxx::Ptr<MouseEvent>&){}void MouseAdapter::mouseEntered(const ::jxx::Ptr<MouseEvent>&){}void MouseAdapter::mouseExited(const ::jxx::Ptr<MouseEvent>&){}void MouseAdapter::mouseDragged(const ::jxx::Ptr<MouseEvent>&){}void MouseAdapter::mouseMoved(const ::jxx::Ptr<MouseEvent>&){}}

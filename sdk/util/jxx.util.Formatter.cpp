@@ -24,16 +24,18 @@
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Number.h"
 #include "jxx.util.TimeZone.h"
+#include "jxx.util.FormatterClosedException.h"
+#include "jxx.util.IllegalFormatException.h"
 #include "jxx.util.Formatter.h"
 
 namespace jxx::util
 {
     void fail_(const char* message)
     {
-        throw std::runtime_error(message);
+        throw IllegalFormatException(jxx::NEW<jxx::lang::String>(message));
     }
 
-    inline std::string toUtf8OrEmpty_(const jxx::Ptr<jxx::lang::String> s)
+    inline std::string toUtf8OrEmpty_(const jxx::Ptr<jxx::lang::String>& s)
     {
         return s ? s->utf8() : std::string{};
     }
@@ -1153,7 +1155,7 @@ namespace jxx::util
         : locale_(nullptr)
     {}
 
-    Formatter::Formatter(const jxx::Ptr<Locale> locale)
+    Formatter::Formatter(const jxx::Ptr<Locale>& locale)
         : locale_(std::move(locale))
     {}
 
@@ -1181,25 +1183,25 @@ namespace jxx::util
     void Formatter::ensureOpen_() const
     {
         if (closed_)
-            throw std::runtime_error("Formatter is closed");
+            throw FormatterClosedException();
     }
 
     jxx::Ptr<Formatter> Formatter::format(
-        jxx::Ptr<jxx::lang::String> formatString,
-        jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args)
+        const jxx::Ptr<jxx::lang::String>& formatString,
+        const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>& args)
     {
-        return format(locale_, std::move(formatString), std::move(args));
+        return format(locale_, formatString, args);
     }
 
     jxx::Ptr<Formatter> Formatter::format(
-        jxx::Ptr<Locale> locale,
-        jxx::Ptr<jxx::lang::String> formatString,
-        jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args)
+        const jxx::Ptr<Locale>& locale,
+        const jxx::Ptr<jxx::lang::String>& formatString,
+        const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>& args)
     {
         ensureOpen_();
 
         if (locale)
-            locale_ = std::move(locale);
+            locale_ = locale;
 
         const std::string pattern = toUtf8OrEmpty_(formatString);
         const auto values = unboxArgs_(args);

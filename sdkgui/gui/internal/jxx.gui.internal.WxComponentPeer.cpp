@@ -31,6 +31,40 @@ namespace jxx::gui::internal
             window_->Bind(wxEVT_KILL_FOCUS,[this](wxFocusEvent& event){if(focusCallback_)focusCallback_(false);event.Skip();});
             window_->Bind(wxEVT_KEY_DOWN,[this](wxKeyEvent& event){if(keyCallback_)keyCallback_(401,event.GetKeyCode(),static_cast<::jxx::lang::jchar>(event.GetUnicodeKey()),event.GetModifiers());event.Skip();});
             window_->Bind(wxEVT_KEY_UP,[this](wxKeyEvent& event){if(keyCallback_)keyCallback_(402,event.GetKeyCode(),static_cast<::jxx::lang::jchar>(event.GetUnicodeKey()),event.GetModifiers());event.Skip();});
+            auto mouseHandler = [this](wxMouseEvent& event)
+            {
+                if (mouseCallback_)
+                {
+                    const int id = event.ButtonDClick() ? 500
+                        : event.ButtonDown() ? 501
+                        : event.ButtonUp() ? 502
+                        : event.Dragging() ? 506
+                        : event.Moving() ? 503
+                        : event.Entering() ? 504
+                        : event.Leaving() ? 505
+                        : 0;
+                    const int button = event.GetButton() == wxMOUSE_BTN_LEFT ? 1
+                        : event.GetButton() == wxMOUSE_BTN_MIDDLE ? 2
+                        : event.GetButton() == wxMOUSE_BTN_RIGHT ? 3
+                        : 0;
+                    if (id != 0)
+                        mouseCallback_(id, event.GetX(), event.GetY(), button,
+                            event.GetClickCount(), event.RightDown() || event.RightUp());
+                }
+                event.Skip();
+            };
+            window_->Bind(wxEVT_LEFT_DOWN, mouseHandler);
+            window_->Bind(wxEVT_LEFT_UP, mouseHandler);
+            window_->Bind(wxEVT_LEFT_DCLICK, mouseHandler);
+            window_->Bind(wxEVT_MIDDLE_DOWN, mouseHandler);
+            window_->Bind(wxEVT_MIDDLE_UP, mouseHandler);
+            window_->Bind(wxEVT_MIDDLE_DCLICK, mouseHandler);
+            window_->Bind(wxEVT_RIGHT_DOWN, mouseHandler);
+            window_->Bind(wxEVT_RIGHT_UP, mouseHandler);
+            window_->Bind(wxEVT_RIGHT_DCLICK, mouseHandler);
+            window_->Bind(wxEVT_MOTION, mouseHandler);
+            window_->Bind(wxEVT_ENTER_WINDOW, mouseHandler);
+            window_->Bind(wxEVT_LEAVE_WINDOW, mouseHandler);
             window_->Bind(wxEVT_CHAR,[this](wxKeyEvent& event){if(keyCallback_)keyCallback_(400,0,static_cast<::jxx::lang::jchar>(event.GetUnicodeKey()),event.GetModifiers());event.Skip();});
         }
         if (auto* button = dynamic_cast<wxButton*>(window_))
@@ -63,6 +97,7 @@ namespace jxx::gui::internal
         actionCallback_ = {};
         focusCallback_ = {};
         keyCallback_ = {};
+        mouseCallback_ = {};
     }
 
     void WxComponentPeer::destroy()
@@ -169,6 +204,7 @@ namespace jxx::gui::internal
         window_->Refresh();
     }
 
+    void WxComponentPeer::setMouseCallback(MouseCallback callback){mouseCallback_=std::move(callback);}
     void WxComponentPeer::setKeyCallback(KeyCallback callback){keyCallback_=std::move(callback);}
     void WxComponentPeer::requestFocus(){if(window_!=nullptr)window_->SetFocus();}
     ::jxx::lang::jbool WxComponentPeer::hasFocus() const{return window_!=nullptr&&window_->HasFocus();}
