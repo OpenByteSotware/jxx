@@ -1,5 +1,7 @@
 #include "awt/jxx.awt.Frame.h"
+
 #include "gui/internal/jxx.gui.internal.NativeWindow.h"
+#include "gui/internal/jxx.gui.internal.WxFramePeer.h"
 
 namespace jxx::awt
 {
@@ -13,6 +15,20 @@ namespace jxx::awt
             ? title
             : ::jxx::NEW<::jxx::lang::String>(""))
     {
+    }
+
+    void Frame::ensureNativeWindow()
+    {
+        if (nativeWindow_ == nullptr)
+        {
+            nativeWindow_ =
+                ::jxx::NEW<::jxx::gui::internal::WxFramePeer>(title_);
+
+            nativeWindow_->setBounds(
+                getX(), getY(), getWidth(), getHeight());
+
+            displayable_ = true;
+        }
     }
 
     void Frame::setTitle(

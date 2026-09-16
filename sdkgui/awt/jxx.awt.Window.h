@@ -19,6 +19,14 @@ namespace jxx::awt
         Window();
         ~Window() override;
 
+        void setVisible(::jxx::lang::jbool visible) override;
+        void setBounds(const ::jxx::Ptr<Rectangle>& rectangle) override;
+        void setBounds(
+            ::jxx::lang::jint x,
+            ::jxx::lang::jint y,
+            ::jxx::lang::jint width,
+            ::jxx::lang::jint height) override;
+
         virtual void pack();
         virtual void dispose();
         virtual void toFront();
@@ -28,6 +36,8 @@ namespace jxx::awt
         virtual ::jxx::lang::jbool isDisplayable() const;
 
     protected:
+        virtual void ensureNativeWindow();
+
         ::jxx::Ptr<::jxx::gui::internal::NativeWindow> nativeWindow_;
         ::jxx::lang::jbool active_;
         ::jxx::lang::jbool displayable_;

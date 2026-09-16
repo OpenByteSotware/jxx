@@ -21,6 +21,9 @@ namespace jxx::awt
 
         virtual ::jxx::Ptr<::jxx::lang::String> getTitle() const;
 
+    protected:
+        void ensureNativeWindow() override;
+
     private:
         ::jxx::Ptr<::jxx::lang::String> title_;
     };
