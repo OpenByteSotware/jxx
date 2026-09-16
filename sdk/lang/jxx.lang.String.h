@@ -56,7 +56,7 @@ public:
         String();
 
         // String(String original)
-        explicit String(const jxx::Ptr<String> original);
+        explicit String(const jxx::Ptr<String>& original);
 
         // String(byte[] bytes)
         explicit String(const jxx::lang::ByteArray bytes);
@@ -92,10 +92,10 @@ public:
         String(const IntArray codePoints, jxx::lang::jint offset, jxx::lang::jint count);
 
         // String(StringBuffer buffer)
-        explicit String(const jxx::Ptr<StringBuffer> buffer);
+        explicit String(const jxx::Ptr<StringBuffer>& buffer);
 
         // String(StringBuilder builder)
-        explicit String(const jxx::Ptr<StringBuilder> builder);
+        explicit String(const jxx::Ptr<StringBuilder>& builder);
 
         // JXX convenience (non-Java): String(const char* utf8)
         explicit String(const char* utf8);
@@ -142,52 +142,52 @@ public:
         void getBytes(jxx::lang::jint srcBegin, jxx::lang::jint srcEnd, const jxx::lang::ByteArray dst, jxx::lang::jint dstBegin) const;
 
         jxx::lang::ByteArray getBytes() const;
-        jxx::lang::ByteArray getBytes(const jxx::Ptr<String> charsetName) const;
-        jxx::lang::ByteArray getBytes(const jxx::Ptr<Charset> charset) const;
+        jxx::lang::ByteArray getBytes(const jxx::Ptr<String>& charsetName) const;
+        jxx::lang::ByteArray getBytes(const jxx::Ptr<Charset>& charset) const;
 
-        jbool contentEquals(const jxx::Ptr<CharSequence> cs) const;
-        jbool contentEquals(const jxx::Ptr<StringBuffer> sb) const;
+        jbool contentEquals(const jxx::Ptr<CharSequence>& cs) const;
+        jbool contentEquals(const jxx::Ptr<StringBuffer>& sb) const;
 
-        jbool equalsIgnoreCase(const jxx::Ptr<String> anotherString) const;
-        jxx::lang::jint compareToIgnoreCase(const jxx::Ptr<String> str) const;
+        jbool equalsIgnoreCase(const jxx::Ptr<String>& anotherString) const;
+        jxx::lang::jint compareToIgnoreCase(const jxx::Ptr<String>& str) const;
 
         jbool regionMatches(jxx::lang::jint toffset, jxx::Ptr<String> other, jxx::lang::jint ooffset, jxx::lang::jint len) const;
         jbool regionMatches(jbool ignoreCase, jxx::lang::jint toffset, jxx::Ptr<String> other, jxx::lang::jint ooffset, jxx::lang::jint len) const;
 
-        jbool startsWith(const jxx::Ptr<String> prefix) const;
-        jbool startsWith(const jxx::Ptr<String> prefix, jxx::lang::jint toffset) const;
-        jbool endsWith(const jxx::Ptr<String> suffix) const;
+        jbool startsWith(const jxx::Ptr<String>& prefix) const;
+        jbool startsWith(const jxx::Ptr<String>& prefix, jxx::lang::jint toffset) const;
+        jbool endsWith(const jxx::Ptr<String>& suffix) const;
 
         jxx::lang::jint indexOf(jxx::lang::jint ch) const;
         jxx::lang::jint indexOf(jxx::lang::jint ch, jxx::lang::jint fromIndex) const;
         jxx::lang::jint lastIndexOf(jxx::lang::jint ch) const;
         jxx::lang::jint lastIndexOf(jxx::lang::jint ch, jxx::lang::jint fromIndex) const;
 
-        jxx::lang::jint indexOf(const jxx::Ptr<String> str) const;
-        jxx::lang::jint indexOf(const jxx::Ptr<String> str, jxx::lang::jint fromIndex) const;
-        jxx::lang::jint lastIndexOf(const jxx::Ptr<String> str) const;
-        jxx::lang::jint lastIndexOf(const jxx::Ptr<String> str, jxx::lang::jint fromIndex) const;
+        jxx::lang::jint indexOf(const jxx::Ptr<String>& str) const;
+        jxx::lang::jint indexOf(const jxx::Ptr<String>& str, jxx::lang::jint fromIndex) const;
+        jxx::lang::jint lastIndexOf(const jxx::Ptr<String>& str) const;
+        jxx::lang::jint lastIndexOf(const jxx::Ptr<String>& str, jxx::lang::jint fromIndex) const;
 
         jxx::Ptr<String> substring(jxx::lang::jint beginIndex) const;
         jxx::Ptr<String> substring(jxx::lang::jint beginIndex, jxx::lang::jint endIndex) const;
-        jxx::Ptr<String> concat(const jxx::Ptr<String> str) const;
+        jxx::Ptr<String> concat(const jxx::Ptr<String>& str) const;
 
         jxx::Ptr<String> replace(jxx::lang::jchar oldChar, jxx::lang::jchar newChar) const;
 
-        jbool matches(const jxx::Ptr<String> regex) const;
-        jbool contains(const jxx::Ptr<CharSequence> s) const;
+        jbool matches(const jxx::Ptr<String>& regex) const;
+        jbool contains(const jxx::Ptr<CharSequence>& s) const;
 
-        jxx::Ptr<String> replaceFirst(const jxx::Ptr<String> regex, jxx::Ptr<String> replacement) const;
-        jxx::Ptr<String> replaceAll(const jxx::Ptr<String> regex, jxx::Ptr<String> replacement) const;
-        jxx::Ptr<String> replace(const jxx::Ptr<CharSequence> target, jxx::Ptr<CharSequence> replacement) const;
+        jxx::Ptr<String> replaceFirst(const jxx::Ptr<String>& regex, const jxx::Ptr<String>& replacement) const;
+        jxx::Ptr<String> replaceAll(const jxx::Ptr<String>& regex, const jxx::Ptr<String>& replacement) const;
+        jxx::Ptr<String> replace(const jxx::Ptr<CharSequence>& target, const jxx::Ptr<CharSequence>& replacement) const;
 
-        jxx::Ptr<JxxArray<jxx::Ptr<String>, 1>> split(const jxx::Ptr<String> regex) const;
-        jxx::Ptr<JxxArray<jxx::Ptr<String>, 1>> split(const jxx::Ptr<String> regex, jxx::lang::jint limit) const;
+        jxx::Ptr<JxxArray<jxx::Ptr<String>, 1>> split(const jxx::Ptr<String>& regex) const;
+        jxx::Ptr<JxxArray<jxx::Ptr<String>, 1>> split(const jxx::Ptr<String>& regex, jxx::lang::jint limit) const;
 
         jxx::Ptr<String> toLowerCase() const;
-        jxx::Ptr<String> toLowerCase(const jxx::Ptr<jxx::util::Locale> locale) const;
+        jxx::Ptr<String> toLowerCase(const jxx::Ptr<jxx::util::Locale>& locale) const;
         jxx::Ptr<String> toUpperCase() const;
-        jxx::Ptr<String> toUpperCase(const jxx::Ptr<jxx::util::Locale> locale) const;
+        jxx::Ptr<String> toUpperCase(const jxx::Ptr<jxx::util::Locale>& locale) const;
 
         jxx::Ptr<String> trim() const;
 
@@ -209,7 +209,7 @@ public:
         static jxx::Ptr<String> valueOf(jxx::lang::jlong l);
         static jxx::Ptr<String> valueOf(jxx::lang::jfloat f);
         static jxx::Ptr<String> valueOf(jxx::lang::jdouble d);
-        static jxx::Ptr<String> valueOf(const jxx::Ptr<Object> obj);
+        static jxx::Ptr<String> valueOf(const jxx::Ptr<Object>& obj);
         static jxx::Ptr<String> valueOf(CharArray data);
         static jxx::Ptr<String> valueOf(CharArray data, jxx::lang::jint offset, jxx::lang::jint count);
 
@@ -217,18 +217,18 @@ public:
         static jxx::Ptr<String> copyValueOf(CharArray data, jxx::lang::jint offset, jxx::lang::jint count);
 
         // Java 8 String.format(...) uses Formatter
-        static jxx::Ptr<String> format(const jxx::Ptr<jxx::lang::String> formatString,
-            const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args);
+        static jxx::Ptr<String> format(const jxx::Ptr<jxx::lang::String>& formatString,
+            const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>& args);
 
-        static jxx::Ptr<jxx::lang::String> format(const jxx::Ptr<jxx::util::Locale> locale,
-            const jxx::Ptr<jxx::lang::String> formatString,
-            const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args);
+        static jxx::Ptr<jxx::lang::String> format(const jxx::Ptr<jxx::util::Locale>& locale,
+            const jxx::Ptr<jxx::lang::String>& formatString,
+            const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>& args);
         // Java 8 join overloads
         static jxx::Ptr<String> join(
-            jxx::Ptr<CharSequence> delimiter,
+            const jxx::Ptr<CharSequence>& delimiter,
             const jxx::Ptr<JxxArray<jxx::Ptr<CharSequence>, 1U>>& elements);
         static jxx::Ptr<String> join(
-            jxx::Ptr<CharSequence> delimiter,
+            const jxx::Ptr<CharSequence>& delimiter,
             const jxx::Ptr<jxx::lang::Iterable<CharSequence>>& elements);
 
         // ---------------------------------------------------------------------
@@ -261,7 +261,7 @@ public:
         static void throwSIOOBE_();
         static void throwIAE_(const char* msg);
 
-        static std::u16string toUtf16_(const jxx::Ptr<CharSequence> s);
+        static std::u16string toUtf16_(const jxx::Ptr<CharSequence>& s);
         static jxx::lang::jbool isTurkicLocale_(const jxx::Ptr<jxx::util::Locale>& loc);
     };
 
