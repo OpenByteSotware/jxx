@@ -132,7 +132,7 @@ private:
 
     // loaded classes cache: binaryName -> weak ClassAny
     mutable std::mutex loadedMutex_;
-    std::unordered_map<std::string, std::weak_ptr<ClassAny>> loadedByName_;
+    std::unordered_map<std::string, jxx::Ptr<ClassAny>> loadedByName_;
 
     // per-class loading locks: name -> Object lock
     mutable std::mutex lockMapMutex_;
@@ -154,7 +154,7 @@ private:
 
     // system loader singleton
     static std::mutex systemMutex_;
-    static std::weak_ptr<ClassLoader> systemLoader_;
+    static jxx::Ptr<ClassLoader> systemLoader_;
 
     // Lock object used by getClassLoadingLock()
     class LoadingLock final : public jxx::lang::ClassBase<LoadingLock, Object> {

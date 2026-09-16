@@ -19,8 +19,8 @@ public:
         explicit Integer(jint value);
 
         static jxx::Ptr<Integer> valueOf(jint value);
-        static jxx::Ptr<Integer> valueOf(const jxx::Ptr<String> s);
-        static jint parseInt(const jxx::Ptr<String> s);
+        static jxx::Ptr<Integer> valueOf(const jxx::Ptr<String>& s);
+        static jint parseInt(const jxx::Ptr<String>& s);
 
     public:
         jbyte byteValue() const override;

@@ -18,8 +18,8 @@ public:
         explicit Byte(jbyte value);
 
         static jxx::Ptr<Byte> valueOf(jbyte value);
-        static jxx::Ptr<Byte> valueOf(const jxx::Ptr<String> s);
-        static jbyte parseByte(const jxx::Ptr<String> s);
+        static jxx::Ptr<Byte> valueOf(const jxx::Ptr<String>& s);
+        static jbyte parseByte(const jxx::Ptr<String>& s);
 
     public:
         jbyte byteValue() const override;

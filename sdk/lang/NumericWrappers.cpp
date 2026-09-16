@@ -6,6 +6,8 @@
 #include "lang/jxx.lang.Float.h"
 #include "lang/jxx.lang.Double.h"
 #include "lang/jxx.lang.Character.h"
+#include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.NumberFormatException.h"
 
 #include <string>
 #include <sstream>
@@ -17,10 +19,10 @@
 
 namespace jxx::lang
 {
-    static std::string narrowAscii_(const jxx::Ptr<String> s)
+    static std::string narrowAscii_(const jxx::Ptr<String>& s)
     {
         if (!s) {
-            throw std::runtime_error("null String");
+            throw NullPointerException();
         }
 
         const std::u16string u = s->utf16();
@@ -29,7 +31,7 @@ namespace jxx::lang
 
         for (char16_t ch : u) {
             if (ch > 0x7f) {
-                throw std::runtime_error("non-ascii numeric string not supported");
+                throw NumberFormatException("Non-ASCII numeric string");
             }
             out.push_back(static_cast<char>(ch));
         }
@@ -76,16 +78,16 @@ namespace jxx::lang
         return jxx::NEW<Byte>(value);
     }
 
-    jxx::Ptr<Byte> Byte::valueOf(const jxx::Ptr<String> s)
+    jxx::Ptr<Byte> Byte::valueOf(const jxx::Ptr<String>& s)
     {
         return jxx::NEW<Byte>(parseByte(s));
     }
 
-    jbyte Byte::parseByte(const jxx::Ptr<String> s)
+    jbyte Byte::parseByte(const jxx::Ptr<String>& s)
     {
         long v = std::stol(narrowAscii_(s));
         if (v < MIN_VALUE || v > MAX_VALUE) {
-            throw std::runtime_error("Byte out of range");
+            throw NumberFormatException("Byte out of range");
         }
         return static_cast<jbyte>(v);
     }
@@ -122,16 +124,16 @@ namespace jxx::lang
         return jxx::NEW<Short>(value);
     }
 
-    jxx::Ptr<Short> Short::valueOf(const jxx::Ptr<String> s)
+    jxx::Ptr<Short> Short::valueOf(const jxx::Ptr<String>& s)
     {
         return jxx::NEW<Short>(parseShort(s));
     }
 
-    jshort Short::parseShort(const jxx::Ptr<String> s)
+    jshort Short::parseShort(const jxx::Ptr<String>& s)
     {
         long v = std::stol(narrowAscii_(s));
         if (v < MIN_VALUE || v > MAX_VALUE) {
-            throw std::runtime_error("Short out of range");
+            throw NumberFormatException("Short out of range");
         }
         return static_cast<jshort>(v);
     }
@@ -168,16 +170,16 @@ namespace jxx::lang
         return jxx::NEW<Integer>(value);
     }
 
-    jxx::Ptr<Integer> Integer::valueOf(const jxx::Ptr<String> s)
+    jxx::Ptr<Integer> Integer::valueOf(const jxx::Ptr<String>& s)
     {
         return jxx::NEW<Integer>(parseInt(s));
     }
 
-    jint Integer::parseInt(const jxx::Ptr<String> s)
+    jint Integer::parseInt(const jxx::Ptr<String>& s)
     {
         long long v = std::stoll(narrowAscii_(s));
         if (v < MIN_VALUE || v > MAX_VALUE) {
-            throw std::runtime_error("Integer out of range");
+            throw NumberFormatException("Integer out of range");
         }
         return static_cast<jint>(v);
     }
@@ -214,12 +216,12 @@ namespace jxx::lang
         return jxx::NEW<Long>(value);
     }
 
-    jxx::Ptr<Long> Long::valueOf(const jxx::Ptr<String> s)
+    jxx::Ptr<Long> Long::valueOf(const jxx::Ptr<String>& s)
     {
         return jxx::NEW<Long>(parseLong(s));
     }
 
-    jlong Long::parseLong(const jxx::Ptr<String> s)
+    jlong Long::parseLong(const jxx::Ptr<String>& s)
     {
         return static_cast<jlong>(std::stoll(narrowAscii_(s)));
     }

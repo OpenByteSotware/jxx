@@ -9,7 +9,7 @@
 
 namespace jxx::lang {
     std::mutex ClassLoader::systemMutex_{};
-    std::weak_ptr<ClassLoader> ClassLoader::systemLoader_{};
+    jxx::Ptr<ClassLoader> ClassLoader::systemLoader_{};
 
     ClassLoader::VectorUrlEnumeration::VectorUrlEnumeration(std::vector<jxx::Ptr<jxx::net::URL>> items)
         : items_(std::move(items)) {}
@@ -37,10 +37,12 @@ namespace jxx::lang {
 
     jxx::Ptr<ClassLoader> ClassLoader::getSystemClassLoader() {
         std::lock_guard<std::mutex> lk(systemMutex_);
-        if (auto s = systemLoader_.lock()) return s;
-        auto sys = jxx::NEW<ClassLoader>(jxx::Ptr<ClassLoader>(nullptr));
-        systemLoader_ = sys;
-        return sys;
+        if (systemLoader_ != nullptr) {
+            return systemLoader_;
+        }
+        systemLoader_ =
+            jxx::NEW<ClassLoader>(jxx::Ptr<ClassLoader>(nullptr));
+        return systemLoader_;
     }
 
     jxx::Ptr<jxx::net::URL> ClassLoader::getSystemResource(const jxx::Ptr<String>& name) {
@@ -72,70 +74,71 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<String> ClassLoader::findLibrary(
-    const jxx::Ptr<String>& /*libraryName*/)
-    {
+        const jxx::Ptr<String>& /*libraryName*/) {
         return nullptr;
     }
 
-    jxx::Ptr<ClassAny> ClassLoader::loadClass(const jxx::Ptr<String>& name, jbool resolve) {
-        if (!name) throw NullPointerException(jxx::NEW<String>("name"));
-        const std::string n = name->utf8();
+    jbool ClassLoader::registerAsParallelCapable() {
+        return true;
+    }
 
-        auto lockObj = getClassLoadingLock(name);
-        return this->synchronized([&]()->jxx::Ptr<ClassAny> {
-            if (auto loaded = findLoadedClass(name)) {
-                if (resolve) resolveClass(loaded);
-                return loaded;
-            }
+    jxx::Ptr<ClassAny> ClassLoader::loadClass(
+        const jxx::Ptr<String>& name,
+        jbool resolve) {
+        if (name == nullptr) {
+            throw NullPointerException(jxx::NEW<String>("name"));
+        }
 
-            if (parent_) {
-                try {
-                    auto c = parent_->loadClass(name, false);
-                    if (c) {
-                        std::lock_guard<std::mutex> lk2(loadedMutex_);
-                        loadedByName_[n] = c;
-                        if (resolve) resolveClass(c);
-                        return c;
+        const std::string binaryName = name->utf8();
+        const auto loadingLock = getClassLoadingLock(name);
+        return loadingLock->synchronized([&]() -> jxx::Ptr<ClassAny> {
+            auto loaded = findLoadedClass(name);
+            if (loaded == nullptr) {
+                if (parent_ != nullptr) {
+                    try {
+                        loaded = parent_->loadClass(name, false);
+                    }
+                    catch (const ClassNotFoundException&) {
+                        loaded = nullptr;
                     }
                 }
-                catch (const ClassNotFoundException&) {
+                else {
+                    try {
+                        loaded = findSystemClass(name);
+                    }
+                    catch (const ClassNotFoundException&) {
+                        loaded = nullptr;
+                    }
                 }
-            }
 
-            try {
-                auto c = findSystemClass(name);
-                if (c) {
-                    std::lock_guard<std::mutex> lk2(loadedMutex_);
-                    loadedByName_[n] = c;
-                    if (resolve) resolveClass(c);
-                    return c;
+                if (loaded == nullptr) {
+                    loaded = findClass(name);
+                    if (loaded == nullptr) {
+                        throw ClassNotFoundException(name);
+                    }
+                    loaded->meta_.classLoader =
+                        ::jxx::CAST<ClassLoader>(thisPtr());
                 }
-            }
-            catch (const ClassNotFoundException&) {
+
+                std::lock_guard<std::mutex> cacheLock(loadedMutex_);
+                loadedByName_[binaryName] = loaded;
             }
 
-            auto c = findClass(name);
-            if (!c) throw ClassNotFoundException(name);
-
-            c->meta_.classLoader =
-                ::jxx::CAST<ClassLoader>(thisPtr());
-
-            {
-                std::lock_guard<std::mutex> lk2(loadedMutex_);
-                loadedByName_[n] = c;
+            if (resolve) {
+                resolveClass(loaded);
             }
-            if (resolve) resolveClass(c);
-            return c;
-            });
+            return loaded;
+        });
     }
 
     jxx::Ptr<ClassAny> ClassLoader::findLoadedClass(const jxx::Ptr<String>& name) {
         if (!name) throw NullPointerException(jxx::NEW<String>("name"));
         const std::string n = name->utf8();
         std::lock_guard<std::mutex> lk(loadedMutex_);
-        auto it = loadedByName_.find(n);
-        if (it == loadedByName_.end()) return nullptr;
-        return it->second.lock();
+        const auto it = loadedByName_.find(n);
+        return it == loadedByName_.end()
+            ? nullptr
+            : it->second;
     }
 
     jxx::Ptr<ClassAny> ClassLoader::findSystemClass(const jxx::Ptr<String>& name) {

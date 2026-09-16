@@ -19,8 +19,8 @@ public:
         explicit Long(jlong value);
 
         static jxx::Ptr<Long> valueOf(jlong value);
-        static jxx::Ptr<Long> valueOf(const jxx::Ptr<String> s);
-        static jlong parseLong(const jxx::Ptr<String> s);
+        static jxx::Ptr<Long> valueOf(const jxx::Ptr<String>& s);
+        static jlong parseLong(const jxx::Ptr<String>& s);
 
     public:
         jbyte byteValue() const override;

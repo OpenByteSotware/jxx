@@ -19,8 +19,8 @@ public:
         explicit Short(jshort value);
 
         static jxx::Ptr<Short> valueOf(jshort value);
-        static jxx::Ptr<Short> valueOf(const jxx::Ptr<String> s);
-        static jshort parseShort(const jxx::Ptr<String> s);
+        static jxx::Ptr<Short> valueOf(const jxx::Ptr<String>& s);
+        static jshort parseShort(const jxx::Ptr<String>& s);
 
     public:
         jbyte byteValue() const override;

@@ -4,6 +4,7 @@
 #include "lang/jxx.lang.Class.h"
 #include "lang/jxx.lang.Cast.h"
 #include "lang/jxx.lang.Cloneable.h"
+#include "lang/jxx.lang.CloneNotSupportedException.h"
 #include "lang/jxx.lang.Object.h"
 
 
@@ -43,7 +44,7 @@ namespace jxx::lang {
     jxx::Ptr<jxx::lang::Object> Object::clone() const {
         // Check if this object is Cloneable
         if (std::dynamic_pointer_cast<Cloneable>(thisPtr()) == nullptr) {
-            throw std::runtime_error("CloneNotSupportedException");
+            throw CloneNotSupportedException();
         }
 
         // If Cloneable, delegate to derived class's cloneImpl
@@ -113,7 +114,7 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<jxx::lang::Object> Object::cloneImpl() const {
-        throw std::runtime_error("cloneImpl not implemented");
+        throw CloneNotSupportedException();
     }
 
     jxx::Ptr<jxx::lang::String> Object::getClassName_() const {

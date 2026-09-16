@@ -9,7 +9,7 @@ namespace jxx::lang {
 
 class Boolean : public jxx::lang::ClassBase<Boolean, Object> {
 public:
-    using JavaSuper = Object;
+    using JxxSuper = Object;
     using Super = jxx::lang::ClassBase<Boolean, Object>;
 
 private:
