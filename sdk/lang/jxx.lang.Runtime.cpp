@@ -6,6 +6,7 @@
 #include <new>
 #include <string>
 #include <thread>
+#include <sstream>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -19,6 +20,8 @@
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.IllegalStateException.h"
 #include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.ProcessBuilder.h"
+#include "io/jxx.io.File.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Thread.h"
 #include "lang/jxx.lang.UnsatisfiedLinkError.h"
@@ -149,13 +152,34 @@ jxx::Ptr<jxx::io::InputStream> Runtime::getLocalizedInputStream(
 jxx::Ptr<jxx::io::OutputStream> Runtime::getLocalizedOutputStream(
     const jxx::Ptr<jxx::io::OutputStream>& output) { return output; }
 
-#define JXX_RUNTIME_EXEC_DEFERRED(body) body { throw UnsupportedOperationException(jxx::NEW<String>("Process stage required")); }
-JXX_RUNTIME_EXEC_DEFERRED(jxx::Ptr<Process> Runtime::exec(const jxx::Ptr<String>&))
-JXX_RUNTIME_EXEC_DEFERRED(jxx::Ptr<Process> Runtime::exec(const jxx::Ptr<JxxArray<jxx::Ptr<String>,1>>&))
-JXX_RUNTIME_EXEC_DEFERRED(jxx::Ptr<Process> Runtime::exec(const jxx::Ptr<String>&, const jxx::Ptr<JxxArray<jxx::Ptr<String>,1>>&))
-JXX_RUNTIME_EXEC_DEFERRED(jxx::Ptr<Process> Runtime::exec(const jxx::Ptr<JxxArray<jxx::Ptr<String>,1>>&, const jxx::Ptr<JxxArray<jxx::Ptr<String>,1>>&))
-JXX_RUNTIME_EXEC_DEFERRED(jxx::Ptr<Process> Runtime::exec(const jxx::Ptr<String>&, const jxx::Ptr<JxxArray<jxx::Ptr<String>,1>>&, const jxx::Ptr<jxx::io::File>&))
-JXX_RUNTIME_EXEC_DEFERRED(jxx::Ptr<Process> Runtime::exec(const jxx::Ptr<JxxArray<jxx::Ptr<String>,1>>&, const jxx::Ptr<JxxArray<jxx::Ptr<String>,1>>&, const jxx::Ptr<jxx::io::File>&))
-#undef JXX_RUNTIME_EXEC_DEFERRED
+namespace {
+jxx::Ptr<JxxArray<jxx::Ptr<String>,1>> splitCommand(const jxx::Ptr<String>& command) {
+    if (command == nullptr) throw NullPointerException();
+    std::istringstream input(command->utf8());
+    std::vector<std::string> parts; std::string part;
+    while (input >> part) parts.push_back(part);
+    if (parts.empty()) throw IllegalArgumentException();
+    auto result=jxx::NEW<JxxArray<jxx::Ptr<String>,1>>(parts.size());
+    for(std::uint32_t i=0;i<result->length;++i)(*result)[i]=jxx::NEW<String>(parts[i]);
+    return result;
+}
+void applyEnvironment(const jxx::Ptr<ProcessBuilder>& builder,
+ const jxx::Ptr<JxxArray<jxx::Ptr<String>,1>>& environment) {
+    if (environment == nullptr) return;
+    builder->clearEnvironment();
+    for(std::uint32_t i=0;i<environment->length;++i){
+        const auto& entry=(*environment)[i]; if(entry==nullptr)throw NullPointerException();
+        auto text=entry->utf8(); auto position=text.find('=');
+        if(position==std::string::npos||position==0)throw IllegalArgumentException(entry);
+        builder->environment(jxx::NEW<String>(text.substr(0,position)),jxx::NEW<String>(text.substr(position+1)));
+    }
+}
+}
+jxx::Ptr<Process> Runtime::exec(const jxx::Ptr<String>& command){return exec(command,nullptr,nullptr);}
+jxx::Ptr<Process> Runtime::exec(const jxx::Ptr<JxxArray<jxx::Ptr<String>,1>>& command){return exec(command,nullptr,nullptr);}
+jxx::Ptr<Process> Runtime::exec(const jxx::Ptr<String>& command,const jxx::Ptr<JxxArray<jxx::Ptr<String>,1>>& environment){return exec(command,environment,nullptr);}
+jxx::Ptr<Process> Runtime::exec(const jxx::Ptr<JxxArray<jxx::Ptr<String>,1>>& command,const jxx::Ptr<JxxArray<jxx::Ptr<String>,1>>& environment){return exec(command,environment,nullptr);}
+jxx::Ptr<Process> Runtime::exec(const jxx::Ptr<String>& command,const jxx::Ptr<JxxArray<jxx::Ptr<String>,1>>& environment,const jxx::Ptr<jxx::io::File>& directory){return exec(splitCommand(command),environment,directory);}
+jxx::Ptr<Process> Runtime::exec(const jxx::Ptr<JxxArray<jxx::Ptr<String>,1>>& command,const jxx::Ptr<JxxArray<jxx::Ptr<String>,1>>& environment,const jxx::Ptr<jxx::io::File>& directory){auto builder=jxx::NEW<ProcessBuilder>(command);applyEnvironment(builder,environment);builder->directory(directory);return builder->start();}
 
 } // namespace jxx::lang

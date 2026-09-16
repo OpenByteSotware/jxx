@@ -66,6 +66,8 @@
 #include "lang/jxx.lang.Integer.h"
 #include "lang/jxx.lang.Long.h"
 #include "lang/jxx.lang.Runtime.h"
+#include "lang/jxx.lang.ProcessBuilder.h"
+#include "lang/jxx.lang.Process.h"
 #include "lang/jxx.lang.Package.h"
 #include "lang/jxx.lang.Short.h"
 #include "lang/jxx.lang.StringBuffer.h"
@@ -160,6 +162,7 @@ void initializeClasses()
             registerType<StringBuilder>();
             registerType<ThreadGroup>();
             registerType<Runtime>();
+            registerType<ProcessBuilder>();
         });
 }
 
