@@ -5,8 +5,10 @@
 
 namespace jxx::awt
 {
-    class Frame :
-        public ::jxx::lang::ClassBase<Frame, Window>
+    class MenuBar;
+    class MenuComponent;
+
+    class Frame : public ::jxx::lang::ClassBase<Frame, Window>
     {
     public:
         using JxxSuper = Window;
@@ -21,10 +23,16 @@ namespace jxx::awt
 
         virtual ::jxx::Ptr<::jxx::lang::String> getTitle() const;
 
+        virtual ::jxx::Ptr<MenuBar> getMenuBar() const;
+        virtual void setMenuBar(const ::jxx::Ptr<MenuBar>& menuBar);
+        virtual void remove(
+            const ::jxx::Ptr<MenuComponent>& menuComponent);
+
     protected:
         void ensureNativeWindow() override;
 
     private:
         ::jxx::Ptr<::jxx::lang::String> title_;
+        ::jxx::Ptr<MenuBar> menuBar_;
     };
 }
