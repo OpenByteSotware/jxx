@@ -3,16 +3,42 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
 #include "util/jxx.util.MissingResourceException.h"
+#include "util/jxx.util.NoSuchElementException.h"
 
 namespace jxx::util {
 namespace {
 
 using Factory = ResourceBundle::BundleFactory;
+
+class KeyEnumeration final : public Enumeration<jxx::lang::String> {
+public:
+    explicit KeyEnumeration(
+        std::vector<jxx::Ptr<jxx::lang::String>> values)
+        : values_(std::move(values)) {
+    }
+
+    jxx::lang::jbool hasMoreElements() override {
+        return index_ < values_.size();
+    }
+
+    jxx::Ptr<jxx::lang::String> nextElement() override {
+        if (!hasMoreElements()) {
+            throw NoSuchElementException();
+        }
+        return values_[index_++];
+    }
+
+private:
+    std::vector<jxx::Ptr<jxx::lang::String>> values_;
+    std::size_t index_ = 0;
+};
 
 std::mutex& registryMutex() {
     static std::mutex value;
@@ -49,25 +75,17 @@ std::vector<std::string> candidateNames(
     std::string suffix;
     if (!language.empty()) {
         suffix = "_" + language;
-        if (!script.empty()) {
-            suffix += "_" + script;
-        }
-        if (!country.empty()) {
-            suffix += "_" + country;
-        }
-        if (!variant.empty()) {
-            suffix += "_" + variant;
-        }
+        if (!script.empty()) suffix += "_" + script;
+        if (!country.empty()) suffix += "_" + country;
+        if (!variant.empty()) suffix += "_" + variant;
         appendCandidate(result, baseName + suffix);
 
         if (!variant.empty()) {
-            const auto position = suffix.rfind('_');
-            suffix.erase(position);
+            suffix.erase(suffix.rfind('_'));
             appendCandidate(result, baseName + suffix);
         }
         if (!country.empty()) {
-            const auto position = suffix.rfind('_');
-            suffix.erase(position);
+            suffix.erase(suffix.rfind('_'));
             appendCandidate(result, baseName + suffix);
         }
         if (!script.empty()) {
@@ -94,24 +112,37 @@ jxx::Ptr<ResourceBundle> ResourceBundle::getBundle(
 
     const auto base = baseName->utf8();
     const auto candidates = candidateNames(base, locale);
+    const auto cacheKey = base + "|" + locale->toLanguageTag()->utf8();
     std::lock_guard<std::mutex> lock(registryMutex());
 
-    for (const auto& candidate : candidates) {
-        const auto cached = cache().find(candidate);
-        if (cached != cache().end()) {
-            return cached->second;
-        }
+    const auto cached = cache().find(cacheKey);
+    if (cached != cache().end()) {
+        return cached->second;
+    }
 
-        const auto provider = registry().find(candidate);
-        if (provider != registry().end()) {
-            auto bundle = provider->second();
-            if (bundle != nullptr) {
-                bundle->locale_ = locale;
-                bundle->baseBundleName_ = baseName;
-                cache()[candidate] = bundle;
-                return bundle;
-            }
+    jxx::Ptr<ResourceBundle> parent;
+    jxx::Ptr<ResourceBundle> selected;
+    for (auto iterator = candidates.rbegin();
+         iterator != candidates.rend();
+         ++iterator) {
+        const auto provider = registry().find(*iterator);
+        if (provider == registry().end()) {
+            continue;
         }
+        auto bundle = provider->second();
+        if (bundle == nullptr) {
+            continue;
+        }
+        bundle->locale_ = locale;
+        bundle->baseBundleName_ = baseName;
+        bundle->setParent(parent);
+        parent = bundle;
+        selected = bundle;
+    }
+
+    if (selected != nullptr) {
+        cache()[cacheKey] = selected;
+        return selected;
     }
 
     throw MissingResourceException(
@@ -132,9 +163,65 @@ void ResourceBundle::registerBundle(
         throw jxx::lang::NullPointerException();
     }
     std::lock_guard<std::mutex> lock(registryMutex());
-    const auto name = bundleName->utf8();
-    registry()[name] = factory;
-    cache().erase(name);
+    registry()[bundleName->utf8()] = factory;
+    cache().clear();
+}
+
+jxx::Ptr<jxx::lang::Object> ResourceBundle::getObject(
+    const jxx::Ptr<jxx::lang::String>& key) {
+    if (key == nullptr) {
+        throw jxx::lang::NullPointerException();
+    }
+
+    auto value = handleGetObject(key);
+    if (value != nullptr) {
+        return value;
+    }
+    if (parent_ != nullptr) {
+        return parent_->getObject(key);
+    }
+
+    throw MissingResourceException(
+        jxx::NEW<jxx::lang::String>("Cannot find resource for key"),
+        baseBundleName_,
+        key);
+}
+
+jxx::Ptr<jxx::lang::String> ResourceBundle::getString(
+    const jxx::Ptr<jxx::lang::String>& key) {
+    return jxx::CAST<jxx::lang::String>(getObject(key));
+}
+
+jxx::Ptr<Enumeration<jxx::lang::String>> ResourceBundle::getKeys() {
+    std::vector<jxx::Ptr<jxx::lang::String>> keys;
+    std::unordered_set<std::string> seen;
+
+    for (auto bundle = jxx::CAST<ResourceBundle>(thisPtr());
+         bundle != nullptr;
+         bundle = bundle->parent_) {
+        auto local = bundle->getLocalKeys();
+        if (local == nullptr) {
+            continue;
+        }
+        while (local->hasMoreElements()) {
+            auto key = local->nextElement();
+            if (key != nullptr && seen.insert(key->utf8()).second) {
+                keys.push_back(key);
+            }
+        }
+    }
+
+    return jxx::Ptr<Enumeration<jxx::lang::String>>(
+        new KeyEnumeration(std::move(keys)));
+}
+
+void ResourceBundle::setParent(
+    const jxx::Ptr<ResourceBundle>& parent) {
+    parent_ = parent;
+}
+
+jxx::Ptr<ResourceBundle> ResourceBundle::getParent() const {
+    return parent_;
 }
 
 jxx::Ptr<Locale> ResourceBundle::getLocale() const {

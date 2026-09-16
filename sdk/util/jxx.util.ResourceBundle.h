@@ -4,6 +4,7 @@
 
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx_types.h"
+#include "util/jxx.util.Enumeration.h"
 #include "util/jxx.util.Locale.h"
 
 namespace jxx::lang {
@@ -25,13 +26,17 @@ public:
 
     static void clearCache();
 
-    // JXX registration hook for compiled or property-backed bundle providers.
     static void registerBundle(
         const jxx::Ptr<jxx::lang::String>& bundleName,
         const BundleFactory& factory);
 
-    virtual jxx::Ptr<jxx::lang::String> getString(
-        const jxx::Ptr<jxx::lang::String>& key) = 0;
+    jxx::Ptr<jxx::lang::Object> getObject(
+        const jxx::Ptr<jxx::lang::String>& key);
+
+    jxx::Ptr<jxx::lang::String> getString(
+        const jxx::Ptr<jxx::lang::String>& key);
+
+    jxx::Ptr<Enumeration<jxx::lang::String>> getKeys();
 
     jxx::Ptr<Locale> getLocale() const;
     jxx::Ptr<jxx::lang::String> getBaseBundleName() const;
@@ -39,9 +44,19 @@ public:
 protected:
     ResourceBundle() = default;
 
+    virtual jxx::Ptr<jxx::lang::Object> handleGetObject(
+        const jxx::Ptr<jxx::lang::String>& key) = 0;
+
+    virtual jxx::Ptr<Enumeration<jxx::lang::String>>
+    getLocalKeys() = 0;
+
+    void setParent(const jxx::Ptr<ResourceBundle>& parent);
+    jxx::Ptr<ResourceBundle> getParent() const;
+
 private:
     jxx::Ptr<Locale> locale_;
     jxx::Ptr<jxx::lang::String> baseBundleName_;
+    jxx::Ptr<ResourceBundle> parent_;
 };
 
 } // namespace jxx::util
