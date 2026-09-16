@@ -6,6 +6,8 @@
 #include "awt/event/jxx.awt.event.ComponentListener.h"
 #include "awt/event/jxx.awt.event.FocusEvent.h"
 #include "awt/event/jxx.awt.event.FocusListener.h"
+#include "awt/event/jxx.awt.event.KeyEvent.h"
+#include "awt/event/jxx.awt.event.KeyListener.h"
 #include "awt/jxx.awt.Container.h"
 #include "gui/internal/jxx.gui.internal.NativeComponent.h"
 
@@ -141,6 +143,9 @@ namespace jxx::awt
 
     void Component::addFocusListener(const ::jxx::Ptr<::jxx::awt::event::FocusListener>& listener){if(listener&&std::find(focusListeners_.begin(),focusListeners_.end(),listener)==focusListeners_.end())focusListeners_.push_back(listener);}
     void Component::removeFocusListener(const ::jxx::Ptr<::jxx::awt::event::FocusListener>& listener){focusListeners_.erase(std::remove(focusListeners_.begin(),focusListeners_.end(),listener),focusListeners_.end());}
+    void Component::addKeyListener(const ::jxx::Ptr<::jxx::awt::event::KeyListener>& listener){if(listener&&std::find(keyListeners_.begin(),keyListeners_.end(),listener)==keyListeners_.end())keyListeners_.push_back(listener);}
+    void Component::removeKeyListener(const ::jxx::Ptr<::jxx::awt::event::KeyListener>& listener){keyListeners_.erase(std::remove(keyListeners_.begin(),keyListeners_.end(),listener),keyListeners_.end());}
+    void Component::processKeyEvent(const ::jxx::Ptr<::jxx::awt::event::KeyEvent>& event){const auto listeners=keyListeners_;for(const auto& listener:listeners){if(!listener)continue;if(event->getID()==::jxx::awt::event::KeyEvent::KEY_TYPED)listener->keyTyped(event);else if(event->getID()==::jxx::awt::event::KeyEvent::KEY_PRESSED)listener->keyPressed(event);else if(event->getID()==::jxx::awt::event::KeyEvent::KEY_RELEASED)listener->keyReleased(event);}}
     void Component::requestFocus(){if(nativeComponent_)nativeComponent_->requestFocus();}
     ::jxx::lang::jbool Component::isFocusOwner() const{return nativeComponent_&&nativeComponent_->hasFocus();}
     void Component::processFocusEvent(const ::jxx::Ptr<::jxx::awt::event::FocusEvent>& event){const auto listeners=focusListeners_;for(const auto& listener:listeners){if(!listener)continue;if(event->getID()==::jxx::awt::event::FocusEvent::FOCUS_GAINED)listener->focusGained(event);else if(event->getID()==::jxx::awt::event::FocusEvent::FOCUS_LOST)listener->focusLost(event);}}
@@ -160,6 +165,7 @@ namespace jxx::awt
         if(font_) nativeComponent_->setFont(font_);
         std::weak_ptr<Component> self=::jxx::CAST<Component>(thisPtr());
         nativeComponent_->setFocusCallback([self](::jxx::lang::jbool gained){if(auto owner=self.lock())owner->processFocusEvent(::jxx::NEW<::jxx::awt::event::FocusEvent>(owner,gained?::jxx::awt::event::FocusEvent::FOCUS_GAINED : ::jxx::awt::event::FocusEvent::FOCUS_LOST));});
+        nativeComponent_->setKeyCallback([self](::jxx::lang::jint id,::jxx::lang::jint code,::jxx::lang::jchar character,::jxx::lang::jint modifiers){if(auto owner=self.lock())owner->processKeyEvent(::jxx::NEW<::jxx::awt::event::KeyEvent>(owner,id,0,modifiers,code,character));});
     }
 
     void Component::invalidate() { valid_=false; }
