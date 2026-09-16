@@ -15,6 +15,22 @@ class Process;
 
 class ProcessBuilder final : public ClassBase<ProcessBuilder, Object> {
 public:
+    class Redirect final : public ClassBase<Redirect, Object> {
+    public:
+        enum class Type { PIPE, INHERIT, READ, WRITE, APPEND };
+        static jxx::Ptr<Redirect> PIPE;
+        static jxx::Ptr<Redirect> INHERIT;
+        static jxx::Ptr<Redirect> from(const jxx::Ptr<jxx::io::File>& file);
+        static jxx::Ptr<Redirect> to(const jxx::Ptr<jxx::io::File>& file);
+        static jxx::Ptr<Redirect> appendTo(const jxx::Ptr<jxx::io::File>& file);
+        Type type() const;
+        jxx::Ptr<jxx::io::File> file() const;
+    private:
+        Redirect(Type type, const jxx::Ptr<jxx::io::File>& file);
+        Type type_;
+        jxx::Ptr<jxx::io::File> file_;
+    };
+
     using JxxSuper = Object;
     using Super = ClassBase<ProcessBuilder, JxxSuper>;
 
@@ -34,6 +50,17 @@ public:
     jxx::Ptr<String> environment(const jxx::Ptr<String>& name) const;
     jxx::Ptr<ProcessBuilder> clearEnvironment();
 
+
+    jxx::Ptr<Redirect> redirectInput() const;
+    jxx::Ptr<Redirect> redirectOutput() const;
+    jxx::Ptr<Redirect> redirectError() const;
+    jxx::Ptr<ProcessBuilder> redirectInput(const jxx::Ptr<Redirect>& source);
+    jxx::Ptr<ProcessBuilder> redirectOutput(const jxx::Ptr<Redirect>& destination);
+    jxx::Ptr<ProcessBuilder> redirectError(const jxx::Ptr<Redirect>& destination);
+    jxx::Ptr<ProcessBuilder> redirectInput(const jxx::Ptr<jxx::io::File>& file);
+    jxx::Ptr<ProcessBuilder> redirectOutput(const jxx::Ptr<jxx::io::File>& file);
+    jxx::Ptr<ProcessBuilder> redirectError(const jxx::Ptr<jxx::io::File>& file);
+    jxx::Ptr<ProcessBuilder> inheritIO();
     jbool redirectErrorStream() const;
     jxx::Ptr<ProcessBuilder> redirectErrorStream(jbool redirect);
 
@@ -44,5 +71,8 @@ private:
     std::unordered_map<std::string,std::string> environment_;
     jxx::Ptr<jxx::io::File> directory_;
     jbool redirectErrorStream_ = false;
+    jxx::Ptr<Redirect> inputRedirect_;
+    jxx::Ptr<Redirect> outputRedirect_;
+    jxx::Ptr<Redirect> errorRedirect_;
 };
 } // namespace jxx::lang
