@@ -61,26 +61,13 @@ protected:
         const ::jxx::Ptr<::jxx::lang::Object>& lockObject);
 
     /**
-2
-* Synchronization object used by reader operations.
-3
-*
-4
-* The no-argument constructor creates a dedicated monitor object.
-5
-* The explicit constructor retains the supplied monitor object.
-6
-*
-7
-* A dedicated monitor is used instead of a counted self-reference
-8
-* because the owning jxx::Ptr is established only after construction,
-9
-* and storing that counted self-reference would create an ownership
-10
-* cycle.
-11
-*/
+     * Synchronization object used by reader operations.
+     *
+     * The no-argument constructor creates a dedicated monitor. The explicit
+     * constructor retains the supplied monitor. A dedicated monitor avoids a
+     * counted self-reference during construction and prevents an ownership
+     * cycle.
+     */
     ::jxx::Ptr<::jxx::lang::Object> lock;
 };
 

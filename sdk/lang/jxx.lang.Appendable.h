@@ -7,14 +7,8 @@
 namespace jxx::lang {
 
     /**
-     * Java-like java.lang.Appendable.
-     *
-     * Java signature:
-     *   Appendable append(CharSequence csq)
-     *   Appendable append(CharSequence csq, int start, int end)
-     *   Appendable append(char c)
-     *
-     * JXX rule: reference returns use jxx::Ptr<T>.
+     * Character-output interface with whole-sequence, subsequence,
+     * and single-character append operations.
      */
     class Appendable : public jxx::lang::InterfaceBase<Appendable> {
     public:

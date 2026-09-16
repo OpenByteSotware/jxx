@@ -1,0 +1,18 @@
+#pragma once
+#include "awt/jxx.awt.Component.h"
+#include "lang/jxx.lang.String.h"
+namespace jxx::awt {
+class TextComponent : public ::jxx::lang::ClassBase<TextComponent,Component> {
+public:
+ using JxxSuper=Component; using Super=::jxx::lang::ClassBase<TextComponent,JxxSuper>;
+ ~TextComponent() override=0;
+ ::jxx::Ptr<::jxx::lang::String> getText() const; virtual void setText(const ::jxx::Ptr<::jxx::lang::String>& text);
+ ::jxx::lang::jbool isEditable() const; void setEditable(::jxx::lang::jbool editable);
+ ::jxx::lang::jint getSelectionStart() const; void setSelectionStart(::jxx::lang::jint start);
+ ::jxx::lang::jint getSelectionEnd() const; void setSelectionEnd(::jxx::lang::jint end);
+ void select(::jxx::lang::jint start,::jxx::lang::jint end); void selectAll();
+ ::jxx::Ptr<::jxx::lang::String> getSelectedText() const;
+ ::jxx::lang::jint getCaretPosition() const; void setCaretPosition(::jxx::lang::jint position);
+protected: explicit TextComponent(const ::jxx::Ptr<::jxx::lang::String>& text);
+private: ::jxx::Ptr<::jxx::lang::String> text_; ::jxx::lang::jbool editable_; ::jxx::lang::jint selectionStart_,selectionEnd_,caretPosition_;
+}; }
