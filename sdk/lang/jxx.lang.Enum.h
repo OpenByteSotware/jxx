@@ -1,9 +1,11 @@
 #pragma once
 
 #include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.buildin_array.h"
 #include "lang/jxx.lang.CloneNotSupportedException.h"
 #include "lang/jxx.lang.ClassCastException.h"
 #include "lang/jxx.lang.Comparable.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
@@ -37,6 +39,27 @@ public:
     }
 
     jxx::Ptr<ClassAny> getDeclaringClass() const { return E::Class(); }
+
+    static jxx::Ptr<E> valueOf(
+        const jxx::Ptr<ClassAny>& enumType,
+        const jxx::Ptr<String>& name) {
+        if (enumType == nullptr || name == nullptr) {
+            throw NullPointerException();
+        }
+        if (enumType.get() != E::Class().get()) {
+            throw IllegalArgumentException();
+        }
+        const auto constants = E::values();
+        if (constants != nullptr) {
+            for (std::uint32_t index = 0; index < constants->length; ++index) {
+                const auto& constant = (*constants)[index];
+                if (constant != nullptr && constant->name()->equals(name)) {
+                    return constant;
+                }
+            }
+        }
+        throw IllegalArgumentException(name);
+    }
 
 protected:
     Enum(const jxx::Ptr<String>& name, jint ordinal)

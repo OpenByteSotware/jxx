@@ -143,6 +143,7 @@ void Thread::entry_(
         self->run();
     }
     catch (...) {
+        thread_local_detail::clearCurrentThreadValues();
         self->state_->running.store(false);
         self->state_->finished.store(true);
         self->state_->finishedCondition.notify_all();
@@ -150,6 +151,7 @@ void Thread::entry_(
         return;
     }
 
+    thread_local_detail::clearCurrentThreadValues();
     self->state_->running.store(false);
     self->state_->finished.store(true);
     self->state_->finishedCondition.notify_all();

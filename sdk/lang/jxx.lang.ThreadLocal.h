@@ -7,18 +7,25 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.ThreadLocalSupport.h"
 #include "util/function/jxx.util.function.Supplier.h"
 
 namespace jxx::lang {
 
 template <typename T>
-class ThreadLocal : public ClassBase<ThreadLocal<T>, Object> {
+class ThreadLocal
+    : public ClassBase<ThreadLocal<T>, Object>
+    , private thread_local_detail::LocalEntry {
 public:
     using JxxSuper = Object;
     using Super = ClassBase<ThreadLocal<T>, JxxSuper>;
 
-    ThreadLocal() = default;
-    ~ThreadLocal() override = default;
+    ThreadLocal() {
+        thread_local_detail::addLocalEntry(this);
+    }
+    ~ThreadLocal() override {
+        thread_local_detail::removeLocalEntry(this);
+    }
 
     jxx::Ptr<T> get() {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -69,6 +76,8 @@ protected:
     void setForCurrentThread(const jxx::Ptr<T>& value) { set(value); }
 
 private:
+    void removeCurrentThreadValue() override { remove(); }
+
     std::mutex mutex_;
     std::unordered_map<std::thread::id, jxx::Ptr<T>> values_;
 };
