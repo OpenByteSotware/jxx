@@ -18,15 +18,13 @@ namespace jxx::awt
         explicit Frame(const ::jxx::Ptr<::jxx::lang::String>& title);
         ~Frame() override = default;
 
-        virtual void setTitle(
-            const ::jxx::Ptr<::jxx::lang::String>& title);
-
+        virtual void setTitle(const ::jxx::Ptr<::jxx::lang::String>& title);
         virtual ::jxx::Ptr<::jxx::lang::String> getTitle() const;
-
         virtual ::jxx::Ptr<MenuBar> getMenuBar() const;
         virtual void setMenuBar(const ::jxx::Ptr<MenuBar>& menuBar);
-        virtual void remove(
-            const ::jxx::Ptr<MenuComponent>& menuComponent);
+        virtual void remove(const ::jxx::Ptr<MenuComponent>& menuComponent);
+
+        void validate() override;
 
     protected:
         void ensureNativeWindow() override;

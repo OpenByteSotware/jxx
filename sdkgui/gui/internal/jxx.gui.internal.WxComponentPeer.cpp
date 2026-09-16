@@ -16,6 +16,15 @@ namespace jxx::gui::internal
     WxComponentPeer::WxComponentPeer(wxWindow* window)
         : window_(window)
     {
+        if (window_ != nullptr)
+        {
+            window_->Bind(wxEVT_DESTROY, [this](wxWindowDestroyEvent& event)
+            {
+                nativeDestroyed();
+                event.Skip();
+            });
+        }
+
         if (auto* button = dynamic_cast<wxButton*>(window_))
         {
             button->Bind(wxEVT_BUTTON, [this](wxCommandEvent& event)
@@ -38,6 +47,12 @@ namespace jxx::gui::internal
     WxComponentPeer::~WxComponentPeer()
     {
         destroy();
+    }
+
+    void WxComponentPeer::nativeDestroyed()
+    {
+        window_ = nullptr;
+        actionCallback_ = {};
     }
 
     void WxComponentPeer::destroy()
