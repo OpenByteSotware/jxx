@@ -4,6 +4,7 @@
 
 #include "awt/event/jxx.awt.event.ContainerEvent.h"
 #include "awt/event/jxx.awt.event.ContainerListener.h"
+#include "awt/event/jxx.awt.event.HierarchyEvent.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
 #include "lang/jxx.lang.NullPointerException.h"
@@ -31,6 +32,7 @@ namespace jxx::awt
 
         components_.insert(components_.begin() + index, component);
         component->setParentInternal(::jxx::CAST<Container>(thisPtr()));
+        component->fireHierarchyEvent(::jxx::awt::event::HierarchyEvent::HIERARCHY_CHANGED, component, ::jxx::CAST<Container>(thisPtr()), ::jxx::awt::event::HierarchyEvent::PARENT_CHANGED);
         if (layout_) layout_->addLayoutComponent(nullptr, component);
         invalidate();
         fireContainerEvent(
@@ -57,6 +59,7 @@ namespace jxx::awt
         if (layout_) layout_->removeLayoutComponent(component);
         component->setNativeComponentInternal(nullptr);
         component->setParentInternal(nullptr);
+        component->fireHierarchyEvent(::jxx::awt::event::HierarchyEvent::HIERARCHY_CHANGED, component, ::jxx::CAST<Container>(thisPtr()), ::jxx::awt::event::HierarchyEvent::PARENT_CHANGED);
         components_.erase(components_.begin() + index);
         invalidate();
         fireContainerEvent(
@@ -154,6 +157,15 @@ namespace jxx::awt
         Component::validate();
     }
 
+    void Container::fireHierarchyBoundsToDescendants(::jxx::lang::jint id, const ::jxx::Ptr<Component>& changed)
+    {
+        for (const auto& component : components_)
+        {
+            if (!component) continue;
+            component->fireHierarchyEvent(id, changed, ::jxx::CAST<Container>(thisPtr()), 0);
+            if (auto child = ::jxx::CAST<Container>(component)) child->fireHierarchyBoundsToDescendants(id, changed);
+        }
+    }
     void Container::doLayout()
     {
         if (layout_)

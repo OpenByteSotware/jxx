@@ -55,6 +55,8 @@ namespace jxx::awt
             const ::jxx::Ptr<::jxx::awt::event::ContainerEvent>& event);
 
     private:
+        friend class Component;
+        void fireHierarchyBoundsToDescendants(::jxx::lang::jint id, const ::jxx::Ptr<Component>& changed);
         void fireContainerEvent(
             ::jxx::lang::jint id,
             const ::jxx::Ptr<Component>& child);

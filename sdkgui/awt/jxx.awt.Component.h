@@ -16,7 +16,7 @@ namespace jxx::awt::event
     class FocusListener;
     class KeyEvent;
     class KeyListener;
-    class MouseEvent; class MouseListener; class MouseMotionListener; class MouseWheelEvent; class MouseWheelListener;
+    class MouseEvent; class MouseListener; class MouseMotionListener; class MouseWheelEvent; class MouseWheelListener; class HierarchyEvent; class HierarchyListener; class HierarchyBoundsListener;
 }
 
 namespace jxx::gui::internal
@@ -77,6 +77,10 @@ namespace jxx::awt
         virtual void addMouseListener(const ::jxx::Ptr<::jxx::awt::event::MouseListener>&); virtual void removeMouseListener(const ::jxx::Ptr<::jxx::awt::event::MouseListener>&); virtual void addMouseMotionListener(const ::jxx::Ptr<::jxx::awt::event::MouseMotionListener>&); virtual void removeMouseMotionListener(const ::jxx::Ptr<::jxx::awt::event::MouseMotionListener>&);
         virtual void addMouseWheelListener(const ::jxx::Ptr<::jxx::awt::event::MouseWheelListener>& listener);
         virtual void removeMouseWheelListener(const ::jxx::Ptr<::jxx::awt::event::MouseWheelListener>& listener);
+        virtual void addHierarchyListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyListener>& listener);
+        virtual void removeHierarchyListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyListener>& listener);
+        virtual void addHierarchyBoundsListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyBoundsListener>& listener);
+        virtual void removeHierarchyBoundsListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyBoundsListener>& listener);
         virtual void requestFocus();
         virtual ::jxx::lang::jbool isFocusOwner() const;
 
@@ -91,6 +95,8 @@ namespace jxx::awt
         virtual void processFocusEvent(const ::jxx::Ptr<::jxx::awt::event::FocusEvent>& event);
         virtual void processMouseEvent(const ::jxx::Ptr<::jxx::awt::event::MouseEvent>& event);
         virtual void processMouseWheelEvent(const ::jxx::Ptr<::jxx::awt::event::MouseWheelEvent>& event);
+        virtual void processHierarchyEvent(const ::jxx::Ptr<::jxx::awt::event::HierarchyEvent>& event);
+        virtual void processHierarchyBoundsEvent(const ::jxx::Ptr<::jxx::awt::event::HierarchyEvent>& event);
         virtual void processKeyEvent(const ::jxx::Ptr<::jxx::awt::event::KeyEvent>& event);
 
         ::jxx::Ptr<::jxx::gui::internal::NativeComponent> nativeComponent_;
@@ -103,6 +109,7 @@ namespace jxx::awt
         void setNativeComponentInternal(
             const ::jxx::Ptr<::jxx::gui::internal::NativeComponent>& peer);
         void fireComponentEvent(::jxx::lang::jint id);
+        void fireHierarchyEvent(::jxx::lang::jint id, const ::jxx::Ptr<Component>& changed, const ::jxx::Ptr<Container>& changedParent, ::jxx::lang::jlong flags);
 
         ::jxx::lang::jint x_ = 0;
         ::jxx::lang::jint y_ = 0;
@@ -120,5 +127,7 @@ namespace jxx::awt
             componentListeners_;
         std::vector<::jxx::Ptr<::jxx::awt::event::FocusListener>> focusListeners_;
         std::vector<::jxx::Ptr<::jxx::awt::event::KeyListener>> keyListeners_; std::vector<::jxx::Ptr<::jxx::awt::event::MouseListener>> mouseListeners_; std::vector<::jxx::Ptr<::jxx::awt::event::MouseMotionListener>> mouseMotionListeners_; std::vector<::jxx::Ptr<::jxx::awt::event::MouseWheelListener>> mouseWheelListeners_;
+        std::vector<::jxx::Ptr<::jxx::awt::event::HierarchyListener>> hierarchyListeners_;
+        std::vector<::jxx::Ptr<::jxx::awt::event::HierarchyBoundsListener>> hierarchyBoundsListeners_;
     };
 }

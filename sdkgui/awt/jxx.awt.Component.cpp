@@ -6,6 +6,9 @@
 #include "awt/event/jxx.awt.event.ComponentListener.h"
 #include "awt/event/jxx.awt.event.FocusEvent.h"
 #include "awt/event/jxx.awt.event.FocusListener.h"
+#include "awt/event/jxx.awt.event.HierarchyBoundsListener.h"
+#include "awt/event/jxx.awt.event.HierarchyEvent.h"
+#include "awt/event/jxx.awt.event.HierarchyListener.h"
 #include "awt/event/jxx.awt.event.KeyEvent.h"
 #include "awt/event/jxx.awt.event.KeyListener.h"
 #include "awt/event/jxx.awt.event.MouseEvent.h"
@@ -54,6 +57,7 @@ namespace jxx::awt
         if(nativeComponent_) nativeComponent_->setBounds(x_,y_,width_,height_);
         invalidate();
         fireComponentEvent(::jxx::awt::event::ComponentEvent::COMPONENT_MOVED);
+        if (auto container = ::jxx::CAST<Container>(thisPtr())) container->fireHierarchyBoundsToDescendants(::jxx::awt::event::HierarchyEvent::ANCESTOR_MOVED, ::jxx::CAST<Component>(thisPtr()));
     }
 
     ::jxx::Ptr<Dimension> Component::getSize() const { return ::jxx::NEW<Dimension>(width_,height_); }
@@ -66,6 +70,7 @@ namespace jxx::awt
         if(nativeComponent_) nativeComponent_->setBounds(x_,y_,width_,height_);
         invalidate();
         fireComponentEvent(::jxx::awt::event::ComponentEvent::COMPONENT_RESIZED);
+        if (auto container = ::jxx::CAST<Container>(thisPtr())) container->fireHierarchyBoundsToDescendants(::jxx::awt::event::HierarchyEvent::ANCESTOR_RESIZED, ::jxx::CAST<Component>(thisPtr()));
     }
 
     ::jxx::Ptr<Rectangle> Component::getBounds() const { return ::jxx::NEW<Rectangle>(x_,y_,width_,height_); }
@@ -82,6 +87,11 @@ namespace jxx::awt
         invalidate();
         if (moved) fireComponentEvent(::jxx::awt::event::ComponentEvent::COMPONENT_MOVED);
         if (resized) fireComponentEvent(::jxx::awt::event::ComponentEvent::COMPONENT_RESIZED);
+        if (auto container = ::jxx::CAST<Container>(thisPtr()))
+        {
+            if (moved) container->fireHierarchyBoundsToDescendants(::jxx::awt::event::HierarchyEvent::ANCESTOR_MOVED, ::jxx::CAST<Component>(thisPtr()));
+            if (resized) container->fireHierarchyBoundsToDescendants(::jxx::awt::event::HierarchyEvent::ANCESTOR_RESIZED, ::jxx::CAST<Component>(thisPtr()));
+        }
     }
 
     ::jxx::Ptr<Color> Component::getForeground() const { return foreground_; }
@@ -156,6 +166,13 @@ namespace jxx::awt
     void Component::addMouseWheelListener(const ::jxx::Ptr<::jxx::awt::event::MouseWheelListener>& listener) { if (listener && std::find(mouseWheelListeners_.begin(), mouseWheelListeners_.end(), listener) == mouseWheelListeners_.end()) mouseWheelListeners_.push_back(listener); }
     void Component::removeMouseWheelListener(const ::jxx::Ptr<::jxx::awt::event::MouseWheelListener>& listener) { mouseWheelListeners_.erase(std::remove(mouseWheelListeners_.begin(), mouseWheelListeners_.end(), listener), mouseWheelListeners_.end()); }
     void Component::processMouseWheelEvent(const ::jxx::Ptr<::jxx::awt::event::MouseWheelEvent>& event) { const auto listeners = mouseWheelListeners_; for (const auto& listener : listeners) if (listener) listener->mouseWheelMoved(event); }
+    void Component::addHierarchyListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyListener>& listener){if(listener&&std::find(hierarchyListeners_.begin(),hierarchyListeners_.end(),listener)==hierarchyListeners_.end())hierarchyListeners_.push_back(listener);}
+    void Component::removeHierarchyListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyListener>& listener){hierarchyListeners_.erase(std::remove(hierarchyListeners_.begin(),hierarchyListeners_.end(),listener),hierarchyListeners_.end());}
+    void Component::addHierarchyBoundsListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyBoundsListener>& listener){if(listener&&std::find(hierarchyBoundsListeners_.begin(),hierarchyBoundsListeners_.end(),listener)==hierarchyBoundsListeners_.end())hierarchyBoundsListeners_.push_back(listener);}
+    void Component::removeHierarchyBoundsListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyBoundsListener>& listener){hierarchyBoundsListeners_.erase(std::remove(hierarchyBoundsListeners_.begin(),hierarchyBoundsListeners_.end(),listener),hierarchyBoundsListeners_.end());}
+    void Component::fireHierarchyEvent(::jxx::lang::jint id,const ::jxx::Ptr<Component>& changed,const ::jxx::Ptr<Container>& parent,::jxx::lang::jlong flags){auto event=::jxx::NEW<::jxx::awt::event::HierarchyEvent>(::jxx::CAST<Component>(thisPtr()),id,changed,parent,flags);if(id==::jxx::awt::event::HierarchyEvent::HIERARCHY_CHANGED)processHierarchyEvent(event);else processHierarchyBoundsEvent(event);}
+    void Component::processHierarchyEvent(const ::jxx::Ptr<::jxx::awt::event::HierarchyEvent>& event){const auto listeners=hierarchyListeners_;for(const auto& listener:listeners)if(listener)listener->hierarchyChanged(event);}
+    void Component::processHierarchyBoundsEvent(const ::jxx::Ptr<::jxx::awt::event::HierarchyEvent>& event){const auto listeners=hierarchyBoundsListeners_;for(const auto& listener:listeners)if(listener){if(event->getID()==::jxx::awt::event::HierarchyEvent::ANCESTOR_MOVED)listener->ancestorMoved(event);else if(event->getID()==::jxx::awt::event::HierarchyEvent::ANCESTOR_RESIZED)listener->ancestorResized(event);}}
     void Component::requestFocus(){if(nativeComponent_)nativeComponent_->requestFocus();}
     ::jxx::lang::jbool Component::isFocusOwner() const{return nativeComponent_&&nativeComponent_->hasFocus();}
     void Component::processFocusEvent(const ::jxx::Ptr<::jxx::awt::event::FocusEvent>& event){const auto listeners=focusListeners_;for(const auto& listener:listeners){if(!listener)continue;if(event->getID()==::jxx::awt::event::FocusEvent::FOCUS_GAINED)listener->focusGained(event);else if(event->getID()==::jxx::awt::event::FocusEvent::FOCUS_LOST)listener->focusLost(event);}}
