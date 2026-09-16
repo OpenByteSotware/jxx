@@ -10,6 +10,7 @@
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
 #include "util/jxx.util.MissingResourceException.h"
+#include "util/jxx.util.HashSet.h"
 #include "util/jxx.util.NoSuchElementException.h"
 
 namespace jxx::util {
@@ -213,6 +214,32 @@ jxx::Ptr<Enumeration<jxx::lang::String>> ResourceBundle::getKeys() {
 
     return jxx::Ptr<Enumeration<jxx::lang::String>>(
         new KeyEnumeration(std::move(keys)));
+}
+
+
+jxx::lang::jbool ResourceBundle::containsKey(
+    const jxx::Ptr<jxx::lang::String>& key) {
+    if (key == nullptr) {
+        throw jxx::lang::NullPointerException();
+    }
+
+    for (auto bundle = jxx::CAST<ResourceBundle>(thisPtr());
+         bundle != nullptr;
+         bundle = bundle->parent_) {
+        if (bundle->handleGetObject(key) != nullptr) {
+            return true;
+        }
+    }
+    return false;
+}
+
+jxx::Ptr<Set<jxx::lang::String>> ResourceBundle::keySet() {
+    auto result = jxx::NEW<HashSet<jxx::lang::String>>();
+    auto keys = getKeys();
+    while (keys->hasMoreElements()) {
+        result->add(keys->nextElement());
+    }
+    return jxx::CAST<Set<jxx::lang::String>>(result);
 }
 
 void ResourceBundle::setParent(

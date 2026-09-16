@@ -252,7 +252,7 @@ namespace jxx {
             virtual ~HashSet() = default;
 
             virtual void writeObject(
-                jxx::Ptr<jxx::io::ObjectOutputStream> out)
+                const jxx::Ptr<jxx::io::ObjectOutputStream>& out)
                 override {
 
                 if (out == nullptr) {
@@ -263,7 +263,7 @@ namespace jxx {
             }
 
             virtual void readObject(
-                jxx::Ptr<jxx::io::ObjectInputStream> in)
+                const jxx::Ptr<jxx::io::ObjectInputStream>& in)
                 override {
 
                 if (in == nullptr) {
@@ -334,7 +334,7 @@ namespace jxx {
             }
 
             virtual jxx::lang::jbool remove(
-                jxx::Ptr<jxx::lang::Object> object)
+                const jxx::Ptr<jxx::lang::Object>& object)
                 override {
 
                 jxx::Ptr<E> element = nullptr;

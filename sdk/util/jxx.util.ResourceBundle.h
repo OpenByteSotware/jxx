@@ -6,6 +6,7 @@
 #include "lang/jxx_types.h"
 #include "util/jxx.util.Enumeration.h"
 #include "util/jxx.util.Locale.h"
+#include "util/jxx.util.Set.h"
 
 namespace jxx::lang {
 class String;
@@ -37,6 +38,11 @@ public:
         const jxx::Ptr<jxx::lang::String>& key);
 
     jxx::Ptr<Enumeration<jxx::lang::String>> getKeys();
+
+    jxx::lang::jbool containsKey(
+        const jxx::Ptr<jxx::lang::String>& key);
+
+    jxx::Ptr<Set<jxx::lang::String>> keySet();
 
     jxx::Ptr<Locale> getLocale() const;
     jxx::Ptr<jxx::lang::String> getBaseBundleName() const;
