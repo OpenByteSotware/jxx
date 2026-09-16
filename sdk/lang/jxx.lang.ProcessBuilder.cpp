@@ -6,6 +6,11 @@
 #include <filesystem>
 #include <fstream>
 #include <mutex>
+#include <chrono>
+#include <condition_variable>
+#include <limits>
+#include <system_error>
+#include <thread>
 #include <vector>
 
 #ifdef _WIN32
@@ -30,6 +35,7 @@ extern char** environ;
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.Process.h"
+#include "util/jxx.util.concurrent.TimeUnit.h"
 
 namespace jxx::lang {
 namespace {
@@ -40,6 +46,25 @@ static constexpr NativeHandle invalidHandle=nullptr;
 using NativeHandle=int;
 static constexpr NativeHandle invalidHandle=-1;
 #endif
+
+class NullInputStream final : public jxx::io::InputStream {
+public:
+    jint read() override { return -1; }
+    jint read(const ByteArray& buffer, jint offset, jint length) override {
+        if (buffer == nullptr) throw NullPointerException();
+        if (offset < 0 || length < 0 || offset > static_cast<jint>(buffer->length) - length) throw IndexOutOfBoundsException();
+        return length == 0 ? 0 : -1;
+    }
+    jint available() override { return 0; }
+    void close() override {}
+};
+
+class NullOutputStream final : public jxx::io::OutputStream {
+public:
+    void write(jint) override { throw jxx::io::IOException(); }
+    void write(const ByteArray&, jint, jint) override { throw jxx::io::IOException(); }
+    void close() override {}
+};
 
 class PipeInput final : public jxx::io::InputStream {
 public:
@@ -68,9 +93,18 @@ public:
 private:
  jint readNative(void* p,jint n){
 #ifdef _WIN32
-  DWORD r=0; return handle_&&ReadFile(handle_,p,n,&r,nullptr)?static_cast<jint>(r):-1;
+  if (!handle_) throw jxx::io::IOException();
+  DWORD r=0;
+  if (!ReadFile(handle_,p,n,&r,nullptr)) {
+      if (GetLastError() == ERROR_BROKEN_PIPE) return 0;
+      throw jxx::io::IOException();
+  }
+  return static_cast<jint>(r);
 #else
-  auto r=::read(handle_,p,static_cast<size_t>(n)); return static_cast<jint>(r);
+  ssize_t r;
+  do { r=::read(handle_,p,static_cast<size_t>(n)); } while(r<0 && errno==EINTR);
+  if(r<0) throw jxx::io::IOException(jxx::NEW<String>(std::strerror(errno)));
+  return static_cast<jint>(r);
 #endif
  }
  NativeHandle handle_;
@@ -93,7 +127,7 @@ private:
 #ifdef _WIN32
   DWORD w=0;if(!handle_||!WriteFile(handle_,p,n,&w,nullptr)||w!=static_cast<DWORD>(n))throw jxx::io::IOException();
 #else
-  const auto* q=static_cast<const unsigned char*>(p);jint done=0;while(done<n){auto w=::write(handle_,q+done,n-done);if(w<0)throw jxx::io::IOException();done+=static_cast<jint>(w);}
+  const auto* q=static_cast<const unsigned char*>(p);jint done=0;while(done<n){ssize_t w;do{w=::write(handle_,q+done,static_cast<size_t>(n-done));}while(w<0&&errno==EINTR);if(w<=0)throw jxx::io::IOException(jxx::NEW<String>(std::strerror(errno)));done+=static_cast<jint>(w);}
 #endif
  }
  NativeHandle handle_;
@@ -118,6 +152,19 @@ public:
   int status=0;while(waitpid(process_,&status,0)<0&&errno==EINTR){} exit_=WIFEXITED(status)?WEXITSTATUS(status):128+WTERMSIG(status);
 #endif
   done_=true;return exit_;
+ }
+ jbool waitFor(jlong timeout, const jxx::Ptr<jxx::util::concurrent::TimeUnit>& unit) override {
+  if(unit==nullptr)throw NullPointerException();
+#ifdef _WIN32
+  const auto millis=unit->toMillis(timeout);
+  const DWORD wait=WaitForSingleObject(process_,millis<=0?0:(millis>static_cast<jlong>(INFINITE-1)?INFINITE-1:static_cast<DWORD>(millis)));
+  if(wait==WAIT_TIMEOUT)return false;
+  if(wait!=WAIT_OBJECT_0)throw jxx::io::IOException();
+  (void)exitValue();return true;
+#else
+  const auto deadline=std::chrono::steady_clock::now()+unit->toChrono(timeout);
+  for(;;){try{(void)exitValue();return true;}catch(const IllegalThreadStateException&){if(std::chrono::steady_clock::now()>=deadline)return false;std::this_thread::sleep_for(std::chrono::milliseconds(1));}}
+#endif
  }
  jint exitValue() override {
   std::lock_guard<std::mutex>l(mutex_);if(done_)return exit_;
@@ -172,6 +219,8 @@ jxx::Ptr<ProcessBuilder::Redirect> ProcessBuilder::Redirect::to(const jxx::Ptr<j
 jxx::Ptr<ProcessBuilder::Redirect> ProcessBuilder::Redirect::appendTo(const jxx::Ptr<jxx::io::File>& file){if(!file)throw NullPointerException();return jxx::Ptr<Redirect>(new Redirect(Type::APPEND,file));}
 ProcessBuilder::Redirect::Type ProcessBuilder::Redirect::type()const{return type_;}
 jxx::Ptr<jxx::io::File> ProcessBuilder::Redirect::file()const{return file_;}
+jbool ProcessBuilder::Redirect::equals(const jxx::Ptr<Object>& other) const {auto value=jxx::CAST<Redirect>(other);if(value==nullptr||type_!=value->type_)return false;if(file_==nullptr||value->file_==nullptr)return file_==value->file_;return file_->getPath()->equals(value->file_->getPath());}
+jint ProcessBuilder::Redirect::hashCode() const {return static_cast<jint>(type_)*31+(file_==nullptr?0:file_->getPath()->hashCode());}
 
 ProcessBuilder::ProcessBuilder(const jxx::Ptr<JxxArray<jxx::Ptr<String>,1>>& c):environment_(currentEnvironment()),inputRedirect_(Redirect::PIPE),outputRedirect_(Redirect::PIPE),errorRedirect_(Redirect::PIPE){command(c);}
 jxx::Ptr<ProcessBuilder> ProcessBuilder::command(const jxx::Ptr<JxxArray<jxx::Ptr<String>,1>>& c){if(!c||c->length==0)throw IllegalArgumentException();command_.clear();for(uint32_t i=0;i<c->length;++i){if(!(*c)[i])throw NullPointerException();command_.push_back((*c)[i]->utf8());}return jxx::CAST<ProcessBuilder>(thisPtr());}
@@ -225,9 +274,9 @@ jxx::Ptr<Process> ProcessBuilder::start(){if(command_.empty())throw IllegalArgum
  close(startup[1]);close(inPipe[0]);close(outPipe[1]);close(errPipe[1]);
  int childError=0;ssize_t count;do{count=read(startup[0],&childError,sizeof(childError));}while(count<0&&errno==EINTR);close(startup[0]);
  if(count>0){close(inPipe[1]);close(outPipe[0]);close(errPipe[0]);int status=0;waitpid(pid,&status,0);throw jxx::io::IOException(jxx::NEW<String>(std::strerror(childError)));}
- auto input=inputRedirect_->type()==Redirect::Type::PIPE?jxx::NEW<PipeOutput>(inPipe[1]):jxx::Ptr<jxx::io::OutputStream>(nullptr);if(!input)close(inPipe[1]);
- auto output=outputRedirect_->type()==Redirect::Type::PIPE?jxx::NEW<PipeInput>(outPipe[0]):jxx::Ptr<jxx::io::InputStream>(nullptr);if(!output)close(outPipe[0]);
- auto error=(!redirectErrorStream_&&errorRedirect_->type()==Redirect::Type::PIPE)?jxx::NEW<PipeInput>(errPipe[0]):jxx::Ptr<jxx::io::InputStream>(nullptr);if(!error)close(errPipe[0]);
+ jxx::Ptr<jxx::io::OutputStream> input;if(inputRedirect_->type()==Redirect::Type::PIPE)input=jxx::NEW<PipeOutput>(inPipe[1]);else{close(inPipe[1]);input=jxx::NEW<NullOutputStream>();}
+ jxx::Ptr<jxx::io::InputStream> output;if(outputRedirect_->type()==Redirect::Type::PIPE)output=jxx::NEW<PipeInput>(outPipe[0]);else{close(outPipe[0]);output=jxx::NEW<NullInputStream>();}
+ jxx::Ptr<jxx::io::InputStream> error;if(!redirectErrorStream_&&errorRedirect_->type()==Redirect::Type::PIPE)error=jxx::NEW<PipeInput>(errPipe[0]);else{close(errPipe[0]);error=jxx::NEW<NullInputStream>();}
  return jxx::CAST<Process>(jxx::NEW<NativeProcess>(pid,input,output,error));
 #endif
 }

@@ -25,6 +25,8 @@ public:
         static jxx::Ptr<Redirect> appendTo(const jxx::Ptr<jxx::io::File>& file);
         Type type() const;
         jxx::Ptr<jxx::io::File> file() const;
+        jbool equals(const jxx::Ptr<Object>& other) const override;
+        jint hashCode() const override;
     private:
         Redirect(Type type, const jxx::Ptr<jxx::io::File>& file);
         Type type_;
