@@ -1,0 +1,3 @@
+#pragma once
+#include "util/jxx.util.EventListener.h"
+namespace jxx::awt::event { class WindowEvent; class WindowListener : public ::jxx::lang::InterfaceBase<WindowListener,::jxx::util::EventListener> { public: ~WindowListener() override=default; virtual void windowOpened(const ::jxx::Ptr<WindowEvent>& event)=0; virtual void windowClosing(const ::jxx::Ptr<WindowEvent>& event)=0; virtual void windowClosed(const ::jxx::Ptr<WindowEvent>& event)=0; virtual void windowIconified(const ::jxx::Ptr<WindowEvent>& event)=0; virtual void windowDeiconified(const ::jxx::Ptr<WindowEvent>& event)=0; virtual void windowActivated(const ::jxx::Ptr<WindowEvent>& event)=0; virtual void windowDeactivated(const ::jxx::Ptr<WindowEvent>& event)=0; }; }
