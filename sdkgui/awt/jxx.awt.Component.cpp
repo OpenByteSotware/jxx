@@ -4,6 +4,8 @@
 
 #include "awt/event/jxx.awt.event.ComponentEvent.h"
 #include "awt/event/jxx.awt.event.ComponentListener.h"
+#include "awt/event/jxx.awt.event.FocusEvent.h"
+#include "awt/event/jxx.awt.event.FocusListener.h"
 #include "awt/jxx.awt.Container.h"
 #include "gui/internal/jxx.gui.internal.NativeComponent.h"
 
@@ -137,6 +139,12 @@ namespace jxx::awt
         }
     }
 
+    void Component::addFocusListener(const ::jxx::Ptr<::jxx::awt::event::FocusListener>& listener){if(listener&&std::find(focusListeners_.begin(),focusListeners_.end(),listener)==focusListeners_.end())focusListeners_.push_back(listener);}
+    void Component::removeFocusListener(const ::jxx::Ptr<::jxx::awt::event::FocusListener>& listener){focusListeners_.erase(std::remove(focusListeners_.begin(),focusListeners_.end(),listener),focusListeners_.end());}
+    void Component::requestFocus(){if(nativeComponent_)nativeComponent_->requestFocus();}
+    ::jxx::lang::jbool Component::isFocusOwner() const{return nativeComponent_&&nativeComponent_->hasFocus();}
+    void Component::processFocusEvent(const ::jxx::Ptr<::jxx::awt::event::FocusEvent>& event){const auto listeners=focusListeners_;for(const auto& listener:listeners){if(!listener)continue;if(event->getID()==::jxx::awt::event::FocusEvent::FOCUS_GAINED)listener->focusGained(event);else if(event->getID()==::jxx::awt::event::FocusEvent::FOCUS_LOST)listener->focusLost(event);}}
+
     void Component::setNativeComponentInternal(
         const ::jxx::Ptr<::jxx::gui::internal::NativeComponent>& value)
     {
@@ -150,6 +158,8 @@ namespace jxx::awt
         if(foreground_) nativeComponent_->setForeground(foreground_);
         if(background_) nativeComponent_->setBackground(background_);
         if(font_) nativeComponent_->setFont(font_);
+        std::weak_ptr<Component> self=::jxx::CAST<Component>(thisPtr());
+        nativeComponent_->setFocusCallback([self](::jxx::lang::jbool gained){if(auto owner=self.lock())owner->processFocusEvent(::jxx::NEW<::jxx::awt::event::FocusEvent>(owner,gained?::jxx::awt::event::FocusEvent::FOCUS_GAINED : ::jxx::awt::event::FocusEvent::FOCUS_LOST));});
     }
 
     void Component::invalidate() { valid_=false; }

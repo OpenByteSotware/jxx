@@ -41,7 +41,13 @@ namespace jxx::util::logging
 		std::lock_guard<std::recursive_mutex>l(mutex_); return level_;
 	}jxx::lang::jbool Handler::isLoggable(const jxx::Ptr<LogRecord>& r)const
 	{
-		if (r == nullptr)return false; std::lock_guard<std::recursive_mutex>l(mutex_); return r->getLevel()->intValue() >= level_->intValue() && (filter_ == nullptr || filter_->isLoggable(r));
+        if (r == nullptr || r->getLevel() == nullptr) {
+            return false;
+        }
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        return r->getLevel()->intValue() >= level_->intValue() &&
+               r->getLevel()->intValue() != Level::OFF()->intValue() &&
+               (filter_ == nullptr || filter_->isLoggable(r));
 	}void Handler::reportError(const jxx::Ptr<jxx::lang::String>& m, const jxx::Ptr<jxx::lang::Exception>& e, jxx::lang::jint c)
 	{
 		getErrorManager()->error(m, e, c);

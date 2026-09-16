@@ -25,6 +25,11 @@ namespace jxx::gui::internal
             });
         }
 
+        if (window_ != nullptr)
+        {
+            window_->Bind(wxEVT_SET_FOCUS,[this](wxFocusEvent& event){if(focusCallback_)focusCallback_(true);event.Skip();});
+            window_->Bind(wxEVT_KILL_FOCUS,[this](wxFocusEvent& event){if(focusCallback_)focusCallback_(false);event.Skip();});
+        }
         if (auto* button = dynamic_cast<wxButton*>(window_))
         {
             button->Bind(wxEVT_BUTTON, [this](wxCommandEvent& event)
@@ -53,6 +58,7 @@ namespace jxx::gui::internal
     {
         window_ = nullptr;
         actionCallback_ = {};
+        focusCallback_ = {};
     }
 
     void WxComponentPeer::destroy()
@@ -158,6 +164,10 @@ namespace jxx::gui::internal
         window_->SetFont(wxFont(info));
         window_->Refresh();
     }
+
+    void WxComponentPeer::requestFocus(){if(window_!=nullptr)window_->SetFocus();}
+    ::jxx::lang::jbool WxComponentPeer::hasFocus() const{return window_!=nullptr&&window_->HasFocus();}
+    void WxComponentPeer::setFocusCallback(FocusCallback callback){focusCallback_=std::move(callback);}
 
     void WxComponentPeer::setActionCallback(ActionCallback callback)
     {

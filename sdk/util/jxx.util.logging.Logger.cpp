@@ -39,7 +39,38 @@ namespace jxx::util::logging
 	
 	jxx::Ptr<Logger>Logger::getLogger(const jxx::Ptr<jxx::lang::String>& n, const jxx::Ptr<jxx::lang::String>& b)
 	{
-		if (n == nullptr)throw jxx::lang::NullPointerException(); std::lock_guard<std::recursive_mutex>l(registryMutex); auto key = n->utf8(); if (auto p = registry[key].lock())return p; auto x = jxx::Ptr<Logger>(new Logger(n, b)); x->thisPtr() = x; registry[key] = x; return x;
+        if (n == nullptr) {
+            throw jxx::lang::NullPointerException();
+        }
+        std::lock_guard<std::recursive_mutex> lock(registryMutex);
+        const auto key = n->utf8();
+        const auto existing = registry.find(key);
+        if (existing != registry.end()) {
+            if (auto logger = existing->second.lock()) {
+                return logger;
+            }
+        }
+
+        auto logger = jxx::Ptr<Logger>(new Logger(n, b));
+        logger->thisPtr() = logger;
+
+        std::string ancestor = key;
+        while (!ancestor.empty()) {
+            const auto separator = ancestor.rfind('.');
+            ancestor = separator == std::string::npos
+                ? std::string()
+                : ancestor.substr(0, separator);
+            const auto parentEntry = registry.find(ancestor);
+            if (parentEntry != registry.end()) {
+                if (auto parent = parentEntry->second.lock()) {
+                    logger->parent_ = parent;
+                    break;
+                }
+            }
+        }
+
+        registry[key] = logger;
+        return logger;
 	}
 	
 	jxx::Ptr<Logger>Logger::getAnonymousLogger()

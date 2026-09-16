@@ -31,6 +31,9 @@ namespace jxx::gui::internal
         void setBackground(const ::jxx::Ptr<::jxx::awt::Color>& color) override;
         void setFont(const ::jxx::Ptr<::jxx::awt::Font>& font) override;
 
+        void requestFocus() override;
+        ::jxx::lang::jbool hasFocus() const override;
+        void setFocusCallback(FocusCallback callback) override;
         void setActionCallback(ActionCallback callback);
         wxWindow* nativeWindow() const;
 
@@ -39,5 +42,6 @@ namespace jxx::gui::internal
 
         wxWindow* window_;
         ActionCallback actionCallback_;
+        FocusCallback focusCallback_;
     };
 }

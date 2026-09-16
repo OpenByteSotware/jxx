@@ -12,6 +12,8 @@ namespace jxx::awt::event
 {
     class ComponentEvent;
     class ComponentListener;
+    class FocusEvent;
+    class FocusListener;
 }
 
 namespace jxx::gui::internal
@@ -65,6 +67,10 @@ namespace jxx::awt
             const ::jxx::Ptr<::jxx::awt::event::ComponentListener>& listener);
         virtual void removeComponentListener(
             const ::jxx::Ptr<::jxx::awt::event::ComponentListener>& listener);
+        virtual void addFocusListener(const ::jxx::Ptr<::jxx::awt::event::FocusListener>& listener);
+        virtual void removeFocusListener(const ::jxx::Ptr<::jxx::awt::event::FocusListener>& listener);
+        virtual void requestFocus();
+        virtual ::jxx::lang::jbool isFocusOwner() const;
 
         virtual void invalidate();
         virtual void validate();
@@ -74,6 +80,7 @@ namespace jxx::awt
         Component();
         virtual void processComponentEvent(
             const ::jxx::Ptr<::jxx::awt::event::ComponentEvent>& event);
+        virtual void processFocusEvent(const ::jxx::Ptr<::jxx::awt::event::FocusEvent>& event);
 
         ::jxx::Ptr<::jxx::gui::internal::NativeComponent> nativeComponent_;
 
@@ -100,5 +107,6 @@ namespace jxx::awt
         std::weak_ptr<Container> parent_;
         std::vector<::jxx::Ptr<::jxx::awt::event::ComponentListener>>
             componentListeners_;
+        std::vector<::jxx::Ptr<::jxx::awt::event::FocusListener>> focusListeners_;
     };
 }
