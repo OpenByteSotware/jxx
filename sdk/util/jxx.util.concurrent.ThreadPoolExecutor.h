@@ -23,6 +23,7 @@ private:
     jxx::lang::jbool shutdown_ = false;
     jxx::lang::jbool stopNow_ = false;
     jxx::lang::jint activeCount_ = 0;
+    jxx::lang::jint liveWorkerCount_ = 0;
     jxx::lang::jlong completedTaskCount_ = 0;
     jxx::lang::jint largestPoolSize_ = 0;
     jxx::lang::jint corePoolSize_;

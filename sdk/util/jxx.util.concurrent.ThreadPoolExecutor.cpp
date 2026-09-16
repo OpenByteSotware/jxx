@@ -24,6 +24,10 @@ namespace jxx::util::concurrent
 	}
 	void ThreadPoolExecutor::workerLoop_()
 	{
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            ++liveWorkerCount_;
+        }
 		for (;;) {
 			jxx::Ptr<jxx::lang::Runnable> task;
 			{
@@ -41,7 +45,12 @@ namespace jxx::util::concurrent
 			{
 				std::lock_guard<std::mutex> lock(mutex_); --activeCount_; ++completedTaskCount_; if (shutdown_ && queue_.empty() && activeCount_ == 0)terminated_.notify_all();
 			}
-		}std::lock_guard<std::mutex> lock(mutex_); if (shutdown_ && queue_.empty() && activeCount_ == 0)terminated_.notify_all();
+		}
+        std::lock_guard<std::mutex> lock(mutex_);
+        --liveWorkerCount_;
+        if (shutdown_ && queue_.empty() && activeCount_ == 0 && liveWorkerCount_ == 0) {
+            terminated_.notify_all();
+        }
 	}
 	void ThreadPoolExecutor::reject_(const jxx::Ptr<jxx::lang::Runnable>& command)
 	{
@@ -81,13 +90,13 @@ namespace jxx::util::concurrent
 	}
 	jxx::lang::jbool ThreadPoolExecutor::isTerminated()
 	{
-		std::lock_guard<std::mutex> lock(mutex_); return shutdown_ && queue_.empty() && activeCount_ == 0;
+		std::lock_guard<std::mutex> lock(mutex_); return shutdown_ && queue_.empty() && activeCount_ == 0 && liveWorkerCount_ == 0;
 	}
 	jxx::lang::jbool ThreadPoolExecutor::awaitTermination(jxx::lang::jlong timeout, const jxx::Ptr<TimeUnit>& unit)
 	{
 		if (unit == nullptr)throw jxx::lang::NullPointerException(); std::unique_lock<std::mutex> lock(mutex_); return terminated_.wait_for(lock, unit->toChrono(timeout), [&]
 	   {
-		   return shutdown_ && queue_.empty() && activeCount_ == 0;
+		   return shutdown_ && queue_.empty() && activeCount_ == 0 && liveWorkerCount_ == 0;
 	   });
 	}
 	jxx::lang::jint ThreadPoolExecutor::getPoolSize()
