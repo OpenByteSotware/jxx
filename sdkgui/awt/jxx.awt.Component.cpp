@@ -19,6 +19,7 @@
 #include "awt/jxx.awt.Container.h"
 #include "awt/jxx.awt.TextComponent.h"
 #include "gui/internal/jxx.gui.internal.NativeComponent.h"
+#include "lang/jxx.lang.NullPointerException.h"
 
 namespace jxx::awt
 {
@@ -103,6 +104,23 @@ namespace jxx::awt
     ::jxx::Ptr<::jxx::lang::String> Component::getName() const { return name_; }
     void Component::setName(const ::jxx::Ptr<::jxx::lang::String>& value) { name_=value; }
     ::jxx::Ptr<Container> Component::getParent() const { return parent_.lock(); }
+    ::jxx::Ptr<ComponentOrientation> Component::getComponentOrientation() const
+    {
+        return componentOrientation_;
+    }
+    void Component::setComponentOrientation(
+        const ::jxx::Ptr<ComponentOrientation>& orientation)
+    {
+        if (orientation == nullptr)
+            throw ::jxx::lang::NullPointerException("orientation");
+        componentOrientation_ = orientation;
+        invalidate();
+    }
+    void Component::applyComponentOrientation(
+        const ::jxx::Ptr<ComponentOrientation>& orientation)
+    {
+        setComponentOrientation(orientation);
+    }
     void Component::setParentInternal(const ::jxx::Ptr<Container>& value) { parent_=value; }
 
     void Component::addComponentListener(

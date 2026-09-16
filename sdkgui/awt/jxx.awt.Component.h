@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "awt/jxx.awt.Color.h"
+#include "awt/jxx.awt.ComponentOrientation.h"
 #include "awt/jxx.awt.Dimension.h"
 #include "awt/jxx.awt.Font.h"
 #include "awt/jxx.awt.Point.h"
@@ -65,6 +66,11 @@ namespace jxx::awt
         virtual ::jxx::Ptr<::jxx::lang::String> getName() const;
         virtual void setName(const ::jxx::Ptr<::jxx::lang::String>& name);
         virtual ::jxx::Ptr<Container> getParent() const;
+        virtual ::jxx::Ptr<ComponentOrientation> getComponentOrientation() const;
+        virtual void setComponentOrientation(
+            const ::jxx::Ptr<ComponentOrientation>& orientation);
+        virtual void applyComponentOrientation(
+            const ::jxx::Ptr<ComponentOrientation>& orientation);
 
         virtual void addComponentListener(
             const ::jxx::Ptr<::jxx::awt::event::ComponentListener>& listener);
@@ -122,6 +128,8 @@ namespace jxx::awt
         ::jxx::Ptr<Color> background_;
         ::jxx::Ptr<Font> font_;
         ::jxx::Ptr<::jxx::lang::String> name_;
+        ::jxx::Ptr<ComponentOrientation> componentOrientation_ =
+            ComponentOrientation::UNKNOWN;
         std::weak_ptr<Container> parent_;
         std::vector<::jxx::Ptr<::jxx::awt::event::ComponentListener>>
             componentListeners_;

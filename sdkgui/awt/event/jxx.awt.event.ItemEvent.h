@@ -1,6 +1,7 @@
 #pragma once
 
 #include "awt/jxx.awt.AWTEvent.h"
+#include "awt/jxx.awt.ItemSelectable.h"
 
 namespace jxx::awt::event
 {
@@ -17,12 +18,12 @@ namespace jxx::awt::event
         static constexpr ::jxx::lang::jint SELECTED = 1;
         static constexpr ::jxx::lang::jint DESELECTED = 2;
 
-        ItemEvent(const ::jxx::Ptr<::jxx::lang::Object>& source,
+        ItemEvent(const ::jxx::Ptr<::jxx::awt::ItemSelectable>& source,
             ::jxx::lang::jint id,
             const ::jxx::Ptr<::jxx::lang::Object>& item,
             ::jxx::lang::jint stateChange);
 
-        ::jxx::Ptr<::jxx::lang::Object> getItemSelectable() const;
+        ::jxx::Ptr<::jxx::awt::ItemSelectable> getItemSelectable() const;
         ::jxx::Ptr<::jxx::lang::Object> getItem() const;
         ::jxx::lang::jint getStateChange() const;
 

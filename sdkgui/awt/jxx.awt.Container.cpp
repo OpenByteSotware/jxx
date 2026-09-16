@@ -143,6 +143,15 @@ namespace jxx::awt
     }
 
     ::jxx::Ptr<LayoutManager> Container::getLayout() const { return layout_; }
+    void Container::applyComponentOrientation(
+        const ::jxx::Ptr<ComponentOrientation>& orientation)
+    {
+        Component::applyComponentOrientation(orientation);
+        const auto components = components_;
+        for (const auto& component : components)
+            if (component != nullptr)
+                component->applyComponentOrientation(orientation);
+    }
 
     void Container::validate()
     {

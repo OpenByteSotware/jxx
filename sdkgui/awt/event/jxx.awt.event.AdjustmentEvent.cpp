@@ -5,7 +5,7 @@
 namespace jxx::awt::event
 {
     AdjustmentEvent::AdjustmentEvent(
-        const ::jxx::Ptr<::jxx::lang::Object>& source,
+        const ::jxx::Ptr<::jxx::awt::Adjustable>& source,
         ::jxx::lang::jint id,
         ::jxx::lang::jint type,
         ::jxx::lang::jint value)
@@ -14,21 +14,21 @@ namespace jxx::awt::event
     }
 
     AdjustmentEvent::AdjustmentEvent(
-        const ::jxx::Ptr<::jxx::lang::Object>& source,
+        const ::jxx::Ptr<::jxx::awt::Adjustable>& source,
         ::jxx::lang::jint id,
         ::jxx::lang::jint type,
         ::jxx::lang::jint value,
         ::jxx::lang::jbool valueIsAdjusting)
-        : Super(source, id),
+        : Super(::jxx::CAST<::jxx::lang::Object>(source), id),
           adjustmentType_(type),
           value_(value),
           valueIsAdjusting_(valueIsAdjusting)
     {
     }
 
-    ::jxx::Ptr<::jxx::lang::Object> AdjustmentEvent::getAdjustable() const
+    ::jxx::Ptr<::jxx::awt::Adjustable> AdjustmentEvent::getAdjustable() const
     {
-        return source;
+        return ::jxx::CAST<::jxx::awt::Adjustable>(source);
     }
 
     ::jxx::lang::jint AdjustmentEvent::getAdjustmentType() const

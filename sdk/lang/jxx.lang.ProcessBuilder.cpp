@@ -1,5 +1,6 @@
 #include "lang/jxx.lang.ProcessBuilder.h"
 
+#include <algorithm>
 #include <atomic>
 #include <cerrno>
 #include <cstring>
@@ -42,6 +43,111 @@ namespace {
 #ifdef _WIN32
 using NativeHandle=HANDLE;
 static constexpr NativeHandle invalidHandle=nullptr;
+
+class WinHandle final {
+public:
+    WinHandle() = default;
+    explicit WinHandle(HANDLE value) : value_(value) {}
+    ~WinHandle() { reset(); }
+    WinHandle(const WinHandle&) = delete;
+    WinHandle& operator=(const WinHandle&) = delete;
+    WinHandle(WinHandle&& other) noexcept : value_(other.release()) {}
+    WinHandle& operator=(WinHandle&& other) noexcept {
+        if (this != &other) reset(other.release());
+        return *this;
+    }
+    HANDLE get() const noexcept { return value_; }
+    HANDLE release() noexcept { HANDLE value=value_; value_=nullptr; return value; }
+    void reset(HANDLE value=nullptr) noexcept {
+        if (value_ != nullptr && value_ != INVALID_HANDLE_VALUE) CloseHandle(value_);
+        value_=value;
+    }
+private:
+    HANDLE value_ = nullptr;
+};
+
+[[noreturn]] void throwWindowsIOException(const char* operation, DWORD error=GetLastError()) {
+    LPWSTR systemMessage=nullptr;
+    const DWORD flags=FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS;
+    FormatMessageW(flags,nullptr,error,0,reinterpret_cast<LPWSTR>(&systemMessage),0,nullptr);
+    std::string message(operation);
+    message += " failed (Windows error " + std::to_string(error) + ")";
+    if(systemMessage!=nullptr){
+        const int size=WideCharToMultiByte(CP_UTF8,0,systemMessage,-1,nullptr,0,nullptr,nullptr);
+        if(size>1){std::string text(static_cast<std::size_t>(size-1),'\0');WideCharToMultiByte(CP_UTF8,0,systemMessage,-1,text.data(),size,nullptr,nullptr);message += ": " + text;}
+        LocalFree(systemMessage);
+    }
+    throw jxx::io::IOException(jxx::NEW<String>(message));
+}
+
+std::wstring utf16(const std::string& value) {
+    if (value.empty()) return {};
+    const int size=MultiByteToWideChar(CP_UTF8,MB_ERR_INVALID_CHARS,value.data(),static_cast<int>(value.size()),nullptr,0);
+    if (size<=0) throw jxx::io::IOException();
+    std::wstring result(static_cast<std::size_t>(size),L'\0');
+    if (MultiByteToWideChar(CP_UTF8,MB_ERR_INVALID_CHARS,value.data(),static_cast<int>(value.size()),result.data(),size)!=size) throw jxx::io::IOException();
+    return result;
+}
+
+std::wstring quoteArgument(const std::wstring& value) {
+    if (!value.empty() && value.find_first_of(L" \\t\\n\\v\\\"")==std::wstring::npos) return value;
+    std::wstring result(1,L'"');
+    std::size_t backslashes=0;
+    for (wchar_t character : value) {
+        if (character==L'\\') { ++backslashes; continue; }
+        if (character==L'"') {
+            result.append(backslashes*2+1,L'\\');
+            result.push_back(L'"');
+            backslashes=0;
+            continue;
+        }
+        result.append(backslashes,L'\\');
+        backslashes=0;
+        result.push_back(character);
+    }
+    result.append(backslashes*2,L'\\');
+    result.push_back(L'"');
+    return result;
+}
+
+std::vector<wchar_t> makeEnvironmentBlock(const std::unordered_map<std::string,std::string>& environment) {
+    std::vector<std::pair<std::wstring,std::wstring>> entries;
+    entries.reserve(environment.size());
+    for (const auto& item : environment) entries.emplace_back(utf16(item.first),utf16(item.second));
+    std::sort(entries.begin(),entries.end(),[](const auto& left,const auto& right){return _wcsicmp(left.first.c_str(),right.first.c_str())<0;});
+    std::vector<wchar_t> block;
+    for (const auto& item : entries) {
+        block.insert(block.end(),item.first.begin(),item.first.end());
+        block.push_back(L'=');
+        block.insert(block.end(),item.second.begin(),item.second.end());
+        block.push_back(L'\0');
+    }
+    block.push_back(L'\0');
+    if (entries.empty()) block.push_back(L'\0');
+    return block;
+}
+
+void createPipePair(WinHandle& childEnd, WinHandle& parentEnd, bool childReads) {
+    SECURITY_ATTRIBUTES attributes{sizeof(attributes),nullptr,TRUE};
+    HANDLE readHandle=nullptr,writeHandle=nullptr;
+    if (!CreatePipe(&readHandle,&writeHandle,&attributes,0)) throw jxx::io::IOException();
+    WinHandle readOwner(readHandle),writeOwner(writeHandle);
+    HANDLE parent=childReads?writeHandle:readHandle;
+    if (!SetHandleInformation(parent,HANDLE_FLAG_INHERIT,0)) throw jxx::io::IOException();
+    if (childReads) { childEnd.reset(readOwner.release()); parentEnd.reset(writeOwner.release()); }
+    else { childEnd.reset(writeOwner.release()); parentEnd.reset(readOwner.release()); }
+}
+
+WinHandle openRedirectFile(const jxx::Ptr<ProcessBuilder::Redirect>& redirect, bool input) {
+    SECURITY_ATTRIBUTES attributes{sizeof(attributes),nullptr,TRUE};
+    DWORD access=input?GENERIC_READ:GENERIC_WRITE;
+    DWORD creation=input?OPEN_EXISTING:(redirect->type()==ProcessBuilder::Redirect::Type::APPEND?OPEN_ALWAYS:CREATE_ALWAYS);
+    HANDLE handle=CreateFileW(utf16(redirect->file()->getPath()->utf8()).c_str(),access,FILE_SHARE_READ|FILE_SHARE_WRITE,&attributes,creation,FILE_ATTRIBUTE_NORMAL,nullptr);
+    if (handle==INVALID_HANDLE_VALUE) throw jxx::io::IOException();
+    WinHandle result(handle);
+    if (!input && redirect->type()==ProcessBuilder::Redirect::Type::APPEND && SetFilePointer(handle,0,nullptr,FILE_END)==INVALID_SET_FILE_POINTER && GetLastError()!=NO_ERROR) throw jxx::io::IOException();
+    return result;
+}
 #else
 using NativeHandle=int;
 static constexpr NativeHandle invalidHandle=-1;
@@ -78,7 +184,7 @@ public:
  }
  jint available() override {
 #ifdef _WIN32
-  DWORD n=0; return handle_&&PeekNamedPipe(handle_,nullptr,0,nullptr,&n,nullptr)?static_cast<jint>(n):0;
+  if(!handle_)throw jxx::io::IOException();DWORD n=0;if(!PeekNamedPipe(handle_,nullptr,0,nullptr,&n,nullptr)){const DWORD error=GetLastError();if(error==ERROR_BROKEN_PIPE)return 0;throwWindowsIOException("PeekNamedPipe",error);}return static_cast<jint>(n);
 #else
   int n=0; return handle_>=0&&ioctl(handle_,FIONREAD,&n)==0?n:0;
 #endif
@@ -125,7 +231,7 @@ public:
 private:
  void writeNative(const void*p,jint n){
 #ifdef _WIN32
-  DWORD w=0;if(!handle_||!WriteFile(handle_,p,n,&w,nullptr)||w!=static_cast<DWORD>(n))throw jxx::io::IOException();
+  if(!handle_)throw jxx::io::IOException();const auto* bytes=static_cast<const unsigned char*>(p);DWORD completed=0;while(completed<static_cast<DWORD>(n)){DWORD written=0;if(!WriteFile(handle_,bytes+completed,static_cast<DWORD>(n)-completed,&written,nullptr))throwWindowsIOException("WriteFile");if(written==0)throw jxx::io::IOException();completed+=written;}
 #else
   const auto* q=static_cast<const unsigned char*>(p);jint done=0;while(done<n){ssize_t w;do{w=::write(handle_,q+done,static_cast<size_t>(n-done));}while(w<0&&errno==EINTR);if(w<=0)throw jxx::io::IOException(jxx::NEW<String>(std::strerror(errno)));done+=static_cast<jint>(w);}
 #endif
@@ -136,7 +242,7 @@ private:
 class NativeProcess final : public Process {
 public:
 #ifdef _WIN32
- NativeProcess(HANDLE process,HANDLE in,HANDLE out,HANDLE err):process_(process),input_(jxx::NEW<PipeInput>(out)),error_(jxx::NEW<PipeInput>(err)),output_(jxx::NEW<PipeOutput>(in)){}
+ NativeProcess(HANDLE process,const jxx::Ptr<jxx::io::OutputStream>& in,const jxx::Ptr<jxx::io::InputStream>& out,const jxx::Ptr<jxx::io::InputStream>& err):process_(process),input_(out),error_(err),output_(in){}
  ~NativeProcess() override { if(process_)CloseHandle(process_); }
 #else
  NativeProcess(pid_t process,const jxx::Ptr<jxx::io::OutputStream>& in,const jxx::Ptr<jxx::io::InputStream>& out,const jxx::Ptr<jxx::io::InputStream>& err):process_(process),input_(out),error_(err),output_(in){}
@@ -169,7 +275,7 @@ public:
  jint exitValue() override {
   std::lock_guard<std::mutex>l(mutex_);if(done_)return exit_;
 #ifdef _WIN32
-  DWORD code=STILL_ACTIVE;if(!GetExitCodeProcess(process_,&code)||code==STILL_ACTIVE)throw IllegalThreadStateException();exit_=static_cast<jint>(code);
+  const DWORD wait=WaitForSingleObject(process_,0);if(wait==WAIT_TIMEOUT)throw IllegalThreadStateException();if(wait!=WAIT_OBJECT_0)throwWindowsIOException("WaitForSingleObject");DWORD code=0;if(!GetExitCodeProcess(process_,&code))throwWindowsIOException("GetExitCodeProcess");exit_=static_cast<jint>(code);
 #else
   int status=0;auto r=waitpid(process_,&status,WNOHANG);if(r==0)throw IllegalThreadStateException();if(r<0)throw IllegalThreadStateException();exit_=WIFEXITED(status)?WEXITSTATUS(status):128+WTERMSIG(status);
 #endif
@@ -177,14 +283,14 @@ public:
  }
  void destroy() override {
 #ifdef _WIN32
-  TerminateProcess(process_,1);
+  if(WaitForSingleObject(process_,0)==WAIT_TIMEOUT&&!TerminateProcess(process_,1))throwWindowsIOException("TerminateProcess");
 #else
   ::kill(process_,SIGTERM);
 #endif
  }
  jxx::Ptr<Process> destroyForcibly() override {
 #ifdef _WIN32
-  TerminateProcess(process_,1);
+  if(WaitForSingleObject(process_,0)==WAIT_TIMEOUT&&!TerminateProcess(process_,1))throwWindowsIOException("TerminateProcess");
 #else
   ::kill(process_,SIGKILL);
 #endif
@@ -245,7 +351,50 @@ jxx::Ptr<ProcessBuilder> ProcessBuilder::redirectErrorStream(jbool v){redirectEr
 
 jxx::Ptr<Process> ProcessBuilder::start(){if(command_.empty())throw IllegalArgumentException();
 #ifdef _WIN32
- SECURITY_ATTRIBUTES sa{sizeof(sa),nullptr,TRUE};HANDLE cinR,cinW,coutR,coutW,cerrR,cerrW;if(!CreatePipe(&cinR,&cinW,&sa,0)||!CreatePipe(&coutR,&coutW,&sa,0)||!CreatePipe(&cerrR,&cerrW,&sa,0))throw jxx::io::IOException();SetHandleInformation(cinW,HANDLE_FLAG_INHERIT,0);SetHandleInformation(coutR,HANDLE_FLAG_INHERIT,0);SetHandleInformation(cerrR,HANDLE_FLAG_INHERIT,0);std::wstring cmd;for(const auto&s:command_){if(!cmd.empty())cmd+=L' ';cmd+=L'"'+std::filesystem::u8path(s).wstring()+L'"';}STARTUPINFOW si{};si.cb=sizeof(si);si.dwFlags=STARTF_USESTDHANDLES;si.hStdInput=cinR;si.hStdOutput=coutW;si.hStdError=redirectErrorStream_?coutW:cerrW;PROCESS_INFORMATION pi{};auto dir=directory_?std::filesystem::u8path(directory_->getPath()->utf8()).wstring():std::wstring();if(!CreateProcessW(nullptr,cmd.data(),nullptr,nullptr,TRUE,0,nullptr,dir.empty()?nullptr:dir.c_str(),&si,&pi))throw jxx::io::IOException();CloseHandle(pi.hThread);CloseHandle(cinR);CloseHandle(coutW);CloseHandle(cerrW);return jxx::CAST<Process>(jxx::NEW<NativeProcess>(pi.hProcess,cinW,coutR,cerrR));
+ WinHandle childInput,parentInput,childOutput,parentOutput,childError,parentError;
+ auto configureInput=[&]{
+   if(inputRedirect_->type()==Redirect::Type::PIPE)createPipePair(childInput,parentInput,true);
+   else if(inputRedirect_->type()==Redirect::Type::INHERIT){HANDLE duplicate=nullptr;HANDLE source=GetStdHandle(STD_INPUT_HANDLE);if(source==nullptr||source==INVALID_HANDLE_VALUE||!DuplicateHandle(GetCurrentProcess(),source,GetCurrentProcess(),&duplicate,0,TRUE,DUPLICATE_SAME_ACCESS))throw jxx::io::IOException();childInput.reset(duplicate);}
+   else childInput=openRedirectFile(inputRedirect_,true);
+ };
+ auto configureOutput=[&](const jxx::Ptr<Redirect>& redirect,WinHandle& child,WinHandle& parent,DWORD standardHandle){
+   if(redirect->type()==Redirect::Type::PIPE)createPipePair(child,parent,false);
+   else if(redirect->type()==Redirect::Type::INHERIT){HANDLE duplicate=nullptr;HANDLE source=GetStdHandle(standardHandle);if(source==nullptr||source==INVALID_HANDLE_VALUE||!DuplicateHandle(GetCurrentProcess(),source,GetCurrentProcess(),&duplicate,0,TRUE,DUPLICATE_SAME_ACCESS))throw jxx::io::IOException();child.reset(duplicate);}
+   else child=openRedirectFile(redirect,false);
+ };
+ configureInput();
+ configureOutput(outputRedirect_,childOutput,parentOutput,STD_OUTPUT_HANDLE);
+ if(redirectErrorStream_) {
+   HANDLE duplicate=nullptr;
+   if(!DuplicateHandle(GetCurrentProcess(),childOutput.get(),GetCurrentProcess(),&duplicate,0,TRUE,DUPLICATE_SAME_ACCESS))throw jxx::io::IOException();
+   childError.reset(duplicate);
+ } else configureOutput(errorRedirect_,childError,parentError,STD_ERROR_HANDLE);
+
+ std::wstring commandLine;
+ for(const auto& argument:command_){if(!commandLine.empty())commandLine.push_back(L' ');commandLine+=quoteArgument(utf16(argument));}
+ std::vector<wchar_t> writableCommand(commandLine.begin(),commandLine.end());writableCommand.push_back(L'\0');
+ auto environmentBlock=makeEnvironmentBlock(environment_);
+ std::wstring directory=directory_?utf16(directory_->getPath()->utf8()):std::wstring();
+ STARTUPINFOEXW startup{};startup.StartupInfo.cb=sizeof(startup);startup.StartupInfo.dwFlags=STARTF_USESTDHANDLES;
+ startup.StartupInfo.hStdInput=childInput.get();startup.StartupInfo.hStdOutput=childOutput.get();startup.StartupInfo.hStdError=childError.get();
+ std::vector<HANDLE> inheritedHandles{childInput.get(),childOutput.get(),childError.get()};
+ std::sort(inheritedHandles.begin(),inheritedHandles.end());
+ inheritedHandles.erase(std::unique(inheritedHandles.begin(),inheritedHandles.end()),inheritedHandles.end());
+ SIZE_T attributeSize=0;InitializeProcThreadAttributeList(nullptr,1,0,&attributeSize);
+ std::vector<unsigned char> attributeStorage(attributeSize);
+ startup.lpAttributeList=reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(attributeStorage.data());
+ if(!InitializeProcThreadAttributeList(startup.lpAttributeList,1,0,&attributeSize))throwWindowsIOException("InitializeProcThreadAttributeList");
+ struct AttributeGuard{LPPROC_THREAD_ATTRIBUTE_LIST value;~AttributeGuard(){if(value)DeleteProcThreadAttributeList(value);}} attributeGuard{startup.lpAttributeList};
+ if(!UpdateProcThreadAttribute(startup.lpAttributeList,0,PROC_THREAD_ATTRIBUTE_HANDLE_LIST,inheritedHandles.data(),inheritedHandles.size()*sizeof(HANDLE),nullptr,nullptr))throwWindowsIOException("UpdateProcThreadAttribute");
+ PROCESS_INFORMATION process{};
+ const DWORD creationFlags=CREATE_UNICODE_ENVIRONMENT|EXTENDED_STARTUPINFO_PRESENT;
+ if(!CreateProcessW(nullptr,writableCommand.data(),nullptr,nullptr,TRUE,creationFlags,environmentBlock.data(),directory.empty()?nullptr:directory.c_str(),&startup.StartupInfo,&process))throwWindowsIOException("CreateProcessW");
+ WinHandle processHandle(process.hProcess),threadHandle(process.hThread);
+ childInput.reset();childOutput.reset();childError.reset();
+ jxx::Ptr<jxx::io::OutputStream> input=inputRedirect_->type()==Redirect::Type::PIPE?jxx::CAST<jxx::io::OutputStream>(jxx::NEW<PipeOutput>(parentInput.release())):jxx::CAST<jxx::io::OutputStream>(jxx::NEW<NullOutputStream>());
+ jxx::Ptr<jxx::io::InputStream> output=outputRedirect_->type()==Redirect::Type::PIPE?jxx::CAST<jxx::io::InputStream>(jxx::NEW<PipeInput>(parentOutput.release())):jxx::CAST<jxx::io::InputStream>(jxx::NEW<NullInputStream>());
+ jxx::Ptr<jxx::io::InputStream> error=(!redirectErrorStream_&&errorRedirect_->type()==Redirect::Type::PIPE)?jxx::CAST<jxx::io::InputStream>(jxx::NEW<PipeInput>(parentError.release())):jxx::CAST<jxx::io::InputStream>(jxx::NEW<NullInputStream>());
+ return jxx::CAST<Process>(jxx::NEW<NativeProcess>(processHandle.release(),input,output,error));
 #else
  int inPipe[2],outPipe[2],errPipe[2],startup[2];
  if(pipe(inPipe)||pipe(outPipe)||pipe(errPipe)||pipe(startup))throw jxx::io::IOException();

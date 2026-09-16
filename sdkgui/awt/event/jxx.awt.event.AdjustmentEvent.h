@@ -1,6 +1,7 @@
 #pragma once
 
 #include "awt/jxx.awt.AWTEvent.h"
+#include "awt/jxx.awt.Adjustable.h"
 
 namespace jxx::awt::event
 {
@@ -22,19 +23,19 @@ namespace jxx::awt::event
         static constexpr ::jxx::lang::jint TRACK = 5;
 
         AdjustmentEvent(
-            const ::jxx::Ptr<::jxx::lang::Object>& source,
+            const ::jxx::Ptr<::jxx::awt::Adjustable>& source,
             ::jxx::lang::jint id,
             ::jxx::lang::jint type,
             ::jxx::lang::jint value);
 
         AdjustmentEvent(
-            const ::jxx::Ptr<::jxx::lang::Object>& source,
+            const ::jxx::Ptr<::jxx::awt::Adjustable>& source,
             ::jxx::lang::jint id,
             ::jxx::lang::jint type,
             ::jxx::lang::jint value,
             ::jxx::lang::jbool valueIsAdjusting);
 
-        ::jxx::Ptr<::jxx::lang::Object> getAdjustable() const;
+        ::jxx::Ptr<::jxx::awt::Adjustable> getAdjustable() const;
         ::jxx::lang::jint getAdjustmentType() const;
         ::jxx::lang::jint getValue() const;
         ::jxx::lang::jbool getValueIsAdjusting() const;

@@ -5,17 +5,17 @@
 namespace jxx::awt::event
 {
     ItemEvent::ItemEvent(
-        const ::jxx::Ptr<::jxx::lang::Object>& source,
+        const ::jxx::Ptr<::jxx::awt::ItemSelectable>& source,
         ::jxx::lang::jint id,
         const ::jxx::Ptr<::jxx::lang::Object>& item,
         ::jxx::lang::jint stateChange)
-        : Super(source, id), item_(item), stateChange_(stateChange)
+        : Super(::jxx::CAST<::jxx::lang::Object>(source), id), item_(item), stateChange_(stateChange)
     {
     }
 
-    ::jxx::Ptr<::jxx::lang::Object> ItemEvent::getItemSelectable() const
+    ::jxx::Ptr<::jxx::awt::ItemSelectable> ItemEvent::getItemSelectable() const
     {
-        return source;
+        return ::jxx::CAST<::jxx::awt::ItemSelectable>(source);
     }
 
     ::jxx::Ptr<::jxx::lang::Object> ItemEvent::getItem() const

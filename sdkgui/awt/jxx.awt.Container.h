@@ -47,6 +47,8 @@ namespace jxx::awt
 
         virtual void setLayout(const ::jxx::Ptr<LayoutManager>& layout);
         virtual ::jxx::Ptr<LayoutManager> getLayout() const;
+        void applyComponentOrientation(
+            const ::jxx::Ptr<ComponentOrientation>& orientation) override;
         void validate() override;
         virtual void doLayout();
 
