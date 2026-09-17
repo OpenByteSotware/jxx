@@ -7,6 +7,11 @@ namespace jxx::io
     class FilenameFilter;
 }
 
+namespace jxx::gui::internal
+{
+    class WxFileDialogPeer;
+}
+
 namespace jxx::awt
 {
     class FileDialog : public ::jxx::lang::ClassBase<FileDialog, Dialog>
@@ -33,20 +38,19 @@ namespace jxx::awt
         ~FileDialog() override = default;
 
         virtual void addNotify();
-        virtual ::jxx::lang::jint getMode() const;
-        virtual void setMode(::jxx::lang::jint mode);
-        virtual ::jxx::Ptr<::jxx::lang::String> getDirectory() const;
-        virtual void setDirectory(
+        ::jxx::lang::jint getMode() const;
+        void setMode(::jxx::lang::jint mode);
+        ::jxx::Ptr<::jxx::lang::String> getDirectory() const;
+        void setDirectory(
             const ::jxx::Ptr<::jxx::lang::String>& directory);
-        virtual ::jxx::Ptr<::jxx::lang::String> getFile() const;
-        virtual void setFile(
-            const ::jxx::Ptr<::jxx::lang::String>& file);
-        virtual ::jxx::Ptr<::jxx::io::FilenameFilter>
-            getFilenameFilter() const;
-        virtual void setFilenameFilter(
+        ::jxx::Ptr<::jxx::lang::String> getFile() const;
+        void setFile(const ::jxx::Ptr<::jxx::lang::String>& file);
+        ::jxx::Ptr<::jxx::io::FilenameFilter> getFilenameFilter() const;
+        void setFilenameFilter(
             const ::jxx::Ptr<::jxx::io::FilenameFilter>& filter);
-        virtual ::jxx::lang::jbool isMultipleMode() const;
-        virtual void setMultipleMode(::jxx::lang::jbool enable);
+        ::jxx::lang::jbool isMultipleMode() const;
+        void setMultipleMode(::jxx::lang::jbool enable);
+        void setVisible(::jxx::lang::jbool visible) override;
 
     protected:
         ::jxx::Ptr<::jxx::lang::String> paramString() const;
@@ -57,5 +61,6 @@ namespace jxx::awt
         ::jxx::Ptr<::jxx::lang::String> file_;
         ::jxx::Ptr<::jxx::io::FilenameFilter> filenameFilter_;
         ::jxx::lang::jbool multipleMode_;
+        ::jxx::Ptr<::jxx::gui::internal::WxFileDialogPeer> filePeer_;
     };
 }

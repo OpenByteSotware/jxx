@@ -61,6 +61,7 @@
 #include "lang/jxx.lang.Character.h"
 #include "lang/jxx.lang.Charset.h"
 #include "lang/jxx.lang.ClassLoader.h"
+#include "lang/jxx.lang.Compiler.h"
 #include "lang/jxx.lang.Double.h"
 #include "lang/jxx.lang.Float.h"
 #include "lang/jxx.lang.Integer.h"
@@ -152,6 +153,7 @@ void initializeClasses()
             registerType<Character>();
             registerType<Charset>();
             registerType<ClassLoader>();
+            registerType<Compiler>();
             registerType<Double>();
             registerType<Float>();
             registerType<Integer>();

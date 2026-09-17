@@ -2,6 +2,7 @@
 
 #include <sstream>
 
+#include "gui/internal/jxx.gui.internal.WxFileDialogPeer.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 
 namespace jxx::awt
@@ -15,15 +16,11 @@ namespace jxx::awt
     }
 
     FileDialog::FileDialog(const ::jxx::Ptr<Frame>& parent)
-        : FileDialog(parent, emptyTitle(), LOAD)
-    {
-    }
+        : FileDialog(parent, emptyTitle(), LOAD) {}
 
     FileDialog::FileDialog(const ::jxx::Ptr<Frame>& parent,
         const ::jxx::Ptr<::jxx::lang::String>& title)
-        : FileDialog(parent, title, LOAD)
-    {
-    }
+        : FileDialog(parent, title, LOAD) {}
 
     FileDialog::FileDialog(const ::jxx::Ptr<Frame>& parent,
         const ::jxx::Ptr<::jxx::lang::String>& title,
@@ -34,15 +31,11 @@ namespace jxx::awt
     }
 
     FileDialog::FileDialog(const ::jxx::Ptr<Dialog>& parent)
-        : FileDialog(parent, emptyTitle(), LOAD)
-    {
-    }
+        : FileDialog(parent, emptyTitle(), LOAD) {}
 
     FileDialog::FileDialog(const ::jxx::Ptr<Dialog>& parent,
         const ::jxx::Ptr<::jxx::lang::String>& title)
-        : FileDialog(parent, title, LOAD)
-    {
-    }
+        : FileDialog(parent, title, LOAD) {}
 
     FileDialog::FileDialog(const ::jxx::Ptr<Dialog>& parent,
         const ::jxx::Ptr<::jxx::lang::String>& title,
@@ -52,15 +45,8 @@ namespace jxx::awt
         setMode(mode);
     }
 
-    void FileDialog::addNotify()
-    {
-        validate();
-    }
-
-    ::jxx::lang::jint FileDialog::getMode() const
-    {
-        return mode_;
-    }
+    void FileDialog::addNotify() {}
+    ::jxx::lang::jint FileDialog::getMode() const { return mode_; }
 
     void FileDialog::setMode(::jxx::lang::jint mode)
     {
@@ -111,6 +97,24 @@ namespace jxx::awt
     void FileDialog::setMultipleMode(::jxx::lang::jbool enable)
     {
         multipleMode_ = enable;
+    }
+
+    void FileDialog::setVisible(::jxx::lang::jbool visible)
+    {
+        if (!visible)
+        {
+            Component::setVisible(false);
+            return;
+        }
+
+        filePeer_ = ::jxx::NEW<::jxx::gui::internal::WxFileDialogPeer>(
+            getTitle(), mode_, directory_, file_, multipleMode_);
+        Component::setVisible(true);
+        filePeer_->showModal();
+        directory_ = filePeer_->getDirectory();
+        file_ = filePeer_->getFile();
+        Component::setVisible(false);
+        filePeer_.reset();
     }
 
     ::jxx::Ptr<::jxx::lang::String> FileDialog::paramString() const
