@@ -27,10 +27,17 @@ public:
         DOMImplementationRegistry,
         JxxSuper>;
 
+    class ConstructionToken final {
+    private:
+        ConstructionToken() = default;
+        friend class DOMImplementationRegistry;
+    };
+
     static ::jxx::Ptr<::jxx::lang::String> PROPERTY;
 
     static ::jxx::Ptr<DOMImplementationRegistry> newInstance();
 
+    explicit DOMImplementationRegistry(ConstructionToken token);
     ~DOMImplementationRegistry() override;
 
     ::jxx::Ptr<::jxx::org::w3c::dom::DOMImplementation>
@@ -47,9 +54,6 @@ public:
 
 private:
     struct Impl;
-
-    DOMImplementationRegistry();
-
     std::shared_ptr<Impl> impl_;
 };
 

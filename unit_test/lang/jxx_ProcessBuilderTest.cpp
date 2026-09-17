@@ -11,6 +11,8 @@
 #include "lang/jxx.lang.Process.h"
 #include "lang/jxx.lang.ProcessBuilder.h"
 #include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.Runtime.h"
+#include "lang/jxx.lang.Thread.h"
 #include "ProcessTestSupport.h"
 #include "util/jxx.util.concurrent.TimeUnit.h"
 
@@ -21,6 +23,165 @@ using jxx::test::process::readAll;
 using jxx::test::process::shellCommand;
 using jxx::test::process::sleepCommand;
 using jxx::test::process::temporaryPath;
+
+class ProcessLikeDerived final
+    : public jxx::lang::Process
+{
+public:
+    using JxxSuper = jxx::lang::Process;
+
+    ProcessLikeDerived() = default;
+
+    jxx::Ptr<jxx::io::OutputStream>
+        getOutputStream() override
+    {
+        return nullptr;
+    }
+
+    jxx::Ptr<jxx::io::InputStream>
+        getInputStream() override
+    {
+        return nullptr;
+    }
+
+    jxx::Ptr<jxx::io::InputStream>
+        getErrorStream() override
+    {
+        return nullptr;
+    }
+
+    jxx::lang::jint waitFor() override
+    {
+        return 0;
+    }
+
+    jxx::lang::jbool waitFor(
+        jxx::lang::jlong,
+        const jxx::Ptr<
+            jxx::util::concurrent::TimeUnit>&) override
+    {
+        return true;
+    }
+
+    jxx::lang::jint exitValue() override
+    {
+        return 0;
+    }
+
+    void destroy() override
+    {
+    }
+};
+
+TEST(ProcessObjectTest,
+    ProcessDerivedHasValidThisPtr)
+{
+    auto process =
+        jxx::NEW<ProcessLikeDerived>();
+
+    ASSERT_NE(
+        process,
+        nullptr);
+
+    EXPECT_NO_THROW(
+    {
+        auto self =
+            process->thisPtr();
+
+        ASSERT_NE(
+            self,
+            nullptr);
+    });
+}
+
+
+TEST(TimeUnitTest, ToChronoWorks)
+{
+    auto unit =
+        jxx::util::concurrent::TimeUnit::MILLISECONDS();
+
+    EXPECT_NO_THROW(
+    {
+        auto value =
+            unit->toChrono(10);
+
+        (void)value;
+    });
+}
+
+TEST(TimeUnitTest, MillisecondsOwnership)
+{
+    auto unit =
+        jxx::util::concurrent::TimeUnit::MILLISECONDS();
+
+    ASSERT_NE(unit, nullptr);
+
+    EXPECT_NO_THROW(
+    {
+        auto self =
+            unit->thisPtr();
+
+        ASSERT_NE(self, nullptr);
+    });
+}
+
+TEST(ProcessBuilderTest, CommandArrayConstructionOnly)
+{
+    EXPECT_NO_THROW(
+    {
+        auto command =
+            commandArray(
+                shellCommand("exit 0"));
+
+        ASSERT_NE(command, nullptr);
+    });
+}
+TEST(ProcessBuilderTest, CommandArrayContents)
+{
+    auto command =
+        commandArray(
+            shellCommand("exit 0"));
+
+    ASSERT_NE(command, nullptr);
+
+    ASSERT_GT(
+        command->length,
+        0u);
+
+    ASSERT_NE(
+        (*command)[0],
+        nullptr);
+}
+
+TEST(ProcessBuilderTest, ProcessBuilderDirectConstructor)
+{
+    auto command = commandArray(shellCommand("exit 0"));
+
+    EXPECT_NO_THROW(
+    {
+        auto builder =
+            jxx::NEW<jxx::lang::ProcessBuilder>(command);
+
+      ASSERT_NE(builder, nullptr);
+    });
+}
+
+TEST(ProcessBuilderTest, ProcessBuilderHasValidThisPtr)
+{
+    auto value =
+        builder(shellCommand("exit 0"));
+
+    ASSERT_NE(value, nullptr);
+
+    EXPECT_NO_THROW(
+    {
+        auto self =
+            value->thisPtr();
+
+        ASSERT_NE(self, nullptr);
+        EXPECT_EQ(self.get(), value.get());
+    });
+}
 
 TEST(ProcessBuilderTest, CommandRoundTripPreservesArguments) {
     auto value = builder({"program", "argument with spaces", ""});
@@ -126,6 +287,24 @@ TEST(ProcessBuilderTest, MissingExecutableThrowsIOException) {
         jxx::io::IOException);
 }
 
+TEST(ProcessTest, ProcessHasValidThisPtr)
+{
+    auto process =
+        builder(sleepCommand())->start();
+
+    ASSERT_NE(process, nullptr);
+
+    EXPECT_NO_THROW(
+    {
+        auto self = process->thisPtr();
+
+        ASSERT_NE(self, nullptr);
+        EXPECT_EQ(self.get(), process.get());
+    });
+
+    process->destroyForcibly();
+}
+
 TEST(ProcessTest, ExitValueThrowsWhileAlive) {
     auto process = builder(sleepCommand())->start();
     EXPECT_TRUE(process->isAlive());
@@ -140,19 +319,59 @@ TEST(ProcessTest, TimedWaitTimesOutThenCompletes) {
     EXPECT_FALSE(process->waitFor(10, jxx::util::concurrent::TimeUnit::MILLISECONDS()));
     process->destroyForcibly();
     EXPECT_TRUE(process->waitFor(10, jxx::util::concurrent::TimeUnit::SECONDS()));
+
 }
 
-TEST(ProcessTest, ConcurrentWaitersObserveSameExitCode) {
-    auto process = builder(shellCommand("exit 7"))->start();
-    int first = -1;
-    int second = -1;
-    std::thread a([&] { first = process->waitFor(); });
-    std::thread b([&] { second = process->waitFor(); });
+TEST(ProcessTest, ProcessSharedFromThis)
+{
+    auto process =
+        builder(sleepCommand())->start();
+
+    auto object =
+        jxx::CAST<jxx::lang::Object>(
+            process);
+
+    ASSERT_NE(object, nullptr);
+
+    EXPECT_NO_THROW(
+    {
+        auto self =
+            object->shared_from_this();
+
+        ASSERT_NE(self, nullptr);
+    });
+
+    process->destroyForcibly();
+}
+
+TEST(ProcessTest, ConcurrentWaitersObserveSameExitCode)
+{
+#ifdef _WIN32
+    auto process =
+        builder(shellCommand("exit /b 7"))->start();
+#else
+    auto process =
+        builder(shellCommand("exit 7"))->start();
+#endif
+
+    std::atomic<int> first{ -1 };
+    std::atomic<int> second{ -1 };
+
+    std::thread a([&]
+ {
+     first = process->waitFor();
+    });
+
+    std::thread b([&]
+ {
+     second = process->waitFor();
+    });
+
     a.join();
     b.join();
-    EXPECT_EQ(first, 7);
-    EXPECT_EQ(second, 7);
+
+    EXPECT_EQ(first.load(), 7);
+    EXPECT_EQ(second.load(), 7);
     EXPECT_EQ(process->exitValue(), 7);
 }
-
 } // namespace

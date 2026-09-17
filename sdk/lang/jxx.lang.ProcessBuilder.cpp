@@ -283,7 +283,7 @@ public:
         const jxx::Ptr<jxx::io::InputStream>& output,
         const jxx::Ptr<jxx::io::InputStream>& error)
         : process_(process), input_(output), error_(error), output_(input),
-          completion_(std::make_shared<Completion>()) {
+          completion_(jxx::NEW<Completion>()) {
         HANDLE waitHandle = nullptr;
         if (!DuplicateHandle(GetCurrentProcess(), process_, GetCurrentProcess(),
                 &waitHandle, SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION,
@@ -330,7 +330,7 @@ public:
         const jxx::Ptr<jxx::io::InputStream>& output,
         const jxx::Ptr<jxx::io::InputStream>& error)
         : process_(process), input_(output), error_(error), output_(input),
-          completion_(std::make_shared<Completion>()) {
+          completion_(jxx::NEW<Completion>()) {
         auto completion = completion_;
         try {
         std::thread([process, completion] {

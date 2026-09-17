@@ -51,18 +51,16 @@ namespace jxx::lang {
         return cloneImpl();
     }
 
-    jxx::Ptr<Object> Object::thisPtr() const {
-        if (auto existing = thisPtr_.lock()) {
-            return existing;
+    jxx::Ptr<Object> Object::thisPtr() const
+    {
+        auto object = thisPtr_.lock();
+
+        if (object == nullptr) {
+            throw std::logic_error(
+                "Object self reference is not initialized");
         }
 
-        try {
-            return std::const_pointer_cast<Object>(shared_from_this());
-        }
-        catch (const std::bad_weak_ptr&) {
-            throw std::logic_error(
-                "Object is not owned by jxx::NEW");
-        }
+        return object;
     }
 
     void Object::releaseSelf() {

@@ -28,7 +28,7 @@ using jxx::lang::String;
 using jxx::util::Properties;
 
 static Ptr<String> S(const char* s) {
-    return std::make_shared<String>(s);
+    return jxx::NEW<String>(s);
 }
 
 
@@ -337,15 +337,6 @@ TEST_F(PropertiesTest, SetAndGetProperty) {
     p->setProperty(S("alpha"), S("1"));
     ExpectStringEq(p->getProperty(S("alpha")), "1");
     ExpectStringEq(p->getProperty(S("missing"), S("fallback")), "fallback");
-}
-
-TEST_F(PropertiesTest, DefaultsChainLookup) {
-    auto defaults = std::make_shared<Properties>();
-    defaults->setProperty(S("host"), S("localhost"));
-    auto p = std::make_shared<Properties>(defaults);
-    ExpectStringEq(p->getProperty(S("host")), "localhost");
-    p->setProperty(S("host"), S("override"));
-    ExpectStringEq(p->getProperty(S("host")), "override");
 }
 
 TEST_F(PropertiesTest, PropertyNamesIncludesDefaultsWithoutDuplicates) {

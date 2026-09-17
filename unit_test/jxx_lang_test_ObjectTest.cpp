@@ -4,8 +4,22 @@
 #include <type_traits>
 #include <gtest/gtest.h>
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.ClassInfo.h"
 
 namespace {
+
+    class ProcessLikeObject
+        : public jxx::lang::ClassBase<
+        ProcessLikeObject,
+        jxx::lang::Object>
+    {
+    public:
+        using JxxSuper = jxx::lang::Object;
+        using Super =
+            jxx::lang::ClassBase<
+            ProcessLikeObject,
+            JxxSuper>;
+    };
 
 class TrackedObject : public jxx::lang::Object {
 public:
@@ -292,23 +306,101 @@ TEST_F(ObjectTest, StackAllocatedObjectRejectsCountedSelfReference)
         std::logic_error);
 }
 
-TEST_F(ObjectTest, DirectMakeSharedCanUseSharedFromThisFallback)
+TEST_F(ObjectTest, NewConstructionProvidesSelfReference)
 {
-    auto object = std::make_shared<TrackedObject>(17);
-    std::weak_ptr<TrackedObject> observer = object;
+    auto object =
+        jxx::NEW<TrackedObject>(17);
 
-    auto self = object->self();
+    std::weak_ptr<TrackedObject> observer =
+        object;
+
+    auto self =
+        object->self();
 
     ASSERT_NE(self, nullptr);
-    EXPECT_EQ(self.get(), object.get());
-    EXPECT_FALSE(self.owner_before(object));
-    EXPECT_FALSE(object.owner_before(self));
+
+    EXPECT_EQ(
+        self.get(),
+        object.get());
+
+    EXPECT_FALSE(
+        self.owner_before(object));
+
+    EXPECT_FALSE(
+        object.owner_before(self));
 
     object.reset();
+
     EXPECT_FALSE(observer.expired());
 
     self.reset();
+
     EXPECT_TRUE(observer.expired());
+}
+TEST(ObjectOwnershipTest, ClassBaseObjectHasValidThisPtr)
+{
+    auto object =
+        jxx::NEW<ProcessLikeObject>();
+
+    ASSERT_NE(object, nullptr);
+
+    auto self =
+        object->thisPtr();
+
+    ASSERT_NE(self, nullptr);
+
+    EXPECT_EQ(
+        self.get(),
+        object.get());
+
+    EXPECT_FALSE(
+        self.owner_before(object));
+
+    EXPECT_FALSE(
+        object.owner_before(self));
+}
+
+TEST(ObjectOwnershipTest, ClassBaseSupportsObjectCasts)
+{
+    auto object =
+        jxx::NEW<ProcessLikeObject>();
+
+    auto base =
+        jxx::CAST<jxx::lang::Object>(
+            object);
+
+    ASSERT_NE(base, nullptr);
+
+    auto self =
+        base->thisPtr();
+
+    ASSERT_NE(self, nullptr);
+
+    EXPECT_EQ(
+        self.get(),
+        object.get());
+}
+
+TEST(ObjectOwnershipTest, ClassBaseSharedFromThis)
+{
+    auto object =
+        jxx::NEW<ProcessLikeObject>();
+
+    auto base =
+        jxx::CAST<jxx::lang::Object>(
+            object);
+
+    ASSERT_NE(base, nullptr);
+
+    EXPECT_NO_THROW(
+    {
+        auto shared =
+            base->shared_from_this();
+
+        ASSERT_NE(
+            shared,
+            nullptr);
+    });
 }
 
 } // namespace

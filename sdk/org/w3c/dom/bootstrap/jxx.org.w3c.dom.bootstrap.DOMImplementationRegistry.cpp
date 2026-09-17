@@ -12,7 +12,6 @@
 #include "org/w3c/dom/jxx.org.w3c.dom.DOMImplementationSource.h"
 
 namespace jxx::org::w3c::dom::bootstrap {
-
 namespace {
 
 class RegistryImplementationList final
@@ -41,7 +40,6 @@ public:
             static_cast<std::size_t>(index) >= values_.size()) {
             return nullptr;
         }
-
         return values_[static_cast<std::size_t>(index)];
     }
 
@@ -68,9 +66,11 @@ DOMImplementationRegistry::PROPERTY =
     ::jxx::NEW<::jxx::lang::String>(
         "org.w3c.dom.DOMImplementationSourceList");
 
-DOMImplementationRegistry::DOMImplementationRegistry()
+DOMImplementationRegistry::DOMImplementationRegistry(
+    ConstructionToken token)
     : Super()
     , impl_(std::make_shared<Impl>()) {
+    (void)token;
     impl_->sources.push_back(
         ::jxx::org::w3c::dom::internal::implementationSource());
 }
@@ -79,12 +79,8 @@ DOMImplementationRegistry::~DOMImplementationRegistry() = default;
 
 ::jxx::Ptr<DOMImplementationRegistry>
 DOMImplementationRegistry::newInstance() {
-    ::jxx::Ptr<DOMImplementationRegistry> registry(
-        new DOMImplementationRegistry());
-
-    ::jxx::detail::initializethisPtr_(registry);
-
-    return registry;
+    return ::jxx::NEW<DOMImplementationRegistry>(
+        ConstructionToken{});
 }
 
 ::jxx::Ptr<::jxx::org::w3c::dom::DOMImplementation>
@@ -93,12 +89,10 @@ DOMImplementationRegistry::getDOMImplementation(
     for (const auto& source : impl_->sources) {
         const auto implementation =
             source->getDOMImplementation(features);
-
         if (implementation != nullptr) {
             return implementation;
         }
     }
-
     return nullptr;
 }
 
@@ -112,7 +106,6 @@ DOMImplementationRegistry::getDOMImplementationList(
     for (const auto& source : impl_->sources) {
         const auto sourceValues =
             source->getDOMImplementationList(features);
-
         if (sourceValues == nullptr) {
             continue;
         }
@@ -149,7 +142,6 @@ void DOMImplementationRegistry::addSource(
     if (source == nullptr) {
         throw ::jxx::lang::NullPointerException();
     }
-
     impl_->sources.push_back(source);
 }
 

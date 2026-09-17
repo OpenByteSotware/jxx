@@ -2,425 +2,355 @@
 #ifndef __JXX_OBJECT_H__
 #define __JXX_OBJECT_H__
 
+#include <array>
+#include <chrono>
+#include <condition_variable>
 #include <cstddef>
+#include <cstdio>
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <mutex>
+#include <numeric>
 #include <sstream>
+#include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <typeinfo>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
-#include <type_traits>
-#include <numeric>
-#include <array>
-#include <stdexcept>
-#include <cstdio>
-#include <condition_variable>
-#include <chrono>
-#include <iostream>
 
-// ---------- Optional: demangle for GCC/Clang ----------
 #if defined(__GNUG__) || defined(__clang__)
 #include <cxxabi.h>
 #include <cstdlib>
 #endif
 
 #include "lang/jxx.lang.ByteType.h"
-#include "lang/jxx_types.h"
 #include "lang/jxx.lang.ClassInfoMarker.h"
+#include "lang/jxx_types.h"
 
-namespace jxx::lang {
+namespace jxx::lang
+{
     class Object;
     class String;
     class ClassAny;
-}
+} // namespace jxx::lang
 
-namespace jxx::lang {
+namespace jxx
+{
+    template <typename T, typename... Args>
+    jxx::Ptr<T> NEW(Args&&... arguments);
 
-    inline std::string demangle(const char* name) {
+    namespace detail
+    {
+        struct ObjectAccess;
+    } // namespace detail
+} // namespace jxx
+
+namespace jxx::lang
+{
+
+    inline std::string demangle(const char* name)
+    {
 #if defined(__GNUG__) || defined(__clang__)
         int status = 0;
-        char* dem = abi::__cxa_demangle(name, nullptr, nullptr, &status);
-        std::string out = (status == 0 && dem) ? dem : name;
-        std::free(dem);
-        return out;
+        char* demangled = abi::__cxa_demangle(name, nullptr, nullptr, &status);
+        std::string result = status == 0 && demangled != nullptr ? demangled : name;
+        std::free(demangled);
+        return result;
 #else
         (void)name;
         return "Object";
 #endif
     }
 
- 
-    // =============== Object (root) ===============
-    // JXX-style root of the class hierarchy:
-    // - Polymorphic for RTTI and dynamic_cast
-    //  - Provides JXX-style equals(), hashCode(), toString(), getClass(), and cloning semantics
-    //  - Provides JXX-style monitor methods: wait(), notify(), notifyAll() using condition_variable
-    //  - Note: JXX Object is not thread-safe by default, but these methods allow you to use it as a monitor if desired. 
-    //  - For JXX-style synchronized blocks, use synchronized(obj, [&] { ... });
-    //  - For JXX-style synchronized methods, inherit from Synchronized below.
-    //  - For JXX-style polymorphic collections, use PolySet/PolyMap below.
-    //  - For JXX-style cloning, derive from Cloneable and implement cloneImpl() for deep copy. Object::clone() checks for Cloneable and delegates to cloneImpl().
-    //  Note: we do NOT make Object copyable or assignable by default, since JXX Object is not. If you want copy semantics, derive from Cloneable and implement cloneImpl() for deep copy.
-    //  - Because this pointer may be used as return need to inherit from enable_shared_from_this for safe shared_ptr creation in clone() and getClass()
-
-    class Object : public std::enable_shared_from_this<Object> {
+    class Object : public std::enable_shared_from_this<Object>
+    {
     public:
-        
-        /**
-         * Returns this object through the owning control block established by
-         * jxx::NEW. The stored self handle is weak, so it does not create an
-         * ownership cycle.
-         */
         jxx::Ptr<Object> thisPtr() const;
 
         Object() = default;
-
-        // make Object polymorphic for RTTI and dynamic_cast (destructor default)
         virtual ~Object();
 
-        // Copy constructor: default-construct mutex and cv since they cannot be copied
         Object(const Object& other);
-
-        // Copy assignment: similar to copy constructor
         Object& operator=(const Object& other);
-
-        // Move constructor and assignment can be defaulted
         Object(Object&&) noexcept = default;
         Object& operator=(Object&&) noexcept = default;
 
-        // JXX-style: logical equality (default identity)
         virtual jbool equals(const jxx::Ptr<Object>& other) const;
-
-        // JXX-style: hashCode (default identity-based)
         virtual jxx::lang::jint hashCode() const;
-
         jxx::Ptr<jxx::lang::ClassAny> getClass() const;
-
-        // Class name (demangled where supported); override if you prefer custom names
         virtual jxx::Ptr<jxx::lang::String> getClassName() const;
-
-        // JXX-style: "Class@hexHash"
         virtual jxx::Ptr<jxx::lang::String> toString() const;
-
-        // Identity check (reference equality)
         virtual bool same(const jxx::Ptr<Object>& other) const;
 
         template <typename Rep, typename Period>
-        bool wait_for(const std::chrono::duration<Rep, Period>& d) {
-            std::unique_lock<std::mutex> lk(mtx_);
-            return cv_.wait_for(lk, d) == std::cv_status::no_timeout;
+        bool wait_for(const std::chrono::duration<Rep, Period>& duration)
+        {
+            std::unique_lock<std::mutex> lock(mtx_);
+            return cv_.wait_for(lock, duration) == std::cv_status::no_timeout;
         }
 
         void wait();
-
         void notify();
-
         void notifyAll();
 
-        // Virtual clone method
         virtual jxx::Ptr<jxx::lang::Object> clone() const;
 
-        // mimic JXX syncrhonized blocks: obj.synchronized([&] { ... });
         template <typename F>
-        auto synchronized(F&& f) const -> decltype(f()) {
+        auto synchronized(F&& function) const -> decltype(function())
+        {
             std::lock_guard<std::recursive_mutex> guard(mutex_);
-            return f();
+            return function();
         }
 
     protected:
-
         virtual jxx::Ptr<jxx::lang::Object> cloneImpl() const;
 
         template <typename T>
-        jxx::Ptr<T> getThis() {
+        jxx::Ptr<T> getThis()
+        {
             static_assert(
                 std::is_base_of_v<jxx::lang::Object, T>,
                 "T must derive from Object");
-
-            return std::dynamic_pointer_cast<T>(
-                thisPtr());
+            return std::dynamic_pointer_cast<T>(thisPtr());
         }
 
         template <typename T>
-        jxx::Ptr<const T> getThis() const {
+        jxx::Ptr<const T> getThis() const
+        {
             static_assert(
                 std::is_base_of_v<jxx::lang::Object, T>,
                 "T must derive from Object");
-
-            return std::dynamic_pointer_cast<const T>(
-                thisPtr());
+            return std::dynamic_pointer_cast<const T>(thisPtr());
         }
 
         mutable std::mutex mtx_;
         std::condition_variable cv_;
 
-    protected:
-        // release thisPtr_ as it was a reference to this object and we are being destroyed, so break the cycle
         void releaseSelf();
-
         jxx::Ptr<jxx::lang::String> getClassName_() const;
-
         mutable std::recursive_mutex mutex_;
 
     private:
-        // Use thisPtr_() when a method must return the current object as jxx::Ptr<Object>.
-        // The internal thisPtr__ member is weak and must not be returned directly.
+        friend struct ::jxx::detail::ObjectAccess;
+
+        void initializeThisPtr_(const jxx::Ptr<Object>& object) noexcept
+        {
+            thisPtr_ = object;
+        }
+
         std::weak_ptr<Object> thisPtr_;
     };
 
-    // =============== Polymorphic hashing/equality for smart pointers ===============
-    struct PolyHash {
+    struct PolyHash
+    {
         using is_transparent = void;
-        std::size_t operator()(const std::shared_ptr<Object>& p) const {
-            return p ? p->hashCode() : 0u;
+
+        std::size_t operator()(const std::shared_ptr<Object>& pointer) const
+        {
+            return pointer != nullptr ? pointer->hashCode() : 0u;
         }
-        std::size_t operator()(const Object* p) const {
-            return p ? p->hashCode() : 0u;
+
+        std::size_t operator()(const Object* pointer) const
+        {
+            return pointer != nullptr ? pointer->hashCode() : 0u;
         }
     };
 
-    struct PolyEqual {
+    struct PolyEqual
+    {
         using is_transparent = void;
-        bool operator()(const std::shared_ptr<Object>& a,
-            const std::shared_ptr<Object>& b) const {
-            if (a == b) return true;
-            if (!a || !b) return false;
-            return a->equals(b);
-        }
-        bool operator()(const jxx::Ptr<Object> a,
-            const jxx::Ptr<Object> b) const {
-            if (!a || !b) return false;
-            return a->equals(b);
+
+        bool operator()(
+            const std::shared_ptr<Object>& left,
+            const std::shared_ptr<Object>& right) const
+        {
+            if (left == right) return true;
+            if (left == nullptr || right == nullptr) return false;
+            return left->equals(right);
         }
     };
 
-    // Convenience aliases for polymorphic containers
     template <typename TPtr = jxx::Ptr<jxx::lang::Object>>
     using PolySet = std::unordered_set<TPtr, PolyHash, PolyEqual>;
 
-    template <typename TValue, typename TKeyPtr = jxx::Ptr<jxx::lang::Object>>
-    using PolyMap = std::unordered_map<TKeyPtr, TValue, PolyHash, PolyEqual>;    
+    template <
+        typename TValue,
+        typename TKeyPtr = jxx::Ptr<jxx::lang::Object>>
+        using PolyMap = std::unordered_map<TKeyPtr, TValue, PolyHash, PolyEqual>;
 
-#define JXX_OBJECT_CLONE(Derived) \
-    jxx::Ptr<jxx::lang::Object> cloneImpl() const override { return jxx::NEW<Derived>(*this); }
-#endif
+#define JXX_OBJECT_CLONE(Derived)                                      \
+    jxx::Ptr<jxx::lang::Object> cloneImpl() const override {           \
+        return jxx::CAST<jxx::lang::Object>(jxx::NEW<Derived>(*this)); \
+    }
 
+} // namespace jxx::lang
 
-
-}
-
-namespace jxx {
-    // =====================================================
-    // N-Dimensional Array Wrapper
-    // =====================================================
+namespace jxx
+{
 
     template <typename T, jxx::lang::jint N>
-    class JxxArray {
+    class JxxArray
+    {
     public:
-        template <typename... Dims,
-            typename = std::enable_if_t<sizeof...(Dims) == N &&
+        template <
+            typename... Dims,
+            typename = std::enable_if_t<
+            sizeof...(Dims) == N &&
             std::conjunction_v<std::is_integral<Dims>...>>>
-            explicit JxxArray(Dims... dims) : shape_{ static_cast<std::uint32_t>(dims)... } {
+            explicit JxxArray(Dims... dimensions)
+            : shape_{ static_cast<std::uint32_t>(dimensions)... }
+        {
             total_size_ = 1;
-            for (auto d : shape_) {
-                if (d == 0) throw std::invalid_argument("Dimension size must be > 0");
-                total_size_ *= d;
+            for (const auto dimension : shape_) {
+                if (dimension == 0) {
+                    throw std::invalid_argument("Dimension size must be > 0");
+                }
+                total_size_ *= dimension;
             }
-            data_ = std::shared_ptr<T>(new T[total_size_](), std::default_delete<T[]>());
+            data_ = std::shared_ptr<T>(
+                new T[total_size_](),
+                std::default_delete<T[]>());
         }
 
         template <typename... Indices>
-        T& operator()(Indices... idxs) {
+        T& operator()(Indices... indices)
+        {
             static_assert(sizeof...(Indices) == N, "Invalid number of indices");
-            std::array<std::size_t, N> indices{ static_cast<std::uint32_t>(idxs)... };
-            return data_.get()[flat_index(indices)];
+            return data_.get()[flat_index(
+                std::array<std::size_t, N>{
+                static_cast<std::uint32_t>(indices)...})];
         }
 
         template <typename... Indices>
-        const T& operator()(Indices... idxs) const {
+        const T& operator()(Indices... indices) const
+        {
             static_assert(sizeof...(Indices) == N, "Invalid number of indices");
-            std::array<std::size_t, N> indices{ static_cast<std::uint32_t>(idxs)... };
-            return data_.get()[flat_index(indices)];
+            return data_.get()[flat_index(
+                std::array<std::size_t, N>{
+                static_cast<std::uint32_t>(indices)...})];
         }
 
-        const std::array<std::size_t, N>& shape() const { return shape_; }
-        std::size_t size() const { return total_size_; }
-        std::shared_ptr<T> data() const { return data_; }
+        const std::array<std::size_t, N>& shape() const
+        {
+            return shape_;
+        }
+        std::size_t size() const
+        {
+            return total_size_;
+        }
+        std::shared_ptr<T> data() const
+        {
+            return data_;
+        }
 
     private:
-        std::size_t flat_index(const std::array<std::size_t, N>& indices) const {
-            std::size_t idx = 0;
+        std::size_t flat_index(
+            const std::array<std::size_t, N>& indices) const
+        {
+            std::size_t index = 0;
             std::size_t stride = 1;
-            for (std::size_t dim = N; dim-- > 0;) {
-                if (indices[dim] >= shape_[dim])
+            for (std::size_t dimension = N; dimension-- > 0;) {
+                if (indices[dimension] >= shape_[dimension]) {
                     throw std::out_of_range("Index out of bounds");
-                idx += indices[dim] * stride;
-                stride *= shape_[dim];
+                }
+                index += indices[dimension] * stride;
+                stride *= shape_[dimension];
             }
-            return idx;
+            return index;
         }
 
-        std::array<std::size_t, N> shape_;
-        std::size_t total_size_;
+        std::array<std::size_t, N> shape_{};
+        std::size_t total_size_ = 0;
         std::shared_ptr<T> data_;
     };
 
-        namespace detail {
-
-            template <typename T, typename = void>
-            struct has_this_ptr
-                : std::false_type {};
-
-            template <typename T>
-            struct has_this_ptr<
-                T,
-                std::void_t<
-                decltype(
-                    std::declval<T&>().thisPtr_)>>
-                : std::true_type {
-            };
-
-            template <typename T>
-            void initializethisPtr_(
-                const std::shared_ptr<T>& object) {
-
-                if constexpr (has_this_ptr<T>::value) {
-                    object->thisPtr = object;
-                }
-            }
-
-        } // namespace detail
-
-        /**
-         * Constructs a JXX object.
-         *
-         * This handles ordinary classes and JxxArray specializations:
-         *
-         *   jxx::NEW<String>("text")
-         *   jxx::NEW<Vector<E>>(capacity, increment)
-         *   jxx::NEW<IntArrayType>(10)
-         *   jxx::NEW<IntArray2DType>(2, 3)
-         */
-        template <typename T, typename... Args>
-        jxx::Ptr<T> NEW(
-            Args&&... arguments)
+    namespace detail
+    {
+        struct ObjectAccess final
         {
-            static_assert(
-                !std::is_array_v<T>,
-                "jxx::NEW<T> does not accept "
-                "native C++ array types. "
-                "Use JxxArray<T, Rank>.");
+            static void initialize(
+                const jxx::Ptr<jxx::lang::Object>& object) noexcept
+            {
+                object->initializeThisPtr_(object);
+            }
+        };
+    } // namespace detail
 
-            static_assert(
-                std::is_constructible_v<
-                    T,
-                    Args...>,
-                "jxx::NEW<T>: T is not "
-                "constructible from the "
-                "supplied arguments.");
+    template <typename T, typename... Args>
+    jxx::Ptr<T> NEW(Args&&... arguments)
+    {
+        static_assert(
+            !std::is_array_v<T>,
+            "jxx::NEW<T> does not accept native C++ array types. "
+            "Use JxxArray<T, Rank>.");
 
-            auto object =
-                std::make_shared<T>(
-                    std::forward<Args>(
-                        arguments)...);
+        static_assert(
+            std::is_constructible_v<T, Args...>,
+            "jxx::NEW<T>: T is not constructible from the supplied arguments.");
 
-            detail::initializethisPtr_(
-                object);
+        auto object = std::make_shared<T>(
+            std::forward<Args>(arguments)...);
 
-            return object;
+        if constexpr (std::is_base_of_v<jxx::lang::Object, T>) {
+            detail::ObjectAccess::initialize(
+                std::static_pointer_cast<jxx::lang::Object>(object));
         }
+
+        return object;
+    }
 
 #ifndef CAST_PTR
 #define CAST_PTR(Type, ptr) std::dynamic_pointer_cast<const Type>(ptr)
 #endif
-}
 
-namespace jxx {
-
-    // ---------------------------
-    // JXX-style instanceof
-    // ---------------------------
-    //
-    // Usage:
-    //   if (instanceof_as<Foo>(obj)) { ... }
-    //
-    // Semantics:
-    //   - returns false if obj == null
-    //   - returns true if obj is instance of Foo (or implements Foo if Foo is an interface type)
-    //
     template <class To, class From>
-    inline bool instanceof(const jxx::Ptr<From>& obj) noexcept {
-        if (!obj) return false;
-        return static_cast<bool>(std::dynamic_pointer_cast<To>(obj));
+    inline bool instanceof(const jxx::Ptr<From>& object) noexcept
+    {
+        if (object == nullptr) return false;
+        return static_cast<bool>(std::dynamic_pointer_cast<To>(object));
     }
 
-    // ---------------------------
-    // JXX-style cast: (To) obj
-    // ---------------------------
-    //
-    // Usage:
-    //   auto foo = cast_as<Foo>(obj);     // returns null if obj is null; throws ClassCastException if incompatible
-    //
-    // Semantics:
-    //   - if obj == null: returns null (same as JXX)
-    //   - else if compatible: returns casted pointer
-    //   - else: throws ClassCastException
-    //
     template <class To, class From>
-    inline jxx::Ptr<To> cast_as(const jxx::Ptr<From>& obj) {
-        if (!obj) return jxx::Ptr<To>{}; // JXX: (T)null == null
-
-        auto casted = std::dynamic_pointer_cast<To>(obj);
-        if (casted) return casted;
-
-        // JXX: ClassCastException. Message text is not specified strictly; keep simple and stable.
-        // If you want richer messages, you can use a registry or typeName() from Throwable/Object metadata.
+    inline jxx::Ptr<To> cast_as(const jxx::Ptr<From>& object)
+    {
+        if (object == nullptr) return nullptr;
+        auto casted = std::dynamic_pointer_cast<To>(object);
+        if (casted != nullptr) return casted;
         throw std::runtime_error("ClassCastException: incompatible cast");
     }
 
-    // ---------------------------
-    // Try-cast (safe cast): returns null instead of throwing
-    // ---------------------------
     template <class To, class From>
-    inline jxx::Ptr<To> try_cast_as(const jxx::Ptr<From>& obj) noexcept {
-        if (!obj) return jxx::Ptr<To>{};
-        return std::dynamic_pointer_cast<To>(obj);
+    inline jxx::Ptr<To> try_cast_as(const jxx::Ptr<From>& object) noexcept
+    {
+        if (object == nullptr) return nullptr;
+        return std::dynamic_pointer_cast<To>(object);
     }
 
     template <typename To, typename From>
-    jxx::Ptr<To> CAST(
-        const jxx::Ptr<From>& ptr)
+    jxx::Ptr<To> CAST(const jxx::Ptr<From>& pointer)
     {
         using ToType = std::remove_cv_t<To>;
         using FromType = std::remove_cv_t<From>;
 
-        if (ptr == nullptr) {
-            return nullptr;
-        }
+        if (pointer == nullptr) return nullptr;
 
         if constexpr (std::is_same_v<ToType, FromType>) {
-            return ptr;
+            return pointer;
         }
         else if constexpr (std::is_base_of_v<ToType, FromType>) {
-            /*
-             * Derived to base conversion.
-             */
-            return std::static_pointer_cast<To>(ptr);
+            return std::static_pointer_cast<To>(pointer);
         }
         else {
-            /*
-             * Checked base-to-derived and interface cross-casts.
-             */
             static_assert(
                 std::is_polymorphic_v<FromType>,
-                "jxx::CAST requires a polymorphic source type "
-                "for checked casts.");
-
-            return std::dynamic_pointer_cast<To>(ptr);
+                "jxx::CAST requires a polymorphic source type for checked casts.");
+            return std::dynamic_pointer_cast<To>(pointer);
         }
     }
 
-} // namespace jxx::lang
+} // namespace jxx
+
+#endif // __JXX_OBJECT_H__
