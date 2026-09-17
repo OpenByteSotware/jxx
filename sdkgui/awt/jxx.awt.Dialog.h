@@ -55,6 +55,7 @@ namespace jxx::awt
         virtual ::jxx::lang::jbool isUndecorated() const;
         virtual void setUndecorated(::jxx::lang::jbool undecorated);
         virtual ::jxx::Ptr<Window> getOwner() const;
+        void setVisible(::jxx::lang::jbool visible) override;
         void validate() override;
 
     protected:

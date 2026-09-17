@@ -6,7 +6,7 @@
 #include "awt/jxx.awt.Frame.h"
 #include "awt/jxx.awt.IllegalComponentStateException.h"
 #include "gui/internal/jxx.gui.internal.NativeWindow.h"
-#include "gui/internal/jxx.gui.internal.WxFramePeer.h"
+#include "gui/internal/jxx.gui.internal.WxDialogPeer.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 
 namespace jxx::awt
@@ -156,14 +156,33 @@ namespace jxx::awt
     void Dialog::ensureNativeWindow()
     {
         if (nativeWindow_ != nullptr) return;
-        nativeWindow_ = ::jxx::NEW<::jxx::gui::internal::WxFramePeer>(title_);
+        nativeWindow_ = ::jxx::NEW<::jxx::gui::internal::WxDialogPeer>(title_,
+            resizable_, undecorated_);
         nativeWindow_->setBounds(getX(), getY(), getWidth(), getHeight());
         configureNativeEvents();
         const auto peer =
-            ::jxx::CAST<::jxx::gui::internal::WxFramePeer>(nativeWindow_);
+            ::jxx::CAST<::jxx::gui::internal::WxDialogPeer>(nativeWindow_);
         if (peer != nullptr)
             peer->installComponents(::jxx::CAST<Container>(thisPtr()));
         displayable_ = true;
+    }
+
+    void Dialog::setVisible(::jxx::lang::jbool visible)
+    {
+        if (visible) ensureNativeWindow();
+        Component::setVisible(visible);
+        if (nativeWindow_ == nullptr) return;
+        if (!visible)
+        {
+            nativeWindow_->hide();
+            return;
+        }
+        nativeWindow_->setBounds(getX(), getY(), getWidth(), getHeight());
+        displayable_ = true;
+        const auto peer =
+            ::jxx::CAST<::jxx::gui::internal::WxDialogPeer>(nativeWindow_);
+        if (isModal() && peer != nullptr) peer->showModal();
+        else nativeWindow_->show();
     }
 
     void Dialog::validate()
@@ -171,7 +190,7 @@ namespace jxx::awt
         Container::validate();
         if (nativeWindow_ == nullptr) return;
         const auto peer =
-            ::jxx::CAST<::jxx::gui::internal::WxFramePeer>(nativeWindow_);
+            ::jxx::CAST<::jxx::gui::internal::WxDialogPeer>(nativeWindow_);
         if (peer != nullptr)
             peer->installComponents(::jxx::CAST<Container>(thisPtr()));
     }
