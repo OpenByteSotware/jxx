@@ -51,8 +51,12 @@ void openLibrary(const std::string& filename) {
 }
 }
 
+Runtime::Runtime(ConstructionToken)
+    : Super() {
+}
+
 jxx::Ptr<Runtime> Runtime::getRuntime() {
-    static auto value = jxx::Ptr<Runtime>(new Runtime());
+    static const auto value = jxx::NEW<Runtime>(ConstructionToken{});
     return value;
 }
 

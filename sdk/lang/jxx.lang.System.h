@@ -13,6 +13,7 @@
 #include "io/jxx.io.FileOutputStream.h"
 
 namespace jxx { namespace lang {
+class Object;
 class String;
 struct System {
     static std::shared_ptr<jxx::io::InputStream> in;
@@ -26,6 +27,17 @@ struct System {
 
     // Java-like utilities
     static jxx::lang::jlong currentTimeMillis();
+    static jxx::lang::jlong nanoTime();
+    static jxx::lang::jint identityHashCode(
+        const jxx::Ptr<jxx::lang::Object>& object) noexcept;
+    static jxx::Ptr<jxx::lang::String> lineSeparator();
+    static jxx::Ptr<jxx::lang::String> getenv(
+        const jxx::Ptr<jxx::lang::String>& name);
+    static jxx::Ptr<jxx::lang::String> mapLibraryName(
+        const jxx::Ptr<jxx::lang::String>& libraryName);
+    static void gc();
+    static void runFinalization();
+    static void exit(jxx::lang::jint status);
 
     static jxx::Ptr<jxx::lang::String> getProperty(
         const jxx::Ptr<jxx::lang::String>& key);

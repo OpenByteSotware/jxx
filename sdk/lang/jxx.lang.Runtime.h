@@ -15,6 +15,9 @@ class String;
 class Thread;
 
 class Runtime final : public ClassBase<Runtime, Object> {
+private:
+    struct ConstructionToken {};
+
 public:
     using JxxSuper = Object;
     using Super = ClassBase<Runtime, JxxSuper>;
@@ -61,8 +64,9 @@ public:
         const jxx::Ptr<JxxArray<jxx::Ptr<String>, 1>>& environment,
         const jxx::Ptr<jxx::io::File>& directory);
 
+    explicit Runtime(ConstructionToken);
+
 private:
-    Runtime() = default;
     void runShutdownHooks_();
 
     mutable std::mutex mutex_;
