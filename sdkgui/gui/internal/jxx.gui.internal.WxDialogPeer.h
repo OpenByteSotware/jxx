@@ -1,15 +1,8 @@
 #pragma once
-
 #include "gui/internal/jxx.gui.internal.NativeWindow.h"
-
 class wxDialog;
 class wxWindow;
-
-namespace jxx::awt
-{
-    class Container;
-}
-
+namespace jxx::awt { class Container; }
 namespace jxx::gui::internal
 {
     class WxDialogPeer final : public NativeWindow
@@ -19,7 +12,6 @@ namespace jxx::gui::internal
             ::jxx::lang::jbool resizable,
             ::jxx::lang::jbool undecorated);
         ~WxDialogPeer() override;
-
         void show() override;
         void showModal();
         void hide() override;
@@ -34,12 +26,12 @@ namespace jxx::gui::internal
         void setEventCallback(EventCallback callback) override;
         void setMenuBar(const ::jxx::Ptr<::jxx::awt::MenuBar>& menuBar) override;
         void installComponents(const ::jxx::Ptr<::jxx::awt::Container>& container);
-
+        void setResizable(::jxx::lang::jbool resizable);
+        ::jxx::lang::jbool isModal() const;
     private:
         void send(::jxx::lang::jint id);
         void buildChildren(wxWindow* parent,
             const ::jxx::Ptr<::jxx::awt::Container>& container);
-
         wxDialog* dialog_;
         ::jxx::Ptr<::jxx::lang::String> title_;
         EventCallback callback_;
