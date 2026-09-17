@@ -13,6 +13,7 @@
 #include "io/jxx.io.FileOutputStream.h"
 
 namespace jxx { namespace lang {
+class String;
 struct System {
     static std::shared_ptr<jxx::io::InputStream> in;
     static std::shared_ptr<jxx::io::PrintStream> out;
@@ -25,6 +26,17 @@ struct System {
 
     // Java-like utilities
     static jxx::lang::jlong currentTimeMillis();
+
+    static jxx::Ptr<jxx::lang::String> getProperty(
+        const jxx::Ptr<jxx::lang::String>& key);
+    static jxx::Ptr<jxx::lang::String> getProperty(
+        const jxx::Ptr<jxx::lang::String>& key,
+        const jxx::Ptr<jxx::lang::String>& defaultValue);
+    static jxx::Ptr<jxx::lang::String> setProperty(
+        const jxx::Ptr<jxx::lang::String>& key,
+        const jxx::Ptr<jxx::lang::String>& value);
+    static jxx::Ptr<jxx::lang::String> clearProperty(
+        const jxx::Ptr<jxx::lang::String>& key);
 
     template<typename T>
     static void arraycopy(const std::vector<T>& src, jxx::lang::jint srcPos,
