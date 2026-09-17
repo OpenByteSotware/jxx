@@ -1,4 +1,7 @@
-#include "jxx.lang.Character.h"
+#include "lang/jxx.lang.Character.h"
+
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 
 #include <memory>
 
@@ -6,7 +9,7 @@
 #include <gsl/util>
 #include <gsl/narrow>
 
-#include "jxx.lang.String.h"
+#include "lang/jxx.lang.String.h"
 #include "jxx.lang.IllegalArgumentException.h"
 #include "jxx.unicode_bridge.h"
 
@@ -20,12 +23,29 @@ namespace
 
 namespace jxx::lang
 {
-    Character::Character()
-        : value_(0)
-    {}
+    namespace {
+    jxx::Ptr<ClassAny> registerCharacterPrimitive()
+    {
+        ClassAny::Meta metadata;
+        metadata.binaryName = "char";
+        metadata.typeId = std::type_index(typeid(jchar));
+        metadata.isPrimitive = true;
+        metadata.modifiers = 0x0001 | 0x0010 | 0x0400;
+        return ClassAny::registerClass(metadata);
+    }
+    }
+
+    const jxx::Ptr<ClassAny> Character::TYPE = registerCharacterPrimitive();
+
+    jxx::Ptr<ClassAny> Character::Class()
+    {
+        return JxxClassInfoMarker::Class();
+    }
+
 
     Character::Character(jchar value)
-        : value_(value)
+        : Super()
+        , value_(value)
     {}
 
     jchar Character::charValue() const noexcept
@@ -61,6 +81,21 @@ namespace jxx::lang
         return static_cast<jint>(value);
     }
 
+    jint Character::compare(jchar x, jchar y) noexcept
+    {
+        return static_cast<jint>(x) - static_cast<jint>(y);
+    }
+
+    jxx::Ptr<String> Character::toString(jchar value)
+    {
+        return jxx::NEW<String>(std::u16string(1, static_cast<char16_t>(value)));
+    }
+
+    jchar Character::reverseBytes(jchar value) noexcept
+    {
+        return static_cast<jchar>((value << 8) | (value >> 8));
+    }
+
     jxx::Ptr<String> Character::toString() const
     {
         return String::valueOf(value_);
@@ -68,7 +103,15 @@ namespace jxx::lang
 
     jxx::Ptr<Character> Character::valueOf(jchar c)
     {
-        return jxx::NEW<Character>(c);
+        static const std::array<jxx::Ptr<Character>, 128> cache = [] {
+            std::array<jxx::Ptr<Character>, 128> values{};
+            for (std::size_t index = 0; index < values.size(); ++index)
+            {
+                values[index] = jxx::NEW<Character>(static_cast<jchar>(index));
+            }
+            return values;
+        }();
+        return c <= 127 ? cache[static_cast<std::size_t>(c)] : jxx::NEW<Character>(c);
     }
 
     jbool Character::isValidCodePoint(jint codePoint) noexcept
@@ -266,16 +309,23 @@ namespace jxx::lang
         return result;
     }
 
-    void Character::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out)
+
+
+
+    void Character::writeObject(
+        const jxx::Ptr<jxx::io::ObjectOutputStream>& out)
     {
-
-
+        (void)out;
     }
 
-    void Character::readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in) {
-
+    void Character::readObject(
+        const jxx::Ptr<jxx::io::ObjectInputStream>& in)
+    {
+        (void)in;
     }
-    void Character::readObjectNoData() {
 
+    void Character::readObjectNoData()
+    {
     }
+
 }

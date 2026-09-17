@@ -1,14 +1,15 @@
 #pragma once
 
-#include "jxx_types.h"
-#include "jxx.lang.Object.h"
-#include "jxx.lang.Comparable.h"
-#include "jxx.lang.buildin_array.h"
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.Comparable.h"
+#include "lang/jxx.lang.buildin_array.h"
 #include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.ClassInfo.h"
 
 namespace jxx::lang
 {
+    class ClassAny;
     class String;
 
     class Character final
@@ -66,7 +67,13 @@ namespace jxx::lang
         static constexpr jint FINAL_QUOTE_PUNCTUATION = 30;
 
     public:
-        Character();
+        using JxxSuper = Object;
+        using Super = ClassBase<Character, Object, Comparable<Character>, jxx::io::SerializableI>;
+        using JxxClassInfoMarker = ClassInfo<Character, Object, Comparable<Character>, jxx::io::SerializableI>;
+
+        static jxx::Ptr<ClassAny> Class();
+        static const jxx::Ptr<ClassAny> TYPE;
+
         explicit Character(jchar value);
 
         jchar charValue() const noexcept;
@@ -78,6 +85,9 @@ namespace jxx::lang
 
         static jxx::Ptr<Character> valueOf(jchar c);
         static jint hashCode(jchar value) noexcept;
+        static jint compare(jchar x, jchar y) noexcept;
+        static jxx::Ptr<String> toString(jchar value);
+        static jchar reverseBytes(jchar value) noexcept;
 
     public:
         static jbool isValidCodePoint(jint codePoint) noexcept;
@@ -117,9 +127,13 @@ namespace jxx::lang
 
         static CharArray toChars(jint codePoint);
 
-        virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out);
-        virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in);
-        virtual void readObjectNoData();
+        void writeObject(
+            const jxx::Ptr<jxx::io::ObjectOutputStream>& out) override;
+        void readObject(
+            const jxx::Ptr<jxx::io::ObjectInputStream>& in) override;
+        void readObjectNoData() override;
+
+
 
     private:
         jchar value_;
