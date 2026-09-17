@@ -11,12 +11,17 @@
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.Runtime.h"
+#include "lang/jxx.lang.SecurityManager.h"
+#include "lang/jxx.lang.RuntimePermission.h"
 
 using namespace jxx::io;
 namespace jxx { namespace lang {
 
 
 namespace {
+jxx::Ptr<SecurityManager>& securityManager() { static jxx::Ptr<SecurityManager> value; return value; }
+std::mutex& securityManagerMutex() { static std::mutex value; return value; }
+
 std::mutex& propertyMutex() {
     static std::mutex mutex;
     return mutex;
@@ -161,6 +166,18 @@ jxx::Ptr<String> System::clearProperty(const jxx::Ptr<String>& key) {
     auto previous = jxx::NEW<String>(found->second);
     values.erase(found);
     return previous;
+}
+
+jxx::Ptr<SecurityManager> System::getSecurityManager() {
+    std::lock_guard<std::mutex> guard(securityManagerMutex());
+    return securityManager();
+}
+void System::setSecurityManager(const jxx::Ptr<SecurityManager>& manager) {
+    std::lock_guard<std::mutex> guard(securityManagerMutex());
+    if (securityManager() != nullptr) {
+        securityManager()->checkPermission(jxx::NEW<RuntimePermission>(jxx::NEW<String>("setSecurityManager")));
+    }
+    securityManager() = manager;
 }
 
 }} // ns

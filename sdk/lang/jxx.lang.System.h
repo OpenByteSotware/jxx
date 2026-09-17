@@ -14,6 +14,7 @@
 
 namespace jxx { namespace lang {
 class Object;
+class SecurityManager;
 class String;
 struct System {
     static std::shared_ptr<jxx::io::InputStream> in;
@@ -38,6 +39,8 @@ struct System {
     static void gc();
     static void runFinalization();
     static void exit(jxx::lang::jint status);
+    static jxx::Ptr<jxx::lang::SecurityManager> getSecurityManager();
+    static void setSecurityManager(const jxx::Ptr<jxx::lang::SecurityManager>& manager);
 
     static jxx::Ptr<jxx::lang::String> getProperty(
         const jxx::Ptr<jxx::lang::String>& key);

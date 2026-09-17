@@ -47,6 +47,7 @@
 #include "lang/jxx.lang.NumberFormatException.h"
 #include "lang/jxx.lang.OutOfMemoryError.h"
 #include "lang/jxx.lang.SecurityException.h"
+#include "lang/jxx.lang.SecurityManager.h"
 #include "lang/jxx.lang.StackOverflowError.h"
 #include "lang/jxx.lang.StackTraceElement.h"
 #include "lang/jxx.lang.StringIndexOutOfBoundsException.h"
@@ -166,6 +167,7 @@ void initializeClasses()
             registerType<ThreadGroup>();
             registerType<Runtime>();
             registerType<RuntimePermission>();
+            registerType<SecurityManager>();
             registerType<ProcessBuilder>();
         });
 }
