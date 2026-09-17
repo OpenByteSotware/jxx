@@ -1,19 +1,15 @@
 #pragma once
 
-#include <stdexcept>
-#include "jxx_types.h"
+#include "lang/jxx.lang.ClassInfo.h"
 
 namespace jxx::lang {
-    
-    struct AutoCloseable {
-        virtual ~AutoCloseable() = default;
 
-        /**
-         * Compare this object with another object.
-         * Must throw on nullptr to match Java semantics.
-         */
-        virtual void close() = 0;
-  
-    };
+class AutoCloseable
+    : public ::jxx::lang::InterfaceBase<AutoCloseable> {
+public:
+    ~AutoCloseable() override = default;
+
+    virtual void close() = 0;
+};
 
 } // namespace jxx::lang
