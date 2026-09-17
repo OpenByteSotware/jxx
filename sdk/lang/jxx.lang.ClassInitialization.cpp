@@ -6,6 +6,7 @@
 #include "lang/jxx.lang.Throwable.h"
 #include "lang/jxx.lang.Exception.h"
 #include "lang/jxx.lang.RuntimeException.h"
+#include "lang/jxx.lang.RuntimePermission.h"
 #include "lang/jxx.lang.Error.h"
 #include "lang/jxx.lang.EmptyStackException.h"
 #include "lang/jxx.lang.ReflectiveOperationException.h"
@@ -164,6 +165,7 @@ void initializeClasses()
             registerType<StringBuilder>();
             registerType<ThreadGroup>();
             registerType<Runtime>();
+            registerType<RuntimePermission>();
             registerType<ProcessBuilder>();
         });
 }
