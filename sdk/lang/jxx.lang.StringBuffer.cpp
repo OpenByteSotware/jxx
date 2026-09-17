@@ -2,9 +2,18 @@
 #include "jxx.lang.NullPointerException.h"
 #include "jxx.lang.StringIndexOutOfBoundsException.h"
 #include "jxx.lang.IllegalArgumentException.h"
-#include "jxx.lang.StringBuffer.h"
+#include "lang/jxx.lang.StringBuffer.h"
+
+#include "lang/jxx.lang.Class.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 
 namespace jxx::lang {
+
+jxx::Ptr<ClassAny> StringBuffer::Class() {
+    return JxxClassInfoMarker::Class();
+}
+
 
     static inline std::u16string u16_from_char_array(const CharArray a, jint off, jint len) {
         std::u16string out;
@@ -22,19 +31,19 @@ namespace jxx::lang {
     }
 
     // ---- constructors ----
-    StringBuffer::StringBuffer() : value_() {}
+    StringBuffer::StringBuffer() : Super(), value_() {}
 
-    StringBuffer::StringBuffer(jint capacity) : value_() {
+    StringBuffer::StringBuffer(jint capacity) : Super(), value_() {
         if (capacity < 0) throwIAE_("negative capacity");
         value_.reserve((std::size_t)capacity);
     }
 
-    StringBuffer::StringBuffer(const jxx::Ptr<String>& str) : value_() {
+    StringBuffer::StringBuffer(const jxx::Ptr<String>& str) : Super(), value_() {
         if (!str) throwNPE_();
         value_ = str->utf16();
     }
 
-    StringBuffer::StringBuffer(const jxx::Ptr<CharSequence>& seq) : value_() {
+    StringBuffer::StringBuffer(const jxx::Ptr<CharSequence>& seq) : Super(), value_() {
         if (!seq) throwNPE_();
         value_ = toUtf16_(seq);
     }
@@ -537,5 +546,15 @@ namespace jxx::lang {
             return jxx::NEW<String>(ca);
             });
     }
+
+
+void StringBuffer::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& output) {
+    (void)output;
+}
+void StringBuffer::readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& input) {
+    (void)input;
+}
+void StringBuffer::readObjectNoData() {
+}
 
 } // namespace jxx::lang

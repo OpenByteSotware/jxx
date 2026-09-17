@@ -17,13 +17,18 @@ class ObjectOutputStream;
 
 namespace jxx::lang {
 
+class ClassAny;
+
 class StringBuffer;
 
 class StringBuilder final
     : public jxx::lang::ClassBase<StringBuilder, Object, jxx::io::SerializableI, Appendable, CharSequence> {
 public:
-    using JavaSuper = Object;
+    using JxxSuper = Object;
     using Super = jxx::lang::ClassBase<StringBuilder, Object, jxx::io::SerializableI, Appendable, CharSequence>;
+    using JxxClassInfoMarker = ClassInfo<StringBuilder, Object, jxx::io::SerializableI, Appendable, CharSequence>;
+
+    static jxx::Ptr<ClassAny> Class();
 
 public:
     StringBuilder();
@@ -47,7 +52,7 @@ public:
     jxx::Ptr<StringBuilder> append(jlong value);
     jxx::Ptr<StringBuilder> append(const jxx::Ptr<Object>& value);
     jxx::Ptr<StringBuilder> append(const jxx::Ptr<String>& value);
-    jxx::Ptr<StringBuilder> append(const jxx::Ptr<StringBuffer> value);
+    jxx::Ptr<StringBuilder> append(const jxx::Ptr<StringBuffer>& value);
     jxx::Ptr<StringBuilder> appendCodePoint(jint codePoint);
 
     jint capacity() const;

@@ -3,23 +3,28 @@
 #include <algorithm>
 #include <sstream>
 #include <locale>
-#include "jxx_types.h"
-#include "jxx.lang.buildin_array.h"
-#include "jxx.lang.Object.h"
+#include "lang/jxx_types.h"
+#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.Object.h"
 #include "io/jxx.io.SerializableI.h"
-#include "jxx.lang.Appendable.h"
-#include "jxx.lang.CharSequence.h"
+#include "lang/jxx.lang.Appendable.h"
+#include "lang/jxx.lang.CharSequence.h"
 
 
 #include <string>
 
 namespace jxx::lang {
 
+class ClassAny;
+
     class StringBuffer final
         : public jxx::lang::ClassBase<StringBuffer, Object, jxx::io::SerializableI, Appendable, CharSequence> {
 public:
-    using JavaSuper = Object;
+    using JxxSuper = Object;
     using Super = jxx::lang::ClassBase<StringBuffer, Object, jxx::io::SerializableI, Appendable, CharSequence>;
+    using JxxClassInfoMarker = ClassInfo<StringBuffer, Object, jxx::io::SerializableI, Appendable, CharSequence>;
+
+    static jxx::Ptr<ClassAny> Class();
 
     public:
         StringBuffer();
@@ -29,13 +34,13 @@ public:
 
         // append (Java 8)
         jxx::Ptr<StringBuffer> append(jxx::lang::jbool b);
-        virtual jxx::Ptr<Appendable> append(jxx::lang::jchar c);
+        jxx::Ptr<Appendable> append(jxx::lang::jchar c) override;
         jxx::Ptr<StringBuffer> appendSB(jxx::lang::jchar c);
         jxx::Ptr<StringBuffer> append(const jxx::lang::CharArray str);
         jxx::Ptr<StringBuffer> append(const jxx::lang::CharArray str, jxx::lang::jint offset, jxx::lang::jint len);
-        virtual jxx::Ptr<Appendable> append(const jxx::Ptr<CharSequence>& s);
+        jxx::Ptr<Appendable> append(const jxx::Ptr<CharSequence>& s) override;
         jxx::Ptr<StringBuffer> appendSB(const jxx::Ptr<CharSequence>& s);
-        virtual jxx::Ptr<Appendable> append(const jxx::Ptr<CharSequence>& s, jxx::lang::jint start, jxx::lang::jint end);
+        jxx::Ptr<Appendable> append(const jxx::Ptr<CharSequence>& s, jxx::lang::jint start, jxx::lang::jint end) override;
         jxx::Ptr<StringBuffer> appendSB(const jxx::Ptr<CharSequence>& s, jxx::lang::jint start, jxx::lang::jint end);
         jxx::Ptr<StringBuffer> append(jxx::lang::jdouble d);
         jxx::Ptr<StringBuffer> append(jxx::lang::jfloat f);
@@ -98,6 +103,10 @@ public:
         jxx::Ptr<String> substring(jxx::lang::jint start) const;
         jxx::Ptr<String> substring(jxx::lang::jint start, jxx::lang::jint end) const;
         jxx::Ptr<jxx::lang::String> toString() const override;
+
+        void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& output) override;
+        void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& input) override;
+        void readObjectNoData() override;
 
     private:
         std::u16string value_;

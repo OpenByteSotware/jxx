@@ -1,5 +1,7 @@
 #include "lang/jxx.lang.StringBuilder.h"
 
+#include "lang/jxx.lang.Class.h"
+
 #include <algorithm>
 #include <cstdint>
 #include <limits>
@@ -14,6 +16,11 @@
 
 namespace jxx::lang
 {
+
+jxx::Ptr<ClassAny> StringBuilder::Class() {
+    return JxxClassInfoMarker::Class();
+}
+
 	namespace
 	{
 		std::u16string charArrayText(const CharArray& array, jint offset, jint length)
@@ -51,23 +58,23 @@ namespace jxx::lang
 		return jxx::CAST<StringBuilder>(this->thisPtr());
 	}
 
-	StringBuilder::StringBuilder() : value_(), capacity_(DEFAULT_CAPACITY)
+	StringBuilder::StringBuilder() : Super(), value_(), capacity_(DEFAULT_CAPACITY)
 	{
 		value_.reserve(capacity_);
 	}
-	StringBuilder::StringBuilder(jint capacity) : value_(), capacity_(capacity)
+	StringBuilder::StringBuilder(jint capacity) : Super(), value_(), capacity_(capacity)
 	{
 		if (capacity < 0) throw NegativeArraySizeException();
 		value_.reserve(static_cast<std::size_t>(capacity_));
 	}
-	StringBuilder::StringBuilder(const jxx::Ptr<String>& string) : value_(), capacity_(0)
+	StringBuilder::StringBuilder(const jxx::Ptr<String>& string) : Super(), value_(), capacity_(0)
 	{
 		if (string == nullptr) throwNPE_();
 		value_ = string->utf16();
 		capacity_ = static_cast<jint>(value_.size()) + DEFAULT_CAPACITY;
 		value_.reserve(static_cast<std::size_t>(capacity_));
 	}
-	StringBuilder::StringBuilder(const jxx::Ptr<CharSequence>& sequence) : value_(), capacity_(0)
+	StringBuilder::StringBuilder(const jxx::Ptr<CharSequence>& sequence) : Super(), value_(), capacity_(0)
 	{
 		if (sequence == nullptr) throwNPE_();
 		value_ = toUtf16_(sequence);
@@ -235,7 +242,7 @@ namespace jxx::lang
 	{
 		appendUtf16_(v == nullptr ? u"null" : v->utf16()); return self_();
 	}
-	jxx::Ptr<StringBuilder> StringBuilder::append(const jxx::Ptr<StringBuffer> v)
+	jxx::Ptr<StringBuilder> StringBuilder::append(const jxx::Ptr<StringBuffer>& v)
 	{
 		return append(v == nullptr ? jxx::NEW<String>("null") : v->toString());
 	}
