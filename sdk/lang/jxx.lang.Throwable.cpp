@@ -259,9 +259,14 @@ namespace jxx::lang
         suppressed_.push_back(exception);
     }
 
-    std::vector<jxx::Ptr<Throwable>> Throwable::getSuppressed() const
+    Throwable::SuppressedArray Throwable::getSuppressed() const
     {
-        return suppressed_;
+        auto result = ::jxx::NEW<SuppressedArrayType>(
+            static_cast<jint>(suppressed_.size()));
+        for (std::size_t index = 0; index < suppressed_.size(); ++index) {
+            (*result)[static_cast<jint>(index)] = suppressed_[index];
+        }
+        return result;
     }
 
     Throwable& Throwable::fillInStackTrace()

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.buildin_array.h"
 #include "lang/jxx.lang.CloneNotSupportedException.h"
@@ -15,10 +16,10 @@ namespace jxx::lang {
 
 template <typename E>
 class Enum
-    : public ClassBase<Enum<E>, Object, Comparable<E>> {
+    : public ClassBase<Enum<E>, Object, Comparable<E>, jxx::io::SerializableI> {
 public:
     using JxxSuper = Object;
-    using Super = ClassBase<Enum<E>, JxxSuper, Comparable<E>>;
+    using Super = ClassBase<Enum<E>, JxxSuper, Comparable<E>, jxx::io::SerializableI>;
 
     jxx::Ptr<String> name() const { return name_; }
     jint ordinal() const noexcept { return ordinal_; }
@@ -29,7 +30,7 @@ public:
         return this == other.get();
     }
 
-    jint hashCode() const override { return JxxSuper::hashCode(); }
+    jint hashCode() const override { return Object::hashCode(); }
 
     jint compareTo(const jxx::Ptr<E>& other) const override {
         if (other == nullptr) throw NullPointerException();
@@ -39,6 +40,10 @@ public:
     }
 
     jxx::Ptr<ClassAny> getDeclaringClass() const { return E::Class(); }
+
+    void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out) override { (void)out; }
+    void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in) override { (void)in; }
+    void readObjectNoData() override {}
 
     static jxx::Ptr<E> valueOf(
         const jxx::Ptr<ClassAny>& enumType,

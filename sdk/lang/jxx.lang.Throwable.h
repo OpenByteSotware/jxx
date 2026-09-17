@@ -122,14 +122,11 @@ namespace jxx::lang
         void addSuppressed(
             const jxx::Ptr<Throwable>& exception);
 
-        /**
-         * Transitional native representation.
-         *
-         * A later strict public-API migration can return a JxxArray reference
-         * without changing the internal storage.
-         */
-        std::vector<jxx::Ptr<Throwable>>
-            getSuppressed() const;
+        using SuppressedArrayType =
+            ::jxx::lang::JxxArray<::jxx::Ptr<Throwable>, 1U>;
+        using SuppressedArray = ::jxx::Ptr<SuppressedArrayType>;
+
+        SuppressedArray getSuppressed() const;
 
         Throwable& fillInStackTrace();
 
