@@ -15,7 +15,9 @@ namespace jxx::util::concurrent
 	}
 	jxx::Ptr<ExecutorService> Executors::newCachedThreadPool()
 	{
-		const auto n = static_cast<jxx::lang::jint>(std::max(1u, std::thread::hardware_concurrency())); return jxx::CAST<ExecutorService>(jxx::NEW<ThreadPoolExecutor>(n, n, 60, TimeUnit::SECONDS()));
+		return jxx::CAST<ExecutorService>(jxx::NEW<ThreadPoolExecutor>(
+            0, std::numeric_limits<jxx::lang::jint>::max(),
+            60, TimeUnit::SECONDS()));
 	}
 	jxx::Ptr<jxx::lang::Object> Executors::cloneImpl() const
 	{

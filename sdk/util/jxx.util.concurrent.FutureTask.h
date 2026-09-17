@@ -195,7 +195,15 @@ private:
             throw CancellationException();
         }
         if (state_ == State::EXCEPTIONAL) {
-            throw ExecutionException();
+            try {
+                std::rethrow_exception(failure_);
+            }
+            catch (const jxx::lang::Throwable& failure) {
+                throw ExecutionException(failure.cloneThrowable());
+            }
+            catch (...) {
+                throw ExecutionException();
+            }
         }
         return result_;
     }
