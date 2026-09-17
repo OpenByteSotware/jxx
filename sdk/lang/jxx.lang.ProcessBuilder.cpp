@@ -283,7 +283,7 @@ public:
         const jxx::Ptr<jxx::io::InputStream>& output,
         const jxx::Ptr<jxx::io::InputStream>& error)
         : process_(process), input_(output), error_(error), output_(input),
-          completion_(jxx::NEW<Completion>()) {
+          completion_(std::make_shared<Completion>()) {
         HANDLE waitHandle = nullptr;
         if (!DuplicateHandle(GetCurrentProcess(), process_, GetCurrentProcess(),
                 &waitHandle, SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION,
@@ -330,7 +330,7 @@ public:
         const jxx::Ptr<jxx::io::InputStream>& output,
         const jxx::Ptr<jxx::io::InputStream>& error)
         : process_(process), input_(output), error_(error), output_(input),
-          completion_(jxx::NEW<Completion>()) {
+          completion_(std::make_shared<Completion>()) {
         auto completion = completion_;
         try {
         std::thread([process, completion] {
@@ -477,8 +477,44 @@ jxx::Ptr<jxx::io::File> ProcessBuilder::Redirect::file()const{return file_;}
 jbool ProcessBuilder::Redirect::equals(const jxx::Ptr<Object>& other) const {auto value=jxx::CAST<Redirect>(other);if(value==nullptr||type_!=value->type_)return false;if(file_==nullptr||value->file_==nullptr)return file_==value->file_;return file_->getPath()->equals(value->file_->getPath());}
 jint ProcessBuilder::Redirect::hashCode() const {return static_cast<jint>(type_)*31+(file_==nullptr?0:file_->getPath()->hashCode());}
 
-ProcessBuilder::ProcessBuilder(const jxx::Ptr<JxxArray<jxx::Ptr<String>,1>>& c):environment_(currentEnvironment()),inputRedirect_(Redirect::PIPE),outputRedirect_(Redirect::PIPE),errorRedirect_(Redirect::PIPE){command(c);}
-jxx::Ptr<ProcessBuilder> ProcessBuilder::command(const jxx::Ptr<JxxArray<jxx::Ptr<String>,1>>& c){if(!c||c->length==0)throw IllegalArgumentException();command_.clear();for(uint32_t i=0;i<c->length;++i){if(!(*c)[i])throw NullPointerException();command_.push_back((*c)[i]->utf8());}return jxx::CAST<ProcessBuilder>(thisPtr());}
+ProcessBuilder::ProcessBuilder(
+    const jxx::Ptr<JxxArray<jxx::Ptr<String>, 1>>& command)
+    : environment_(currentEnvironment())
+    , inputRedirect_(Redirect::PIPE)
+    , outputRedirect_(Redirect::PIPE)
+    , errorRedirect_(Redirect::PIPE) {
+    if (command == nullptr || command->length == 0) {
+        throw IllegalArgumentException();
+    }
+
+    command_.reserve(command->length);
+    for (std::uint32_t index = 0; index < command->length; ++index) {
+        const auto& argument = (*command)[index];
+        if (argument == nullptr) {
+            throw NullPointerException();
+        }
+        command_.push_back(argument->utf8());
+    }
+}
+jxx::Ptr<ProcessBuilder> ProcessBuilder::command(
+    const jxx::Ptr<JxxArray<jxx::Ptr<String>, 1>>& command) {
+    if (command == nullptr || command->length == 0) {
+        throw IllegalArgumentException();
+    }
+
+    std::vector<std::string> replacement;
+    replacement.reserve(command->length);
+    for (std::uint32_t index = 0; index < command->length; ++index) {
+        const auto& argument = (*command)[index];
+        if (argument == nullptr) {
+            throw NullPointerException();
+        }
+        replacement.push_back(argument->utf8());
+    }
+
+    command_ = std::move(replacement);
+    return jxx::CAST<ProcessBuilder>(thisPtr());
+}
 jxx::Ptr<JxxArray<jxx::Ptr<String>,1>> ProcessBuilder::command()const{auto a=jxx::NEW<JxxArray<jxx::Ptr<String>,1>>(command_.size());for(uint32_t i=0;i<a->length;++i)(*a)[i]=jxx::NEW<String>(command_[i]);return a;}
 jxx::Ptr<jxx::io::File> ProcessBuilder::directory()const{return directory_;}
 jxx::Ptr<ProcessBuilder> ProcessBuilder::directory(const jxx::Ptr<jxx::io::File>&d){directory_=d;return jxx::CAST<ProcessBuilder>(thisPtr());}
