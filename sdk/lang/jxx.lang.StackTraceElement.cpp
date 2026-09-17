@@ -1,5 +1,8 @@
 #include "lang/jxx.lang.StackTraceElement.h"
 
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+
 #include <cstddef>
 #include <utility>
 
@@ -18,7 +21,7 @@ StackTraceElement::StackTraceElement(
     const ::jxx::Ptr<String>& methodName,
     const ::jxx::Ptr<String>& fileName,
     jint lineNumber)
-    : JxxSuper()
+    : Super()
     , declaringClass_(declaringClass)
     , methodName_(methodName)
     , fileName_(fileName)
@@ -29,14 +32,14 @@ StackTraceElement::StackTraceElement(
 }
 
 StackTraceElement::StackTraceElement(const StackTraceElement& other)
-    : JxxSuper(other)
+    : Super()
     , declaringClass_(other.declaringClass_)
     , methodName_(other.methodName_)
     , fileName_(other.fileName_)
     , lineNumber_(other.lineNumber_) {}
 
 StackTraceElement::StackTraceElement(StackTraceElement&& other) noexcept
-    : JxxSuper(std::move(other))
+    : Super()
     , declaringClass_(std::move(other.declaringClass_))
     , methodName_(std::move(other.methodName_))
     , fileName_(std::move(other.fileName_))
@@ -96,6 +99,20 @@ jint StackTraceElement::hashCode() const {
     else value += "Unknown Source";
     value += ")";
     return ::jxx::NEW<String>(value);
+}
+
+
+void StackTraceElement::writeObject(
+    const jxx::Ptr<jxx::io::ObjectOutputStream>& out) {
+    (void)out;
+}
+
+void StackTraceElement::readObject(
+    const jxx::Ptr<jxx::io::ObjectInputStream>& in) {
+    (void)in;
+}
+
+void StackTraceElement::readObjectNoData() {
 }
 
 ::jxx::Ptr<Object> StackTraceElement::cloneImpl() const {

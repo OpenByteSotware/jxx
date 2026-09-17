@@ -1,6 +1,7 @@
 #pragma once
 
 #include "lang/jxx.lang.ClassInfoMarker.h"
+#include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx_types.h"
 
@@ -12,10 +13,16 @@ class String;
 template <typename Derived, typename JxxSuper, typename... JxxInterfaces>
 class ClassInfo;
 
-class StackTraceElement final : public Object {
+class StackTraceElement final
+    : public ClassBase<
+          StackTraceElement,
+          Object,
+          jxx::io::SerializableI> {
 public:
     using JxxSuper = Object;
-    using JxxClassInfoMarker = ClassInfo<StackTraceElement, JxxSuper>;
+    using Super = ClassBase<StackTraceElement, JxxSuper, jxx::io::SerializableI>;
+    using JxxClassInfoMarker =
+        ClassInfo<StackTraceElement, JxxSuper, jxx::io::SerializableI>;
 
     static ::jxx::Ptr<ClassAny> Class();
 
@@ -40,6 +47,12 @@ public:
     jbool equals(const ::jxx::Ptr<Object>& other) const override;
     jint hashCode() const override;
     ::jxx::Ptr<String> toString() const override;
+
+    void writeObject(
+        const jxx::Ptr<jxx::io::ObjectOutputStream>& out) override;
+    void readObject(
+        const jxx::Ptr<jxx::io::ObjectInputStream>& in) override;
+    void readObjectNoData() override;
 
 protected:
     ::jxx::Ptr<Object> cloneImpl() const override;

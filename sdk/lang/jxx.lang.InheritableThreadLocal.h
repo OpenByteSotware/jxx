@@ -15,7 +15,8 @@ public:
     using JxxSuper = ThreadLocal<T>;
     using Super = JxxSuper;
 
-    InheritableThreadLocal() {
+    InheritableThreadLocal()
+        : JxxSuper() {
         thread_local_detail::addInheritableEntry(this);
     }
 

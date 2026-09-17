@@ -20,7 +20,8 @@ public:
     using JxxSuper = Object;
     using Super = ClassBase<ThreadLocal<T>, JxxSuper>;
 
-    ThreadLocal() {
+    ThreadLocal()
+        : Super() {
         thread_local_detail::addLocalEntry(this);
     }
     ~ThreadLocal() override {
@@ -28,13 +29,20 @@ public:
     }
 
     jxx::Ptr<T> get() {
-        std::lock_guard<std::mutex> lock(mutex_);
         const auto id = std::this_thread::get_id();
-        const auto found = values_.find(id);
-        if (found != values_.end()) return found->second;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            const auto found = values_.find(id);
+            if (found != values_.end()) {
+                return found->second;
+            }
+        }
+
         auto value = initialValue();
-        values_[id] = value;
-        return value;
+
+        std::lock_guard<std::mutex> lock(mutex_);
+        const auto inserted = values_.emplace(id, value);
+        return inserted.first->second;
     }
 
     void set(const jxx::Ptr<T>& value) {
