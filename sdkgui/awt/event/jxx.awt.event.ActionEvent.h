@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 #include "awt/jxx.awt.AWTEvent.h"
 namespace jxx::awt::event {
 class ActionEvent : public ::jxx::lang::ClassBase<ActionEvent, ::jxx::awt::AWTEvent> {

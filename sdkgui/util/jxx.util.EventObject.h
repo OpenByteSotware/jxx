@@ -2,6 +2,7 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
+
 namespace jxx::util {
 class EventObject : public ::jxx::lang::ClassBase<EventObject, ::jxx::lang::Object> {
 public:

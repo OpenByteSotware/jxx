@@ -42,6 +42,10 @@ set_target_properties(
         LINKER_LANGUAGE CXX
 )
 
+target_compile_definitions(jxx_gui
+    PUBLIC
+        wxDEBUG_LEVEL=0
+)
 #
 # Core JXX dependency.
 #

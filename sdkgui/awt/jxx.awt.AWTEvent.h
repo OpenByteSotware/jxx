@@ -1,5 +1,7 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 #include "util/jxx.util.EventObject.h"
+
 namespace jxx::awt {
 class AWTEvent : public ::jxx::lang::ClassBase<AWTEvent, ::jxx::util::EventObject> {
 public:

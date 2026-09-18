@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <deque>
 #include <mutex>
+#include <limits>
 #include <vector>
 
 #include "io/jxx.io.SerializableI.h"
@@ -17,9 +18,9 @@
 namespace jxx::util::concurrent {
 
 template<typename E>
-class ArrayBlockingQueue final
+class LinkedBlockingQueue final
     : public ::jxx::lang::ClassBase<
-          ArrayBlockingQueue<E>,
+          LinkedBlockingQueue<E>,
           ::jxx::util::AbstractQueue<E>,
           BlockingQueue<E>,
           ::jxx::io::SerializableI> {
@@ -46,7 +47,7 @@ private:
 public:
     using JxxSuper = ::jxx::util::AbstractQueue<E>;
     using Super = ::jxx::lang::ClassBase<
-        ArrayBlockingQueue<E>, JxxSuper, BlockingQueue<E>,
+        LinkedBlockingQueue<E>, JxxSuper, BlockingQueue<E>,
         ::jxx::io::SerializableI>;
     using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
 
@@ -54,28 +55,12 @@ public:
         return JxxClassInfoMarker::Class();
     }
 
-    explicit ArrayBlockingQueue(::jxx::lang::jint capacity)
-        : ArrayBlockingQueue(capacity, false) {}
+    LinkedBlockingQueue()
+        : LinkedBlockingQueue(std::numeric_limits<::jxx::lang::jint>::max()) {}
 
-    ArrayBlockingQueue(
-        ::jxx::lang::jint capacity,
-        ::jxx::lang::jbool fair)
-        : Super(), capacity_(capacity), fair_(fair) {
+    explicit LinkedBlockingQueue(::jxx::lang::jint capacity)
+        : Super(), capacity_(capacity) {
         if (capacity <= 0) throw ::jxx::lang::IllegalArgumentException();
-    }
-
-    ArrayBlockingQueue(
-        ::jxx::lang::jint capacity,
-        ::jxx::lang::jbool fair,
-        const ::jxx::Ptr<::jxx::util::wildcard::CollectionExtends<E>>& collection)
-        : ArrayBlockingQueue(capacity, fair) {
-        if (collection == nullptr) throw ::jxx::lang::NullPointerException();
-        auto iterator = collection->iterator();
-        while (iterator->hasNext()) {
-            const auto element = iterator->next();
-            requireElement_(element);
-            if (!offer(element)) throw ::jxx::lang::IllegalArgumentException();
-        }
     }
 
     ::jxx::lang::jbool offer(const ::jxx::Ptr<E>& element) override {
@@ -225,7 +210,6 @@ private:
     std::condition_variable notFull_;
     std::deque<::jxx::Ptr<E>> queue_;
     ::jxx::lang::jint capacity_;
-    ::jxx::lang::jbool fair_;
 };
 
 } // namespace jxx::util::concurrent
