@@ -23,6 +23,7 @@ struct Thread::NativeState {
     mutable std::mutex mutex;
     std::condition_variable finishedCondition;
     std::condition_variable interruptCondition;
+    std::function<void()> parkWakeup;
     std::thread nativeThread;
 
     jxx::Ptr<Runnable> target;
@@ -184,8 +185,29 @@ void Thread::run() {
 
 void Thread::interrupt() {
     state_->interrupted.store(true);
+
+    std::function<void()> parkWakeup;
+    {
+        std::lock_guard<std::mutex> lock(state_->mutex);
+        parkWakeup = state_->parkWakeup;
+    }
+
     state_->interruptCondition.notify_all();
     state_->finishedCondition.notify_all();
+
+    if (parkWakeup) {
+        parkWakeup();
+    }
+}
+
+void Thread::setParkWakeup_(const std::function<void()>& wakeup) {
+    std::lock_guard<std::mutex> lock(state_->mutex);
+    state_->parkWakeup = wakeup;
+}
+
+void Thread::clearParkWakeup_() {
+    std::lock_guard<std::mutex> lock(state_->mutex);
+    state_->parkWakeup = nullptr;
 }
 
 jbool Thread::isInterrupted() const {

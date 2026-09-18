@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 
 #include "lang/jxx.lang.ClassInfo.h"
@@ -7,6 +8,10 @@
 #include "lang/jxx.lang.Runnable.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx_types.h"
+
+namespace jxx::util::concurrent::locks {
+class LockSupport;
+}
 
 namespace jxx::lang {
 
@@ -103,6 +108,11 @@ public:
     State getState() const;
 
     jxx::Ptr<String> toString() const override;
+
+public:
+    /* Internal portable parking integration. */
+    void setParkWakeup_(const std::function<void()>& wakeup);
+    void clearParkWakeup_();
 
 private:
     struct NativeState;
