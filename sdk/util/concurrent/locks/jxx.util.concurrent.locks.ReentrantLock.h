@@ -6,6 +6,8 @@
 #include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Exceptions.h"
+#include "lang/jxx.lang.InterruptedException.h"
+#include "lang/jxx.lang.Thread.h"
 #include "lang/jxx.lang.Object.h"
 #include "util/concurrent/locks/jxx.util.concurrent.locks.Lock.h"
 namespace jxx::util::concurrent::locks {
@@ -25,9 +27,41 @@ public:
  using JxxSuper=::jxx::lang::Object;using Super=::jxx::lang::ClassBase<ReentrantLock,JxxSuper,Lock,::jxx::io::SerializableI>;using JxxClassInfoMarker=::jxx::lang::ClassInfo<ReentrantLock,JxxSuper,Lock,::jxx::io::SerializableI>;
  static ::jxx::Ptr<::jxx::lang::ClassAny> Class(){return JxxClassInfoMarker::Class();}
  ReentrantLock():ReentrantLock(false){} explicit ReentrantLock(::jxx::lang::jbool fair):Super(),fair_(fair){}
- void lock()override{mutex_.lock();acquired_();} void lockInterruptibly()override{lock();}
+ void lock()override{mutex_.lock();acquired_();} void lockInterruptibly() override {
+  if (::jxx::lang::Thread::interrupted()) {
+   throw ::jxx::lang::InterruptedException();
+  }
+  while (!mutex_.try_lock_for(std::chrono::milliseconds(10))) {
+   if (::jxx::lang::Thread::interrupted()) {
+    throw ::jxx::lang::InterruptedException();
+   }
+  }
+  acquired_();
+ }
  ::jxx::lang::jbool tryLock()override{if(!mutex_.try_lock())return false;acquired_();return true;}
- ::jxx::lang::jbool tryLock(::jxx::lang::jlong time,const ::jxx::Ptr<::jxx::util::concurrent::TimeUnit>&unit)override{if(!unit)throw ::jxx::lang::NullPointerException();if(!mutex_.try_lock_for(unit->toChrono(time)))return false;acquired_();return true;}
+ ::jxx::lang::jbool tryLock(
+  ::jxx::lang::jlong time,
+  const ::jxx::Ptr<::jxx::util::concurrent::TimeUnit>& unit) override {
+  if (!unit) throw ::jxx::lang::NullPointerException();
+  if (::jxx::lang::Thread::interrupted()) {
+   throw ::jxx::lang::InterruptedException();
+  }
+  const auto deadline = std::chrono::steady_clock::now() + unit->toChrono(time);
+  for (;;) {
+   const auto now = std::chrono::steady_clock::now();
+   if (now >= deadline) return false;
+   const auto remaining = deadline - now;
+   if (mutex_.try_lock_for(std::min(
+       remaining,
+       std::chrono::steady_clock::duration(std::chrono::milliseconds(10))))) {
+    acquired_();
+    return true;
+   }
+   if (::jxx::lang::Thread::interrupted()) {
+    throw ::jxx::lang::InterruptedException();
+   }
+  }
+ }
  void unlock()override{checkOwner_();if(--holdCount_==0)owner_=std::thread::id{};mutex_.unlock();}
  ::jxx::Ptr<Condition> newCondition()override{return ::jxx::CAST<Condition>(::jxx::NEW<ConditionImpl>(this));}
  ::jxx::lang::jint getHoldCount()const noexcept{return owner_==std::this_thread::get_id()?holdCount_:0;} ::jxx::lang::jbool isHeldByCurrentThread()const noexcept{return owner_==std::this_thread::get_id();} ::jxx::lang::jbool isLocked()const noexcept{return holdCount_>0;} ::jxx::lang::jbool isFair()const noexcept{return fair_;}
