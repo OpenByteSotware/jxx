@@ -1,0 +1,15 @@
+#include "swing/jxx.swing.JSplitPane.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
+namespace jxx::swing
+{
+    JSplitPane::JSplitPane():JSplitPane(HORIZONTAL){} JSplitPane::JSplitPane(::jxx::lang::jint o):Super(){setLayout(nullptr);setOrientation(o);} JSplitPane::JSplitPane(::jxx::lang::jint o,const ::jxx::Ptr<::jxx::awt::Component>& a,const ::jxx::Ptr<::jxx::awt::Component>& b):JSplitPane(o){setFirst(a);setSecond(b);}
+    void JSplitPane::setOrientation(::jxx::lang::jint v){if(v!=HORIZONTAL&&v!=VERTICAL)throw ::jxx::lang::IllegalArgumentException("orientation");orientation_=v;} ::jxx::lang::jint JSplitPane::getOrientation()const{return orientation_;}
+    void JSplitPane::setFirst(const ::jxx::Ptr<::jxx::awt::Component>& c){if(first_)remove(first_);first_=c;if(first_)add(first_);} void JSplitPane::setSecond(const ::jxx::Ptr<::jxx::awt::Component>& c){if(second_)remove(second_);second_=c;if(second_)add(second_);}
+    void JSplitPane::setLeftComponent(const ::jxx::Ptr<::jxx::awt::Component>& c){setFirst(c);} ::jxx::Ptr<::jxx::awt::Component> JSplitPane::getLeftComponent()const{return first_;}
+    void JSplitPane::setRightComponent(const ::jxx::Ptr<::jxx::awt::Component>& c){setSecond(c);} ::jxx::Ptr<::jxx::awt::Component> JSplitPane::getRightComponent()const{return second_;}
+    void JSplitPane::setTopComponent(const ::jxx::Ptr<::jxx::awt::Component>& c){setFirst(c);} ::jxx::Ptr<::jxx::awt::Component> JSplitPane::getTopComponent()const{return first_;}
+    void JSplitPane::setBottomComponent(const ::jxx::Ptr<::jxx::awt::Component>& c){setSecond(c);} ::jxx::Ptr<::jxx::awt::Component> JSplitPane::getBottomComponent()const{return second_;}
+    void JSplitPane::setDividerLocation(::jxx::lang::jint v){dividerLocation_=v;doLayout();} ::jxx::lang::jint JSplitPane::getDividerLocation()const{return dividerLocation_;}
+    void JSplitPane::setResizeWeight(::jxx::lang::jdouble v){if(v<0.0||v>1.0)throw ::jxx::lang::IllegalArgumentException("weight");resizeWeight_=v;} ::jxx::lang::jdouble JSplitPane::getResizeWeight()const{return resizeWeight_;}
+    void JSplitPane::doLayout(){const auto total=orientation_==HORIZONTAL?getWidth():getHeight();const auto split=dividerLocation_>=0?dividerLocation_:static_cast<::jxx::lang::jint>(total*resizeWeight_);if(orientation_==HORIZONTAL){if(first_)first_->setBounds(0,0,split,getHeight());if(second_)second_->setBounds(split,0,getWidth()-split,getHeight());}else{if(first_)first_->setBounds(0,0,getWidth(),split);if(second_)second_->setBounds(0,split,getWidth(),getHeight()-split);}}
+}

@@ -1,6 +1,8 @@
 #include "gui/internal/jxx.gui.internal.WxDialogPeer.h"
 #include <utility>
 #include <wx/button.h>
+#include <wx/checkbox.h>
+#include <wx/radiobut.h>
 #include <wx/dialog.h>
 #include <wx/panel.h>
 #include <wx/stattext.h>
@@ -13,6 +15,8 @@
 #include "gui/internal/jxx.gui.internal.GuiRuntime.h"
 #include "gui/internal/jxx.gui.internal.WxComponentPeer.h"
 #include "swing/jxx.swing.AbstractButton.h"
+#include "swing/jxx.swing.JCheckBox.h"
+#include "swing/jxx.swing.JRadioButton.h"
 #include "swing/jxx.swing.JLabel.h"
 #include "swing/jxx.swing.JTextArea.h"
 #include "swing/jxx.swing.JTextField.h"
@@ -93,7 +97,11 @@ namespace jxx::gui::internal
             const auto component = container->getComponent(index);
             if (component == nullptr || component->nativeComponent_ != nullptr) continue;
             wxWindow* native = nullptr;
-            if (const auto button = ::jxx::CAST<::jxx::swing::AbstractButton>(component))
+            if (const auto check = ::jxx::CAST<::jxx::swing::JCheckBox>(component)) {
+                auto* control = new wxCheckBox(parent, wxID_ANY, nativeText(check->getText())); control->SetValue(check->isSelected()); auto peer = ::jxx::NEW<WxComponentPeer>(control); std::weak_ptr<::jxx::swing::JCheckBox> weak = check; peer->setActionCallback([weak]() { if (auto owner = weak.lock()) owner->doClick(); }); component->setNativeComponentInternal(peer); native = control;
+            } else if (const auto radio = ::jxx::CAST<::jxx::swing::JRadioButton>(component)) {
+                auto* control = new wxRadioButton(parent, wxID_ANY, nativeText(radio->getText())); control->SetValue(radio->isSelected()); auto peer = ::jxx::NEW<WxComponentPeer>(control); std::weak_ptr<::jxx::swing::JRadioButton> weak = radio; peer->setActionCallback([weak]() { if (auto owner = weak.lock()) owner->doClick(); }); component->setNativeComponentInternal(peer); native = control;
+            } else if (const auto button = ::jxx::CAST<::jxx::swing::AbstractButton>(component))
             {
                 auto* control = new wxButton(parent, wxID_ANY, nativeText(button->getText()));
                 const auto peer = ::jxx::NEW<WxComponentPeer>(control);

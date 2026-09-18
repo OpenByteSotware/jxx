@@ -2,6 +2,8 @@
 
 #include <utility>
 #include <wx/button.h>
+#include <wx/checkbox.h>
+#include <wx/radiobut.h>
 #include <wx/colour.h>
 #include <wx/control.h>
 #include <wx/font.h>
@@ -77,6 +79,22 @@ namespace jxx::gui::internal
             });
         }
 
+        if (auto* check = dynamic_cast<wxCheckBox*>(window_))
+        {
+            check->Bind(wxEVT_CHECKBOX, [this](wxCommandEvent& event)
+            {
+                if (actionCallback_) actionCallback_();
+                event.Skip();
+            });
+        }
+        if (auto* radio = dynamic_cast<wxRadioButton*>(window_))
+        {
+            radio->Bind(wxEVT_RADIOBUTTON, [this](wxCommandEvent& event)
+            {
+                if (actionCallback_) actionCallback_();
+                event.Skip();
+            });
+        }
         if (auto* text = dynamic_cast<wxTextCtrl*>(window_))
         {
             text->Bind(wxEVT_TEXT, [this, text](wxCommandEvent& event) { if (textCallback_) textCallback_(::jxx::NEW<::jxx::lang::String>(text->GetValue().ToUTF8().data())); event.Skip(); });

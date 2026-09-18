@@ -18,7 +18,7 @@ namespace jxx::swing
         ::jxx::Ptr<::jxx::lang::String> getActionCommand() const;
         void addActionListener(const ::jxx::Ptr<::jxx::awt::event::ActionListener>& listener);
         void removeActionListener(const ::jxx::Ptr<::jxx::awt::event::ActionListener>& listener);
-        void doClick();
+        virtual void doClick();
     protected:
         AbstractButton();
         explicit AbstractButton(const ::jxx::Ptr<::jxx::lang::String>& text);
