@@ -163,7 +163,9 @@ public:
         if (object == nullptr) return false;
         std::lock_guard<std::mutex> lock(mutex_);
         for (auto iterator = queue_.begin(); iterator != queue_.end(); ++iterator) {
-            if ((*iterator)->equals(object)) {
+            auto candidate = ::jxx::CAST<::jxx::lang::Object>(*iterator);
+            if ((candidate != nullptr && candidate->equals(object)) ||
+                static_cast<const void*>((*iterator).get()) == static_cast<const void*>(object.get())) {
                 queue_.erase(iterator);
                 notFull_.notify_one();
                 return true;

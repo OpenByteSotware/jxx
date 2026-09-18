@@ -18,8 +18,13 @@ namespace jxx::util::concurrent {
 
 template <typename V>
 class FutureTask
-    : public jxx::lang::Object
-    , public virtual RunnableFuture<V> {
+    : public ::jxx::lang::ClassBase<FutureTask<V>, ::jxx::lang::Object, RunnableFuture<V>> {
+public:
+    using JxxSuper = ::jxx::lang::Object;
+    using Super = ::jxx::lang::ClassBase<FutureTask<V>, JxxSuper, RunnableFuture<V>>;
+    using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
+    static ::jxx::Ptr<::jxx::lang::ClassAny> Class() { return JxxClassInfoMarker::Class(); }
+
 private:
     enum class State {
         NEW,
@@ -38,7 +43,7 @@ private:
 
 public:
     explicit FutureTask(const jxx::Ptr<Callable<V>>& callable)
-        : callable_(callable) {
+        : Super(), callable_(callable) {
         if (callable_ == nullptr) {
             throw jxx::lang::NullPointerException();
         }
