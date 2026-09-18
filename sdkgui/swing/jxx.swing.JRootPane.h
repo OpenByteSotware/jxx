@@ -6,6 +6,7 @@ namespace jxx::swing
 {
     class AbstractButton;
     class JLayeredPane;
+    class JMenuBar;
 
     class JRootPane :
         public ::jxx::lang::ClassBase<JRootPane, JComponent>
@@ -35,6 +36,8 @@ namespace jxx::swing
         void setGlassPane(
             const ::jxx::Ptr<::jxx::awt::Component>& glassPane);
         ::jxx::Ptr<::jxx::awt::Component> getGlassPane() const;
+        void setJMenuBar(const ::jxx::Ptr<JMenuBar>& menuBar);
+        ::jxx::Ptr<JMenuBar> getJMenuBar() const;
         void setDefaultButton(
             const ::jxx::Ptr<AbstractButton>& defaultButton);
         ::jxx::Ptr<AbstractButton> getDefaultButton() const;
@@ -45,6 +48,7 @@ namespace jxx::swing
         ::jxx::Ptr<::jxx::awt::Container> contentPane_;
         ::jxx::Ptr<JLayeredPane> layeredPane_;
         ::jxx::Ptr<::jxx::awt::Component> glassPane_;
+        ::jxx::Ptr<JMenuBar> menuBar_;
         ::jxx::Ptr<AbstractButton> defaultButton_;
         ::jxx::lang::jint windowDecorationStyle_ = NONE;
     };

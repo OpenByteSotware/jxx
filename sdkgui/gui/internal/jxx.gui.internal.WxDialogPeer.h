@@ -3,6 +3,7 @@
 class wxDialog;
 class wxWindow;
 namespace jxx::awt { class Container; }
+namespace jxx::swing { class JMenuBar; }
 namespace jxx::gui::internal
 {
     class WxDialogPeer final : public NativeWindow
@@ -25,6 +26,7 @@ namespace jxx::gui::internal
         ::jxx::lang::jbool isShown() const override;
         void setEventCallback(EventCallback callback) override;
         void setMenuBar(const ::jxx::Ptr<::jxx::awt::MenuBar>& menuBar) override;
+        void setSwingMenuBar(const ::jxx::Ptr<::jxx::swing::JMenuBar>& menuBar) override;
         void installComponents(const ::jxx::Ptr<::jxx::awt::Container>& container);
         void setResizable(::jxx::lang::jbool resizable);
         ::jxx::lang::jbool isModal() const;

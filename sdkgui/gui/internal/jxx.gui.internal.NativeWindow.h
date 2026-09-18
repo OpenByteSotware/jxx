@@ -4,6 +4,7 @@
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx_types.h"
 namespace jxx::awt { class MenuBar; }
+namespace jxx::swing { class JMenuBar; }
 namespace jxx::gui::internal {
 class NativeWindow : public ::jxx::lang::Object {
 public:
@@ -15,4 +16,5 @@ public:
  virtual ::jxx::Ptr<::jxx::lang::String> getTitle() const=0; virtual ::jxx::lang::jbool isShown() const=0;
  virtual void setEventCallback(EventCallback callback)=0;
  virtual void setMenuBar(const ::jxx::Ptr<::jxx::awt::MenuBar>& menuBar)=0;
+ virtual void setSwingMenuBar(const ::jxx::Ptr<::jxx::swing::JMenuBar>& menuBar)=0;
 }; }

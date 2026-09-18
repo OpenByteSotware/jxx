@@ -19,6 +19,11 @@
 #include "swing/jxx.swing.JLabel.h"
 #include "swing/jxx.swing.JTextArea.h"
 #include "swing/jxx.swing.JTextField.h"
+#include "swing/jxx.swing.JMenu.h"
+#include "swing/jxx.swing.JMenuBar.h"
+#include "swing/jxx.swing.JMenuItem.h"
+#include "swing/jxx.swing.JCheckBoxMenuItem.h"
+#include "swing/jxx.swing.JRadioButtonMenuItem.h"
 #include "awt/jxx.awt.Menu.h"
 #include "awt/jxx.awt.MenuBar.h"
 #include "awt/jxx.awt.MenuItem.h"
@@ -80,7 +85,7 @@ namespace jxx::gui::internal
 		if (frame_)frame_->Show(false);
 	} void WxFramePeer::destroy()
 	{
-		menuItems_.clear(); if (frame_) {
+		menuItems_.clear(); swingMenuItems_.clear(); if (frame_) {
 			auto* value = frame_; frame_ = nullptr; value->Destroy();
 		}
 	}
@@ -114,6 +119,36 @@ namespace jxx::gui::internal
 			}const int id = wxWindow::NewControlId(); wxItemKind kind = ::jxx::CAST<::jxx::awt::CheckboxMenuItem>(item) ? wxITEM_CHECK : wxITEM_NORMAL; auto* nativeItem = nativeMenu->Append(id, nativeText(label), wxEmptyString, kind); nativeItem->Enable(item->isEnabled()); if (auto check = ::jxx::CAST<::jxx::awt::CheckboxMenuItem>(item))nativeItem->Check(check->getState()); menuItems_[id] = item;
 		}return nativeMenu;
 	}
+	wxMenu* WxFramePeer::buildSwingMenu(const ::jxx::Ptr<::jxx::swing::JMenu>& menu)
+	{
+		auto* nativeMenu = new wxMenu();
+		if (!menu) return nativeMenu;
+		for (::jxx::lang::jint i = 0; i < menu->getItemCount(); ++i)
+		{
+			auto item = menu->getItem(i);
+			if (!item) { nativeMenu->AppendSeparator(); continue; }
+			if (auto submenu = ::jxx::CAST<::jxx::swing::JMenu>(item))
+			{ nativeMenu->AppendSubMenu(buildSwingMenu(submenu), nativeText(submenu->getText())); continue; }
+			const int id = wxWindow::NewControlId();
+			wxItemKind kind = ::jxx::CAST<::jxx::swing::JCheckBoxMenuItem>(item) ? wxITEM_CHECK
+			    : (::jxx::CAST<::jxx::swing::JRadioButtonMenuItem>(item) ? wxITEM_RADIO : wxITEM_NORMAL);
+			auto* nativeItem = nativeMenu->Append(id, nativeText(item->getText()), wxEmptyString, kind);
+			nativeItem->Enable(item->isEnabled());
+			if (auto check = ::jxx::CAST<::jxx::swing::JCheckBoxMenuItem>(item)) nativeItem->Check(check->isSelected());
+			if (auto radio = ::jxx::CAST<::jxx::swing::JRadioButtonMenuItem>(item)) nativeItem->Check(radio->isSelected());
+			swingMenuItems_[id] = item;
+		}
+		return nativeMenu;
+	}
+	void WxFramePeer::setSwingMenuBar(const ::jxx::Ptr<::jxx::swing::JMenuBar>& menuBar)
+	{
+		if (!frame_) return;
+		swingMenuItems_.clear();
+		auto* nativeBar = new wxMenuBar();
+		if (menuBar) for (::jxx::lang::jint i = 0; i < menuBar->getMenuCount(); ++i)
+		{ auto menu = menuBar->getMenu(i); if (menu) nativeBar->Append(buildSwingMenu(menu), nativeText(menu->getText())); }
+		frame_->SetMenuBar(nativeBar);
+	}
 	void WxFramePeer::setMenuBar(const ::jxx::Ptr<::jxx::awt::MenuBar>& menuBar)
 	{
 		if (!frame_)return; menuItems_.clear(); auto* nativeBar = new wxMenuBar(); if (menuBar) {
@@ -124,7 +159,7 @@ namespace jxx::gui::internal
 	}
 	void WxFramePeer::dispatchMenu(::jxx::lang::jint id)
 	{
-		auto it = menuItems_.find(id); if (it == menuItems_.end())return; if (auto item = it->second.lock()) {
+		auto sit = swingMenuItems_.find(id); if (sit != swingMenuItems_.end()) { if (auto item = sit->second.lock()) { if (auto check = ::jxx::CAST<::jxx::swing::JCheckBoxMenuItem>(item)) check->setSelected(!check->isSelected()); if (auto radio = ::jxx::CAST<::jxx::swing::JRadioButtonMenuItem>(item)) radio->setSelected(true); item->doClick(); } return; } auto it = menuItems_.find(id); if (it == menuItems_.end())return; if (auto item = it->second.lock()) {
 			if (auto check = ::jxx::CAST<::jxx::awt::CheckboxMenuItem>(item))check->setState(!check->getState()); item->fireActionPerformed();
 		}
 	}

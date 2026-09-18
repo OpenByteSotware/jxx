@@ -6,6 +6,7 @@
 
 namespace jxx::swing
 {
+    class JMenuBar;
     class JFrame : public ::jxx::lang::ClassBase<JFrame,
         ::jxx::awt::Frame, RootPaneContainer, WindowConstants>
     {
@@ -25,6 +26,8 @@ namespace jxx::swing
         ::jxx::Ptr<JLayeredPane> getLayeredPane() const override;
         void setGlassPane(const ::jxx::Ptr<::jxx::awt::Component>& pane) override;
         ::jxx::Ptr<::jxx::awt::Component> getGlassPane() const override;
+        void setJMenuBar(const ::jxx::Ptr<JMenuBar>& menuBar);
+        ::jxx::Ptr<JMenuBar> getJMenuBar() const;
         void setDefaultCloseOperation(::jxx::lang::jint operation);
         ::jxx::lang::jint getDefaultCloseOperation() const;
 

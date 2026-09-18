@@ -3,6 +3,8 @@
 #include "awt/event/jxx.awt.event.WindowEvent.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "swing/jxx.swing.JRootPane.h"
+#include "swing/jxx.swing.JMenuBar.h"
+#include "gui/internal/jxx.gui.internal.NativeWindow.h"
 
 namespace jxx::swing
 {
@@ -26,6 +28,12 @@ namespace jxx::swing
     ::jxx::Ptr<JLayeredPane> JDialog::getLayeredPane() const { return rootPane_->getLayeredPane(); }
     void JDialog::setGlassPane(const ::jxx::Ptr<::jxx::awt::Component>& pane) { rootPane_->setGlassPane(pane); }
     ::jxx::Ptr<::jxx::awt::Component> JDialog::getGlassPane() const { return rootPane_->getGlassPane(); }
+    void JDialog::setJMenuBar(const ::jxx::Ptr<JMenuBar>& value)
+    {
+        rootPane_->setJMenuBar(value);
+        if (nativeWindow_ != nullptr) nativeWindow_->setSwingMenuBar(value);
+    }
+    ::jxx::Ptr<JMenuBar> JDialog::getJMenuBar() const { return rootPane_->getJMenuBar(); }
     void JDialog::setDefaultCloseOperation(::jxx::lang::jint value)
     {
         if (value < DO_NOTHING_ON_CLOSE || value > DISPOSE_ON_CLOSE)

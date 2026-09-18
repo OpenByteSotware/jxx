@@ -75,6 +75,7 @@ namespace jxx::gui::internal
     ::jxx::Ptr<::jxx::lang::String> WxDialogPeer::getTitle() const { return title_; }
     ::jxx::lang::jbool WxDialogPeer::isShown() const { return dialog_ != nullptr && dialog_->IsShown(); }
     void WxDialogPeer::setMenuBar(const ::jxx::Ptr<::jxx::awt::MenuBar>&) {}
+    void WxDialogPeer::setSwingMenuBar(const ::jxx::Ptr<::jxx::swing::JMenuBar>&) {}
     void WxDialogPeer::setResizable(::jxx::lang::jbool resizable)
     {
         if (dialog_ == nullptr) return;

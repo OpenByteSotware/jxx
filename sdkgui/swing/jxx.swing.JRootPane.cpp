@@ -5,6 +5,7 @@
 #include "lang/jxx.lang.NullPointerException.h"
 #include "swing/jxx.swing.AbstractButton.h"
 #include "swing/jxx.swing.JLayeredPane.h"
+#include "swing/jxx.swing.JMenuBar.h"
 #include "swing/jxx.swing.JPanel.h"
 
 namespace jxx::swing
@@ -70,6 +71,17 @@ namespace jxx::swing
         return glassPane_;
     }
 
+    void JRootPane::setJMenuBar(const ::jxx::Ptr<JMenuBar>& value)
+    {
+        if (menuBar_ != nullptr) layeredPane_->remove(menuBar_);
+        menuBar_ = value;
+        if (menuBar_ != nullptr) layeredPane_->add(menuBar_);
+        invalidate();
+    }
+    ::jxx::Ptr<JMenuBar> JRootPane::getJMenuBar() const
+    {
+        return menuBar_;
+    }
     void JRootPane::setDefaultButton(
         const ::jxx::Ptr<AbstractButton>& value)
     {

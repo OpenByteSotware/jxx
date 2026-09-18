@@ -2,6 +2,7 @@
 #include <algorithm>
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
+#include "swing/jxx.swing.JPopupMenu.h"
 namespace jxx::swing
 {
     JMenu::JMenu() : Super() {}
@@ -16,6 +17,11 @@ namespace jxx::swing
     ::jxx::lang::jint JMenu::getItemCount() const { return static_cast<::jxx::lang::jint>(items_.size()); }
     ::jxx::Ptr<JMenuItem> JMenu::getItem(::jxx::lang::jint position) const { if (position < 0 || position >= static_cast<::jxx::lang::jint>(items_.size())) throw ::jxx::lang::IllegalArgumentException("position"); return items_[position]; }
     ::jxx::lang::jbool JMenu::isTopLevelMenu() const { return getParent() != nullptr; }
+    ::jxx::Ptr<JPopupMenu> JMenu::getPopupMenu() const
+    {
+        if (popupMenu_ == nullptr) popupMenu_ = ::jxx::NEW<JPopupMenu>(getText());
+        return popupMenu_;
+    }
     void JMenu::setPopupMenuVisible(::jxx::lang::jbool value) { popupVisible_ = value; }
     ::jxx::lang::jbool JMenu::isPopupMenuVisible() const { return popupVisible_; }
 }

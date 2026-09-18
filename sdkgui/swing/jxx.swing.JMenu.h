@@ -3,6 +3,7 @@
 #include "swing/jxx.swing.JMenuItem.h"
 namespace jxx::swing
 {
+    class JPopupMenu;
     class JMenu : public ::jxx::lang::ClassBase<JMenu, JMenuItem>
     {
     public:
@@ -20,10 +21,12 @@ namespace jxx::swing
         ::jxx::lang::jint getItemCount() const;
         ::jxx::Ptr<JMenuItem> getItem(::jxx::lang::jint position) const;
         ::jxx::lang::jbool isTopLevelMenu() const;
+        ::jxx::Ptr<JPopupMenu> getPopupMenu() const;
         void setPopupMenuVisible(::jxx::lang::jbool visible);
         ::jxx::lang::jbool isPopupMenuVisible() const;
     private:
         std::vector<::jxx::Ptr<JMenuItem>> items_;
         ::jxx::lang::jbool popupVisible_ = false;
+        mutable ::jxx::Ptr<JPopupMenu> popupMenu_;
     };
 }
