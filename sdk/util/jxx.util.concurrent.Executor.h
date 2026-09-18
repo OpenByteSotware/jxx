@@ -1,10 +1,18 @@
 #pragma once
-#include "lang/jxx_types.h"
+
+#include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Runnable.h"
+
 namespace jxx::util::concurrent {
-class Executor {
+
+class Executor
+    : public ::jxx::lang::InterfaceBase<Executor> {
 public:
-    virtual ~Executor() = default;
-    virtual void execute(const jxx::Ptr<jxx::lang::Runnable>& command) = 0;
+    using Super = ::jxx::lang::InterfaceBase<Executor>;
+    using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
+    ~Executor() override = default;
+    virtual void execute(
+        const ::jxx::Ptr<::jxx::lang::Runnable>& command) = 0;
 };
+
 } // namespace jxx::util::concurrent

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "lang/jxx.lang.ClassInfo.h"
-#include "lang/jxx_ptr.h"
 
 namespace jxx::awt
 {
