@@ -14,6 +14,8 @@
 #include "gui/internal/jxx.gui.internal.WxComponentPeer.h"
 #include "swing/jxx.swing.AbstractButton.h"
 #include "swing/jxx.swing.JLabel.h"
+#include "swing/jxx.swing.JTextArea.h"
+#include "swing/jxx.swing.JTextField.h"
 namespace jxx::gui::internal
 {
     namespace
@@ -101,6 +103,23 @@ namespace jxx::gui::internal
             else if (const auto label = ::jxx::CAST<::jxx::swing::JLabel>(component))
             {
                 auto* control = new wxStaticText(parent, wxID_ANY, nativeText(label->getText()));
+                component->setNativeComponentInternal(::jxx::NEW<WxComponentPeer>(control)); native = control;
+            }
+            else if (const auto field = ::jxx::CAST<::jxx::swing::JTextField>(component))
+            {
+                auto* control = new wxTextCtrl(parent, wxID_ANY, nativeText(field->getText()), wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
+                control->SetEditable(field->isEditable());
+                auto peer = ::jxx::NEW<WxComponentPeer>(control);
+                std::weak_ptr<::jxx::swing::JTextField> weak = field;
+                peer->setActionCallback([weak] { if (auto owner = weak.lock()) owner->fireActionPerformed(); });
+                component->setNativeComponentInternal(peer); native = control;
+            }
+            else if (const auto area = ::jxx::CAST<::jxx::swing::JTextArea>(component))
+            {
+                long style = wxTE_MULTILINE;
+                if (!area->getLineWrap()) style |= wxTE_DONTWRAP;
+                auto* control = new wxTextCtrl(parent, wxID_ANY, nativeText(area->getText()), wxDefaultPosition, wxDefaultSize, style);
+                control->SetEditable(area->isEditable());
                 component->setNativeComponentInternal(::jxx::NEW<WxComponentPeer>(control)); native = control;
             }
             else if (const auto button = ::jxx::CAST<::jxx::awt::Button>(component))
