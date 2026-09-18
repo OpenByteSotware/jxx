@@ -1,19 +1,20 @@
 #pragma once
 
-#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx_types.h"
 
-namespace jxx::util
-{
-    template<typename E>
-    class Comparator
-    {
-    protected:
-        Comparator() = default;
+namespace jxx::util {
 
-    public:
-        virtual ~Comparator() = default;
+template<typename E>
+class Comparator
+    : public ::jxx::lang::InterfaceBase<Comparator<E>> {
+public:
+    using Super = ::jxx::lang::InterfaceBase<Comparator<E>>;
+    using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
+    ~Comparator() override = default;
+    virtual ::jxx::lang::jint compare(
+        const ::jxx::Ptr<E>& first,
+        const ::jxx::Ptr<E>& second) const = 0;
+};
 
-    public:
-        virtual jxx::lang::jint compare(const jxx::Ptr<E> a, jxx::Ptr<E> b) const = 0;
-    };
-}
+} // namespace jxx::util

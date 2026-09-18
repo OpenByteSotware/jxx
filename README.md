@@ -178,6 +178,9 @@ C:\<jxxlocation>\3rdparty\wxWidgets>cmake -B build_wx -DwxUSE_STL=ON -DwxUSE_WEB
 if you want static link
 cmake -B build_wx -DwxUSE_STL=ON -DwxUSE_WEBVIEW=OFF -DwxBUILD_SHARED=OFF
 
+cmake -S . -B build_wx -G "Visual Studio 18 2026" -A x64 -DwxUSE_STC=OFF -DwxUSE_STL=ON -DwxUSE_WEBVIEW=OFF -DwxBUILD_SHARED=OFF -DwxBUILD_MONOLITHIC=OFF -DwxBUILD_COMPATIBILITY=3.1 -DwxBUILD_SAMPLES=OFF -DwxBUILD_TESTS=OFF -DwxBUILD_DEMOS=OFF
+
+
 if you don't want to use STC disable it, see wxWidget docs for details. 
 -DwxUSE_STC=OFF
 
