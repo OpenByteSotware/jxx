@@ -1,0 +1,3 @@
+#include "util/concurrent/locks/jxx.util.concurrent.locks.AbstractOwnableSynchronizer.h"
+#include "lang/jxx.lang.Class.h"
+namespace jxx::util::concurrent::locks {::jxx::Ptr<::jxx::lang::ClassAny>AbstractOwnableSynchronizer::Class(){return JxxClassInfoMarker::Class();}AbstractOwnableSynchronizer::AbstractOwnableSynchronizer():Super(){}void AbstractOwnableSynchronizer::setExclusiveOwnerThread(const ::jxx::Ptr<::jxx::lang::Thread>&t){std::lock_guard<std::mutex>l(ownerMutex_);owner_=t;}::jxx::Ptr<::jxx::lang::Thread>AbstractOwnableSynchronizer::getExclusiveOwnerThread()const{std::lock_guard<std::mutex>l(ownerMutex_);return owner_;}}
