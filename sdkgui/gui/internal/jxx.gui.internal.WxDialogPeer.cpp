@@ -12,6 +12,8 @@
 #include "awt/jxx.awt.TextField.h"
 #include "gui/internal/jxx.gui.internal.GuiRuntime.h"
 #include "gui/internal/jxx.gui.internal.WxComponentPeer.h"
+#include "swing/jxx.swing.AbstractButton.h"
+#include "swing/jxx.swing.JLabel.h"
 namespace jxx::gui::internal
 {
     namespace
@@ -88,7 +90,20 @@ namespace jxx::gui::internal
             const auto component = container->getComponent(index);
             if (component == nullptr || component->nativeComponent_ != nullptr) continue;
             wxWindow* native = nullptr;
-            if (const auto button = ::jxx::CAST<::jxx::awt::Button>(component))
+            if (const auto button = ::jxx::CAST<::jxx::swing::AbstractButton>(component))
+            {
+                auto* control = new wxButton(parent, wxID_ANY, nativeText(button->getText()));
+                const auto peer = ::jxx::NEW<WxComponentPeer>(control);
+                std::weak_ptr<::jxx::swing::AbstractButton> weak = button;
+                peer->setActionCallback([weak] { if (const auto owner = weak.lock()) owner->fireActionPerformed(); });
+                component->setNativeComponentInternal(peer); native = control;
+            }
+            else if (const auto label = ::jxx::CAST<::jxx::swing::JLabel>(component))
+            {
+                auto* control = new wxStaticText(parent, wxID_ANY, nativeText(label->getText()));
+                component->setNativeComponentInternal(::jxx::NEW<WxComponentPeer>(control)); native = control;
+            }
+            else if (const auto button = ::jxx::CAST<::jxx::awt::Button>(component))
             {
                 auto* control = new wxButton(parent, wxID_ANY, nativeText(button->getLabel()));
                 const auto peer = ::jxx::NEW<WxComponentPeer>(control);
