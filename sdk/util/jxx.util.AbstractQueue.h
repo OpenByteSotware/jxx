@@ -174,7 +174,7 @@ public:
      */
 
     virtual jxx::lang::jbool offer(
-        jxx::Ptr<E> element) override = 0;
+        const jxx::Ptr<E>& element) override = 0;
 
     virtual jxx::Ptr<E> poll() override = 0;
 
