@@ -132,6 +132,61 @@ public:
         return JxxSuper::put(key, value);
     }
 
+    ::jxx::Ptr<V> computeIfAbsent(
+        const ::jxx::Ptr<K>& key,
+        const ::jxx::Ptr<::jxx::util::function::Function<K, V>>& function) override {
+        if (!key || !function) throw ::jxx::lang::NullPointerException();
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        auto objectKey = ::jxx::CAST<::jxx::lang::Object>(key);
+        auto current = JxxSuper::get(objectKey);
+        if (current) return current;
+        auto replacement = function->apply(key);
+        if (replacement) JxxSuper::put(key, replacement);
+        return replacement;
+    }
+
+    ::jxx::Ptr<V> computeIfPresent(
+        const ::jxx::Ptr<K>& key,
+        const ::jxx::Ptr<::jxx::util::function::BiFunction<K, V, V>>& function) override {
+        if (!key || !function) throw ::jxx::lang::NullPointerException();
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        auto objectKey = ::jxx::CAST<::jxx::lang::Object>(key);
+        auto current = JxxSuper::get(objectKey);
+        if (!current) return nullptr;
+        auto replacement = function->apply(key, current);
+        if (replacement) JxxSuper::put(key, replacement);
+        else JxxSuper::remove(objectKey);
+        return replacement;
+    }
+
+    ::jxx::Ptr<V> compute(
+        const ::jxx::Ptr<K>& key,
+        const ::jxx::Ptr<::jxx::util::function::BiFunction<K, V, V>>& function) override {
+        if (!key || !function) throw ::jxx::lang::NullPointerException();
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        auto objectKey = ::jxx::CAST<::jxx::lang::Object>(key);
+        auto current = JxxSuper::get(objectKey);
+        auto replacement = function->apply(key, current);
+        if (replacement) JxxSuper::put(key, replacement);
+        else JxxSuper::remove(objectKey);
+        return replacement;
+    }
+
+    ::jxx::Ptr<V> merge(
+        const ::jxx::Ptr<K>& key,
+        const ::jxx::Ptr<V>& value,
+        const ::jxx::Ptr<::jxx::util::function::BiFunction<V, V, V>>& function) override {
+        require_(key, value);
+        if (!function) throw ::jxx::lang::NullPointerException();
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        auto objectKey = ::jxx::CAST<::jxx::lang::Object>(key);
+        auto current = JxxSuper::get(objectKey);
+        auto replacement = current ? function->apply(current, value) : value;
+        if (replacement) JxxSuper::put(key, replacement);
+        else JxxSuper::remove(objectKey);
+        return replacement;
+    }
+
     ::jxx::lang::jlong mappingCount() {
         return static_cast<::jxx::lang::jlong>(size());
     }
