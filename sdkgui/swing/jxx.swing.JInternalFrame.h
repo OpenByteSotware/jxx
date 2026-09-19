@@ -1,6 +1,8 @@
 #pragma once
+#include <vector>
 #include "swing/jxx.swing.JComponent.h"
 #include "swing/jxx.swing.RootPaneContainer.h"
+namespace jxx::swing::event { class InternalFrameEvent; class InternalFrameListener; }
 namespace jxx::swing
 {
     class JRootPane;
@@ -25,9 +27,15 @@ namespace jxx::swing
         void setMaximum(::jxx::lang::jbool value); ::jxx::lang::jbool isMaximum() const;
         void setSelected(::jxx::lang::jbool value); ::jxx::lang::jbool isSelected() const;
         ::jxx::lang::jbool isResizable() const; ::jxx::lang::jbool isClosable() const; ::jxx::lang::jbool isMaximizable() const; ::jxx::lang::jbool isIconifiable() const;
+        void addInternalFrameListener(const ::jxx::Ptr<::jxx::swing::event::InternalFrameListener>& listener);
+        void removeInternalFrameListener(const ::jxx::Ptr<::jxx::swing::event::InternalFrameListener>& listener);
         void dispose(); void moveToFront(); void moveToBack();
+    protected:
+        virtual void processInternalFrameEvent(
+            const ::jxx::Ptr<::jxx::swing::event::InternalFrameEvent>& event);
     private:
         ::jxx::Ptr<JRootPane> rootPane_; ::jxx::Ptr<::jxx::lang::String> title_;
         ::jxx::lang::jbool resizable_=false,closable_=false,maximizable_=false,iconifiable_=false,closed_=false,icon_=false,maximum_=false,selected_=false;
+        std::vector<::jxx::Ptr<::jxx::swing::event::InternalFrameListener>> internalFrameListeners_;
     };
 }

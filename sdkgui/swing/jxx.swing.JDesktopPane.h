@@ -4,6 +4,7 @@
 namespace jxx::swing
 {
     class JInternalFrame;
+    class DesktopManager;
     class JDesktopPane : public ::jxx::lang::ClassBase<JDesktopPane, JLayeredPane>
     {
     public:
@@ -14,7 +15,8 @@ namespace jxx::swing
         void remove(const ::jxx::Ptr<::jxx::awt::Component>& component) override;
         std::vector<::jxx::Ptr<JInternalFrame>> getAllFrames() const;
         ::jxx::Ptr<JInternalFrame> getSelectedFrame() const; void setSelectedFrame(const ::jxx::Ptr<JInternalFrame>& frame);
+        void setDesktopManager(const ::jxx::Ptr<DesktopManager>& manager); ::jxx::Ptr<DesktopManager> getDesktopManager() const;
         void setDragMode(::jxx::lang::jint mode); ::jxx::lang::jint getDragMode() const;
-    private:std::vector<::jxx::Ptr<JInternalFrame>> frames_;::jxx::Ptr<JInternalFrame> selected_;::jxx::lang::jint dragMode_=LIVE_DRAG_MODE;
+    private: ::jxx::Ptr<DesktopManager> desktopManager_;std::vector<::jxx::Ptr<JInternalFrame>> frames_;::jxx::Ptr<JInternalFrame> selected_;::jxx::lang::jint dragMode_=LIVE_DRAG_MODE;
     };
 }
