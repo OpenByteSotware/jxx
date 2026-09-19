@@ -1,5 +1,6 @@
 #pragma once
 
+#include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "lang/jxx.lang.Object.h"
 #include "util/function/jxx.util.function.Function.h"
 
