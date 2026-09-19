@@ -17,7 +17,7 @@ namespace jxx::lang {
 
 class ThreadGroup;
 
-class Thread final
+class Thread
     : public jxx::lang::ClassBase<
           Thread,
           Object,
