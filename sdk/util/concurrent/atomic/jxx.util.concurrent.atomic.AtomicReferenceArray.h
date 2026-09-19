@@ -1,0 +1,12 @@
+#pragma once
+#include <mutex>
+#include <vector>
+#include "io/jxx.io.SerializableI.h"
+#include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.Exceptions.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.buildin_array.h"
+namespace jxx::util::concurrent::atomic {
+template<typename E> class AtomicReferenceArray final:public ::jxx::lang::ClassBase<AtomicReferenceArray<E>,::jxx::lang::Object,::jxx::io::SerializableI>{
+public:using JxxSuper=::jxx::lang::Object;using Super=::jxx::lang::ClassBase<AtomicReferenceArray<E>,JxxSuper,::jxx::io::SerializableI>;using JxxClassInfoMarker=typename Super::JxxClassInfoMarker;static ::jxx::Ptr<::jxx::lang::ClassAny>Class(){return JxxClassInfoMarker::Class();}explicit AtomicReferenceArray(::jxx::lang::jint n):Super(),values_(checked_(n)){}explicit AtomicReferenceArray(const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<E>,1U>>&a):Super(){if(!a)throw ::jxx::lang::NullPointerException();values_.reserve(a->length);for(std::uint32_t i=0;i<a->length;++i)values_.push_back((*a)[i]);}::jxx::lang::jint length()const noexcept{return static_cast<::jxx::lang::jint>(values_.size());}::jxx::Ptr<E>get(::jxx::lang::jint i)const{std::lock_guard<std::mutex>l(mutex_);return values_[index_(i)];}void set(::jxx::lang::jint i,const ::jxx::Ptr<E>&v){std::lock_guard<std::mutex>l(mutex_);values_[index_(i)]=v;}void lazySet(::jxx::lang::jint i,const ::jxx::Ptr<E>&v){set(i,v);}::jxx::Ptr<E>getAndSet(::jxx::lang::jint i,const ::jxx::Ptr<E>&v){std::lock_guard<std::mutex>l(mutex_);auto&x=values_[index_(i)];auto old=x;x=v;return old;}::jxx::lang::jbool compareAndSet(::jxx::lang::jint i,const ::jxx::Ptr<E>&e,const ::jxx::Ptr<E>&u){std::lock_guard<std::mutex>l(mutex_);auto&x=values_[index_(i)];if(x.get()!=e.get())return false;x=u;return true;}::jxx::lang::jbool weakCompareAndSet(::jxx::lang::jint i,const ::jxx::Ptr<E>&e,const ::jxx::Ptr<E>&u){return compareAndSet(i,e,u);}void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>&o)override{(void)o;}void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>&i)override{(void)i;}void readObjectNoData()override{}
+private:static std::size_t checked_(::jxx::lang::jint n){if(n<0)throw ::jxx::lang::IllegalArgumentException();return static_cast<std::size_t>(n);}std::size_t index_(::jxx::lang::jint i)const{if(i<0||i>=length())throw ::jxx::lang::IndexOutOfBoundsException();return static_cast<std::size_t>(i);}mutable std::mutex mutex_;std::vector<::jxx::Ptr<E>>values_;};}
