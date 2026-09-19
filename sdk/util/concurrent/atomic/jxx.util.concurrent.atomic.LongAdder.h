@@ -1,0 +1,8 @@
+#pragma once
+#include <atomic>
+#include "io/jxx.io.SerializableI.h"
+#include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.Number.h"
+#include "lang/jxx.lang.String.h"
+namespace jxx::util::concurrent::atomic {
+class LongAdder final:public ::jxx::lang::ClassBase<LongAdder,::jxx::lang::Number,::jxx::io::SerializableI>{public:using JxxSuper=::jxx::lang::Number;using Super=::jxx::lang::ClassBase<LongAdder,JxxSuper,::jxx::io::SerializableI>;using JxxClassInfoMarker=::jxx::lang::ClassInfo<LongAdder,JxxSuper,::jxx::io::SerializableI>;static ::jxx::Ptr<::jxx::lang::ClassAny>Class(){return JxxClassInfoMarker::Class();}LongAdder():Super(){}void add(::jxx::lang::jlong x)noexcept{value_.fetch_add(x,std::memory_order_relaxed);}void increment()noexcept{add(1);}void decrement()noexcept{add(-1);}::jxx::lang::jlong sum()const noexcept{return value_.load(std::memory_order_relaxed);}void reset()noexcept{value_.store(0,std::memory_order_relaxed);}::jxx::lang::jlong sumThenReset()noexcept{return value_.exchange(0,std::memory_order_relaxed);}::jxx::lang::jint intValue()const override{return static_cast<::jxx::lang::jint>(sum());}::jxx::lang::jlong longValue()const override{return sum();}::jxx::lang::jfloat floatValue()const override{return static_cast<::jxx::lang::jfloat>(sum());}::jxx::lang::jdouble doubleValue()const override{return static_cast<::jxx::lang::jdouble>(sum());}::jxx::Ptr<::jxx::lang::String>toString()const override{return ::jxx::NEW<::jxx::lang::String>(std::to_string(sum()));}void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>&o)override{(void)o;}void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>&i)override{(void)i;}void readObjectNoData()override{}private:std::atomic<::jxx::lang::jlong>value_{0};};}

@@ -1,0 +1,8 @@
+#pragma once
+#include <mutex>
+#include "io/jxx.io.SerializableI.h"
+#include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.Number.h"
+#include "lang/jxx.lang.String.h"
+namespace jxx::util::concurrent::atomic {
+class DoubleAdder final:public ::jxx::lang::ClassBase<DoubleAdder,::jxx::lang::Number,::jxx::io::SerializableI>{public:using JxxSuper=::jxx::lang::Number;using Super=::jxx::lang::ClassBase<DoubleAdder,JxxSuper,::jxx::io::SerializableI>;using JxxClassInfoMarker=::jxx::lang::ClassInfo<DoubleAdder,JxxSuper,::jxx::io::SerializableI>;static ::jxx::Ptr<::jxx::lang::ClassAny>Class(){return JxxClassInfoMarker::Class();}DoubleAdder():Super(){}void add(::jxx::lang::jdouble x){std::lock_guard<std::mutex>l(mutex_);value_+=x;}::jxx::lang::jdouble sum()const{std::lock_guard<std::mutex>l(mutex_);return value_;}void reset(){std::lock_guard<std::mutex>l(mutex_);value_=0;}::jxx::lang::jdouble sumThenReset(){std::lock_guard<std::mutex>l(mutex_);auto v=value_;value_=0;return v;}::jxx::lang::jint intValue()const override{return static_cast<::jxx::lang::jint>(sum());}::jxx::lang::jlong longValue()const override{return static_cast<::jxx::lang::jlong>(sum());}::jxx::lang::jfloat floatValue()const override{return static_cast<::jxx::lang::jfloat>(sum());}::jxx::lang::jdouble doubleValue()const override{return sum();}::jxx::Ptr<::jxx::lang::String>toString()const override{return ::jxx::NEW<::jxx::lang::String>(std::to_string(sum()));}void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>&o)override{(void)o;}void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>&i)override{(void)i;}void readObjectNoData()override{}private:mutable std::mutex mutex_;::jxx::lang::jdouble value_=0;};}
