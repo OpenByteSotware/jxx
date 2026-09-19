@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <chrono>
 #include <condition_variable>
+#include <deque>
 #include <limits>
 #include <mutex>
 
@@ -47,14 +48,24 @@ public:
         if (::jxx::lang::Thread::interrupted()) {
             throw ::jxx::lang::InterruptedException();
         }
+        auto current = ::jxx::lang::Thread::currentThread();
+        const auto id = current ? current->getId() : 0;
         std::unique_lock<std::mutex> lock(mutex_);
-        while (permits_ < permits) {
+        if (fair_) waiters_.push_back(id);
+        for (;;) {
+            const auto eligible = permits_ >= permits &&
+                (!fair_ || (!waiters_.empty() && waiters_.front() == id));
+            if (eligible) break;
             condition_.wait_for(lock, std::chrono::milliseconds(10));
             if (::jxx::lang::Thread::interrupted()) {
+                if (fair_) eraseWaiter_(id);
+                condition_.notify_all();
                 throw ::jxx::lang::InterruptedException();
             }
         }
+        if (fair_) waiters_.pop_front();
         permits_ -= permits;
+        condition_.notify_all();
     }
 
     void acquireUninterruptibly() { acquireUninterruptibly(1); }
@@ -100,19 +111,33 @@ public:
         }
         const auto deadline = std::chrono::steady_clock::now() +
             unit->toChrono(timeout);
+        auto current = ::jxx::lang::Thread::currentThread();
+        const auto id = current ? current->getId() : 0;
         std::unique_lock<std::mutex> lock(mutex_);
-        while (permits_ < permits) {
+        if (fair_) waiters_.push_back(id);
+        for (;;) {
+            const auto eligible = permits_ >= permits &&
+                (!fair_ || (!waiters_.empty() && waiters_.front() == id));
+            if (eligible) break;
             const auto now = std::chrono::steady_clock::now();
-            if (now >= deadline) return false;
+            if (now >= deadline) {
+                if (fair_) eraseWaiter_(id);
+                condition_.notify_all();
+                return false;
+            }
             condition_.wait_for(lock, std::min(
                 deadline - now,
                 std::chrono::steady_clock::duration(
                     std::chrono::milliseconds(10))));
             if (::jxx::lang::Thread::interrupted()) {
+                if (fair_) eraseWaiter_(id);
+                condition_.notify_all();
                 throw ::jxx::lang::InterruptedException();
             }
         }
+        if (fair_) waiters_.pop_front();
         permits_ -= permits;
+        condition_.notify_all();
         return true;
     }
 
@@ -144,11 +169,26 @@ public:
 
     ::jxx::lang::jbool isFair() const noexcept { return fair_; }
 
+    ::jxx::lang::jbool hasQueuedThreads() const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return !waiters_.empty();
+    }
+
+    ::jxx::lang::jint getQueueLength() const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return static_cast<::jxx::lang::jint>(waiters_.size());
+    }
+
     void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {(void)out;}
     void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {(void)in;}
     void readObjectNoData() override {}
 
 private:
+    void eraseWaiter_(::jxx::lang::jlong id) {
+        auto it = std::find(waiters_.begin(), waiters_.end(), id);
+        if (it != waiters_.end()) waiters_.erase(it);
+    }
+
     static void validatePermits_(::jxx::lang::jint permits) {
         if (permits < 0) throw ::jxx::lang::IllegalArgumentException();
     }
@@ -157,6 +197,7 @@ private:
     std::condition_variable condition_;
     ::jxx::lang::jint permits_;
     ::jxx::lang::jbool fair_;
+    std::deque<::jxx::lang::jlong> waiters_;
 };
 
 } // namespace jxx::util::concurrent

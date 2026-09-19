@@ -4,6 +4,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <cstdint>
+#include <deque>
 #include <mutex>
 #include <thread>
 
@@ -53,11 +54,14 @@ private:
 
             std::unique_lock<std::mutex> conditionLock(mutex_);
             const auto observed = generation_;
+            ++waiters_;
+            ++waiters_;
             const auto holds = owner_->releaseFully_();
             while (generation_ == observed) {
                 condition_.wait_for(conditionLock, std::chrono::milliseconds(10));
                 if (current && current->isInterrupted()) interrupted = true;
             }
+            if (waiters_ > 0) --waiters_;
             conditionLock.unlock();
             owner_->reacquire_(holds);
             if (interrupted && current) current->interrupt();
@@ -144,6 +148,7 @@ private:
                 }
             }
             signalled = generation_ != observed;
+            if (waiters_ > 0) --waiters_;
             conditionLock.unlock();
             owner_->reacquire_(holds);
 
@@ -155,9 +160,17 @@ private:
         }
 
         ReentrantLock* owner_;
-        std::mutex mutex_;
+        mutable std::mutex mutex_;
         std::condition_variable condition_;
         std::uint64_t generation_ = 0;
+        ::jxx::lang::jint waiters_ = 0;
+
+    public:
+        ::jxx::lang::jint waiterCount() const {
+            std::lock_guard<std::mutex> lock(mutex_);
+            return waiters_;
+        }
+        ReentrantLock* owner() const noexcept { return owner_; }
     };
 
 public:
@@ -176,13 +189,31 @@ public:
         : Super(), fair_(fair) {}
 
     void lock() override {
-        mutex_.lock();
-        acquired_();
+        if (isHeldByCurrentThread()) {
+            mutex_.lock();
+            acquired_();
+            return;
+        }
+        if (fair_) {
+            (void)acquireFair_(false, nullptr);
+        } else {
+            mutex_.lock();
+            acquired_();
+        }
     }
 
     void lockInterruptibly() override {
         if (::jxx::lang::Thread::interrupted()) {
             throw ::jxx::lang::InterruptedException();
+        }
+        if (isHeldByCurrentThread()) {
+            mutex_.lock();
+            acquired_();
+            return;
+        }
+        if (fair_) {
+            (void)acquireFair_(true, nullptr);
+            return;
         }
         while (!mutex_.try_lock_for(std::chrono::milliseconds(10))) {
             if (::jxx::lang::Thread::interrupted()) {
@@ -206,6 +237,9 @@ public:
             throw ::jxx::lang::InterruptedException();
         }
         const auto deadline = std::chrono::steady_clock::now() + unit->toChrono(time);
+        if (fair_ && !isHeldByCurrentThread()) {
+            return acquireFair_(true, &deadline);
+        }
         for (;;) {
             const auto now = std::chrono::steady_clock::now();
             if (now >= deadline) return false;
@@ -224,8 +258,12 @@ public:
 
     void unlock() override {
         checkOwner_();
-        if (--holdCount_ == 0) owner_ = std::thread::id{};
+        if (--holdCount_ == 0) {
+            owner_ = std::thread::id{};
+            ownerThread_.reset();
+        }
         mutex_.unlock();
+        admissionChanged_.notify_all();
     }
 
     ::jxx::Ptr<Condition> newCondition() override {
@@ -241,6 +279,42 @@ public:
     ::jxx::lang::jbool isLocked() const noexcept { return holdCount_ > 0; }
     ::jxx::lang::jbool isFair() const noexcept { return fair_; }
 
+    ::jxx::Ptr<::jxx::lang::Thread> getOwner() const {
+        return ownerThread_;
+    }
+
+    ::jxx::lang::jbool hasQueuedThreads() const {
+        std::lock_guard<std::mutex> lock(admissionMutex_);
+        return !admissionQueue_.empty();
+    }
+
+    ::jxx::lang::jbool hasQueuedThread(
+        const ::jxx::Ptr<::jxx::lang::Thread>& thread) const {
+        if (!thread) throw ::jxx::lang::NullPointerException();
+        std::lock_guard<std::mutex> lock(admissionMutex_);
+        return std::find(admissionQueue_.begin(), admissionQueue_.end(),
+            thread->getId()) != admissionQueue_.end();
+    }
+
+    ::jxx::lang::jint getQueueLength() const {
+        std::lock_guard<std::mutex> lock(admissionMutex_);
+        return static_cast<::jxx::lang::jint>(admissionQueue_.size());
+    }
+
+    ::jxx::lang::jbool hasWaiters(const ::jxx::Ptr<Condition>& condition) const {
+        return getWaitQueueLength(condition) > 0;
+    }
+
+    ::jxx::lang::jint getWaitQueueLength(
+        const ::jxx::Ptr<Condition>& condition) const {
+        if (!condition) throw ::jxx::lang::NullPointerException();
+        auto concrete = std::dynamic_pointer_cast<ConditionImpl>(condition);
+        if (!concrete || concrete->owner() != this) {
+            throw ::jxx::lang::IllegalArgumentException();
+        }
+        return concrete->waiterCount();
+    }
+
     void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {(void)out;}
     void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {(void)in;}
     void readObjectNoData() override {}
@@ -250,6 +324,7 @@ private:
         if (owner_ == std::this_thread::get_id()) ++holdCount_;
         else {
             owner_ = std::this_thread::get_id();
+            ownerThread_ = ::jxx::lang::Thread::currentThread();
             holdCount_ = 1;
         }
     }
@@ -272,12 +347,58 @@ private:
     void reacquire_(::jxx::lang::jint holds) {
         for (::jxx::lang::jint i = 0; i < holds; ++i) mutex_.lock();
         owner_ = std::this_thread::get_id();
+        ownerThread_ = ::jxx::lang::Thread::currentThread();
         holdCount_ = holds;
+    }
+
+    ::jxx::lang::jbool acquireFair_(
+        ::jxx::lang::jbool interruptible,
+        const std::chrono::steady_clock::time_point* deadline) {
+        auto current = ::jxx::lang::Thread::currentThread();
+        const auto id = current ? current->getId() : 0;
+        {
+            std::lock_guard<std::mutex> lock(admissionMutex_);
+            admissionQueue_.push_back(id);
+        }
+        for (;;) {
+            if (interruptible && ::jxx::lang::Thread::interrupted()) {
+                std::lock_guard<std::mutex> lock(admissionMutex_);
+                auto it=std::find(admissionQueue_.begin(),admissionQueue_.end(),id);
+                if(it!=admissionQueue_.end()) admissionQueue_.erase(it);
+                admissionChanged_.notify_all();
+                throw ::jxx::lang::InterruptedException();
+            }
+            if (deadline && std::chrono::steady_clock::now() >= *deadline) {
+                std::lock_guard<std::mutex> lock(admissionMutex_);
+                auto it=std::find(admissionQueue_.begin(),admissionQueue_.end(),id);
+                if(it!=admissionQueue_.end()) admissionQueue_.erase(it);
+                admissionChanged_.notify_all();
+                return false;
+            }
+            bool first=false;
+            {
+                std::lock_guard<std::mutex> lock(admissionMutex_);
+                first=!admissionQueue_.empty() && admissionQueue_.front()==id;
+            }
+            if (first && mutex_.try_lock_for(std::chrono::milliseconds(10))) {
+                std::lock_guard<std::mutex> lock(admissionMutex_);
+                admissionQueue_.pop_front();
+                acquired_();
+                admissionChanged_.notify_all();
+                return true;
+            }
+            std::unique_lock<std::mutex> lock(admissionMutex_);
+            admissionChanged_.wait_for(lock,std::chrono::milliseconds(10));
+        }
     }
 
     mutable std::recursive_timed_mutex mutex_;
     std::thread::id owner_;
+    ::jxx::Ptr<::jxx::lang::Thread> ownerThread_;
     ::jxx::lang::jint holdCount_ = 0;
+    mutable std::mutex admissionMutex_;
+    std::condition_variable admissionChanged_;
+    std::deque<::jxx::lang::jlong> admissionQueue_;
     ::jxx::lang::jbool fair_;
 };
 
