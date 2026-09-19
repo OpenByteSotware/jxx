@@ -8,6 +8,7 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "util/concurrent/jxx.util.concurrent.ConcurrentMap.h"
+#include "util/jxx.util.concurrent.ForkJoinPool.h"
 #include "util/jxx.util.HashMap.h"
 
 namespace jxx::util::concurrent {
@@ -192,9 +193,14 @@ public:
     void forEach(
         ::jxx::lang::jlong parallelismThreshold,
         const ::jxx::Ptr<::jxx::util::function::BiConsumer<K, V>>& action) {
-        (void)parallelismThreshold;
         if (!action) throw ::jxx::lang::NullPointerException();
-        for (const auto& item : snapshot_()) action->accept(item.first, item.second);
+        auto items = snapshot_();
+        ::jxx::util::concurrent::ForkJoinPool::commonPool()->parallelFor(
+            items.size(), parallelismThreshold,
+            [&](std::size_t begin, std::size_t end) {
+                for (auto i = begin; i < end; ++i)
+                    action->accept(items[i].first, items[i].second);
+            });
     }
 
     template<typename U>
@@ -212,25 +218,22 @@ public:
 
     void forEachKey(::jxx::lang::jlong threshold,
         const ::jxx::Ptr<::jxx::util::function::Consumer<K>>& action) {
-        (void)threshold; if (!action) throw ::jxx::lang::NullPointerException();
-        for (const auto& item : snapshot_()) action->accept(item.first);
+        if (!action) throw ::jxx::lang::NullPointerException(); auto items=snapshot_();
+        ::jxx::util::concurrent::ForkJoinPool::commonPool()->parallelFor(items.size(),threshold,[&](std::size_t b,std::size_t e){for(auto i=b;i<e;++i)action->accept(items[i].first);});
     }
 
     void forEachValue(::jxx::lang::jlong threshold,
         const ::jxx::Ptr<::jxx::util::function::Consumer<V>>& action) {
-        (void)threshold; if (!action) throw ::jxx::lang::NullPointerException();
-        for (const auto& item : snapshot_()) action->accept(item.second);
+        if (!action) throw ::jxx::lang::NullPointerException(); auto items=snapshot_();
+        ::jxx::util::concurrent::ForkJoinPool::commonPool()->parallelFor(items.size(),threshold,[&](std::size_t b,std::size_t e){for(auto i=b;i<e;++i)action->accept(items[i].second);});
     }
 
     template<typename U>
     ::jxx::Ptr<U> search(::jxx::lang::jlong threshold,
         const ::jxx::Ptr<::jxx::util::function::BiFunction<K, V, U>>& function) {
-        (void)threshold; if (!function) throw ::jxx::lang::NullPointerException();
-        for (const auto& item : snapshot_()) {
-            auto result = function->apply(item.first, item.second);
-            if (result) return result;
-        }
-        return nullptr;
+        if (!function) throw ::jxx::lang::NullPointerException();
+        auto items=snapshot_(); std::atomic<bool> found{false}; ::jxx::Ptr<U> result; std::mutex resultMutex;
+        ::jxx::util::concurrent::ForkJoinPool::commonPool()->parallelFor(items.size(),threshold,[&](std::size_t b,std::size_t e){for(auto i=b;i<e&&!found.load(std::memory_order_acquire);++i){auto candidate=function->apply(items[i].first,items[i].second);if(candidate){bool expected=false;if(found.compare_exchange_strong(expected,true)){std::lock_guard<std::mutex>lock(resultMutex);result=candidate;}break;}}}); return result;
     }
 
     template<typename U>
