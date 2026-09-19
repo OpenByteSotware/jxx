@@ -1,0 +1,14 @@
+#pragma once
+#include <deque>
+#include <mutex>
+#include <vector>
+#include "io/jxx.io.SerializableI.h"
+#include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.Exceptions.h"
+#include "util/jxx.util.AbstractQueue.h"
+namespace jxx::util::concurrent {
+template<typename E> class ConcurrentLinkedQueue final:public ::jxx::lang::ClassBase<ConcurrentLinkedQueue<E>,::jxx::util::AbstractQueue<E>,::jxx::io::SerializableI>{
+ class SnapshotIterator final:public ::jxx::lang::ClassBase<SnapshotIterator,::jxx::lang::Object,::jxx::util::Iterator<E>>{public:using Super=::jxx::lang::ClassBase<SnapshotIterator,::jxx::lang::Object,::jxx::util::Iterator<E>>;explicit SnapshotIterator(std::vector<::jxx::Ptr<E>>v):Super(),values_(std::move(v)){}::jxx::lang::jbool hasNext()override{return index_<values_.size();}::jxx::Ptr<E>next()override{if(!hasNext())throw ::jxx::util::NoSuchElementException();return values_[index_++];}void remove()override{throw ::jxx::lang::UnsupportedOperationException();}private:std::vector<::jxx::Ptr<E>>values_;std::size_t index_=0;};
+public:using JxxSuper=::jxx::util::AbstractQueue<E>;using Super=::jxx::lang::ClassBase<ConcurrentLinkedQueue<E>,JxxSuper,::jxx::io::SerializableI>;using JxxClassInfoMarker=typename Super::JxxClassInfoMarker;static ::jxx::Ptr<::jxx::lang::ClassAny>Class(){return JxxClassInfoMarker::Class();}ConcurrentLinkedQueue():Super(){}
+ ::jxx::lang::jbool offer(const ::jxx::Ptr<E>&e)override{require_(e);std::lock_guard<std::mutex>l(mutex_);queue_.push_back(e);return true;}::jxx::Ptr<E>poll()override{std::lock_guard<std::mutex>l(mutex_);if(queue_.empty())return nullptr;auto e=queue_.front();queue_.pop_front();return e;}::jxx::Ptr<E>peek()override{std::lock_guard<std::mutex>l(mutex_);return queue_.empty()?nullptr:queue_.front();}::jxx::lang::jint size()override{std::lock_guard<std::mutex>l(mutex_);return static_cast<::jxx::lang::jint>(queue_.size());}::jxx::Ptr<::jxx::util::Iterator<E>>iterator()override{std::lock_guard<std::mutex>l(mutex_);return ::jxx::CAST<::jxx::util::Iterator<E>>(::jxx::NEW<SnapshotIterator>(std::vector<::jxx::Ptr<E>>(queue_.begin(),queue_.end())));}void clear()override{std::lock_guard<std::mutex>l(mutex_);queue_.clear();}::jxx::lang::jbool remove(const ::jxx::Ptr<::jxx::lang::Object>&o)override{std::lock_guard<std::mutex>l(mutex_);for(auto i=queue_.begin();i!=queue_.end();++i){auto x=::jxx::CAST<::jxx::lang::Object>(*i);if(o?(x&&o->equals(x)):!x){queue_.erase(i);return true;}}return false;}void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>&o)override{(void)o;}void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>&i)override{(void)i;}void readObjectNoData()override{}
+private:static void require_(const ::jxx::Ptr<E>&e){if(!e)throw ::jxx::lang::NullPointerException();}mutable std::mutex mutex_;std::deque<::jxx::Ptr<E>>queue_;};}
