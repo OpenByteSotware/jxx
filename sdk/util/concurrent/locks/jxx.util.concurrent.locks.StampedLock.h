@@ -7,6 +7,7 @@
 #include <limits>
 #include <mutex>
 #include <unordered_map>
+#include <vector>
 
 #include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.ClassInfo.h"
@@ -15,6 +16,8 @@
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.Thread.h"
 #include "util/jxx.util.concurrent.TimeUnit.h"
+#include "util/concurrent/locks/jxx.util.concurrent.locks.Lock.h"
+#include "util/concurrent/locks/jxx.util.concurrent.locks.ReadWriteLock.h"
 
 namespace jxx::util::concurrent::locks {
 
@@ -244,11 +247,58 @@ public:
         return readers_;
     }
 
+    ::jxx::Ptr<Lock> asReadLock() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!readView_) readView_ = ::jxx::NEW<ReadView>(this);
+        return ::jxx::CAST<Lock>(readView_);
+    }
+
+    ::jxx::Ptr<Lock> asWriteLock() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!writeView_) writeView_ = ::jxx::NEW<WriteView>(this);
+        return ::jxx::CAST<Lock>(writeView_);
+    }
+
+    ::jxx::Ptr<ReadWriteLock> asReadWriteLock() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!readWriteView_) readWriteView_ = ::jxx::NEW<ReadWriteView>(this);
+        return ::jxx::CAST<ReadWriteLock>(readWriteView_);
+    }
+
     void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {(void)out;}
     void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {(void)in;}
     void readObjectNoData() override {}
 
 private:
+    class ReadView final : public ::jxx::lang::ClassBase<ReadView, ::jxx::lang::Object, Lock> {
+    public:
+        using Super = ::jxx::lang::ClassBase<ReadView, ::jxx::lang::Object, Lock>;
+        explicit ReadView(StampedLock* owner) : Super(), owner_(owner) {}
+        void lock() override { stamps_[owner_].push_back(owner_->readLock()); }
+        void lockInterruptibly() override { stamps_[owner_].push_back(owner_->readLockInterruptibly()); }
+        ::jxx::lang::jbool tryLock() override { auto stamp=owner_->tryReadLock(); if(!stamp)return false; stamps_[owner_].push_back(stamp); return true; }
+        ::jxx::lang::jbool tryLock(::jxx::lang::jlong time,const ::jxx::Ptr<::jxx::util::concurrent::TimeUnit>& unit) override {auto stamp=owner_->tryReadLock(time,unit);if(!stamp)return false;stamps_[owner_].push_back(stamp);return true;}
+        void unlock() override {auto& values=stamps_[owner_];if(values.empty())throw ::jxx::lang::IllegalMonitorStateException();auto stamp=values.back();values.pop_back();owner_->unlockRead(stamp);}
+        ::jxx::Ptr<Condition> newCondition() override {throw ::jxx::lang::UnsupportedOperationException();}
+    private: StampedLock* owner_; inline static thread_local std::unordered_map<StampedLock*,std::vector<::jxx::lang::jlong>> stamps_;
+    };
+    class WriteView final : public ::jxx::lang::ClassBase<WriteView, ::jxx::lang::Object, Lock> {
+    public:
+        using Super = ::jxx::lang::ClassBase<WriteView, ::jxx::lang::Object, Lock>;
+        explicit WriteView(StampedLock* owner) : Super(), owner_(owner) {}
+        void lock() override {stamps_[owner_]=owner_->writeLock();}
+        void lockInterruptibly() override {stamps_[owner_]=owner_->writeLockInterruptibly();}
+        ::jxx::lang::jbool tryLock() override {auto stamp=owner_->tryWriteLock();if(!stamp)return false;stamps_[owner_]=stamp;return true;}
+        ::jxx::lang::jbool tryLock(::jxx::lang::jlong time,const ::jxx::Ptr<::jxx::util::concurrent::TimeUnit>& unit) override {auto stamp=owner_->tryWriteLock(time,unit);if(!stamp)return false;stamps_[owner_]=stamp;return true;}
+        void unlock() override {auto found=stamps_.find(owner_);if(found==stamps_.end()||!found->second)throw ::jxx::lang::IllegalMonitorStateException();auto stamp=found->second;found->second=0;owner_->unlockWrite(stamp);}
+        ::jxx::Ptr<Condition> newCondition() override {throw ::jxx::lang::UnsupportedOperationException();}
+    private: StampedLock* owner_; inline static thread_local std::unordered_map<StampedLock*,::jxx::lang::jlong> stamps_;
+    };
+    class ReadWriteView final : public ::jxx::lang::ClassBase<ReadWriteView, ::jxx::lang::Object, ReadWriteLock> {
+    public: using Super=::jxx::lang::ClassBase<ReadWriteView,::jxx::lang::Object,ReadWriteLock>;explicit ReadWriteView(StampedLock* owner):Super(),owner_(owner){}::jxx::Ptr<Lock> readLock()override{return owner_->asReadLock();}::jxx::Ptr<Lock> writeLock()override{return owner_->asWriteLock();}
+    private: StampedLock* owner_;
+    };
+
     static constexpr ::jxx::lang::jlong READ = 1;
     static constexpr ::jxx::lang::jlong WRITE = 2;
     static constexpr ::jxx::lang::jlong OPTIMISTIC = 3;
@@ -304,6 +354,9 @@ private:
     std::uint64_t version_ = 1;
     std::uint64_t sequence_ = 0;
     std::unordered_map<::jxx::lang::jlong, ::jxx::lang::jlong> active_;
+    ::jxx::Ptr<ReadView> readView_;
+    ::jxx::Ptr<WriteView> writeView_;
+    ::jxx::Ptr<ReadWriteView> readWriteView_;
 };
 
 } // namespace jxx::util::concurrent::locks
