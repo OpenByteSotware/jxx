@@ -16,10 +16,17 @@ namespace jxx::swing
         void setBottomComponent(const ::jxx::Ptr<::jxx::awt::Component>& component); ::jxx::Ptr<::jxx::awt::Component> getBottomComponent() const;
         void setDividerLocation(::jxx::lang::jint location); ::jxx::lang::jint getDividerLocation() const;
         void setResizeWeight(::jxx::lang::jdouble weight); ::jxx::lang::jdouble getResizeWeight() const;
-        void doLayout() override;
+        void doLayout() override; void setDividerSize(::jxx::lang::jint value); ::jxx::lang::jint getDividerSize()const; void setContinuousLayout(::jxx::lang::jbool value); ::jxx::lang::jbool isContinuousLayout()const; void setOneTouchExpandable(::jxx::lang::jbool value); ::jxx::lang::jbool isOneTouchExpandable()const; void setLastDividerLocation(::jxx::lang::jint value); ::jxx::lang::jint getLastDividerLocation()const; void resetToPreferredSizes();
     private:
         void setFirst(const ::jxx::Ptr<::jxx::awt::Component>& component); void setSecond(const ::jxx::Ptr<::jxx::awt::Component>& component);
-        ::jxx::lang::jint orientation_=HORIZONTAL,dividerLocation_=-1; ::jxx::lang::jdouble resizeWeight_=0.0;
-        ::jxx::Ptr<::jxx::awt::Component> first_,second_;
+        ::jxx::lang::jint orientation_ = HORIZONTAL;
+        ::jxx::lang::jint dividerLocation_ = -1;
+        ::jxx::lang::jint dividerSize_ = 10;
+        ::jxx::lang::jint lastDividerLocation_ = -1;
+        ::jxx::lang::jdouble resizeWeight_ = 0.0;
+        ::jxx::lang::jbool continuousLayout_ = false;
+        ::jxx::lang::jbool oneTouchExpandable_ = false;
+        ::jxx::Ptr<::jxx::awt::Component> first_;
+        ::jxx::Ptr<::jxx::awt::Component> second_;
     };
 }
