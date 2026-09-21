@@ -3,6 +3,7 @@
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.ClassNotFoundException.h"
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "util/jxx.util.NoSuchElementException.h"
 #include "lang/jxx.lang.ClassLoader.h"
@@ -342,16 +343,27 @@ namespace jxx::lang {
     // Packages
     jxx::Ptr<Package> ClassLoader::definePackage(
         const jxx::Ptr<String>& name) {
-        if (name == nullptr) {
-            throw NullPointerException("name");
-        }
+        return definePackage(name, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+    }
+
+    ::jxx::Ptr<Package> ClassLoader::definePackage(
+        const ::jxx::Ptr<String>& name,
+        const ::jxx::Ptr<String>& specificationTitle,
+        const ::jxx::Ptr<String>& specificationVersion,
+        const ::jxx::Ptr<String>& specificationVendor,
+        const ::jxx::Ptr<String>& implementationTitle,
+        const ::jxx::Ptr<String>& implementationVersion,
+        const ::jxx::Ptr<String>& implementationVendor,
+        const ::jxx::Ptr<::jxx::net::URL>& sealBase) {
+        if (name == nullptr) throw NullPointerException("name");
         const auto packageName = name->utf8();
         std::lock_guard<std::mutex> lock(pkgMutex_);
-        const auto existing = packages_.find(packageName);
-        if (existing != packages_.end()) {
-            return existing->second;
+        if (packages_.find(packageName) != packages_.end()) {
+            throw IllegalArgumentException("package already defined");
         }
-        auto result = Package::definePackage(name);
+        auto result = Package::definePackage(
+            name, specificationTitle, specificationVersion, specificationVendor,
+            implementationTitle, implementationVersion, implementationVendor, sealBase);
         packages_[packageName] = result;
         return result;
     }

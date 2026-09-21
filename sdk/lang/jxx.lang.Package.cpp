@@ -8,6 +8,7 @@
 #include "lang/jxx.lang.NumberFormatException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
+#include "net/jxx.net.URL.h"
 
 namespace jxx::lang {
 namespace {
@@ -53,7 +54,7 @@ jxx::Ptr<Package> Package::definePackage(
     const jxx::Ptr<String>& implementationTitle,
     const jxx::Ptr<String>& implementationVersion,
     const jxx::Ptr<String>& implementationVendor,
-    const jxx::Ptr<String>& sealBase) {
+    const ::jxx::Ptr<::jxx::net::URL>& sealBase) {
     if (name == nullptr) throw NullPointerException();
     const auto key = name->utf8();
     std::lock_guard<std::mutex> lock(registryMutex_);
@@ -94,7 +95,7 @@ Package::Package(const jxx::Ptr<String>& name,
     const jxx::Ptr<String>& implementationTitle,
     const jxx::Ptr<String>& implementationVersion,
     const jxx::Ptr<String>& implementationVendor,
-    const jxx::Ptr<String>& sealBase)
+    const ::jxx::Ptr<::jxx::net::URL>& sealBase)
     : Super(), name_(name), specificationTitle_(specificationTitle),
       specificationVersion_(specificationVersion), specificationVendor_(specificationVendor),
       implementationTitle_(implementationTitle), implementationVersion_(implementationVersion),
@@ -110,7 +111,7 @@ jxx::Ptr<String> Package::getImplementationTitle() const { return implementation
 jxx::Ptr<String> Package::getImplementationVersion() const { return implementationVersion_; }
 jxx::Ptr<String> Package::getImplementationVendor() const { return implementationVendor_; }
 jbool Package::isSealed() const noexcept { return sealBase_ != nullptr; }
-jbool Package::isSealed(const jxx::Ptr<String>& sealBase) const {
+jbool Package::isSealed(const ::jxx::Ptr<::jxx::net::URL>& sealBase) const {
     if (sealBase == nullptr) return false;
     return sealBase_ != nullptr && sealBase_->equals(sealBase);
 }

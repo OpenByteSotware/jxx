@@ -115,6 +115,15 @@ protected:
 
     // Package definition helper
     virtual jxx::Ptr<Package> definePackage(const jxx::Ptr<String>& name);
+    virtual ::jxx::Ptr<Package> definePackage(
+        const ::jxx::Ptr<String>& name,
+        const ::jxx::Ptr<String>& specificationTitle,
+        const ::jxx::Ptr<String>& specificationVersion,
+        const ::jxx::Ptr<String>& specificationVendor,
+        const ::jxx::Ptr<String>& implementationTitle,
+        const ::jxx::Ptr<String>& implementationVersion,
+        const ::jxx::Ptr<String>& implementationVendor,
+        const ::jxx::Ptr<::jxx::net::URL>& sealBase);
 
     // JXX API protected: registerAsParallelCapable()
     static jbool registerAsParallelCapable();

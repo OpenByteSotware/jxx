@@ -8,6 +8,8 @@
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.buildin_array.h"
 
+namespace jxx::net { class URL; }
+
 namespace jxx::lang {
 
 class ClassAny;
@@ -33,7 +35,7 @@ public:
     jxx::Ptr<String> getImplementationVendor() const;
 
     jbool isSealed() const noexcept;
-    jbool isSealed(const jxx::Ptr<String>& sealBase) const;
+    jbool isSealed(const ::jxx::Ptr<::jxx::net::URL>& sealBase) const;
     jbool isCompatibleWith(const jxx::Ptr<String>& desired) const;
     jxx::Ptr<String> toString() const override;
 
@@ -46,7 +48,7 @@ public:
         const jxx::Ptr<String>& implementationTitle,
         const jxx::Ptr<String>& implementationVersion,
         const jxx::Ptr<String>& implementationVendor,
-        const jxx::Ptr<String>& sealBase);
+        const ::jxx::Ptr<::jxx::net::URL>& sealBase);
 
     Package(
         const jxx::Ptr<String>& name,
@@ -56,7 +58,7 @@ public:
         const jxx::Ptr<String>& implementationTitle = nullptr,
         const jxx::Ptr<String>& implementationVersion = nullptr,
         const jxx::Ptr<String>& implementationVendor = nullptr,
-        const jxx::Ptr<String>& sealBase = nullptr);
+        const ::jxx::Ptr<::jxx::net::URL>& sealBase = nullptr);
 
 private:
     jxx::Ptr<String> name_;
@@ -66,7 +68,7 @@ private:
     jxx::Ptr<String> implementationTitle_;
     jxx::Ptr<String> implementationVersion_;
     jxx::Ptr<String> implementationVendor_;
-    jxx::Ptr<String> sealBase_;
+    ::jxx::Ptr<::jxx::net::URL> sealBase_;
 
     static std::mutex registryMutex_;
     static std::unordered_map<std::string, std::weak_ptr<Package>> registry_;
