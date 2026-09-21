@@ -148,6 +148,11 @@ jxx::Ptr<String> System::lineSeparator() {
 }
 
 jxx::Ptr<jxx::util::Map<String, String>> System::getenv() {
+    const auto manager = getSecurityManager();
+    if (manager != nullptr) {
+        manager->checkPermission(
+            jxx::NEW<RuntimePermission>(jxx::NEW<String>("getenv.*")));
+    }
     auto result = jxx::NEW<jxx::util::HashMap<String, String>>();
 #ifdef _WIN32
     char** current = _environ;
@@ -169,6 +174,11 @@ jxx::Ptr<jxx::util::Map<String, String>> System::getenv() {
 jxx::Ptr<String> System::getenv(const jxx::Ptr<String>& name) {
     if (name == nullptr) throw NullPointerException();
     if (name->length() == 0) throw IllegalArgumentException();
+    const auto manager = getSecurityManager();
+    if (manager != nullptr) {
+        manager->checkPermission(jxx::NEW<RuntimePermission>(
+            jxx::NEW<String>("getenv." + name->utf8())));
+    }
     const char* value = std::getenv(name->utf8().c_str());
     return value == nullptr ? nullptr : jxx::NEW<String>(value);
 }
@@ -212,12 +222,16 @@ void System::exit(jxx::lang::jint status) {
 }
 
 jxx::Ptr<jxx::util::Properties> System::getProperties() {
+    const auto manager = getSecurityManager();
+    if (manager != nullptr) manager->checkPropertiesAccess();
     std::lock_guard<std::mutex> guard(propertyMutex());
     return systemProperties();
 }
 
 void System::setProperties(
     const jxx::Ptr<jxx::util::Properties>& values) {
+    const auto manager = getSecurityManager();
+    if (manager != nullptr) manager->checkPropertiesAccess();
     std::lock_guard<std::mutex> guard(propertyMutex());
     systemProperties() = values == nullptr
         ? jxx::NEW<jxx::util::Properties>()
@@ -225,6 +239,8 @@ void System::setProperties(
 }
 
 jxx::Ptr<String> System::getProperty(const jxx::Ptr<String>& key) {
+    const auto manager = getSecurityManager();
+    if (manager != nullptr) manager->checkPropertyAccess(key);
     requirePropertyKey(key);
     std::lock_guard<std::mutex> guard(propertyMutex());
     return systemProperties()->getProperty(key);
@@ -233,6 +249,8 @@ jxx::Ptr<String> System::getProperty(const jxx::Ptr<String>& key) {
 jxx::Ptr<String> System::getProperty(
     const jxx::Ptr<String>& key,
     const jxx::Ptr<String>& defaultValue) {
+    const auto manager = getSecurityManager();
+    if (manager != nullptr) manager->checkPropertyAccess(key);
     requirePropertyKey(key);
     std::lock_guard<std::mutex> guard(propertyMutex());
     return systemProperties()->getProperty(key, defaultValue);
@@ -242,6 +260,8 @@ jxx::Ptr<String> System::setProperty(
     const jxx::Ptr<String>& key,
     const jxx::Ptr<String>& value) {
     requirePropertyKey(key);
+    const auto manager = getSecurityManager();
+    if (manager != nullptr) manager->checkPropertiesAccess();
     if (value == nullptr) throw NullPointerException();
     std::lock_guard<std::mutex> guard(propertyMutex());
     return jxx::CAST<String>(systemProperties()->setProperty(key, value));
@@ -249,6 +269,8 @@ jxx::Ptr<String> System::setProperty(
 
 jxx::Ptr<String> System::clearProperty(const jxx::Ptr<String>& key) {
     requirePropertyKey(key);
+    const auto manager = getSecurityManager();
+    if (manager != nullptr) manager->checkPropertiesAccess();
     std::lock_guard<std::mutex> guard(propertyMutex());
     const auto previous = systemProperties()->getProperty(key);
     if (previous != nullptr) {

@@ -15,11 +15,5 @@ namespace jxx::awt::print
     PrinterIOException::getIOException() const
     {
         return exception_;
-    }
-
-    ::jxx::Ptr<::jxx::lang::Throwable>
-    PrinterIOException::getCause() const
-    {
-        return exception_;
-    }
+    }    
 }

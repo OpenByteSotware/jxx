@@ -25,6 +25,7 @@
 #include "io/jxx.io.File.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.System.h"
+#include "lang/jxx.lang.RuntimePermission.h"
 #include "lang/jxx.lang.SecurityManager.h"
 #include "lang/jxx.lang.Thread.h"
 #include "lang/jxx.lang.UnsatisfiedLinkError.h"
@@ -66,6 +67,9 @@ jxx::Ptr<Runtime> Runtime::getRuntime() {
 }
 
 void Runtime::addShutdownHook(const jxx::Ptr<Thread>& hook) {
+    const auto manager = System::getSecurityManager();
+    if (manager != nullptr) manager->checkPermission(
+        jxx::NEW<RuntimePermission>(jxx::NEW<String>("shutdownHooks")));
     if (hook == nullptr) throw NullPointerException();
     std::lock_guard<std::mutex> lock(mutex_);
     if (shuttingDown_) throw IllegalStateException();
@@ -79,6 +83,9 @@ void Runtime::addShutdownHook(const jxx::Ptr<Thread>& hook) {
 }
 
 jbool Runtime::removeShutdownHook(const jxx::Ptr<Thread>& hook) {
+    const auto manager = System::getSecurityManager();
+    if (manager != nullptr) manager->checkPermission(
+        jxx::NEW<RuntimePermission>(jxx::NEW<String>("shutdownHooks")));
     if (hook == nullptr) throw NullPointerException();
     std::lock_guard<std::mutex> lock(mutex_);
     if (shuttingDown_) throw IllegalStateException();

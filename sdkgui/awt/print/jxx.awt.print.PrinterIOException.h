@@ -15,8 +15,7 @@ namespace jxx::awt::print
 
         explicit PrinterIOException(
             const ::jxx::Ptr<::jxx::io::IOException>& exception);
-        ::jxx::Ptr<::jxx::io::IOException> getIOException() const;
-        ::jxx::Ptr<::jxx::lang::Throwable> getCause() const override;
+        ::jxx::Ptr<::jxx::io::IOException> getIOException() const;        
 
     private:
         ::jxx::Ptr<::jxx::io::IOException> exception_;
