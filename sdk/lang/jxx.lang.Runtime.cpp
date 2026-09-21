@@ -24,6 +24,8 @@
 #include "lang/jxx.lang.ProcessBuilder.h"
 #include "io/jxx.io.File.h"
 #include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.System.h"
+#include "lang/jxx.lang.SecurityManager.h"
 #include "lang/jxx.lang.Thread.h"
 #include "lang/jxx.lang.UnsatisfiedLinkError.h"
 #include "lang/jxx.lang.UnsupportedOperationException.h"
@@ -170,12 +172,16 @@ void Runtime::traceMethodCalls(jbool) { }
 
 void Runtime::load(const jxx::Ptr<String>& filename) {
     if (filename == nullptr) throw NullPointerException();
+    const auto manager = System::getSecurityManager();
+    if (manager != nullptr) manager->checkLink(filename);
     const auto path = std::filesystem::u8path(filename->utf8());
     if (!path.is_absolute()) throw UnsatisfiedLinkError(filename);
     openLibrary(filename->utf8());
 }
 void Runtime::loadLibrary(const jxx::Ptr<String>& libraryName) {
     if (libraryName == nullptr) throw NullPointerException();
+    const auto manager = System::getSecurityManager();
+    if (manager != nullptr) manager->checkLink(libraryName);
     const auto name = libraryName->utf8();
     if (name.find('/') != std::string::npos || name.find('\\') != std::string::npos) {
         throw UnsatisfiedLinkError(libraryName);

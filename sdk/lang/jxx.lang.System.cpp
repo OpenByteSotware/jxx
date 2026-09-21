@@ -91,6 +91,14 @@ jxx::Ptr<String> System::getenv(const jxx::Ptr<String>& name) {
     return value == nullptr ? nullptr : jxx::NEW<String>(value);
 }
 
+void System::load(const jxx::Ptr<String>& filename) {
+    Runtime::getRuntime()->load(filename);
+}
+
+void System::loadLibrary(const jxx::Ptr<String>& libraryName) {
+    Runtime::getRuntime()->loadLibrary(libraryName);
+}
+
 jxx::Ptr<String> System::mapLibraryName(
     const jxx::Ptr<String>& libraryName) {
     if (libraryName == nullptr) {

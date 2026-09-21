@@ -36,6 +36,8 @@ struct System {
         const jxx::Ptr<jxx::lang::String>& name);
     static jxx::Ptr<jxx::lang::String> mapLibraryName(
         const jxx::Ptr<jxx::lang::String>& libraryName);
+    static void load(const jxx::Ptr<jxx::lang::String>& filename);
+    static void loadLibrary(const jxx::Ptr<jxx::lang::String>& libraryName);
     static void gc();
     static void runFinalization();
     static void exit(jxx::lang::jint status);
