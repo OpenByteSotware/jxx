@@ -98,26 +98,28 @@ namespace jxx::lang
 
     const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::COMMON(
         new Character::UnicodeScript(jxx::NEW<String>("COMMON"), 0));
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::INHERITED(
+        new Character::UnicodeScript(jxx::NEW<String>("INHERITED"), 1));
     const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::LATIN(
-        new Character::UnicodeScript(jxx::NEW<String>("LATIN"), 1));
+        new Character::UnicodeScript(jxx::NEW<String>("LATIN"), 2));
     const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::GREEK(
-        new Character::UnicodeScript(jxx::NEW<String>("GREEK"), 2));
+        new Character::UnicodeScript(jxx::NEW<String>("GREEK"), 3));
     const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::CYRILLIC(
-        new Character::UnicodeScript(jxx::NEW<String>("CYRILLIC"), 3));
+        new Character::UnicodeScript(jxx::NEW<String>("CYRILLIC"), 4));
     const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::HEBREW(
-        new Character::UnicodeScript(jxx::NEW<String>("HEBREW"), 4));
+        new Character::UnicodeScript(jxx::NEW<String>("HEBREW"), 5));
     const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::ARABIC(
-        new Character::UnicodeScript(jxx::NEW<String>("ARABIC"), 5));
+        new Character::UnicodeScript(jxx::NEW<String>("ARABIC"), 6));
     const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::HAN(
-        new Character::UnicodeScript(jxx::NEW<String>("HAN"), 6));
+        new Character::UnicodeScript(jxx::NEW<String>("HAN"), 7));
     const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::HIRAGANA(
-        new Character::UnicodeScript(jxx::NEW<String>("HIRAGANA"), 7));
+        new Character::UnicodeScript(jxx::NEW<String>("HIRAGANA"), 8));
     const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::KATAKANA(
-        new Character::UnicodeScript(jxx::NEW<String>("KATAKANA"), 8));
+        new Character::UnicodeScript(jxx::NEW<String>("KATAKANA"), 9));
     const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::HANGUL(
-        new Character::UnicodeScript(jxx::NEW<String>("HANGUL"), 9));
+        new Character::UnicodeScript(jxx::NEW<String>("HANGUL"), 10));
     const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::UNKNOWN(
-        new Character::UnicodeScript(jxx::NEW<String>("UNKNOWN"), 10));
+        new Character::UnicodeScript(jxx::NEW<String>("UNKNOWN"), 11));
 
     jxx::Ptr<ClassAny> Character::UnicodeScript::Class() {
         return ClassInfo<UnicodeScript, Enum<UnicodeScript>>::Class();
@@ -125,11 +127,11 @@ namespace jxx::lang
 
     jxx::Ptr<JxxArray<jxx::Ptr<Character::UnicodeScript>, 1>>
     Character::UnicodeScript::values() {
-        auto result = jxx::NEW<JxxArray<jxx::Ptr<UnicodeScript>, 1>>(11);
-        (*result)[0]=COMMON; (*result)[1]=LATIN; (*result)[2]=GREEK;
-        (*result)[3]=CYRILLIC; (*result)[4]=HEBREW; (*result)[5]=ARABIC;
-        (*result)[6]=HAN; (*result)[7]=HIRAGANA; (*result)[8]=KATAKANA;
-        (*result)[9]=HANGUL; (*result)[10]=UNKNOWN;
+        auto result = jxx::NEW<JxxArray<jxx::Ptr<UnicodeScript>, 1>>(12);
+        (*result)[0]=COMMON; (*result)[1]=INHERITED; (*result)[2]=LATIN;
+        (*result)[3]=GREEK; (*result)[4]=CYRILLIC; (*result)[5]=HEBREW;
+        (*result)[6]=ARABIC; (*result)[7]=HAN; (*result)[8]=HIRAGANA;
+        (*result)[9]=KATAKANA; (*result)[10]=HANGUL; (*result)[11]=UNKNOWN;
         return result;
     }
 
@@ -151,20 +153,21 @@ namespace jxx::lang
 
     jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::of(jint codePoint) {
         if (!Character::isValidCodePoint(codePoint)) throw IllegalArgumentException();
-        if ((codePoint >= 0x0041 && codePoint <= 0x024F) ||
-            (codePoint >= 0x1E00 && codePoint <= 0x1EFF)) return LATIN;
-        if (codePoint >= 0x0370 && codePoint <= 0x03FF) return GREEK;
-        if (codePoint >= 0x0400 && codePoint <= 0x052F) return CYRILLIC;
-        if (codePoint >= 0x0590 && codePoint <= 0x05FF) return HEBREW;
-        if (codePoint >= 0x0600 && codePoint <= 0x06FF) return ARABIC;
-        if (codePoint >= 0x3040 && codePoint <= 0x309F) return HIRAGANA;
-        if (codePoint >= 0x30A0 && codePoint <= 0x30FF) return KATAKANA;
-        if ((codePoint >= 0x3400 && codePoint <= 0x4DBF) ||
-            (codePoint >= 0x4E00 && codePoint <= 0x9FFF)) return HAN;
-        if ((codePoint >= 0x1100 && codePoint <= 0x11FF) ||
-            (codePoint >= 0xAC00 && codePoint <= 0xD7AF)) return HANGUL;
-        if (codePoint <= 0x002F || (codePoint >= 0x2000 && codePoint <= 0x206F)) return COMMON;
-        return UNKNOWN;
+        using Key = jxx::unicode_bridge::UnicodeScriptKey;
+        switch (jxx::unicode_bridge::getUnicodeScript(static_cast<char32_t>(codePoint))) {
+            case Key::Common: return COMMON;
+            case Key::Inherited: return INHERITED;
+            case Key::Latin: return LATIN;
+            case Key::Greek: return GREEK;
+            case Key::Cyrillic: return CYRILLIC;
+            case Key::Hebrew: return HEBREW;
+            case Key::Arabic: return ARABIC;
+            case Key::Han: return HAN;
+            case Key::Hiragana: return HIRAGANA;
+            case Key::Katakana: return KATAKANA;
+            case Key::Hangul: return HANGUL;
+            default: return UNKNOWN;
+        }
     }
     namespace {
     jxx::Ptr<ClassAny> registerCharacterPrimitive()

@@ -4,6 +4,24 @@
 
 namespace jxx::unicode_bridge
 {
+    enum class UnicodeScriptKey : unsigned char
+    {
+        Common,
+        Inherited,
+        Latin,
+        Greek,
+        Cyrillic,
+        Hebrew,
+        Arabic,
+        Han,
+        Hiragana,
+        Katakana,
+        Hangul,
+        Unknown
+    };
+
+    UnicodeScriptKey getUnicodeScript(char32_t codePoint) noexcept;
+
     bool isLowerCase(char32_t codePoint) noexcept;
     bool isUpperCase(char32_t codePoint) noexcept;
     bool isTitleCase(char32_t codePoint) noexcept;

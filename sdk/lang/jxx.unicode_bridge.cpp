@@ -3,6 +3,8 @@
 #include <gsl/util>
 #include <gsl/narrow>
 #include <libunicode/ucd.h>
+#include <libunicode/case_mapping.h>
+#include <libunicode/codepoint_properties.h>
 
 namespace
 {
@@ -184,23 +186,38 @@ namespace jxx::unicode_bridge
         return (value >= 0 && value < radix) ? value : -1;
     }
 
+    UnicodeScriptKey getUnicodeScript(char32_t codePoint) noexcept
+    {
+        using unicode::Script;
+        switch (unicode::codepoint_properties::get(codePoint).script)
+        {
+            case Script::Common: return UnicodeScriptKey::Common;
+            case Script::Inherited: return UnicodeScriptKey::Inherited;
+            case Script::Latin: return UnicodeScriptKey::Latin;
+            case Script::Greek: return UnicodeScriptKey::Greek;
+            case Script::Cyrillic: return UnicodeScriptKey::Cyrillic;
+            case Script::Hebrew: return UnicodeScriptKey::Hebrew;
+            case Script::Arabic: return UnicodeScriptKey::Arabic;
+            case Script::Han: return UnicodeScriptKey::Han;
+            case Script::Hiragana: return UnicodeScriptKey::Hiragana;
+            case Script::Katakana: return UnicodeScriptKey::Katakana;
+            case Script::Hangul: return UnicodeScriptKey::Hangul;
+            default: return UnicodeScriptKey::Unknown;
+        }
+    }
+
     char32_t toLowerCase(char32_t codePoint) noexcept
     {
-        // ucd.h does not expose Unicode case mapping.
-        if (isAsciiUpper_(codePoint))
-            return static_cast<char32_t>(codePoint - U'A' + U'a');
-        return codePoint;
+        return unicode::simple_lowercase(codePoint);
     }
 
     char32_t toUpperCase(char32_t codePoint) noexcept
     {
-        if (isAsciiLower_(codePoint))
-            return static_cast<char32_t>(codePoint - U'a' + U'A');
-        return codePoint;
+        return unicode::simple_uppercase(codePoint);
     }
 
     char32_t toTitleCase(char32_t codePoint) noexcept
     {
-        return toUpperCase(codePoint);
+        return unicode::simple_titlecase(codePoint);
     }
 }

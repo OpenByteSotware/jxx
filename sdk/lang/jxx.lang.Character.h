@@ -58,6 +58,7 @@ namespace jxx::lang
             static jxx::Ptr<UnicodeScript> forName(const jxx::Ptr<String>& scriptName);
 
             static const jxx::Ptr<UnicodeScript> COMMON;
+            static const jxx::Ptr<UnicodeScript> INHERITED;
             static const jxx::Ptr<UnicodeScript> LATIN;
             static const jxx::Ptr<UnicodeScript> GREEK;
             static const jxx::Ptr<UnicodeScript> CYRILLIC;
