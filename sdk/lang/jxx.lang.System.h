@@ -45,6 +45,7 @@ struct System {
     static void loadLibrary(const jxx::Ptr<jxx::lang::String>& libraryName);
     static void gc();
     static void runFinalization();
+    static void runFinalizersOnExit(::jxx::lang::jbool value);
     static void exit(jxx::lang::jint status);
     static jxx::Ptr<jxx::lang::SecurityManager> getSecurityManager();
     static void setSecurityManager(const jxx::Ptr<jxx::lang::SecurityManager>& manager);

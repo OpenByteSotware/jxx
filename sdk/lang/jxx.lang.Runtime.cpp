@@ -31,6 +31,8 @@
 #include "lang/jxx.lang.UnsupportedOperationException.h"
 
 namespace jxx::lang {
+
+jbool Runtime::runFinalizersOnExit_ = false;
 namespace {
 std::string platformLibraryName(const std::string& name) {
 #ifdef _WIN32
@@ -132,10 +134,18 @@ void Runtime::runShutdownHooks_() {
 }
 
 void Runtime::exit(jint status) {
+    const auto manager = System::getSecurityManager();
+    if (manager != nullptr) manager->checkExit(status);
     runShutdownHooks_();
+    if (runFinalizersOnExit_) runFinalization();
     std::exit(status);
 }
-void Runtime::halt(jint status) { std::_Exit(status); }
+
+void Runtime::halt(jint status) {
+    const auto manager = System::getSecurityManager();
+    if (manager != nullptr) manager->checkExit(status);
+    std::_Exit(status);
+}
 
 jint Runtime::availableProcessors() const {
     const auto count = std::thread::hardware_concurrency();
@@ -167,6 +177,13 @@ jlong Runtime::freeMemory() const {
 jlong Runtime::maxMemory() const { return totalMemory(); }
 void Runtime::gc() { }
 void Runtime::runFinalization() { }
+
+void Runtime::runFinalizersOnExit(::jxx::lang::jbool value) {
+    const auto manager = System::getSecurityManager();
+    if (manager != nullptr) manager->checkExit(0);
+    runFinalizersOnExit_ = value;
+}
+
 void Runtime::traceInstructions(jbool) { }
 void Runtime::traceMethodCalls(jbool) { }
 

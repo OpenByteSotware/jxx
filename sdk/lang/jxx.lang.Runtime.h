@@ -36,6 +36,7 @@ public:
     jlong maxMemory() const;
     void gc();
     void runFinalization();
+    static void runFinalizersOnExit(::jxx::lang::jbool value);
     void traceInstructions(jbool enable);
     void traceMethodCalls(jbool enable);
 
@@ -75,5 +76,6 @@ private:
     std::vector<jxx::Ptr<Thread>> shutdownHooks_;
     jbool shuttingDown_ = false;
     jbool shutdownComplete_ = false;
+    static jbool runFinalizersOnExit_;
 };
 } // namespace jxx::lang

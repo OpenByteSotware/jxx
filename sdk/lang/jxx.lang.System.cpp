@@ -153,6 +153,10 @@ void System::runFinalization() {
     Runtime::getRuntime()->runFinalization();
 }
 
+void System::runFinalizersOnExit(::jxx::lang::jbool value) {
+    Runtime::runFinalizersOnExit(value);
+}
+
 void System::exit(jxx::lang::jint status) {
     Runtime::getRuntime()->exit(status);
 }
