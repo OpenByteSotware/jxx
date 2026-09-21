@@ -1,20 +1,10 @@
 #include "lang/jxx.lang.Compiler.h"
 
-#include <atomic>
-
 #include "lang/jxx.lang.Class.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
 
 namespace jxx::lang {
-namespace {
-
-std::atomic<jbool>& compilerEnabled() noexcept {
-    static std::atomic<jbool> enabled{true};
-    return enabled;
-}
-
-} // namespace
 
 jxx::Ptr<ClassAny> Compiler::Class() {
     return JxxClassInfoMarker::Class();
@@ -45,11 +35,9 @@ jxx::Ptr<Object> Compiler::command(
 }
 
 void Compiler::enable() noexcept {
-    compilerEnabled().store(true, std::memory_order_release);
 }
 
 void Compiler::disable() noexcept {
-    compilerEnabled().store(false, std::memory_order_release);
 }
 
 } // namespace jxx::lang
