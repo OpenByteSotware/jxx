@@ -7,6 +7,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Object.h"
@@ -33,9 +34,8 @@ std::unordered_map<std::string, std::string>& properties() {
 }
 
 void requirePropertyKey(const jxx::Ptr<String>& key) {
-    if (key == nullptr || key->length() == 0) {
-        throw NullPointerException();
-    }
+    if (key == nullptr) throw NullPointerException();
+    if (key->length() == 0) throw IllegalArgumentException();
 }
 } // namespace
 
@@ -122,13 +122,9 @@ jxx::Ptr<String> System::getProperty(const jxx::Ptr<String>& key) {
     requirePropertyKey(key);
     std::lock_guard<std::mutex> guard(propertyMutex());
     const auto found = properties().find(key->utf8());
-    if (found != properties().end()) {
-        return jxx::NEW<String>(found->second);
-    }
-    const char* environmentValue = std::getenv(key->utf8().c_str());
-    return environmentValue == nullptr
+    return found == properties().end()
         ? nullptr
-        : jxx::NEW<String>(environmentValue);
+        : jxx::NEW<String>(found->second);
 }
 
 jxx::Ptr<String> System::getProperty(
