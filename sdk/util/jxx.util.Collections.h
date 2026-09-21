@@ -12,6 +12,8 @@
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.buildin_array.h"
 #include "util/jxx.util.Collection.h"
+#include "util/jxx.util.Enumeration.h"
+#include "util/jxx.util.ArrayList.h"
 #include "util/jxx.util.ComparatorSuper.h"
 #include "util/jxx.util.List.h"
 #include "util/jxx.util.NoSuchElementException.h"
@@ -457,6 +459,42 @@ namespace jxx::util {
                 if (matches) return i;
             }
             return -1;
+        }
+
+        template <typename T>
+        static jxx::Ptr<Enumeration<T>> enumeration(
+            const jxx::Ptr<Collection<T>>& collection) {
+            if (collection == nullptr) throw jxx::lang::NullPointerException();
+
+            class IteratorEnumeration final : public Enumeration<T> {
+            public:
+                explicit IteratorEnumeration(const jxx::Ptr<Iterator<T>>& iterator)
+                    : iterator_(iterator) {}
+
+                jxx::lang::jbool hasMoreElements() override {
+                    return iterator_->hasNext();
+                }
+
+                jxx::Ptr<T> nextElement() override {
+                    return iterator_->next();
+                }
+
+            private:
+                jxx::Ptr<Iterator<T>> iterator_;
+            };
+
+            return jxx::NEW<IteratorEnumeration>(collection->iterator());
+        }
+
+        template <typename T>
+        static jxx::Ptr<ArrayList<T>> list(
+            const jxx::Ptr<Enumeration<T>>& enumerationValue) {
+            if (enumerationValue == nullptr) throw jxx::lang::NullPointerException();
+            auto result = jxx::NEW<ArrayList<T>>();
+            while (enumerationValue->hasMoreElements()) {
+                result->add(enumerationValue->nextElement());
+            }
+            return result;
         }
 
         template <typename T>
