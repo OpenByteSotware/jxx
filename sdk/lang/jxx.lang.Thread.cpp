@@ -185,13 +185,23 @@ void Thread::run() {
         state_->target->run();
     }
 }
+void Thread::interrupt()
+{
+    if (!state_->started.load(std::memory_order_acquire) ||
+        state_->finished.load(std::memory_order_acquire)) {
+        return;
+    }
 
-void Thread::interrupt() {
-    state_->interrupted.store(true);
+    state_->interrupted.store(
+        true,
+        std::memory_order_release);
 
     std::function<void()> parkWakeup;
+
     {
-        std::lock_guard<std::mutex> lock(state_->mutex);
+        std::lock_guard<std::mutex> lock(
+            state_->mutex);
+
         parkWakeup = state_->parkWakeup;
     }
 
@@ -202,7 +212,6 @@ void Thread::interrupt() {
         parkWakeup();
     }
 }
-
 void Thread::setParkWakeup_(const std::function<void()>& wakeup) {
     std::lock_guard<std::mutex> lock(state_->mutex);
     state_->parkWakeup = wakeup;
