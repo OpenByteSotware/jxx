@@ -19,6 +19,7 @@
 #include "io/jxx.io.OutputStream.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.IllegalStateException.h"
+#include "lang/jxx.lang.InterruptedException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.ProcessBuilder.h"
 #include "io/jxx.io.File.h"
@@ -86,15 +87,46 @@ jbool Runtime::removeShutdownHook(const jxx::Ptr<Thread>& hook) {
 void Runtime::runShutdownHooks_() {
     std::vector<jxx::Ptr<Thread>> hooks;
     {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (shuttingDown_) return;
+        std::unique_lock<std::mutex> lock(mutex_);
+        if (shuttingDown_) {
+            shutdownCondition_.wait(lock, [this] { return shutdownComplete_; });
+            return;
+        }
         shuttingDown_ = true;
-        hooks = shutdownHooks_;
+        hooks.swap(shutdownHooks_);
     }
-    for (const auto& hook : hooks) hook->start();
+
+    // Start every registered hook before waiting for any one hook. Shutdown
+    // hooks are independent, and one failed start must not suppress others.
     for (const auto& hook : hooks) {
-        try { hook->join(); } catch (...) {}
+        try {
+            hook->start();
+        }
+        catch (...) {
+        }
     }
+
+    for (const auto& hook : hooks) {
+        for (;;) {
+            try {
+                hook->join();
+                break;
+            }
+            catch (const InterruptedException&) {
+                // Shutdown waits for hooks even if the coordinating thread is
+                // interrupted.
+            }
+            catch (...) {
+                break;
+            }
+        }
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        shutdownComplete_ = true;
+    }
+    shutdownCondition_.notify_all();
 }
 
 void Runtime::exit(jint status) {

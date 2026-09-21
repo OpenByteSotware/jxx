@@ -1,5 +1,6 @@
 #pragma once
 
+#include <condition_variable>
 #include <mutex>
 #include <vector>
 
@@ -70,7 +71,9 @@ private:
     void runShutdownHooks_();
 
     mutable std::mutex mutex_;
+    std::condition_variable shutdownCondition_;
     std::vector<jxx::Ptr<Thread>> shutdownHooks_;
     jbool shuttingDown_ = false;
+    jbool shutdownComplete_ = false;
 };
 } // namespace jxx::lang
