@@ -12,6 +12,9 @@
 #include "io/jxx.io.FileInputStream.h"
 #include "io/jxx.io.FileOutputStream.h"
 
+namespace jxx::io { class Console; }
+namespace jxx::nio::channels { class Channel; }
+
 namespace jxx { namespace util { class Properties; } namespace lang {
 class Object;
 class SecurityManager;
@@ -32,6 +35,8 @@ struct System {
     static jxx::lang::jint identityHashCode(
         const jxx::Ptr<jxx::lang::Object>& object) noexcept;
     static jxx::Ptr<jxx::lang::String> lineSeparator();
+    static jxx::Ptr<jxx::io::Console> console();
+    static jxx::Ptr<jxx::nio::channels::Channel> inheritedChannel();
     static jxx::Ptr<jxx::lang::String> getenv(
         const jxx::Ptr<jxx::lang::String>& name);
     static jxx::Ptr<jxx::lang::String> mapLibraryName(
@@ -47,6 +52,7 @@ struct System {
     static jxx::Ptr<jxx::util::Properties> getProperties();
     static void setProperties(
         const jxx::Ptr<jxx::util::Properties>& properties);
+
     static jxx::Ptr<jxx::lang::String> getProperty(
         const jxx::Ptr<jxx::lang::String>& key);
     static jxx::Ptr<jxx::lang::String> getProperty(

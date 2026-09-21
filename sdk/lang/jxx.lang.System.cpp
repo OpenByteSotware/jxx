@@ -1,11 +1,22 @@
 #include "io/jxx.io.FileDescriptor.h"
+#include "nio/channels/jxx.nio.channels.Channel.h"
+#include "io/jxx.io.PrintWriter.h"
+#include "io/jxx.io.InputStreamReader.h"
+#include "io/jxx.io.Console.h"
 #include "lang/jxx.lang.System.h"
 
+#include <cstdio>
 #include <cstdlib>
 #include <cstdint>
 #include <mutex>
 #include <string>
 #include <unordered_map>
+
+#ifdef _WIN32
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
 
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
@@ -74,6 +85,26 @@ jxx::lang::jint System::identityHashCode(
     const auto address = reinterpret_cast<std::uintptr_t>(object.get());
     return static_cast<jxx::lang::jint>(
         address ^ (address >> 32));
+}
+
+jxx::Ptr<jxx::io::Console> System::console() {
+#ifdef _WIN32
+    const bool interactive = ::_isatty(::_fileno(stdin)) != 0 &&
+                             ::_isatty(::_fileno(stdout)) != 0;
+#else
+    const bool interactive = ::isatty(STDIN_FILENO) != 0 &&
+                             ::isatty(STDOUT_FILENO) != 0;
+#endif
+    if (!interactive || in == nullptr || out == nullptr) return nullptr;
+    static const auto value = jxx::NEW<jxx::io::Console>(
+        jxx::NEW<jxx::io::InputStreamReader>(in),
+        jxx::NEW<jxx::io::PrintWriter>(
+            jxx::CAST<jxx::io::OutputStream>(out), true));
+    return value;
+}
+
+jxx::Ptr<jxx::nio::channels::Channel> System::inheritedChannel() {
+    return nullptr;
 }
 
 jxx::Ptr<String> System::lineSeparator() {
