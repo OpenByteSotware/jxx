@@ -4,6 +4,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <functional>
+#include <iostream>
 #include <mutex>
 #include <sstream>
 #include <stdexcept>
@@ -16,6 +17,8 @@
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.ThreadLocalSupport.h"
 #include "lang/jxx.lang.ThreadGroup.h"
+#include "lang/jxx.lang.UnsupportedOperationException.h"
+#include "lang/jxx.lang.Throwable.h"
 
 namespace jxx::lang {
 
@@ -361,6 +364,37 @@ void Thread::setPriority(jint priority) {
     }
 
     state_->priority.store(std::min(priority, state_->group->getMaxPriority()));
+}
+
+void Thread::stop() {
+    throw UnsupportedOperationException("Thread.stop is not safely portable");
+}
+
+void Thread::suspend() {
+    throw UnsupportedOperationException("Thread.suspend is not safely portable");
+}
+
+void Thread::resume() {
+    throw UnsupportedOperationException("Thread.resume is not safely portable");
+}
+
+void Thread::destroy() {
+    throw UnsupportedOperationException("Thread.destroy is not safely portable");
+}
+
+::jxx::lang::jint Thread::countStackFrames() const {
+    if (!isAlive()) return 0;
+    throw UnsupportedOperationException("Thread stack-frame inspection is unavailable");
+}
+
+void Thread::dumpStack() {
+    Throwable("Stack trace").printStackTrace(std::cerr);
+}
+
+::jxx::lang::jbool Thread::holdsLock(
+    const ::jxx::Ptr<::jxx::lang::Object>& object) {
+    if (object == nullptr) throw NullPointerException();
+    throw UnsupportedOperationException("Monitor ownership inspection is unavailable");
 }
 
 jbool Thread::isDaemon() const {

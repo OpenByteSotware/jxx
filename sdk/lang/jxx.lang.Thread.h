@@ -89,6 +89,17 @@ public:
     void run() override;
 
     void interrupt();
+
+    // Deprecated compatibility surface. Portable native threads cannot be
+    // asynchronously stopped, suspended, resumed, or destroyed safely.
+    void stop();
+    void suspend();
+    void resume();
+    void destroy();
+    ::jxx::lang::jint countStackFrames() const;
+    static void dumpStack();
+    static ::jxx::lang::jbool holdsLock(
+        const ::jxx::Ptr<::jxx::lang::Object>& object);
     jbool isInterrupted() const;
     static jbool interrupted();
 
