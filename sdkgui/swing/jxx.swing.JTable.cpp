@@ -265,12 +265,66 @@ namespace jxx::swing
             || start >= getRowCount() || end >= getRowCount())
             throw ::jxx::lang::IndexOutOfBoundsException("row");
         selectedRow_ = start;
+        anchorRow_ = end;
+    }
+
+    void JTable::setColumnSelectionInterval(
+        ::jxx::lang::jint start,
+        ::jxx::lang::jint end)
+    {
+        if (start < 0 || end < 0
+            || start >= getColumnCount() || end >= getColumnCount())
+            throw ::jxx::lang::IndexOutOfBoundsException("column");
+        selectedColumn_ = start;
+        anchorColumn_ = end;
+    }
+
+    void JTable::changeSelection(
+        ::jxx::lang::jint rowIndex,
+        ::jxx::lang::jint columnIndex,
+        ::jxx::lang::jbool toggle,
+        ::jxx::lang::jbool extend)
+    {
+        if (rowIndex < 0 || rowIndex >= getRowCount()
+            || columnIndex < 0 || columnIndex >= getColumnCount())
+            throw ::jxx::lang::IndexOutOfBoundsException("cell");
+
+        if (toggle && !extend
+            && selectedRow_ == rowIndex
+            && selectedColumn_ == columnIndex)
+        {
+            clearSelection();
+            return;
+        }
+
+        if (!extend || anchorRow_ < 0 || anchorColumn_ < 0)
+        {
+            anchorRow_ = rowIndex;
+            anchorColumn_ = columnIndex;
+        }
+        selectedRow_ = rowIndex;
+        selectedColumn_ = columnIndex;
+    }
+
+    void JTable::selectAll()
+    {
+        if (getRowCount() == 0 || getColumnCount() == 0)
+        {
+            clearSelection();
+            return;
+        }
+        anchorRow_ = 0;
+        anchorColumn_ = 0;
+        selectedRow_ = getRowCount() - 1;
+        selectedColumn_ = getColumnCount() - 1;
     }
 
     void JTable::clearSelection()
     {
         selectedRow_ = -1;
         selectedColumn_ = -1;
+        anchorRow_ = -1;
+        anchorColumn_ = -1;
     }
 
     ::jxx::lang::jint JTable::getSelectedRow() const

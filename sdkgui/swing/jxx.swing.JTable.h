@@ -118,6 +118,15 @@ namespace jxx::swing
         void setRowSelectionInterval(
             ::jxx::lang::jint start,
             ::jxx::lang::jint end);
+        void setColumnSelectionInterval(
+            ::jxx::lang::jint start,
+            ::jxx::lang::jint end);
+        void changeSelection(
+            ::jxx::lang::jint rowIndex,
+            ::jxx::lang::jint columnIndex,
+            ::jxx::lang::jbool toggle,
+            ::jxx::lang::jbool extend);
+        void selectAll();
         void clearSelection();
         ::jxx::lang::jint getSelectedRow() const;
         ::jxx::lang::jint getSelectedColumn() const;
@@ -211,6 +220,8 @@ namespace jxx::swing
         ::jxx::Ptr<RowSorter<::jxx::swing::table::TableModel>> rowSorter_;
         ::jxx::lang::jint selectedRow_ = -1;
         ::jxx::lang::jint selectedColumn_ = -1;
+        ::jxx::lang::jint anchorRow_ = -1;
+        ::jxx::lang::jint anchorColumn_ = -1;
         ::jxx::lang::jint rowHeight_ = 16;
         ::jxx::lang::jbool rowSelectionAllowed_ = true;
         ::jxx::lang::jbool columnSelectionAllowed_ = false;

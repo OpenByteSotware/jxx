@@ -483,9 +483,7 @@ ProcessBuilder::ProcessBuilder(
     , inputRedirect_(Redirect::PIPE)
     , outputRedirect_(Redirect::PIPE)
     , errorRedirect_(Redirect::PIPE) {
-    if (command == nullptr || command->length == 0) {
-        throw IllegalArgumentException();
-    }
+    if (command == nullptr) throw NullPointerException();
 
     command_.reserve(command->length);
     for (std::uint32_t index = 0; index < command->length; ++index) {
@@ -498,9 +496,7 @@ ProcessBuilder::ProcessBuilder(
 }
 jxx::Ptr<ProcessBuilder> ProcessBuilder::command(
     const jxx::Ptr<JxxArray<jxx::Ptr<String>, 1>>& command) {
-    if (command == nullptr || command->length == 0) {
-        throw IllegalArgumentException();
-    }
+    if (command == nullptr) throw NullPointerException();
 
     std::vector<std::string> replacement;
     replacement.reserve(command->length);
@@ -518,7 +514,21 @@ jxx::Ptr<ProcessBuilder> ProcessBuilder::command(
 jxx::Ptr<JxxArray<jxx::Ptr<String>,1>> ProcessBuilder::command()const{auto a=jxx::NEW<JxxArray<jxx::Ptr<String>,1>>(command_.size());for(uint32_t i=0;i<a->length;++i)(*a)[i]=jxx::NEW<String>(command_[i]);return a;}
 jxx::Ptr<jxx::io::File> ProcessBuilder::directory()const{return directory_;}
 jxx::Ptr<ProcessBuilder> ProcessBuilder::directory(const jxx::Ptr<jxx::io::File>&d){directory_=d;return jxx::CAST<ProcessBuilder>(thisPtr());}
-jxx::Ptr<ProcessBuilder> ProcessBuilder::environment(const jxx::Ptr<String>&n,const jxx::Ptr<String>&v){if(!n||!v)throw NullPointerException();environment_[n->utf8()]=v->utf8();return jxx::CAST<ProcessBuilder>(thisPtr());}
+jxx::Ptr<ProcessBuilder> ProcessBuilder::environment(
+    const jxx::Ptr<String>& name,
+    const jxx::Ptr<String>& value) {
+    if (name == nullptr || value == nullptr) throw NullPointerException();
+    const auto nativeName = name->utf8();
+    const auto nativeValue = value->utf8();
+    if (nativeName.empty() ||
+        nativeName.find('=') != std::string::npos ||
+        nativeName.find('\0') != std::string::npos ||
+        nativeValue.find('\0') != std::string::npos) {
+        throw IllegalArgumentException();
+    }
+    environment_[nativeName] = nativeValue;
+    return jxx::CAST<ProcessBuilder>(thisPtr());
+}
 jxx::Ptr<String> ProcessBuilder::environment(const jxx::Ptr<String>&n)const{if(!n)throw NullPointerException();auto i=environment_.find(n->utf8());return i==environment_.end()?nullptr:jxx::NEW<String>(i->second);}
 jxx::Ptr<ProcessBuilder> ProcessBuilder::clearEnvironment(){environment_.clear();return jxx::CAST<ProcessBuilder>(thisPtr());}
 jxx::Ptr<ProcessBuilder::Redirect> ProcessBuilder::redirectInput()const{return inputRedirect_;}
@@ -535,7 +545,8 @@ jbool ProcessBuilder::redirectErrorStream()const{return redirectErrorStream_;}
 jxx::Ptr<ProcessBuilder> ProcessBuilder::redirectErrorStream(jbool v){redirectErrorStream_=v;return jxx::CAST<ProcessBuilder>(thisPtr());}
 
 jxx::Ptr<Process> ProcessBuilder::start(){
- if(command_.empty() || command_[0].empty())throw IllegalArgumentException();
+ if(command_.empty())throw IndexOutOfBoundsException();
+ if(command_[0].empty())throw IllegalArgumentException();
  for(const auto& argument:command_)if(argument.find('\0')!=std::string::npos)throw IllegalArgumentException();
  for(const auto& item:environment_){if(item.first.empty()||item.first.find('=')!=std::string::npos||item.first.find('\0')!=std::string::npos||item.second.find('\0')!=std::string::npos)throw IllegalArgumentException();}
 #ifdef _WIN32
