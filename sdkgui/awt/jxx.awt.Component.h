@@ -9,11 +9,11 @@
 namespace jxx::awt::event { class ComponentEvent; class ComponentListener; class FocusEvent; class FocusListener; class KeyEvent; class KeyListener; class MouseEvent; class MouseListener; class MouseMotionListener; class MouseWheelEvent; class MouseWheelListener; class HierarchyEvent; class HierarchyListener; class HierarchyBoundsListener; }
 namespace jxx::gui::internal { class NativeComponent; class WxFramePeer; class WxDialogPeer; }
 namespace jxx::awt {
-class Container;
+class Container; class DefaultKeyboardFocusManager;
 class Component : public ::jxx::lang::ClassBase<Component, ::jxx::lang::Object> {
 public:
  using JxxSuper=::jxx::lang::Object; using Super=::jxx::lang::ClassBase<Component,JxxSuper>; virtual ~Component()=0;
- virtual ::jxx::lang::jbool isVisible() const; virtual void setVisible(::jxx::lang::jbool visible); virtual ::jxx::lang::jbool isEnabled() const; virtual void setEnabled(::jxx::lang::jbool enabled);
+ virtual ::jxx::lang::jbool isVisible() const; virtual void setVisible(::jxx::lang::jbool visible); virtual ::jxx::lang::jbool isEnabled() const; virtual void setEnabled(::jxx::lang::jbool enabled); virtual void setFocusable(::jxx::lang::jbool focusable); virtual ::jxx::lang::jbool isFocusable() const; virtual ::jxx::lang::jbool isFocusTraversable() const; virtual ::jxx::lang::jbool requestFocusInWindow();
  virtual ::jxx::lang::jint getX() const; virtual ::jxx::lang::jint getY() const; virtual ::jxx::lang::jint getWidth() const; virtual ::jxx::lang::jint getHeight() const;
  virtual ::jxx::Ptr<Point> getLocation() const; virtual void setLocation(const ::jxx::Ptr<Point>& point); virtual void setLocation(::jxx::lang::jint x,::jxx::lang::jint y);
  virtual ::jxx::Ptr<Dimension> getSize() const; virtual void setSize(const ::jxx::Ptr<Dimension>& dimension); virtual void setSize(::jxx::lang::jint width,::jxx::lang::jint height);
@@ -29,8 +29,8 @@ public:
 protected:
  Component(); virtual void processComponentEvent(const ::jxx::Ptr<::jxx::awt::event::ComponentEvent>& event); virtual void processFocusEvent(const ::jxx::Ptr<::jxx::awt::event::FocusEvent>& event); virtual void processMouseEvent(const ::jxx::Ptr<::jxx::awt::event::MouseEvent>& event); virtual void processMouseWheelEvent(const ::jxx::Ptr<::jxx::awt::event::MouseWheelEvent>& event); virtual void processHierarchyEvent(const ::jxx::Ptr<::jxx::awt::event::HierarchyEvent>& event); virtual void processHierarchyBoundsEvent(const ::jxx::Ptr<::jxx::awt::event::HierarchyEvent>& event); virtual void processKeyEvent(const ::jxx::Ptr<::jxx::awt::event::KeyEvent>& event); ::jxx::Ptr<::jxx::gui::internal::NativeComponent> nativeComponent_;
 private:
- friend class Container; friend class ::jxx::gui::internal::WxFramePeer; friend class ::jxx::gui::internal::WxDialogPeer;
+ friend class Container; friend class DefaultKeyboardFocusManager; friend class ::jxx::gui::internal::WxFramePeer; friend class ::jxx::gui::internal::WxDialogPeer;
  void setParentInternal(const ::jxx::Ptr<Container>& parent); void setNativeComponentInternal(const ::jxx::Ptr<::jxx::gui::internal::NativeComponent>& peer); void fireComponentEvent(::jxx::lang::jint id); void fireHierarchyEvent(::jxx::lang::jint id,const ::jxx::Ptr<Component>& changed,const ::jxx::Ptr<Container>& changedParent,::jxx::lang::jlong flags);
- ::jxx::lang::jint x_=0,y_=0,width_=0,height_=0; ::jxx::lang::jbool visible_=true,enabled_=true,valid_=false; ::jxx::Ptr<Color> foreground_; ::jxx::Ptr<Color> background_; ::jxx::Ptr<Font> font_; ::jxx::Ptr<::jxx::lang::String> name_; ::jxx::Ptr<ComponentOrientation> componentOrientation_=ComponentOrientation::UNKNOWN; std::weak_ptr<Container> parent_;
+ ::jxx::lang::jint x_=0,y_=0,width_=0,height_=0; ::jxx::lang::jbool visible_=true,enabled_=true,focusable_=true,valid_=false; ::jxx::Ptr<Color> foreground_; ::jxx::Ptr<Color> background_; ::jxx::Ptr<Font> font_; ::jxx::Ptr<::jxx::lang::String> name_; ::jxx::Ptr<ComponentOrientation> componentOrientation_=ComponentOrientation::UNKNOWN; std::weak_ptr<Container> parent_;
  std::vector<::jxx::Ptr<::jxx::awt::event::ComponentListener>> componentListeners_; std::vector<::jxx::Ptr<::jxx::awt::event::FocusListener>> focusListeners_; std::vector<::jxx::Ptr<::jxx::awt::event::KeyListener>> keyListeners_; std::vector<::jxx::Ptr<::jxx::awt::event::MouseListener>> mouseListeners_; std::vector<::jxx::Ptr<::jxx::awt::event::MouseMotionListener>> mouseMotionListeners_; std::vector<::jxx::Ptr<::jxx::awt::event::MouseWheelListener>> mouseWheelListeners_; std::vector<::jxx::Ptr<::jxx::awt::event::HierarchyListener>> hierarchyListeners_; std::vector<::jxx::Ptr<::jxx::awt::event::HierarchyBoundsListener>> hierarchyBoundsListeners_;
 }; }

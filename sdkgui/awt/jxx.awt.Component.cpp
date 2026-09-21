@@ -44,6 +44,10 @@ namespace jxx::awt
 
     ::jxx::lang::jbool Component::isEnabled() const { return enabled_; }
     void Component::setEnabled(::jxx::lang::jbool value) { enabled_=value; if(nativeComponent_) nativeComponent_->setEnabled(value); }
+    void Component::setFocusable(::jxx::lang::jbool value) { focusable_=value; }
+    ::jxx::lang::jbool Component::isFocusable() const { return focusable_; }
+    ::jxx::lang::jbool Component::isFocusTraversable() const { return isFocusable(); }
+    ::jxx::lang::jbool Component::requestFocusInWindow() { if(!focusable_||!visible_||!enabled_) return false; requestFocus(); return isFocusOwner(); }
     ::jxx::lang::jint Component::getX() const { return x_; }
     ::jxx::lang::jint Component::getY() const { return y_; }
     ::jxx::lang::jint Component::getWidth() const { return width_; }
