@@ -24,6 +24,8 @@ namespace jxx::swing::table
 {
     class DefaultTableColumnModel;
     class JTableHeader;
+    class TableCellEditor;
+    class TableCellRenderer;
     class TableColumn;
     class TableColumnModel;
     class TableModel;
@@ -143,6 +145,39 @@ namespace jxx::swing
         void setIntercellSpacing(
             const ::jxx::Ptr<::jxx::awt::Dimension>& spacing);
         ::jxx::Ptr<::jxx::awt::Dimension> getIntercellSpacing() const;
+        ::jxx::Ptr<::jxx::swing::table::TableCellRenderer>
+            getCellRenderer(
+                ::jxx::lang::jint row,
+                ::jxx::lang::jint column) const;
+        ::jxx::Ptr<::jxx::awt::Component> prepareRenderer(
+            const ::jxx::Ptr<::jxx::swing::table::TableCellRenderer>& renderer,
+            ::jxx::lang::jint row,
+            ::jxx::lang::jint column);
+        void setDefaultRenderer(
+            const ::jxx::Ptr<::jxx::swing::table::TableCellRenderer>& renderer);
+        ::jxx::Ptr<::jxx::swing::table::TableCellRenderer>
+            getDefaultRenderer() const;
+
+        ::jxx::Ptr<::jxx::swing::table::TableCellEditor>
+            getCellEditor(
+                ::jxx::lang::jint row,
+                ::jxx::lang::jint column) const;
+        ::jxx::Ptr<::jxx::awt::Component> prepareEditor(
+            const ::jxx::Ptr<::jxx::swing::table::TableCellEditor>& editor,
+            ::jxx::lang::jint row,
+            ::jxx::lang::jint column);
+        void setCellEditor(
+            const ::jxx::Ptr<::jxx::swing::table::TableCellEditor>& editor);
+        ::jxx::Ptr<::jxx::swing::table::TableCellEditor>
+            getCellEditor() const;
+        ::jxx::lang::jbool editCellAt(
+            ::jxx::lang::jint row,
+            ::jxx::lang::jint column);
+        ::jxx::lang::jbool isEditing() const;
+        ::jxx::lang::jint getEditingRow() const;
+        ::jxx::lang::jint getEditingColumn() const;
+        void removeEditor();
+
         void setRowHeight(::jxx::lang::jint height);
         ::jxx::lang::jint getRowHeight() const;
         void setAutoResizeMode(::jxx::lang::jint mode);
@@ -183,6 +218,11 @@ namespace jxx::swing
         ::jxx::lang::jbool showVerticalLines_ = true;
         ::jxx::Ptr<::jxx::awt::Color> gridColor_;
         ::jxx::Ptr<::jxx::awt::Dimension> intercellSpacing_;
+        ::jxx::Ptr<::jxx::swing::table::TableCellRenderer>
+            defaultRenderer_;
+        ::jxx::Ptr<::jxx::swing::table::TableCellEditor> cellEditor_;
+        ::jxx::lang::jint editingRow_ = -1;
+        ::jxx::lang::jint editingColumn_ = -1;
         ::jxx::lang::jint autoResizeMode_ = AUTO_RESIZE_SUBSEQUENT_COLUMNS;
         ::jxx::lang::jbool autoCreateRowSorter_ = false;
     };

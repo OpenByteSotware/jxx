@@ -7,8 +7,11 @@
 #include "swing/event/jxx.swing.event.RowSorterEvent.h"
 #include "swing/event/jxx.swing.event.TableModelEvent.h"
 #include "swing/jxx.swing.RowSorter.h"
+#include "swing/table/jxx.swing.table.DefaultTableCellRenderer.h"
 #include "swing/table/jxx.swing.table.DefaultTableColumnModel.h"
 #include "swing/table/jxx.swing.table.JTableHeader.h"
+#include "swing/table/jxx.swing.table.TableCellEditor.h"
+#include "swing/table/jxx.swing.table.TableCellRenderer.h"
 #include "swing/table/jxx.swing.table.TableColumn.h"
 #include "swing/table/jxx.swing.table.TableColumnModel.h"
 #include "swing/table/jxx.swing.table.TableModel.h"
@@ -43,7 +46,9 @@ namespace jxx::swing
             columnModel)
         : Super(),
           gridColor_(::jxx::awt::Color::gray),
-          intercellSpacing_(::jxx::NEW<::jxx::awt::Dimension>(1, 1))
+          intercellSpacing_(::jxx::NEW<::jxx::awt::Dimension>(1, 1)),
+          defaultRenderer_(::jxx::NEW<
+              ::jxx::swing::table::DefaultTableCellRenderer>())
     {
         setColumnModel(columnModel);
         setModel(model);
@@ -377,6 +382,101 @@ namespace jxx::swing
     {
         return intercellSpacing_ == nullptr ? nullptr
             : ::jxx::NEW<::jxx::awt::Dimension>(intercellSpacing_);
+    }
+
+    ::jxx::Ptr<::jxx::swing::table::TableCellRenderer>
+    JTable::getCellRenderer(
+        ::jxx::lang::jint row,
+        ::jxx::lang::jint column) const
+    {
+        if (row < 0 || row >= getRowCount()
+            || column < 0 || column >= getColumnCount())
+            throw ::jxx::lang::IndexOutOfBoundsException("cell");
+        const auto renderer = columnModel_->getColumn(column)->getCellRenderer();
+        return renderer == nullptr ? defaultRenderer_ : renderer;
+    }
+
+    ::jxx::Ptr<::jxx::awt::Component> JTable::prepareRenderer(
+        const ::jxx::Ptr<::jxx::swing::table::TableCellRenderer>& renderer,
+        ::jxx::lang::jint row,
+        ::jxx::lang::jint column)
+    {
+        if (renderer == nullptr)
+            throw ::jxx::lang::IllegalArgumentException("renderer");
+        return renderer->getTableCellRendererComponent(
+            ::jxx::CAST<JTable>(thisPtr()), getValueAt(row, column),
+            isRowSelected(row) || isColumnSelected(column),
+            false, row, column);
+    }
+
+    void JTable::setDefaultRenderer(
+        const ::jxx::Ptr<::jxx::swing::table::TableCellRenderer>& renderer)
+    { defaultRenderer_ = renderer; }
+
+    ::jxx::Ptr<::jxx::swing::table::TableCellRenderer>
+    JTable::getDefaultRenderer() const
+    { return defaultRenderer_; }
+
+    ::jxx::Ptr<::jxx::swing::table::TableCellEditor>
+    JTable::getCellEditor(
+        ::jxx::lang::jint row,
+        ::jxx::lang::jint column) const
+    {
+        if (row < 0 || row >= getRowCount()
+            || column < 0 || column >= getColumnCount())
+            throw ::jxx::lang::IndexOutOfBoundsException("cell");
+        return columnModel_->getColumn(column)->getCellEditor();
+    }
+
+    ::jxx::Ptr<::jxx::awt::Component> JTable::prepareEditor(
+        const ::jxx::Ptr<::jxx::swing::table::TableCellEditor>& editor,
+        ::jxx::lang::jint row,
+        ::jxx::lang::jint column)
+    {
+        if (editor == nullptr)
+            throw ::jxx::lang::IllegalArgumentException("editor");
+        return editor->getTableCellEditorComponent(
+            ::jxx::CAST<JTable>(thisPtr()), getValueAt(row, column),
+            true, row, column);
+    }
+
+    void JTable::setCellEditor(
+        const ::jxx::Ptr<::jxx::swing::table::TableCellEditor>& editor)
+    { cellEditor_ = editor; }
+
+    ::jxx::Ptr<::jxx::swing::table::TableCellEditor>
+    JTable::getCellEditor() const
+    { return cellEditor_; }
+
+    ::jxx::lang::jbool JTable::editCellAt(
+        ::jxx::lang::jint row,
+        ::jxx::lang::jint column)
+    {
+        const auto editor = getCellEditor(row, column);
+        if (editor == nullptr || !model_->isCellEditable(
+                convertRowIndexToModel(row),
+                convertColumnIndexToModel(column)))
+            return false;
+        removeEditor();
+        cellEditor_ = editor;
+        editingRow_ = row;
+        editingColumn_ = column;
+        prepareEditor(editor, row, column);
+        return true;
+    }
+
+    ::jxx::lang::jbool JTable::isEditing() const
+    { return cellEditor_ != nullptr; }
+    ::jxx::lang::jint JTable::getEditingRow() const
+    { return editingRow_; }
+    ::jxx::lang::jint JTable::getEditingColumn() const
+    { return editingColumn_; }
+
+    void JTable::removeEditor()
+    {
+        cellEditor_.reset();
+        editingRow_ = -1;
+        editingColumn_ = -1;
     }
 
     void JTable::setRowHeight(::jxx::lang::jint height)
