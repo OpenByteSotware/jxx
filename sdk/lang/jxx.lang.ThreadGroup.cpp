@@ -7,6 +7,8 @@
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.IllegalThreadStateException.h"
 #include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.SecurityManager.h"
+#include "lang/jxx.lang.System.h"
 #include "lang/jxx.lang.Thread.h"
 #include "lang/jxx.lang.Throwable.h"
 
@@ -56,7 +58,14 @@ jbool ThreadGroup::parentOf(const jxx::Ptr<ThreadGroup>& g) const {
     for (auto current = g; current != nullptr; current = current->parent_) if (current.get() == this) return true;
     return false;
 }
-void ThreadGroup::checkAccess() const {}
+void ThreadGroup::checkAccess() const {
+    const auto manager = System::getSecurityManager();
+    if (manager != nullptr) {
+        const auto self = jxx::CAST<ThreadGroup>(
+            const_cast<ThreadGroup*>(this)->thisPtr());
+        manager->checkAccess(self);
+    }
+}
 jint ThreadGroup::activeCount() const {
     std::lock_guard<std::recursive_mutex> l(mutex_); jint n = 0;
     for (auto* t : threads_) if (t != nullptr && t->isAlive()) ++n;
@@ -94,6 +103,24 @@ jint ThreadGroup::enumerate(const jxx::Ptr<JxxArray<jxx::Ptr<ThreadGroup>,1>>& a
     return n;
 }
 void ThreadGroup::interrupt() { std::lock_guard<std::recursive_mutex> l(mutex_); for(auto* t:threads_)if(t)t->interrupt(); for(auto* g:groups_)if(g)g->interrupt(); }
+void ThreadGroup::stop() {
+    checkAccess();
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    for (auto* thread : threads_) if (thread != nullptr) thread->stop();
+    for (auto* group : groups_) if (group != nullptr) group->stop();
+}
+void ThreadGroup::suspend() {
+    checkAccess();
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    for (auto* thread : threads_) if (thread != nullptr) thread->suspend();
+    for (auto* group : groups_) if (group != nullptr) group->suspend();
+}
+void ThreadGroup::resume() {
+    checkAccess();
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    for (auto* thread : threads_) if (thread != nullptr) thread->resume();
+    for (auto* group : groups_) if (group != nullptr) group->resume();
+}
 void ThreadGroup::destroy() {
     checkAccess(); std::lock_guard<std::recursive_mutex> l(mutex_);
     if (destroyed_ || !threads_.empty()) throw IllegalThreadStateException();

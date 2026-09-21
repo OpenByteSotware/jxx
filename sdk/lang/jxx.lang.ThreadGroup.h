@@ -48,6 +48,9 @@ public:
     jint enumerate(const jxx::Ptr<JxxArray<jxx::Ptr<ThreadGroup>, 1>>& groups,
                    jbool recurse) const;
     void interrupt();
+    void stop();
+    void suspend();
+    void resume();
     void destroy();
     void list() const;
     void list_(jint indent) const;
