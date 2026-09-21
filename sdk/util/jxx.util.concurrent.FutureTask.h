@@ -12,6 +12,7 @@
 #include "util/jxx.util.concurrent.CancellationException.h"
 #include "util/jxx.util.concurrent.ExecutionException.h"
 #include "util/jxx.util.concurrent.RunnableFuture.h"
+#include "util/jxx.util.concurrent.RunnableAdapter.h"
 #include "util/jxx.util.concurrent.TimeoutException.h"
 
 namespace jxx::util::concurrent {
@@ -45,6 +46,16 @@ public:
     explicit FutureTask(const jxx::Ptr<Callable<V>>& callable)
         : Super(), callable_(callable) {
         if (callable_ == nullptr) {
+            throw jxx::lang::NullPointerException();
+        }
+    }
+
+    FutureTask(
+        const jxx::Ptr<jxx::lang::Runnable>& runnable,
+        const jxx::Ptr<V>& result)
+        : FutureTask(jxx::CAST<Callable<V>>(
+              jxx::NEW<RunnableAdapter<V>>(runnable, result))) {
+        if (runnable == nullptr) {
             throw jxx::lang::NullPointerException();
         }
     }
@@ -110,6 +121,12 @@ public:
             throw jxx::lang::NullPointerException();
         }
         std::unique_lock<std::mutex> lock(mutex_);
+        if (isTerminal_(state_)) {
+            return report_();
+        }
+        if (timeout <= 0) {
+            throw TimeoutException();
+        }
         if (!condition_.wait_for(
                 lock,
                 unit->toChrono(timeout),
