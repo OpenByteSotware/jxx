@@ -9,6 +9,7 @@
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.Runnable.h"
 #include "util/jxx.util.concurrent.CancellationException.h"
+#include "util/jxx.util.concurrent.Callable.h"
 #include "util/jxx.util.concurrent.ExecutionException.h"
 #include "util/jxx.util.concurrent.RunnableScheduledFuture.h"
 #include "util/jxx.util.concurrent.TimeoutException.h"
@@ -35,38 +36,37 @@ public:
         if(!command_) throw ::jxx::lang::NullPointerException();
     }
 
+    ScheduledFutureTask(
+        const ::jxx::Ptr<Callable<V>>& callable,
+        ::jxx::lang::jlong delayNanos)
+        : Super(), callable_(callable),
+          trigger_(clock::now()+std::chrono::nanoseconds(delayNanos)),
+          periodNanos_(0), sequence_(nextSequence_++) {
+        if (callable_ == nullptr) throw ::jxx::lang::NullPointerException();
+    }
+
     void run() override {
         { std::lock_guard<std::mutex> l(mutex_); if(cancelled_||done_||running_) return; running_=true; }
-        try { command_->run(); finishRun_(nullptr); }
+        try {
+            if (callable_ != nullptr) result_ = callable_->call();
+            else command_->run();
+            finishRun_(nullptr);
+        }
         catch(const ::jxx::lang::Throwable& e) { finishRun_(e.cloneThrowable()); }
         catch(...) { finishRun_(::jxx::NEW<::jxx::lang::RuntimeException>()); }
     }
 
-    ::jxx::lang::jbool cancel(
-        ::jxx::lang::jbool mayInterruptIfRunning) override {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (done_ || cancelled_) return false;
-        if (running_ && !mayInterruptIfRunning) return false;
-        cancelled_ = true;
-        done_ = true;
-        condition_.notify_all();
-        return true;
+    ::jxx::lang::jbool cancel(::jxx::lang::jbool) override {
+        std::lock_guard<std::mutex> l(mutex_); if(done_) return false;
+        cancelled_=true; done_=true; condition_.notify_all(); return true;
     }
     ::jxx::lang::jbool isCancelled() override { std::lock_guard<std::mutex> l(mutex_); return cancelled_; }
     ::jxx::lang::jbool isDone() override { std::lock_guard<std::mutex> l(mutex_); return done_; }
     ::jxx::lang::jbool isPeriodic() override { return periodNanos_!=0; }
     ::jxx::Ptr<V> get() override { std::unique_lock<std::mutex> l(mutex_); condition_.wait(l,[&]{return done_;}); return report_(); }
-    ::jxx::Ptr<V> get(
-        ::jxx::lang::jlong timeout,
-        const ::jxx::Ptr<TimeUnit>& unit) override {
-        if (unit == nullptr) throw ::jxx::lang::NullPointerException();
-        std::unique_lock<std::mutex> lock(mutex_);
-        if (!done_ && timeout <= 0) throw TimeoutException();
-        if (!condition_.wait_for(
-                lock, unit->toChrono(timeout), [&] { return done_; })) {
-            throw TimeoutException();
-        }
-        return report_();
+    ::jxx::Ptr<V> get(::jxx::lang::jlong timeout,const ::jxx::Ptr<TimeUnit>& unit) override {
+        if(!unit) throw ::jxx::lang::NullPointerException(); std::unique_lock<std::mutex> l(mutex_);
+        if(!condition_.wait_for(l,unit->toChrono(timeout),[&]{return done_;})) throw TimeoutException(); return report_();
     }
     ::jxx::lang::jlong getDelay(const ::jxx::Ptr<TimeUnit>& unit) const override {
         if(!unit) throw ::jxx::lang::NullPointerException();
@@ -92,7 +92,9 @@ private:
     }
     ::jxx::Ptr<V> report_(){if(cancelled_)throw CancellationException();if(failure_)throw ExecutionException(failure_);return result_;}
     inline static std::atomic<::jxx::lang::jlong> nextSequence_{0};
-    ::jxx::Ptr<::jxx::lang::Runnable> command_; ::jxx::Ptr<V> result_;
+    ::jxx::Ptr<::jxx::lang::Runnable> command_;
+    ::jxx::Ptr<Callable<V>> callable_;
+    ::jxx::Ptr<V> result_;
     clock::time_point trigger_; ::jxx::lang::jlong periodNanos_; ::jxx::lang::jlong sequence_;
     mutable std::mutex mutex_; std::condition_variable condition_;
     ::jxx::lang::jbool running_=false,done_=false,cancelled_=false;
