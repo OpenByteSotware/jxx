@@ -1,12 +1,12 @@
 #pragma once
 #include "awt/jxx.awt.Dimension.h"
-#include "swing/jxx.swing.JTextComponent.h"
+#include "swing/text/jxx.swing.text.JTextComponent.h"
 namespace jxx::swing
 {
-    class JTextArea : public ::jxx::lang::ClassBase<JTextArea,JTextComponent>
+    class JTextArea : public ::jxx::lang::ClassBase<JTextArea,::jxx::swing::text::JTextComponent>
     {
     public:
-        using JxxSuper=JTextComponent; using Super=::jxx::lang::ClassBase<JTextArea,JxxSuper>;
+        using JxxSuper=::jxx::swing::text::JTextComponent; using Super=::jxx::lang::ClassBase<JTextArea,JxxSuper>;
         JTextArea(); explicit JTextArea(const ::jxx::Ptr<::jxx::lang::String>& text); JTextArea(::jxx::lang::jint rows,::jxx::lang::jint columns); JTextArea(const ::jxx::Ptr<::jxx::lang::String>& text,::jxx::lang::jint rows,::jxx::lang::jint columns);
         void append(const ::jxx::Ptr<::jxx::lang::String>& text); void insert(const ::jxx::Ptr<::jxx::lang::String>& text,::jxx::lang::jint position); void replaceRange(const ::jxx::Ptr<::jxx::lang::String>& text,::jxx::lang::jint start,::jxx::lang::jint end);
         ::jxx::lang::jint getRows() const; void setRows(::jxx::lang::jint rows); ::jxx::lang::jint getColumns() const; void setColumns(::jxx::lang::jint columns);

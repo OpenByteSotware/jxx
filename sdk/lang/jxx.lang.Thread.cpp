@@ -39,6 +39,7 @@ struct Thread::NativeState {
 
     jlong id = 0;
     jxx::Ptr<ThreadGroup> group;
+    jxx::Ptr<Thread::UncaughtExceptionHandler> uncaughtExceptionHandler;
     std::vector<std::function<void()>> inheritedValues;
 };
 
@@ -48,6 +49,8 @@ Thread::currentThread_;
 namespace {
 
 std::atomic<jlong> nextThreadId{1};
+std::mutex defaultHandlerMutex;
+jxx::Ptr<Thread::UncaughtExceptionHandler> defaultUncaughtExceptionHandler;
 
 jxx::Ptr<String> defaultThreadName(jlong id) {
     return jxx::NEW<String>(
@@ -147,7 +150,7 @@ void Thread::entry_(
     }
     catch (const Throwable& throwable) {
         try {
-            self->state_->group->uncaughtException(self, throwable.cloneThrowable());
+            self->dispatchUncaughtException_(throwable.cloneThrowable());
         }
         catch (...) {
         }
@@ -361,6 +364,46 @@ void Thread::setDaemon(jbool daemon) {
     }
 
     state_->daemon.store(daemon);
+}
+
+void Thread::setDefaultUncaughtExceptionHandler(
+    const jxx::Ptr<UncaughtExceptionHandler>& handler) {
+    std::lock_guard<std::mutex> lock(defaultHandlerMutex);
+    defaultUncaughtExceptionHandler = handler;
+}
+
+jxx::Ptr<Thread::UncaughtExceptionHandler>
+Thread::getDefaultUncaughtExceptionHandler() {
+    std::lock_guard<std::mutex> lock(defaultHandlerMutex);
+    return defaultUncaughtExceptionHandler;
+}
+
+void Thread::setUncaughtExceptionHandler(
+    const jxx::Ptr<UncaughtExceptionHandler>& handler) {
+    std::lock_guard<std::mutex> lock(state_->mutex);
+    state_->uncaughtExceptionHandler = handler;
+}
+
+jxx::Ptr<Thread::UncaughtExceptionHandler>
+Thread::getUncaughtExceptionHandler() const {
+    std::lock_guard<std::mutex> lock(state_->mutex);
+    if (state_->uncaughtExceptionHandler != nullptr) {
+        return state_->uncaughtExceptionHandler;
+    }
+    if (state_->group == nullptr) {
+        return nullptr;
+    }
+    return jxx::CAST<UncaughtExceptionHandler>(state_->group);
+}
+
+void Thread::dispatchUncaughtException_(
+    const jxx::Ptr<Throwable>& throwable) {
+    const auto handler = getUncaughtExceptionHandler();
+    if (handler != nullptr) {
+        handler->uncaughtException(
+            jxx::CAST<Thread>(thisPtr()),
+            throwable);
+    }
 }
 
 Thread::State Thread::getState() const {

@@ -1,11 +1,11 @@
 #pragma once
-#include "swing/jxx.swing.JTextComponent.h"
+#include "swing/text/jxx.swing.text.JTextComponent.h"
 namespace jxx::swing
 {
-    class JEditorPane : public ::jxx::lang::ClassBase<JEditorPane, JTextComponent>
+    class JEditorPane : public ::jxx::lang::ClassBase<JEditorPane, ::jxx::swing::text::JTextComponent>
     {
     public:
-        using JxxSuper = JTextComponent;
+        using JxxSuper = ::jxx::swing::text::JTextComponent;
         using Super = ::jxx::lang::ClassBase<JEditorPane, JxxSuper>;
         JEditorPane();
         JEditorPane(const ::jxx::Ptr<::jxx::lang::String>& type,

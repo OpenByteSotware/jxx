@@ -6,17 +6,24 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.Thread.h"
 #include "lang/jxx.lang.buildin_array.h"
 #include "lang/jxx_types.h"
 
 namespace jxx::lang {
-class Thread;
 class Throwable;
 
-class ThreadGroup : public ClassBase<ThreadGroup, Object> {
+class ThreadGroup
+    : public ClassBase<
+          ThreadGroup,
+          Object,
+          Thread::UncaughtExceptionHandler> {
 public:
     using JxxSuper = Object;
-    using Super = ClassBase<ThreadGroup, JxxSuper>;
+    using Super = ClassBase<
+        ThreadGroup,
+        JxxSuper,
+        Thread::UncaughtExceptionHandler>;
 
     explicit ThreadGroup(const jxx::Ptr<String>& name);
     ThreadGroup(const jxx::Ptr<ThreadGroup>& parent,
@@ -46,7 +53,7 @@ public:
     void list_(jint indent) const;
     jbool allowThreadSuspension(jbool value);
     void uncaughtException(const jxx::Ptr<Thread>& thread,
-                           const jxx::Ptr<Throwable>& throwable);
+                           const jxx::Ptr<Throwable>& throwable) override;
     jxx::Ptr<String> toString() const override;
 
     static jxx::Ptr<ThreadGroup> systemThreadGroup();

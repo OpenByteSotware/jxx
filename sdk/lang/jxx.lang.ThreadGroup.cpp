@@ -125,6 +125,13 @@ void ThreadGroup::uncaughtException(
         parent_->uncaughtException(thread, throwable);
         return;
     }
+    const auto defaultHandler =
+        Thread::getDefaultUncaughtExceptionHandler();
+    if (defaultHandler != nullptr &&
+        defaultHandler.get() != this) {
+        defaultHandler->uncaughtException(thread, throwable);
+        return;
+    }
     std::cerr << "Exception in thread "
               << (thread == nullptr ? std::string("unknown") : thread->getName()->utf8())
               << ": " << throwable->toString()->utf8() << std::endl;

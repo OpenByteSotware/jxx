@@ -3,18 +3,18 @@
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
 namespace jxx::swing
 {
-	JTable::JTable() :JTable(::jxx::NEW<DefaultTableModel>())
+	JTable::JTable() :JTable(::jxx::NEW<::jxx::swing::table::DefaultTableModel>())
 	{
-	} JTable::JTable(const ::jxx::Ptr<TableModel>& m) :Super()
+	} JTable::JTable(const ::jxx::Ptr<::jxx::swing::table::TableModel>& m) :Super()
 	{
 		setModel(m);
-	} JTable::JTable(::jxx::lang::jint r, ::jxx::lang::jint c) :JTable(::jxx::NEW<DefaultTableModel>(r, c))
+	} JTable::JTable(::jxx::lang::jint r, ::jxx::lang::jint c) :JTable(::jxx::NEW<::jxx::swing::table::DefaultTableModel>(r, c))
 	{
 	}
-	void JTable::setModel(const ::jxx::Ptr<TableModel>& m)
+	void JTable::setModel(const ::jxx::Ptr<::jxx::swing::table::TableModel>& m)
 	{
 		if (!m)throw ::jxx::lang::NullPointerException("model"); model_ = m; clearSelection();
-	} ::jxx::Ptr<TableModel> JTable::getModel()const
+	} ::jxx::Ptr<::jxx::swing::table::TableModel> JTable::getModel()const
 	{
 		return model_;
 	}

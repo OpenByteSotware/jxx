@@ -16,6 +16,7 @@ class LockSupport;
 namespace jxx::lang {
 
 class ThreadGroup;
+class Throwable;
 
 class Thread
     : public jxx::lang::ClassBase<
@@ -41,6 +42,16 @@ public:
         WAITING,
         TIMED_WAITING,
         TERMINATED
+    };
+
+    class UncaughtExceptionHandler
+        : public jxx::lang::InterfaceBase<UncaughtExceptionHandler> {
+    public:
+        ~UncaughtExceptionHandler() override = default;
+
+        virtual void uncaughtException(
+            const jxx::Ptr<Thread>& thread,
+            const jxx::Ptr<Throwable>& throwable) = 0;
     };
 
     Thread();
@@ -107,6 +118,16 @@ public:
 
     State getState() const;
 
+    static void setDefaultUncaughtExceptionHandler(
+        const jxx::Ptr<UncaughtExceptionHandler>& handler);
+    static jxx::Ptr<UncaughtExceptionHandler>
+        getDefaultUncaughtExceptionHandler();
+
+    void setUncaughtExceptionHandler(
+        const jxx::Ptr<UncaughtExceptionHandler>& handler);
+    jxx::Ptr<UncaughtExceptionHandler>
+        getUncaughtExceptionHandler() const;
+
     jxx::Ptr<String> toString() const override;
 
 public:
@@ -121,6 +142,9 @@ private:
 
     static void entry_(
         const jxx::Ptr<Thread>& self);
+
+    void dispatchUncaughtException_(
+        const jxx::Ptr<Throwable>& throwable);
 
     static thread_local std::weak_ptr<Thread>
         currentThread_;

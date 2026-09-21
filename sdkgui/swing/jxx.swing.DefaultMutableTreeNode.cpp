@@ -1,10 +1,1 @@
 #include "swing/jxx.swing.DefaultMutableTreeNode.h"
-#include "lang/jxx.lang.IllegalStateException.h"
-namespace jxx::swing
-{
-    DefaultMutableTreeNode::DefaultMutableTreeNode()=default; DefaultMutableTreeNode::DefaultMutableTreeNode(const ::jxx::Ptr<::jxx::lang::Object>& v):userObject_(v){} DefaultMutableTreeNode::DefaultMutableTreeNode(const ::jxx::Ptr<::jxx::lang::Object>& v,::jxx::lang::jbool a):userObject_(v),allowsChildren_(a){}
-    void DefaultMutableTreeNode::add(const ::jxx::Ptr<DefaultMutableTreeNode>& c){insert(c,getChildCount());} void DefaultMutableTreeNode::insert(const ::jxx::Ptr<DefaultMutableTreeNode>& c,::jxx::lang::jint i){if(!allowsChildren_)throw ::jxx::lang::IllegalStateException("children not allowed");if(!c||i<0||i>getChildCount())throw ::jxx::lang::IndexOutOfBoundsException("index");c->parent_=::jxx::CAST<DefaultMutableTreeNode>(thisPtr());children_.insert(children_.begin()+i,c);} void DefaultMutableTreeNode::remove(::jxx::lang::jint i){if(i<0||i>=getChildCount())throw ::jxx::lang::IndexOutOfBoundsException("index");children_[i]->parent_.reset();children_.erase(children_.begin()+i);} void DefaultMutableTreeNode::removeAllChildren(){while(!children_.empty())remove(getChildCount()-1);}
-    ::jxx::Ptr<TreeNode> DefaultMutableTreeNode::getChildAt(::jxx::lang::jint i)const{if(i<0||i>=getChildCount())throw ::jxx::lang::IndexOutOfBoundsException("index");return children_[i];} ::jxx::lang::jint DefaultMutableTreeNode::getChildCount()const{return static_cast<::jxx::lang::jint>(children_.size());} ::jxx::Ptr<TreeNode> DefaultMutableTreeNode::getParent()const{return parent_.lock();}
-    ::jxx::lang::jbool DefaultMutableTreeNode::getAllowsChildren()const{return allowsChildren_;} void DefaultMutableTreeNode::setAllowsChildren(::jxx::lang::jbool v){allowsChildren_=v;if(!v)removeAllChildren();} ::jxx::lang::jbool DefaultMutableTreeNode::isLeaf()const{return children_.empty();}
-    void DefaultMutableTreeNode::setUserObject(const ::jxx::Ptr<::jxx::lang::Object>& v){userObject_=v;} ::jxx::Ptr<::jxx::lang::Object> DefaultMutableTreeNode::getUserObject()const{return userObject_;}
-}
