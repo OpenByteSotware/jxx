@@ -5,6 +5,7 @@
 
 #include "lang/jxx_types.h"
 #include "util/jxx.util.Enumeration.h"
+#include "util/jxx.util.NoSuchElementException.h"
 #include "lang/jxx.lang.Object.h"
 
 namespace jxx::util
@@ -29,7 +30,7 @@ namespace jxx::util
         jxx::Ptr<T> nextElement() override
         {
             if (index_ >= items_.size())
-                throw std::runtime_error("no more elements");
+                throw jxx::util::NoSuchElementException();
             return items_[index_++];
         }
 
