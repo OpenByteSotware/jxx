@@ -85,9 +85,8 @@ jxx::Ptr<String> System::lineSeparator() {
 }
 
 jxx::Ptr<String> System::getenv(const jxx::Ptr<String>& name) {
-    if (name == nullptr) {
-        throw NullPointerException();
-    }
+    if (name == nullptr) throw NullPointerException();
+    if (name->length() == 0) throw IllegalArgumentException();
     const char* value = std::getenv(name->utf8().c_str());
     return value == nullptr ? nullptr : jxx::NEW<String>(value);
 }
