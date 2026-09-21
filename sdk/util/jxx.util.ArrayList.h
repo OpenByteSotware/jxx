@@ -9,6 +9,10 @@
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.buildin_array.h"
 #include "util/jxx.util.AbstractList.h"
+#include "util/jxx.util.ComparatorSuper.h"
+#include "lang/jxx.lang.Comparable.h"
+#include "util/function/jxx.util.function.UnaryOperator.h"
+#include "util/function/jxx.util.function.PredicateSuper.h"
 #include "util/jxx.util.ConcurrentModificationException.h"
 #include "util/jxx.util.List.h"
 #include "util/jxx.util.ListIterator.h"
@@ -429,6 +433,64 @@ public:
         size_ += count;
         ++this->modCount;
         return true;
+    }
+
+    jxx::lang::jbool removeIf(
+        const jxx::Ptr<jxx::util::function::PredicateSuper<E>>& filter) {
+        if (filter == nullptr) throw jxx::lang::NullPointerException();
+        jxx::lang::jint writeIndex = 0;
+        const auto oldSize = size_;
+        for (jxx::lang::jint readIndex = 0; readIndex < oldSize; ++readIndex) {
+            const auto element = (*elementData_)(readIndex);
+            if (!filter->test(element)) {
+                (*elementData_)(writeIndex++) = element;
+            }
+        }
+        if (writeIndex == oldSize) return false;
+        for (auto index = writeIndex; index < oldSize; ++index) {
+            (*elementData_)(index) = nullptr;
+        }
+        size_ = writeIndex;
+        ++this->modCount;
+        return true;
+    }
+
+    void replaceAll(
+        const jxx::Ptr<jxx::util::function::UnaryOperator<E>>& function) {
+        if (function == nullptr) throw jxx::lang::NullPointerException();
+        const auto expectedModCount = this->modCount;
+        for (jxx::lang::jint index = 0; index < size_; ++index) {
+            (*elementData_)(index) = function->apply((*elementData_)(index));
+            if (this->modCount != expectedModCount) {
+                throw jxx::util::ConcurrentModificationException();
+            }
+        }
+        ++this->modCount;
+    }
+
+    void sort(const jxx::Ptr<jxx::util::ComparatorSuper<E>>& comparator) {
+        const auto expectedModCount = this->modCount;
+        std::vector<jxx::Ptr<E>> values;
+        values.reserve(static_cast<std::size_t>(size_));
+        for (jxx::lang::jint index = 0; index < size_; ++index) {
+            values.push_back((*elementData_)(index));
+        }
+        std::stable_sort(
+            values.begin(), values.end(),
+            [&](const jxx::Ptr<E>& left, const jxx::Ptr<E>& right) {
+                if (comparator != nullptr) return comparator->compareSuper(left, right) < 0;
+                if (left == nullptr || right == nullptr) throw jxx::lang::NullPointerException();
+                const auto comparable = jxx::CAST<jxx::lang::Comparable<E>>(left);
+                if (comparable == nullptr) throw jxx::lang::ClassCastException();
+                return comparable->compareTo(right) < 0;
+            });
+        for (jxx::lang::jint index = 0; index < size_; ++index) {
+            (*elementData_)(index) = values[static_cast<std::size_t>(index)];
+        }
+        if (this->modCount != expectedModCount) {
+            throw jxx::util::ConcurrentModificationException();
+        }
+        ++this->modCount;
     }
 
     jxx::Ptr<Iterator<E>> iterator() override {

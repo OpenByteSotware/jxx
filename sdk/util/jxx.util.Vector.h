@@ -297,6 +297,21 @@ public:
 
     ~Vector() override = default;
 
+    void copyInto(
+        const jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<E>, 1U>>& destination) const {
+        if (destination == nullptr) throw jxx::lang::NullPointerException();
+        this->synchronized([&] {
+            if (destination->length < elements_.size()) {
+                throw jxx::lang::ArrayIndexOutOfBoundsException();
+            }
+            for (jxx::lang::jint index = 0;
+                 index < static_cast<jxx::lang::jint>(elements_.size());
+                 ++index) {
+                (*destination)[index] = elements_[static_cast<std::size_t>(index)];
+            }
+        });
+    }
+
     void trimToSize() {
         this->synchronized([&]() {
             std::vector<jxx::Ptr<E>> compact(elements_);
