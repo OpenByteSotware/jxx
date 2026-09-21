@@ -20,6 +20,7 @@
 #include "util/jxx.util.MapEntry.h"
 #include "util/jxx.util.NoSuchElementException.h"
 #include "util/jxx.util.Spliterator.h"
+#include "util/jxx.util.spliterators.IteratorSpliterator.h"
 #include "util/jxx.util.wildcard.CollectionAny.h"
 #include "util/jxx.util.wildcard.CollectionExtends.h"
 #include "lang/jxx.lang.ClassInfo.h"
@@ -307,7 +308,8 @@ namespace jxx::util
 			}
 			jxx::Ptr<Spliterator<K>> spliterator() override
 			{
-				throw jxx::lang::UnsupportedOperationException();
+				return jxx::NEW<jxx::util::spliterators::IteratorSpliterator<K>>(
+					iterator(), size(), Spliterator<K>::DISTINCT | Spliterator<K>::SIZED);
 			}
 		};
 
@@ -370,7 +372,8 @@ namespace jxx::util
 			}
 			jxx::Ptr<Spliterator<V>> spliterator() override
 			{
-				throw jxx::lang::UnsupportedOperationException();
+				return jxx::NEW<jxx::util::spliterators::IteratorSpliterator<V>>(
+					iterator(), size(), Spliterator<V>::SIZED);
 			}
 		};
 
@@ -450,7 +453,9 @@ namespace jxx::util
 			}
 			jxx::Ptr<Spliterator<MapEntry<K, V>>> spliterator() override
 			{
-				throw jxx::lang::UnsupportedOperationException();
+				return jxx::NEW<jxx::util::spliterators::IteratorSpliterator<MapEntry<K, V>>>(
+					iterator(), size(), Spliterator<MapEntry<K, V>>::DISTINCT |
+					Spliterator<MapEntry<K, V>>::SIZED);
 			}
 		};
 

@@ -6,6 +6,7 @@
 #include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "util/jxx.util.AbstractCollection.h"
 #include "util/jxx.util.Iterator.h"
+#include "util/jxx.util.spliterators.IteratorSpliterator.h"
 #include "util/jxx.util.Set.h"
 #include "util/jxx.util.wildcard.CollectionAny.h"
 
@@ -77,7 +78,10 @@ namespace jxx::util {
         jxx::Ptr<Spliterator<E>>
             spliterator() override
         {
-            throw jxx::lang::UnsupportedOperationException();
+            return jxx::NEW<jxx::util::spliterators::IteratorSpliterator<E>>(
+                this->iterator(),
+                this->size(),
+                Spliterator<E>::DISTINCT | Spliterator<E>::SIZED);
         }
 
 
