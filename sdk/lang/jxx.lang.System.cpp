@@ -14,6 +14,7 @@
 #include "lang/jxx.lang.Runtime.h"
 #include "lang/jxx.lang.SecurityManager.h"
 #include "lang/jxx.lang.RuntimePermission.h"
+#include "util/jxx.util.Properties.h"
 
 using namespace jxx::io;
 namespace jxx { namespace lang {
@@ -28,8 +29,8 @@ std::mutex& propertyMutex() {
     return mutex;
 }
 
-std::unordered_map<std::string, std::string>& properties() {
-    static std::unordered_map<std::string, std::string> values;
+jxx::Ptr<jxx::util::Properties>& systemProperties() {
+    static auto values = jxx::NEW<jxx::util::Properties>();
     return values;
 }
 
@@ -125,49 +126,49 @@ void System::exit(jxx::lang::jint status) {
     Runtime::getRuntime()->exit(status);
 }
 
+jxx::Ptr<jxx::util::Properties> System::getProperties() {
+    std::lock_guard<std::mutex> guard(propertyMutex());
+    return systemProperties();
+}
+
+void System::setProperties(
+    const jxx::Ptr<jxx::util::Properties>& values) {
+    std::lock_guard<std::mutex> guard(propertyMutex());
+    systemProperties() = values == nullptr
+        ? jxx::NEW<jxx::util::Properties>()
+        : values;
+}
+
 jxx::Ptr<String> System::getProperty(const jxx::Ptr<String>& key) {
     requirePropertyKey(key);
     std::lock_guard<std::mutex> guard(propertyMutex());
-    const auto found = properties().find(key->utf8());
-    return found == properties().end()
-        ? nullptr
-        : jxx::NEW<String>(found->second);
+    return systemProperties()->getProperty(key);
 }
 
 jxx::Ptr<String> System::getProperty(
     const jxx::Ptr<String>& key,
     const jxx::Ptr<String>& defaultValue) {
-    const auto value = getProperty(key);
-    return value == nullptr ? defaultValue : value;
+    requirePropertyKey(key);
+    std::lock_guard<std::mutex> guard(propertyMutex());
+    return systemProperties()->getProperty(key, defaultValue);
 }
 
 jxx::Ptr<String> System::setProperty(
     const jxx::Ptr<String>& key,
     const jxx::Ptr<String>& value) {
     requirePropertyKey(key);
-    if (value == nullptr) {
-        throw NullPointerException();
-    }
+    if (value == nullptr) throw NullPointerException();
     std::lock_guard<std::mutex> guard(propertyMutex());
-    auto& values = properties();
-    const auto found = values.find(key->utf8());
-    auto previous = found == values.end()
-        ? nullptr
-        : jxx::NEW<String>(found->second);
-    values[key->utf8()] = value->utf8();
-    return previous;
+    return jxx::CAST<String>(systemProperties()->setProperty(key, value));
 }
 
 jxx::Ptr<String> System::clearProperty(const jxx::Ptr<String>& key) {
     requirePropertyKey(key);
     std::lock_guard<std::mutex> guard(propertyMutex());
-    auto& values = properties();
-    const auto found = values.find(key->utf8());
-    if (found == values.end()) {
-        return nullptr;
+    const auto previous = systemProperties()->getProperty(key);
+    if (previous != nullptr) {
+        systemProperties()->remove(jxx::CAST<Object>(key));
     }
-    auto previous = jxx::NEW<String>(found->second);
-    values.erase(found);
     return previous;
 }
 

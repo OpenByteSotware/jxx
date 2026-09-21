@@ -12,7 +12,7 @@
 #include "io/jxx.io.FileInputStream.h"
 #include "io/jxx.io.FileOutputStream.h"
 
-namespace jxx { namespace lang {
+namespace jxx { namespace util { class Properties; } namespace lang {
 class Object;
 class SecurityManager;
 class String;
@@ -44,6 +44,9 @@ struct System {
     static jxx::Ptr<jxx::lang::SecurityManager> getSecurityManager();
     static void setSecurityManager(const jxx::Ptr<jxx::lang::SecurityManager>& manager);
 
+    static jxx::Ptr<jxx::util::Properties> getProperties();
+    static void setProperties(
+        const jxx::Ptr<jxx::util::Properties>& properties);
     static jxx::Ptr<jxx::lang::String> getProperty(
         const jxx::Ptr<jxx::lang::String>& key);
     static jxx::Ptr<jxx::lang::String> getProperty(
