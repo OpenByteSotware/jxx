@@ -13,6 +13,7 @@ namespace jxx::awt::event
 
 namespace jxx::awt
 {
+    class FocusTraversalPolicy;
     class Container :
         public ::jxx::lang::ClassBase<Container, Component>
     {
@@ -52,6 +53,19 @@ namespace jxx::awt
         void validate() override;
         virtual void doLayout();
 
+        virtual void setFocusTraversalPolicy(
+            const ::jxx::Ptr<FocusTraversalPolicy>& policy);
+        virtual ::jxx::Ptr<FocusTraversalPolicy>
+            getFocusTraversalPolicy() const;
+        virtual void setFocusCycleRoot(::jxx::lang::jbool value);
+        virtual ::jxx::lang::jbool isFocusCycleRoot() const;
+        virtual ::jxx::lang::jbool isFocusCycleRoot(
+            const ::jxx::Ptr<Container>& container) const;
+        virtual void setFocusTraversalPolicyProvider(
+            ::jxx::lang::jbool value);
+        virtual ::jxx::lang::jbool
+            isFocusTraversalPolicyProvider() const;
+
     protected:
         virtual void processContainerEvent(
             const ::jxx::Ptr<::jxx::awt::event::ContainerEvent>& event);
@@ -65,6 +79,9 @@ namespace jxx::awt
 
         std::vector<::jxx::Ptr<Component>> components_;
         ::jxx::Ptr<LayoutManager> layout_;
+        ::jxx::Ptr<FocusTraversalPolicy> focusTraversalPolicy_;
+        ::jxx::lang::jbool focusCycleRoot_ = false;
+        ::jxx::lang::jbool focusTraversalPolicyProvider_ = false;
         std::vector<::jxx::Ptr<::jxx::awt::event::ContainerListener>>
             containerListeners_;
     };

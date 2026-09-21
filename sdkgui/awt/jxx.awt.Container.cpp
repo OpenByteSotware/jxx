@@ -1,5 +1,7 @@
 #include "awt/jxx.awt.Container.h"
 
+#include "awt/jxx.awt.FocusTraversalPolicy.h"
+
 #include <algorithm>
 
 #include "awt/event/jxx.awt.event.ContainerEvent.h"
@@ -180,4 +182,53 @@ namespace jxx::awt
         if (layout_)
             layout_->layoutContainer(::jxx::CAST<Container>(thisPtr()));
     }
+    void Container::setFocusTraversalPolicy(
+        const ::jxx::Ptr<FocusTraversalPolicy>& policy)
+    {
+        focusTraversalPolicy_ = policy;
+    }
+
+    ::jxx::Ptr<FocusTraversalPolicy>
+    Container::getFocusTraversalPolicy() const
+    {
+        return focusTraversalPolicy_;
+    }
+
+    void Container::setFocusCycleRoot(::jxx::lang::jbool value)
+    {
+        focusCycleRoot_ = value;
+    }
+
+    ::jxx::lang::jbool Container::isFocusCycleRoot() const
+    {
+        return focusCycleRoot_;
+    }
+
+    ::jxx::lang::jbool Container::isFocusCycleRoot(
+        const ::jxx::Ptr<Container>& container) const
+    {
+        if (container == nullptr)
+            return false;
+        auto current = getParent();
+        while (current != nullptr)
+        {
+            if (current == container)
+                return container->isFocusCycleRoot();
+            current = current->getParent();
+        }
+        return false;
+    }
+
+    void Container::setFocusTraversalPolicyProvider(
+        ::jxx::lang::jbool value)
+    {
+        focusTraversalPolicyProvider_ = value;
+    }
+
+    ::jxx::lang::jbool
+    Container::isFocusTraversalPolicyProvider() const
+    {
+        return focusTraversalPolicyProvider_;
+    }
+
 }
