@@ -338,6 +338,17 @@ namespace jxx
 				return previous;
 			}
 
+			// Function-template facade keeps Map::remove(key, value) visible on the
+			// concrete type without introducing another virtual final overrider.
+			template <typename Dummy = void>
+			jxx::lang::jbool remove(
+				const jxx::Ptr<jxx::lang::Object>& key,
+				const jxx::Ptr<jxx::lang::Object>& value)
+			{
+				(void)sizeof(Dummy*);
+				return Map<K, V>::remove(key, value);
+			}
+
 			virtual jxx::Ptr<V> remove(
 				const jxx::Ptr<jxx::lang::Object>& key) override
 			{
