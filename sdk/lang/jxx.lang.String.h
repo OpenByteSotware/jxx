@@ -45,8 +45,8 @@ namespace jxx::lang {
     class String final
         : public jxx::lang::ClassBase<String, Object, CharSequence, Comparable<String>, jxx::io::Serializable> {
 public:
-    using JavaSuper = Object;
-    using Super = jxx::lang::ClassBase<String, Object, CharSequence, Comparable<String>, jxx::io::Serializable>;
+    using JxxSuper = Object;
+    using Super = jxx::lang::ClassBase<String, JxxSuper, CharSequence, Comparable<String>, jxx::io::Serializable>;
 
     public:
         static jxx::Ptr<ClassAny> Class();
@@ -197,8 +197,7 @@ public:
         jxx::Ptr<jxx::util::IntStream> chars() const;
         jxx::Ptr<jxx::util::IntStream> codePoints() const;
 
-        // Java: String intern()
-        //jxx::Ptr<String> intern() const;
+        jxx::Ptr<String> intern() const;
 
         // ---------------------------------------------------------------------
         // Static methods (ALL Java 8 public static methods)

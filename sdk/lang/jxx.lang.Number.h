@@ -5,8 +5,8 @@
 namespace jxx::lang {
 class Number : public jxx::lang::ClassBase<Number, Object, jxx::io::Serializable> {
 public:
-    using JavaSuper = Object;
-    using Super = jxx::lang::ClassBase<Number, Object, jxx::io::Serializable>;
+    using JxxSuper = Object;
+    using Super = jxx::lang::ClassBase<Number, JxxSuper, jxx::io::Serializable>;
 
 public:
     virtual ~Number() override = default;

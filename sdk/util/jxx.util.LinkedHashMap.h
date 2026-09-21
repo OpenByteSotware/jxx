@@ -22,11 +22,11 @@ template <typename K, typename V>
 class LinkedHashMap
     : public jxx::lang::ClassBase<LinkedHashMap<K, V>, HashMap<K, V>> {
 public:
-    using JavaSuper = HashMap<K, V>;
+    using JxxSuper = HashMap<K, V>;
     using Super =
         jxx::lang::ClassBase<
             LinkedHashMap<K, V>,
-            JavaSuper>;
+            JxxSuper>;
 
     struct OrderKeyHash {
         std::size_t operator()(const jxx::Ptr<K>& key) const {

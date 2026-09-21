@@ -679,18 +679,25 @@ namespace jxx::lang {
         for (jint i = 0; i < (jint)cps.size(); ++i) (*a)[i] = cps[(size_t)i];
         return jxx::util::IntStream::of(a);
     }
-    /*
     jxx::Ptr<String> String::intern() const {
-        std::lock_guard<std::mutex> lk(internMutex_);
-        auto it = internPool_.find(value_);
-        if (it != internPool_.end()) {
-            if (auto existing = it->second.lock()) return existing;
+        static std::mutex poolMutex;
+        static std::unordered_map<
+            std::u16string,
+            std::weak_ptr<String>> pool;
+
+        std::lock_guard<std::mutex> lock(poolMutex);
+        const auto existing = pool.find(value_);
+        if (existing != pool.end()) {
+            if (auto canonical = existing->second.lock()) {
+                return canonical;
+            }
+            pool.erase(existing);
         }
-        auto me = jxx::CAST<String, jxx::lang::Object>(this->thisPtr());
-        internPool_[value_] = me;
-        return me;
+
+        auto canonical = jxx::CAST<String>(this->thisPtr());
+        pool.emplace(value_, canonical);
+        return canonical;
     }
-    */
     // ---- static methods ----
     jxx::Ptr<String> String::valueOf(jbool b) { return jxx::NEW<String>(b ? "true" : "false"); }
     jxx::Ptr<String> String::valueOf(jchar c) {
