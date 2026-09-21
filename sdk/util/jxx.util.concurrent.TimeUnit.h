@@ -3,6 +3,8 @@
 #include <chrono>
 #include <limits>
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.Thread.h"
+#include "lang/jxx.lang.NullPointerException.h"
 namespace jxx::util::concurrent {
 class TimeUnit final : public jxx::lang::Object {
 public:
@@ -36,6 +38,24 @@ public:
     jxx::lang::jlong toHours(jxx::lang::jlong d) const noexcept{return toNanos(d)/factor(Kind::HOURS);}
     jxx::lang::jlong toDays(jxx::lang::jlong d) const noexcept{return toNanos(d)/factor(Kind::DAYS);}
     std::chrono::nanoseconds toChrono(jxx::lang::jlong d) const noexcept{return std::chrono::nanoseconds(toNanos(d));}
+    void sleep(jxx::lang::jlong timeout) const {
+        if (timeout <= 0) return;
+        const auto nanos = toNanos(timeout);
+        const auto millis = nanos / 1000000LL;
+        const auto remainder = static_cast<jxx::lang::jint>(nanos % 1000000LL);
+        jxx::lang::Thread::sleep(millis, remainder);
+    }
+
+    void timedJoin(
+        const jxx::Ptr<jxx::lang::Thread>& thread,
+        jxx::lang::jlong timeout) const {
+        if (thread == nullptr) throw jxx::lang::NullPointerException();
+        if (timeout <= 0) return;
+        const auto nanos = toNanos(timeout);
+        thread->join(
+            nanos / 1000000LL,
+            static_cast<jxx::lang::jint>(nanos % 1000000LL));
+    }
 protected:jxx::Ptr<jxx::lang::Object> cloneImpl() const override{return jxx::Ptr<jxx::lang::Object>(new TimeUnit(kind_));}
 };
 } // namespace jxx::util::concurrent
