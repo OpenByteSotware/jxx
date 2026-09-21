@@ -27,6 +27,7 @@ public:
     static const jxx::Ptr<ClassAny> TYPE;
     static jxx::Ptr<ClassAny> Class();
     explicit Float(jfloat value);
+    explicit Float(::jxx::lang::jdouble value);
     explicit Float(const jxx::Ptr<String>& value);
     static jxx::Ptr<Float> valueOf(jfloat value);
     static jxx::Ptr<Float> valueOf(const jxx::Ptr<String>& value);
@@ -35,6 +36,10 @@ public:
     static jxx::Ptr<String> toHexString(jfloat value);
     static jbool isNaN(jfloat value);
     static jbool isInfinite(jfloat value);
+    static ::jxx::lang::jbool isFinite(::jxx::lang::jfloat value) noexcept;
+    static ::jxx::lang::jfloat sum(::jxx::lang::jfloat left, ::jxx::lang::jfloat right) noexcept;
+    static ::jxx::lang::jfloat min(::jxx::lang::jfloat left, ::jxx::lang::jfloat right) noexcept;
+    static ::jxx::lang::jfloat max(::jxx::lang::jfloat left, ::jxx::lang::jfloat right) noexcept;
     jbool isNaN() const;
     jbool isInfinite() const;
     static jint floatToIntBits(jfloat value);

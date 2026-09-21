@@ -35,6 +35,10 @@ public:
     static jxx::Ptr<String> toHexString(jdouble value);
     static jbool isNaN(jdouble value);
     static jbool isInfinite(jdouble value);
+    static ::jxx::lang::jbool isFinite(::jxx::lang::jdouble value) noexcept;
+    static ::jxx::lang::jdouble sum(::jxx::lang::jdouble left, ::jxx::lang::jdouble right) noexcept;
+    static ::jxx::lang::jdouble min(::jxx::lang::jdouble left, ::jxx::lang::jdouble right) noexcept;
+    static ::jxx::lang::jdouble max(::jxx::lang::jdouble left, ::jxx::lang::jdouble right) noexcept;
     jbool isNaN() const;
     jbool isInfinite() const;
     static jlong doubleToLongBits(jdouble value);
