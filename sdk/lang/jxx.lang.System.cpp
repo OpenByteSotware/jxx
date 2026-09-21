@@ -65,6 +65,31 @@ void System::init(){
     System::err = jxx::NEW<PrintStream>(errOs, true);
 }
 
+namespace {
+void checkSetIoPermission() {
+    const auto manager = System::getSecurityManager();
+    if (manager != nullptr) {
+        manager->checkPermission(
+            jxx::NEW<RuntimePermission>(jxx::NEW<String>("setIO")));
+    }
+}
+} // namespace
+
+void System::setIn(const jxx::Ptr<jxx::io::InputStream>& stream) {
+    checkSetIoPermission();
+    in = stream;
+}
+
+void System::setOut(const jxx::Ptr<jxx::io::PrintStream>& stream) {
+    checkSetIoPermission();
+    out = stream;
+}
+
+void System::setErr(const jxx::Ptr<jxx::io::PrintStream>& stream) {
+    checkSetIoPermission();
+    err = stream;
+}
+
 jxx::lang::jlong System::currentTimeMillis() {
     using namespace std::chrono;
     auto now = time_point_cast<milliseconds>(system_clock::now());

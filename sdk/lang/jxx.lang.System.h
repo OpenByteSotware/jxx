@@ -25,9 +25,9 @@ struct System {
     static std::shared_ptr<jxx::io::PrintStream> err;
 
     static void init();
-    static void setIn(std::shared_ptr<jxx::io::InputStream> s) { in = std::move(s); }
-    static void setOut(std::shared_ptr<jxx::io::PrintStream> s) { out = std::move(s); }
-    static void setErr(std::shared_ptr<jxx::io::PrintStream> s) { err = std::move(s); }
+    static void setIn(const jxx::Ptr<jxx::io::InputStream>& stream);
+    static void setOut(const jxx::Ptr<jxx::io::PrintStream>& stream);
+    static void setErr(const jxx::Ptr<jxx::io::PrintStream>& stream);
 
     // Java-like utilities
     static jxx::lang::jlong currentTimeMillis();
