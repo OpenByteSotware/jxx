@@ -13,11 +13,16 @@ Prereq:
 pip install javalang - used for Abstract tree anaylsis of java source
 C++17 compiler with all the C++17 abilities
 
-No open source libraries used under the hood to keep from dependecies across platforms.
+Open source libraries can be included but must be MIT compatible license so that proprietary applications can link statically
+to jxx libraries.  See included open source libraries used.  3rdparty folder contains open source libraries used.
+They must be c++17 compatible.  Cross platform and have a cmake file for cross complilation.
 So if adding new capabilites to jxx, you will need to implement from ground up.  Cannot include boost
-libraries.  Only stl, clib can be used.  You can reimplement a behavior required using those.
-The dependecy tree can become large and changes can have a ripple effect.  That is the reason to
-implement from group up.
+libraries.  The dependecy tree can become large and changes can have a ripple effect.  
+
+WxWidgets is built outside of jxx because it is so large.  Rebuilding each time jxx changes takes a very long time.
+See below on how to build wxWidgets for gui sdk part (awt and swing) for jxx.
+
+the other open source packages are included in jxx projects because it may need to rebuilt them.  They are faster to build.
 
 With that said sometimes it is too much work to build from ground up.  But packages needed are scruiized for 
 license compatibility and amount of work to include.  Mainly use MIT license.

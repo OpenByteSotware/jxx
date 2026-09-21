@@ -12,6 +12,7 @@ namespace jxx::lang
 {
     class ClassAny;
     class String;
+    class CharSequence;
 
     class Character final
 		: public ClassBase<Character, Object, Comparable<Character>, jxx::io::SerializableI>
@@ -488,7 +489,53 @@ namespace jxx::lang
         static jint toUpperCase(jint codePoint) noexcept;
         static jint toTitleCase(jint codePoint) noexcept;
 
-        static CharArray toChars(jint codePoint);
+        static ::jxx::lang::jint codePointAt(
+            const ::jxx::Ptr<::jxx::lang::CharSequence>& seq,
+            ::jxx::lang::jint index);
+        static ::jxx::lang::jint codePointAt(
+            const ::jxx::lang::CharArray& a,
+            ::jxx::lang::jint index);
+        static ::jxx::lang::jint codePointAt(
+            const ::jxx::lang::CharArray& a,
+            ::jxx::lang::jint index,
+            ::jxx::lang::jint limit);
+
+        static ::jxx::lang::jint codePointBefore(
+            const ::jxx::Ptr<::jxx::lang::CharSequence>& seq,
+            ::jxx::lang::jint index);
+        static ::jxx::lang::jint codePointBefore(
+            const ::jxx::lang::CharArray& a,
+            ::jxx::lang::jint index);
+        static ::jxx::lang::jint codePointBefore(
+            const ::jxx::lang::CharArray& a,
+            ::jxx::lang::jint index,
+            ::jxx::lang::jint start);
+
+        static ::jxx::lang::jint codePointCount(
+            const ::jxx::Ptr<::jxx::lang::CharSequence>& seq,
+            ::jxx::lang::jint beginIndex,
+            ::jxx::lang::jint endIndex);
+        static ::jxx::lang::jint codePointCount(
+            const ::jxx::lang::CharArray& a,
+            ::jxx::lang::jint offset,
+            ::jxx::lang::jint count);
+
+        static ::jxx::lang::jint offsetByCodePoints(
+            const ::jxx::Ptr<::jxx::lang::CharSequence>& seq,
+            ::jxx::lang::jint index,
+            ::jxx::lang::jint codePointOffset);
+        static ::jxx::lang::jint offsetByCodePoints(
+            const ::jxx::lang::CharArray& a,
+            ::jxx::lang::jint start,
+            ::jxx::lang::jint count,
+            ::jxx::lang::jint index,
+            ::jxx::lang::jint codePointOffset);
+
+        static ::jxx::lang::CharArray toChars(::jxx::lang::jint codePoint);
+        static ::jxx::lang::jint toChars(
+            ::jxx::lang::jint codePoint,
+            const ::jxx::lang::CharArray& dst,
+            ::jxx::lang::jint dstIndex);
 
         void writeObject(
             const jxx::Ptr<jxx::io::ObjectOutputStream>& out) override;

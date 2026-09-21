@@ -14,6 +14,9 @@
 #include <gsl/narrow>
 
 #include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.CharSequence.h"
+#include "lang/jxx.lang.IndexOutOfBoundsException.h"
+#include "lang/jxx.lang.NullPointerException.h"
 #include "jxx.lang.IllegalArgumentException.h"
 #include "jxx.unicode_bridge.h"
 
@@ -1347,6 +1350,175 @@ namespace jxx::lang
             jxx::unicode_bridge::toTitleCase(static_cast<char32_t>(codePoint)));
     }
 
+    ::jxx::lang::jint Character::codePointAt(
+        const ::jxx::Ptr<::jxx::lang::CharSequence>& seq,
+        ::jxx::lang::jint index)
+    {
+        if (seq == nullptr) throw ::jxx::lang::NullPointerException();
+        const auto length = seq->length();
+        if (index < 0 || index >= length) throw ::jxx::lang::IndexOutOfBoundsException();
+        const auto high = seq->charAt(index);
+        if (isHighSurrogate(high) && index + 1 < length) {
+            const auto low = seq->charAt(index + 1);
+            if (isLowSurrogate(low)) return toCodePoint(high, low);
+        }
+        return static_cast<::jxx::lang::jint>(high);
+    }
+
+    ::jxx::lang::jint Character::codePointAt(
+        const ::jxx::lang::CharArray& a,
+        ::jxx::lang::jint index)
+    {
+        if (a == nullptr) throw ::jxx::lang::NullPointerException();
+        return codePointAt(a, index, static_cast<::jxx::lang::jint>(a->length));
+    }
+
+    ::jxx::lang::jint Character::codePointAt(
+        const ::jxx::lang::CharArray& a,
+        ::jxx::lang::jint index,
+        ::jxx::lang::jint limit)
+    {
+        if (a == nullptr) throw ::jxx::lang::NullPointerException();
+        const auto length = static_cast<::jxx::lang::jint>(a->length);
+        if (index < 0 || index >= limit || limit < 0 || limit > length) {
+            throw ::jxx::lang::IndexOutOfBoundsException();
+        }
+        const auto high = (*a)[index];
+        if (isHighSurrogate(high) && index + 1 < limit) {
+            const auto low = (*a)[index + 1];
+            if (isLowSurrogate(low)) return toCodePoint(high, low);
+        }
+        return static_cast<::jxx::lang::jint>(high);
+    }
+
+    ::jxx::lang::jint Character::codePointBefore(
+        const ::jxx::Ptr<::jxx::lang::CharSequence>& seq,
+        ::jxx::lang::jint index)
+    {
+        if (seq == nullptr) throw ::jxx::lang::NullPointerException();
+        if (index < 1 || index > seq->length()) throw ::jxx::lang::IndexOutOfBoundsException();
+        const auto low = seq->charAt(index - 1);
+        if (isLowSurrogate(low) && index - 2 >= 0) {
+            const auto high = seq->charAt(index - 2);
+            if (isHighSurrogate(high)) return toCodePoint(high, low);
+        }
+        return static_cast<::jxx::lang::jint>(low);
+    }
+
+    ::jxx::lang::jint Character::codePointBefore(
+        const ::jxx::lang::CharArray& a,
+        ::jxx::lang::jint index)
+    {
+        if (a == nullptr) throw ::jxx::lang::NullPointerException();
+        return codePointBefore(a, index, 0);
+    }
+
+    ::jxx::lang::jint Character::codePointBefore(
+        const ::jxx::lang::CharArray& a,
+        ::jxx::lang::jint index,
+        ::jxx::lang::jint start)
+    {
+        if (a == nullptr) throw ::jxx::lang::NullPointerException();
+        const auto length = static_cast<::jxx::lang::jint>(a->length);
+        if (start < 0 || start >= index || index > length) throw ::jxx::lang::IndexOutOfBoundsException();
+        const auto low = (*a)[index - 1];
+        if (isLowSurrogate(low) && index - 2 >= start) {
+            const auto high = (*a)[index - 2];
+            if (isHighSurrogate(high)) return toCodePoint(high, low);
+        }
+        return static_cast<::jxx::lang::jint>(low);
+    }
+
+    ::jxx::lang::jint Character::codePointCount(
+        const ::jxx::Ptr<::jxx::lang::CharSequence>& seq,
+        ::jxx::lang::jint beginIndex,
+        ::jxx::lang::jint endIndex)
+    {
+        if (seq == nullptr) throw ::jxx::lang::NullPointerException();
+        const auto length = seq->length();
+        if (beginIndex < 0 || endIndex > length || beginIndex > endIndex) {
+            throw ::jxx::lang::IndexOutOfBoundsException();
+        }
+        ::jxx::lang::jint result = 0;
+        for (auto i = beginIndex; i < endIndex; ++i, ++result) {
+            const auto high = seq->charAt(i);
+            if (isHighSurrogate(high) && i + 1 < endIndex && isLowSurrogate(seq->charAt(i + 1))) ++i;
+        }
+        return result;
+    }
+
+    ::jxx::lang::jint Character::codePointCount(
+        const ::jxx::lang::CharArray& a,
+        ::jxx::lang::jint offset,
+        ::jxx::lang::jint count)
+    {
+        if (a == nullptr) throw ::jxx::lang::NullPointerException();
+        const auto length = static_cast<::jxx::lang::jint>(a->length);
+        if (offset < 0 || count < 0 || offset > length - count) throw ::jxx::lang::IndexOutOfBoundsException();
+        const auto limit = offset + count;
+        ::jxx::lang::jint result = 0;
+        for (auto i = offset; i < limit; ++i, ++result) {
+            const auto high = (*a)[i];
+            if (isHighSurrogate(high) && i + 1 < limit && isLowSurrogate((*a)[i + 1])) ++i;
+        }
+        return result;
+    }
+
+    ::jxx::lang::jint Character::offsetByCodePoints(
+        const ::jxx::Ptr<::jxx::lang::CharSequence>& seq,
+        ::jxx::lang::jint index,
+        ::jxx::lang::jint codePointOffset)
+    {
+        if (seq == nullptr) throw ::jxx::lang::NullPointerException();
+        const auto length = seq->length();
+        if (index < 0 || index > length) throw ::jxx::lang::IndexOutOfBoundsException();
+        auto result = index;
+        if (codePointOffset >= 0) {
+            for (auto remaining = codePointOffset; remaining > 0; --remaining) {
+                if (result >= length) throw ::jxx::lang::IndexOutOfBoundsException();
+                const auto high = seq->charAt(result++);
+                if (isHighSurrogate(high) && result < length && isLowSurrogate(seq->charAt(result))) ++result;
+            }
+        } else {
+            for (auto remaining = codePointOffset; remaining < 0; ++remaining) {
+                if (result <= 0) throw ::jxx::lang::IndexOutOfBoundsException();
+                const auto low = seq->charAt(--result);
+                if (isLowSurrogate(low) && result > 0 && isHighSurrogate(seq->charAt(result - 1))) --result;
+            }
+        }
+        return result;
+    }
+
+    ::jxx::lang::jint Character::offsetByCodePoints(
+        const ::jxx::lang::CharArray& a,
+        ::jxx::lang::jint start,
+        ::jxx::lang::jint count,
+        ::jxx::lang::jint index,
+        ::jxx::lang::jint codePointOffset)
+    {
+        if (a == nullptr) throw ::jxx::lang::NullPointerException();
+        const auto length = static_cast<::jxx::lang::jint>(a->length);
+        if (start < 0 || count < 0 || start > length - count || index < start || index > start + count) {
+            throw ::jxx::lang::IndexOutOfBoundsException();
+        }
+        const auto limit = start + count;
+        auto result = index;
+        if (codePointOffset >= 0) {
+            for (auto remaining = codePointOffset; remaining > 0; --remaining) {
+                if (result >= limit) throw ::jxx::lang::IndexOutOfBoundsException();
+                const auto high = (*a)[result++];
+                if (isHighSurrogate(high) && result < limit && isLowSurrogate((*a)[result])) ++result;
+            }
+        } else {
+            for (auto remaining = codePointOffset; remaining < 0; ++remaining) {
+                if (result <= start) throw ::jxx::lang::IndexOutOfBoundsException();
+                const auto low = (*a)[--result];
+                if (isLowSurrogate(low) && result > start && isHighSurrogate((*a)[result - 1])) --result;
+            }
+        }
+        return result;
+    }
+
     CharArray Character::toChars(jint codePoint)
     {
         if (!isValidCodePoint(codePoint))
@@ -1366,6 +1538,26 @@ namespace jxx::lang
     }
 
 
+
+
+    ::jxx::lang::jint Character::toChars(
+        ::jxx::lang::jint codePoint,
+        const ::jxx::lang::CharArray& dst,
+        ::jxx::lang::jint dstIndex)
+    {
+        if (!isValidCodePoint(codePoint)) throwIAE_("invalid Unicode code point");
+        if (dst == nullptr) throw ::jxx::lang::NullPointerException();
+        const auto required = charCount(codePoint);
+        const auto length = static_cast<::jxx::lang::jint>(dst->length);
+        if (dstIndex < 0 || dstIndex > length - required) throw ::jxx::lang::IndexOutOfBoundsException();
+        if (required == 1) {
+            (*dst)[dstIndex] = static_cast<::jxx::lang::jchar>(codePoint);
+        } else {
+            (*dst)[dstIndex] = highSurrogate(codePoint);
+            (*dst)[dstIndex + 1] = lowSurrogate(codePoint);
+        }
+        return required;
+    }
 
 
     void Character::writeObject(
