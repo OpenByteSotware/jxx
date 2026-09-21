@@ -39,7 +39,15 @@ Matcher::Matcher(const jxx::Ptr<Pattern> pattern, jxx::Ptr<jxx::lang::CharSequen
     , inputUtf8_(input_->utf8())
     , lastMatch_()
     , searchPos_(0)
-    , hasMatch_(static_cast<jxx::lang::jbool>(false)) {
+    , regionStart_(0)
+    , regionEnd_(inputUtf8_.size())
+    , appendPos_(0)
+    , hasMatch_(static_cast<jxx::lang::jbool>(false))
+    , anchoringBounds_(true)
+    , transparentBounds_(false)
+    , hitEnd_(false)
+    , requireEnd_(false)
+    , matchBase_(0) {
     if (pattern_ == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -56,7 +64,11 @@ jxx::Ptr<Pattern> Matcher::pattern() {
 }
 
 jxx::Ptr<Matcher> Matcher::reset() {
-    searchPos_ = 0;
+    searchPos_ = regionStart_;
+    appendPos_ = regionStart_;
+    hitEnd_ = false;
+    requireEnd_ = false;
+    matchBase_ = regionStart_;
     hasMatch_ = static_cast<jxx::lang::jbool>(false);
     lastMatch_ = std::match_results<std::string::const_iterator>();
     return jxx::CAST<Matcher>(jxx::CAST<jxx::lang::Object>(shared_from_this()));
@@ -65,6 +77,8 @@ jxx::Ptr<Matcher> Matcher::reset() {
 jxx::Ptr<Matcher> Matcher::reset(const jxx::Ptr<jxx::lang::CharSequence> input) {
     input_ = toStringPtr(input);
     inputUtf8_ = input_->utf8();
+    regionStart_ = 0;
+    regionEnd_ = inputUtf8_.size();
     return reset();
 }
 
@@ -90,16 +104,18 @@ jxx::lang::jbool Matcher::lookingAt() {
 }
 
 jxx::lang::jbool Matcher::find() {
-    if (searchPos_ > inputUtf8_.size()) {
-        hasMatch_ = static_cast<jxx::lang::jbool>(false);
-        return static_cast<jxx::lang::jbool>(false);
-    }
-    const auto begin = inputUtf8_.cbegin() + static_cast<std::ptrdiff_t>(searchPos_);
-    hasMatch_ = static_cast<jxx::lang::jbool>(std::regex_search(begin, inputUtf8_.cend(), lastMatch_, pattern_->nativeRegex()));
-    if (hasMatch_) {
-        searchPos_ += static_cast<std::size_t>(lastMatch_.position() + lastMatch_.length());
-    }
-    return hasMatch_;
+    if (searchPos_ > regionEnd_) { hasMatch_ = false; hitEnd_ = true; return false; }
+    const auto first = inputUtf8_.cbegin() + static_cast<std::ptrdiff_t>(searchPos_);
+    const auto last = inputUtf8_.cbegin() + static_cast<std::ptrdiff_t>(regionEnd_);
+    hasMatch_ = static_cast<jxx::lang::jbool>(std::regex_search(first, last, lastMatch_, pattern_->nativeRegex()));
+    matchBase_ = searchPos_;
+    if (!hasMatch_) { searchPos_ = regionEnd_; hitEnd_ = true; requireEnd_ = false; return false; }
+    const auto matchStart = matchBase_ + static_cast<std::size_t>(lastMatch_.position(0));
+    const auto matchEnd = matchStart + static_cast<std::size_t>(lastMatch_.length(0));
+    searchPos_ = matchEnd == matchStart ? std::min(regionEnd_ + 1, matchEnd + 1) : matchEnd;
+    hitEnd_ = matchEnd == regionEnd_;
+    requireEnd_ = false;
+    return true;
 }
 
 jxx::lang::jbool Matcher::find(jxx::lang::jint start) {
@@ -159,6 +175,32 @@ jxx::Ptr<jxx::lang::String> Matcher::group(jxx::lang::jint group) {
 
 jxx::lang::jint Matcher::groupCount() {
     return static_cast<jxx::lang::jint>(pattern_->nativeRegex().mark_count());
+}
+
+jxx::Ptr<Matcher> Matcher::region(jxx::lang::jint startValue, jxx::lang::jint endValue) {
+    if (startValue < 0 || endValue < startValue || static_cast<std::size_t>(endValue) > inputUtf8_.size()) throw jxx::lang::IndexOutOfBoundsException();
+    regionStart_ = static_cast<std::size_t>(startValue); regionEnd_ = static_cast<std::size_t>(endValue); return reset();
+}
+jxx::lang::jint Matcher::regionStart() const { return static_cast<jxx::lang::jint>(regionStart_); }
+jxx::lang::jint Matcher::regionEnd() const { return static_cast<jxx::lang::jint>(regionEnd_); }
+jxx::Ptr<Matcher> Matcher::useAnchoringBounds(jxx::lang::jbool value){ anchoringBounds_=value; return jxx::CAST<Matcher>(shared_from_this()); }
+jxx::lang::jbool Matcher::hasAnchoringBounds() const{return anchoringBounds_;}
+jxx::Ptr<Matcher> Matcher::useTransparentBounds(jxx::lang::jbool value){ transparentBounds_=value; return jxx::CAST<Matcher>(shared_from_this()); }
+jxx::lang::jbool Matcher::hasTransparentBounds() const{return transparentBounds_;}
+jxx::lang::jbool Matcher::hitEnd() const{return hitEnd_;}
+jxx::lang::jbool Matcher::requireEnd() const{return requireEnd_;}
+
+jxx::Ptr<Matcher> Matcher::appendReplacement(const jxx::Ptr<jxx::lang::StringBuffer>& buffer,const jxx::Ptr<jxx::lang::String>& replacement){
+    if(!buffer||!replacement)throw jxx::lang::NullPointerException(); ensureMatchState();
+    const auto matchStart=static_cast<std::size_t>(start()); const auto matchEnd=static_cast<std::size_t>(end());
+    buffer->append(jxx::NEW<jxx::lang::String>(inputUtf8_.substr(appendPos_,matchStart-appendPos_)));
+    buffer->append(jxx::NEW<jxx::lang::String>(lastMatch_.format(replacement->utf8())));
+    appendPos_=matchEnd; return jxx::CAST<Matcher>(shared_from_this());
+}
+jxx::Ptr<jxx::lang::StringBuffer> Matcher::appendTail(const jxx::Ptr<jxx::lang::StringBuffer>& buffer){
+    if(!buffer)throw jxx::lang::NullPointerException();
+    buffer->append(jxx::NEW<jxx::lang::String>(inputUtf8_.substr(appendPos_,regionEnd_-appendPos_)));
+    appendPos_=regionEnd_; return buffer;
 }
 
 jxx::Ptr<jxx::lang::String> Matcher::replaceAll(const jxx::Ptr<jxx::lang::String> replacement) {
