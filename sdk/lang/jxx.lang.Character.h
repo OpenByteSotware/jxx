@@ -6,6 +6,7 @@
 #include "lang/jxx.lang.buildin_array.h"
 #include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.Enum.h"
 
 namespace jxx::lang
 {
@@ -16,6 +17,61 @@ namespace jxx::lang
 		: public ClassBase<Character, Object, Comparable<Character>, jxx::io::SerializableI>
     {
     public:
+        class Subset : public ClassBase<Subset, Object> {
+        public:
+            jxx::Ptr<String> toString() const override;
+
+        protected:
+            explicit Subset(const jxx::Ptr<String>& name);
+
+        private:
+            jxx::Ptr<String> name_;
+        };
+
+        class UnicodeBlock final : public ClassBase<UnicodeBlock, Subset> {
+        public:
+            static jxx::Ptr<UnicodeBlock> of(jint codePoint);
+            static jxx::Ptr<UnicodeBlock> forName(const jxx::Ptr<String>& blockName);
+
+            static const jxx::Ptr<UnicodeBlock> BASIC_LATIN;
+            static const jxx::Ptr<UnicodeBlock> LATIN_1_SUPPLEMENT;
+            static const jxx::Ptr<UnicodeBlock> GREEK;
+            static const jxx::Ptr<UnicodeBlock> CYRILLIC;
+            static const jxx::Ptr<UnicodeBlock> HEBREW;
+            static const jxx::Ptr<UnicodeBlock> ARABIC;
+            static const jxx::Ptr<UnicodeBlock> GENERAL_PUNCTUATION;
+
+        private:
+            UnicodeBlock(const jxx::Ptr<String>& name, jint start, jint end);
+            jint start_;
+            jint end_;
+        };
+
+        class UnicodeScript final : public Enum<UnicodeScript> {
+        public:
+            using JxxSuper = Enum<UnicodeScript>;
+
+            static jxx::Ptr<ClassAny> Class();
+            static jxx::Ptr<JxxArray<jxx::Ptr<UnicodeScript>, 1>> values();
+            static jxx::Ptr<UnicodeScript> valueOf(const jxx::Ptr<String>& name);
+            static jxx::Ptr<UnicodeScript> of(jint codePoint);
+            static jxx::Ptr<UnicodeScript> forName(const jxx::Ptr<String>& scriptName);
+
+            static const jxx::Ptr<UnicodeScript> COMMON;
+            static const jxx::Ptr<UnicodeScript> LATIN;
+            static const jxx::Ptr<UnicodeScript> GREEK;
+            static const jxx::Ptr<UnicodeScript> CYRILLIC;
+            static const jxx::Ptr<UnicodeScript> HEBREW;
+            static const jxx::Ptr<UnicodeScript> ARABIC;
+            static const jxx::Ptr<UnicodeScript> HAN;
+            static const jxx::Ptr<UnicodeScript> HIRAGANA;
+            static const jxx::Ptr<UnicodeScript> KATAKANA;
+            static const jxx::Ptr<UnicodeScript> HANGUL;
+            static const jxx::Ptr<UnicodeScript> UNKNOWN;
+
+        private:
+            UnicodeScript(const jxx::Ptr<String>& name, jint ordinal);
+        };
         static constexpr jchar MIN_VALUE = 0x0000;
         static constexpr jchar MAX_VALUE = 0xFFFF;
 

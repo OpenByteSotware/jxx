@@ -4,6 +4,8 @@
 #include "io/jxx.io.ObjectOutputStream.h"
 
 #include <memory>
+#include <cctype>
+#include <string>
 
 
 #include <gsl/util>
@@ -23,6 +25,147 @@ namespace
 
 namespace jxx::lang
 {
+    namespace {
+        std::string normalizedUnicodeName(const jxx::Ptr<String>& value) {
+            if (value == nullptr) {
+                throw NullPointerException();
+            }
+            auto name = value->utf8();
+            for (auto& ch : name) {
+                if (ch == ' ' || ch == '-') ch = '_';
+                else ch = static_cast<char>(std::toupper(static_cast<unsigned char>(ch)));
+            }
+            return name;
+        }
+    }
+
+    Character::Subset::Subset(const jxx::Ptr<String>& name)
+        : ClassBase<Subset, Object>(), name_(name) {
+        if (name_ == nullptr) throw NullPointerException();
+    }
+
+    jxx::Ptr<String> Character::Subset::toString() const {
+        return name_;
+    }
+
+    Character::UnicodeBlock::UnicodeBlock(
+        const jxx::Ptr<String>& name, jint start, jint end)
+        : ClassBase<UnicodeBlock, Subset>(name), start_(start), end_(end) {}
+
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BASIC_LATIN(
+        new Character::UnicodeBlock(jxx::NEW<String>("BASIC_LATIN"), 0x0000, 0x007F));
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LATIN_1_SUPPLEMENT(
+        new Character::UnicodeBlock(jxx::NEW<String>("LATIN_1_SUPPLEMENT"), 0x0080, 0x00FF));
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::GREEK(
+        new Character::UnicodeBlock(jxx::NEW<String>("GREEK"), 0x0370, 0x03FF));
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CYRILLIC(
+        new Character::UnicodeBlock(jxx::NEW<String>("CYRILLIC"), 0x0400, 0x04FF));
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HEBREW(
+        new Character::UnicodeBlock(jxx::NEW<String>("HEBREW"), 0x0590, 0x05FF));
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ARABIC(
+        new Character::UnicodeBlock(jxx::NEW<String>("ARABIC"), 0x0600, 0x06FF));
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::GENERAL_PUNCTUATION(
+        new Character::UnicodeBlock(jxx::NEW<String>("GENERAL_PUNCTUATION"), 0x2000, 0x206F));
+
+    jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::of(jint codePoint) {
+        if (!Character::isValidCodePoint(codePoint)) throw IllegalArgumentException();
+        const jxx::Ptr<UnicodeBlock> blocks[] = {
+            BASIC_LATIN, LATIN_1_SUPPLEMENT, GREEK, CYRILLIC,
+            HEBREW, ARABIC, GENERAL_PUNCTUATION
+        };
+        for (const auto& block : blocks) {
+            if (codePoint >= block->start_ && codePoint <= block->end_) return block;
+        }
+        return nullptr;
+    }
+
+    jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::forName(
+        const jxx::Ptr<String>& blockName) {
+        const auto requested = normalizedUnicodeName(blockName);
+        const jxx::Ptr<UnicodeBlock> blocks[] = {
+            BASIC_LATIN, LATIN_1_SUPPLEMENT, GREEK, CYRILLIC,
+            HEBREW, ARABIC, GENERAL_PUNCTUATION
+        };
+        for (const auto& block : blocks) {
+            if (normalizedUnicodeName(block->toString()) == requested) return block;
+        }
+        throw IllegalArgumentException(blockName);
+    }
+
+    Character::UnicodeScript::UnicodeScript(
+        const jxx::Ptr<String>& name, jint ordinal)
+        : Enum<UnicodeScript>(name, ordinal) {}
+
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::COMMON(
+        new Character::UnicodeScript(jxx::NEW<String>("COMMON"), 0));
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::LATIN(
+        new Character::UnicodeScript(jxx::NEW<String>("LATIN"), 1));
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::GREEK(
+        new Character::UnicodeScript(jxx::NEW<String>("GREEK"), 2));
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::CYRILLIC(
+        new Character::UnicodeScript(jxx::NEW<String>("CYRILLIC"), 3));
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::HEBREW(
+        new Character::UnicodeScript(jxx::NEW<String>("HEBREW"), 4));
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::ARABIC(
+        new Character::UnicodeScript(jxx::NEW<String>("ARABIC"), 5));
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::HAN(
+        new Character::UnicodeScript(jxx::NEW<String>("HAN"), 6));
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::HIRAGANA(
+        new Character::UnicodeScript(jxx::NEW<String>("HIRAGANA"), 7));
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::KATAKANA(
+        new Character::UnicodeScript(jxx::NEW<String>("KATAKANA"), 8));
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::HANGUL(
+        new Character::UnicodeScript(jxx::NEW<String>("HANGUL"), 9));
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::UNKNOWN(
+        new Character::UnicodeScript(jxx::NEW<String>("UNKNOWN"), 10));
+
+    jxx::Ptr<ClassAny> Character::UnicodeScript::Class() {
+        return ClassInfo<UnicodeScript, Enum<UnicodeScript>>::Class();
+    }
+
+    jxx::Ptr<JxxArray<jxx::Ptr<Character::UnicodeScript>, 1>>
+    Character::UnicodeScript::values() {
+        auto result = jxx::NEW<JxxArray<jxx::Ptr<UnicodeScript>, 1>>(11);
+        (*result)[0]=COMMON; (*result)[1]=LATIN; (*result)[2]=GREEK;
+        (*result)[3]=CYRILLIC; (*result)[4]=HEBREW; (*result)[5]=ARABIC;
+        (*result)[6]=HAN; (*result)[7]=HIRAGANA; (*result)[8]=KATAKANA;
+        (*result)[9]=HANGUL; (*result)[10]=UNKNOWN;
+        return result;
+    }
+
+    jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::valueOf(
+        const jxx::Ptr<String>& name) {
+        return Enum<UnicodeScript>::valueOf(Class(), name);
+    }
+
+    jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::forName(
+        const jxx::Ptr<String>& scriptName) {
+        const auto requested = normalizedUnicodeName(scriptName);
+        const auto all = values();
+        for (std::uint32_t i=0; i<all->length; ++i) {
+            const auto& script = (*all)[i];
+            if (normalizedUnicodeName(script->name()) == requested) return script;
+        }
+        throw IllegalArgumentException(scriptName);
+    }
+
+    jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::of(jint codePoint) {
+        if (!Character::isValidCodePoint(codePoint)) throw IllegalArgumentException();
+        if ((codePoint >= 0x0041 && codePoint <= 0x024F) ||
+            (codePoint >= 0x1E00 && codePoint <= 0x1EFF)) return LATIN;
+        if (codePoint >= 0x0370 && codePoint <= 0x03FF) return GREEK;
+        if (codePoint >= 0x0400 && codePoint <= 0x052F) return CYRILLIC;
+        if (codePoint >= 0x0590 && codePoint <= 0x05FF) return HEBREW;
+        if (codePoint >= 0x0600 && codePoint <= 0x06FF) return ARABIC;
+        if (codePoint >= 0x3040 && codePoint <= 0x309F) return HIRAGANA;
+        if (codePoint >= 0x30A0 && codePoint <= 0x30FF) return KATAKANA;
+        if ((codePoint >= 0x3400 && codePoint <= 0x4DBF) ||
+            (codePoint >= 0x4E00 && codePoint <= 0x9FFF)) return HAN;
+        if ((codePoint >= 0x1100 && codePoint <= 0x11FF) ||
+            (codePoint >= 0xAC00 && codePoint <= 0xD7AF)) return HANGUL;
+        if (codePoint <= 0x002F || (codePoint >= 0x2000 && codePoint <= 0x206F)) return COMMON;
+        return UNKNOWN;
+    }
     namespace {
     jxx::Ptr<ClassAny> registerCharacterPrimitive()
     {
