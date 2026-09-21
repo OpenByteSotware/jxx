@@ -30,8 +30,32 @@ public:
     }
 
     ConcurrentHashMap() : Super() {}
+
     explicit ConcurrentHashMap(::jxx::lang::jint initialCapacity)
-        : Super(initialCapacity) {}
+        : Super() {
+        validateSizing_(initialCapacity, 0.75F, 1);
+    }
+
+    ConcurrentHashMap(
+        ::jxx::lang::jint initialCapacity,
+        ::jxx::lang::jfloat loadFactor)
+        : Super() {
+        validateSizing_(initialCapacity, loadFactor, 1);
+    }
+
+    ConcurrentHashMap(
+        ::jxx::lang::jint initialCapacity,
+        ::jxx::lang::jfloat loadFactor,
+        ::jxx::lang::jint concurrencyLevel)
+        : Super() {
+        validateSizing_(initialCapacity, loadFactor, concurrencyLevel);
+    }
+
+    explicit ConcurrentHashMap(
+        const ::jxx::Ptr<::jxx::util::Map<K, V>>& source)
+        : Super() {
+        putAll(source);
+    }
 
     ::jxx::lang::jint size() override {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -45,18 +69,21 @@ public:
 
     ::jxx::lang::jbool containsKey(
         const ::jxx::Ptr<::jxx::lang::Object>& key) override {
+        requireObject_(key);
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         return JxxSuper::containsKey(key);
     }
 
     ::jxx::lang::jbool containsValue(
         const ::jxx::Ptr<::jxx::lang::Object>& value) override {
+        requireObject_(value);
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         return JxxSuper::containsValue(value);
     }
 
     ::jxx::Ptr<V> get(
         const ::jxx::Ptr<::jxx::lang::Object>& key) override {
+        requireObject_(key);
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         return JxxSuper::get(key);
     }
@@ -71,6 +98,7 @@ public:
 
     ::jxx::Ptr<V> remove(
         const ::jxx::Ptr<::jxx::lang::Object>& key) override {
+        requireObject_(key);
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         return JxxSuper::remove(key);
     }
@@ -101,7 +129,8 @@ public:
     ::jxx::lang::jbool remove(
         const ::jxx::Ptr<::jxx::lang::Object>& key,
         const ::jxx::Ptr<::jxx::lang::Object>& value) override {
-        if (!key || !value) return false;
+        requireObject_(key);
+        requireObject_(value);
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         auto current = JxxSuper::get(key);
         auto currentObject = ::jxx::CAST<::jxx::lang::Object>(current);
@@ -133,6 +162,29 @@ public:
         auto objectKey = ::jxx::CAST<::jxx::lang::Object>(key);
         if (!JxxSuper::containsKey(objectKey)) return nullptr;
         return JxxSuper::put(key, value);
+    }
+
+    ::jxx::Ptr<V> getOrDefault(
+        const ::jxx::Ptr<::jxx::lang::Object>& key,
+        const ::jxx::Ptr<V>& defaultValue) override {
+        requireObject_(key);
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        auto value = JxxSuper::get(key);
+        return value != nullptr ? value : defaultValue;
+    }
+
+    void replaceAll(
+        const ::jxx::Ptr<::jxx::util::function::BiFunction<K, V, V>>& function) override {
+        if (function == nullptr) throw ::jxx::lang::NullPointerException();
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        auto entries = JxxSuper::entrySet();
+        auto iterator = entries->iterator();
+        while (iterator->hasNext()) {
+            auto entry = iterator->next();
+            auto replacement = function->apply(entry->getKey(), entry->getValue());
+            if (replacement == nullptr) throw ::jxx::lang::NullPointerException();
+            JxxSuper::put(entry->getKey(), replacement);
+        }
     }
 
     ::jxx::Ptr<V> computeIfAbsent(
@@ -312,6 +364,22 @@ private:
             result.emplace_back(entry->getKey(), entry->getValue());
         }
         return result;
+    }
+
+    static void validateSizing_(
+        ::jxx::lang::jint initialCapacity,
+        ::jxx::lang::jfloat loadFactor,
+        ::jxx::lang::jint concurrencyLevel) {
+        if (initialCapacity < 0 ||
+            !(loadFactor > 0.0F) ||
+            concurrencyLevel <= 0) {
+            throw ::jxx::lang::IllegalArgumentException();
+        }
+    }
+
+    static void requireObject_(
+        const ::jxx::Ptr<::jxx::lang::Object>& value) {
+        if (value == nullptr) throw ::jxx::lang::NullPointerException();
     }
 
     static void require_(
