@@ -3,6 +3,7 @@
 #include <condition_variable>
 #include <cstdint>
 #include <mutex>
+#include <limits>
 #include <unordered_map>
 
 #include "lang/jxx.lang.Class.h"
@@ -34,14 +35,17 @@ public:
                 if (entry.initialized) {
                     return entry.value;
                 }
-                if (entry.computing) {
-                    condition_.wait(lock, [&entry] {
-                        return !entry.computing;
+                generation = entry.generation;
+                if (entry.computingGeneration == generation) {
+                    const auto* key = type.get();
+                    condition_.wait(lock, [this, key, generation] {
+                        const auto found = entries_.find(key);
+                        return found == entries_.end() ||
+                               found->second.computingGeneration != generation;
                     });
                     continue;
                 }
-                entry.computing = true;
-                generation = entry.generation;
+                entry.computingGeneration = generation;
             }
 
             T computed;
@@ -52,8 +56,9 @@ public:
                 std::lock_guard<std::mutex> lock(mutex_);
                 auto found = entries_.find(type.get());
                 if (found != entries_.end() &&
-                    found->second.generation == generation) {
-                    found->second.computing = false;
+                    found->second.generation == generation &&
+                    found->second.computingGeneration == generation) {
+                    found->second.computingGeneration = noGeneration_;
                 }
                 condition_.notify_all();
                 throw;
@@ -65,11 +70,13 @@ public:
                 if (entry.generation == generation) {
                     entry.value = computed;
                     entry.initialized = true;
-                    entry.computing = false;
+                    entry.computingGeneration = noGeneration_;
                     condition_.notify_all();
                     return entry.value;
                 }
-                entry.computing = false;
+                if (entry.computingGeneration == generation) {
+                    entry.computingGeneration = noGeneration_;
+                }
                 condition_.notify_all();
             }
         }
@@ -95,11 +102,14 @@ protected:
         const jxx::Ptr<ClassAny>& type) = 0;
 
 private:
+    static constexpr std::uint64_t noGeneration_ =
+        (std::numeric_limits<std::uint64_t>::max)();
+
     struct Entry final {
         T value{};
         std::uint64_t generation = 0;
         bool initialized = false;
-        bool computing = false;
+        std::uint64_t computingGeneration = noGeneration_;
     };
 
     std::mutex mutex_;
