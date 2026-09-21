@@ -26,6 +26,12 @@
 #include "lang/jxx.lang.SecurityManager.h"
 #include "lang/jxx.lang.RuntimePermission.h"
 #include "util/jxx.util.Properties.h"
+#include "util/jxx.util.HashMap.h"
+
+
+#ifndef _WIN32
+extern char** environ;
+#endif
 
 using namespace jxx::io;
 namespace jxx { namespace lang {
@@ -139,6 +145,25 @@ jxx::Ptr<String> System::lineSeparator() {
     static const auto value = jxx::NEW<String>("\n");
 #endif
     return value;
+}
+
+jxx::Ptr<jxx::util::Map<String, String>> System::getenv() {
+    auto result = jxx::NEW<jxx::util::HashMap<String, String>>();
+#ifdef _WIN32
+    char** current = _environ;
+#else
+    char** current = ::environ;
+#endif
+    if (current == nullptr) return result;
+    for (; *current != nullptr; ++current) {
+        const std::string entry(*current);
+        const auto separator = entry.find('=');
+        if (separator == std::string::npos || separator == 0U) continue;
+        result->put(
+            jxx::NEW<String>(entry.substr(0U, separator)),
+            jxx::NEW<String>(entry.substr(separator + 1U)));
+    }
+    return result;
 }
 
 jxx::Ptr<String> System::getenv(const jxx::Ptr<String>& name) {

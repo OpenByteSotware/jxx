@@ -13,6 +13,7 @@
 #include "io/jxx.io.FileOutputStream.h"
 
 namespace jxx::io { class Console; }
+namespace jxx::util { template <typename K, typename V> class Map; }
 namespace jxx::nio::channels { class Channel; }
 
 namespace jxx { namespace util { class Properties; } namespace lang {
@@ -39,6 +40,7 @@ struct System {
     static jxx::Ptr<jxx::nio::channels::Channel> inheritedChannel();
     static jxx::Ptr<jxx::lang::String> getenv(
         const jxx::Ptr<jxx::lang::String>& name);
+    static jxx::Ptr<jxx::util::Map<jxx::lang::String, jxx::lang::String>> getenv();
     static jxx::Ptr<jxx::lang::String> mapLibraryName(
         const jxx::Ptr<jxx::lang::String>& libraryName);
     static void load(const jxx::Ptr<jxx::lang::String>& filename);

@@ -361,7 +361,7 @@ namespace jxx::lang {
         if (packages_.find(packageName) != packages_.end()) {
             throw IllegalArgumentException("package already defined");
         }
-        auto result = Package::definePackage(
+        auto result = jxx::NEW<Package>(
             name, specificationTitle, specificationVersion, specificationVendor,
             implementationTitle, implementationVersion, implementationVendor, sealBase);
         packages_[packageName] = result;
