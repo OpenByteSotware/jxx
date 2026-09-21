@@ -1,6 +1,9 @@
 #pragma once
 
+#include "awt/jxx.awt.Color.h"
 #include "awt/jxx.awt.Dimension.h"
+#include "awt/jxx.awt.Point.h"
+#include "awt/jxx.awt.Rectangle.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "swing/jxx.swing.JComponent.h"
 #include "swing/event/jxx.swing.event.RowSorterListener.h"
@@ -115,6 +118,31 @@ namespace jxx::swing
             ::jxx::lang::jint end);
         void clearSelection();
         ::jxx::lang::jint getSelectedRow() const;
+        ::jxx::lang::jint getSelectedColumn() const;
+        ::jxx::lang::jbool isRowSelected(::jxx::lang::jint row) const;
+        ::jxx::lang::jbool isColumnSelected(::jxx::lang::jint column) const;
+        void setRowSelectionAllowed(::jxx::lang::jbool allowed);
+        ::jxx::lang::jbool getRowSelectionAllowed() const;
+        void setColumnSelectionAllowed(::jxx::lang::jbool allowed);
+        ::jxx::lang::jbool getColumnSelectionAllowed() const;
+        ::jxx::lang::jint rowAtPoint(
+            const ::jxx::Ptr<::jxx::awt::Point>& point) const;
+        ::jxx::lang::jint columnAtPoint(
+            const ::jxx::Ptr<::jxx::awt::Point>& point) const;
+        ::jxx::Ptr<::jxx::awt::Rectangle> getCellRect(
+            ::jxx::lang::jint row,
+            ::jxx::lang::jint column,
+            ::jxx::lang::jbool includeSpacing) const;
+        void setGridColor(const ::jxx::Ptr<::jxx::awt::Color>& color);
+        ::jxx::Ptr<::jxx::awt::Color> getGridColor() const;
+        void setShowHorizontalLines(::jxx::lang::jbool show);
+        ::jxx::lang::jbool getShowHorizontalLines() const;
+        void setShowVerticalLines(::jxx::lang::jbool show);
+        ::jxx::lang::jbool getShowVerticalLines() const;
+        void setShowGrid(::jxx::lang::jbool show);
+        void setIntercellSpacing(
+            const ::jxx::Ptr<::jxx::awt::Dimension>& spacing);
+        ::jxx::Ptr<::jxx::awt::Dimension> getIntercellSpacing() const;
         void setRowHeight(::jxx::lang::jint height);
         ::jxx::lang::jint getRowHeight() const;
         void setAutoResizeMode(::jxx::lang::jint mode);
@@ -147,7 +175,14 @@ namespace jxx::swing
         ::jxx::Ptr<::jxx::swing::table::JTableHeader> tableHeader_;
         ::jxx::Ptr<RowSorter<::jxx::swing::table::TableModel>> rowSorter_;
         ::jxx::lang::jint selectedRow_ = -1;
+        ::jxx::lang::jint selectedColumn_ = -1;
         ::jxx::lang::jint rowHeight_ = 16;
+        ::jxx::lang::jbool rowSelectionAllowed_ = true;
+        ::jxx::lang::jbool columnSelectionAllowed_ = false;
+        ::jxx::lang::jbool showHorizontalLines_ = true;
+        ::jxx::lang::jbool showVerticalLines_ = true;
+        ::jxx::Ptr<::jxx::awt::Color> gridColor_;
+        ::jxx::Ptr<::jxx::awt::Dimension> intercellSpacing_;
         ::jxx::lang::jint autoResizeMode_ = AUTO_RESIZE_SUBSEQUENT_COLUMNS;
         ::jxx::lang::jbool autoCreateRowSorter_ = false;
     };

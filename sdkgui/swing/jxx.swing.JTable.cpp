@@ -1,5 +1,7 @@
 #include "swing/jxx.swing.JTable.h"
 
+#include <algorithm>
+
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
 #include "swing/event/jxx.swing.event.RowSorterEvent.h"
@@ -39,7 +41,9 @@ namespace jxx::swing
         const ::jxx::Ptr<::jxx::swing::table::TableModel>& model,
         const ::jxx::Ptr<::jxx::swing::table::TableColumnModel>&
             columnModel)
-        : Super()
+        : Super(),
+          gridColor_(::jxx::awt::Color::gray),
+          intercellSpacing_(::jxx::NEW<::jxx::awt::Dimension>(1, 1))
     {
         setColumnModel(columnModel);
         setModel(model);
@@ -258,9 +262,122 @@ namespace jxx::swing
         selectedRow_ = start;
     }
 
-    void JTable::clearSelection() { selectedRow_ = -1; }
+    void JTable::clearSelection()
+    {
+        selectedRow_ = -1;
+        selectedColumn_ = -1;
+    }
+
     ::jxx::lang::jint JTable::getSelectedRow() const
     { return selectedRow_; }
+
+    ::jxx::lang::jint JTable::getSelectedColumn() const
+    { return selectedColumn_; }
+
+    ::jxx::lang::jbool JTable::isRowSelected(::jxx::lang::jint row) const
+    { return rowSelectionAllowed_ && selectedRow_ == row; }
+
+    ::jxx::lang::jbool JTable::isColumnSelected(
+        ::jxx::lang::jint column) const
+    { return columnSelectionAllowed_ && selectedColumn_ == column; }
+
+    void JTable::setRowSelectionAllowed(::jxx::lang::jbool allowed)
+    { rowSelectionAllowed_ = allowed; }
+
+    ::jxx::lang::jbool JTable::getRowSelectionAllowed() const
+    { return rowSelectionAllowed_; }
+
+    void JTable::setColumnSelectionAllowed(::jxx::lang::jbool allowed)
+    {
+        columnSelectionAllowed_ = allowed;
+        if (columnModel_ != nullptr)
+            columnModel_->setColumnSelectionAllowed(allowed);
+    }
+
+    ::jxx::lang::jbool JTable::getColumnSelectionAllowed() const
+    { return columnSelectionAllowed_; }
+
+    ::jxx::lang::jint JTable::rowAtPoint(
+        const ::jxx::Ptr<::jxx::awt::Point>& point) const
+    {
+        if (point == nullptr || point->y < 0) return -1;
+        const auto row = point->y / rowHeight_;
+        return row < getRowCount() ? row : -1;
+    }
+
+    ::jxx::lang::jint JTable::columnAtPoint(
+        const ::jxx::Ptr<::jxx::awt::Point>& point) const
+    {
+        return point == nullptr || columnModel_ == nullptr
+            ? -1 : columnModel_->getColumnIndexAtX(point->x);
+    }
+
+    ::jxx::Ptr<::jxx::awt::Rectangle> JTable::getCellRect(
+        ::jxx::lang::jint row,
+        ::jxx::lang::jint column,
+        ::jxx::lang::jbool includeSpacing) const
+    {
+        if (row < 0 || row >= getRowCount()
+            || column < 0 || column >= getColumnCount())
+            return ::jxx::NEW<::jxx::awt::Rectangle>();
+        ::jxx::lang::jint x = 0;
+        for (::jxx::lang::jint index = 0; index < column; ++index)
+            x += columnModel_->getColumn(index)->getWidth();
+        auto width = columnModel_->getColumn(column)->getWidth();
+        auto height = rowHeight_;
+        if (!includeSpacing && intercellSpacing_ != nullptr)
+        {
+            x += intercellSpacing_->width / 2;
+            width = std::max<::jxx::lang::jint>(
+                0, width - intercellSpacing_->width);
+            height = std::max<::jxx::lang::jint>(
+                0, height - intercellSpacing_->height);
+        }
+        return ::jxx::NEW<::jxx::awt::Rectangle>(
+            x, row * rowHeight_, width, height);
+    }
+
+    void JTable::setGridColor(
+        const ::jxx::Ptr<::jxx::awt::Color>& color)
+    {
+        if (color == nullptr)
+            throw ::jxx::lang::IllegalArgumentException("color");
+        gridColor_ = color;
+    }
+
+    ::jxx::Ptr<::jxx::awt::Color> JTable::getGridColor() const
+    { return gridColor_; }
+
+    void JTable::setShowHorizontalLines(::jxx::lang::jbool show)
+    { showHorizontalLines_ = show; }
+    ::jxx::lang::jbool JTable::getShowHorizontalLines() const
+    { return showHorizontalLines_; }
+    void JTable::setShowVerticalLines(::jxx::lang::jbool show)
+    { showVerticalLines_ = show; }
+    ::jxx::lang::jbool JTable::getShowVerticalLines() const
+    { return showVerticalLines_; }
+    void JTable::setShowGrid(::jxx::lang::jbool show)
+    {
+        showHorizontalLines_ = show;
+        showVerticalLines_ = show;
+    }
+
+    void JTable::setIntercellSpacing(
+        const ::jxx::Ptr<::jxx::awt::Dimension>& spacing)
+    {
+        if (spacing == nullptr
+            || spacing->width < 0 || spacing->height < 0)
+            throw ::jxx::lang::IllegalArgumentException("spacing");
+        intercellSpacing_ = ::jxx::NEW<::jxx::awt::Dimension>(spacing);
+        if (columnModel_ != nullptr)
+            columnModel_->setColumnMargin(spacing->width);
+    }
+
+    ::jxx::Ptr<::jxx::awt::Dimension> JTable::getIntercellSpacing() const
+    {
+        return intercellSpacing_ == nullptr ? nullptr
+            : ::jxx::NEW<::jxx::awt::Dimension>(intercellSpacing_);
+    }
 
     void JTable::setRowHeight(::jxx::lang::jint height)
     {
