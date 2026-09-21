@@ -1,6 +1,7 @@
 #pragma once
 
 #include "io/jxx.io.SerializableI.h"
+#include "io/jxx.io.InvalidObjectException.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.buildin_array.h"
 #include "lang/jxx.lang.CloneNotSupportedException.h"
@@ -42,8 +43,13 @@ public:
     jxx::Ptr<ClassAny> getDeclaringClass() const { return E::Class(); }
 
     void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out) override { (void)out; }
-    void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in) override { (void)in; }
-    void readObjectNoData() override {}
+    void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in) override {
+        (void)in;
+        throw ::jxx::io::InvalidObjectException("cannot deserialize enum");
+    }
+    void readObjectNoData() override {
+        throw ::jxx::io::InvalidObjectException("cannot deserialize enum");
+    }
 
     static jxx::Ptr<E> valueOf(
         const jxx::Ptr<ClassAny>& enumType,
