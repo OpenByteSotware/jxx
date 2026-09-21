@@ -45,19 +45,29 @@ void ThreadPoolExecutor::startWorkerLocked_() {
 void ThreadPoolExecutor::execute(
     const jxx::Ptr<jxx::lang::Runnable>& command) {
     if (command == nullptr) throw jxx::lang::NullPointerException();
+    jxx::Ptr<RejectedExecutionHandler> rejectionHandler;
     {
         std::lock_guard<std::mutex> lock(mutex_);
         if (shutdown_) {
-            reject_(command);
-            return;
+            rejectionHandler = handler_;
         }
-        queue_.push_back(command);
+        else {
+            queue_.push_back(command);
         ++submittedTaskCount_;
         if (liveWorkerCount_ < corePoolSize_ ||
             (cachedMode_() && liveWorkerCount_ < maximumPoolSize_ &&
              activeCount_ + static_cast<jxx::lang::jint>(queue_.size()) > liveWorkerCount_)) {
             startWorkerLocked_();
         }
+        }
+    }
+    if (rejectionHandler != nullptr) {
+        rejectionHandler->rejectedExecution(
+            command, jxx::CAST<ThreadPoolExecutor>(thisPtr()));
+        return;
+    }
+    if (isShutdown()) {
+        throw RejectedExecutionException();
     }
     workAvailable_.notify_one();
 }

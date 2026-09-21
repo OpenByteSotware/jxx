@@ -42,17 +42,31 @@ public:
         catch(...) { finishRun_(::jxx::NEW<::jxx::lang::RuntimeException>()); }
     }
 
-    ::jxx::lang::jbool cancel(::jxx::lang::jbool) override {
-        std::lock_guard<std::mutex> l(mutex_); if(done_) return false;
-        cancelled_=true; done_=true; condition_.notify_all(); return true;
+    ::jxx::lang::jbool cancel(
+        ::jxx::lang::jbool mayInterruptIfRunning) override {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (done_ || cancelled_) return false;
+        if (running_ && !mayInterruptIfRunning) return false;
+        cancelled_ = true;
+        done_ = true;
+        condition_.notify_all();
+        return true;
     }
     ::jxx::lang::jbool isCancelled() override { std::lock_guard<std::mutex> l(mutex_); return cancelled_; }
     ::jxx::lang::jbool isDone() override { std::lock_guard<std::mutex> l(mutex_); return done_; }
     ::jxx::lang::jbool isPeriodic() override { return periodNanos_!=0; }
     ::jxx::Ptr<V> get() override { std::unique_lock<std::mutex> l(mutex_); condition_.wait(l,[&]{return done_;}); return report_(); }
-    ::jxx::Ptr<V> get(::jxx::lang::jlong timeout,const ::jxx::Ptr<TimeUnit>& unit) override {
-        if(!unit) throw ::jxx::lang::NullPointerException(); std::unique_lock<std::mutex> l(mutex_);
-        if(!condition_.wait_for(l,unit->toChrono(timeout),[&]{return done_;})) throw TimeoutException(); return report_();
+    ::jxx::Ptr<V> get(
+        ::jxx::lang::jlong timeout,
+        const ::jxx::Ptr<TimeUnit>& unit) override {
+        if (unit == nullptr) throw ::jxx::lang::NullPointerException();
+        std::unique_lock<std::mutex> lock(mutex_);
+        if (!done_ && timeout <= 0) throw TimeoutException();
+        if (!condition_.wait_for(
+                lock, unit->toChrono(timeout), [&] { return done_; })) {
+            throw TimeoutException();
+        }
+        return report_();
     }
     ::jxx::lang::jlong getDelay(const ::jxx::Ptr<TimeUnit>& unit) const override {
         if(!unit) throw ::jxx::lang::NullPointerException();
