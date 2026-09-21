@@ -38,15 +38,29 @@ public:
     void execute(const ::jxx::Ptr<::jxx::lang::Runnable>& command) override;
     void shutdown() override;
     ::jxx::Ptr<::jxx::util::List<::jxx::lang::Runnable>> shutdownNow() override;
+    ::jxx::lang::jbool isShutdown() override;
+
+    void setContinueExistingPeriodicTasksAfterShutdownPolicy(
+        ::jxx::lang::jbool value);
+    ::jxx::lang::jbool
+    getContinueExistingPeriodicTasksAfterShutdownPolicy() const;
+    void setExecuteExistingDelayedTasksAfterShutdownPolicy(
+        ::jxx::lang::jbool value);
+    ::jxx::lang::jbool
+    getExecuteExistingDelayedTasksAfterShutdownPolicy() const;
 
 private:
     using Task=ScheduledFutureTask<::jxx::lang::Object>;
     struct Later { bool operator()(const ::jxx::Ptr<Task>& a,const ::jxx::Ptr<Task>& b) const { return a->compareTo(::jxx::CAST<Delayed>(b))>0; } };
     ::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> schedule_(const ::jxx::Ptr<::jxx::lang::Runnable>& command,::jxx::lang::jlong delayNanos,::jxx::lang::jlong periodNanos);
     void dispatch_();
-    std::mutex scheduleMutex_; std::condition_variable scheduleChanged_;
+    mutable std::mutex scheduleMutex_; std::condition_variable scheduleChanged_;
     std::priority_queue<::jxx::Ptr<Task>,std::vector<::jxx::Ptr<Task>>,Later> scheduled_;
-    std::thread dispatcher_; ::jxx::lang::jbool stopping_=false;
+    std::thread dispatcher_;
+    ::jxx::lang::jbool stopping_=false;
+    std::atomic<::jxx::lang::jbool> shutdownRequested_{false};
+    ::jxx::lang::jbool continuePeriodicAfterShutdown_=false;
+    ::jxx::lang::jbool executeDelayedAfterShutdown_=true;
 };
 
 } // namespace jxx::util::concurrent
