@@ -100,10 +100,33 @@ jint Math::negateExact(jint v) { if (v == std::numeric_limits<jint>::min()) thro
 jlong Math::negateExact(jlong v) { if (v == std::numeric_limits<jlong>::min()) throw ArithmeticException("long overflow"); return -v; }
 jint Math::toIntExact(jlong v) { return checkedValue<jint, jlong>(v); }
 
-jint Math::floorDiv(jint x, jint y) { jint q=x/y, r=x%y; return (r!=0 && ((x^y)<0)) ? q-1 : q; }
-jlong Math::floorDiv(jlong x, jlong y) { jlong q=x/y, r=x%y; return (r!=0 && ((x^y)<0)) ? q-1 : q; }
-jint Math::floorMod(jint x, jint y) { return x - floorDiv(x,y)*y; }
-jlong Math::floorMod(jlong x, jlong y) { return x - floorDiv(x,y)*y; }
+jint Math::floorDiv(jint x, jint y) {
+    if (y == 0) throw ArithmeticException("/ by zero");
+    if (x == std::numeric_limits<jint>::min() && y == -1) return x;
+    const auto quotient = static_cast<jint>(x / y);
+    const auto remainder = static_cast<jint>(x % y);
+    return (remainder != 0 && ((x ^ y) < 0)) ? quotient - 1 : quotient;
+}
+
+jlong Math::floorDiv(jlong x, jlong y) {
+    if (y == 0) throw ArithmeticException("/ by zero");
+    if (x == std::numeric_limits<jlong>::min() && y == -1) return x;
+    const auto quotient = static_cast<jlong>(x / y);
+    const auto remainder = static_cast<jlong>(x % y);
+    return (remainder != 0 && ((x ^ y) < 0)) ? quotient - 1 : quotient;
+}
+
+jint Math::floorMod(jint x, jint y) {
+    if (y == 0) throw ArithmeticException("/ by zero");
+    if (x == std::numeric_limits<jint>::min() && y == -1) return 0;
+    return static_cast<jint>(x - floorDiv(x, y) * y);
+}
+
+jlong Math::floorMod(jlong x, jlong y) {
+    if (y == 0) throw ArithmeticException("/ by zero");
+    if (x == std::numeric_limits<jlong>::min() && y == -1) return 0;
+    return static_cast<jlong>(x - floorDiv(x, y) * y);
+}
 
 jint Math::abs(jint v) { return v < 0 ? -v : v; }
 jlong Math::abs(jlong v) { return v < 0 ? -v : v; }
@@ -123,6 +146,12 @@ jdouble Math::copySign(jdouble m,jdouble s){return std::copysign(m,s);} jfloat M
 jint Math::getExponent(jfloat v){return std::isfinite(v)&&v!=0.0F?std::ilogb(v):(v==0.0F?-127:128);} jint Math::getExponent(jdouble v){return std::isfinite(v)&&v!=0.0?std::ilogb(v):(v==0.0?-1023:1024);}
 jdouble Math::nextAfter(jdouble s,jdouble d){return std::nextafter(s,d);} jfloat Math::nextAfter(jfloat s,jdouble d){return std::nextafter(s,static_cast<jfloat>(d));}
 jdouble Math::nextUp(jdouble v){return std::nextafter(v,std::numeric_limits<jdouble>::infinity());} jfloat Math::nextUp(jfloat v){return std::nextafter(v,std::numeric_limits<jfloat>::infinity());}
+::jxx::lang::jdouble Math::nextDown(::jxx::lang::jdouble value) {
+    return std::nextafter(value, -std::numeric_limits<::jxx::lang::jdouble>::infinity());
+}
+::jxx::lang::jfloat Math::nextDown(::jxx::lang::jfloat value) {
+    return std::nextafter(value, -std::numeric_limits<::jxx::lang::jfloat>::infinity());
+}
 jdouble Math::scalb(jdouble v,jint s){return std::scalbn(v,s);} jfloat Math::scalb(jfloat v,jint s){return std::scalbn(v,s);}
 
 } // namespace jxx::lang

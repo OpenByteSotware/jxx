@@ -87,6 +87,8 @@ public:
     static jfloat nextAfter(jfloat start, jdouble direction);
     static jdouble nextUp(jdouble value);
     static jfloat nextUp(jfloat value);
+    static ::jxx::lang::jdouble nextDown(::jxx::lang::jdouble value);
+    static ::jxx::lang::jfloat nextDown(::jxx::lang::jfloat value);
     static jdouble scalb(jdouble value, jint scaleFactor);
     static jfloat scalb(jfloat value, jint scaleFactor);
 };

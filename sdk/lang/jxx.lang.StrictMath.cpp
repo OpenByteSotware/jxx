@@ -73,6 +73,8 @@ jdouble StrictMath::nextAfter(jdouble s, jdouble d) { return Math::nextAfter(s, 
 jfloat StrictMath::nextAfter(jfloat s, jdouble d) { return Math::nextAfter(s, d); }
 jdouble StrictMath::nextUp(jdouble v) { return Math::nextUp(v); }
 jfloat StrictMath::nextUp(jfloat v) { return Math::nextUp(v); }
+::jxx::lang::jdouble StrictMath::nextDown(::jxx::lang::jdouble v) { return Math::nextDown(v); }
+::jxx::lang::jfloat StrictMath::nextDown(::jxx::lang::jfloat v) { return Math::nextDown(v); }
 jdouble StrictMath::scalb(jdouble v, jint s) { return Math::scalb(v, s); }
 jfloat StrictMath::scalb(jfloat v, jint s) { return Math::scalb(v, s); }
 
