@@ -1,0 +1,5 @@
+#pragma once
+#include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx_types.h"
+namespace jxx::awt { class Graphics; namespace image { class ImageObserver; class ImageProducer; } class Image : public ::jxx::lang::ClassBase<Image,::jxx::lang::Object> { public: using JxxSuper=::jxx::lang::Object; using Super=::jxx::lang::ClassBase<Image,JxxSuper>; static constexpr ::jxx::lang::jint SCALE_DEFAULT=1,SCALE_FAST=2,SCALE_SMOOTH=4,SCALE_REPLICATE=8,SCALE_AREA_AVERAGING=16; virtual ::jxx::lang::jint getWidth(const ::jxx::Ptr<::jxx::awt::image::ImageObserver>& observer) const=0; virtual ::jxx::lang::jint getHeight(const ::jxx::Ptr<::jxx::awt::image::ImageObserver>& observer) const=0; virtual ::jxx::Ptr<::jxx::awt::image::ImageProducer> getSource() const=0; virtual ::jxx::Ptr<Graphics> getGraphics()=0; virtual ::jxx::Ptr<::jxx::lang::Object> getProperty(const ::jxx::Ptr<::jxx::lang::Object>& name,const ::jxx::Ptr<::jxx::awt::image::ImageObserver>& observer)=0; virtual void flush(); }; }
