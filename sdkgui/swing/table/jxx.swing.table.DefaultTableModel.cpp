@@ -14,7 +14,7 @@ namespace jxx::swing::table
     ::jxx::lang::jbool DefaultTableModel::isCellEditable(::jxx::lang::jint,::jxx::lang::jint) const { return true; }
     void DefaultTableModel::setRowCount(::jxx::lang::jint rows) { if(rows<0) throw ::jxx::lang::IndexOutOfBoundsException("rows"); data_.resize(rows); for(auto& row:data_) row.resize(columns_.size()); }
     void DefaultTableModel::setColumnCount(::jxx::lang::jint columns) { if(columns<0) throw ::jxx::lang::IndexOutOfBoundsException("columns"); columns_.resize(columns); for(auto& row:data_) row.resize(columns); }
-    void DefaultTableModel::addRow(const std::vector<::jxx::Ptr<::jxx::lang::Object>>& row) { auto copy=row; copy.resize(columns_.size()); data_.push_back(std::move(copy)); }
+    void DefaultTableModel::addRow(const std::vector<::jxx::Ptr<::jxx::lang::Object>>& row) { auto copy=row; copy.resize(columns_.size()); data_.push_back(std::move(copy)); fireTableRowsInserted(getRowCount() - 1, getRowCount() - 1); }
     void DefaultTableModel::removeRow(::jxx::lang::jint row) { if(row<0||row>=getRowCount()) throw ::jxx::lang::IndexOutOfBoundsException("row"); data_.erase(data_.begin()+row); }
     void DefaultTableModel::setColumnIdentifiers(const std::vector<::jxx::Ptr<::jxx::lang::String>>& identifiers) { columns_=identifiers; for(auto& row:data_) row.resize(columns_.size()); }
 }

@@ -28,6 +28,14 @@ public:
     static jlong parseLong(const jxx::Ptr<String>& value);
     static jlong parseLong(const jxx::Ptr<String>& value, jint radix);
     static jxx::Ptr<Long> decode(const jxx::Ptr<String>& value);
+    static ::jxx::Ptr<Long> getLong(
+        const ::jxx::Ptr<String>& name);
+    static ::jxx::Ptr<Long> getLong(
+        const ::jxx::Ptr<String>& name,
+        ::jxx::lang::jlong defaultValue);
+    static ::jxx::Ptr<Long> getLong(
+        const ::jxx::Ptr<String>& name,
+        const ::jxx::Ptr<Long>& defaultValue);
     static jxx::Ptr<String> toString(jlong value);
     static jint hashCode(jlong value);
     static jint compare(jlong left, jlong right);

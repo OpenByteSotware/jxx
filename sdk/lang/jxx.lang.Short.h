@@ -32,6 +32,10 @@ public:
     static jint hashCode(jshort value);
     static jint compare(jshort left, jshort right);
     static jshort reverseBytes(jshort value);
+    static ::jxx::lang::jint toUnsignedInt(
+        ::jxx::lang::jshort value) noexcept;
+    static ::jxx::lang::jlong toUnsignedLong(
+        ::jxx::lang::jshort value) noexcept;
     jbyte byteValue() const override;
     jshort shortValue() const override;
     jint intValue() const override;

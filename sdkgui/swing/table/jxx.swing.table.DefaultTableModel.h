@@ -1,14 +1,14 @@
 #pragma once
 #include <vector>
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
-#include "swing/table/jxx.swing.table.TableModel.h"
+#include "swing/table/jxx.swing.table.AbstractTableModel.h"
 namespace jxx::swing::table
 {
-    class DefaultTableModel : public ::jxx::lang::ClassBase<DefaultTableModel, ::jxx::lang::Object, TableModel>
+    class DefaultTableModel : public ::jxx::lang::ClassBase<DefaultTableModel, AbstractTableModel>
     {
     public:
-        using JxxSuper = ::jxx::lang::Object;
-        using Super = ::jxx::lang::ClassBase<DefaultTableModel, JxxSuper, TableModel>;
+        using JxxSuper = AbstractTableModel;
+        using Super = ::jxx::lang::ClassBase<DefaultTableModel, JxxSuper>;
         DefaultTableModel();
         DefaultTableModel(::jxx::lang::jint rows, ::jxx::lang::jint columns);
         ::jxx::lang::jint getRowCount() const override;

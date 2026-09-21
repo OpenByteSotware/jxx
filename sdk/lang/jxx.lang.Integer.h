@@ -28,6 +28,14 @@ public:
     static jint parseInt(const jxx::Ptr<String>& value);
     static jint parseInt(const jxx::Ptr<String>& value, jint radix);
     static jxx::Ptr<Integer> decode(const jxx::Ptr<String>& value);
+    static ::jxx::Ptr<Integer> getInteger(
+        const ::jxx::Ptr<String>& name);
+    static ::jxx::Ptr<Integer> getInteger(
+        const ::jxx::Ptr<String>& name,
+        ::jxx::lang::jint defaultValue);
+    static ::jxx::Ptr<Integer> getInteger(
+        const ::jxx::Ptr<String>& name,
+        const ::jxx::Ptr<Integer>& defaultValue);
     static jxx::Ptr<String> toString(jint value);
     static jint hashCode(jint value);
     static jint compare(jint left, jint right);
