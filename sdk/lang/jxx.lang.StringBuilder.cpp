@@ -255,7 +255,7 @@ jxx::Ptr<ClassAny> StringBuilder::Class() {
 
 	jxx::Ptr<StringBuilder> StringBuilder::delete_(jint s, jint e)
 	{
-		if (s < 0)throwSIOOBE_(); e = std::min(e, length()); if (s > e)throwSIOOBE_(); value_.erase(s, e - s); return self_();
+		if (s < 0 || e < 0) throwSIOOBE_(); e = std::min(e, length()); if (s > e)throwSIOOBE_(); value_.erase(s, e - s); return self_();
 	}
 	jxx::Ptr<StringBuilder> StringBuilder::deleteCharAt(jint i)
 	{
@@ -323,7 +323,7 @@ jxx::Ptr<ClassAny> StringBuilder::Class() {
 
 	void StringBuilder::getChars(jint b, jint e, const CharArray& d, jint db) const
 	{
-		if (d == nullptr)throwNPE_(); if (b < 0 || e<b || e>length() || db<0 || db + e - b>d->length)throwSIOOBE_(); for (jint i = 0; i < e - b; ++i)(*d)[db + i] = value_[b + i];
+		if (d == nullptr)throwNPE_(); const auto count = e - b; if (b < 0 || e < b || e > length() || db < 0 || db > static_cast<jint>(d->length) || count > static_cast<jint>(d->length) - db) throwSIOOBE_(); for (jint i = 0; i < e - b; ++i)(*d)[db + i] = value_[b + i];
 	}
 	jint StringBuilder::indexOf(const jxx::Ptr<String>& s) const
 	{

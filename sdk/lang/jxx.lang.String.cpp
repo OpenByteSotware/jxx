@@ -409,8 +409,8 @@ namespace jxx::lang {
     jbool String::regionMatches(jbool ignoreCase, jint toffset, jxx::Ptr<String> other, jint ooffset, jint len) const {
         if (!other) throwNPE_();
         if (toffset < 0 || ooffset < 0 || len < 0) return false;
-        if (toffset + len > length()) return false;
-        if (ooffset + len > other->length()) return false;
+        if (toffset > length() - len) return false;
+        if (ooffset > other->length() - len) return false;
 
         for (jint i = 0; i < len; ++i) {
             char16_t a = value_[(size_t)(toffset + i)];
@@ -440,19 +440,42 @@ namespace jxx::lang {
     jint String::indexOf(jint ch) const { return indexOf(ch, 0); }
 
     jint String::indexOf(jint ch, jint fromIndex) const {
-        if (fromIndex < 0) fromIndex = 0;
-        if (fromIndex >= length()) return -1;
-        char16_t c = (char16_t)ch;
-        for (jint i = fromIndex; i < length(); ++i) if (value_[(size_t)i] == c) return i;
+        fromIndex = std::max(fromIndex, 0);
+        if (fromIndex >= length() || ch < 0 || ch > 0x10FFFF) return -1;
+        if (ch <= 0xFFFF) {
+            const auto unit = static_cast<char16_t>(ch);
+            for (jint i = fromIndex; i < length(); ++i)
+                if (value_[static_cast<std::size_t>(i)] == unit) return i;
+            return -1;
+        }
+        const auto cp = static_cast<std::uint32_t>(ch - 0x10000);
+        const auto high = static_cast<char16_t>(0xD800U + (cp >> 10U));
+        const auto low = static_cast<char16_t>(0xDC00U + (cp & 0x3FFU));
+        for (jint i = fromIndex; i + 1 < length(); ++i)
+            if (value_[static_cast<std::size_t>(i)] == high &&
+                value_[static_cast<std::size_t>(i + 1)] == low) return i;
         return -1;
     }
 
     jint String::lastIndexOf(jint ch) const { return lastIndexOf(ch, length() - 1); }
 
     jint String::lastIndexOf(jint ch, jint fromIndex) const {
-        char16_t c = (char16_t)ch;
-        if (fromIndex >= length()) fromIndex = length() - 1;
-        for (jint i = fromIndex; i >= 0; --i) if (value_[(size_t)i] == c) return i;
+        if (ch < 0 || ch > 0x10FFFF || fromIndex < 0 || length() == 0) return -1;
+        if (ch <= 0xFFFF) {
+            fromIndex = std::min(fromIndex, length() - 1);
+            const auto unit = static_cast<char16_t>(ch);
+            for (jint i = fromIndex; i >= 0; --i)
+                if (value_[static_cast<std::size_t>(i)] == unit) return i;
+            return -1;
+        }
+        if (length() < 2) return -1;
+        fromIndex = std::min(fromIndex, length() - 2);
+        const auto cp = static_cast<std::uint32_t>(ch - 0x10000);
+        const auto high = static_cast<char16_t>(0xD800U + (cp >> 10U));
+        const auto low = static_cast<char16_t>(0xDC00U + (cp & 0x3FFU));
+        for (jint i = fromIndex; i >= 0; --i)
+            if (value_[static_cast<std::size_t>(i)] == high &&
+                value_[static_cast<std::size_t>(i + 1)] == low) return i;
         return -1;
     }
 
@@ -551,22 +574,33 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<JxxArray<jxx::Ptr<String>, 1>> String::split(const jxx::Ptr<String>& regex, jint limit) const {
-        if (!regex) throwNPE_();
-        std::regex re(regex->utf8());
-        std::string s = utf8();
-
+        if (regex == nullptr) throwNPE_();
+        const std::regex expression(regex->utf8());
+        const auto source = utf8();
         std::vector<std::string> parts;
-        std::sregex_token_iterator it(s.begin(), s.end(), re, -1);
-        std::sregex_token_iterator end;
-
-        for (; it != end; ++it) {
-            parts.push_back(it->str());
-            if (limit > 0 && (jint)parts.size() >= limit) break;
+        std::size_t previous = 0;
+        std::smatch match;
+        auto searchBegin = source.cbegin();
+        while ((limit <= 0 || static_cast<jint>(parts.size()) < limit - 1) &&
+               std::regex_search(searchBegin, source.cend(), match, expression)) {
+            const auto position = previous + static_cast<std::size_t>(match.position());
+            if (!(position == 0 && match.length() == 0))
+                parts.emplace_back(source.substr(previous, position - previous));
+            previous = position + static_cast<std::size_t>(match.length());
+            if (match.length() == 0) {
+                if (previous >= source.size()) break;
+                ++previous;
+            }
+            searchBegin = source.cbegin() + static_cast<std::ptrdiff_t>(previous);
         }
-
-        auto arr = jxx::NEW<JxxArray<jxx::Ptr<String>, 1>>((std::uint32_t)parts.size());
-        for (jint i = 0; i < (jint)parts.size(); ++i) (*arr)[i] = jxx::NEW<String>(parts[(size_t)i].c_str());
-        return arr;
+        parts.emplace_back(source.substr(previous));
+        if (limit == 0)
+            while (!parts.empty() && parts.back().empty()) parts.pop_back();
+        auto result = jxx::NEW<JxxArray<jxx::Ptr<String>, 1>>(
+            static_cast<std::uint32_t>(parts.size()));
+        for (jint i = 0; i < static_cast<jint>(parts.size()); ++i)
+            (*result)[i] = jxx::NEW<String>(parts[static_cast<std::size_t>(i)]);
+        return result;
     }
 
     jxx::Ptr<String> String::toLowerCase() const {
