@@ -46,4 +46,6 @@ ipch/
 *.VC.db
 *.VC.VC.opendb
 
-node_modules/
+node_modules
+
+java_converter/outcpp
