@@ -10,6 +10,8 @@
 #include "com/google/gson/jxx.com.google.gson.ExclusionStrategy.h"
 #include "com/google/gson/jxx.com.google.gson.LongSerializationPolicy.h"
 #include "com/google/gson/jxx.com.google.gson.ToNumberStrategy.h"
+#include "com/google/gson/jxx.com.google.gson.JsonSerializer.h"
+#include "com/google/gson/jxx.com.google.gson.JsonDeserializer.h"
 #include "com/google/gson/reflect/jxx.com.google.gson.reflect.TypeToken.h"
 
 #include <string>
@@ -48,7 +50,11 @@ public:
         const ::jxx::Ptr<::jxx::lang::String>& dateFormatPattern = nullptr,
         ::jxx::lang::jint dateStyle = -1,
         ::jxx::lang::jbool serializeInnerClasses = true,
-        ::jxx::lang::jbool complexMapKeySerialization = false);
+        ::jxx::lang::jbool complexMapKeySerialization = false,
+        const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>>& serializerTypes = nullptr,
+        const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<JsonSerializer>, 1U>>& serializers = nullptr,
+        const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>>& deserializerTypes = nullptr,
+        const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<JsonDeserializer>, 1U>>& deserializers = nullptr);
 
     ::jxx::Ptr<JsonElement> fromJson(
         const ::jxx::Ptr<::jxx::lang::String>& json) const;
@@ -103,6 +109,8 @@ public:
     ::jxx::lang::jint dateStyle() const noexcept;
     ::jxx::lang::jbool serializeInnerClasses() const noexcept;
     ::jxx::lang::jbool complexMapKeySerialization() const noexcept;
+    ::jxx::Ptr<JsonSerializer> getSerializer(const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const;
+    ::jxx::Ptr<JsonDeserializer> getDeserializer(const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const;
 
 private:
     static std::string formatTree_(
@@ -135,6 +143,10 @@ private:
     ::jxx::lang::jint dateStyle_ = -1;
     ::jxx::lang::jbool serializeInnerClasses_ = true;
     ::jxx::lang::jbool complexMapKeySerialization_ = false;
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>> serializerTypes_;
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<JsonSerializer>, 1U>> serializers_;
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>> deserializerTypes_;
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<JsonDeserializer>, 1U>> deserializers_;
 };
 
 } // namespace com::google::gson

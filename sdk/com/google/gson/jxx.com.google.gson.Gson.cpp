@@ -71,7 +71,11 @@ Gson::Gson(
     const ::jxx::Ptr<::jxx::lang::String>& dateFormatPattern,
     ::jxx::lang::jint dateStyle,
     ::jxx::lang::jbool serializeInnerClasses,
-    ::jxx::lang::jbool complexMapKeySerialization)
+    ::jxx::lang::jbool complexMapKeySerialization,
+    const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>>& serializerTypes,
+    const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<JsonSerializer>, 1U>>& serializers,
+    const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>>& deserializerTypes,
+    const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<JsonDeserializer>, 1U>>& deserializers)
     : serializeNulls_(serializeNulls), htmlSafe_(htmlSafe),
       prettyPrinting_(prettyPrinting), lenient_(lenient),
       fieldNamingStrategy_(fieldNamingStrategy), adapterTypes_(adapterTypes),
@@ -83,7 +87,8 @@ Gson::Gson(
       longSerializationPolicy_(longSerializationPolicy),
       objectToNumberStrategy_(objectToNumberStrategy), numberToNumberStrategy_(numberToNumberStrategy),
       dateFormatPattern_(dateFormatPattern), dateStyle_(dateStyle),
-      serializeInnerClasses_(serializeInnerClasses), complexMapKeySerialization_(complexMapKeySerialization) {}
+      serializeInnerClasses_(serializeInnerClasses), complexMapKeySerialization_(complexMapKeySerialization),
+      serializerTypes_(serializerTypes), serializers_(serializers), deserializerTypes_(deserializerTypes), deserializers_(deserializers) {}
 
 ::jxx::Ptr<JsonElement> Gson::fromJson(
     const ::jxx::Ptr<::jxx::lang::String>& json) const {
@@ -252,5 +257,7 @@ LongSerializationPolicy Gson::longSerializationPolicy() const noexcept { return 
 ::jxx::lang::jint Gson::dateStyle() const noexcept { return dateStyle_; }
 ::jxx::lang::jbool Gson::serializeInnerClasses() const noexcept { return serializeInnerClasses_; }
 ::jxx::lang::jbool Gson::complexMapKeySerialization() const noexcept { return complexMapKeySerialization_; }
+::jxx::Ptr<JsonSerializer> Gson::getSerializer(const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const {if(type==nullptr)throw ::jxx::lang::NullPointerException();if(serializerTypes_!=nullptr&&serializers_!=nullptr)for(::jxx::lang::jint i=serializers_->length-1;i>=0;--i)if((*serializerTypes_)[i]==type)return (*serializers_)[i];return nullptr;}
+::jxx::Ptr<JsonDeserializer> Gson::getDeserializer(const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const {if(type==nullptr)throw ::jxx::lang::NullPointerException();if(deserializerTypes_!=nullptr&&deserializers_!=nullptr)for(::jxx::lang::jint i=deserializers_->length-1;i>=0;--i)if((*deserializerTypes_)[i]==type)return (*deserializers_)[i];return nullptr;}
 
 } // namespace com::google::gson

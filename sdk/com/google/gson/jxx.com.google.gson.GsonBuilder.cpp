@@ -116,13 +116,16 @@ template <typename T>
 ::jxx::Ptr<GsonBuilder> GsonBuilder::disableInnerClassSerialization(){serializeInnerClasses_=false;return ::jxx::CAST<GsonBuilder>(this->thisPtr());}
 ::jxx::Ptr<GsonBuilder> GsonBuilder::enableComplexMapKeySerialization(){complexMapKeySerialization_=true;return ::jxx::CAST<GsonBuilder>(this->thisPtr());}
 
+::jxx::Ptr<GsonBuilder> GsonBuilder::registerTypeSerializer(const ::jxx::Ptr<::jxx::lang::ClassAny>& type,const ::jxx::Ptr<JsonSerializer>& serializer){if(type==nullptr||serializer==nullptr)throw ::jxx::lang::NullPointerException();serializerTypes_=append(serializerTypes_,type);serializers_=append(serializers_,serializer);return ::jxx::CAST<GsonBuilder>(this->thisPtr());}
+::jxx::Ptr<GsonBuilder> GsonBuilder::registerTypeDeserializer(const ::jxx::Ptr<::jxx::lang::ClassAny>& type,const ::jxx::Ptr<JsonDeserializer>& deserializer){if(type==nullptr||deserializer==nullptr)throw ::jxx::lang::NullPointerException();deserializerTypes_=append(deserializerTypes_,type);deserializers_=append(deserializers_,deserializer);return ::jxx::CAST<GsonBuilder>(this->thisPtr());}
+
 ::jxx::Ptr<Gson> GsonBuilder::create() const {
     return ::jxx::NEW<Gson>(serializeNulls_, htmlSafe_, prettyPrinting_, lenient_,
         fieldNamingStrategy_, adapterTypes_, adapters_, creatorTypes_, creators_, factories_,
         serializationStrategies_, deserializationStrategies_, requireExpose_, version_,
         nonExecutableJson_, specialFloatingPointValues_, longSerializationPolicy_,
         objectToNumberStrategy_, numberToNumberStrategy_, dateFormatPattern_, dateStyle_,
-        serializeInnerClasses_, complexMapKeySerialization_);
+        serializeInnerClasses_, complexMapKeySerialization_, serializerTypes_, serializers_, deserializerTypes_, deserializers_);
 }
 
 } // namespace com::google::gson

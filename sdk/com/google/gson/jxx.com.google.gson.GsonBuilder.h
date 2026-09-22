@@ -11,6 +11,8 @@
 #include "com/google/gson/jxx.com.google.gson.ExclusionStrategy.h"
 #include "com/google/gson/jxx.com.google.gson.LongSerializationPolicy.h"
 #include "com/google/gson/jxx.com.google.gson.ToNumberPolicy.h"
+#include "com/google/gson/jxx.com.google.gson.JsonSerializer.h"
+#include "com/google/gson/jxx.com.google.gson.JsonDeserializer.h"
 #include "lang/jxx.lang.String.h"
 
 namespace com::google::gson {
@@ -37,6 +39,12 @@ public:
         const ::jxx::Ptr<InstanceCreator>& creator);
     ::jxx::Ptr<GsonBuilder> registerTypeAdapterFactory(
         const ::jxx::Ptr<TypeAdapterFactory>& factory);
+    ::jxx::Ptr<GsonBuilder> registerTypeSerializer(
+        const ::jxx::Ptr<::jxx::lang::ClassAny>& type,
+        const ::jxx::Ptr<JsonSerializer>& serializer);
+    ::jxx::Ptr<GsonBuilder> registerTypeDeserializer(
+        const ::jxx::Ptr<::jxx::lang::ClassAny>& type,
+        const ::jxx::Ptr<JsonDeserializer>& deserializer);
     ::jxx::Ptr<GsonBuilder> addSerializationExclusionStrategy(
         const ::jxx::Ptr<ExclusionStrategy>& strategy);
     ::jxx::Ptr<GsonBuilder> addDeserializationExclusionStrategy(
@@ -74,6 +82,10 @@ private:
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>> creatorTypes_;
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<InstanceCreator>, 1U>> creators_;
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapterFactory>, 1U>> factories_;
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>> serializerTypes_;
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<JsonSerializer>, 1U>> serializers_;
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>> deserializerTypes_;
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<JsonDeserializer>, 1U>> deserializers_;
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<ExclusionStrategy>, 1U>> serializationStrategies_;
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<ExclusionStrategy>, 1U>> deserializationStrategies_;
     ::jxx::lang::jbool requireExpose_ = false;
