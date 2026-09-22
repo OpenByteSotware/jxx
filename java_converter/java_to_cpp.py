@@ -250,8 +250,9 @@ class Translator:
     def translate(self,src,out_root,stem):
         tree=javalang.parse.parse(src);self.gather(tree)
         pkg=tree.package.name if tree.package else ''; rel=Path(*pkg.split('.')) if pkg else Path()
-        hp=Path(out_root)/'include'/rel/f'{stem}.h';cp=Path(out_root)/'src'/rel/f'{stem}.cpp'
-        hp.parent.mkdir(parents=True,exist_ok=True);cp.parent.mkdir(parents=True,exist_ok=True)
+        output_dir=Path(out_root)/rel
+        hp=output_dir/f'{stem}.h';cp=output_dir/f'{stem}.cpp'
+        output_dir.mkdir(parents=True,exist_ok=True)
         # resolve declarations before includes are emitted
         for t in tree.types or []:
             if getattr(t,'extends',None) is not None:self.ref_raw(t.extends)
@@ -266,7 +267,7 @@ class Translator:
 
 def generate_cmake(out_root:str, project:str='TranspiledProject', target:str='transpiled')->str:
     root=Path(out_root)
-    sources=sorted(x.relative_to(root).as_posix() for x in (root/'src').rglob('*.cpp'))
+    sources=sorted(x.relative_to(root).as_posix() for x in root.rglob('*.cpp'))
     lines=['cmake_minimum_required(VERSION 3.16)',f'project({project} LANGUAGES CXX)','',
            'set(CMAKE_CXX_STANDARD 17)','set(CMAKE_CXX_STANDARD_REQUIRED ON)',
            'set(CMAKE_CXX_EXTENSIONS OFF)','']
@@ -275,9 +276,9 @@ def generate_cmake(out_root:str, project:str='TranspiledProject', target:str='tr
         lines.extend(f'    {x}' for x in sources)
         lines.append(')')
     else:
-        lines += [f'file(GLOB_RECURSE {target}_SOURCES CONFIGURE_DEPENDS src/*.cpp)',
+        lines += [f'file(GLOB_RECURSE {target}_SOURCES CONFIGURE_DEPENDS *.cpp)',
                   f'add_library({target} STATIC ${{{target}_SOURCES}})']
-    lines += [f'target_include_directories({target} PUBLIC ${{CMAKE_CURRENT_SOURCE_DIR}}/include)','']
+    lines += [f'target_include_directories({target} PUBLIC ${{CMAKE_CURRENT_SOURCE_DIR}})','']
     return '\n'.join(lines)
 
 def translate_file(path:Path,out_root:str):
@@ -290,7 +291,7 @@ def main():
     ap=argparse.ArgumentParser(description='Java 8 to JXX C++17 translator')
     ap.add_argument('input',nargs='?',help='single Java source file')
     ap.add_argument('--dir',dest='src_dir',help='recursively convert every .java file')
-    ap.add_argument('--out',required=True,help='mimic output root containing include/ and src/')
+    ap.add_argument('--out',required=True,help='output root; .h and .cpp are written together under package folders')
     ap.add_argument('--cmake',action='store_true',help='generate CMakeLists.txt in output root')
     ap.add_argument('--cmake-project',default='TranspiledProject')
     ap.add_argument('--cmake-target',default='transpiled')
