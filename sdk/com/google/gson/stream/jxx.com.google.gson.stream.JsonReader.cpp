@@ -328,6 +328,10 @@ void JsonReader::nextNull() {
     return result;
 }
 
+::jxx::lang::jfloat JsonReader::nextFloat() { return static_cast<::jxx::lang::jfloat>(nextDouble()); }
+::jxx::lang::jshort JsonReader::nextShort() { const auto value=nextLong(); if(value<std::numeric_limits<::jxx::lang::jshort>::min()||value>std::numeric_limits<::jxx::lang::jshort>::max()) malformed("JSON short is out of range"); return static_cast<::jxx::lang::jshort>(value); }
+::jxx::lang::jbyte JsonReader::nextByte() { const auto value=nextLong(); if(value<std::numeric_limits<::jxx::lang::jbyte>::min()||value>std::numeric_limits<::jxx::lang::jbyte>::max()) malformed("JSON byte is out of range"); return static_cast<::jxx::lang::jbyte>(value); }
+
 ::jxx::lang::jlong JsonReader::nextLong() {
     const auto value = nextString()->utf8();
     char* end = nullptr;

@@ -36,6 +36,7 @@ public:
     ::jxx::Ptr<JsonWriter> name(const ::jxx::Ptr<::jxx::lang::String>& name);
     ::jxx::Ptr<JsonWriter> value(const ::jxx::Ptr<::jxx::lang::String>& value);
     ::jxx::Ptr<JsonWriter> value(::jxx::lang::jbool value);
+    ::jxx::Ptr<JsonWriter> value(::jxx::lang::jchar value);
     ::jxx::Ptr<JsonWriter> value(::jxx::lang::jdouble value);
     ::jxx::Ptr<JsonWriter> value(::jxx::lang::jlong value);
     ::jxx::Ptr<JsonWriter> value(::jxx::lang::jint value);

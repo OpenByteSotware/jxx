@@ -4,6 +4,8 @@
 #include "lang/jxx.lang.Object.h"
 #include "com/google/gson/stream/jxx.com.google.gson.stream.JsonReader.h"
 #include "com/google/gson/stream/jxx.com.google.gson.stream.JsonWriter.h"
+#include "io/jxx.io.Reader.h"
+#include "io/jxx.io.Writer.h"
 
 namespace com::google::gson {
 class JsonElement;
@@ -27,6 +29,11 @@ public:
     ::jxx::Ptr<::jxx::lang::Object> fromJson(
         const ::jxx::Ptr<::jxx::lang::String>& json);
     ::jxx::Ptr<::jxx::lang::String> toJson(
+        const ::jxx::Ptr<::jxx::lang::Object>& value);
+    ::jxx::Ptr<::jxx::lang::Object> fromJson(
+        const ::jxx::Ptr<::jxx::io::Reader>& reader);
+    void toJson(
+        const ::jxx::Ptr<::jxx::io::Writer>& writer,
         const ::jxx::Ptr<::jxx::lang::Object>& value);
     static ::jxx::Ptr<TypeAdapter> nullSafe(
         const ::jxx::Ptr<TypeAdapter>& delegate);

@@ -177,6 +177,10 @@ void JsonWriter::writeString_(const std::string& value) {
     return self_();
 }
 
+::jxx::Ptr<JsonWriter> JsonWriter::value(::jxx::lang::jchar valueCharacter) {
+    return value(::jxx::NEW<::jxx::lang::String>(std::u16string(1U, valueCharacter)));
+}
+
 ::jxx::Ptr<JsonWriter> JsonWriter::value(::jxx::lang::jbool valueBoolean) {
     beforeValue_();
     writeRaw_(valueBoolean ? "true" : "false");

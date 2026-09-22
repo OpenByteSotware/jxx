@@ -38,6 +38,9 @@ public:
     ::jxx::lang::jbool nextBoolean();
     void nextNull();
     ::jxx::lang::jdouble nextDouble();
+    ::jxx::lang::jfloat nextFloat();
+    ::jxx::lang::jshort nextShort();
+    ::jxx::lang::jbyte nextByte();
     ::jxx::lang::jlong nextLong();
     ::jxx::lang::jint nextInt();
     void skipValue();
