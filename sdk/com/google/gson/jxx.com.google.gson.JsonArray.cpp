@@ -23,7 +23,10 @@ void JsonArray::set(::jxx::lang::jint index,const ::jxx::Ptr<JsonElement>& eleme
 ::jxx::Ptr<JsonElement> JsonArray::deepCopy(){const auto result=::jxx::NEW<JsonArray>();for(::jxx::lang::jint i=0;i<size();++i){const auto value=get(i);result->add(value==nullptr?nullptr:value->deepCopy());}return result;}
 ::jxx::Ptr<::jxx::lang::String> JsonArray::getAsString(){if(size()!=1)throw ::jxx::lang::IllegalStateException();return get(0)->getAsString();}
 ::jxx::lang::jbool JsonArray::getAsBoolean(){if(size()!=1)throw ::jxx::lang::IllegalStateException();return get(0)->getAsBoolean();}
+::jxx::lang::jbyte JsonArray::getAsByte(){if(size()!=1)throw ::jxx::lang::IllegalStateException();return get(0)->getAsByte();}
+::jxx::lang::jshort JsonArray::getAsShort(){if(size()!=1)throw ::jxx::lang::IllegalStateException();return get(0)->getAsShort();}
 ::jxx::lang::jint JsonArray::getAsInt(){if(size()!=1)throw ::jxx::lang::IllegalStateException();return get(0)->getAsInt();}
+::jxx::lang::jfloat JsonArray::getAsFloat(){if(size()!=1)throw ::jxx::lang::IllegalStateException();return get(0)->getAsFloat();}
 ::jxx::lang::jlong JsonArray::getAsLong(){if(size()!=1)throw ::jxx::lang::IllegalStateException();return get(0)->getAsLong();}
 ::jxx::lang::jdouble JsonArray::getAsDouble(){if(size()!=1)throw ::jxx::lang::IllegalStateException();return get(0)->getAsDouble();}
 ::jxx::lang::jbool JsonArray::equals(const ::jxx::Ptr<::jxx::lang::Object>& other) const{const auto array=std::dynamic_pointer_cast<JsonArray>(other);if(array==nullptr||array->size()!=size())return false;for(::jxx::lang::jint i=0;i<size();++i){const auto a=get(i);const auto b=array->get(i);if(a==nullptr?b!=nullptr:!a->equals(b))return false;}return true;}

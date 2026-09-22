@@ -58,6 +58,11 @@ public:
 
     ::jxx::Ptr<JsonElement> fromJson(
         const ::jxx::Ptr<::jxx::lang::String>& json) const;
+    ::jxx::Ptr<::com::google::gson::stream::JsonReader> newJsonReader(
+        const ::jxx::Ptr<::jxx::io::Reader>& reader) const;
+    ::jxx::Ptr<::com::google::gson::stream::JsonWriter> newJsonWriter(
+        const ::jxx::Ptr<::jxx::io::Writer>& writer) const;
+
     ::jxx::Ptr<JsonElement> fromJson(const ::jxx::Ptr<::jxx::io::Reader>& reader) const;
     ::jxx::Ptr<JsonElement> fromJson(const ::jxx::Ptr<::com::google::gson::stream::JsonReader>& reader) const;
 
@@ -120,6 +125,12 @@ public:
     ::jxx::Ptr<::jxx::lang::Object> fromJsonTree(
         const ::jxx::Ptr<JsonElement>& tree,
         const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const;
+    ::jxx::Ptr<JsonElement> toJsonTree(
+        const ::jxx::Ptr<::jxx::lang::Object>& value,
+        const ::jxx::Ptr<::com::google::gson::reflect::TypeToken>& type) const;
+    ::jxx::Ptr<::jxx::lang::Object> fromJsonTree(
+        const ::jxx::Ptr<JsonElement>& tree,
+        const ::jxx::Ptr<::com::google::gson::reflect::TypeToken>& type) const;
 
 private:
     static std::string formatTree_(

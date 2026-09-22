@@ -155,6 +155,9 @@ std::string Gson::formatTree_(
 void Gson::toJson(const ::jxx::Ptr<JsonElement>& element,const ::jxx::Ptr<::jxx::io::Writer>& writer) const { if(writer==nullptr) throw ::jxx::lang::NullPointerException(); writer->write(toJson(element)); }
 void Gson::toJson(const ::jxx::Ptr<JsonElement>& element,const ::jxx::Ptr<::com::google::gson::stream::JsonWriter>& writer) const { if(writer==nullptr) throw ::jxx::lang::NullPointerException(); ::com::google::gson::internal::Streams::write(element,writer); }
 
+::jxx::Ptr<::com::google::gson::stream::JsonReader> Gson::newJsonReader(const ::jxx::Ptr<::jxx::io::Reader>& reader) const {if(reader==nullptr)throw ::jxx::lang::NullPointerException();const auto result=::jxx::NEW<::com::google::gson::stream::JsonReader>(reader);result->setLenient(lenient_);return result;}
+::jxx::Ptr<::com::google::gson::stream::JsonWriter> Gson::newJsonWriter(const ::jxx::Ptr<::jxx::io::Writer>& writer) const {if(writer==nullptr)throw ::jxx::lang::NullPointerException();const auto result=::jxx::NEW<::com::google::gson::stream::JsonWriter>(writer);result->setLenient(lenient_);result->setHtmlSafe(htmlSafe_);result->setSerializeNulls(serializeNulls_);if(prettyPrinting_)result->setIndent(::jxx::NEW<::jxx::lang::String>("  "));return result;}
+
 ::jxx::Ptr<::jxx::lang::Object> Gson::fromJson(
     const ::jxx::Ptr<::jxx::lang::String>& json,
     const ::jxx::Ptr<TypeAdapter>& adapter) const {
@@ -264,6 +267,9 @@ LongSerializationPolicy Gson::longSerializationPolicy() const noexcept { return 
 ::jxx::lang::jbool Gson::complexMapKeySerialization() const noexcept { return complexMapKeySerialization_; }
 ::jxx::Ptr<JsonElement> Gson::toJsonTree(const ::jxx::Ptr<::jxx::lang::Object>& value,const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const {if(type==nullptr)throw ::jxx::lang::NullPointerException();const auto adapter=getAdapter(type);return adapter==nullptr?nullptr:adapter->toJsonTree(value);}
 ::jxx::Ptr<::jxx::lang::Object> Gson::fromJsonTree(const ::jxx::Ptr<JsonElement>& tree,const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const {if(type==nullptr)throw ::jxx::lang::NullPointerException();const auto adapter=getAdapter(type);return adapter==nullptr?nullptr:adapter->fromJsonTree(tree);}
+
+::jxx::Ptr<JsonElement> Gson::toJsonTree(const ::jxx::Ptr<::jxx::lang::Object>& value,const ::jxx::Ptr<::com::google::gson::reflect::TypeToken>& type) const {if(type==nullptr)throw ::jxx::lang::NullPointerException();return toJsonTree(value,type->getRawType());}
+::jxx::Ptr<::jxx::lang::Object> Gson::fromJsonTree(const ::jxx::Ptr<JsonElement>& tree,const ::jxx::Ptr<::com::google::gson::reflect::TypeToken>& type) const {if(type==nullptr)throw ::jxx::lang::NullPointerException();return fromJsonTree(tree,type->getRawType());}
 
 ::jxx::Ptr<TypeAdapter> Gson::getTreeAdapter(const ::jxx::Ptr<::jxx::lang::ClassAny>& type){if(type==nullptr)throw ::jxx::lang::NullPointerException();const auto serializer=getSerializer(type);const auto deserializer=getDeserializer(type);if(serializer==nullptr&&deserializer==nullptr)return nullptr;const auto context=::jxx::NEW<::com::google::gson::internal::GsonContext>(::jxx::CAST<Gson>(this->thisPtr()));return ::jxx::CAST<TypeAdapter>(::jxx::NEW<::com::google::gson::internal::TreeTypeAdapter>(serializer,deserializer,type,context,context));}
 ::jxx::Ptr<JsonSerializer> Gson::getSerializer(const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const {if(type==nullptr)throw ::jxx::lang::NullPointerException();if(serializerTypes_!=nullptr&&serializers_!=nullptr)for(::jxx::lang::jint i=serializers_->length-1;i>=0;--i)if((*serializerTypes_)[i]==type)return (*serializers_)[i];return nullptr;}

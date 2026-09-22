@@ -24,7 +24,10 @@ public:
     ::jxx::Ptr<JsonElement> deepCopy() override;
     ::jxx::Ptr<::jxx::lang::String> getAsString() override;
     ::jxx::lang::jbool getAsBoolean() override;
+    ::jxx::lang::jbyte getAsByte() override;
+    ::jxx::lang::jshort getAsShort() override;
     ::jxx::lang::jint getAsInt() override;
+    ::jxx::lang::jfloat getAsFloat() override;
     ::jxx::lang::jlong getAsLong() override;
     ::jxx::lang::jdouble getAsDouble() override;
     ::jxx::lang::jbool equals(
