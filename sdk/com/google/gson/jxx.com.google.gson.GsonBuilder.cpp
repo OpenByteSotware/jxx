@@ -109,11 +109,20 @@ template <typename T>
     return ::jxx::CAST<GsonBuilder>(this->thisPtr());
 }
 
+::jxx::Ptr<GsonBuilder> GsonBuilder::setObjectToNumberStrategy(const ::jxx::Ptr<ToNumberStrategy>& strategy){if(strategy==nullptr)throw ::jxx::lang::NullPointerException();objectToNumberStrategy_=strategy;return ::jxx::CAST<GsonBuilder>(this->thisPtr());}
+::jxx::Ptr<GsonBuilder> GsonBuilder::setNumberToNumberStrategy(const ::jxx::Ptr<ToNumberStrategy>& strategy){if(strategy==nullptr)throw ::jxx::lang::NullPointerException();numberToNumberStrategy_=strategy;return ::jxx::CAST<GsonBuilder>(this->thisPtr());}
+::jxx::Ptr<GsonBuilder> GsonBuilder::setDateFormat(const ::jxx::Ptr<::jxx::lang::String>& pattern){if(pattern==nullptr)throw ::jxx::lang::NullPointerException();dateFormatPattern_=pattern;dateStyle_=-1;return ::jxx::CAST<GsonBuilder>(this->thisPtr());}
+::jxx::Ptr<GsonBuilder> GsonBuilder::setDateFormat(::jxx::lang::jint style){dateStyle_=style;dateFormatPattern_=nullptr;return ::jxx::CAST<GsonBuilder>(this->thisPtr());}
+::jxx::Ptr<GsonBuilder> GsonBuilder::disableInnerClassSerialization(){serializeInnerClasses_=false;return ::jxx::CAST<GsonBuilder>(this->thisPtr());}
+::jxx::Ptr<GsonBuilder> GsonBuilder::enableComplexMapKeySerialization(){complexMapKeySerialization_=true;return ::jxx::CAST<GsonBuilder>(this->thisPtr());}
+
 ::jxx::Ptr<Gson> GsonBuilder::create() const {
     return ::jxx::NEW<Gson>(serializeNulls_, htmlSafe_, prettyPrinting_, lenient_,
         fieldNamingStrategy_, adapterTypes_, adapters_, creatorTypes_, creators_, factories_,
         serializationStrategies_, deserializationStrategies_, requireExpose_, version_,
-        nonExecutableJson_, specialFloatingPointValues_, longSerializationPolicy_);
+        nonExecutableJson_, specialFloatingPointValues_, longSerializationPolicy_,
+        objectToNumberStrategy_, numberToNumberStrategy_, dateFormatPattern_, dateStyle_,
+        serializeInnerClasses_, complexMapKeySerialization_);
 }
 
 } // namespace com::google::gson

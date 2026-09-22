@@ -10,6 +10,8 @@
 #include "lang/jxx.lang.Class.h"
 #include "com/google/gson/jxx.com.google.gson.ExclusionStrategy.h"
 #include "com/google/gson/jxx.com.google.gson.LongSerializationPolicy.h"
+#include "com/google/gson/jxx.com.google.gson.ToNumberPolicy.h"
+#include "lang/jxx.lang.String.h"
 
 namespace com::google::gson {
 
@@ -48,6 +50,16 @@ public:
     ::jxx::Ptr<GsonBuilder> serializeSpecialFloatingPointValues();
     ::jxx::Ptr<GsonBuilder> setLongSerializationPolicy(
         LongSerializationPolicy policy);
+    ::jxx::Ptr<GsonBuilder> setObjectToNumberStrategy(
+        const ::jxx::Ptr<ToNumberStrategy>& strategy);
+    ::jxx::Ptr<GsonBuilder> setNumberToNumberStrategy(
+        const ::jxx::Ptr<ToNumberStrategy>& strategy);
+    ::jxx::Ptr<GsonBuilder> setDateFormat(
+        const ::jxx::Ptr<::jxx::lang::String>& pattern);
+    ::jxx::Ptr<GsonBuilder> setDateFormat(
+        ::jxx::lang::jint style);
+    ::jxx::Ptr<GsonBuilder> disableInnerClassSerialization();
+    ::jxx::Ptr<GsonBuilder> enableComplexMapKeySerialization();
 
     ::jxx::Ptr<Gson> create() const;
 
@@ -69,6 +81,12 @@ private:
     ::jxx::lang::jbool nonExecutableJson_ = false;
     ::jxx::lang::jbool specialFloatingPointValues_ = false;
     LongSerializationPolicy longSerializationPolicy_ = LongSerializationPolicy::DEFAULT;
+    ::jxx::Ptr<ToNumberStrategy> objectToNumberStrategy_;
+    ::jxx::Ptr<ToNumberStrategy> numberToNumberStrategy_;
+    ::jxx::Ptr<::jxx::lang::String> dateFormatPattern_;
+    ::jxx::lang::jint dateStyle_ = -1;
+    ::jxx::lang::jbool serializeInnerClasses_ = true;
+    ::jxx::lang::jbool complexMapKeySerialization_ = false;
 };
 
 } // namespace com::google::gson

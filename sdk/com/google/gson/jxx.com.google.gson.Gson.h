@@ -9,6 +9,7 @@
 #include "com/google/gson/jxx.com.google.gson.TypeAdapterFactory.h"
 #include "com/google/gson/jxx.com.google.gson.ExclusionStrategy.h"
 #include "com/google/gson/jxx.com.google.gson.LongSerializationPolicy.h"
+#include "com/google/gson/jxx.com.google.gson.ToNumberStrategy.h"
 #include "com/google/gson/reflect/jxx.com.google.gson.reflect.TypeToken.h"
 
 #include <string>
@@ -41,7 +42,13 @@ public:
         ::jxx::lang::jdouble version = -1.0,
         ::jxx::lang::jbool nonExecutableJson = false,
         ::jxx::lang::jbool specialFloatingPointValues = false,
-        LongSerializationPolicy longSerializationPolicy = LongSerializationPolicy::DEFAULT);
+        LongSerializationPolicy longSerializationPolicy = LongSerializationPolicy::DEFAULT,
+        const ::jxx::Ptr<ToNumberStrategy>& objectToNumberStrategy = nullptr,
+        const ::jxx::Ptr<ToNumberStrategy>& numberToNumberStrategy = nullptr,
+        const ::jxx::Ptr<::jxx::lang::String>& dateFormatPattern = nullptr,
+        ::jxx::lang::jint dateStyle = -1,
+        ::jxx::lang::jbool serializeInnerClasses = true,
+        ::jxx::lang::jbool complexMapKeySerialization = false);
 
     ::jxx::Ptr<JsonElement> fromJson(
         const ::jxx::Ptr<::jxx::lang::String>& json) const;
@@ -84,6 +91,12 @@ public:
     ::jxx::lang::jbool requireExpose() const noexcept;
     ::jxx::lang::jdouble version() const noexcept;
     LongSerializationPolicy longSerializationPolicy() const noexcept;
+    ::jxx::Ptr<ToNumberStrategy> objectToNumberStrategy() const;
+    ::jxx::Ptr<ToNumberStrategy> numberToNumberStrategy() const;
+    ::jxx::Ptr<::jxx::lang::String> dateFormatPattern() const;
+    ::jxx::lang::jint dateStyle() const noexcept;
+    ::jxx::lang::jbool serializeInnerClasses() const noexcept;
+    ::jxx::lang::jbool complexMapKeySerialization() const noexcept;
 
 private:
     static std::string formatTree_(
@@ -110,6 +123,12 @@ private:
     ::jxx::lang::jbool nonExecutableJson_ = false;
     ::jxx::lang::jbool specialFloatingPointValues_ = false;
     LongSerializationPolicy longSerializationPolicy_ = LongSerializationPolicy::DEFAULT;
+    ::jxx::Ptr<ToNumberStrategy> objectToNumberStrategy_;
+    ::jxx::Ptr<ToNumberStrategy> numberToNumberStrategy_;
+    ::jxx::Ptr<::jxx::lang::String> dateFormatPattern_;
+    ::jxx::lang::jint dateStyle_ = -1;
+    ::jxx::lang::jbool serializeInnerClasses_ = true;
+    ::jxx::lang::jbool complexMapKeySerialization_ = false;
 };
 
 } // namespace com::google::gson

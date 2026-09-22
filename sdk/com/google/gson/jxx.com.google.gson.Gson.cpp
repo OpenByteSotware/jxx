@@ -65,7 +65,13 @@ Gson::Gson(
     ::jxx::lang::jdouble version,
     ::jxx::lang::jbool nonExecutableJson,
     ::jxx::lang::jbool specialFloatingPointValues,
-    LongSerializationPolicy longSerializationPolicy)
+    LongSerializationPolicy longSerializationPolicy,
+    const ::jxx::Ptr<ToNumberStrategy>& objectToNumberStrategy,
+    const ::jxx::Ptr<ToNumberStrategy>& numberToNumberStrategy,
+    const ::jxx::Ptr<::jxx::lang::String>& dateFormatPattern,
+    ::jxx::lang::jint dateStyle,
+    ::jxx::lang::jbool serializeInnerClasses,
+    ::jxx::lang::jbool complexMapKeySerialization)
     : serializeNulls_(serializeNulls), htmlSafe_(htmlSafe),
       prettyPrinting_(prettyPrinting), lenient_(lenient),
       fieldNamingStrategy_(fieldNamingStrategy), adapterTypes_(adapterTypes),
@@ -74,7 +80,10 @@ Gson::Gson(
       deserializationStrategies_(deserializationStrategies), requireExpose_(requireExpose),
       version_(version), nonExecutableJson_(nonExecutableJson),
       specialFloatingPointValues_(specialFloatingPointValues),
-      longSerializationPolicy_(longSerializationPolicy) {}
+      longSerializationPolicy_(longSerializationPolicy),
+      objectToNumberStrategy_(objectToNumberStrategy), numberToNumberStrategy_(numberToNumberStrategy),
+      dateFormatPattern_(dateFormatPattern), dateStyle_(dateStyle),
+      serializeInnerClasses_(serializeInnerClasses), complexMapKeySerialization_(complexMapKeySerialization) {}
 
 ::jxx::Ptr<JsonElement> Gson::fromJson(
     const ::jxx::Ptr<::jxx::lang::String>& json) const {
@@ -234,5 +243,11 @@ void Gson::toJson(const ::jxx::Ptr<JsonElement>& element,const ::jxx::Ptr<::com:
 ::jxx::lang::jbool Gson::requireExpose() const noexcept { return requireExpose_; }
 ::jxx::lang::jdouble Gson::version() const noexcept { return version_; }
 LongSerializationPolicy Gson::longSerializationPolicy() const noexcept { return longSerializationPolicy_; }
+::jxx::Ptr<ToNumberStrategy> Gson::objectToNumberStrategy() const { return objectToNumberStrategy_; }
+::jxx::Ptr<ToNumberStrategy> Gson::numberToNumberStrategy() const { return numberToNumberStrategy_; }
+::jxx::Ptr<::jxx::lang::String> Gson::dateFormatPattern() const { return dateFormatPattern_; }
+::jxx::lang::jint Gson::dateStyle() const noexcept { return dateStyle_; }
+::jxx::lang::jbool Gson::serializeInnerClasses() const noexcept { return serializeInnerClasses_; }
+::jxx::lang::jbool Gson::complexMapKeySerialization() const noexcept { return complexMapKeySerialization_; }
 
 } // namespace com::google::gson
