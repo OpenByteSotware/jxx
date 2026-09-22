@@ -8,6 +8,7 @@
 #include "com/google/gson/jxx.com.google.gson.InstanceCreator.h"
 #include "com/google/gson/jxx.com.google.gson.TypeAdapterFactory.h"
 #include "com/google/gson/jxx.com.google.gson.ExclusionStrategy.h"
+#include "com/google/gson/jxx.com.google.gson.LongSerializationPolicy.h"
 
 #include <string>
 
@@ -36,7 +37,8 @@ public:
         ::jxx::lang::jbool requireExpose = false,
         ::jxx::lang::jdouble version = -1.0,
         ::jxx::lang::jbool nonExecutableJson = false,
-        ::jxx::lang::jbool specialFloatingPointValues = false);
+        ::jxx::lang::jbool specialFloatingPointValues = false,
+        LongSerializationPolicy longSerializationPolicy = LongSerializationPolicy::DEFAULT);
 
     ::jxx::Ptr<JsonElement> fromJson(
         const ::jxx::Ptr<::jxx::lang::String>& json) const;
@@ -69,6 +71,7 @@ public:
         ::jxx::lang::jbool serialization) const;
     ::jxx::lang::jbool requireExpose() const noexcept;
     ::jxx::lang::jdouble version() const noexcept;
+    LongSerializationPolicy longSerializationPolicy() const noexcept;
 
 private:
     static std::string formatTree_(
@@ -94,6 +97,7 @@ private:
     ::jxx::lang::jdouble version_ = -1.0;
     ::jxx::lang::jbool nonExecutableJson_ = false;
     ::jxx::lang::jbool specialFloatingPointValues_ = false;
+    LongSerializationPolicy longSerializationPolicy_ = LongSerializationPolicy::DEFAULT;
 };
 
 } // namespace com::google::gson

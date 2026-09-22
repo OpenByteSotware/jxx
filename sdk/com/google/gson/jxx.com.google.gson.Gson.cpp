@@ -59,7 +59,8 @@ Gson::Gson(
     ::jxx::lang::jbool requireExpose,
     ::jxx::lang::jdouble version,
     ::jxx::lang::jbool nonExecutableJson,
-    ::jxx::lang::jbool specialFloatingPointValues)
+    ::jxx::lang::jbool specialFloatingPointValues,
+    LongSerializationPolicy longSerializationPolicy)
     : serializeNulls_(serializeNulls), htmlSafe_(htmlSafe),
       prettyPrinting_(prettyPrinting), lenient_(lenient),
       fieldNamingStrategy_(fieldNamingStrategy), adapterTypes_(adapterTypes),
@@ -67,7 +68,8 @@ Gson::Gson(
       factories_(factories), serializationStrategies_(serializationStrategies),
       deserializationStrategies_(deserializationStrategies), requireExpose_(requireExpose),
       version_(version), nonExecutableJson_(nonExecutableJson),
-      specialFloatingPointValues_(specialFloatingPointValues) {}
+      specialFloatingPointValues_(specialFloatingPointValues),
+      longSerializationPolicy_(longSerializationPolicy) {}
 
 ::jxx::Ptr<JsonElement> Gson::fromJson(
     const ::jxx::Ptr<::jxx::lang::String>& json) const {
@@ -206,5 +208,6 @@ std::string Gson::formatTree_(
 
 ::jxx::lang::jbool Gson::requireExpose() const noexcept { return requireExpose_; }
 ::jxx::lang::jdouble Gson::version() const noexcept { return version_; }
+LongSerializationPolicy Gson::longSerializationPolicy() const noexcept { return longSerializationPolicy_; }
 
 } // namespace com::google::gson

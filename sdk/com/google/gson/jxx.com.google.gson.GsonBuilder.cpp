@@ -103,11 +103,17 @@ template <typename T>
     return ::jxx::CAST<GsonBuilder>(this->thisPtr());
 }
 
+::jxx::Ptr<GsonBuilder> GsonBuilder::setLongSerializationPolicy(
+    LongSerializationPolicy policy) {
+    longSerializationPolicy_ = policy;
+    return ::jxx::CAST<GsonBuilder>(this->thisPtr());
+}
+
 ::jxx::Ptr<Gson> GsonBuilder::create() const {
     return ::jxx::NEW<Gson>(serializeNulls_, htmlSafe_, prettyPrinting_, lenient_,
         fieldNamingStrategy_, adapterTypes_, adapters_, creatorTypes_, creators_, factories_,
         serializationStrategies_, deserializationStrategies_, requireExpose_, version_,
-        nonExecutableJson_, specialFloatingPointValues_);
+        nonExecutableJson_, specialFloatingPointValues_, longSerializationPolicy_);
 }
 
 } // namespace com::google::gson

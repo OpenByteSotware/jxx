@@ -9,6 +9,7 @@
 #include "com/google/gson/jxx.com.google.gson.TypeAdapterFactory.h"
 #include "lang/jxx.lang.Class.h"
 #include "com/google/gson/jxx.com.google.gson.ExclusionStrategy.h"
+#include "com/google/gson/jxx.com.google.gson.LongSerializationPolicy.h"
 
 namespace com::google::gson {
 
@@ -45,6 +46,8 @@ public:
     ::jxx::Ptr<GsonBuilder> setVersion(::jxx::lang::jdouble version);
     ::jxx::Ptr<GsonBuilder> generateNonExecutableJson();
     ::jxx::Ptr<GsonBuilder> serializeSpecialFloatingPointValues();
+    ::jxx::Ptr<GsonBuilder> setLongSerializationPolicy(
+        LongSerializationPolicy policy);
 
     ::jxx::Ptr<Gson> create() const;
 
@@ -65,6 +68,7 @@ private:
     ::jxx::lang::jdouble version_ = -1.0;
     ::jxx::lang::jbool nonExecutableJson_ = false;
     ::jxx::lang::jbool specialFloatingPointValues_ = false;
+    LongSerializationPolicy longSerializationPolicy_ = LongSerializationPolicy::DEFAULT;
 };
 
 } // namespace com::google::gson
