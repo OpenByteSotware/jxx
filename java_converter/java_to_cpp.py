@@ -137,9 +137,7 @@ class Translator:
         mods = set(getattr(m, "modifiers", None) or [])
         if not {"public", "static"}.issubset(mods):
             return False
-        # javalang represents a void return as return_type=None.
-        return_type = getattr(m, "return_type", None)
-        if return_type is not None and self.simple(self.name_of(return_type)) != "void":
+        if self.name_of(getattr(m, "return_type", None)) != "void":
             return False
         params = list(getattr(m, "parameters", None) or [])
         if len(params) != 1:
@@ -331,20 +329,87 @@ class Translator:
         cp.write_text(self.source(tree,os.path.relpath(hp,cp.parent).replace(os.sep,'/')),encoding='utf-8')
         return hp,cp
 
+def _cmake_target_name(source: Path, root: Path) -> str:
+    """Return a deterministic, CMake-safe executable target name.
+
+    The Java filename remains the target name when it is unique. Package path
+    components are used only to disambiguate duplicate filenames.
+    """
+    relative = source.relative_to(root).with_suffix('')
+    parts = list(relative.parts)
+    raw = '_'.join(parts)
+    safe = ''.join(ch if ch.isalnum() or ch == '_' else '_' for ch in raw)
+    if safe and safe[0].isdigit():
+        safe = '_' + safe
+    return safe or 'jxx_app'
+
+
+def _contains_native_main(source: Path) -> bool:
+    try:
+        text = source.read_text(encoding='utf-8')
+    except OSError:
+        return False
+    return 'int main(int argc, char* argv[])' in text
+
+
 def generate_cmake(out_root:str, project:str='TranspiledProject', target:str='transpiled')->str:
-    root=Path(out_root)
-    sources=sorted(x.relative_to(root).as_posix() for x in root.rglob('*.cpp'))
-    lines=['cmake_minimum_required(VERSION 3.16)',f'project({project} LANGUAGES CXX)','',
-           'set(CMAKE_CXX_STANDARD 17)','set(CMAKE_CXX_STANDARD_REQUIRED ON)',
-           'set(CMAKE_CXX_EXTENSIONS OFF)','']
-    if sources:
+    root = Path(out_root)
+    sources = sorted(root.rglob('*.cpp'))
+    main_sources = [source for source in sources if _contains_native_main(source)]
+    support_sources = [source for source in sources if source not in main_sources]
+
+    relative_main = [(source, source.relative_to(root).as_posix()) for source in main_sources]
+    relative_support = [source.relative_to(root).as_posix() for source in support_sources]
+
+    lines = [
+        'cmake_minimum_required(VERSION 3.16)',
+        f'project({project} LANGUAGES CXX)',
+        '',
+        'set(CMAKE_CXX_STANDARD 17)',
+        'set(CMAKE_CXX_STANDARD_REQUIRED ON)',
+        'set(CMAKE_CXX_EXTENSIONS OFF)',
+        '',
+    ]
+
+    if relative_support:
         lines.append(f'add_library({target} STATIC')
-        lines.extend(f'    {x}' for x in sources)
+        lines.extend(f'    {source}' for source in relative_support)
         lines.append(')')
-    else:
-        lines += [f'file(GLOB_RECURSE {target}_SOURCES CONFIGURE_DEPENDS *.cpp)',
-                  f'add_library({target} STATIC ${{{target}_SOURCES}})']
-    lines += [f'target_include_directories({target} PUBLIC ${{CMAKE_CURRENT_SOURCE_DIR}})','']
+        lines.append(
+            f'target_include_directories({target} PUBLIC '
+            '${CMAKE_CURRENT_SOURCE_DIR})')
+        lines.append('')
+
+    used_targets = set()
+    stem_counts = {}
+    for source, _ in relative_main:
+        stem_counts[source.stem] = stem_counts.get(source.stem, 0) + 1
+
+    for source, relative_source in relative_main:
+        executable = source.stem
+        if stem_counts[source.stem] > 1 or executable in used_targets:
+            executable = _cmake_target_name(source, root)
+        while executable in used_targets:
+            executable += '_app'
+        used_targets.add(executable)
+
+        lines.append(f'add_executable({executable}')
+        lines.append(f'    {relative_source}')
+        lines.append(')')
+        lines.append(
+            f'target_include_directories({executable} PRIVATE '
+            '${CMAKE_CURRENT_SOURCE_DIR})')
+        if relative_support:
+            lines.append(f'target_link_libraries({executable} PRIVATE {target})')
+        lines.append('')
+
+    if not sources:
+        lines.append('# No generated C++ sources were found.')
+    elif not relative_main:
+        lines.append('# No translated Java main method was found; no executable was generated.')
+
+    lines.append('# Add the JXX SDK target/library to target_link_libraries as required by your build.')
+    lines.append('')
     return '\n'.join(lines)
 
 def translate_file(path:Path,out_root:str):
