@@ -113,6 +113,53 @@ std::string JsonReader::readString_() {
             case 'n': result.push_back('\n'); break;
             case 'r': result.push_back('\r'); break;
             case 't': result.push_back('\t'); break;
+            case 'u': {
+                if (position_ + 4U > json_.size()) {
+                    malformed("Incomplete JSON unicode escape");
+                }
+                unsigned int codePoint = 0U;
+                for (int index = 0; index < 4; ++index) {
+                    const auto digit = take_();
+                    codePoint <<= 4U;
+                    if (digit >= '0' && digit <= '9') codePoint |= static_cast<unsigned int>(digit - '0');
+                    else if (digit >= 'a' && digit <= 'f') codePoint |= static_cast<unsigned int>(digit - 'a' + 10);
+                    else if (digit >= 'A' && digit <= 'F') codePoint |= static_cast<unsigned int>(digit - 'A' + 10);
+                    else malformed("Invalid JSON unicode escape");
+                }
+                if (codePoint >= 0xD800U && codePoint <= 0xDBFFU) {
+                    if (position_ + 6U > json_.size() || take_() != '\\' || take_() != 'u') {
+                        malformed("Missing JSON low surrogate");
+                    }
+                    unsigned int low = 0U;
+                    for (int index = 0; index < 4; ++index) {
+                        const auto digit = take_();
+                        low <<= 4U;
+                        if (digit >= '0' && digit <= '9') low |= static_cast<unsigned int>(digit - '0');
+                        else if (digit >= 'a' && digit <= 'f') low |= static_cast<unsigned int>(digit - 'a' + 10);
+                        else if (digit >= 'A' && digit <= 'F') low |= static_cast<unsigned int>(digit - 'A' + 10);
+                        else malformed("Invalid JSON unicode escape");
+                    }
+                    if (low < 0xDC00U || low > 0xDFFFU) malformed("Invalid JSON low surrogate");
+                    codePoint = 0x10000U + ((codePoint - 0xD800U) << 10U) + (low - 0xDC00U);
+                } else if (codePoint >= 0xDC00U && codePoint <= 0xDFFFU) {
+                    malformed("Unexpected JSON low surrogate");
+                }
+                if (codePoint <= 0x7FU) result.push_back(static_cast<char>(codePoint));
+                else if (codePoint <= 0x7FFU) {
+                    result.push_back(static_cast<char>(0xC0U | (codePoint >> 6U)));
+                    result.push_back(static_cast<char>(0x80U | (codePoint & 0x3FU)));
+                } else if (codePoint <= 0xFFFFU) {
+                    result.push_back(static_cast<char>(0xE0U | (codePoint >> 12U)));
+                    result.push_back(static_cast<char>(0x80U | ((codePoint >> 6U) & 0x3FU)));
+                    result.push_back(static_cast<char>(0x80U | (codePoint & 0x3FU)));
+                } else {
+                    result.push_back(static_cast<char>(0xF0U | (codePoint >> 18U)));
+                    result.push_back(static_cast<char>(0x80U | ((codePoint >> 12U) & 0x3FU)));
+                    result.push_back(static_cast<char>(0x80U | ((codePoint >> 6U) & 0x3FU)));
+                    result.push_back(static_cast<char>(0x80U | (codePoint & 0x3FU)));
+                }
+                break;
+            }
             default: malformed("Unsupported JSON escape sequence");
         }
     }
