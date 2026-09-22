@@ -5,7 +5,7 @@
 #include "lang/jxx.lang.buildin_array.h"
 
 namespace jxx::ext::xml::bind::metadata { class BindingDescriptor; }
-namespace jxx::ext::xml::bind { class Unmarshaller; }
+namespace jxx::ext::xml::bind { class Unmarshaller; class Marshaller; }
 
 namespace jxx::ext::xml::bind {
 
@@ -23,6 +23,7 @@ public:
         const ::jxx::Ptr<DescriptorArray>& descriptors);
 
     ::jxx::Ptr<Unmarshaller> createUnmarshaller();
+    ::jxx::Ptr<Marshaller> createMarshaller();
 
     explicit JAXBContext(
         const ::jxx::Ptr<DescriptorArray>& descriptors);

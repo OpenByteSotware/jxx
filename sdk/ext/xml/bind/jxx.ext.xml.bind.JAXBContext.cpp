@@ -1,6 +1,7 @@
 #include "ext/xml/bind/jxx.ext.xml.bind.JAXBContext.h"
 
 #include "ext/xml/bind/internal/jxx.ext.xml.bind.internal.DomUnmarshaller.h"
+#include "ext/xml/bind/internal/jxx.ext.xml.bind.internal.XmlMarshaller.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 
@@ -32,6 +33,11 @@ JAXBContext::JAXBContext(
 ::jxx::Ptr<Unmarshaller> JAXBContext::createUnmarshaller() {
     return ::jxx::CAST<Unmarshaller>(
         ::jxx::NEW<internal::DomUnmarshaller>(descriptors_));
+}
+
+::jxx::Ptr<Marshaller> JAXBContext::createMarshaller() {
+    return ::jxx::CAST<Marshaller>(
+        ::jxx::NEW<internal::XmlMarshaller>());
 }
 
 } // namespace jxx::ext::xml::bind
