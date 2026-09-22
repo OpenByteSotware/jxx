@@ -70,6 +70,9 @@ public:
         const ::jxx::Ptr<::jxx::lang::String>& pattern);
     ::jxx::Ptr<GsonBuilder> setDateFormat(
         ::jxx::lang::jint style);
+    ::jxx::Ptr<GsonBuilder> setDateFormat(
+        ::jxx::lang::jint dateStyle,
+        ::jxx::lang::jint timeStyle);
     ::jxx::Ptr<GsonBuilder> disableInnerClassSerialization();
     ::jxx::Ptr<GsonBuilder> enableComplexMapKeySerialization();
 
@@ -103,6 +106,7 @@ private:
     ::jxx::Ptr<ToNumberStrategy> numberToNumberStrategy_;
     ::jxx::Ptr<::jxx::lang::String> dateFormatPattern_;
     ::jxx::lang::jint dateStyle_ = -1;
+    ::jxx::lang::jint timeStyle_ = -1;
     ::jxx::lang::jbool serializeInnerClasses_ = true;
     ::jxx::lang::jbool complexMapKeySerialization_ = false;
 };

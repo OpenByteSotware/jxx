@@ -131,6 +131,7 @@ GsonBuilder::GsonBuilder(const ::jxx::Ptr<Gson>& gson) {
 ::jxx::Ptr<GsonBuilder> GsonBuilder::setNumberToNumberStrategy(const ::jxx::Ptr<ToNumberStrategy>& strategy){if(strategy==nullptr)throw ::jxx::lang::NullPointerException();numberToNumberStrategy_=strategy;return ::jxx::CAST<GsonBuilder>(this->thisPtr());}
 ::jxx::Ptr<GsonBuilder> GsonBuilder::setDateFormat(const ::jxx::Ptr<::jxx::lang::String>& pattern){if(pattern==nullptr)throw ::jxx::lang::NullPointerException();dateFormatPattern_=pattern;dateStyle_=-1;return ::jxx::CAST<GsonBuilder>(this->thisPtr());}
 ::jxx::Ptr<GsonBuilder> GsonBuilder::setDateFormat(::jxx::lang::jint style){dateStyle_=style;dateFormatPattern_=nullptr;return ::jxx::CAST<GsonBuilder>(this->thisPtr());}
+::jxx::Ptr<GsonBuilder> GsonBuilder::setDateFormat(::jxx::lang::jint dateStyle,::jxx::lang::jint timeStyle){dateStyle_=dateStyle;timeStyle_=timeStyle;dateFormatPattern_=nullptr;return ::jxx::CAST<GsonBuilder>(this->thisPtr());}
 ::jxx::Ptr<GsonBuilder> GsonBuilder::disableInnerClassSerialization(){serializeInnerClasses_=false;return ::jxx::CAST<GsonBuilder>(this->thisPtr());}
 ::jxx::Ptr<GsonBuilder> GsonBuilder::enableComplexMapKeySerialization(){complexMapKeySerialization_=true;return ::jxx::CAST<GsonBuilder>(this->thisPtr());}
 

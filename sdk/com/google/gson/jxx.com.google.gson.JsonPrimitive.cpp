@@ -1,6 +1,7 @@
 #include "com/google/gson/jxx.com.google.gson.JsonPrimitive.h"
 #include "lang/jxx.lang.Boolean.h"
 #include "lang/jxx.lang.Double.h"
+#include "lang/jxx.lang.IllegalStateException.h"
 #include "lang/jxx.lang.Long.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Short.h"
@@ -47,6 +48,11 @@ JsonPrimitive::JsonPrimitive(::jxx::lang::jdouble value):kind_(Kind::DECIMAL),va
 ::jxx::lang::jshort JsonPrimitive::getAsShort()
 {
 	return static_cast<::jxx::lang::jshort>(::jxx::lang::Short::parseShort(value_));
+}
+
+::jxx::lang::jchar JsonPrimitive::getAsCharacter()
+{
+    return static_cast<::jxx::lang::jchar>(value_->charAt(0));
 }
 
 ::jxx::lang::jfloat JsonPrimitive::getAsFloat() 

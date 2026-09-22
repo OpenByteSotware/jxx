@@ -23,6 +23,7 @@ void JsonArray::set(::jxx::lang::jint index,const ::jxx::Ptr<JsonElement>& eleme
 ::jxx::Ptr<JsonElement> JsonArray::deepCopy(){const auto result=::jxx::NEW<JsonArray>();for(::jxx::lang::jint i=0;i<size();++i){const auto value=get(i);result->add(value==nullptr?nullptr:value->deepCopy());}return result;}
 ::jxx::Ptr<::jxx::lang::String> JsonArray::getAsString(){if(size()!=1)throw ::jxx::lang::IllegalStateException();return get(0)->getAsString();}
 ::jxx::lang::jbool JsonArray::getAsBoolean(){if(size()!=1)throw ::jxx::lang::IllegalStateException();return get(0)->getAsBoolean();}
+::jxx::lang::jchar JsonArray::getAsCharacter(){if(size()!=1)throw ::jxx::lang::IllegalStateException();return get(0)->getAsCharacter();}
 ::jxx::lang::jbyte JsonArray::getAsByte(){if(size()!=1)throw ::jxx::lang::IllegalStateException();return get(0)->getAsByte();}
 ::jxx::lang::jshort JsonArray::getAsShort(){if(size()!=1)throw ::jxx::lang::IllegalStateException();return get(0)->getAsShort();}
 ::jxx::lang::jint JsonArray::getAsInt(){if(size()!=1)throw ::jxx::lang::IllegalStateException();return get(0)->getAsInt();}
