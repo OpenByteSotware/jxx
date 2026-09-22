@@ -53,12 +53,21 @@ Gson::Gson(
     const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapter>, 1U>>& adapters,
     const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>>& creatorTypes,
     const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<InstanceCreator>, 1U>>& creators,
-    const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapterFactory>, 1U>>& factories)
+    const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapterFactory>, 1U>>& factories,
+    const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<ExclusionStrategy>, 1U>>& serializationStrategies,
+    const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<ExclusionStrategy>, 1U>>& deserializationStrategies,
+    ::jxx::lang::jbool requireExpose,
+    ::jxx::lang::jdouble version,
+    ::jxx::lang::jbool nonExecutableJson,
+    ::jxx::lang::jbool specialFloatingPointValues)
     : serializeNulls_(serializeNulls), htmlSafe_(htmlSafe),
       prettyPrinting_(prettyPrinting), lenient_(lenient),
       fieldNamingStrategy_(fieldNamingStrategy), adapterTypes_(adapterTypes),
       adapters_(adapters), creatorTypes_(creatorTypes), creators_(creators),
-      factories_(factories) {}
+      factories_(factories), serializationStrategies_(serializationStrategies),
+      deserializationStrategies_(deserializationStrategies), requireExpose_(requireExpose),
+      version_(version), nonExecutableJson_(nonExecutableJson),
+      specialFloatingPointValues_(specialFloatingPointValues) {}
 
 ::jxx::Ptr<JsonElement> Gson::fromJson(
     const ::jxx::Ptr<::jxx::lang::String>& json) const {
@@ -112,8 +121,9 @@ std::string Gson::formatTree_(
 
 ::jxx::Ptr<::jxx::lang::String> Gson::toJson(
     const ::jxx::Ptr<JsonElement>& element) const {
-    return ::jxx::NEW<::jxx::lang::String>(
-        formatTree_(element, serializeNulls_, htmlSafe_, prettyPrinting_, 0));
+    auto text = formatTree_(element, serializeNulls_, htmlSafe_, prettyPrinting_, 0);
+    if (nonExecutableJson_) text = ")]}'\n" + text;
+    return ::jxx::NEW<::jxx::lang::String>(text);
 }
 
 ::jxx::Ptr<::jxx::lang::Object> Gson::fromJson(
@@ -163,5 +173,38 @@ std::string Gson::formatTree_(
     }
     return nullptr;
 }
+
+::jxx::lang::jbool Gson::shouldSkipField(
+    const ::jxx::Ptr<FieldAttributes>& field,
+    ::jxx::lang::jbool serialization) const {
+    if (field == nullptr) throw ::jxx::lang::NullPointerException();
+    const auto strategies = serialization
+        ? serializationStrategies_
+        : deserializationStrategies_;
+    if (strategies != nullptr) {
+        for (::jxx::lang::jint index = 0; index < strategies->length; ++index) {
+            if ((*strategies)[index] != nullptr && (*strategies)[index]->shouldSkipField(field)) return true;
+        }
+    }
+    return false;
+}
+
+::jxx::lang::jbool Gson::shouldSkipClass(
+    const ::jxx::Ptr<::jxx::lang::ClassAny>& type,
+    ::jxx::lang::jbool serialization) const {
+    if (type == nullptr) throw ::jxx::lang::NullPointerException();
+    const auto strategies = serialization
+        ? serializationStrategies_
+        : deserializationStrategies_;
+    if (strategies != nullptr) {
+        for (::jxx::lang::jint index = 0; index < strategies->length; ++index) {
+            if ((*strategies)[index] != nullptr && (*strategies)[index]->shouldSkipClass(type)) return true;
+        }
+    }
+    return false;
+}
+
+::jxx::lang::jbool Gson::requireExpose() const noexcept { return requireExpose_; }
+::jxx::lang::jdouble Gson::version() const noexcept { return version_; }
 
 } // namespace com::google::gson

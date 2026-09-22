@@ -8,6 +8,7 @@
 #include "com/google/gson/jxx.com.google.gson.TypeAdapter.h"
 #include "com/google/gson/jxx.com.google.gson.TypeAdapterFactory.h"
 #include "lang/jxx.lang.Class.h"
+#include "com/google/gson/jxx.com.google.gson.ExclusionStrategy.h"
 
 namespace com::google::gson {
 
@@ -33,6 +34,17 @@ public:
         const ::jxx::Ptr<InstanceCreator>& creator);
     ::jxx::Ptr<GsonBuilder> registerTypeAdapterFactory(
         const ::jxx::Ptr<TypeAdapterFactory>& factory);
+    ::jxx::Ptr<GsonBuilder> addSerializationExclusionStrategy(
+        const ::jxx::Ptr<ExclusionStrategy>& strategy);
+    ::jxx::Ptr<GsonBuilder> addDeserializationExclusionStrategy(
+        const ::jxx::Ptr<ExclusionStrategy>& strategy);
+    ::jxx::Ptr<GsonBuilder> setExclusionStrategies(
+        const ::jxx::Ptr<::jxx::lang::JxxArray<
+            ::jxx::Ptr<ExclusionStrategy>, 1U>>& strategies);
+    ::jxx::Ptr<GsonBuilder> excludeFieldsWithoutExposeAnnotation();
+    ::jxx::Ptr<GsonBuilder> setVersion(::jxx::lang::jdouble version);
+    ::jxx::Ptr<GsonBuilder> generateNonExecutableJson();
+    ::jxx::Ptr<GsonBuilder> serializeSpecialFloatingPointValues();
 
     ::jxx::Ptr<Gson> create() const;
 
@@ -47,6 +59,12 @@ private:
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>> creatorTypes_;
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<InstanceCreator>, 1U>> creators_;
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapterFactory>, 1U>> factories_;
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<ExclusionStrategy>, 1U>> serializationStrategies_;
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<ExclusionStrategy>, 1U>> deserializationStrategies_;
+    ::jxx::lang::jbool requireExpose_ = false;
+    ::jxx::lang::jdouble version_ = -1.0;
+    ::jxx::lang::jbool nonExecutableJson_ = false;
+    ::jxx::lang::jbool specialFloatingPointValues_ = false;
 };
 
 } // namespace com::google::gson

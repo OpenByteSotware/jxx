@@ -7,6 +7,7 @@
 #include "com/google/gson/jxx.com.google.gson.FieldNamingStrategy.h"
 #include "com/google/gson/jxx.com.google.gson.InstanceCreator.h"
 #include "com/google/gson/jxx.com.google.gson.TypeAdapterFactory.h"
+#include "com/google/gson/jxx.com.google.gson.ExclusionStrategy.h"
 
 #include <string>
 
@@ -29,7 +30,13 @@ public:
         const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapter>, 1U>>& adapters = nullptr,
         const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>>& creatorTypes = nullptr,
         const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<InstanceCreator>, 1U>>& creators = nullptr,
-        const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapterFactory>, 1U>>& factories = nullptr);
+        const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapterFactory>, 1U>>& factories = nullptr,
+        const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<ExclusionStrategy>, 1U>>& serializationStrategies = nullptr,
+        const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<ExclusionStrategy>, 1U>>& deserializationStrategies = nullptr,
+        ::jxx::lang::jbool requireExpose = false,
+        ::jxx::lang::jdouble version = -1.0,
+        ::jxx::lang::jbool nonExecutableJson = false,
+        ::jxx::lang::jbool specialFloatingPointValues = false);
 
     ::jxx::Ptr<JsonElement> fromJson(
         const ::jxx::Ptr<::jxx::lang::String>& json) const;
@@ -54,6 +61,14 @@ public:
         const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const;
     ::jxx::Ptr<::jxx::lang::Object> createInstance(
         const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const;
+    ::jxx::lang::jbool shouldSkipField(
+        const ::jxx::Ptr<FieldAttributes>& field,
+        ::jxx::lang::jbool serialization) const;
+    ::jxx::lang::jbool shouldSkipClass(
+        const ::jxx::Ptr<::jxx::lang::ClassAny>& type,
+        ::jxx::lang::jbool serialization) const;
+    ::jxx::lang::jbool requireExpose() const noexcept;
+    ::jxx::lang::jdouble version() const noexcept;
 
 private:
     static std::string formatTree_(
@@ -73,6 +88,12 @@ private:
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>> creatorTypes_;
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<InstanceCreator>, 1U>> creators_;
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapterFactory>, 1U>> factories_;
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<ExclusionStrategy>, 1U>> serializationStrategies_;
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<ExclusionStrategy>, 1U>> deserializationStrategies_;
+    ::jxx::lang::jbool requireExpose_ = false;
+    ::jxx::lang::jdouble version_ = -1.0;
+    ::jxx::lang::jbool nonExecutableJson_ = false;
+    ::jxx::lang::jbool specialFloatingPointValues_ = false;
 };
 
 } // namespace com::google::gson
