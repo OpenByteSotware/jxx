@@ -18,6 +18,9 @@ public:
     ::jxx::lang::jlong getAsLong() override;
     ::jxx::lang::jdouble getAsDouble() override;
     ::jxx::Ptr<::jxx::lang::String> toString() const override;
+    ::jxx::lang::jbool equals(
+        const ::jxx::Ptr<::jxx::lang::Object>& other) const override;
+    ::jxx::lang::jint hashCode() const override;
 private:
     enum class Kind { STRING, BOOLEAN, INTEGER, DECIMAL };
     Kind kind_; ::jxx::Ptr<::jxx::lang::String> value_;

@@ -201,6 +201,14 @@ void JsonWriter::writeString_(const std::string& value) {
     return self_();
 }
 
+::jxx::Ptr<JsonWriter> JsonWriter::value(::jxx::lang::jint valueInt) {
+    return value(static_cast<::jxx::lang::jlong>(valueInt));
+}
+
+::jxx::Ptr<JsonWriter> JsonWriter::value(::jxx::lang::jfloat valueFloat) {
+    return value(static_cast<::jxx::lang::jdouble>(valueFloat));
+}
+
 ::jxx::Ptr<JsonWriter> JsonWriter::nullValue() {
     if (deferredName_ && !serializeNulls_) {
         deferredName_ = false;
@@ -219,6 +227,14 @@ void JsonWriter::writeString_(const std::string& value) {
     beforeValue_();
     writeRaw_(valueString->utf8());
     afterValue_();
+    return self_();
+}
+
+::jxx::Ptr<JsonWriter> JsonWriter::cancelName() {
+    ensureOpen_();
+    if (!deferredName_) throw ::jxx::lang::IllegalStateException();
+    deferredName_ = false;
+    name_.clear();
     return self_();
 }
 

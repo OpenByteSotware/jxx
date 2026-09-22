@@ -33,6 +33,7 @@ public:
     JsonToken peek();
 
     ::jxx::Ptr<::jxx::lang::String> nextName();
+    void promoteNameToValue();
     ::jxx::Ptr<::jxx::lang::String> nextString();
     ::jxx::lang::jbool nextBoolean();
     void nextNull();
@@ -40,6 +41,7 @@ public:
     ::jxx::lang::jlong nextLong();
     ::jxx::lang::jint nextInt();
     void skipValue();
+    ::jxx::Ptr<::jxx::lang::String> getPreviousPath() const;
 
     void close() override;
     ::jxx::Ptr<::jxx::lang::String> getPath() const;
@@ -73,6 +75,8 @@ private:
     ::jxx::lang::jbool lenient_ = false;
     ::jxx::lang::jbool closed_ = false;
     ::jxx::lang::jbool loaded_ = false;
+    std::string previousPath_;
+    ::jxx::lang::jbool promotedName_ = false;
 };
 
 } // namespace com::google::gson::stream

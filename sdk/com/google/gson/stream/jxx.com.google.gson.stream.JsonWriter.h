@@ -38,8 +38,11 @@ public:
     ::jxx::Ptr<JsonWriter> value(::jxx::lang::jbool value);
     ::jxx::Ptr<JsonWriter> value(::jxx::lang::jdouble value);
     ::jxx::Ptr<JsonWriter> value(::jxx::lang::jlong value);
+    ::jxx::Ptr<JsonWriter> value(::jxx::lang::jint value);
+    ::jxx::Ptr<JsonWriter> value(::jxx::lang::jfloat value);
     ::jxx::Ptr<JsonWriter> nullValue();
     ::jxx::Ptr<JsonWriter> jsonValue(const ::jxx::Ptr<::jxx::lang::String>& value);
+    ::jxx::Ptr<JsonWriter> cancelName();
 
     void flush() override;
     void close() override;

@@ -18,4 +18,20 @@ JsonPrimitive::JsonPrimitive(::jxx::lang::jdouble value):kind_(Kind::DECIMAL),va
 ::jxx::lang::jlong JsonPrimitive::getAsLong(){return ::jxx::lang::Long::parseLong(value_);}
 ::jxx::lang::jdouble JsonPrimitive::getAsDouble(){return ::jxx::lang::Double::parseDouble(value_);}
 ::jxx::Ptr<::jxx::lang::String> JsonPrimitive::toString() const{return kind_==Kind::STRING?::jxx::NEW<::jxx::lang::String>(quoted(value_->utf8())):value_;}
+::jxx::lang::jbool JsonPrimitive::equals(
+    const ::jxx::Ptr<::jxx::lang::Object>& other) const {
+    const auto primitive = std::dynamic_pointer_cast<JsonPrimitive>(other);
+    if (primitive == nullptr) return false;
+    if (isNumber() && primitive->isNumber()) return ::jxx::lang::Double::parseDouble(value_) == primitive->getAsDouble();
+    return kind_ == primitive->kind_ && value_->equals(primitive->value_);
+}
+
+::jxx::lang::jint JsonPrimitive::hashCode() const {
+    if (isNumber()) {
+        const auto bits = static_cast<unsigned long long>(std::hash<double>{}(::jxx::lang::Double::parseDouble(value_)));
+        return static_cast<::jxx::lang::jint>(bits ^ (bits >> 32U));
+    }
+    return value_ == nullptr ? 0 : value_->hashCode();
+}
+
 } // namespace com::google::gson

@@ -253,6 +253,7 @@ void JsonReader::endObject() {
 }
 
 ::jxx::Ptr<::jxx::lang::String> JsonReader::nextName() {
+    previousPath_ = getPath()->utf8();
     if (stack_.empty() || stack_.back().scope != Scope::OBJECT || !stack_.back().expectName) {
         malformed("Expected a JSON object member name");
     }
@@ -270,7 +271,31 @@ void JsonReader::endObject() {
     return ::jxx::NEW<::jxx::lang::String>(frame.name);
 }
 
+void JsonReader::promoteNameToValue() {
+    ensureOpen_();
+    if (stack_.empty() || stack_.back().scope != Scope::OBJECT || !stack_.back().expectName) {
+        malformed("Expected a JSON name");
+    }
+    previousPath_ = getPath()->utf8();
+    auto& frame = stack_.back();
+    skipWhitespace_();
+    if (!frame.first) {
+        if (current_() == ',') { ++position_; skipWhitespace_(); }
+        else malformed("Expected comma between object members");
+    }
+    frame.name = readString_();
+    skipWhitespace_();
+    expect_(':');
+    frame.first = false;
+    frame.expectName = false;
+    promotedName_ = true;
+}
+
 ::jxx::Ptr<::jxx::lang::String> JsonReader::nextString() {
+    if (promotedName_) {
+        promotedName_ = false;
+        return ::jxx::NEW<::jxx::lang::String>(stack_.back().name);
+    }
     beforeValue_();
     const auto token = peek();
     std::string value;
@@ -344,6 +369,10 @@ void JsonReader::close() {
         stack_.clear();
         json_.clear();
     }
+}
+
+::jxx::Ptr<::jxx::lang::String> JsonReader::getPreviousPath() const {
+    return ::jxx::NEW<::jxx::lang::String>(previousPath_.empty() ? "$" : previousPath_);
 }
 
 ::jxx::Ptr<::jxx::lang::String> JsonReader::getPath() const {
