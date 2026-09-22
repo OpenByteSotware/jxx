@@ -22,6 +22,14 @@ public:
     ::jxx::lang::jbool isEmpty() const;
     ::jxx::Ptr<::jxx::util::Iterator<JsonElement>> iterator() const;
     ::jxx::Ptr<JsonElement> deepCopy() override;
+    ::jxx::Ptr<::jxx::lang::String> getAsString() override;
+    ::jxx::lang::jbool getAsBoolean() override;
+    ::jxx::lang::jint getAsInt() override;
+    ::jxx::lang::jlong getAsLong() override;
+    ::jxx::lang::jdouble getAsDouble() override;
+    ::jxx::lang::jbool equals(
+        const ::jxx::Ptr<::jxx::lang::Object>& other) const override;
+    ::jxx::lang::jint hashCode() const override;
     ::jxx::Ptr<::jxx::lang::String> toString() const override;
 private: ::jxx::Ptr<::jxx::util::ArrayList<JsonElement>> elements_;
 };

@@ -29,6 +29,9 @@ public:
     ::jxx::Ptr<::jxx::util::Set<::jxx::lang::String>> keySet() const;
     ::jxx::Ptr<::jxx::util::Collection<JsonElement>> values() const;
     ::jxx::Ptr<JsonElement> deepCopy() override;
+    ::jxx::lang::jbool equals(
+        const ::jxx::Ptr<::jxx::lang::Object>& other) const override;
+    ::jxx::lang::jint hashCode() const override;
     ::jxx::Ptr<::jxx::lang::String> toString() const override;
 private: ::jxx::Ptr<::com::google::gson::internal::LinkedTreeMap<::jxx::lang::String,JsonElement>> members_;
 };

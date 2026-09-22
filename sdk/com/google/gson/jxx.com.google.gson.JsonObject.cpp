@@ -36,6 +36,9 @@ JsonObject::entrySet() const {
     return result;
 }
 
+::jxx::lang::jbool JsonObject::equals(const ::jxx::Ptr<::jxx::lang::Object>& other) const{const auto object=std::dynamic_pointer_cast<JsonObject>(other);if(object==nullptr||object->size()!=size())return false;const auto iterator=entrySet()->iterator();while(iterator->hasNext()){const auto entry=iterator->next();const auto left=entry->getValue();const auto right=object->get(entry->getKey());if(left==nullptr?right!=nullptr:!left->equals(right))return false;}return true;}
+::jxx::lang::jint JsonObject::hashCode() const{::jxx::lang::jint result=0;const auto iterator=entrySet()->iterator();while(iterator->hasNext()){const auto entry=iterator->next();const auto key=entry->getKey();const auto value=entry->getValue();result+=(key==nullptr?0:key->hashCode())^(value==nullptr?0:value->hashCode());}return result;}
+
 ::jxx::Ptr<::jxx::lang::String> JsonObject::toString() const {
     std::string output = "{";
     auto iterator = members_->entrySet()->iterator();
