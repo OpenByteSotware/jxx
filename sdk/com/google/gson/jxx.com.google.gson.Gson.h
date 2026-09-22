@@ -38,6 +38,8 @@ public:
         const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>>& creatorTypes = nullptr,
         const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<InstanceCreator>, 1U>>& creators = nullptr,
         const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapterFactory>, 1U>>& factories = nullptr,
+        const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>>& hierarchyAdapterTypes = nullptr,
+        const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapter>, 1U>>& hierarchyAdapters = nullptr,
         const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<ExclusionStrategy>, 1U>>& serializationStrategies = nullptr,
         const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<ExclusionStrategy>, 1U>>& deserializationStrategies = nullptr,
         ::jxx::lang::jbool requireExpose = false,
@@ -49,6 +51,7 @@ public:
         const ::jxx::Ptr<ToNumberStrategy>& numberToNumberStrategy = nullptr,
         const ::jxx::Ptr<::jxx::lang::String>& dateFormatPattern = nullptr,
         ::jxx::lang::jint dateStyle = -1,
+        ::jxx::lang::jint timeStyle = -1,
         ::jxx::lang::jbool serializeInnerClasses = true,
         ::jxx::lang::jbool complexMapKeySerialization = false,
         const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>>& serializerTypes = nullptr,
@@ -113,6 +116,7 @@ public:
     ::jxx::Ptr<ToNumberStrategy> numberToNumberStrategy() const;
     ::jxx::Ptr<::jxx::lang::String> dateFormatPattern() const;
     ::jxx::lang::jint dateStyle() const noexcept;
+    ::jxx::lang::jint timeStyle() const noexcept;
     ::jxx::lang::jbool serializeInnerClasses() const noexcept;
     ::jxx::lang::jbool complexMapKeySerialization() const noexcept;
     ::jxx::Ptr<JsonSerializer> getSerializer(const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const;
@@ -150,6 +154,8 @@ private:
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>> creatorTypes_;
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<InstanceCreator>, 1U>> creators_;
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapterFactory>, 1U>> factories_;
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>> hierarchyAdapterTypes_;
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapter>, 1U>> hierarchyAdapters_;
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<ExclusionStrategy>, 1U>> serializationStrategies_;
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<ExclusionStrategy>, 1U>> deserializationStrategies_;
     ::jxx::lang::jbool requireExpose_ = false;
@@ -161,6 +167,7 @@ private:
     ::jxx::Ptr<ToNumberStrategy> numberToNumberStrategy_;
     ::jxx::Ptr<::jxx::lang::String> dateFormatPattern_;
     ::jxx::lang::jint dateStyle_ = -1;
+    ::jxx::lang::jint timeStyle_ = -1;
     ::jxx::lang::jbool serializeInnerClasses_ = true;
     ::jxx::lang::jbool complexMapKeySerialization_ = false;
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>> serializerTypes_;

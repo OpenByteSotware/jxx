@@ -10,6 +10,7 @@ public:
     void add(const ::jxx::Ptr<JsonElement>& element);
     void add(const ::jxx::Ptr<::jxx::lang::String>& value);
     void add(::jxx::lang::jbool value);
+    void add(::jxx::lang::jchar value);
     void add(::jxx::lang::jlong value);
     void add(::jxx::lang::jdouble value);
     void addAll(const ::jxx::Ptr<JsonArray>& array);

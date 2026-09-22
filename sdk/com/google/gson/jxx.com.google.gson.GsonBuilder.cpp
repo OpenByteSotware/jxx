@@ -31,6 +31,7 @@ GsonBuilder::GsonBuilder(const ::jxx::Ptr<Gson>& gson) {
     numberToNumberStrategy_ = gson->numberToNumberStrategy();
     dateFormatPattern_ = gson->dateFormatPattern();
     dateStyle_ = gson->dateStyle();
+    timeStyle_ = gson->timeStyle();
     serializeInnerClasses_ = gson->serializeInnerClasses();
     complexMapKeySerialization_ = gson->complexMapKeySerialization();
 }
@@ -142,10 +143,10 @@ GsonBuilder::GsonBuilder(const ::jxx::Ptr<Gson>& gson) {
 
 ::jxx::Ptr<Gson> GsonBuilder::create() const {
     return ::jxx::NEW<Gson>(serializeNulls_, htmlSafe_, prettyPrinting_, lenient_,
-        fieldNamingStrategy_, adapterTypes_, adapters_, creatorTypes_, creators_, factories_,
+        fieldNamingStrategy_, adapterTypes_, adapters_, creatorTypes_, creators_, factories_, hierarchyAdapterTypes_, hierarchyAdapters_,
         serializationStrategies_, deserializationStrategies_, requireExpose_, version_,
         nonExecutableJson_, specialFloatingPointValues_, longSerializationPolicy_,
-        objectToNumberStrategy_, numberToNumberStrategy_, dateFormatPattern_, dateStyle_,
+        objectToNumberStrategy_, numberToNumberStrategy_, dateFormatPattern_, dateStyle_, timeStyle_,
         serializeInnerClasses_, complexMapKeySerialization_, serializerTypes_, serializers_, deserializerTypes_, deserializers_);
 }
 

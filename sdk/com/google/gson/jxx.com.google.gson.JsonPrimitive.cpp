@@ -13,6 +13,7 @@ namespace com::google::gson {
 namespace { std::string quoted(const std::string& in){ std::string out="\""; for(char c:in){ if(c=='\"'||c=='\\') out.push_back('\\'); if(c=='\n'){out+="\\n";continue;} out.push_back(c);} return out+"\""; } }
 JsonPrimitive::JsonPrimitive(const ::jxx::Ptr<::jxx::lang::String>& value):kind_(Kind::STRING),value_(value){if(!value_)throw ::jxx::lang::NullPointerException();}
 JsonPrimitive::JsonPrimitive(::jxx::lang::jbool value):kind_(Kind::BOOLEAN),value_(::jxx::lang::Boolean::toString(value)){}
+JsonPrimitive::JsonPrimitive(::jxx::lang::jchar value):kind_(Kind::STRING),value_(::jxx::NEW<::jxx::lang::String>(std::u16string(1U,value))){}
 JsonPrimitive::JsonPrimitive(::jxx::lang::jlong value):kind_(Kind::INTEGER),value_(::jxx::lang::Long::toString(value)){}
 JsonPrimitive::JsonPrimitive(::jxx::lang::jdouble value):kind_(Kind::DECIMAL),value_(::jxx::lang::Double::toString(value)){}
 ::jxx::lang::jbool JsonPrimitive::isString() const noexcept{return kind_==Kind::STRING;}

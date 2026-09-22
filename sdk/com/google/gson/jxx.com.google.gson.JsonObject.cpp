@@ -10,6 +10,7 @@ JsonObject::JsonObject(const ::jxx::Ptr<JsonObject>& source):JsonObject(){if(sou
 void JsonObject::add(const ::jxx::Ptr<::jxx::lang::String>& property,const ::jxx::Ptr<JsonElement>& value){if(!property)throw ::jxx::lang::NullPointerException();members_->put(property,value==nullptr?JsonNull::INSTANCE():value);}
 void JsonObject::addProperty(const ::jxx::Ptr<::jxx::lang::String>& property,const ::jxx::Ptr<::jxx::lang::String>& value){::jxx::Ptr<JsonElement> element=value==nullptr?::jxx::CAST<JsonElement>(JsonNull::INSTANCE()) : ::jxx::CAST<JsonElement>(::jxx::NEW<JsonPrimitive>(value));add(property,element);}
 void JsonObject::addProperty(const ::jxx::Ptr<::jxx::lang::String>& property,::jxx::lang::jbool value){add(property,::jxx::NEW<JsonPrimitive>(value));}
+void JsonObject::addProperty(const ::jxx::Ptr<::jxx::lang::String>& property,::jxx::lang::jchar value){add(property,::jxx::NEW<JsonPrimitive>(value));}
 void JsonObject::addProperty(const ::jxx::Ptr<::jxx::lang::String>& property,::jxx::lang::jlong value){add(property,::jxx::NEW<JsonPrimitive>(value));}
 void JsonObject::addProperty(const ::jxx::Ptr<::jxx::lang::String>& property,::jxx::lang::jdouble value){add(property,::jxx::NEW<JsonPrimitive>(value));}
 ::jxx::Ptr<JsonElement> JsonObject::get(const ::jxx::Ptr<::jxx::lang::String>& property) const{return members_->get(::jxx::CAST<::jxx::lang::Object>(property));}

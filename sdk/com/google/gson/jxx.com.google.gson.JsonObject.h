@@ -14,6 +14,7 @@ public:
     void add(const ::jxx::Ptr<::jxx::lang::String>& property,const ::jxx::Ptr<JsonElement>& value);
     void addProperty(const ::jxx::Ptr<::jxx::lang::String>& property,const ::jxx::Ptr<::jxx::lang::String>& value);
     void addProperty(const ::jxx::Ptr<::jxx::lang::String>& property,::jxx::lang::jbool value);
+    void addProperty(const ::jxx::Ptr<::jxx::lang::String>& property,::jxx::lang::jchar value);
     void addProperty(const ::jxx::Ptr<::jxx::lang::String>& property,::jxx::lang::jlong value);
     void addProperty(const ::jxx::Ptr<::jxx::lang::String>& property,::jxx::lang::jdouble value);
     ::jxx::Ptr<JsonElement> get(const ::jxx::Ptr<::jxx::lang::String>& property) const;

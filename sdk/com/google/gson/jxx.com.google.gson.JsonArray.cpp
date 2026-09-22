@@ -9,6 +9,7 @@ JsonArray::JsonArray():elements_(::jxx::NEW<::jxx::util::ArrayList<JsonElement>>
 void JsonArray::add(const ::jxx::Ptr<JsonElement>& element){elements_->add(element==nullptr?JsonNull::INSTANCE():element);}
 void JsonArray::add(const ::jxx::Ptr<::jxx::lang::String>& value){add(value==nullptr?::jxx::CAST<JsonElement>(JsonNull::INSTANCE()) : ::jxx::CAST<JsonElement>(::jxx::NEW<JsonPrimitive>(value)));}
 void JsonArray::add(::jxx::lang::jbool value){add(::jxx::NEW<JsonPrimitive>(value));}
+void JsonArray::add(::jxx::lang::jchar value){add(::jxx::NEW<JsonPrimitive>(value));}
 void JsonArray::add(::jxx::lang::jlong value){add(::jxx::NEW<JsonPrimitive>(value));}
 void JsonArray::add(::jxx::lang::jdouble value){add(::jxx::NEW<JsonPrimitive>(value));}
 void JsonArray::addAll(const ::jxx::Ptr<JsonArray>& array){if(array==nullptr)throw ::jxx::lang::NullPointerException();for(::jxx::lang::jint i=0;i<array->size();++i)add(array->get(i));}

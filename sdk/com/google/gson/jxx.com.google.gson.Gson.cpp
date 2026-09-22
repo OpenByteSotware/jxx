@@ -62,6 +62,8 @@ Gson::Gson(
     const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>>& creatorTypes,
     const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<InstanceCreator>, 1U>>& creators,
     const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapterFactory>, 1U>>& factories,
+    const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>>& hierarchyAdapterTypes,
+    const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapter>, 1U>>& hierarchyAdapters,
     const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<ExclusionStrategy>, 1U>>& serializationStrategies,
     const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<ExclusionStrategy>, 1U>>& deserializationStrategies,
     ::jxx::lang::jbool requireExpose,
@@ -73,6 +75,7 @@ Gson::Gson(
     const ::jxx::Ptr<ToNumberStrategy>& numberToNumberStrategy,
     const ::jxx::Ptr<::jxx::lang::String>& dateFormatPattern,
     ::jxx::lang::jint dateStyle,
+    ::jxx::lang::jint timeStyle,
     ::jxx::lang::jbool serializeInnerClasses,
     ::jxx::lang::jbool complexMapKeySerialization,
     const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>>& serializerTypes,
@@ -89,7 +92,7 @@ Gson::Gson(
       specialFloatingPointValues_(specialFloatingPointValues),
       longSerializationPolicy_(longSerializationPolicy),
       objectToNumberStrategy_(objectToNumberStrategy), numberToNumberStrategy_(numberToNumberStrategy),
-      dateFormatPattern_(dateFormatPattern), dateStyle_(dateStyle),
+      dateFormatPattern_(dateFormatPattern), dateStyle_(dateStyle), timeStyle_(timeStyle),
       serializeInnerClasses_(serializeInnerClasses), complexMapKeySerialization_(complexMapKeySerialization),
       serializerTypes_(serializerTypes), serializers_(serializers), deserializerTypes_(deserializerTypes), deserializers_(deserializers) {}
 
@@ -200,6 +203,7 @@ void Gson::toJson(const ::jxx::Ptr<JsonElement>& element,const ::jxx::Ptr<::com:
             if ((*adapterTypes_)[index] == type) return (*adapters_)[index];
         }
     }
+    if (hierarchyAdapterTypes_ != nullptr && hierarchyAdapters_ != nullptr) { for (::jxx::lang::jint index = hierarchyAdapters_->length - 1; index >= 0; --index) if ((*hierarchyAdapterTypes_)[index] == type) return (*hierarchyAdapters_)[index]; }
     if (factories_ != nullptr) {
         for (::jxx::lang::jint index = factories_->length - 1; index >= 0; --index) {
             const auto adapter = (*factories_)[index]->create(type);
@@ -263,6 +267,7 @@ LongSerializationPolicy Gson::longSerializationPolicy() const noexcept { return 
 ::jxx::Ptr<ToNumberStrategy> Gson::numberToNumberStrategy() const { return numberToNumberStrategy_; }
 ::jxx::Ptr<::jxx::lang::String> Gson::dateFormatPattern() const { return dateFormatPattern_; }
 ::jxx::lang::jint Gson::dateStyle() const noexcept { return dateStyle_; }
+::jxx::lang::jint Gson::timeStyle() const noexcept { return timeStyle_; }
 ::jxx::lang::jbool Gson::serializeInnerClasses() const noexcept { return serializeInnerClasses_; }
 ::jxx::lang::jbool Gson::complexMapKeySerialization() const noexcept { return complexMapKeySerialization_; }
 ::jxx::Ptr<JsonElement> Gson::toJsonTree(const ::jxx::Ptr<::jxx::lang::Object>& value,const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const {if(type==nullptr)throw ::jxx::lang::NullPointerException();const auto adapter=getAdapter(type);return adapter==nullptr?nullptr:adapter->toJsonTree(value);}

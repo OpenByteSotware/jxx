@@ -6,6 +6,7 @@ class JsonPrimitive final : public ::jxx::lang::ClassBase<JsonPrimitive, JsonEle
 public:
     explicit JsonPrimitive(const ::jxx::Ptr<::jxx::lang::String>& value);
     explicit JsonPrimitive(::jxx::lang::jbool value);
+    explicit JsonPrimitive(::jxx::lang::jchar value);
     explicit JsonPrimitive(::jxx::lang::jlong value);
     explicit JsonPrimitive(::jxx::lang::jdouble value);
     ::jxx::lang::jbool isJsonPrimitive() const noexcept override { return true; }
