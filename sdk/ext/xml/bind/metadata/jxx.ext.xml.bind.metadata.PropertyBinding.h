@@ -5,6 +5,7 @@
 #include "lang/jxx.lang.String.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.ObjectFactory.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.PropertyWriter.h"
+#include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.RepeatedPropertyWriter.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.ValueConverter.h"
 
 namespace jxx::ext::xml::bind::metadata {
@@ -26,7 +27,8 @@ public:
         const ::jxx::Ptr<PropertyWriter>& writer,
         const ::jxx::Ptr<ValueConverter>& converter = nullptr,
         const ::jxx::Ptr<ObjectFactory>& childFactory = nullptr,
-        const ::jxx::Ptr<BindingDescriptor>& childDescriptor = nullptr);
+        const ::jxx::Ptr<BindingDescriptor>& childDescriptor = nullptr,
+        const ::jxx::Ptr<RepeatedPropertyWriter>& repeatedWriter = nullptr);
 
     Kind kind() const noexcept;
     ::jxx::Ptr<::jxx::lang::String> localName() const;
@@ -38,6 +40,7 @@ public:
     ::jxx::Ptr<ValueConverter> converter() const;
     ::jxx::Ptr<ObjectFactory> childFactory() const;
     ::jxx::Ptr<BindingDescriptor> childDescriptor() const;
+    ::jxx::Ptr<RepeatedPropertyWriter> repeatedWriter() const;
     ::jxx::lang::jbool isTextValue() const noexcept;
     ::jxx::lang::jbool isNestedObject() const noexcept;
 
@@ -52,6 +55,7 @@ private:
     ::jxx::Ptr<ValueConverter> converter_;
     ::jxx::Ptr<ObjectFactory> childFactory_;
     ::jxx::Ptr<BindingDescriptor> childDescriptor_;
+    ::jxx::Ptr<RepeatedPropertyWriter> repeatedWriter_;
 };
 
 } // namespace jxx::ext::xml::bind::metadata

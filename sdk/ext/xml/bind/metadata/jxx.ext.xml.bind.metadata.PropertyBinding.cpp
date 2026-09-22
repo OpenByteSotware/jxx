@@ -16,11 +16,12 @@ PropertyBinding::PropertyBinding(
     const ::jxx::Ptr<PropertyWriter>& writer,
     const ::jxx::Ptr<ValueConverter>& converter,
     const ::jxx::Ptr<ObjectFactory>& childFactory,
-    const ::jxx::Ptr<BindingDescriptor>& childDescriptor)
+    const ::jxx::Ptr<BindingDescriptor>& childDescriptor,
+    const ::jxx::Ptr<RepeatedPropertyWriter>& repeatedWriter)
     : kind_(kind), localName_(localName), namespace_(nameSpace),
       required_(required), nillable_(nillable), repeated_(repeated),
       writer_(writer), converter_(converter), childFactory_(childFactory),
-      childDescriptor_(childDescriptor) {
+      childDescriptor_(childDescriptor), repeatedWriter_(repeatedWriter) {
     if (localName_ == nullptr || nameSpace == nullptr || writer_ == nullptr) {
         throw ::jxx::lang::NullPointerException();
     }
@@ -31,6 +32,12 @@ PropertyBinding::PropertyBinding(
         throw ::jxx::lang::IllegalArgumentException();
     }
     if (converter_ != nullptr && childDescriptor_ != nullptr) {
+        throw ::jxx::lang::IllegalArgumentException();
+    }
+    if (repeated_ && repeatedWriter_ == nullptr) {
+        throw ::jxx::lang::IllegalArgumentException();
+    }
+    if (!repeated_ && repeatedWriter_ != nullptr) {
         throw ::jxx::lang::IllegalArgumentException();
     }
 }
@@ -45,6 +52,7 @@ PropertyBinding::Kind PropertyBinding::kind() const noexcept { return kind_; }
 ::jxx::Ptr<ValueConverter> PropertyBinding::converter() const { return converter_; }
 ::jxx::Ptr<ObjectFactory> PropertyBinding::childFactory() const { return childFactory_; }
 ::jxx::Ptr<BindingDescriptor> PropertyBinding::childDescriptor() const { return childDescriptor_; }
+::jxx::Ptr<RepeatedPropertyWriter> PropertyBinding::repeatedWriter() const { return repeatedWriter_; }
 ::jxx::lang::jbool PropertyBinding::isTextValue() const noexcept { return converter_ != nullptr; }
 ::jxx::lang::jbool PropertyBinding::isNestedObject() const noexcept { return childFactory_ != nullptr; }
 

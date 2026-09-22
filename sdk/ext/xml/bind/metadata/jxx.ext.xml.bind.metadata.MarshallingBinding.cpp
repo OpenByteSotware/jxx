@@ -14,14 +14,22 @@ MarshallingBinding::MarshallingBinding(
     ::jxx::lang::jbool repeated,
     const ::jxx::Ptr<PropertyReader>& reader,
     const ::jxx::Ptr<ValueFormatter>& formatter,
-    const ::jxx::Ptr<MarshallingDescriptor>& childDescriptor)
+    const ::jxx::Ptr<MarshallingDescriptor>& childDescriptor,
+    const ::jxx::Ptr<RepeatedValueReader>& repeatedReader)
     : kind_(kind), localName_(localName), namespace_(nameSpace),
       required_(required), nillable_(nillable), repeated_(repeated),
-      reader_(reader), formatter_(formatter), childDescriptor_(childDescriptor) {
+      reader_(reader), formatter_(formatter), childDescriptor_(childDescriptor),
+      repeatedReader_(repeatedReader) {
     if (localName_ == nullptr || namespace_ == nullptr || reader_ == nullptr) {
         throw ::jxx::lang::NullPointerException();
     }
     if ((formatter_ == nullptr) == (childDescriptor_ == nullptr)) {
+        throw ::jxx::lang::IllegalArgumentException();
+    }
+    if (repeated_ && repeatedReader_ == nullptr) {
+        throw ::jxx::lang::IllegalArgumentException();
+    }
+    if (!repeated_ && repeatedReader_ != nullptr) {
         throw ::jxx::lang::IllegalArgumentException();
     }
 }
@@ -35,6 +43,7 @@ PropertyBinding::Kind MarshallingBinding::kind() const noexcept { return kind_; 
 ::jxx::Ptr<PropertyReader> MarshallingBinding::reader() const { return reader_; }
 ::jxx::Ptr<ValueFormatter> MarshallingBinding::formatter() const { return formatter_; }
 ::jxx::Ptr<MarshallingDescriptor> MarshallingBinding::childDescriptor() const { return childDescriptor_; }
+::jxx::Ptr<RepeatedValueReader> MarshallingBinding::repeatedReader() const { return repeatedReader_; }
 ::jxx::lang::jbool MarshallingBinding::isTextValue() const noexcept { return formatter_ != nullptr; }
 
 } // namespace jxx::ext::xml::bind::metadata

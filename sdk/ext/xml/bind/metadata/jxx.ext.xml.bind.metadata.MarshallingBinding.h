@@ -6,6 +6,7 @@
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.PropertyBinding.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.PropertyReader.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.ValueFormatter.h"
+#include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.RepeatedValueReader.h"
 
 namespace jxx::ext::xml::bind::metadata {
 class MarshallingDescriptor;
@@ -24,7 +25,8 @@ public:
         ::jxx::lang::jbool repeated,
         const ::jxx::Ptr<PropertyReader>& reader,
         const ::jxx::Ptr<ValueFormatter>& formatter = nullptr,
-        const ::jxx::Ptr<MarshallingDescriptor>& childDescriptor = nullptr);
+        const ::jxx::Ptr<MarshallingDescriptor>& childDescriptor = nullptr,
+        const ::jxx::Ptr<RepeatedValueReader>& repeatedReader = nullptr);
 
     PropertyBinding::Kind kind() const noexcept;
     ::jxx::Ptr<::jxx::lang::String> localName() const;
@@ -35,6 +37,7 @@ public:
     ::jxx::Ptr<PropertyReader> reader() const;
     ::jxx::Ptr<ValueFormatter> formatter() const;
     ::jxx::Ptr<MarshallingDescriptor> childDescriptor() const;
+    ::jxx::Ptr<RepeatedValueReader> repeatedReader() const;
     ::jxx::lang::jbool isTextValue() const noexcept;
 
 private:
@@ -47,6 +50,7 @@ private:
     ::jxx::Ptr<PropertyReader> reader_;
     ::jxx::Ptr<ValueFormatter> formatter_;
     ::jxx::Ptr<MarshallingDescriptor> childDescriptor_;
+    ::jxx::Ptr<RepeatedValueReader> repeatedReader_;
 };
 
 } // namespace jxx::ext::xml::bind::metadata
