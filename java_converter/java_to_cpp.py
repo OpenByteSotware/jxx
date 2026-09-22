@@ -137,7 +137,9 @@ class Translator:
         mods = set(getattr(m, "modifiers", None) or [])
         if not {"public", "static"}.issubset(mods):
             return False
-        if self.name_of(getattr(m, "return_type", None)) != "void":
+        # javalang represents a void return as return_type=None.
+        return_type = getattr(m, "return_type", None)
+        if return_type is not None and self.simple(self.name_of(return_type)) != "void":
             return False
         params = list(getattr(m, "parameters", None) or [])
         if len(params) != 1:
