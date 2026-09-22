@@ -111,6 +111,8 @@ public:
     ::jxx::lang::jbool complexMapKeySerialization() const noexcept;
     ::jxx::Ptr<JsonSerializer> getSerializer(const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const;
     ::jxx::Ptr<JsonDeserializer> getDeserializer(const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const;
+    ::jxx::Ptr<TypeAdapter> getTreeAdapter(
+        const ::jxx::Ptr<::jxx::lang::ClassAny>& type);
 
 private:
     static std::string formatTree_(

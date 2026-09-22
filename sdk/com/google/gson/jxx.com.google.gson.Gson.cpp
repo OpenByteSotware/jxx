@@ -13,6 +13,8 @@
 #include "com/google/gson/stream/jxx.com.google.gson.stream.JsonWriter.h"
 #include "io/jxx.io.Reader.h"
 #include "io/jxx.io.Writer.h"
+#include "com/google/gson/internal/jxx.com.google.gson.internal.GsonContext.h"
+#include "com/google/gson/internal/jxx.com.google.gson.internal.TreeTypeAdapter.h"
 
 namespace com::google::gson {
 namespace {
@@ -198,7 +200,7 @@ void Gson::toJson(const ::jxx::Ptr<JsonElement>& element,const ::jxx::Ptr<::com:
             if (adapter != nullptr) return adapter;
         }
     }
-    return nullptr;
+    return const_cast<Gson*>(this)->getTreeAdapter(type);
 }
 
 ::jxx::Ptr<TypeAdapter> Gson::getAdapter(
@@ -257,6 +259,7 @@ LongSerializationPolicy Gson::longSerializationPolicy() const noexcept { return 
 ::jxx::lang::jint Gson::dateStyle() const noexcept { return dateStyle_; }
 ::jxx::lang::jbool Gson::serializeInnerClasses() const noexcept { return serializeInnerClasses_; }
 ::jxx::lang::jbool Gson::complexMapKeySerialization() const noexcept { return complexMapKeySerialization_; }
+::jxx::Ptr<TypeAdapter> Gson::getTreeAdapter(const ::jxx::Ptr<::jxx::lang::ClassAny>& type){if(type==nullptr)throw ::jxx::lang::NullPointerException();const auto serializer=getSerializer(type);const auto deserializer=getDeserializer(type);if(serializer==nullptr&&deserializer==nullptr)return nullptr;const auto context=::jxx::NEW<::com::google::gson::internal::GsonContext>(::jxx::CAST<Gson>(this->thisPtr()));return ::jxx::CAST<TypeAdapter>(::jxx::NEW<::com::google::gson::internal::TreeTypeAdapter>(serializer,deserializer,type,context,context));}
 ::jxx::Ptr<JsonSerializer> Gson::getSerializer(const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const {if(type==nullptr)throw ::jxx::lang::NullPointerException();if(serializerTypes_!=nullptr&&serializers_!=nullptr)for(::jxx::lang::jint i=serializers_->length-1;i>=0;--i)if((*serializerTypes_)[i]==type)return (*serializers_)[i];return nullptr;}
 ::jxx::Ptr<JsonDeserializer> Gson::getDeserializer(const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const {if(type==nullptr)throw ::jxx::lang::NullPointerException();if(deserializerTypes_!=nullptr&&deserializers_!=nullptr)for(::jxx::lang::jint i=deserializers_->length-1;i>=0;--i)if((*deserializerTypes_)[i]==type)return (*deserializers_)[i];return nullptr;}
 
