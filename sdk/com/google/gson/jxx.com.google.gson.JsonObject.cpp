@@ -6,6 +6,7 @@
 #include "util/jxx.util.MapEntry.h"
 namespace com::google::gson {
 JsonObject::JsonObject():members_(::jxx::NEW<::com::google::gson::internal::LinkedTreeMap<::jxx::lang::String,JsonElement>>()){}
+JsonObject::JsonObject(const ::jxx::Ptr<JsonObject>& source):JsonObject(){if(source==nullptr)throw ::jxx::lang::NullPointerException();const auto iterator=source->entrySet()->iterator();while(iterator->hasNext()){const auto entry=iterator->next();add(entry->getKey(),entry->getValue());}}
 void JsonObject::add(const ::jxx::Ptr<::jxx::lang::String>& property,const ::jxx::Ptr<JsonElement>& value){if(!property)throw ::jxx::lang::NullPointerException();members_->put(property,value==nullptr?JsonNull::INSTANCE():value);}
 void JsonObject::addProperty(const ::jxx::Ptr<::jxx::lang::String>& property,const ::jxx::Ptr<::jxx::lang::String>& value){::jxx::Ptr<JsonElement> element=value==nullptr?::jxx::CAST<JsonElement>(JsonNull::INSTANCE()) : ::jxx::CAST<JsonElement>(::jxx::NEW<JsonPrimitive>(value));add(property,element);}
 void JsonObject::addProperty(const ::jxx::Ptr<::jxx::lang::String>& property,::jxx::lang::jbool value){add(property,::jxx::NEW<JsonPrimitive>(value));}
@@ -17,6 +18,7 @@ void JsonObject::addProperty(const ::jxx::Ptr<::jxx::lang::String>& property,::j
 ::jxx::Ptr<JsonObject> JsonObject::getAsJsonObject(const ::jxx::Ptr<::jxx::lang::String>& property) const{const auto value=get(property);return value==nullptr?nullptr:value->getAsJsonObject();}
 ::jxx::Ptr<JsonPrimitive> JsonObject::getAsJsonPrimitive(const ::jxx::Ptr<::jxx::lang::String>& property) const{const auto value=get(property);return value==nullptr?nullptr:value->getAsJsonPrimitive();}
 ::jxx::lang::jint JsonObject::size() const{return members_->size();}
+::jxx::lang::jbool JsonObject::isEmpty() const{return members_->isEmpty();}
 ::jxx::lang::jbool JsonObject::has(const ::jxx::Ptr<::jxx::lang::String>& property) const{return members_->containsKey(::jxx::CAST<::jxx::lang::Object>(property));}
 ::jxx::Ptr<::jxx::util::Set<
     ::jxx::util::MapEntry<::jxx::lang::String, JsonElement>>>

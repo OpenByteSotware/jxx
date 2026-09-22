@@ -114,6 +114,12 @@ public:
     ::jxx::Ptr<JsonDeserializer> getDeserializer(const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const;
     ::jxx::Ptr<TypeAdapter> getTreeAdapter(
         const ::jxx::Ptr<::jxx::lang::ClassAny>& type);
+    ::jxx::Ptr<JsonElement> toJsonTree(
+        const ::jxx::Ptr<::jxx::lang::Object>& value,
+        const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const;
+    ::jxx::Ptr<::jxx::lang::Object> fromJsonTree(
+        const ::jxx::Ptr<JsonElement>& tree,
+        const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const;
 
 private:
     static std::string formatTree_(
