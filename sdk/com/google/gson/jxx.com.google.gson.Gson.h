@@ -2,6 +2,11 @@
 
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.Class.h"
+#include "com/google/gson/jxx.com.google.gson.FieldNamingStrategy.h"
+#include "com/google/gson/jxx.com.google.gson.InstanceCreator.h"
+#include "com/google/gson/jxx.com.google.gson.TypeAdapterFactory.h"
 
 #include <string>
 
@@ -18,7 +23,13 @@ public:
         ::jxx::lang::jbool serializeNulls,
         ::jxx::lang::jbool htmlSafe,
         ::jxx::lang::jbool prettyPrinting,
-        ::jxx::lang::jbool lenient);
+        ::jxx::lang::jbool lenient,
+        const ::jxx::Ptr<FieldNamingStrategy>& fieldNamingStrategy = nullptr,
+        const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>>& adapterTypes = nullptr,
+        const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapter>, 1U>>& adapters = nullptr,
+        const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>>& creatorTypes = nullptr,
+        const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<InstanceCreator>, 1U>>& creators = nullptr,
+        const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapterFactory>, 1U>>& factories = nullptr);
 
     ::jxx::Ptr<JsonElement> fromJson(
         const ::jxx::Ptr<::jxx::lang::String>& json) const;
@@ -38,6 +49,11 @@ public:
     ::jxx::lang::jbool htmlSafe() const noexcept;
     ::jxx::lang::jbool prettyPrinting() const noexcept;
     ::jxx::lang::jbool lenient() const noexcept;
+    ::jxx::Ptr<FieldNamingStrategy> fieldNamingStrategy() const;
+    ::jxx::Ptr<TypeAdapter> getAdapter(
+        const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const;
+    ::jxx::Ptr<::jxx::lang::Object> createInstance(
+        const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const;
 
 private:
     static std::string formatTree_(
@@ -51,6 +67,12 @@ private:
     ::jxx::lang::jbool htmlSafe_ = true;
     ::jxx::lang::jbool prettyPrinting_ = false;
     ::jxx::lang::jbool lenient_ = false;
+    ::jxx::Ptr<FieldNamingStrategy> fieldNamingStrategy_;
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>> adapterTypes_;
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapter>, 1U>> adapters_;
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>> creatorTypes_;
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<InstanceCreator>, 1U>> creators_;
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapterFactory>, 1U>> factories_;
 };
 
 } // namespace com::google::gson

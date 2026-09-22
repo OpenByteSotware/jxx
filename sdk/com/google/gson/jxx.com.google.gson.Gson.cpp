@@ -47,9 +47,18 @@ Gson::Gson(
     ::jxx::lang::jbool serializeNulls,
     ::jxx::lang::jbool htmlSafe,
     ::jxx::lang::jbool prettyPrinting,
-    ::jxx::lang::jbool lenient)
+    ::jxx::lang::jbool lenient,
+    const ::jxx::Ptr<FieldNamingStrategy>& fieldNamingStrategy,
+    const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>>& adapterTypes,
+    const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapter>, 1U>>& adapters,
+    const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>>& creatorTypes,
+    const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<InstanceCreator>, 1U>>& creators,
+    const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapterFactory>, 1U>>& factories)
     : serializeNulls_(serializeNulls), htmlSafe_(htmlSafe),
-      prettyPrinting_(prettyPrinting), lenient_(lenient) {}
+      prettyPrinting_(prettyPrinting), lenient_(lenient),
+      fieldNamingStrategy_(fieldNamingStrategy), adapterTypes_(adapterTypes),
+      adapters_(adapters), creatorTypes_(creatorTypes), creators_(creators),
+      factories_(factories) {}
 
 ::jxx::Ptr<JsonElement> Gson::fromJson(
     const ::jxx::Ptr<::jxx::lang::String>& json) const {
@@ -125,5 +134,34 @@ std::string Gson::formatTree_(
 ::jxx::lang::jbool Gson::htmlSafe() const noexcept { return htmlSafe_; }
 ::jxx::lang::jbool Gson::prettyPrinting() const noexcept { return prettyPrinting_; }
 ::jxx::lang::jbool Gson::lenient() const noexcept { return lenient_; }
+::jxx::Ptr<FieldNamingStrategy> Gson::fieldNamingStrategy() const { return fieldNamingStrategy_; }
+
+::jxx::Ptr<TypeAdapter> Gson::getAdapter(
+    const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const {
+    if (type == nullptr) throw ::jxx::lang::NullPointerException();
+    if (adapterTypes_ != nullptr && adapters_ != nullptr) {
+        for (::jxx::lang::jint index = adapters_->length - 1; index >= 0; --index) {
+            if ((*adapterTypes_)[index] == type) return (*adapters_)[index];
+        }
+    }
+    if (factories_ != nullptr) {
+        for (::jxx::lang::jint index = factories_->length - 1; index >= 0; --index) {
+            const auto adapter = (*factories_)[index]->create(type);
+            if (adapter != nullptr) return adapter;
+        }
+    }
+    return nullptr;
+}
+
+::jxx::Ptr<::jxx::lang::Object> Gson::createInstance(
+    const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const {
+    if (type == nullptr) throw ::jxx::lang::NullPointerException();
+    if (creatorTypes_ != nullptr && creators_ != nullptr) {
+        for (::jxx::lang::jint index = creators_->length - 1; index >= 0; --index) {
+            if ((*creatorTypes_)[index] == type) return (*creators_)[index]->createInstance();
+        }
+    }
+    return nullptr;
+}
 
 } // namespace com::google::gson
