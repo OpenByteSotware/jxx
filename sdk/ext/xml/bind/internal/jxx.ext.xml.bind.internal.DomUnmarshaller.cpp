@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "ext/xml/bind/jxx.ext.xml.bind.UnmarshalException.h"
+#include "ext/xml/namespace/jxx.ext.xml.namespace.QName.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.BindingDescriptor.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.PropertyBinding.h"
 #include "ext/xml/parsers/jxx.ext.xml.parsers.DocumentBuilder.h"
@@ -93,6 +94,31 @@ DomUnmarshaller::DomUnmarshaller(
             ::jxx::NEW<::jxx::lang::String>("No root binding descriptor"));
     }
     return readObject_(element, descriptor, nullptr);
+}
+
+
+::jxx::Ptr<::jxx::ext::xml::bind::JAXBElementI>
+DomUnmarshaller::unmarshalElement(
+    const ::jxx::Ptr<::jxx::org::w3c::dom::Node>& node) {
+    const auto element = elementFromNode(node);
+    if (element == nullptr) {
+        throw UnmarshalException(
+            ::jxx::NEW<::jxx::lang::String>("Root node is not an element"));
+    }
+    const auto descriptor = findRoot_(element);
+    if (descriptor == nullptr || descriptor->wrapperFactory() == nullptr) {
+        throw UnmarshalException(
+            ::jxx::NEW<::jxx::lang::String>("No root element wrapper factory"));
+    }
+    const auto value = readObject_(element, descriptor, nullptr);
+    const auto name = ::jxx::NEW<::jxx::ext::xml::namespace_::QName>(
+        namespace_(element), localName_(element));
+    const auto xsiNamespace = ::jxx::NEW<::jxx::lang::String>(
+        "http://www.w3.org/2001/XMLSchema-instance");
+    const auto nilName = ::jxx::NEW<::jxx::lang::String>("nil");
+    const auto nil = element->hasAttributeNS(xsiNamespace, nilName) &&
+        element->getAttributeNS(xsiNamespace, nilName)->utf8() == "true";
+    return descriptor->wrapperFactory()->wrap(name, value, nil);
 }
 
 ::jxx::Ptr<metadata::BindingDescriptor> DomUnmarshaller::findRoot_(

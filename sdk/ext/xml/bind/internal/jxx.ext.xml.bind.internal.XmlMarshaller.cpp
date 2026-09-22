@@ -1,5 +1,7 @@
 #include "ext/xml/bind/internal/jxx.ext.xml.bind.internal.XmlMarshaller.h"
 #include "ext/xml/bind/jxx.ext.xml.bind.JAXBException.h"
+#include "ext/xml/bind/jxx.ext.xml.bind.JAXBElementI.h"
+#include "ext/xml/namespace/jxx.ext.xml.namespace.QName.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.MarshallingDescriptor.h"
 #include "io/jxx.io.Writer.h"
 #include "lang/jxx.lang.NullPointerException.h"
@@ -122,6 +124,54 @@ std::string XmlMarshaller::writeObject_(
     }
     return output;
 }
+
+std::string XmlMarshaller::writeElement_(
+    const ::jxx::Ptr<::jxx::ext::xml::bind::JAXBElementI>& element,
+    const ::jxx::Ptr<metadata::MarshallingDescriptor>& descriptor) {
+    if (element == nullptr || descriptor == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+    const auto name = element->getName();
+    const auto localName = name->getLocalPart()->utf8();
+    const auto nameSpace = name->getNamespaceURI()->utf8();
+    const auto prefix = name->getPrefix()->utf8();
+    const auto qualifiedName = prefix.empty()
+        ? localName
+        : prefix + ":" + localName;
+    if (element->isNil()) {
+        std::string output = "<" + qualifiedName;
+        if (!nameSpace.empty()) {
+            output += prefix.empty()
+                ? " xmlns=\"" + escape_(nameSpace, true) + "\""
+                : " xmlns:" + prefix + "=\"" + escape_(nameSpace, true) + "\"";
+        }
+        output += " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:nil=\"true\"/>";
+        return output;
+    }
+    auto output = writeObject_(element->getValueObject(), descriptor);
+    const auto descriptorName = descriptor->rootName()->utf8();
+    const auto descriptorOpen = "<" + descriptorName;
+    const auto descriptorClose = "</" + descriptorName + ">";
+    const auto replacementOpen = "<" + qualifiedName;
+    if (output.rfind(descriptorOpen, 0U) == 0U) {
+        output.replace(0U, descriptorOpen.size(), replacementOpen);
+    }
+    const auto closePosition = output.rfind(descriptorClose);
+    if (closePosition != std::string::npos) {
+        output.replace(closePosition, descriptorClose.size(), "</" + qualifiedName + ">");
+    }
+    if (!nameSpace.empty()) {
+        const auto insertion = output.find('>');
+        if (insertion != std::string::npos) {
+            const auto declaration = prefix.empty()
+                ? " xmlns=\"" + escape_(nameSpace, true) + "\""
+                : " xmlns:" + prefix + "=\"" + escape_(nameSpace, true) + "\"";
+            output.insert(insertion, declaration);
+        }
+    }
+    return output;
+}
+
 ::jxx::Ptr<::jxx::lang::String> XmlMarshaller::marshal(
     const ::jxx::Ptr<::jxx::lang::Object>& object,
     const ::jxx::Ptr<metadata::MarshallingDescriptor>& descriptor) {
@@ -135,4 +185,19 @@ void XmlMarshaller::marshal(
     writer->write(marshal(object, descriptor));
     writer->flush();
 }
+::jxx::Ptr<::jxx::lang::String> XmlMarshaller::marshalElement(
+    const ::jxx::Ptr<::jxx::ext::xml::bind::JAXBElementI>& element,
+    const ::jxx::Ptr<metadata::MarshallingDescriptor>& descriptor) {
+    return ::jxx::NEW<::jxx::lang::String>(writeElement_(element, descriptor));
+}
+
+void XmlMarshaller::marshalElement(
+    const ::jxx::Ptr<::jxx::ext::xml::bind::JAXBElementI>& element,
+    const ::jxx::Ptr<metadata::MarshallingDescriptor>& descriptor,
+    const ::jxx::Ptr<::jxx::io::Writer>& writer) {
+    if (writer == nullptr) throw ::jxx::lang::NullPointerException();
+    writer->write(marshalElement(element, descriptor));
+    writer->flush();
+}
+
 } // namespace jxx::ext::xml::bind::internal

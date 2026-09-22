@@ -27,6 +27,8 @@ public:
         const ::jxx::Ptr<::jxx::io::Reader>& reader) override;
     ::jxx::Ptr<::jxx::lang::Object> unmarshal(
         const ::jxx::Ptr<::jxx::org::w3c::dom::Node>& node) override;
+    ::jxx::Ptr<::jxx::ext::xml::bind::JAXBElementI> unmarshalElement(
+        const ::jxx::Ptr<::jxx::org::w3c::dom::Node>& node) override;
 
 private:
     ::jxx::Ptr<metadata::BindingDescriptor> findRoot_(

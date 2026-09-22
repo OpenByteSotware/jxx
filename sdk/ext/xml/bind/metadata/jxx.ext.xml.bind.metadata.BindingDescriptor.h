@@ -2,12 +2,14 @@
 
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.Class.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_array.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.ObjectFactory.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.PropertyBinding.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.MixedContentWriter.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.LifecycleCallback.h"
+#include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.ElementWrapperFactory.h"
 
 namespace jxx::ext::xml::bind::metadata {
 
@@ -24,7 +26,9 @@ public:
         const ::jxx::Ptr<ObjectFactory>& factory,
         const ::jxx::Ptr<PropertyArray>& properties,
         const ::jxx::Ptr<MixedContentWriter>& mixedWriter = nullptr,
-        const ::jxx::Ptr<LifecycleCallback>& lifecycle = nullptr);
+        const ::jxx::Ptr<LifecycleCallback>& lifecycle = nullptr,
+        const ::jxx::Ptr<::jxx::lang::ClassAny>& declaredType = nullptr,
+        const ::jxx::Ptr<ElementWrapperFactory>& wrapperFactory = nullptr);
 
     ::jxx::Ptr<::jxx::lang::String> typeName() const;
     ::jxx::Ptr<::jxx::lang::String> rootName() const;
@@ -34,6 +38,8 @@ public:
     ::jxx::Ptr<MixedContentWriter> mixedWriter() const;
     ::jxx::lang::jbool isMixed() const noexcept;
     ::jxx::Ptr<LifecycleCallback> lifecycle() const;
+    ::jxx::Ptr<::jxx::lang::ClassAny> declaredType() const;
+    ::jxx::Ptr<ElementWrapperFactory> wrapperFactory() const;
     ::jxx::Ptr<PropertyBinding> findElement(
         const ::jxx::Ptr<::jxx::lang::String>& localName,
         const ::jxx::Ptr<::jxx::lang::String>& nameSpace) const;
@@ -54,6 +60,8 @@ private:
     ::jxx::Ptr<PropertyArray> properties_;
     ::jxx::Ptr<MixedContentWriter> mixedWriter_;
     ::jxx::Ptr<LifecycleCallback> lifecycle_;
+    ::jxx::Ptr<::jxx::lang::ClassAny> declaredType_;
+    ::jxx::Ptr<ElementWrapperFactory> wrapperFactory_;
 };
 
 } // namespace jxx::ext::xml::bind::metadata

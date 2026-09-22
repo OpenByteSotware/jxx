@@ -13,9 +13,19 @@ public:
         const ::jxx::Ptr<::jxx::lang::Object>& object,
         const ::jxx::Ptr<metadata::MarshallingDescriptor>& descriptor,
         const ::jxx::Ptr<::jxx::io::Writer>& writer) override;
+    ::jxx::Ptr<::jxx::lang::String> marshalElement(
+        const ::jxx::Ptr<::jxx::ext::xml::bind::JAXBElementI>& element,
+        const ::jxx::Ptr<metadata::MarshallingDescriptor>& descriptor) override;
+    void marshalElement(
+        const ::jxx::Ptr<::jxx::ext::xml::bind::JAXBElementI>& element,
+        const ::jxx::Ptr<metadata::MarshallingDescriptor>& descriptor,
+        const ::jxx::Ptr<::jxx::io::Writer>& writer) override;
 private:
     static std::string writeObject_(
         const ::jxx::Ptr<::jxx::lang::Object>& object,
+        const ::jxx::Ptr<metadata::MarshallingDescriptor>& descriptor);
+    static std::string writeElement_(
+        const ::jxx::Ptr<::jxx::ext::xml::bind::JAXBElementI>& element,
         const ::jxx::Ptr<metadata::MarshallingDescriptor>& descriptor);
     static std::string escape_(const std::string& value, ::jxx::lang::jbool attribute);
     static std::string qualifiedName_(
