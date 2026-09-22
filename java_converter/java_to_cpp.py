@@ -279,14 +279,21 @@ class Translator:
                 self.current_return='void' if type(m).__name__=='ConstructorDeclaration' else self.resolve(m.return_type).value()
                 for statement in m.body or []:self.stmt(statement,o)
                 self.current_return=old;o.exit();o.w('}');o.w()
-        if ns:o.exit();o.w(f'}} // namespace {ns}')
+        # Close the translated package namespace before emitting the native
+        # process entry point. Standard C++ requires ::main in global scope.
+        if ns:
+            o.exit()
+            o.w(f'}} // namespace {ns}')
         if java_mains:
             if len(java_mains) > 1:
                 self.diag.append('multiple Java main methods found; native main uses the first one')
             owner, method = java_mains[0]
             parameter_name = method.parameters[0].name
             target = f'{ns}::{owner.name}' if ns else owner.name
-            o.w();o.w('int main(int argc, char* argv[]) {');o.enter()
+            o.w()
+            o.w('// Native C++ process entry point. This must remain in global scope.')
+            o.w('int main(int argc, char* argv[]) {')
+            o.enter()
             o.w('using JxxString = ::jxx::lang::String;')
             o.w('using JxxStringArray = ::jxx::lang::JxxArray<::jxx::Ptr<JxxString>, 1U>;')
             o.w(f'auto {parameter_name} = ::jxx::NEW<JxxStringArray>(argc);')
@@ -295,7 +302,13 @@ class Translator:
             o.exit();o.w('}')
             o.w(f'{target}::jxxMain({parameter_name});')
             o.w('return 0;');o.exit();o.w('}')
-        return o.text()
+        generated = o.text()
+        if java_mains and ns:
+            namespace_close = generated.rfind(f'}} // namespace {ns}')
+            native_main = generated.rfind('int main(int argc, char* argv[])')
+            if namespace_close < 0 or native_main <= namespace_close:
+                raise RuntimeError('native C++ main must be emitted after the package namespace closes')
+        return generated
 
     def translate(self,src,out_root,stem):
         tree=javalang.parse.parse(src);self.gather(tree)
