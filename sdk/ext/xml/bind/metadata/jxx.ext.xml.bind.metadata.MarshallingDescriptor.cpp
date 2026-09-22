@@ -7,9 +7,10 @@ MarshallingDescriptor::MarshallingDescriptor(
     const ::jxx::Ptr<::jxx::lang::String>& rootName,
     const ::jxx::Ptr<::jxx::lang::String>& rootNamespace,
     const ::jxx::Ptr<BindingArray>& bindings,
-    const ::jxx::Ptr<MixedContentReader>& mixedReader)
+    const ::jxx::Ptr<MixedContentReader>& mixedReader,
+    const ::jxx::Ptr<LifecycleCallback>& lifecycle)
     : rootName_(rootName), rootNamespace_(rootNamespace), bindings_(bindings),
-      mixedReader_(mixedReader) {
+      mixedReader_(mixedReader), lifecycle_(lifecycle) {
     if (rootName_ == nullptr || rootNamespace_ == nullptr || bindings_ == nullptr) {
         throw ::jxx::lang::NullPointerException();
     }
@@ -20,5 +21,6 @@ MarshallingDescriptor::MarshallingDescriptor(
 ::jxx::Ptr<MarshallingDescriptor::BindingArray> MarshallingDescriptor::bindings() const { return bindings_; }
 ::jxx::Ptr<MixedContentReader> MarshallingDescriptor::mixedReader() const { return mixedReader_; }
 ::jxx::lang::jbool MarshallingDescriptor::isMixed() const noexcept { return mixedReader_ != nullptr; }
+::jxx::Ptr<LifecycleCallback> MarshallingDescriptor::lifecycle() const { return lifecycle_; }
 
 } // namespace jxx::ext::xml::bind::metadata

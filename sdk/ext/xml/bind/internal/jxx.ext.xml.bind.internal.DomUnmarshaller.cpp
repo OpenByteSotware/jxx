@@ -92,7 +92,7 @@ DomUnmarshaller::DomUnmarshaller(
         throw UnmarshalException(
             ::jxx::NEW<::jxx::lang::String>("No root binding descriptor"));
     }
-    return readObject_(element, descriptor);
+    return readObject_(element, descriptor, nullptr);
 }
 
 ::jxx::Ptr<metadata::BindingDescriptor> DomUnmarshaller::findRoot_(
@@ -113,11 +113,15 @@ DomUnmarshaller::DomUnmarshaller(
 
 ::jxx::Ptr<::jxx::lang::Object> DomUnmarshaller::readObject_(
     const ::jxx::Ptr<::jxx::org::w3c::dom::Element>& element,
-    const ::jxx::Ptr<metadata::BindingDescriptor>& descriptor) const {
+    const ::jxx::Ptr<metadata::BindingDescriptor>& descriptor,
+    const ::jxx::Ptr<::jxx::lang::Object>& parent) const {
     const auto target = descriptor->factory()->create();
     if (target == nullptr) {
         throw UnmarshalException(
             ::jxx::NEW<::jxx::lang::String>("Object factory returned null"));
+    }
+    if (descriptor->lifecycle() != nullptr) {
+        descriptor->lifecycle()->beforeUnmarshal(target, parent);
     }
 
     const auto properties = descriptor->properties();
@@ -180,7 +184,7 @@ DomUnmarshaller::DomUnmarshaller(
             } else {
                 const auto childElement =
                     std::dynamic_pointer_cast<::jxx::org::w3c::dom::Element>(child);
-                value = readObject_(childElement, property->childDescriptor());
+                value = readObject_(childElement, property->childDescriptor(), target);
             }
             property->writer()->write(target, value);
         }
@@ -195,6 +199,9 @@ DomUnmarshaller::DomUnmarshaller(
             throw UnmarshalException(
                 ::jxx::NEW<::jxx::lang::String>("Missing required XML value"));
         }
+    }
+    if (descriptor->lifecycle() != nullptr) {
+        descriptor->lifecycle()->afterUnmarshal(target, parent);
     }
     return target;
 }

@@ -117,6 +117,9 @@ std::string XmlMarshaller::writeObject_(
     }
     }
     output += "</" + rootName + ">";
+    if (descriptor->lifecycle() != nullptr) {
+        descriptor->lifecycle()->afterMarshal(object);
+    }
     return output;
 }
 ::jxx::Ptr<::jxx::lang::String> XmlMarshaller::marshal(

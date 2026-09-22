@@ -33,7 +33,8 @@ private:
         const ::jxx::Ptr<::jxx::org::w3c::dom::Element>& element) const;
     ::jxx::Ptr<::jxx::lang::Object> readObject_(
         const ::jxx::Ptr<::jxx::org::w3c::dom::Element>& element,
-        const ::jxx::Ptr<metadata::BindingDescriptor>& descriptor) const;
+        const ::jxx::Ptr<metadata::BindingDescriptor>& descriptor,
+        const ::jxx::Ptr<::jxx::lang::Object>& parent = nullptr) const;
     static ::jxx::Ptr<::jxx::lang::String> localName_(
         const ::jxx::Ptr<::jxx::org::w3c::dom::Node>& node);
     static ::jxx::Ptr<::jxx::lang::String> namespace_(

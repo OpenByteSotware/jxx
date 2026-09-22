@@ -18,10 +18,12 @@ BindingDescriptor::BindingDescriptor(
     const ::jxx::Ptr<::jxx::lang::String>& rootNamespace,
     const ::jxx::Ptr<ObjectFactory>& factory,
     const ::jxx::Ptr<PropertyArray>& properties,
-    const ::jxx::Ptr<MixedContentWriter>& mixedWriter)
+    const ::jxx::Ptr<MixedContentWriter>& mixedWriter,
+    const ::jxx::Ptr<LifecycleCallback>& lifecycle)
     : typeName_(typeName), rootName_(rootName),
       rootNamespace_(rootNamespace), factory_(factory),
-      properties_(properties), mixedWriter_(mixedWriter) {
+      properties_(properties), mixedWriter_(mixedWriter),
+      lifecycle_(lifecycle) {
     if (typeName_ == nullptr || rootName_ == nullptr ||
         rootNamespace_ == nullptr || factory_ == nullptr ||
         properties_ == nullptr) {
@@ -36,6 +38,7 @@ BindingDescriptor::BindingDescriptor(
 ::jxx::Ptr<BindingDescriptor::PropertyArray> BindingDescriptor::properties() const { return properties_; }
 ::jxx::Ptr<MixedContentWriter> BindingDescriptor::mixedWriter() const { return mixedWriter_; }
 ::jxx::lang::jbool BindingDescriptor::isMixed() const noexcept { return mixedWriter_ != nullptr; }
+::jxx::Ptr<LifecycleCallback> BindingDescriptor::lifecycle() const { return lifecycle_; }
 
 ::jxx::Ptr<PropertyBinding> BindingDescriptor::find_(
     PropertyBinding::Kind kind,
