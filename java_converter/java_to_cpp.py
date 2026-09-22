@@ -74,7 +74,7 @@ class Translator:
 
         if isinstance(name, (list, tuple)):
             return ".".join(
-                Transpiler.name_of(x)
+                Translator.name_of(x)
                 for x in name
             )
 
@@ -131,8 +131,37 @@ class Translator:
             if inc: self.includes.add(inc)
         self.includes.update({'lang/jxx.lang.Object.h','lang/jxx.lang.ClassInfo.h','lang/jxx.lang.JxxArray.h'})
 
+    def is_java_main(self, m) -> bool:
+        if type(m).__name__ != "MethodDeclaration" or m.name != "main":
+            return False
+        mods = set(getattr(m, "modifiers", None) or [])
+        if not {"public", "static"}.issubset(mods):
+            return False
+        if self.name_of(getattr(m, "return_type", None)) != "void":
+            return False
+        params = list(getattr(m, "parameters", None) or [])
+        if len(params) != 1:
+            return False
+        param = params[0]
+        if self.simple(self.name_of(param.type)) != "String":
+            return False
+        dimensions = len(getattr(param.type, "dimensions", None) or [])
+        dimensions += len(getattr(param, "dimensions", None) or [])
+        dimensions += 1 if getattr(param, "varargs", False) else 0
+        return dimensions == 1
+
+    def java_main_arg_type(self) -> str:
+        return (
+            "::jxx::Ptr<::jxx::lang::JxxArray<"
+            "::jxx::Ptr<::jxx::lang::String>, 1U>>"
+        )
+
     def sig(self,m,cname,definition=False):
         ctor=type(m).__name__=='ConstructorDeclaration'
+        if self.is_java_main(m):
+            qualified = f'{cname}::jxxMain' if definition else 'jxxMain'
+            parameter_name = m.parameters[0].name
+            return f'void {qualified}(const {self.java_main_arg_type()}& {parameter_name})'
         ps=[]
         for p in m.parameters or []:
             extra=(1 if getattr(p,'varargs',False) else 0)+len(getattr(p,'dimensions',None) or [])
@@ -225,6 +254,9 @@ class Translator:
                         typ=self.resolve(m.type).value(); init=f' = {self.expr(d.initializer)}' if d.initializer is not None else (' = nullptr' if typ.startswith('::jxx::Ptr<') else '')
                         o.w(f'{prefix}{typ} {d.name}{init};')
                 elif n in ('MethodDeclaration','ConstructorDeclaration'):
+                    if self.is_java_main(m):
+                        o.w(f'static {self.sig(m,t.name)};')
+                        continue
                     virt='virtual ' if n=='MethodDeclaration' and ('abstract' in (m.modifiers or set()) or m.body is None) else ''
                     pure=' = 0' if virt else ''
                     o.w(f'{virt}{self.sig(m,t.name)}{pure};')
@@ -233,18 +265,36 @@ class Translator:
         return o.text()
 
     def source(self,tree,header_inc)->str:
-        o=Emit();o.w(f'#include "{header_inc}"');o.w();ns=self.package.replace('.','::')
+        o=Emit();o.w(f'#include "{header_inc}"');o.w();ns=self.package.replace('.', '::')
+        java_mains=[]
         if ns:o.w(f'namespace {ns} {{');o.enter()
         for t in tree.types or []:
             if type(t).__name__!='ClassDeclaration':continue
             for m in t.body or []:
                 if type(m).__name__ not in ('MethodDeclaration','ConstructorDeclaration') or getattr(m,'body',None) is None:continue
+                if self.is_java_main(m):
+                    java_mains.append((t, m))
                 o.w(self.sig(m,t.name,True)+' {');o.enter()
                 old=self.current_return
                 self.current_return='void' if type(m).__name__=='ConstructorDeclaration' else self.resolve(m.return_type).value()
-                for s in m.body or []:self.stmt(s,o)
+                for statement in m.body or []:self.stmt(statement,o)
                 self.current_return=old;o.exit();o.w('}');o.w()
         if ns:o.exit();o.w(f'}} // namespace {ns}')
+        if java_mains:
+            if len(java_mains) > 1:
+                self.diag.append('multiple Java main methods found; native main uses the first one')
+            owner, method = java_mains[0]
+            parameter_name = method.parameters[0].name
+            target = f'{ns}::{owner.name}' if ns else owner.name
+            o.w();o.w('int main(int argc, char* argv[]) {');o.enter()
+            o.w('using JxxString = ::jxx::lang::String;')
+            o.w('using JxxStringArray = ::jxx::lang::JxxArray<::jxx::Ptr<JxxString>, 1U>;')
+            o.w(f'auto {parameter_name} = ::jxx::NEW<JxxStringArray>(argc);')
+            o.w('for (int index = 0; index < argc; ++index) {');o.enter()
+            o.w(f'(*{parameter_name})[static_cast<::jxx::lang::jint>(index)] = ::jxx::NEW<JxxString>(argv[index]);')
+            o.exit();o.w('}')
+            o.w(f'{target}::jxxMain({parameter_name});')
+            o.w('return 0;');o.exit();o.w('}')
         return o.text()
 
     def translate(self,src,out_root,stem):
