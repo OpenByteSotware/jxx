@@ -55,10 +55,30 @@ class Translator:
 
     @staticmethod
     def simple(n): return str(n).split('.')[-1]
+
     @staticmethod
     def name_of(t):
-        n=getattr(t,'name',t); return '.'.join(n) if isinstance(n,(list,tuple)) else str(n)
+        if t is None:
+            return ""
 
+        if isinstance(t, str):
+            return t
+
+        name = getattr(t, "name", None)
+
+        if name is None:
+            return str(t)
+
+        if isinstance(name, str):
+            return name
+
+        if isinstance(name, (list, tuple)):
+            return ".".join(
+                Transpiler.name_of(x)
+                for x in name
+            )
+
+        return str(name)
     def qmap(self,name:str)->Tuple[str,Optional[str]]:
         if name in self.imports: name=self.imports[name]
         if name=='String': name='java.lang.String'
