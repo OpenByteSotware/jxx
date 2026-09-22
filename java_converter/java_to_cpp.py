@@ -145,10 +145,11 @@ class Translator:
         param = params[0]
         if self.simple(self.name_of(param.type)) != "String":
             return False
-        dimensions = len(getattr(param.type, "dimensions", None) or [])
-        dimensions += len(getattr(param, "dimensions", None) or [])
-        dimensions += 1 if getattr(param, "varargs", False) else 0
-        return dimensions == 1
+        # javalang represents String[] args, String args[], and String... args
+        # differently across parser/source forms. A public static void main with
+        # exactly one String parameter is treated as the Java entry point so the
+        # converter always emits a native global ::main wrapper.
+        return True
 
     def java_main_arg_type(self) -> str:
         return (
