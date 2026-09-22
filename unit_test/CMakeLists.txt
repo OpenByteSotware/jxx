@@ -73,6 +73,7 @@ endif()
 target_include_directories(
     all_tests
     PRIVATE
+	"${CMAKE_CURRENT_SOURCE_DIR}/support"
         "${CMAKE_SOURCE_DIR}/sdk"
         "${CMAKE_SOURCE_DIR}/sdk/defines"
         "${CMAKE_SOURCE_DIR}/sdk/lang"
