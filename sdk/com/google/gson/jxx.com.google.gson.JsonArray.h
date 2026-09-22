@@ -8,6 +8,10 @@ public:
     ::jxx::lang::jbool isJsonArray() const noexcept override { return true; }
     void add(const ::jxx::Ptr<JsonElement>& element);
     ::jxx::Ptr<JsonElement> get(::jxx::lang::jint index) const;
+    void set(::jxx::lang::jint index, const ::jxx::Ptr<JsonElement>& element);
+    ::jxx::Ptr<JsonElement> remove(::jxx::lang::jint index);
+    ::jxx::lang::jbool remove(const ::jxx::Ptr<JsonElement>& element);
+    ::jxx::lang::jbool contains(const ::jxx::Ptr<JsonElement>& element) const;
     ::jxx::lang::jint size() const;
     ::jxx::Ptr<::jxx::lang::String> toString() const override;
 private: ::jxx::Ptr<::jxx::util::ArrayList<JsonElement>> elements_;

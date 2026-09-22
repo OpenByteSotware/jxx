@@ -12,6 +12,11 @@ public:
     void add(const ::jxx::Ptr<::jxx::lang::String>& property,const ::jxx::Ptr<JsonElement>& value);
     void addProperty(const ::jxx::Ptr<::jxx::lang::String>& property,const ::jxx::Ptr<::jxx::lang::String>& value);
     ::jxx::Ptr<JsonElement> get(const ::jxx::Ptr<::jxx::lang::String>& property) const;
+    ::jxx::Ptr<JsonElement> remove(const ::jxx::Ptr<::jxx::lang::String>& property);
+    ::jxx::Ptr<JsonArray> getAsJsonArray(const ::jxx::Ptr<::jxx::lang::String>& property) const;
+    ::jxx::Ptr<JsonObject> getAsJsonObject(const ::jxx::Ptr<::jxx::lang::String>& property) const;
+    ::jxx::Ptr<JsonPrimitive> getAsJsonPrimitive(const ::jxx::Ptr<::jxx::lang::String>& property) const;
+    ::jxx::lang::jint size() const;
     ::jxx::lang::jbool has(const ::jxx::Ptr<::jxx::lang::String>& property) const;
     ::jxx::Ptr<::jxx::util::Set<
         ::jxx::util::MapEntry<::jxx::lang::String, JsonElement>>> entrySet() const;

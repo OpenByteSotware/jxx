@@ -16,6 +16,9 @@ public:
 
     virtual ::jxx::Ptr<JsonElement> toJsonTree(
         const ::jxx::Ptr<::jxx::lang::Object>& value) = 0;
+
+    static ::jxx::Ptr<TypeAdapter> nullSafe(
+        const ::jxx::Ptr<TypeAdapter>& delegate);
 };
 
 } // namespace com::google::gson

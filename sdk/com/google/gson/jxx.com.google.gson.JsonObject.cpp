@@ -9,6 +9,11 @@ JsonObject::JsonObject():members_(::jxx::NEW<::com::google::gson::internal::Link
 void JsonObject::add(const ::jxx::Ptr<::jxx::lang::String>& property,const ::jxx::Ptr<JsonElement>& value){if(!property)throw ::jxx::lang::NullPointerException();members_->put(property,value==nullptr?JsonNull::INSTANCE():value);}
 void JsonObject::addProperty(const ::jxx::Ptr<::jxx::lang::String>& property,const ::jxx::Ptr<::jxx::lang::String>& value){::jxx::Ptr<JsonElement> element=value==nullptr?::jxx::CAST<JsonElement>(JsonNull::INSTANCE()) : ::jxx::CAST<JsonElement>(::jxx::NEW<JsonPrimitive>(value));add(property,element);}
 ::jxx::Ptr<JsonElement> JsonObject::get(const ::jxx::Ptr<::jxx::lang::String>& property) const{return members_->get(::jxx::CAST<::jxx::lang::Object>(property));}
+::jxx::Ptr<JsonElement> JsonObject::remove(const ::jxx::Ptr<::jxx::lang::String>& property){return members_->remove(::jxx::CAST<::jxx::lang::Object>(property));}
+::jxx::Ptr<JsonArray> JsonObject::getAsJsonArray(const ::jxx::Ptr<::jxx::lang::String>& property) const{const auto value=get(property);return value==nullptr?nullptr:value->getAsJsonArray();}
+::jxx::Ptr<JsonObject> JsonObject::getAsJsonObject(const ::jxx::Ptr<::jxx::lang::String>& property) const{const auto value=get(property);return value==nullptr?nullptr:value->getAsJsonObject();}
+::jxx::Ptr<JsonPrimitive> JsonObject::getAsJsonPrimitive(const ::jxx::Ptr<::jxx::lang::String>& property) const{const auto value=get(property);return value==nullptr?nullptr:value->getAsJsonPrimitive();}
+::jxx::lang::jint JsonObject::size() const{return members_->size();}
 ::jxx::lang::jbool JsonObject::has(const ::jxx::Ptr<::jxx::lang::String>& property) const{return members_->containsKey(::jxx::CAST<::jxx::lang::Object>(property));}
 ::jxx::Ptr<::jxx::util::Set<
     ::jxx::util::MapEntry<::jxx::lang::String, JsonElement>>>
