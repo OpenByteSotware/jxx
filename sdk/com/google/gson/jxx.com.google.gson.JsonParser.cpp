@@ -149,6 +149,9 @@ private:
 
 } // namespace
 
+::jxx::Ptr<JsonElement> JsonParser::parse(const ::jxx::Ptr<::jxx::lang::String>& json) const { return parseString(json); }
+::jxx::Ptr<JsonElement> JsonParser::parse(const ::jxx::Ptr<::jxx::io::Reader>& reader) const { return parseReader(reader); }
+
 ::jxx::Ptr<JsonElement> JsonParser::parseString(
     const ::jxx::Ptr<::jxx::lang::String>& json) {
     if (json == nullptr) throw ::jxx::lang::NullPointerException();

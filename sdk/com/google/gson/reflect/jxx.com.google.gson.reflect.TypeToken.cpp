@@ -18,6 +18,9 @@ TypeToken::TypeToken(
 ::jxx::Ptr<::jxx::lang::ClassAny> TypeToken::getRawType() const { return rawType_; }
 ::jxx::Ptr<::jxx::lang::ClassAny> TypeToken::getType() const { return rawType_; }
 
+::jxx::lang::jbool TypeToken::isAssignableFrom(const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const { return type != nullptr && type == rawType_; }
+::jxx::lang::jbool TypeToken::isAssignableFrom(const ::jxx::Ptr<TypeToken>& type) const { return type != nullptr && isAssignableFrom(type->getRawType()); }
+
 ::jxx::lang::jbool TypeToken::equals(
     const ::jxx::Ptr<::jxx::lang::Object>& other) const {
     const auto token = std::dynamic_pointer_cast<TypeToken>(other);

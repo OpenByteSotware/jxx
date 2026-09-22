@@ -17,6 +17,10 @@ public:
 
     ::jxx::Ptr<::jxx::lang::ClassAny> getRawType() const;
     ::jxx::Ptr<::jxx::lang::ClassAny> getType() const;
+    ::jxx::lang::jbool isAssignableFrom(
+        const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const;
+    ::jxx::lang::jbool isAssignableFrom(
+        const ::jxx::Ptr<TypeToken>& type) const;
 
     ::jxx::lang::jbool equals(
         const ::jxx::Ptr<::jxx::lang::Object>& other) const override;

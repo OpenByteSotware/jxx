@@ -40,6 +40,9 @@ public:
         const ::jxx::Ptr<InstanceCreator>& creator);
     ::jxx::Ptr<GsonBuilder> registerTypeAdapterFactory(
         const ::jxx::Ptr<TypeAdapterFactory>& factory);
+    ::jxx::Ptr<GsonBuilder> registerTypeHierarchyAdapter(
+        const ::jxx::Ptr<::jxx::lang::ClassAny>& baseType,
+        const ::jxx::Ptr<TypeAdapter>& adapter);
     ::jxx::Ptr<GsonBuilder> registerTypeSerializer(
         const ::jxx::Ptr<::jxx::lang::ClassAny>& type,
         const ::jxx::Ptr<JsonSerializer>& serializer);
@@ -83,6 +86,8 @@ private:
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>> creatorTypes_;
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<InstanceCreator>, 1U>> creators_;
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapterFactory>, 1U>> factories_;
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>> hierarchyAdapterTypes_;
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TypeAdapter>, 1U>> hierarchyAdapters_;
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>> serializerTypes_;
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<JsonSerializer>, 1U>> serializers_;
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::ClassAny>, 1U>> deserializerTypes_;

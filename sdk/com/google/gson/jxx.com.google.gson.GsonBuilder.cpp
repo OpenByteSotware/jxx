@@ -137,6 +137,8 @@ GsonBuilder::GsonBuilder(const ::jxx::Ptr<Gson>& gson) {
 ::jxx::Ptr<GsonBuilder> GsonBuilder::registerTypeSerializer(const ::jxx::Ptr<::jxx::lang::ClassAny>& type,const ::jxx::Ptr<JsonSerializer>& serializer){if(type==nullptr||serializer==nullptr)throw ::jxx::lang::NullPointerException();serializerTypes_=append(serializerTypes_,type);serializers_=append(serializers_,serializer);return ::jxx::CAST<GsonBuilder>(this->thisPtr());}
 ::jxx::Ptr<GsonBuilder> GsonBuilder::registerTypeDeserializer(const ::jxx::Ptr<::jxx::lang::ClassAny>& type,const ::jxx::Ptr<JsonDeserializer>& deserializer){if(type==nullptr||deserializer==nullptr)throw ::jxx::lang::NullPointerException();deserializerTypes_=append(deserializerTypes_,type);deserializers_=append(deserializers_,deserializer);return ::jxx::CAST<GsonBuilder>(this->thisPtr());}
 
+::jxx::Ptr<GsonBuilder> GsonBuilder::registerTypeHierarchyAdapter(const ::jxx::Ptr<::jxx::lang::ClassAny>& baseType,const ::jxx::Ptr<TypeAdapter>& adapter){if(baseType==nullptr||adapter==nullptr)throw ::jxx::lang::NullPointerException();hierarchyAdapterTypes_=append(hierarchyAdapterTypes_,baseType);hierarchyAdapters_=append(hierarchyAdapters_,adapter);return ::jxx::CAST<GsonBuilder>(this->thisPtr());}
+
 ::jxx::Ptr<Gson> GsonBuilder::create() const {
     return ::jxx::NEW<Gson>(serializeNulls_, htmlSafe_, prettyPrinting_, lenient_,
         fieldNamingStrategy_, adapterTypes_, adapters_, creatorTypes_, creators_, factories_,

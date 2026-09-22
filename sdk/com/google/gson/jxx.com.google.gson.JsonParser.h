@@ -14,6 +14,11 @@ class JsonParser final
           JsonParser,
           ::jxx::lang::Object> {
 public:
+    JsonParser() = default;
+    ::jxx::Ptr<JsonElement> parse(
+        const ::jxx::Ptr<::jxx::lang::String>& json) const;
+    ::jxx::Ptr<JsonElement> parse(
+        const ::jxx::Ptr<::jxx::io::Reader>& reader) const;
     static ::jxx::Ptr<JsonElement> parseString(
         const ::jxx::Ptr<::jxx::lang::String>& json);
     static ::jxx::Ptr<JsonElement> parseReader(
