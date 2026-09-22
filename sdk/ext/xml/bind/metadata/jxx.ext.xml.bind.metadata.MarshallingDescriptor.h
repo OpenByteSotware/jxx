@@ -5,6 +5,7 @@
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_array.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.MarshallingBinding.h"
+#include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.MixedContentReader.h"
 
 namespace jxx::ext::xml::bind::metadata {
 
@@ -19,16 +20,20 @@ public:
     MarshallingDescriptor(
         const ::jxx::Ptr<::jxx::lang::String>& rootName,
         const ::jxx::Ptr<::jxx::lang::String>& rootNamespace,
-        const ::jxx::Ptr<BindingArray>& bindings);
+        const ::jxx::Ptr<BindingArray>& bindings,
+        const ::jxx::Ptr<MixedContentReader>& mixedReader = nullptr);
 
     ::jxx::Ptr<::jxx::lang::String> rootName() const;
     ::jxx::Ptr<::jxx::lang::String> rootNamespace() const;
     ::jxx::Ptr<BindingArray> bindings() const;
+    ::jxx::Ptr<MixedContentReader> mixedReader() const;
+    ::jxx::lang::jbool isMixed() const noexcept;
 
 private:
     ::jxx::Ptr<::jxx::lang::String> rootName_;
     ::jxx::Ptr<::jxx::lang::String> rootNamespace_;
     ::jxx::Ptr<BindingArray> bindings_;
+    ::jxx::Ptr<MixedContentReader> mixedReader_;
 };
 
 } // namespace jxx::ext::xml::bind::metadata

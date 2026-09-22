@@ -132,31 +132,10 @@ DomUnmarshaller::DomUnmarshaller(
             property->kind() != metadata::PropertyBinding::Kind::ATTRIBUTE) {
             continue;
         }
-        if (element->hasAttributeNS(
-                property->nameSpace(), property->localName())) {
-            const auto attribute = element->getAttributeNS(
-                property->nameSpace(), property->localName());
+        const auto attribute = element->getAttributeNS(
+            property->nameSpace(), property->localName());
+        if (attribute != nullptr && !attribute->isEmpty()) {
             const auto value = property->converter()->convert(attribute);
-            if (property->repeated()) {
-                property->repeatedWriter()->add(target, value);
-            } else {
-                property->writer()->write(target, value);
-            }
-            seen[static_cast<std::size_t>(index)] = true;
-        }
-    }
-
-    for (::jxx::lang::jint index = 0;
-         index < properties->length;
-         ++index) {
-        const auto property = (*properties)[index];
-        if (property == nullptr ||
-            property->kind() != metadata::PropertyBinding::Kind::VALUE) {
-            continue;
-        }
-        const auto text = element->getTextContent();
-        if (text != nullptr) {
-            const auto value = property->converter()->convert(text);
             property->writer()->write(target, value);
             seen[static_cast<std::size_t>(index)] = true;
         }
@@ -168,9 +147,20 @@ DomUnmarshaller::DomUnmarshaller(
              index < children->getLength();
              ++index) {
             const auto child = children->item(index);
-            if (child == nullptr ||
-                child->getNodeType() !=
-                    ::jxx::org::w3c::dom::Node::ELEMENT_NODE) {
+            if (child == nullptr) continue;
+            if (descriptor->isMixed() &&
+                (child->getNodeType() ==
+                    ::jxx::org::w3c::dom::Node::TEXT_NODE ||
+                 child->getNodeType() ==
+                    ::jxx::org::w3c::dom::Node::CDATA_SECTION_NODE)) {
+                const auto text = child->getTextContent();
+                if (text != nullptr && !text->isEmpty()) {
+                    descriptor->mixedWriter()->addText(target, text);
+                }
+                continue;
+            }
+            if (child->getNodeType() !=
+                ::jxx::org::w3c::dom::Node::ELEMENT_NODE) {
                 continue;
             }
             const auto property = descriptor->findElement(
@@ -185,32 +175,14 @@ DomUnmarshaller::DomUnmarshaller(
                 }
             }
             ::jxx::Ptr<::jxx::lang::Object> value;
-            const auto childElement =
-                std::dynamic_pointer_cast<::jxx::org::w3c::dom::Element>(child);
-            const auto xsiNamespace =
-                ::jxx::NEW<::jxx::lang::String>(
-                    "http://www.w3.org/2001/XMLSchema-instance");
-            const auto nilName =
-                ::jxx::NEW<::jxx::lang::String>("nil");
-            const auto isNil = childElement != nullptr &&
-                childElement->hasAttributeNS(xsiNamespace, nilName) &&
-                childElement->getAttributeNS(xsiNamespace, nilName)->utf8() == "true";
-            if (isNil) {
-                if (!property->nillable()) {
-                    throw UnmarshalException(
-                        ::jxx::NEW<::jxx::lang::String>("Non-nillable XML value is nil"));
-                }
-                value = nullptr;
-            } else if (property->isTextValue()) {
+            if (property->isTextValue()) {
                 value = property->converter()->convert(child->getTextContent());
             } else {
+                const auto childElement =
+                    std::dynamic_pointer_cast<::jxx::org::w3c::dom::Element>(child);
                 value = readObject_(childElement, property->childDescriptor());
             }
-            if (property->repeated()) {
-                property->repeatedWriter()->add(target, value);
-            } else {
-                property->writer()->write(target, value);
-            }
+            property->writer()->write(target, value);
         }
     }
 

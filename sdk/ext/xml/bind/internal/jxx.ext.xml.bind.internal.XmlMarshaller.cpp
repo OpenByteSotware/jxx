@@ -67,6 +67,32 @@ std::string XmlMarshaller::writeObject_(
             escape_(binding->formatter()->format(value)->utf8(), true) + "\"";
     }
     output += ">";
+    if (descriptor->isMixed()) {
+        const auto reader = descriptor->mixedReader();
+        for (::jxx::lang::jint index = 0;
+             index < reader->size(object);
+             ++index) {
+            const auto value = reader->value(object, index);
+            if (value == nullptr) continue;
+            if (reader->kind(object, index) ==
+                metadata::MixedContentReader::Kind::TEXT) {
+                const auto text =
+                    std::dynamic_pointer_cast<::jxx::lang::String>(value);
+                if (text != nullptr) output += escape_(text->utf8(), false);
+            } else {
+                for (::jxx::lang::jint bindingIndex = 0;
+                     bindingIndex < bindings->length;
+                     ++bindingIndex) {
+                    const auto binding = (*bindings)[bindingIndex];
+                    if (binding != nullptr &&
+                        binding->kind() == metadata::PropertyBinding::Kind::ELEMENT) {
+                        output += writeBinding_(value, binding);
+                        break;
+                    }
+                }
+            }
+        }
+    } else {
     for (::jxx::lang::jint index = 0; index < bindings->length; ++index) {
         const auto binding = (*bindings)[index];
         if (binding == nullptr || binding->kind() == metadata::PropertyBinding::Kind::ATTRIBUTE) continue;
@@ -88,6 +114,7 @@ std::string XmlMarshaller::writeObject_(
         } else {
             output += writeBinding_(value, binding);
         }
+    }
     }
     output += "</" + rootName + ">";
     return output;
