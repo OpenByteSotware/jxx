@@ -1,5 +1,7 @@
 #include "ext/xml/bind/internal/jxx.ext.xml.bind.internal.DomUnmarshaller.h"
 
+#include <vector>
+
 #include "ext/xml/bind/jxx.ext.xml.bind.UnmarshalException.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.BindingDescriptor.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.PropertyBinding.h"
@@ -118,6 +120,27 @@ DomUnmarshaller::DomUnmarshaller(
             ::jxx::NEW<::jxx::lang::String>("Object factory returned null"));
     }
 
+    const auto properties = descriptor->properties();
+    std::vector<::jxx::lang::jbool> seen(
+        static_cast<std::size_t>(properties->length), false);
+
+    for (::jxx::lang::jint index = 0;
+         index < properties->length;
+         ++index) {
+        const auto property = (*properties)[index];
+        if (property == nullptr ||
+            property->kind() != metadata::PropertyBinding::Kind::ATTRIBUTE) {
+            continue;
+        }
+        const auto attribute = element->getAttributeNS(
+            property->nameSpace(), property->localName());
+        if (attribute != nullptr && !attribute->isEmpty()) {
+            const auto value = property->converter()->convert(attribute);
+            property->writer()->write(target, value);
+            seen[static_cast<std::size_t>(index)] = true;
+        }
+    }
+
     const auto children = element->getChildNodes();
     if (children != nullptr) {
         for (::jxx::lang::jint index = 0;
@@ -132,13 +155,34 @@ DomUnmarshaller::DomUnmarshaller(
             const auto property = descriptor->findElement(
                 localName_(child), namespace_(child));
             if (property == nullptr) continue;
+            for (::jxx::lang::jint propertyIndex = 0;
+                 propertyIndex < properties->length;
+                 ++propertyIndex) {
+                if ((*properties)[propertyIndex] == property) {
+                    seen[static_cast<std::size_t>(propertyIndex)] = true;
+                    break;
+                }
+            }
             ::jxx::Ptr<::jxx::lang::Object> value;
             if (property->isTextValue()) {
                 value = property->converter()->convert(child->getTextContent());
             } else {
-                value = property->childFactory()->create();
+                const auto childElement =
+                    std::dynamic_pointer_cast<::jxx::org::w3c::dom::Element>(child);
+                value = readObject_(childElement, property->childDescriptor());
             }
             property->writer()->write(target, value);
+        }
+    }
+
+    for (::jxx::lang::jint index = 0;
+         index < properties->length;
+         ++index) {
+        const auto property = (*properties)[index];
+        if (property != nullptr && property->required() &&
+            !seen[static_cast<std::size_t>(index)]) {
+            throw UnmarshalException(
+                ::jxx::NEW<::jxx::lang::String>("Missing required XML value"));
         }
     }
     return target;
