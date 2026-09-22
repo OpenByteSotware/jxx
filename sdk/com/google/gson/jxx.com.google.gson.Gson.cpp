@@ -170,6 +170,9 @@ void Gson::toJson(const ::jxx::Ptr<JsonElement>& element,const ::jxx::Ptr<::com:
     return toJson(adapter->toJsonTree(value));
 }
 
+::jxx::Ptr<::jxx::lang::String> Gson::toJson(const ::jxx::Ptr<::jxx::lang::Object>& value,const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const {if(type==nullptr)throw ::jxx::lang::NullPointerException();const auto adapter=getAdapter(type);return adapter==nullptr?nullptr:toJson(value,adapter);}
+::jxx::Ptr<::jxx::lang::String> Gson::toJson(const ::jxx::Ptr<::jxx::lang::Object>& value,const ::jxx::Ptr<::com::google::gson::reflect::TypeToken>& type) const {if(type==nullptr)throw ::jxx::lang::NullPointerException();return toJson(value,type->getRawType());}
+
 ::jxx::lang::jbool Gson::serializeNulls() const noexcept { return serializeNulls_; }
 ::jxx::lang::jbool Gson::htmlSafe() const noexcept { return htmlSafe_; }
 ::jxx::lang::jbool Gson::prettyPrinting() const noexcept { return prettyPrinting_; }

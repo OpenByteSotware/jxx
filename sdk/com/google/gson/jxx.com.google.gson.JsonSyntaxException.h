@@ -1,14 +1,14 @@
 #pragma once
 
 #include "lang/jxx.lang.ClassInfoMarker.h"
-#include "lang/jxx.lang.RuntimeException.h"
+#include "com/google/gson/jxx.com.google.gson.JsonParseException.h"
 
 namespace com::google::gson {
 
 class JsonSyntaxException
-    : public ::jxx::lang::RuntimeException {
+    : public JsonParseException {
 public:
-    using JxxSuper = ::jxx::lang::RuntimeException;
+    using JxxSuper = JsonParseException;
     using JxxClassInfoMarker =
         ::jxx::lang::ClassInfo<JsonSyntaxException, JxxSuper>;
 
@@ -17,6 +17,8 @@ public:
     JsonSyntaxException();
     explicit JsonSyntaxException(
         const ::jxx::Ptr<::jxx::lang::String>& message);
+    explicit JsonSyntaxException(const ::jxx::Ptr<::jxx::lang::Throwable>& cause);
+    JsonSyntaxException(const ::jxx::Ptr<::jxx::lang::String>& message, const ::jxx::Ptr<::jxx::lang::Throwable>& cause);
     JsonSyntaxException(const JsonSyntaxException&) = default;
     JsonSyntaxException(JsonSyntaxException&&) noexcept = default;
     JsonSyntaxException& operator=(const JsonSyntaxException&) = default;

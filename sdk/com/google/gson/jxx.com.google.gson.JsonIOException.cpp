@@ -3,6 +3,10 @@ namespace com::google::gson {
 JsonIOException::JsonIOException() = default;
 JsonIOException::JsonIOException(const ::jxx::Ptr<::jxx::lang::String>& message)
     : JsonParseException(message) {}
+JsonIOException::JsonIOException(const ::jxx::Ptr<::jxx::lang::Throwable>& cause)
+    : JsonParseException(cause) {}
+JsonIOException::JsonIOException(const ::jxx::Ptr<::jxx::lang::String>& message, const ::jxx::Ptr<::jxx::lang::Throwable>& cause)
+    : JsonParseException(message, cause) {}
 ::jxx::Ptr<::jxx::lang::Object> JsonIOException::cloneImpl() const {
     return ::jxx::NEW<JsonIOException>(*this);
 }

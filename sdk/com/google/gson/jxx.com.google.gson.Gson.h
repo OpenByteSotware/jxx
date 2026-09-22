@@ -70,6 +70,12 @@ public:
     ::jxx::Ptr<::jxx::lang::String> toJson(
         const ::jxx::Ptr<::jxx::lang::Object>& value,
         const ::jxx::Ptr<TypeAdapter>& adapter) const;
+    ::jxx::Ptr<::jxx::lang::String> toJson(
+        const ::jxx::Ptr<::jxx::lang::Object>& value,
+        const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const;
+    ::jxx::Ptr<::jxx::lang::String> toJson(
+        const ::jxx::Ptr<::jxx::lang::Object>& value,
+        const ::jxx::Ptr<::com::google::gson::reflect::TypeToken>& type) const;
 
     ::jxx::lang::jbool serializeNulls() const noexcept;
     ::jxx::lang::jbool htmlSafe() const noexcept;
