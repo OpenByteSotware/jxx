@@ -9,6 +9,7 @@
 #include "com/google/gson/jxx.com.google.gson.TypeAdapterFactory.h"
 #include "com/google/gson/jxx.com.google.gson.ExclusionStrategy.h"
 #include "com/google/gson/jxx.com.google.gson.LongSerializationPolicy.h"
+#include "com/google/gson/reflect/jxx.com.google.gson.reflect.TypeToken.h"
 
 #include <string>
 
@@ -55,6 +56,9 @@ public:
     ::jxx::Ptr<::jxx::lang::Object> fromJson(
         const ::jxx::Ptr<::jxx::lang::String>& json,
         const ::jxx::Ptr<TypeAdapter>& adapter) const;
+    ::jxx::Ptr<::jxx::lang::Object> fromJson(
+        const ::jxx::Ptr<::jxx::lang::String>& json,
+        const ::jxx::Ptr<::com::google::gson::reflect::TypeToken>& type) const;
 
     ::jxx::Ptr<::jxx::lang::String> toJson(
         const ::jxx::Ptr<::jxx::lang::Object>& value,
@@ -67,6 +71,8 @@ public:
     ::jxx::Ptr<FieldNamingStrategy> fieldNamingStrategy() const;
     ::jxx::Ptr<TypeAdapter> getAdapter(
         const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const;
+    ::jxx::Ptr<TypeAdapter> getAdapter(
+        const ::jxx::Ptr<::com::google::gson::reflect::TypeToken>& type) const;
     ::jxx::Ptr<::jxx::lang::Object> createInstance(
         const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const;
     ::jxx::lang::jbool shouldSkipField(

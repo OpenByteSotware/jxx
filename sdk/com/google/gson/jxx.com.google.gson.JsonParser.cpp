@@ -11,6 +11,7 @@
 #include "com/google/gson/jxx.com.google.gson.JsonSyntaxException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
+#include "io/jxx.io.Reader.h"
 
 namespace com::google::gson {
 namespace {
@@ -152,6 +153,27 @@ private:
     const ::jxx::Ptr<::jxx::lang::String>& json) {
     if (json == nullptr) throw ::jxx::lang::NullPointerException();
     return Parser(json->utf8()).parse();
+}
+
+::jxx::Ptr<JsonElement> JsonParser::parseReader(
+    const ::jxx::Ptr<::jxx::io::Reader>& reader) {
+    if (reader == nullptr) throw ::jxx::lang::NullPointerException();
+    std::string text;
+    for (;;) {
+        const auto value = reader->read();
+        if (value < 0) break;
+        const auto code = static_cast<unsigned int>(value);
+        if (code <= 0x7FU) text.push_back(static_cast<char>(code));
+        else if (code <= 0x7FFU) {
+            text.push_back(static_cast<char>(0xC0U | (code >> 6U)));
+            text.push_back(static_cast<char>(0x80U | (code & 0x3FU)));
+        } else {
+            text.push_back(static_cast<char>(0xE0U | (code >> 12U)));
+            text.push_back(static_cast<char>(0x80U | ((code >> 6U) & 0x3FU)));
+            text.push_back(static_cast<char>(0x80U | (code & 0x3FU)));
+        }
+    }
+    return parseString(::jxx::NEW<::jxx::lang::String>(text));
 }
 
 } // namespace com::google::gson

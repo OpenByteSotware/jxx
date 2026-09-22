@@ -7,6 +7,10 @@ public:
     JsonArray();
     ::jxx::lang::jbool isJsonArray() const noexcept override { return true; }
     void add(const ::jxx::Ptr<JsonElement>& element);
+    void add(const ::jxx::Ptr<::jxx::lang::String>& value);
+    void add(::jxx::lang::jbool value);
+    void add(::jxx::lang::jlong value);
+    void add(::jxx::lang::jdouble value);
     ::jxx::Ptr<JsonElement> get(::jxx::lang::jint index) const;
     void set(::jxx::lang::jint index, const ::jxx::Ptr<JsonElement>& element);
     ::jxx::Ptr<JsonElement> remove(::jxx::lang::jint index);

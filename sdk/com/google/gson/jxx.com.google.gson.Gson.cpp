@@ -145,6 +145,15 @@ void Gson::toJson(const ::jxx::Ptr<JsonElement>& element,const ::jxx::Ptr<::com:
     return adapter->fromJsonTree(JsonParser::parseString(json));
 }
 
+::jxx::Ptr<::jxx::lang::Object> Gson::fromJson(
+    const ::jxx::Ptr<::jxx::lang::String>& json,
+    const ::jxx::Ptr<::com::google::gson::reflect::TypeToken>& type) const {
+    if (type == nullptr) throw ::jxx::lang::NullPointerException();
+    const auto adapter = getAdapter(type);
+    if (adapter == nullptr) return nullptr;
+    return fromJson(json, adapter);
+}
+
 ::jxx::Ptr<::jxx::lang::String> Gson::toJson(
     const ::jxx::Ptr<::jxx::lang::Object>& value,
     const ::jxx::Ptr<TypeAdapter>& adapter) const {
@@ -173,6 +182,12 @@ void Gson::toJson(const ::jxx::Ptr<JsonElement>& element,const ::jxx::Ptr<::com:
         }
     }
     return nullptr;
+}
+
+::jxx::Ptr<TypeAdapter> Gson::getAdapter(
+    const ::jxx::Ptr<::com::google::gson::reflect::TypeToken>& type) const {
+    if (type == nullptr) throw ::jxx::lang::NullPointerException();
+    return getAdapter(type->getRawType());
 }
 
 ::jxx::Ptr<::jxx::lang::Object> Gson::createInstance(
