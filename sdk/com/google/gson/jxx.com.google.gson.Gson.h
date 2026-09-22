@@ -19,7 +19,7 @@
 namespace jxx::lang { class String; }
 namespace jxx::io { class Reader; class Writer; }
 namespace com::google::gson::stream { class JsonReader; class JsonWriter; }
-namespace com::google::gson { class JsonElement; class TypeAdapter; }
+namespace com::google::gson { class JsonElement; class TypeAdapter; class GsonBuilder; }
 
 namespace com::google::gson {
 
@@ -83,6 +83,7 @@ public:
         const ::jxx::Ptr<::jxx::lang::Object>& value,
         const ::jxx::Ptr<::com::google::gson::reflect::TypeToken>& type) const;
 
+    ::jxx::Ptr<GsonBuilder> newBuilder();
     ::jxx::lang::jbool serializeNulls() const noexcept;
     ::jxx::lang::jbool htmlSafe() const noexcept;
     ::jxx::lang::jbool prettyPrinting() const noexcept;

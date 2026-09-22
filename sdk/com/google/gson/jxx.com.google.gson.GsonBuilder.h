@@ -23,6 +23,7 @@ class GsonBuilder final
     : public ::jxx::lang::ClassBase<GsonBuilder, ::jxx::lang::Object> {
 public:
     GsonBuilder() = default;
+    explicit GsonBuilder(const ::jxx::Ptr<Gson>& gson);
 
     ::jxx::Ptr<GsonBuilder> serializeNulls();
     ::jxx::Ptr<GsonBuilder> disableHtmlEscaping();

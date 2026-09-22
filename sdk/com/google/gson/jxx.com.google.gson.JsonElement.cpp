@@ -13,7 +13,10 @@ namespace com::google::gson {
 ::jxx::Ptr<JsonObject> JsonElement::getAsJsonObject(){ if(!isJsonObject()) throw ::jxx::lang::IllegalStateException(); return std::dynamic_pointer_cast<JsonObject>(shared_from_this()); }
 ::jxx::Ptr<::jxx::lang::String> JsonElement::getAsString(){ throw ::jxx::lang::IllegalStateException(); }
 ::jxx::lang::jbool JsonElement::getAsBoolean(){ throw ::jxx::lang::IllegalStateException(); }
+::jxx::lang::jbyte JsonElement::getAsByte(){ return static_cast<::jxx::lang::jbyte>(getAsInt()); }
+::jxx::lang::jshort JsonElement::getAsShort(){ return static_cast<::jxx::lang::jshort>(getAsInt()); }
 ::jxx::lang::jint JsonElement::getAsInt(){ throw ::jxx::lang::IllegalStateException(); }
+::jxx::lang::jfloat JsonElement::getAsFloat(){ return static_cast<::jxx::lang::jfloat>(getAsDouble()); }
 ::jxx::lang::jlong JsonElement::getAsLong(){ throw ::jxx::lang::IllegalStateException(); }
 ::jxx::lang::jdouble JsonElement::getAsDouble(){ throw ::jxx::lang::IllegalStateException(); }
 ::jxx::Ptr<JsonElement> JsonElement::deepCopy(){return ::jxx::CAST<JsonElement>(this->thisPtr());}

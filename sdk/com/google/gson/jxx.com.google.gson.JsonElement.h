@@ -18,7 +18,10 @@ public:
     virtual ::jxx::Ptr<JsonObject> getAsJsonObject();
     virtual ::jxx::Ptr<::jxx::lang::String> getAsString();
     virtual ::jxx::lang::jbool getAsBoolean();
+    virtual ::jxx::lang::jbyte getAsByte();
+    virtual ::jxx::lang::jshort getAsShort();
     virtual ::jxx::lang::jint getAsInt();
+    virtual ::jxx::lang::jfloat getAsFloat();
     virtual ::jxx::lang::jlong getAsLong();
     virtual ::jxx::lang::jdouble getAsDouble();
     virtual ::jxx::Ptr<JsonElement> deepCopy();

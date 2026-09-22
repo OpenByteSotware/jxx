@@ -7,6 +7,7 @@
 #include "com/google/gson/jxx.com.google.gson.JsonParser.h"
 #include "com/google/gson/jxx.com.google.gson.JsonPrimitive.h"
 #include "com/google/gson/jxx.com.google.gson.TypeAdapter.h"
+#include "com/google/gson/jxx.com.google.gson.GsonBuilder.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "com/google/gson/internal/jxx.com.google.gson.internal.Streams.h"
 #include "com/google/gson/stream/jxx.com.google.gson.stream.JsonReader.h"
@@ -179,6 +180,8 @@ void Gson::toJson(const ::jxx::Ptr<JsonElement>& element,const ::jxx::Ptr<::com:
 
 ::jxx::Ptr<::jxx::lang::String> Gson::toJson(const ::jxx::Ptr<::jxx::lang::Object>& value,const ::jxx::Ptr<::jxx::lang::ClassAny>& type) const {if(type==nullptr)throw ::jxx::lang::NullPointerException();const auto adapter=getAdapter(type);return adapter==nullptr?nullptr:toJson(value,adapter);}
 ::jxx::Ptr<::jxx::lang::String> Gson::toJson(const ::jxx::Ptr<::jxx::lang::Object>& value,const ::jxx::Ptr<::com::google::gson::reflect::TypeToken>& type) const {if(type==nullptr)throw ::jxx::lang::NullPointerException();return toJson(value,type->getRawType());}
+
+::jxx::Ptr<GsonBuilder> Gson::newBuilder() { return ::jxx::NEW<GsonBuilder>(::jxx::CAST<Gson>(this->thisPtr())); }
 
 ::jxx::lang::jbool Gson::serializeNulls() const noexcept { return serializeNulls_; }
 ::jxx::lang::jbool Gson::htmlSafe() const noexcept { return htmlSafe_; }

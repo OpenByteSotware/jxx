@@ -14,7 +14,10 @@ public:
     ::jxx::lang::jbool isNumber() const noexcept;
     ::jxx::Ptr<::jxx::lang::String> getAsString() override;
     ::jxx::lang::jbool getAsBoolean() override;
+    ::jxx::lang::jbyte getAsByte() override;
+    ::jxx::lang::jshort getAsShort() override;
     ::jxx::lang::jint getAsInt() override;
+    ::jxx::lang::jfloat getAsFloat() override;
     ::jxx::lang::jlong getAsLong() override;
     ::jxx::lang::jdouble getAsDouble() override;
     ::jxx::Ptr<::jxx::lang::String> toString() const override;

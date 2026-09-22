@@ -24,6 +24,9 @@ JsonObject::entrySet() const {
     return members_->entrySet();
 }
 
+::jxx::Ptr<::jxx::util::Set<::jxx::lang::String>> JsonObject::keySet() const { return members_->keySet(); }
+::jxx::Ptr<::jxx::util::Collection<JsonElement>> JsonObject::values() const { return members_->values(); }
+
 ::jxx::Ptr<JsonElement> JsonObject::deepCopy() {
     const auto result = ::jxx::NEW<JsonObject>();
     const auto iterator = members_->entrySet()->iterator();

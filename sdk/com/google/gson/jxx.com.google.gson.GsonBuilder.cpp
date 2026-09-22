@@ -17,6 +17,24 @@ template <typename T>
 }
 }
 
+GsonBuilder::GsonBuilder(const ::jxx::Ptr<Gson>& gson) {
+    if (gson == nullptr) throw ::jxx::lang::NullPointerException();
+    serializeNulls_ = gson->serializeNulls();
+    htmlSafe_ = gson->htmlSafe();
+    prettyPrinting_ = gson->prettyPrinting();
+    lenient_ = gson->lenient();
+    fieldNamingStrategy_ = gson->fieldNamingStrategy();
+    requireExpose_ = gson->requireExpose();
+    version_ = gson->version();
+    longSerializationPolicy_ = gson->longSerializationPolicy();
+    objectToNumberStrategy_ = gson->objectToNumberStrategy();
+    numberToNumberStrategy_ = gson->numberToNumberStrategy();
+    dateFormatPattern_ = gson->dateFormatPattern();
+    dateStyle_ = gson->dateStyle();
+    serializeInnerClasses_ = gson->serializeInnerClasses();
+    complexMapKeySerialization_ = gson->complexMapKeySerialization();
+}
+
 ::jxx::Ptr<GsonBuilder> GsonBuilder::serializeNulls() { serializeNulls_ = true; return ::jxx::CAST<GsonBuilder>(this->thisPtr()); }
 ::jxx::Ptr<GsonBuilder> GsonBuilder::disableHtmlEscaping() { htmlSafe_ = false; return ::jxx::CAST<GsonBuilder>(this->thisPtr()); }
 ::jxx::Ptr<GsonBuilder> GsonBuilder::setPrettyPrinting() { prettyPrinting_ = true; return ::jxx::CAST<GsonBuilder>(this->thisPtr()); }

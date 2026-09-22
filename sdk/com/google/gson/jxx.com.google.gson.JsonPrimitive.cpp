@@ -2,6 +2,11 @@
 #include "lang/jxx.lang.Boolean.h"
 #include "lang/jxx.lang.Double.h"
 #include "lang/jxx.lang.Long.h"
+#include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.Short.h"
+#include "lang/jxx.lang.Float.h"
+#include "lang/jxx.lang.Integer.h"
+#include "lang/jxx.lang.Byte.h"
 #include "lang/jxx.lang.NullPointerException.h"
 namespace com::google::gson {
 namespace { std::string quoted(const std::string& in){ std::string out="\""; for(char c:in){ if(c=='\"'||c=='\\') out.push_back('\\'); if(c=='\n'){out+="\\n";continue;} out.push_back(c);} return out+"\""; } }
@@ -32,6 +37,21 @@ JsonPrimitive::JsonPrimitive(::jxx::lang::jdouble value):kind_(Kind::DECIMAL),va
         return static_cast<::jxx::lang::jint>(bits ^ (bits >> 32U));
     }
     return value_ == nullptr ? 0 : value_->hashCode();
+}
+
+::jxx::lang::jbyte JsonPrimitive::getAsByte()
+{
+    return ::jxx::lang::Byte::parseByte(value_);
+}
+
+::jxx::lang::jshort JsonPrimitive::getAsShort()
+{
+	return static_cast<::jxx::lang::jshort>(::jxx::lang::Short::parseShort(value_));
+}
+
+::jxx::lang::jfloat JsonPrimitive::getAsFloat() 
+{
+	return static_cast<::jxx::lang::jfloat>(::jxx::lang::Float::parseFloat(value_));
 }
 
 } // namespace com::google::gson

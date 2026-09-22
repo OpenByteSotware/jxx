@@ -4,6 +4,7 @@
 #include "lang/jxx.lang.String.h"
 #include "util/jxx.util.Set.h"
 #include "util/jxx.util.MapEntry.h"
+#include "util/jxx.util.Collection.h"
 namespace com::google::gson {
 class JsonObject final : public ::jxx::lang::ClassBase<JsonObject, JsonElement> {
 public:
@@ -23,6 +24,8 @@ public:
     ::jxx::lang::jbool has(const ::jxx::Ptr<::jxx::lang::String>& property) const;
     ::jxx::Ptr<::jxx::util::Set<
         ::jxx::util::MapEntry<::jxx::lang::String, JsonElement>>> entrySet() const;
+    ::jxx::Ptr<::jxx::util::Set<::jxx::lang::String>> keySet() const;
+    ::jxx::Ptr<::jxx::util::Collection<JsonElement>> values() const;
     ::jxx::Ptr<JsonElement> deepCopy() override;
     ::jxx::Ptr<::jxx::lang::String> toString() const override;
 private: ::jxx::Ptr<::com::google::gson::internal::LinkedTreeMap<::jxx::lang::String,JsonElement>> members_;
