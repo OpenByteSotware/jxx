@@ -10,6 +10,12 @@ void JsonObject::add(const ::jxx::Ptr<::jxx::lang::String>& property,const ::jxx
 void JsonObject::addProperty(const ::jxx::Ptr<::jxx::lang::String>& property,const ::jxx::Ptr<::jxx::lang::String>& value){::jxx::Ptr<JsonElement> element=value==nullptr?::jxx::CAST<JsonElement>(JsonNull::INSTANCE()) : ::jxx::CAST<JsonElement>(::jxx::NEW<JsonPrimitive>(value));add(property,element);}
 ::jxx::Ptr<JsonElement> JsonObject::get(const ::jxx::Ptr<::jxx::lang::String>& property) const{return members_->get(::jxx::CAST<::jxx::lang::Object>(property));}
 ::jxx::lang::jbool JsonObject::has(const ::jxx::Ptr<::jxx::lang::String>& property) const{return members_->containsKey(::jxx::CAST<::jxx::lang::Object>(property));}
+::jxx::Ptr<::jxx::util::Set<
+    ::jxx::util::MapEntry<::jxx::lang::String, JsonElement>>>
+JsonObject::entrySet() const {
+    return members_->entrySet();
+}
+
 ::jxx::Ptr<::jxx::lang::String> JsonObject::toString() const {
     std::string output = "{";
     auto iterator = members_->entrySet()->iterator();
