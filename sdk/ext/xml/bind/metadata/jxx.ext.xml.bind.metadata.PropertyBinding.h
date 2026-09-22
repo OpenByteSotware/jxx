@@ -28,7 +28,9 @@ public:
         const ::jxx::Ptr<ValueConverter>& converter = nullptr,
         const ::jxx::Ptr<ObjectFactory>& childFactory = nullptr,
         const ::jxx::Ptr<BindingDescriptor>& childDescriptor = nullptr,
-        const ::jxx::Ptr<RepeatedPropertyWriter>& repeatedWriter = nullptr);
+        const ::jxx::Ptr<RepeatedPropertyWriter>& repeatedWriter = nullptr,
+        const ::jxx::Ptr<::jxx::lang::String>& defaultValue = nullptr,
+        const ::jxx::Ptr<::jxx::lang::String>& fixedValue = nullptr);
 
     Kind kind() const noexcept;
     ::jxx::Ptr<::jxx::lang::String> localName() const;
@@ -41,6 +43,10 @@ public:
     ::jxx::Ptr<ObjectFactory> childFactory() const;
     ::jxx::Ptr<BindingDescriptor> childDescriptor() const;
     ::jxx::Ptr<RepeatedPropertyWriter> repeatedWriter() const;
+    ::jxx::Ptr<::jxx::lang::String> defaultValue() const;
+    ::jxx::Ptr<::jxx::lang::String> fixedValue() const;
+    ::jxx::lang::jbool hasDefaultValue() const noexcept;
+    ::jxx::lang::jbool hasFixedValue() const noexcept;
     ::jxx::lang::jbool isTextValue() const noexcept;
     ::jxx::lang::jbool isNestedObject() const noexcept;
 
@@ -56,6 +62,8 @@ private:
     ::jxx::Ptr<ObjectFactory> childFactory_;
     ::jxx::Ptr<BindingDescriptor> childDescriptor_;
     ::jxx::Ptr<RepeatedPropertyWriter> repeatedWriter_;
+    ::jxx::Ptr<::jxx::lang::String> defaultValue_;
+    ::jxx::Ptr<::jxx::lang::String> fixedValue_;
 };
 
 } // namespace jxx::ext::xml::bind::metadata

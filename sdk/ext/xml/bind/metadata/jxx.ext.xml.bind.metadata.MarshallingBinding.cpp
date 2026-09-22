@@ -15,11 +15,15 @@ MarshallingBinding::MarshallingBinding(
     const ::jxx::Ptr<PropertyReader>& reader,
     const ::jxx::Ptr<ValueFormatter>& formatter,
     const ::jxx::Ptr<MarshallingDescriptor>& childDescriptor,
-    const ::jxx::Ptr<RepeatedValueReader>& repeatedReader)
+    const ::jxx::Ptr<RepeatedValueReader>& repeatedReader,
+    const ::jxx::Ptr<::jxx::lang::String>& defaultValue,
+    const ::jxx::Ptr<::jxx::lang::String>& fixedValue,
+    ::jxx::lang::jbool omitDefault)
     : kind_(kind), localName_(localName), namespace_(nameSpace),
       required_(required), nillable_(nillable), repeated_(repeated),
       reader_(reader), formatter_(formatter), childDescriptor_(childDescriptor),
-      repeatedReader_(repeatedReader) {
+      repeatedReader_(repeatedReader), defaultValue_(defaultValue),
+      fixedValue_(fixedValue), omitDefault_(omitDefault) {
     if (localName_ == nullptr || namespace_ == nullptr || reader_ == nullptr) {
         throw ::jxx::lang::NullPointerException();
     }
@@ -30,6 +34,12 @@ MarshallingBinding::MarshallingBinding(
         throw ::jxx::lang::IllegalArgumentException();
     }
     if (!repeated_ && repeatedReader_ != nullptr) {
+        throw ::jxx::lang::IllegalArgumentException();
+    }
+    if (defaultValue_ != nullptr && fixedValue_ != nullptr) {
+        throw ::jxx::lang::IllegalArgumentException();
+    }
+    if ((defaultValue_ != nullptr || fixedValue_ != nullptr) && formatter_ == nullptr) {
         throw ::jxx::lang::IllegalArgumentException();
     }
 }
@@ -44,6 +54,9 @@ PropertyBinding::Kind MarshallingBinding::kind() const noexcept { return kind_; 
 ::jxx::Ptr<ValueFormatter> MarshallingBinding::formatter() const { return formatter_; }
 ::jxx::Ptr<MarshallingDescriptor> MarshallingBinding::childDescriptor() const { return childDescriptor_; }
 ::jxx::Ptr<RepeatedValueReader> MarshallingBinding::repeatedReader() const { return repeatedReader_; }
+::jxx::Ptr<::jxx::lang::String> MarshallingBinding::defaultValue() const { return defaultValue_; }
+::jxx::Ptr<::jxx::lang::String> MarshallingBinding::fixedValue() const { return fixedValue_; }
+::jxx::lang::jbool MarshallingBinding::omitDefault() const noexcept { return omitDefault_; }
 ::jxx::lang::jbool MarshallingBinding::isTextValue() const noexcept { return formatter_ != nullptr; }
 
 } // namespace jxx::ext::xml::bind::metadata

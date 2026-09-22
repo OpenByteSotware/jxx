@@ -17,11 +17,14 @@ PropertyBinding::PropertyBinding(
     const ::jxx::Ptr<ValueConverter>& converter,
     const ::jxx::Ptr<ObjectFactory>& childFactory,
     const ::jxx::Ptr<BindingDescriptor>& childDescriptor,
-    const ::jxx::Ptr<RepeatedPropertyWriter>& repeatedWriter)
+    const ::jxx::Ptr<RepeatedPropertyWriter>& repeatedWriter,
+    const ::jxx::Ptr<::jxx::lang::String>& defaultValue,
+    const ::jxx::Ptr<::jxx::lang::String>& fixedValue)
     : kind_(kind), localName_(localName), namespace_(nameSpace),
       required_(required), nillable_(nillable), repeated_(repeated),
       writer_(writer), converter_(converter), childFactory_(childFactory),
-      childDescriptor_(childDescriptor), repeatedWriter_(repeatedWriter) {
+      childDescriptor_(childDescriptor), repeatedWriter_(repeatedWriter),
+      defaultValue_(defaultValue), fixedValue_(fixedValue) {
     if (localName_ == nullptr || nameSpace == nullptr || writer_ == nullptr) {
         throw ::jxx::lang::NullPointerException();
     }
@@ -40,6 +43,12 @@ PropertyBinding::PropertyBinding(
     if (!repeated_ && repeatedWriter_ != nullptr) {
         throw ::jxx::lang::IllegalArgumentException();
     }
+    if (defaultValue_ != nullptr && fixedValue_ != nullptr) {
+        throw ::jxx::lang::IllegalArgumentException();
+    }
+    if ((defaultValue_ != nullptr || fixedValue_ != nullptr) && converter_ == nullptr) {
+        throw ::jxx::lang::IllegalArgumentException();
+    }
 }
 
 PropertyBinding::Kind PropertyBinding::kind() const noexcept { return kind_; }
@@ -53,6 +62,10 @@ PropertyBinding::Kind PropertyBinding::kind() const noexcept { return kind_; }
 ::jxx::Ptr<ObjectFactory> PropertyBinding::childFactory() const { return childFactory_; }
 ::jxx::Ptr<BindingDescriptor> PropertyBinding::childDescriptor() const { return childDescriptor_; }
 ::jxx::Ptr<RepeatedPropertyWriter> PropertyBinding::repeatedWriter() const { return repeatedWriter_; }
+::jxx::Ptr<::jxx::lang::String> PropertyBinding::defaultValue() const { return defaultValue_; }
+::jxx::Ptr<::jxx::lang::String> PropertyBinding::fixedValue() const { return fixedValue_; }
+::jxx::lang::jbool PropertyBinding::hasDefaultValue() const noexcept { return defaultValue_ != nullptr; }
+::jxx::lang::jbool PropertyBinding::hasFixedValue() const noexcept { return fixedValue_ != nullptr; }
 ::jxx::lang::jbool PropertyBinding::isTextValue() const noexcept { return converter_ != nullptr; }
 ::jxx::lang::jbool PropertyBinding::isNestedObject() const noexcept { return childFactory_ != nullptr; }
 

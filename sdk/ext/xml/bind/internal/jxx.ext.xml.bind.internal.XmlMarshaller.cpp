@@ -33,12 +33,24 @@ std::string XmlMarshaller::writeBinding_(
     const ::jxx::Ptr<::jxx::lang::Object>& value,
     const ::jxx::Ptr<metadata::MarshallingBinding>& binding) {
     const auto name = qualifiedName_(binding->localName(), binding->nameSpace());
-    if (binding->kind() == metadata::PropertyBinding::Kind::VALUE) {
-        return escape_(binding->formatter()->format(value)->utf8(), false);
-    }
-    if (binding->isTextValue()) {
+    if (binding->kind() == metadata::PropertyBinding::Kind::VALUE ||
+        binding->isTextValue()) {
+        const auto lexicalValue = binding->formatter()->format(value);
+        if (binding->fixedValue() != nullptr &&
+            lexicalValue->utf8() != binding->fixedValue()->utf8()) {
+            throw JAXBException(
+                ::jxx::NEW<::jxx::lang::String>("Value does not match fixed XML value"));
+        }
+        if (binding->omitDefault() &&
+            binding->defaultValue() != nullptr &&
+            lexicalValue->utf8() == binding->defaultValue()->utf8()) {
+            return "";
+        }
+        if (binding->kind() == metadata::PropertyBinding::Kind::VALUE) {
+            return escape_(lexicalValue->utf8(), false);
+        }
         return "<" + name + ">" +
-            escape_(binding->formatter()->format(value)->utf8(), false) +
+            escape_(lexicalValue->utf8(), false) +
             "</" + name + ">";
     }
     return writeObject_(value, binding->childDescriptor());
@@ -65,8 +77,19 @@ std::string XmlMarshaller::writeObject_(
             if (binding->required()) throw JAXBException(::jxx::NEW<::jxx::lang::String>("Missing required attribute"));
             continue;
         }
+        const auto lexicalValue = binding->formatter()->format(value);
+        if (binding->fixedValue() != nullptr &&
+            lexicalValue->utf8() != binding->fixedValue()->utf8()) {
+            throw JAXBException(
+                ::jxx::NEW<::jxx::lang::String>("Value does not match fixed XML value"));
+        }
+        if (binding->omitDefault() &&
+            binding->defaultValue() != nullptr &&
+            lexicalValue->utf8() == binding->defaultValue()->utf8()) {
+            continue;
+        }
         output += " " + qualifiedName_(binding->localName(), binding->nameSpace()) + "=\"" +
-            escape_(binding->formatter()->format(value)->utf8(), true) + "\"";
+            escape_(lexicalValue->utf8(), true) + "\"";
     }
     output += ">";
     if (descriptor->isMixed()) {

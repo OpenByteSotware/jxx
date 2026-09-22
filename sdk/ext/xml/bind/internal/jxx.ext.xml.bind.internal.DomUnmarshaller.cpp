@@ -165,6 +165,11 @@ DomUnmarshaller::unmarshalElement(
         const auto attribute = element->getAttributeNS(
             property->nameSpace(), property->localName());
         if (attribute != nullptr && !attribute->isEmpty()) {
+            if (property->hasFixedValue() &&
+                !equalString(attribute, property->fixedValue())) {
+                throw UnmarshalException(
+                    ::jxx::NEW<::jxx::lang::String>("XML value does not match fixed value"));
+            }
             const auto value = property->converter()->convert(attribute);
             property->writer()->write(target, value);
             seen[static_cast<std::size_t>(index)] = true;
@@ -220,6 +225,18 @@ DomUnmarshaller::unmarshalElement(
          index < properties->length;
          ++index) {
         const auto property = (*properties)[index];
+        if (property != nullptr &&
+            !seen[static_cast<std::size_t>(index)] &&
+            !property->repeated() &&
+            (property->hasDefaultValue() || property->hasFixedValue())) {
+            const auto lexicalValue = property->hasFixedValue()
+                ? property->fixedValue()
+                : property->defaultValue();
+            property->writer()->write(
+                target,
+                property->converter()->convert(lexicalValue));
+            seen[static_cast<std::size_t>(index)] = true;
+        }
         if (property != nullptr && property->required() &&
             !seen[static_cast<std::size_t>(index)]) {
             throw UnmarshalException(

@@ -26,7 +26,10 @@ public:
         const ::jxx::Ptr<PropertyReader>& reader,
         const ::jxx::Ptr<ValueFormatter>& formatter = nullptr,
         const ::jxx::Ptr<MarshallingDescriptor>& childDescriptor = nullptr,
-        const ::jxx::Ptr<RepeatedValueReader>& repeatedReader = nullptr);
+        const ::jxx::Ptr<RepeatedValueReader>& repeatedReader = nullptr,
+        const ::jxx::Ptr<::jxx::lang::String>& defaultValue = nullptr,
+        const ::jxx::Ptr<::jxx::lang::String>& fixedValue = nullptr,
+        ::jxx::lang::jbool omitDefault = false);
 
     PropertyBinding::Kind kind() const noexcept;
     ::jxx::Ptr<::jxx::lang::String> localName() const;
@@ -38,6 +41,9 @@ public:
     ::jxx::Ptr<ValueFormatter> formatter() const;
     ::jxx::Ptr<MarshallingDescriptor> childDescriptor() const;
     ::jxx::Ptr<RepeatedValueReader> repeatedReader() const;
+    ::jxx::Ptr<::jxx::lang::String> defaultValue() const;
+    ::jxx::Ptr<::jxx::lang::String> fixedValue() const;
+    ::jxx::lang::jbool omitDefault() const noexcept;
     ::jxx::lang::jbool isTextValue() const noexcept;
 
 private:
@@ -51,6 +57,9 @@ private:
     ::jxx::Ptr<ValueFormatter> formatter_;
     ::jxx::Ptr<MarshallingDescriptor> childDescriptor_;
     ::jxx::Ptr<RepeatedValueReader> repeatedReader_;
+    ::jxx::Ptr<::jxx::lang::String> defaultValue_;
+    ::jxx::Ptr<::jxx::lang::String> fixedValue_;
+    ::jxx::lang::jbool omitDefault_;
 };
 
 } // namespace jxx::ext::xml::bind::metadata
