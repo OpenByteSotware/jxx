@@ -16,4 +16,5 @@ namespace com::google::gson {
 ::jxx::lang::jint JsonElement::getAsInt(){ throw ::jxx::lang::IllegalStateException(); }
 ::jxx::lang::jlong JsonElement::getAsLong(){ throw ::jxx::lang::IllegalStateException(); }
 ::jxx::lang::jdouble JsonElement::getAsDouble(){ throw ::jxx::lang::IllegalStateException(); }
+::jxx::Ptr<JsonElement> JsonElement::deepCopy(){return ::jxx::CAST<JsonElement>(this->thisPtr());}
 } // namespace com::google::gson

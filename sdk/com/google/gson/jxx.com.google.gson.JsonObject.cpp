@@ -21,6 +21,13 @@ JsonObject::entrySet() const {
     return members_->entrySet();
 }
 
+::jxx::Ptr<JsonElement> JsonObject::deepCopy() {
+    const auto result = ::jxx::NEW<JsonObject>();
+    const auto iterator = members_->entrySet()->iterator();
+    while (iterator->hasNext()) { const auto entry = iterator->next(); const auto value = entry->getValue(); result->add(entry->getKey(), value == nullptr ? nullptr : value->deepCopy()); }
+    return result;
+}
+
 ::jxx::Ptr<::jxx::lang::String> JsonObject::toString() const {
     std::string output = "{";
     auto iterator = members_->entrySet()->iterator();

@@ -20,6 +20,7 @@ public:
     ::jxx::lang::jbool has(const ::jxx::Ptr<::jxx::lang::String>& property) const;
     ::jxx::Ptr<::jxx::util::Set<
         ::jxx::util::MapEntry<::jxx::lang::String, JsonElement>>> entrySet() const;
+    ::jxx::Ptr<JsonElement> deepCopy() override;
     ::jxx::Ptr<::jxx::lang::String> toString() const override;
 private: ::jxx::Ptr<::com::google::gson::internal::LinkedTreeMap<::jxx::lang::String,JsonElement>> members_;
 };

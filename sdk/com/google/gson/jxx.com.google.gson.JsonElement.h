@@ -21,5 +21,6 @@ public:
     virtual ::jxx::lang::jint getAsInt();
     virtual ::jxx::lang::jlong getAsLong();
     virtual ::jxx::lang::jdouble getAsDouble();
+    virtual ::jxx::Ptr<JsonElement> deepCopy();
 };
 } // namespace com::google::gson

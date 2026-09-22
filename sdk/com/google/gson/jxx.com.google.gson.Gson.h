@@ -13,6 +13,8 @@
 #include <string>
 
 namespace jxx::lang { class String; }
+namespace jxx::io { class Reader; class Writer; }
+namespace com::google::gson::stream { class JsonReader; class JsonWriter; }
 namespace com::google::gson { class JsonElement; class TypeAdapter; }
 
 namespace com::google::gson {
@@ -42,9 +44,13 @@ public:
 
     ::jxx::Ptr<JsonElement> fromJson(
         const ::jxx::Ptr<::jxx::lang::String>& json) const;
+    ::jxx::Ptr<JsonElement> fromJson(const ::jxx::Ptr<::jxx::io::Reader>& reader) const;
+    ::jxx::Ptr<JsonElement> fromJson(const ::jxx::Ptr<::com::google::gson::stream::JsonReader>& reader) const;
 
     ::jxx::Ptr<::jxx::lang::String> toJson(
         const ::jxx::Ptr<JsonElement>& element) const;
+    void toJson(const ::jxx::Ptr<JsonElement>& element, const ::jxx::Ptr<::jxx::io::Writer>& writer) const;
+    void toJson(const ::jxx::Ptr<JsonElement>& element, const ::jxx::Ptr<::com::google::gson::stream::JsonWriter>& writer) const;
 
     ::jxx::Ptr<::jxx::lang::Object> fromJson(
         const ::jxx::Ptr<::jxx::lang::String>& json,

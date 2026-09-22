@@ -8,6 +8,11 @@
 #include "com/google/gson/jxx.com.google.gson.JsonPrimitive.h"
 #include "com/google/gson/jxx.com.google.gson.TypeAdapter.h"
 #include "lang/jxx.lang.NullPointerException.h"
+#include "com/google/gson/internal/jxx.com.google.gson.internal.Streams.h"
+#include "com/google/gson/stream/jxx.com.google.gson.stream.JsonReader.h"
+#include "com/google/gson/stream/jxx.com.google.gson.stream.JsonWriter.h"
+#include "io/jxx.io.Reader.h"
+#include "io/jxx.io.Writer.h"
 
 namespace com::google::gson {
 namespace {
@@ -75,6 +80,8 @@ Gson::Gson(
     const ::jxx::Ptr<::jxx::lang::String>& json) const {
     return JsonParser::parseString(json);
 }
+::jxx::Ptr<JsonElement> Gson::fromJson(const ::jxx::Ptr<::jxx::io::Reader>& reader) const { if(reader==nullptr) throw ::jxx::lang::NullPointerException(); const auto stream=::jxx::NEW<::com::google::gson::stream::JsonReader>(reader); stream->setLenient(lenient_); return ::com::google::gson::internal::Streams::parse(stream); }
+::jxx::Ptr<JsonElement> Gson::fromJson(const ::jxx::Ptr<::com::google::gson::stream::JsonReader>& reader) const { if(reader==nullptr) throw ::jxx::lang::NullPointerException(); return ::com::google::gson::internal::Streams::parse(reader); }
 
 std::string Gson::formatTree_(
     const ::jxx::Ptr<JsonElement>& element,
@@ -127,6 +134,9 @@ std::string Gson::formatTree_(
     if (nonExecutableJson_) text = ")]}'\n" + text;
     return ::jxx::NEW<::jxx::lang::String>(text);
 }
+
+void Gson::toJson(const ::jxx::Ptr<JsonElement>& element,const ::jxx::Ptr<::jxx::io::Writer>& writer) const { if(writer==nullptr) throw ::jxx::lang::NullPointerException(); writer->write(toJson(element)); }
+void Gson::toJson(const ::jxx::Ptr<JsonElement>& element,const ::jxx::Ptr<::com::google::gson::stream::JsonWriter>& writer) const { if(writer==nullptr) throw ::jxx::lang::NullPointerException(); ::com::google::gson::internal::Streams::write(element,writer); }
 
 ::jxx::Ptr<::jxx::lang::Object> Gson::fromJson(
     const ::jxx::Ptr<::jxx::lang::String>& json,

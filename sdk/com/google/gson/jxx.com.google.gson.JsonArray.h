@@ -13,6 +13,7 @@ public:
     ::jxx::lang::jbool remove(const ::jxx::Ptr<JsonElement>& element);
     ::jxx::lang::jbool contains(const ::jxx::Ptr<JsonElement>& element) const;
     ::jxx::lang::jint size() const;
+    ::jxx::Ptr<JsonElement> deepCopy() override;
     ::jxx::Ptr<::jxx::lang::String> toString() const override;
 private: ::jxx::Ptr<::jxx::util::ArrayList<JsonElement>> elements_;
 };
