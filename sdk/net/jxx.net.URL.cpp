@@ -279,8 +279,8 @@ namespace jxx::net
         const auto thisPort = (port_ >= 0) ? port_ : getDefaultPort();
         const auto otherPort = (other->port_ >= 0) ? other->port_ : other->getDefaultPort();
         return
-            ((!protocol_ && !other->protocol_) || (protocol_ && other->protocol_ && protocol_->equals(other->protocol_))) &&
-            ((!host_ && !other->host_) || (host_ && other->host_ && host_->equals(other->host_))) &&
+            ((!protocol_ && !other->protocol_) || (protocol_ && other->protocol_ && protocol_->equalsIgnoreCase(other->protocol_))) &&
+            ((!host_ && !other->host_) || (host_ && other->host_ && host_->equalsIgnoreCase(other->host_))) &&
             thisPort == otherPort &&
             ((!path_ && !other->path_) || (path_ && other->path_ && path_->equals(other->path_)));
     }
@@ -303,9 +303,22 @@ namespace jxx::net
 
     jxx::lang::jbool URL::equals(const jxx::Ptr<jxx::lang::Object>& other) const
     {
-        auto u = std::dynamic_pointer_cast<URL>(other);
-        return u && toExternalForm()->equals(u->toExternalForm());
+        const auto url = std::dynamic_pointer_cast<URL>(other);
+        if (url == nullptr || !sameFile(url)) {
+            return false;
+        }
+        return (!ref_ && !url->ref_) ||
+            (ref_ && url->ref_ && ref_->equals(url->ref_));
     }
 
-    jxx::lang::jint URL::hashCode() const { return toExternalForm()->hashCode(); }
+    jxx::lang::jint URL::hashCode() const {
+        jxx::lang::jint result = protocol_ ? protocol_->toLowerCase()->hashCode() : 0;
+        result = 31 * result + (host_ ? host_->toLowerCase()->hashCode() : 0);
+        const auto effectivePort = port_ >= 0 ? port_ : getDefaultPort();
+        result = 31 * result + effectivePort;
+        result = 31 * result + (path_ ? path_->hashCode() : 0);
+        result = 31 * result + (query_ ? query_->hashCode() : 0);
+        result = 31 * result + (ref_ ? ref_->hashCode() : 0);
+        return result;
+    }
 }

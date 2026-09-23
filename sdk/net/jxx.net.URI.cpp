@@ -3,6 +3,7 @@
 #include "net/internal/jxx.net.internal.UrlUtil.h"
 #include "net/jxx.net.URISyntaxException.h"
 #include "net/jxx.net.URL.h"
+#include "lang/jxx.lang.NullPointerException.h"
 
 namespace
 {
@@ -131,8 +132,9 @@ namespace jxx::net
 
     jxx::Ptr<URI> URI::resolve(const jxx::Ptr<URI>& uri) const
     {
-        if (!uri)
-            return jxx::NEW<URI>(toString());
+        if (uri == nullptr) {
+            throw jxx::lang::NullPointerException();
+        }
         if (uri->isAbsolute())
             return uri;
 
@@ -154,8 +156,9 @@ namespace jxx::net
 
     jxx::Ptr<URI> URI::relativize(const jxx::Ptr<URI>& uri) const
     {
-        if (!uri)
-            return nullptr;
+        if (uri == nullptr) {
+            throw jxx::lang::NullPointerException();
+        }
         if ((scheme_ && uri->scheme_ && !scheme_->equals(uri->scheme_)) ||
             (authority_ && uri->authority_ && !authority_->equals(uri->authority_)))
             return uri;
@@ -204,8 +207,9 @@ namespace jxx::net
 
     jxx::lang::jint URI::compareTo(const jxx::Ptr<URI>& other) const
     {
-        if (!other)
-            return 1;
+        if (other == nullptr) {
+            throw jxx::lang::NullPointerException();
+        }
         const auto a = toString()->utf8();
         const auto b = other->toString()->utf8();
         if (a < b) return -1;

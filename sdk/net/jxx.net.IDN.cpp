@@ -1,8 +1,9 @@
 #include <algorithm>
 #include <cctype>
-#include <stdexcept>
 
 #include "net/jxx.net.IDN.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.NullPointerException.h"
 
 namespace
 {
@@ -23,10 +24,14 @@ namespace jxx::net
     }
 
     jxx::Ptr<jxx::lang::String> IDN::toASCII(const jxx::Ptr<jxx::lang::String>& input,
-                                             jxx::lang::jint /*flags*/)
+                                             jxx::lang::jint flags)
     {
-        if (!input)
-            throw std::invalid_argument("null input");
+        if (input == nullptr) {
+            throw jxx::lang::NullPointerException();
+        }
+        if ((flags & ~(ALLOW_UNASSIGNED | USE_STD3_ASCII_RULES)) != 0) {
+            throw jxx::lang::IllegalArgumentException("unsupported IDN flags");
+        }
         return jxx::NEW<jxx::lang::String>(asciiFold_(input->utf8()));
     }
 
@@ -36,10 +41,14 @@ namespace jxx::net
     }
 
     jxx::Ptr<jxx::lang::String> IDN::toUnicode(const jxx::Ptr<jxx::lang::String>& input,
-                                               jxx::lang::jint /*flags*/)
+                                               jxx::lang::jint flags)
     {
-        if (!input)
-            throw std::invalid_argument("null input");
+        if (input == nullptr) {
+            throw jxx::lang::NullPointerException();
+        }
+        if ((flags & ~(ALLOW_UNASSIGNED | USE_STD3_ASCII_RULES)) != 0) {
+            throw jxx::lang::IllegalArgumentException("unsupported IDN flags");
+        }
         return input;
     }
 }
