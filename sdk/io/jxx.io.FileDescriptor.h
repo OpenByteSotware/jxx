@@ -10,6 +10,9 @@ typedef struct _IO_FILE FILE;
 
 namespace jxx::io
 {
+    class FileInputStream;
+    class FileOutputStream;
+
     class FileDescriptor final
         : public ::jxx::lang::ClassBase<
               FileDescriptor,
@@ -35,9 +38,12 @@ namespace jxx::io
         void sync();
         FILE* nativeHandle() const;
 
+    private:
+        friend class FileInputStream;
+        friend class FileOutputStream;
+
         void invalidate(FILE* expectedHandle) noexcept;
 
-    private:
         FILE* handle_ = nullptr;
         ::jxx::lang::jbool owned_ = false;
     };

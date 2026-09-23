@@ -42,6 +42,7 @@ namespace jxx::io
 	} FileOutputStream::FileOutputStream(const ::jxx::Ptr<File>& f, ::jxx::lang::jbool a)
 	{
 		if (!f) throw ::jxx::lang::NullPointerException();
+		if (f->isDirectory()) throw FileNotFoundException(f->getPath());
 		handle_ = openOutputFile_(f->getPath(), a); if (!handle_)throw FileNotFoundException(f->getPath()); owned_ = true; descriptor_ = ::jxx::NEW<FileDescriptor>(handle_, false);
 	} FileOutputStream::FileOutputStream(const ::jxx::Ptr<FileDescriptor>& d) :descriptor_(d)
 	{
