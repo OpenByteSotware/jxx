@@ -4,6 +4,8 @@
 
 #include "io/jxx.io.IOException.h"
 #include "io/jxx.io.OutputStream.h"
+#include "io/jxx.io.UnsupportedEncodingException.h"
+#include "nio/charset/jxx.nio.charset.Charset.h"
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
@@ -27,15 +29,29 @@ OutputStreamWriter::OutputStreamWriter(
     if (output == nullptr || charsetName == nullptr) {
         throw ::jxx::lang::NullPointerException();
     }
+    if (!::jxx::nio::charset::Charset::isSupported(charsetName)) {
+        throw UnsupportedEncodingException(charsetName->utf8());
+    }
+    encoding_ = ::jxx::nio::charset::Charset::forName(charsetName)->name();
 }
 
 void OutputStreamWriter::writeString(
     const ::jxx::Ptr<::jxx::lang::String>& value) {
-
-    if (out_ == nullptr) {
-        throw IOException();
+    if (out_ == nullptr) throw IOException();
+    const auto encoding = encoding_->utf8();
+    if (encoding == "ISO-8859-1" || encoding == "US-ASCII") {
+        auto bytes = std::make_shared<::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(
+            static_cast<std::uint32_t>(value->length()));
+        for (::jxx::lang::jint index = 0; index < value->length(); ++index) {
+            const auto ch = value->charAt(index);
+            (*bytes)[index] = static_cast<::jxx::lang::jbyte>(
+                encoding == "US-ASCII" && ch > 0x7F ? '?' : (ch <= 0xFF ? ch : '?'));
+        }
+        out_->write(bytes, 0, static_cast<::jxx::lang::jint>(bytes->length));
+    } else {
+        const auto bytes = value->getBytes();
+        out_->write(bytes, 0, static_cast<::jxx::lang::jint>(bytes->length));
     }
-    out_->write(value->getBytes());
 }
 
 void OutputStreamWriter::write(::jxx::lang::jint value) {

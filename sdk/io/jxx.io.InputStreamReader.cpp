@@ -5,6 +5,8 @@
 #include "io/jxx.io.ByteArrayOutputStream.h"
 #include "io/jxx.io.IOException.h"
 #include "io/jxx.io.InputStream.h"
+#include "io/jxx.io.UnsupportedEncodingException.h"
+#include "nio/charset/jxx.nio.charset.Charset.h"
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
@@ -28,6 +30,10 @@ InputStreamReader::InputStreamReader(
     if (input == nullptr || charsetName == nullptr) {
         throw ::jxx::lang::NullPointerException();
     }
+    if (!::jxx::nio::charset::Charset::isSupported(charsetName)) {
+        throw UnsupportedEncodingException(charsetName->utf8());
+    }
+    encoding_ = ::jxx::nio::charset::Charset::forName(charsetName)->name();
 }
 
 void InputStreamReader::decodeAll() {
@@ -46,8 +52,20 @@ void InputStreamReader::decodeAll() {
         }
         output->write(value);
     }
-    decoded_ =
-        ::jxx::NEW<::jxx::lang::String>(output->toByteArray());
+    const auto bytes = output->toByteArray();
+    const auto encoding = encoding_->utf8();
+    if (encoding == "ISO-8859-1" || encoding == "US-ASCII") {
+        std::u16string decoded;
+        decoded.reserve(bytes->length);
+        for (std::uint32_t index = 0; index < bytes->length; ++index) {
+            const auto value = static_cast<unsigned char>((*bytes)[index]);
+            decoded.push_back(static_cast<char16_t>(
+                encoding == "US-ASCII" && value > 0x7FU ? 0xFFFDU : value));
+        }
+        decoded_ = ::jxx::NEW<::jxx::lang::String>(decoded);
+    } else {
+        decoded_ = ::jxx::NEW<::jxx::lang::String>(bytes);
+    }
 }
 
 ::jxx::lang::jint InputStreamReader::read() {
