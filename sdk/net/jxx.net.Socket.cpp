@@ -291,13 +291,29 @@ namespace jxx::net
 
     jxx::Ptr<jxx::io::InputStream> Socket::getInputStream()
     {
-        ensureCreated_(true);
+        if (isClosed()) {
+            throw SocketException("socket is closed");
+        }
+        if (!isConnected()) {
+            throw SocketException("socket is not connected");
+        }
+        if (isInputShutdown()) {
+            throw SocketException("socket input is shutdown");
+        }
         return jxx::NEW<internal::NativeSocketInputStream>(state_);
     }
 
     jxx::Ptr<jxx::io::OutputStream> Socket::getOutputStream()
     {
-        ensureCreated_(true);
+        if (isClosed()) {
+            throw SocketException("socket is closed");
+        }
+        if (!isConnected()) {
+            throw SocketException("socket is not connected");
+        }
+        if (isOutputShutdown()) {
+            throw SocketException("socket output is shutdown");
+        }
         return jxx::NEW<internal::NativeSocketOutputStream>(state_);
     }
 
@@ -344,6 +360,12 @@ namespace jxx::net
 
     void Socket::setSoLinger(jxx::lang::jbool on, jxx::lang::jint linger)
     {
+        if (linger < 0) {
+            throw ::jxx::lang::IllegalArgumentException("linger is negative");
+        }
+        if (linger > 65535) {
+            linger = 65535;
+        }
         ensureCreated_(true);
         struct linger ls{};
         ls.l_onoff = on ? 1 : 0;
@@ -410,15 +432,28 @@ namespace jxx::net
     jxx::lang::jint Socket::getReceiveBufferSize() const { return state_ && state_->socket != internal::kInvalidSocket ? getSockOptInt_(SOL_SOCKET, SO_RCVBUF) : 0; }
     void Socket::setKeepAlive(jxx::lang::jbool on) { ensureCreated_(true); setSockOptBool_(SOL_SOCKET, SO_KEEPALIVE, on); }
     jxx::lang::jbool Socket::getKeepAlive() const { return state_ && state_->socket != internal::kInvalidSocket ? getSockOptBool_(SOL_SOCKET, SO_KEEPALIVE) : false; }
-    void Socket::setTrafficClass(jxx::lang::jint tc) { ensureCreated_(true); setSockOptInt_(IPPROTO_IP, IP_TOS, tc); }
+    void Socket::setTrafficClass(jxx::lang::jint tc) {
+        if (tc < 0 || tc > 255) {
+            throw ::jxx::lang::IllegalArgumentException("traffic class out of range");
+        }
+        ensureCreated_(true);
+        setSockOptInt_(IPPROTO_IP, IP_TOS, tc);
+    }
     jxx::lang::jint Socket::getTrafficClass() const { return state_ && state_->socket != internal::kInvalidSocket ? getSockOptInt_(IPPROTO_IP, IP_TOS) : 0; }
     void Socket::setReuseAddress(jxx::lang::jbool on) { ensureCreated_(true); setSockOptBool_(SOL_SOCKET, SO_REUSEADDR, on); }
     jxx::lang::jbool Socket::getReuseAddress() const { return state_ && state_->socket != internal::kInvalidSocket ? getSockOptBool_(SOL_SOCKET, SO_REUSEADDR) : false; }
 
     void Socket::shutdownInput()
     {
-        if (!state_ || state_->socket == internal::kInvalidSocket)
-            return;
+        if (isClosed()) {
+            throw SocketException("socket is closed");
+        }
+        if (!isConnected()) {
+            throw SocketException("socket is not connected");
+        }
+        if (isInputShutdown()) {
+            throw SocketException("socket input is already shutdown");
+        }
     #if defined(_WIN32)
         ::shutdown(state_->socket, SD_RECEIVE);
     #else
@@ -429,8 +464,15 @@ namespace jxx::net
 
     void Socket::shutdownOutput()
     {
-        if (!state_ || state_->socket == internal::kInvalidSocket)
-            return;
+        if (isClosed()) {
+            throw SocketException("socket is closed");
+        }
+        if (!isConnected()) {
+            throw SocketException("socket is not connected");
+        }
+        if (isOutputShutdown()) {
+            throw SocketException("socket output is already shutdown");
+        }
     #if defined(_WIN32)
         ::shutdown(state_->socket, SD_SEND);
     #else
