@@ -405,12 +405,44 @@ namespace jxx::net {
 
     jxx::lang::ByteArray
         NetworkInterface::getHardwareAddress() const {
-        return hardwareAddr_;
+        if (hardwareAddr_ == nullptr) {
+            return nullptr;
+        }
+
+        auto copy =
+            std::make_shared<
+                jxx::lang::ByteArrayType>(
+                    hardwareAddr_->length);
+
+        for (std::uint32_t index = 0;
+             index < hardwareAddr_->length;
+             ++index) {
+
+            (*copy)[index] =
+                (*hardwareAddr_)[index];
+        }
+
+        return copy;
     }
 
     jxx::Ptr<jxx::lang::String>
         NetworkInterface::toString() const {
-        return jxx::NEW<jxx::lang::String>(name_ != nullptr ? name_->utf8() : "");
+        std::string value(
+            "name:");
+
+        value += name_ != nullptr
+            ? name_->utf8()
+            : std::string();
+
+        if (displayName_ != nullptr) {
+            value += " (";
+            value += displayName_->utf8();
+            value += ")";
+        }
+
+        return jxx::NEW<
+            jxx::lang::String>(
+                value);
     }
 
     jxx::Ptr<NetworkInterface>
