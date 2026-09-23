@@ -87,4 +87,21 @@ namespace jxx::io
         } catch (...) {
         }
     }
+
+    ::jxx::lang::jbool FileDescriptor::closeConnection(FILE* expectedHandle) noexcept
+    {
+        try {
+            return synchronized([&]() -> ::jxx::lang::jbool {
+                if (handle_ != expectedHandle || !handle_) {
+                    return true;
+                }
+                auto* const handle = handle_;
+                handle_ = nullptr;
+                owned_ = false;
+                return std::fclose(handle) == 0;
+            });
+        } catch (...) {
+            return false;
+        }
+    }
 } // namespace jxx::io

@@ -43,6 +43,7 @@ namespace jxx::io
         friend class FileOutputStream;
 
         void invalidate(FILE* expectedHandle) noexcept;
+        ::jxx::lang::jbool closeConnection(FILE* expectedHandle) noexcept;
 
         FILE* handle_ = nullptr;
         ::jxx::lang::jbool owned_ = false;

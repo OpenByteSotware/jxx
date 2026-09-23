@@ -72,7 +72,7 @@ namespace jxx::io
 		descriptor_ = ::jxx::NEW<FileDescriptor>(handle_, false);
 	} FileInputStream::FileInputStream(const ::jxx::Ptr<FileDescriptor>& d) :descriptor_(d)
 	{
-		if (!d)throw ::jxx::lang::NullPointerException(); handle_ = d->nativeHandle(); if (!handle_)throw FileNotFoundException();
+		if (!d)throw ::jxx::lang::NullPointerException(); handle_ = d->nativeHandle(); if (!handle_)throw FileNotFoundException(); owned_ = true;
 	} FileInputStream::~FileInputStream()
 	{
 		try { close(); } catch (...) {}
@@ -111,7 +111,10 @@ namespace jxx::io
 			   const auto owned = owned_;
 			   handle_ = nullptr;
 			   owned_ = false;
-			   if (owned && descriptor_) descriptor_->invalidate(handle);
+			   if (owned && descriptor_) {
+				   if (!descriptor_->closeConnection(handle)) throw IOException();
+				   return;
+			   }
 			   if (owned && std::fclose(handle) != 0) throw IOException();
 	  });
 	} ::jxx::Ptr<FileDescriptor> FileInputStream::getFD()const
