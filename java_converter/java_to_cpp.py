@@ -329,88 +329,85 @@ class Translator:
         cp.write_text(self.source(tree,os.path.relpath(hp,cp.parent).replace(os.sep,'/')),encoding='utf-8')
         return hp,cp
 
-def _cmake_target_name(source: Path, root: Path) -> str:
-    """Return a deterministic, CMake-safe executable target name.
-
-    The Java filename remains the target name when it is unique. Package path
-    components are used only to disambiguate duplicate filenames.
-    """
-    relative = source.relative_to(root).with_suffix('')
-    parts = list(relative.parts)
-    raw = '_'.join(parts)
-    safe = ''.join(ch if ch.isalnum() or ch == '_' else '_' for ch in raw)
-    if safe and safe[0].isdigit():
-        safe = '_' + safe
-    return safe or 'jxx_app'
-
-
 def _contains_native_main(source: Path) -> bool:
     try:
-        text = source.read_text(encoding='utf-8')
+        return 'int main(int argc, char* argv[])' in source.read_text(encoding='utf-8')
     except OSError:
         return False
-    return 'int main(int argc, char* argv[])' in text
 
 
-def generate_cmake(out_root:str, project:str='TranspiledProject', target:str='transpiled')->str:
+def _safe_target(source: Path, root: Path) -> str:
+    raw = '_'.join(source.relative_to(root).with_suffix('').parts)
+    name = ''.join(ch if ch.isalnum() or ch == '_' else '_' for ch in raw)
+    return ('_' + name) if name and name[0].isdigit() else (name or 'jxx_app')
+
+
+def generate_cmake_files(out_root: str, project: str = 'TranspiledProject',
+                         support_target: str = 'transpiled') -> Path:
     root = Path(out_root)
     sources = sorted(root.rglob('*.cpp'))
-    main_sources = [source for source in sources if _contains_native_main(source)]
-    support_sources = [source for source in sources if source not in main_sources]
+    mains = [source for source in sources if _contains_native_main(source)]
+    support = [source for source in sources if source not in mains]
 
-    relative_main = [(source, source.relative_to(root).as_posix()) for source in main_sources]
-    relative_support = [source.relative_to(root).as_posix() for source in support_sources]
+    counts = {}
+    for source in mains:
+        counts[source.stem] = counts.get(source.stem, 0) + 1
+    names = {}
+    used = set()
+    for source in mains:
+        name = source.stem if counts[source.stem] == 1 else _safe_target(source, root)
+        while name in used:
+            name += '_app'
+        used.add(name)
+        names[source] = name
 
-    lines = [
+    root_lines = [
         'cmake_minimum_required(VERSION 3.16)',
-        f'project({project} LANGUAGES CXX)',
-        '',
+        f'project({project} LANGUAGES CXX)', '',
         'set(CMAKE_CXX_STANDARD 17)',
         'set(CMAKE_CXX_STANDARD_REQUIRED ON)',
-        'set(CMAKE_CXX_EXTENSIONS OFF)',
-        '',
+        'set(CMAKE_CXX_EXTENSIONS OFF)', ''
     ]
+    if support:
+        root_lines.append(f'add_library({support_target} STATIC')
+        root_lines.extend(f'    {x.relative_to(root).as_posix()}' for x in support)
+        root_lines += [')', f'target_include_directories({support_target} PUBLIC ${{CMAKE_CURRENT_SOURCE_DIR}})', '']
 
-    if relative_support:
-        lines.append(f'add_library({target} STATIC')
-        lines.extend(f'    {source}' for source in relative_support)
-        lines.append(')')
-        lines.append(
-            f'target_include_directories({target} PUBLIC '
-            '${CMAKE_CURRENT_SOURCE_DIR})')
-        lines.append('')
+    main_folders = sorted({source.parent for source in mains})
+    for folder in main_folders:
+        if folder != root:
+            root_lines.append(f'add_subdirectory({folder.relative_to(root).as_posix()})')
 
-    used_targets = set()
-    stem_counts = {}
-    for source, _ in relative_main:
-        stem_counts[source.stem] = stem_counts.get(source.stem, 0) + 1
+    for source in [x for x in mains if x.parent == root]:
+        target = names[source]
+        root_lines += ['', f'add_executable({target} {source.name})',
+                       f'target_include_directories({target} PRIVATE ${{CMAKE_CURRENT_SOURCE_DIR}})']
+        if support:
+            root_lines.append(f'target_link_libraries({target} PRIVATE {support_target})')
 
-    for source, relative_source in relative_main:
-        executable = source.stem
-        if stem_counts[source.stem] > 1 or executable in used_targets:
-            executable = _cmake_target_name(source, root)
-        while executable in used_targets:
-            executable += '_app'
-        used_targets.add(executable)
+    if not mains:
+        root_lines.append('# No translated Java main method was found.')
+    root_file = root / 'CMakeLists.txt'
+    root_file.write_text('\n'.join(root_lines) + '\n', encoding='utf-8')
 
-        lines.append(f'add_executable({executable}')
-        lines.append(f'    {relative_source}')
-        lines.append(')')
-        lines.append(
-            f'target_include_directories({executable} PRIVATE '
-            '${CMAKE_CURRENT_SOURCE_DIR})')
-        if relative_support:
-            lines.append(f'target_link_libraries({executable} PRIVATE {target})')
-        lines.append('')
+    for folder in main_folders:
+        if folder == root:
+            continue
+        lines = ['# Generated executable targets for translated Java main methods.', '']
+        for source in [x for x in mains if x.parent == folder]:
+            target = names[source]
+            lines += [f'add_executable({target} {source.name})',
+                      f'target_include_directories({target} PRIVATE ${{PROJECT_SOURCE_DIR}})']
+            if support:
+                lines.append(f'target_link_libraries({target} PRIVATE {support_target})')
+            lines.append('')
+        (folder / 'CMakeLists.txt').write_text('\n'.join(lines), encoding='utf-8')
+    return root_file
 
-    if not sources:
-        lines.append('# No generated C++ sources were found.')
-    elif not relative_main:
-        lines.append('# No translated Java main method was found; no executable was generated.')
 
-    lines.append('# Add the JXX SDK target/library to target_link_libraries as required by your build.')
-    lines.append('')
-    return '\n'.join(lines)
+def generate_cmake(out_root: str, project: str = 'TranspiledProject',
+                   target: str = 'transpiled') -> str:
+    return generate_cmake_files(out_root, project, target).read_text(encoding='utf-8')
 
 def translate_file(path:Path,out_root:str):
     src=path.read_text(encoding='utf-8')
@@ -437,7 +434,7 @@ def main():
     else:
         translate_file(Path(a.input),a.out)
     if a.cmake:
-        cmake=Path(a.out)/'CMakeLists.txt'
-        cmake.write_text(generate_cmake(a.out,a.cmake_project,a.cmake_target),encoding='utf-8')
-        print(f'Wrote {cmake}')
+        cmake = generate_cmake_files(a.out, a.cmake_project, a.cmake_target)
+        for generated in sorted(Path(a.out).rglob('CMakeLists.txt')):
+            print(f'Wrote {generated}')
 if __name__=='__main__': main()
