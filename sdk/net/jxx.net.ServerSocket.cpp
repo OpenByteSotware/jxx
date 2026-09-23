@@ -9,7 +9,6 @@
     #include <sys/socket.h>
 #endif
 
-#include <cerrno>
 #include <cstring>
 #include <stdexcept>
 
@@ -196,20 +195,28 @@ namespace jxx::net
     jxx::Ptr<Socket> ServerSocket::accept()
     {
         ensureCreated_();
+        if (soTimeout_ > 0) {
+            fd_set readable;
+            FD_ZERO(&readable);
+            FD_SET(state_->socket, &readable);
+            timeval wait{};
+            wait.tv_sec = soTimeout_ / 1000;
+            wait.tv_usec = (soTimeout_ % 1000) * 1000;
+#if defined(_WIN32)
+            const auto ready = ::select(0, &readable, nullptr, nullptr, &wait);
+#else
+            const auto ready = ::select(state_->socket + 1, &readable, nullptr, nullptr, &wait);
+#endif
+            if (ready == 0)
+                throw ::jxx::net::SocketTimeoutException("accept timed out");
+            if (ready < 0)
+                throwSE_("accept wait failed");
+        }
         sockaddr_storage remote{};
         socklen_t len = sizeof(remote);
         const auto s = ::accept(state_->socket, reinterpret_cast<sockaddr*>(&remote), &len);
-        if (s == internal::kInvalidSocket) {
-#if defined(_WIN32)
-            const auto error = ::WSAGetLastError();
-            if (soTimeout_ > 0 && (error == WSAETIMEDOUT || error == WSAEWOULDBLOCK))
-                throw ::jxx::net::SocketTimeoutException("accept timed out");
-#else
-            if (soTimeout_ > 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
-                throw ::jxx::net::SocketTimeoutException("accept timed out");
-#endif
+        if (s == internal::kInvalidSocket)
             throwSE_("accept failed");
-        }
 
         sockaddr_storage local{};
         socklen_t llen = sizeof(local);
