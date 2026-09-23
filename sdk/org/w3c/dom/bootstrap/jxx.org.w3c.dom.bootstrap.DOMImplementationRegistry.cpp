@@ -1,9 +1,7 @@
-#include "org/w3c/dom/bootstrap/jxx.org.w3c.dom.bootstrap.DOMImplementationRegistry.h"
-
 #include <cstddef>
 #include <utility>
 #include <vector>
-
+#include "org/w3c/dom/bootstrap/jxx.org.w3c.dom.bootstrap.DOMImplementationRegistry.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
 #include "org/w3c/dom/internal/jxx.org.w3c.dom.internal.DOMImplementationSourceImpl.h"

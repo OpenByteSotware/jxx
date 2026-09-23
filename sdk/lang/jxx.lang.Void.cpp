@@ -1,7 +1,5 @@
-#include "lang/jxx.lang.Void.h"
-
 #include <typeindex>
-
+#include "lang/jxx.lang.Void.h"
 #include "lang/jxx.lang.Class.h"
 
 namespace jxx::lang {

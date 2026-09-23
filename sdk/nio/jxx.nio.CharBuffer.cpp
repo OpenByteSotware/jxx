@@ -1,6 +1,6 @@
+#include <stdexcept>
 #include "nio/jxx.nio.CharBuffer.h"
 
-#include <stdexcept>
 
 namespace
 {

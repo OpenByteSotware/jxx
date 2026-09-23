@@ -1,8 +1,6 @@
-#include "lang/jxx.lang.Package.h"
-
 #include <cstdint>
 #include <vector>
-
+#include "lang/jxx.lang.Package.h"
 #include "lang/jxx.lang.Class.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NumberFormatException.h"

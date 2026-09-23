@@ -1,7 +1,7 @@
-#include "lang/jxx.lang.ThreadLocalSupport.h"
-
 #include <algorithm>
 #include <mutex>
+#include "lang/jxx.lang.ThreadLocalSupport.h"
+
 
 namespace jxx::lang::thread_local_detail {
 namespace {

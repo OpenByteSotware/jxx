@@ -1,10 +1,10 @@
-#include "lang/jxx.lang.Math.h"
 
 #include <cmath>
 #include <cstdint>
 #include <limits>
 #include <mutex>
 #include <random>
+#include "lang/jxx.lang.Math.h"
 
 #include "lang/jxx.lang.ArithmeticException.h"
 

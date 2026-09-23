@@ -1,6 +1,6 @@
+#include <stdexcept>
 #include "nio/jxx.nio.FloatBuffer.h"
 
-#include <stdexcept>
 
 namespace
 {

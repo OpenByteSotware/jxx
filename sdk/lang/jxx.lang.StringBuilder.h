@@ -1,8 +1,6 @@
 #pragma once
-#include "lang/jxx.lang.ClassInfo.h"
-
 #include <string>
-
+#include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.Appendable.h"
 #include "lang/jxx.lang.CharSequence.h"

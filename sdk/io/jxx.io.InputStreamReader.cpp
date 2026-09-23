@@ -1,7 +1,5 @@
-#include "io/jxx.io.InputStreamReader.h"
-
 #include <algorithm>
-
+#include "io/jxx.io.InputStreamReader.h"
 #include "io/jxx.io.ByteArrayOutputStream.h"
 #include "io/jxx.io.IOException.h"
 #include "io/jxx.io.InputStream.h"

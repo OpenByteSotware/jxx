@@ -1,9 +1,8 @@
-#include "lang/jxx.lang.initialize.h"
-
 #include <algorithm>
 #include <atomic>
 #include <exception>
 #include <utility>
+#include "lang/jxx.lang.initialize.h"
 
 namespace jxx::lang {
 namespace class_info_detail {

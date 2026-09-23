@@ -1,10 +1,8 @@
-#include "io/jxx.io.ModifiedUTF.h"
-
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <vector>
-
+#include "io/jxx.io.ModifiedUTF.h"
 #include "io/jxx.io.UTFDataFormatException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"

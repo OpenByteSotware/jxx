@@ -1,7 +1,7 @@
 #pragma once
+#include <memory>
 #include "lang/jxx.lang.ClassInfo.h"
 
-#include <memory>
 
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.Object.h"

@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.NullPointerException.h"
 #include "net/internal/jxx.net.internal.NetPlatform.h"
 #include "net/jxx.net.Inet4Address.h"
 #include "net/jxx.net.Inet6Address.h"
@@ -81,9 +82,9 @@ namespace jxx::net
         const jxx::Ptr<jxx::lang::String>& hostAddress,
         const jxx::lang::ByteArray& bytes,
         jxx::lang::jint family)
-        : hostName_(std::move(hostName)),
-        hostAddress_(std::move(hostAddress)),
-        bytes_(bytes),
+        : hostName_(hostName),
+        hostAddress_(hostAddress),
+        bytes_(copyAddressBytes_(bytes)),
         family_(family)
     {}
 
@@ -95,6 +96,10 @@ namespace jxx::net
     jxx::Ptr<InetAddress> InetAddress::getByAddress(const jxx::Ptr<jxx::lang::String>& host,
         const jxx::lang::ByteArray& addr)
     {
+        if (addr == nullptr) {
+            throw jxx::lang::NullPointerException();
+        }
+
         auto bytes = fromByteArray_(addr);
         if (bytes.size() == 4)
             return jxx::NEW<Inet4Address>(host, jxx::NEW<jxx::lang::String>(toPrintable_(bytes, AF_INET)), addr);
@@ -183,7 +188,7 @@ namespace jxx::net
 
     jxx::Ptr<jxx::lang::String> InetAddress::getHostName() const { return hostName_ ? hostName_ : hostAddress_; }
     jxx::Ptr<jxx::lang::String> InetAddress::getCanonicalHostName() const { return getHostName(); }
-    jxx::lang::ByteArray InetAddress::getAddress() const { return bytes_; }
+    jxx::lang::ByteArray InetAddress::getAddress() const { return copyAddressBytes_(bytes_); }
     jxx::Ptr<jxx::lang::String> InetAddress::getHostAddress() const { return hostAddress_; }
 
     jxx::lang::jbool InetAddress::isMulticastAddress() const { return false; }
@@ -228,17 +233,55 @@ namespace jxx::net
 
     jxx::lang::jbool InetAddress::equals(const jxx::Ptr<jxx::lang::Object>& other) const
     {
-        auto a = std::dynamic_pointer_cast<InetAddress>(other);
-        return a && bytes_ == a->bytes_ && family_ == a->family_;
+        const auto address = std::dynamic_pointer_cast<InetAddress>(other);
+        if (address == nullptr || family_ != address->family_ ||
+            bytes_ == nullptr || address->bytes_ == nullptr ||
+            bytes_->length != address->bytes_->length) {
+            return false;
+        }
+
+        for (jxx::lang::jint i = 0; i < bytes_->length; ++i) {
+            if ((*bytes_)[i] != (*address->bytes_)[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     jxx::lang::jint InetAddress::hashCode() const
     {
-        jxx::lang::jint h = 1;
-        for (jxx::lang::jint i = 0; i < static_cast<jxx::lang::jint>(bytes_->length); ++i)
-            h = 31 * h + (*bytes_)[i];
-        return h + family_;
+        if (bytes_ == nullptr) {
+            return 0;
+        }
+
+        jxx::lang::jint result = 0;
+        for (jxx::lang::jint i = 0; i < bytes_->length; ++i) {
+            result = 31 * result +
+                static_cast<unsigned char>((*bytes_)[i]);
+        }
+        return result;
     }
 
     jxx::lang::jint InetAddress::familyValue_() const noexcept { return family_; }
+
+    jxx::lang::jbyte InetAddress::byteAt_(jxx::lang::jint index) const {
+        return bytes_->at(index);
+    }
+
+    jxx::lang::ByteArray InetAddress::rawBytes_() const noexcept {
+        return bytes_;
+    }
+
+    jxx::lang::ByteArray InetAddress::copyAddressBytes_(
+        jxx::lang::ByteArray bytes) {
+        if (bytes == nullptr) {
+            return nullptr;
+        }
+
+        auto copy = jxx::NEW<jxx::lang::ByteArrayType>(bytes->length);
+        for (jxx::lang::jint i = 0; i < bytes->length; ++i) {
+            (*copy)[i] = (*bytes)[i];
+        }
+        return copy;
+    }
 }

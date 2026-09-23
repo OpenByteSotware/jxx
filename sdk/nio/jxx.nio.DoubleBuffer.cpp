@@ -1,6 +1,6 @@
+#include <stdexcept>
 #include "nio/jxx.nio.DoubleBuffer.h"
 
-#include <stdexcept>
 
 namespace
 {

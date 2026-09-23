@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <cctype>
+#include <string>
 #include "org/w3c/dom/internal/jxx.org.w3c.dom.internal.DOMImplementationImpl.h"
 
 #include "org/w3c/dom/internal/jxx.org.w3c.dom.internal.PugiDom.h"
@@ -7,9 +10,6 @@
 #include "org/w3c/dom/jxx.org.w3c.dom.Node.h"
 #include "org/w3c/dom/ls/internal/jxx.org.w3c.dom.ls.internal.DOMImplementationLSImpl.h"
 
-#include <algorithm>
-#include <cctype>
-#include <string>
 
 #include "lang/jxx.lang.String.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Document.h"

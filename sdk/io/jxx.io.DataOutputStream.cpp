@@ -1,5 +1,5 @@
-#include "io/jxx.io.DataOutputStream.h"
 #include <cstring>
+#include "io/jxx.io.DataOutputStream.h"
 #include "io/jxx.io.ModifiedUTF.h"
 #include "lang/jxx.lang.String.h"
 #include "io/jxx.io.UTFDataFormatException.h"

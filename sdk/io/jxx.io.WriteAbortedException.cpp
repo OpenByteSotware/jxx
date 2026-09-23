@@ -1,7 +1,5 @@
-#include "io/jxx.io.WriteAbortedException.h"
-
 #include <string>
-
+#include "io/jxx.io.WriteAbortedException.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.String.h"
 

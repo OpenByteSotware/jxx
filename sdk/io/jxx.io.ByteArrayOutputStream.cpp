@@ -1,8 +1,6 @@
-#include "io/jxx.io.ByteArrayOutputStream.h"
-
 #include <algorithm>
 #include <cstdint>
-
+#include "io/jxx.io.ByteArrayOutputStream.h"
 #include "io/jxx.io.IOHelper.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"

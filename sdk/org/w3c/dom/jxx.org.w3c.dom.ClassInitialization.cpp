@@ -1,6 +1,6 @@
+#include <mutex>
 #include "org/w3c/dom/jxx.org.w3c.dom.ClassInitialization.h"
 
-#include <mutex>
 
 #include "org/w3c/dom/jxx.org.w3c.dom.DOMException.h"
 

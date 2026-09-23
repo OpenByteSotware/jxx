@@ -1,6 +1,6 @@
-#include "io/jxx.io.InvalidClassException.h"
 
 #include <string>
+#include "io/jxx.io.InvalidClassException.h"
 
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.String.h"

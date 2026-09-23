@@ -1,17 +1,16 @@
-#include "lang/jxx.lang.Character.h"
-
-#include "io/jxx.io.ObjectInputStream.h"
-#include "io/jxx.io.ObjectOutputStream.h"
-
 #include <memory>
 #include <algorithm>
 #include <cctype>
 #include <string>
 #include <vector>
-
-
 #include <gsl/util>
 #include <gsl/narrow>
+
+#include "lang/jxx.lang.Character.h"
+
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+
 
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.CharSequence.h"

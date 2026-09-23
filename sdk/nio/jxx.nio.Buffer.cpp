@@ -1,6 +1,5 @@
-#include "nio/jxx.nio.Buffer.h"
-
 #include <stdexcept>
+#include "nio/jxx.nio.Buffer.h"
 
 namespace
 {

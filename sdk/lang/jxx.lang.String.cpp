@@ -1,10 +1,9 @@
-#include "lang/jxx.lang.String.h"
-
 #include <algorithm>
 #include <sstream>
 #include <regex>
 #include <locale>
 #include <vector>
+
 #include "util/jxx.util.Locale.h"
 #include "jxx.lang.NullPointerException.h"
 #include "jxx.lang.StringIndexOutOfBoundsException.h"
@@ -16,6 +15,7 @@
 #include "jxx.lang.Cast.h"
 #include "lang/jxx.lang.Iterable.h"
 #include "lang/jxx.lang.BootstrapClasses.h"
+#include "lang/jxx.lang.String.h"
 
 
 namespace jxx::lang {

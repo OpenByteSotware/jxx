@@ -1,6 +1,5 @@
 #pragma once
 
-#include "lang/jxx_types.h"
 
 #if defined(_WIN32)
     #ifndef NOMINMAX
@@ -12,6 +11,7 @@
 #else
     #include <unistd.h>
 #endif
+#include "lang/jxx_types.h"
 
 namespace jxx::net::internal
 {

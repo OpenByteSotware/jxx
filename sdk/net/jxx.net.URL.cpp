@@ -1,7 +1,5 @@
-#include "net/jxx.net.URL.h"
-
 #include <stdexcept>
-
+#include "net/jxx.net.URL.h"
 #include "net/internal/jxx.net.internal.UrlUtil.h"
 #include "net/jxx.net.HttpURLConnection.h"
 #include "net/jxx.net.JarURLConnection.h"

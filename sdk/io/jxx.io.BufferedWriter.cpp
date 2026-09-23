@@ -1,12 +1,10 @@
-#include "io/jxx.io.BufferedWriter.h"
-
 #include <cstdint>
-
 #include "io/jxx.io.IOException.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
+#include "io/jxx.io.BufferedWriter.h"
 
 namespace jxx::io {
 

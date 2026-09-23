@@ -1,12 +1,9 @@
-#include "net/jxx.net.Socket.h"
+
 #include <cerrno>
 #if !defined(_WIN32)
 #include <fcntl.h>
 #include <sys/select.h>
 #endif
-#include "lang/jxx.lang.IllegalArgumentException.h"
-#include "net/jxx.net.ConnectException.h"
-#include "net/jxx.net.SocketTimeoutException.h"
 
 #if defined(_WIN32)
     #include <winsock2.h>
@@ -21,7 +18,10 @@
 
 #include <cstring>
 #include <stdexcept>
-
+#include "net/jxx.net.Socket.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
+#include "net/jxx.net.ConnectException.h"
+#include "net/jxx.net.SocketTimeoutException.h"
 #include "net/internal/jxx.net.internal.NativeSocketState.h"
 #include "net/internal/jxx.net.internal.NetPlatform.h"
 #include "net/jxx.net.Inet4Address.h"

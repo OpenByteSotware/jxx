@@ -1,7 +1,5 @@
-#include "lang/jxx.lang.Boolean.h"
-
 #include <typeindex>
-
+#include "lang/jxx.lang.Boolean.h"
 #include "lang/jxx.lang.Class.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"

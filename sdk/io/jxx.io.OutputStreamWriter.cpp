@@ -1,7 +1,5 @@
-#include "io/jxx.io.OutputStreamWriter.h"
-
 #include <string>
-
+#include "io/jxx.io.OutputStreamWriter.h"
 #include "io/jxx.io.IOException.h"
 #include "io/jxx.io.OutputStream.h"
 #include "io/jxx.io.UnsupportedEncodingException.h"

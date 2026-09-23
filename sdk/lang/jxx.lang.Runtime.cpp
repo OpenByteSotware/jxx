@@ -1,4 +1,3 @@
-#include "lang/jxx.lang.Runtime.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -30,6 +29,7 @@
 #include "lang/jxx.lang.Thread.h"
 #include "lang/jxx.lang.UnsatisfiedLinkError.h"
 #include "lang/jxx.lang.UnsupportedOperationException.h"
+#include "lang/jxx.lang.Runtime.h"
 
 namespace jxx::lang {
 

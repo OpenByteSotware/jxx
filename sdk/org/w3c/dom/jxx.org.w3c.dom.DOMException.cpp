@@ -1,6 +1,6 @@
+#include <utility>
 #include "org/w3c/dom/jxx.org.w3c.dom.DOMException.h"
 
-#include <utility>
 
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.String.h"

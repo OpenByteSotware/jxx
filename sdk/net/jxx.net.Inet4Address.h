@@ -1,5 +1,4 @@
 #pragma once
-#include "lang/jxx.lang.ClassInfo.h"
 
 #include <vector>
 #if defined(_WIN32)
@@ -8,6 +7,7 @@
 #include <arpa/inet.h>
 #endif
 
+#include "lang/jxx.lang.ClassInfo.h"
 #include "net/jxx.net.InetAddress.h"
 
 namespace jxx::net

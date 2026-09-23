@@ -1,7 +1,5 @@
-#include "net/jxx.net.URLDecoder.h"
-
 #include <stdexcept>
-
+#include "net/jxx.net.URLDecoder.h"
 #include "net/internal/jxx.net.internal.UrlUtil.h"
 
 namespace jxx::net

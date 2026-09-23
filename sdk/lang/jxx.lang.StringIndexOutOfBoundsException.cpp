@@ -1,7 +1,5 @@
-#include "lang/jxx.lang.StringIndexOutOfBoundsException.h"
-
 #include <string>
-
+#include "lang/jxx.lang.StringIndexOutOfBoundsException.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.String.h"
 

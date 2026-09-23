@@ -1,6 +1,6 @@
+#include <stdexcept>
 #include "nio/jxx.nio.ByteBuffer.h"
 
-#include <stdexcept>
 
 namespace
 {

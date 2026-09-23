@@ -1,9 +1,7 @@
-#include "io/jxx.io.ByteArrayInputStream.h"
-
 #include <algorithm>
-
 #include "io/jxx.io.IOHelper.h"
 #include "lang/jxx.lang.NullPointerException.h"
+#include "io/jxx.io.ByteArrayInputStream.h"
 
 namespace jxx::io {
 

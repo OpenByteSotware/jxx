@@ -1,7 +1,7 @@
+#include <stdexcept>
 #include "nio/charset/jxx.nio.charset.CharsetDecoder.h"
 #include "nio/charset/jxx.nio.charset.Charset.h"
 
-#include <stdexcept>
 
 namespace
 {

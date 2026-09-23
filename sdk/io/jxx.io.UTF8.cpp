@@ -1,9 +1,6 @@
-#include "io/jxx.io.UTF8.h"
-
 #include <algorithm>
 #include <cstddef>
-#include <cstdint>
-#include <vector>
+#include "io/jxx.io.UTF8.h"
 
 namespace jxx::io {
 

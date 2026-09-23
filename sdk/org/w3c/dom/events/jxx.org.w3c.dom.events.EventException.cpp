@@ -1,6 +1,6 @@
+#include <utility>
 #include "org/w3c/dom/events/jxx.org.w3c.dom.events.EventException.h"
 
-#include <utility>
 
 #include "lang/jxx.lang.String.h"
 

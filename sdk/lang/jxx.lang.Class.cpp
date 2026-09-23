@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Class.h"
 #include "lang/jxx.lang.NullPointerException.h"
@@ -10,7 +11,6 @@
 #include "lang/jxx.lang.InstantiationException.h"
 #include "lang/jxx.lang.IllegalAccessException.h"
 
-#include <algorithm>
 
 namespace jxx::lang {
 

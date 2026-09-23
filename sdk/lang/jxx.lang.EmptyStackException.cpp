@@ -1,7 +1,5 @@
-#include "lang/jxx.lang.EmptyStackException.h"
-
 #include <utility>
-
+#include "lang/jxx.lang.EmptyStackException.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
 

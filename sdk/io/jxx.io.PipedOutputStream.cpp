@@ -1,7 +1,5 @@
-#include "io/jxx.io.PipedOutputStream.h"
-
 #include <mutex>
-
+#include "io/jxx.io.PipedOutputStream.h"
 #include "io/jxx.io.IOException.h"
 #include "io/jxx.io.IOHelper.h"
 #include "io/jxx.io.PipeState.h"

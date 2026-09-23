@@ -1,9 +1,7 @@
-#include "lang/jxx.lang.ThreadGroup.h"
-
 #include <algorithm>
 #include <iostream>
 #include <sstream>
-
+#include "lang/jxx.lang.ThreadGroup.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.IllegalThreadStateException.h"
 #include "lang/jxx.lang.NullPointerException.h"

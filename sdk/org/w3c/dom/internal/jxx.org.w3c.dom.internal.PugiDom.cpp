@@ -1,5 +1,3 @@
-#include "org/w3c/dom/internal/jxx.org.w3c.dom.internal.PugiDom.h"
-
 #include <algorithm>
 #include <cctype>
 #include <functional>
@@ -9,8 +7,8 @@
 #include <utility>
 #include <vector>
 #include <unordered_set>
-
 #include <pugixml.hpp>
+#include "org/w3c/dom/internal/jxx.org.w3c.dom.internal.PugiDom.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Boolean.h"

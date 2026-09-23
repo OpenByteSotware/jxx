@@ -1,4 +1,3 @@
-#include "lang/jxx.lang.Thread.h"
 
 #include <atomic>
 #include <chrono>
@@ -19,6 +18,7 @@
 #include "lang/jxx.lang.ThreadGroup.h"
 #include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "lang/jxx.lang.Throwable.h"
+#include "lang/jxx.lang.Thread.h"
 
 namespace jxx::lang {
 

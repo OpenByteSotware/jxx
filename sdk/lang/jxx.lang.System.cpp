@@ -1,10 +1,3 @@
-#include "io/jxx.io.FileDescriptor.h"
-#include "nio/channels/jxx.nio.channels.Channel.h"
-#include "io/jxx.io.PrintWriter.h"
-#include "io/jxx.io.InputStreamReader.h"
-#include "io/jxx.io.Console.h"
-#include "lang/jxx.lang.System.h"
-
 #include <cstdio>
 #include <cstdlib>
 #include <cstdint>
@@ -18,6 +11,11 @@
 #include <unistd.h>
 #endif
 
+#include "io/jxx.io.FileDescriptor.h"
+#include "nio/channels/jxx.nio.channels.Channel.h"
+#include "io/jxx.io.PrintWriter.h"
+#include "io/jxx.io.InputStreamReader.h"
+#include "io/jxx.io.Console.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
@@ -27,6 +25,7 @@
 #include "lang/jxx.lang.RuntimePermission.h"
 #include "util/jxx.util.Properties.h"
 #include "util/jxx.util.HashMap.h"
+#include "lang/jxx.lang.System.h"
 
 
 #ifndef _WIN32

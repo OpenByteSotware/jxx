@@ -1,7 +1,5 @@
-#include "lang/jxx.lang.RuntimeException.h"
-
 #include <utility>
-
+#include "lang/jxx.lang.RuntimeException.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Throwable.h"

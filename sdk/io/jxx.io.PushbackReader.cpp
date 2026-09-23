@@ -1,8 +1,6 @@
-#include "io/jxx.io.PushbackReader.h"
-
 #include <algorithm>
 #include <cstdint>
-
+#include "io/jxx.io.PushbackReader.h"
 #include "io/jxx.io.IOException.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"

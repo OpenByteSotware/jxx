@@ -1,7 +1,5 @@
-#include "io/jxx.io.InputStream.h"
-
 #include <algorithm>
-
+#include "io/jxx.io.InputStream.h"
 #include "io/jxx.io.IOHelper.h"
 #include "io/jxx.io.IOException.h"
 #include "lang/jxx.lang.String.h"

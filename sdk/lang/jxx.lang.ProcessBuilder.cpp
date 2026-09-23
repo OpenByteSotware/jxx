@@ -1,4 +1,3 @@
-#include "lang/jxx.lang.ProcessBuilder.h"
 
 #include <algorithm>
 #include <atomic>
@@ -37,6 +36,7 @@ extern char** environ;
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.Process.h"
 #include "util/jxx.util.concurrent.TimeUnit.h"
+#include "lang/jxx.lang.ProcessBuilder.h"
 
 namespace jxx::lang {
 namespace {

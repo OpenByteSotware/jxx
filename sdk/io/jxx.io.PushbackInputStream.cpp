@@ -1,8 +1,7 @@
-#include "io/jxx.io.PushbackInputStream.h"
 
 #include <algorithm>
 #include <cstdint>
-
+#include "io/jxx.io.PushbackInputStream.h"
 #include "io/jxx.io.IOException.h"
 #include "io/jxx.io.IOHelper.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"

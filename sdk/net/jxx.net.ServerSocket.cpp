@@ -1,4 +1,3 @@
-#include "net/jxx.net.ServerSocket.h"
 
 #if defined(_WIN32)
     #include <winsock2.h>
@@ -11,6 +10,8 @@
 
 #include <cstring>
 #include <stdexcept>
+
+#include "net/jxx.net.ServerSocket.h"
 
 #include "net/internal/jxx.net.internal.NativeSocketState.h"
 #include "net/internal/jxx.net.internal.NetPlatform.h"

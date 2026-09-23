@@ -1,6 +1,7 @@
+#include <stdexcept>
+
 #include "nio/jxx.nio.LongBuffer.h"
 
-#include <stdexcept>
 
 namespace
 {

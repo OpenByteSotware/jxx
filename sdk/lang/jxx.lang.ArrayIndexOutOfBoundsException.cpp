@@ -1,8 +1,8 @@
+#include <string>
 #include "lang/jxx.lang.ArrayIndexOutOfBoundsException.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.String.h"
 
-#include <string>
 
 jxx::Ptr<jxx::lang::ClassAny> jxx::lang::ArrayIndexOutOfBoundsException::Class()
 {

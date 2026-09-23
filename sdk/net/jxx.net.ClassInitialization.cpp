@@ -1,6 +1,6 @@
+#include <mutex>
 #include "net/jxx.net.ClassInitialization.h"
 
-#include <mutex>
 
 #include "lang/jxx.lang.ClassInfo.h"
 #include "net/jxx.net.BindException.h"

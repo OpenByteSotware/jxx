@@ -1,6 +1,6 @@
-#include "io/jxx.io.DataInputStream.h"
 #include <cstring>
 #include <string>
+#include "io/jxx.io.DataInputStream.h"
 #include "io/jxx.io.EOFException.h"
 #include "io/jxx.io.IOHelper.h"
 #include "io/jxx.io.ModifiedUTF.h"

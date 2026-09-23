@@ -1,8 +1,8 @@
+#include <cstdint>
 #include "lang/jxx.lang.Short.h"
 #include "lang/jxx.lang.Integer.h"
 #include "lang/jxx.lang.Long.h"
 
-#include <cstdint>
 
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"

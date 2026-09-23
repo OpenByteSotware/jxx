@@ -1,8 +1,8 @@
-#include "net/jxx.net.IDN.h"
-
 #include <algorithm>
 #include <cctype>
 #include <stdexcept>
+
+#include "net/jxx.net.IDN.h"
 
 namespace
 {

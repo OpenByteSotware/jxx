@@ -1,6 +1,6 @@
+#include <stdexcept>
 #include "nio/jxx.nio.ShortBuffer.h"
 
-#include <stdexcept>
 
 namespace
 {

@@ -1,9 +1,3 @@
-#include "lang/jxx.lang.Byte.h"
-#include "lang/jxx.lang.Short.h"
-#include "lang/jxx.lang.Integer.h"
-#include "lang/jxx.lang.Long.h"
-#include "lang/jxx.lang.Float.h"
-#include "lang/jxx.lang.Double.h"
 #include <array>
 #include <cerrno>
 #include <cmath>
@@ -13,6 +7,12 @@
 #include <sstream>
 #include <string>
 #include <typeindex>
+#include "lang/jxx.lang.Byte.h"
+#include "lang/jxx.lang.Short.h"
+#include "lang/jxx.lang.Integer.h"
+#include "lang/jxx.lang.Long.h"
+#include "lang/jxx.lang.Float.h"
+#include "lang/jxx.lang.Double.h"
 #include "lang/jxx.lang.Class.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.NumberFormatException.h"

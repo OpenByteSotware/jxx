@@ -1,6 +1,6 @@
+#include <mutex>
 #include "nio/jxx.nio.ClassInitialization.h"
 
-#include <mutex>
 
 #include "lang/jxx.lang.ClassInfo.h"
 

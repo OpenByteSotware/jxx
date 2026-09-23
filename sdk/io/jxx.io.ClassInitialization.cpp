@@ -1,5 +1,5 @@
-#include "io/jxx.io.ClassInitialization.h"
 #include <mutex>
+#include "io/jxx.io.ClassInitialization.h"
 #include "io/jxx.io.ByteArrayInputStream.h"
 #include "io/jxx.io.ByteArrayOutputStream.h"
 #include "io/jxx.io.BufferedInputStream.h"

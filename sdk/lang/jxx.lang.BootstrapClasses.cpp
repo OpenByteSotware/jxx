@@ -1,5 +1,5 @@
-#include "lang/jxx.lang.BootstrapClasses.h"
 #include <typeindex>
+#include "lang/jxx.lang.BootstrapClasses.h"
 #include "io/jxx.io.Serializable.h"
 #include "lang/jxx.lang.CharSequence.h"
 #include "lang/jxx.lang.Class.h"

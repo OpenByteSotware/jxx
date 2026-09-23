@@ -3,7 +3,6 @@
 #include <memory>
 #include <vector>
 #include <cstring>
-#include "lang/jxx.lang.IndexOutOfBoundsException.h"
 #include <chrono>
 #include "lang/jxx.lang.internal.h"
 #include "io/jxx.io.InputStream.h"
@@ -11,6 +10,7 @@
 #include "io/jxx.io.FileDescriptor.h"
 #include "io/jxx.io.FileInputStream.h"
 #include "io/jxx.io.FileOutputStream.h"
+#include "lang/jxx.lang.IndexOutOfBoundsException.h"
 
 namespace jxx::io { class Console; }
 namespace jxx::util { template <typename K, typename V> class Map; }

@@ -1,9 +1,7 @@
-#include "lang/jxx.lang.Throwable.h"
-
 #include <cstring>
 #include <iomanip>
 #include <utility>
-
+#include "lang/jxx.lang.Throwable.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"

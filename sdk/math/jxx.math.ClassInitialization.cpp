@@ -1,6 +1,6 @@
+#include <mutex>
 #include "math/jxx.math.ClassInitialization.h"
 
-#include <mutex>
 
 #include "lang/jxx.lang.ClassInfo.h"
 
