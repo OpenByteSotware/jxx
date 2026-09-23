@@ -1,7 +1,6 @@
 #pragma once
-#include "lang/jxx.lang.ClassInfoMarker.h"
-
 #include <memory>
+#include "lang/jxx.lang.ClassInfoMarker.h"
 #include "lang/jxx.lang.RuntimeException.h"
 
 namespace jxx::lang {

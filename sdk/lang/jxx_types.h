@@ -45,3 +45,12 @@ namespace jxx {
 	template <typename T>
 	using Ptr = std::shared_ptr<T>;
 }
+
+/* Cross-platform forward declaration of FILE */
+#ifdef _WIN32
+	/* MSVC / Windows CRT */
+typedef struct _iobuf FILE;
+#else
+	/* glibc / POSIX */
+typedef struct _IO_FILE FILE;
+#endif

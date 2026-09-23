@@ -1,8 +1,57 @@
-#include "io/jxx.io.FileOutputStream.h"
+
 #include "io/jxx.io.File.h"
 #include "io/jxx.io.FileDescriptor.h"
 #include "io/jxx.io.FileNotFoundException.h"
 #include "io/jxx.io.IOHelper.h"
 #include "io/jxx.io.IOException.h"
 #include "lang/jxx.lang.String.h"
-namespace jxx::io { FileOutputStream::FileOutputStream(const ::jxx::Ptr<::jxx::lang::String>& n):FileOutputStream(n,false){} FileOutputStream::FileOutputStream(const ::jxx::Ptr<::jxx::lang::String>& n,::jxx::lang::jbool a):FileOutputStream(::jxx::NEW<File>(n),a){} FileOutputStream::FileOutputStream(const ::jxx::Ptr<File>& f):FileOutputStream(f,false){} FileOutputStream::FileOutputStream(const ::jxx::Ptr<File>& f,::jxx::lang::jbool a){handle_=std::fopen(f->getPath()->utf8().c_str(),a?"ab":"wb");if(!handle_)throw FileNotFoundException(f->getPath());owned_=true;descriptor_=::jxx::NEW<FileDescriptor>(handle_,false);} FileOutputStream::FileOutputStream(const ::jxx::Ptr<FileDescriptor>& d):handle_(d?d->nativeHandle():nullptr),descriptor_(d){} FileOutputStream::~FileOutputStream(){close();} void FileOutputStream::write(::jxx::lang::jint b){ synchronized([&] {if(!handle_)throw IOException("Stream Closed");if(std::fputc(b&0xff,handle_)==EOF)throw IOException(); }); } void FileOutputStream::write(const ::jxx::lang::ByteArray& b,::jxx::lang::jint o,::jxx::lang::jint l){ synchronized([&] {if(!handle_)throw IOException("Stream Closed");IOHelper::checkBounds(b,o,l);if(std::fwrite(&(*b)[o],1,static_cast<std::size_t>(l),handle_)!=static_cast<std::size_t>(l))throw IOException(); }); } void FileOutputStream::flush(){ synchronized([&] {if(!handle_)throw IOException("Stream Closed");if(std::fflush(handle_)!=0)throw IOException(); }); } void FileOutputStream::close(){ synchronized([&] {if(owned_&&handle_)std::fclose(handle_);handle_=nullptr;owned_=false; }); } ::jxx::Ptr<FileDescriptor> FileOutputStream::getFD()const{ return synchronized([&]() -> ::jxx::Ptr<FileDescriptor> {if(!handle_)throw IOException("Stream Closed");return descriptor_; }); } }
+#include "io/jxx.io.FileOutputStream.h"
+
+namespace jxx::io
+{
+	FileOutputStream::FileOutputStream(const ::jxx::Ptr<::jxx::lang::String>& n) :FileOutputStream(n, false)
+	{
+	} FileOutputStream::FileOutputStream(const ::jxx::Ptr<::jxx::lang::String>& n, ::jxx::lang::jbool a) :FileOutputStream(::jxx::NEW<File>(n), a)
+	{
+	} FileOutputStream::FileOutputStream(const ::jxx::Ptr<File>& f) :FileOutputStream(f, false)
+	{
+	} FileOutputStream::FileOutputStream(const ::jxx::Ptr<File>& f, ::jxx::lang::jbool a)
+	{
+		handle_ = std::fopen(f->getPath()->utf8().c_str(), a ? "ab" : "wb"); if (!handle_)throw FileNotFoundException(f->getPath()); owned_ = true; descriptor_ = ::jxx::NEW<FileDescriptor>(handle_, false);
+	} FileOutputStream::FileOutputStream(const ::jxx::Ptr<FileDescriptor>& d) :handle_(d ? d->nativeHandle() : nullptr), descriptor_(d)
+	{
+	} FileOutputStream::~FileOutputStream()
+	{
+		close();
+	} void FileOutputStream::write(::jxx::lang::jint b)
+	{
+		synchronized([&]
+	  {
+			   if (!handle_)throw IOException("Stream Closed"); if (std::fputc(b & 0xff, handle_) == EOF)throw IOException();
+	  });
+	} void FileOutputStream::write(const ::jxx::lang::ByteArray& b, ::jxx::lang::jint o, ::jxx::lang::jint l)
+	{
+		synchronized([&]
+	  {
+			   if (!handle_)throw IOException("Stream Closed"); IOHelper::checkBounds(b, o, l); if (std::fwrite(&(*b)[o], 1, static_cast<std::size_t>(l), handle_) != static_cast<std::size_t>(l))throw IOException();
+	  });
+	} void FileOutputStream::flush()
+	{
+		synchronized([&]
+	  {
+			   if (!handle_)throw IOException("Stream Closed"); if (std::fflush(handle_) != 0)throw IOException();
+	  });
+	} void FileOutputStream::close()
+	{
+		synchronized([&]
+	  {
+			   if (owned_ && handle_)std::fclose(handle_); handle_ = nullptr; owned_ = false;
+	  });
+	} ::jxx::Ptr<FileDescriptor> FileOutputStream::getFD()const
+	{
+		return synchronized([&]() -> ::jxx::Ptr<FileDescriptor>
+	  {
+			   if (!handle_)throw IOException("Stream Closed"); return descriptor_;
+	  });
+	}
+}

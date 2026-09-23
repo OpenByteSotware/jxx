@@ -3,6 +3,7 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.buildin_array.h"
 #include "lang/jxx_types.h"
+
 namespace jxx::io {
 class InputStream : public ::jxx::lang::ClassBase<InputStream, ::jxx::lang::Object, Closeable> {
 public:
