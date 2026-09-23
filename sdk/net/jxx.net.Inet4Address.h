@@ -14,8 +14,8 @@ namespace jxx::net
 {
     class Inet4Address final : public jxx::lang::ClassBase<Inet4Address, InetAddress> {
 public:
-    using JavaSuper = InetAddress;
-    using Super = jxx::lang::ClassBase<Inet4Address, InetAddress>;
+    using JxxSuper = InetAddress;
+    using Super = jxx::lang::ClassBase<Inet4Address, JxxSuper>;
 
     public:
         Inet4Address(const jxx::Ptr<jxx::lang::String>& hostName,

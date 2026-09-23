@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "net/jxx.net.Inet4Address.h"
 
 
@@ -12,7 +13,7 @@ namespace jxx::net
                                const jxx::Ptr<jxx::lang::String>& hostAddress,
                                const jxx::lang::ByteArray& bytes)
         
-    : Super(std::move(hostName), std::move(hostAddress), bytes, AF_INET)
+    : Super(hostName, hostAddress, bytes, AF_INET)
     {
     }
 

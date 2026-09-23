@@ -12,8 +12,8 @@ namespace jxx::net {
 
     class Inet6Address final : public jxx::lang::ClassBase<Inet6Address, InetAddress> {
 public:
-    using JavaSuper = InetAddress;
-    using Super = jxx::lang::ClassBase<Inet6Address, InetAddress>;
+    using JxxSuper = InetAddress;
+    using Super = jxx::lang::ClassBase<Inet6Address, JxxSuper>;
 
     private:
 
