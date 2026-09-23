@@ -1,11 +1,13 @@
-#include "net/jxx.net.HttpURLConnection.h"
-
 #include <algorithm>
-#include <stdexcept>
+#include <array>
+
+#include "lang/jxx.lang.String.h"
+#include "net/jxx.net.ProtocolException.h"
+#include "net/jxx.net.HttpURLConnection.h"
 
 namespace
 {
-    jxx::lang::jbool g_followRedirects = true;
+    ::jxx::lang::jbool g_followRedirects = true;
 }
 
 namespace jxx::net
@@ -27,11 +29,11 @@ namespace jxx::net
     void HttpURLConnection::setRequestMethod(const jxx::Ptr<jxx::lang::String>& method)
     {
         if (!method)
-            throw std::invalid_argument("null method");
+            throw ::jxx::net::ProtocolException("null method");
         const auto m = method->utf8();
         static const char* allowed[] = {"GET","POST","HEAD","OPTIONS","PUT","DELETE","TRACE"};
         if (std::find(std::begin(allowed), std::end(allowed), m) == std::end(allowed))
-            throw std::invalid_argument("invalid HTTP method");
+            throw ::jxx::net::ProtocolException("invalid HTTP method");
         method_ = method;
     }
 

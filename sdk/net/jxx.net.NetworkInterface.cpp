@@ -61,32 +61,20 @@ namespace {
      *
      * Therefore ByteArrayType is the type that must be allocated.
      */
-    jxx::lang::ByteArray makeByteArray_(
-        const void* source,
-        std::size_t length) {
-
-       // if (source == nullptr && length != 0U) {
-       //     throw jxx::lang::NullPointerException();
-      //  }
-        /*
-        auto result =
-            jxx::NEW<jxx::lang::ByteArrayType>(static_cast<jxx::lang::ByteArrayType::size_type>(length));
-
-        const auto* bytes =
-            static_cast<const unsigned char*>(
-                source);
-
-        for (std::size_t i = 0;
-            i < length;
-            ++i) {
-
-            (*result)[
-                static_cast<jxx::lang::jint>(i)] =
-                static_cast<jxx::lang::jbyte>(
-                    bytes[i]);
+    jxx::lang::ByteArray
+        makeByteArray_(const void* source, std::size_t length) {
+        if (source == nullptr) {
+            return nullptr;
         }
-        */
-        return nullptr;
+        auto result = std::make_shared<
+            jxx::lang::JxxArray<jxx::lang::jbyte, 1U>>(
+                static_cast<std::uint32_t>(length));
+        const auto* bytes = static_cast<const unsigned char*>(source);
+        for (std::size_t index = 0; index < length; ++index) {
+            (*result)[static_cast<std::uint32_t>(index)] =
+                static_cast<jxx::lang::jbyte>(bytes[index]);
+        }
+        return result;
     }
 
 #if defined(_WIN32)
@@ -123,8 +111,8 @@ namespace {
 
                 return nullptr;
             }
-            return nullptr;
-            //return jxx::NEW<jxx::net::Inet4Address>(nullptr, jxx::NEW<jxx::lang::String>(text), addressBytes);
+            return jxx::net::InetAddress::getByAddress(
+                jxx::NEW<jxx::lang::String>(text), addressBytes);
         }
 
         if (address.lpSockaddr->sa_family == AF_INET6) {
@@ -236,8 +224,8 @@ namespace {
 
                 return nullptr;
             }
-            return nullptr;
-            //return jxx::NEW<jxx::net::Inet4Address>(nullptr, jxx::NEW<jxx::lang::String>(text), addressBytes);
+            return jxx::net::InetAddress::getByAddress(
+                jxx::NEW<jxx::lang::String>(text), addressBytes);
         }
 
         if (address->sa_family == AF_INET6) {
@@ -261,16 +249,8 @@ namespace {
 
                 return nullptr;
             }
-            return nullptr;
-            /*return jxx::NEW<
-                jxx::net::Inet6Address>(
-                    nullptr,
-                    jxx::NEW<jxx::lang::String>(
-                        std::string(text)),
-                    addressBytes,
-                    static_cast<jxx::lang::jint>(
-                        socketAddress->sin6_scope_id),
-                    nullptr);*/
+            return jxx::net::InetAddress::getByAddress(
+                jxx::NEW<jxx::lang::String>(text), addressBytes);
         }
 
         return nullptr;

@@ -1,12 +1,12 @@
-#include <stdexcept>
+#include "io/jxx.io.InputStream.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
 #include "net/internal/jxx.net.internal.UrlUtil.h"
 #include "net/jxx.net.ContentHandler.h"
 #include "net/jxx.net.ContentHandlerFactory.h"
 #include "net/jxx.net.FileNameMap.h"
-#include "io/jxx.io.InputStream.h"
+#include "net/jxx.net.UnknownServiceException.h"
 #include "net/jxx.net.URL.h"
 #include "net/jxx.net.URLConnection.h"
-
 
 namespace
 {
@@ -153,12 +153,12 @@ namespace jxx::net
 
     jxx::Ptr<jxx::io::InputStream> URLConnection::getInputStream()
     {
-        throw std::runtime_error("getInputStream not implemented for this URLConnection");
+        throw ::jxx::net::UnknownServiceException("protocol does not support input");
     }
 
     jxx::Ptr<jxx::io::OutputStream> URLConnection::getOutputStream()
     {
-        throw std::runtime_error("getOutputStream not implemented for this URLConnection");
+        throw ::jxx::net::UnknownServiceException("protocol does not support output");
     }
 
     jxx::lang::jbool URLConnection::getDoInput() const noexcept { return doInput_; }
@@ -182,7 +182,7 @@ namespace jxx::net
                                            const jxx::Ptr<jxx::lang::String>& value)
     {
         if (!key)
-            throw std::invalid_argument("null key");
+            throw ::jxx::lang::IllegalArgumentException("null key");
         requestProps_[key->utf8()] = value ? value->utf8() : std::string();
     }
 
