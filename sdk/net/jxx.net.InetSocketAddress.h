@@ -11,7 +11,7 @@ namespace jxx::net
 
     class InetSocketAddress final : public jxx::lang::ClassBase<InetSocketAddress, SocketAddress> {
 public:
-    using JavaSuper = SocketAddress;
+    using JxxSuper = SocketAddress;
     using Super = jxx::lang::ClassBase<InetSocketAddress, SocketAddress>;
 
     public:

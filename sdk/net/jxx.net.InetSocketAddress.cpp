@@ -4,17 +4,22 @@
 
 #include "net/jxx.net.InetAddress.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.NullPointerException.h"
 
 namespace jxx::net
 {
     InetSocketAddress::InetSocketAddress(jxx::lang::jint port)
-        : InetSocketAddress(InetAddress::getLoopbackAddress(), nullptr, port, false)
+        : InetSocketAddress(InetAddress::getByAddress(
+              ::jxx::NEW<::jxx::lang::ByteArrayType>(4)), nullptr, port, false)
     {
     }
 
     InetSocketAddress::InetSocketAddress(const jxx::Ptr<InetAddress>& addr,
                                          jxx::lang::jint port)
-        : InetSocketAddress(std::move(addr), nullptr, port, false)
+        : InetSocketAddress(addr != nullptr
+              ? addr
+              : InetAddress::getByAddress(::jxx::NEW<::jxx::lang::ByteArrayType>(4)),
+          nullptr, port, false)
     {
     }
 
@@ -22,7 +27,9 @@ namespace jxx::net
                                          jxx::lang::jint port)
         : InetSocketAddress(nullptr, std::move(hostname), port, false)
     {
-        if (host_)
+        if (host_ == nullptr) {
+            throw jxx::lang::NullPointerException();
+        }
         {
             try
             {
@@ -51,7 +58,11 @@ namespace jxx::net
     jxx::Ptr<InetSocketAddress> InetSocketAddress::createUnresolved(const jxx::Ptr<jxx::lang::String>& host,
                                                                     jxx::lang::jint port)
     {
-        return std::shared_ptr<InetSocketAddress>(new InetSocketAddress(nullptr, std::move(host), port, true));
+        if (host == nullptr) {
+            throw jxx::lang::NullPointerException();
+        }
+        return std::shared_ptr<InetSocketAddress>(
+            new InetSocketAddress(nullptr, host, port, true));
     }
 
     jxx::lang::jint InetSocketAddress::getPort() const noexcept { return port_; }
@@ -63,7 +74,12 @@ namespace jxx::net
     jxx::Ptr<jxx::lang::String> InetSocketAddress::toString() const
     {
         const auto host = getHostString();
-        return jxx::NEW<jxx::lang::String>((host ? host->utf8() : std::string()) + ":" + std::to_string(port_));
+        std::string value = host != nullptr ? host->utf8() : std::string();
+        if (addr_ != nullptr && value.find(':') != std::string::npos &&
+            (value.empty() || value.front() != '[')) {
+            value = "[" + value + "]";
+        }
+        return jxx::NEW<jxx::lang::String>(value + ":" + std::to_string(port_));
     }
 
     jxx::lang::jbool InetSocketAddress::equals(const jxx::Ptr<jxx::lang::Object>& other) const
@@ -74,12 +90,16 @@ namespace jxx::net
         if (addr_ && o->addr_)
             return addr_->equals(o->addr_);
         if (!addr_ && !o->addr_)
-            return ((!host_ && !o->host_) || (host_ && o->host_ && host_->equals(o->host_)));
+            return ((!host_ && !o->host_) || (host_ && o->host_ && host_->equalsIgnoreCase(o->host_)));
         return false;
     }
 
     jxx::lang::jint InetSocketAddress::hashCode() const
     {
-        return port_ + (host_ ? host_->hashCode() : 0) + (addr_ ? addr_->hashCode() : 0);
+        jxx::lang::jint hostHash = 0;
+        if (host_ != nullptr) {
+            hostHash = host_->toLowerCase()->hashCode();
+        }
+        return port_ + hostHash + (addr_ != nullptr ? addr_->hashCode() : 0);
     }
 }
