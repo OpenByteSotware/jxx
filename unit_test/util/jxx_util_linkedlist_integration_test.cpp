@@ -10,7 +10,7 @@ TEST(LinkedListIntegrationTest, IndexedDequeAndIteratorMutationsStayConsistent) 
  const auto list=::jxx::NEW<List>(); const auto a=text("a"),b=text("b"),c=text("c"),x=text("x");
  list->addLast(a); list->addLast(c); list->add(1,b); list->addFirst(x);
  ASSERT_EQ(4,list->size()); EXPECT_TRUE(list->get(0)->equals(x)); EXPECT_TRUE(list->get(2)->equals(b));
- EXPECT_TRUE(list->set(2,c)->equals(b)); EXPECT_TRUE(list->remove(1)->equals(a)); EXPECT_TRUE(list->removeFirst()->equals(x)); EXPECT_TRUE(list->removeLast()->equals(c)); EXPECT_TRUE(list->isEmpty());
+ EXPECT_TRUE(list->set(2,c)->equals(b)); EXPECT_TRUE(list->remove(1)->equals(a)); EXPECT_TRUE(list->removeFirst()->equals(x)); EXPECT_TRUE(list->removeLast()->equals(c)); ASSERT_EQ(1,list->size()); EXPECT_TRUE(list->getFirst()->equals(c)); EXPECT_TRUE(list->removeFirst()->equals(c)); EXPECT_TRUE(list->isEmpty());
 }
 TEST(LinkedListIntegrationTest, ListIteratorSupportsBidirectionalMutation) {
  const auto list=::jxx::NEW<List>(); list->add(text("a")); list->add(text("c"));

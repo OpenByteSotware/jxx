@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "net/jxx.net.InetAddress.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
 
 namespace jxx::net
 {
@@ -44,7 +45,7 @@ namespace jxx::net
           unresolved_(unresolved)
     {
         if (port < 0 || port > 65535)
-            throw std::invalid_argument("port out of range");
+            throw jxx::lang::IllegalArgumentException("port out of range");
     }
 
     jxx::Ptr<InetSocketAddress> InetSocketAddress::createUnresolved(const jxx::Ptr<jxx::lang::String>& host,
