@@ -24,4 +24,28 @@
 #include "io/jxx.io.SequenceInputStream.h"
 #include "io/jxx.io.StringReader.h"
 #include "lang/jxx.lang.ClassInfo.h"
-namespace jxx::io { namespace { template<typename T> void reg(){::jxx::lang::class_info_detail::registerClassInfo<T>();} } void initializeClasses(){static std::once_flag once;std::call_once(once,[]{reg<ByteArrayInputStream>();reg<ByteArrayOutputStream>();reg<BufferedInputStream>();reg<BufferedOutputStream>();reg<BufferedReader>();reg<BufferedWriter>();reg<Console>();reg<DataInputStream>();reg<DataOutputStream>();reg<File>();reg<FileInputStream>();reg<FileOutputStream>();reg<FileReader>();reg<FileWriter>();reg<InputStreamReader>();reg<ObjectInputStream>();reg<ObjectOutputStream>();reg<OutputStreamWriter>();reg<PrintStream>();reg<PrintWriter>();reg<PushbackInputStream>();reg<SequenceInputStream>();reg<StringReader>();});} }
+namespace jxx::io
+{
+	namespace
+	{
+		template<typename T> void reg()
+		{
+			::jxx::lang::class_info_detail::registerClassInfo<T>();
+		}
+	} void initializeClasses()
+	{
+		static std::once_flag once; std::call_once(once, []
+	   {
+				  reg<ByteArrayInputStream>(); 
+				  reg<ByteArrayOutputStream>(); 
+				  reg<BufferedInputStream>(); reg<BufferedOutputStream>();
+				  reg<BufferedReader>(); reg<BufferedWriter>(); reg<Console>();
+				  reg<DataInputStream>(); reg<DataOutputStream>(); reg<File>(); 
+				  reg<FileInputStream>(); reg<FileOutputStream>(); reg<FileReader>(); 
+				  reg<FileWriter>(); reg<InputStreamReader>(); reg<ObjectInputStream>();
+				  reg<ObjectOutputStream>(); reg<OutputStreamWriter>(); reg<PrintStream>();
+				  reg<PrintWriter>(); reg<PushbackInputStream>(); reg<SequenceInputStream>();
+				  reg<StringReader>();
+	   });
+	}
+}
