@@ -198,8 +198,22 @@ namespace jxx::net
 
     void Socket::connect(const jxx::Ptr<SocketAddress>& endpoint, jxx::lang::jint timeout)
     {
-        if (endpoint == nullptr || timeout < 0) throw ::jxx::lang::IllegalArgumentException();
-        auto isa=std::dynamic_pointer_cast<InetSocketAddress>(endpoint); if(!isa) throw ::jxx::lang::IllegalArgumentException();
+        if (timeout < 0) {
+            throw ::jxx::lang::IllegalArgumentException("connect timeout is negative");
+        }
+        if (endpoint == nullptr) {
+            throw ::jxx::lang::IllegalArgumentException("connect endpoint is null");
+        }
+        if (isClosed()) {
+            throw SocketException("socket is closed");
+        }
+        if (isConnected()) {
+            throw SocketException("socket is already connected");
+        }
+        const auto isa = std::dynamic_pointer_cast<InetSocketAddress>(endpoint);
+        if (isa == nullptr) {
+            throw ::jxx::lang::IllegalArgumentException("unsupported socket address");
+        }
         auto addr=isa->getAddress(); if(!addr&&isa->isUnresolved()) addr=InetAddress::getByName(isa->getHostString()); if(!addr) throw UnknownHostException("unable to resolve host");
         remoteAddr_=addr; remotePort_=isa->getPort(); ensureCreated_(true); socklen_t len=0; auto ss=toSockaddr_(addr,isa->getPort(),len); int result=0;
         if(timeout==0) result=::connect(state_->socket,reinterpret_cast<sockaddr*>(&ss),len); else {
@@ -235,9 +249,16 @@ namespace jxx::net
 
     void Socket::bind(const jxx::Ptr<SocketAddress>& bindpoint)
     {
-        auto isa = std::dynamic_pointer_cast<InetSocketAddress>(bindpoint);
-        if (!isa)
-            throw std::invalid_argument("unsupported socket address");
+        if (isClosed()) {
+            throw SocketException("socket is closed");
+        }
+        if (isBound()) {
+            throw SocketException("socket is already bound");
+        }
+        const auto isa = std::dynamic_pointer_cast<InetSocketAddress>(bindpoint);
+        if (isa == nullptr) {
+            throw ::jxx::lang::IllegalArgumentException("unsupported socket address");
+        }
         localAddr_ = isa->getAddress();
         localPort_ = isa->getPort();
         if (!localAddr_)
@@ -371,9 +392,21 @@ namespace jxx::net
     }
 
     jxx::lang::jint Socket::getSoTimeout() const noexcept { return soTimeout_; }
-    void Socket::setSendBufferSize(jxx::lang::jint size) { ensureCreated_(true); setSockOptInt_(SOL_SOCKET, SO_SNDBUF, size); }
+    void Socket::setSendBufferSize(jxx::lang::jint size) {
+        if (size <= 0) {
+            throw ::jxx::lang::IllegalArgumentException("send buffer size must be positive");
+        }
+        ensureCreated_(true);
+        setSockOptInt_(SOL_SOCKET, SO_SNDBUF, size);
+    }
     jxx::lang::jint Socket::getSendBufferSize() const { return state_ && state_->socket != internal::kInvalidSocket ? getSockOptInt_(SOL_SOCKET, SO_SNDBUF) : 0; }
-    void Socket::setReceiveBufferSize(jxx::lang::jint size) { ensureCreated_(true); setSockOptInt_(SOL_SOCKET, SO_RCVBUF, size); }
+    void Socket::setReceiveBufferSize(jxx::lang::jint size) {
+        if (size <= 0) {
+            throw ::jxx::lang::IllegalArgumentException("receive buffer size must be positive");
+        }
+        ensureCreated_(true);
+        setSockOptInt_(SOL_SOCKET, SO_RCVBUF, size);
+    }
     jxx::lang::jint Socket::getReceiveBufferSize() const { return state_ && state_->socket != internal::kInvalidSocket ? getSockOptInt_(SOL_SOCKET, SO_RCVBUF) : 0; }
     void Socket::setKeepAlive(jxx::lang::jbool on) { ensureCreated_(true); setSockOptBool_(SOL_SOCKET, SO_KEEPALIVE, on); }
     jxx::lang::jbool Socket::getKeepAlive() const { return state_ && state_->socket != internal::kInvalidSocket ? getSockOptBool_(SOL_SOCKET, SO_KEEPALIVE) : false; }

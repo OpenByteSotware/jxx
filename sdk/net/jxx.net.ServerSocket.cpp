@@ -153,9 +153,16 @@ namespace jxx::net
     void ServerSocket::bind(const jxx::Ptr<SocketAddress>& endpoint,
                             jxx::lang::jint backlog)
     {
-        auto isa = std::dynamic_pointer_cast<InetSocketAddress>(endpoint);
-        if (!isa)
-            throw std::invalid_argument("unsupported socket address");
+        if (isClosed()) {
+            throw SocketException("server socket is closed");
+        }
+        if (isBound()) {
+            throw SocketException("server socket is already bound");
+        }
+        const auto isa = std::dynamic_pointer_cast<InetSocketAddress>(endpoint);
+        if (isa == nullptr) {
+            throw ::jxx::lang::IllegalArgumentException("unsupported socket address");
+        }
 
         localAddr_ = isa->getAddress();
         localPort_ = isa->getPort();
@@ -306,7 +313,13 @@ namespace jxx::net
     jxx::lang::jint ServerSocket::getSoTimeout() const noexcept { return soTimeout_; }
     void ServerSocket::setReuseAddress(jxx::lang::jbool on) { ensureCreated_(); setSockOptBool_(SOL_SOCKET, SO_REUSEADDR, on); }
     jxx::lang::jbool ServerSocket::getReuseAddress() const { return state_ && state_->socket != internal::kInvalidSocket ? getSockOptBool_(SOL_SOCKET, SO_REUSEADDR) : false; }
-    void ServerSocket::setReceiveBufferSize(jxx::lang::jint size) { ensureCreated_(); setSockOptInt_(SOL_SOCKET, SO_RCVBUF, size); }
+    void ServerSocket::setReceiveBufferSize(jxx::lang::jint size) {
+        if (size <= 0) {
+            throw ::jxx::lang::IllegalArgumentException("receive buffer size must be positive");
+        }
+        ensureCreated_();
+        setSockOptInt_(SOL_SOCKET, SO_RCVBUF, size);
+    }
     jxx::lang::jint ServerSocket::getReceiveBufferSize() const { return state_ && state_->socket != internal::kInvalidSocket ? getSockOptInt_(SOL_SOCKET, SO_RCVBUF) : 0; }
     void ServerSocket::setPerformancePreferences(jxx::lang::jint, jxx::lang::jint, jxx::lang::jint) {}
 
