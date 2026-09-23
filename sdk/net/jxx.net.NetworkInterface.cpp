@@ -1022,16 +1022,13 @@ namespace jxx::net {
 
     jxx::Ptr<jxx::util::List<InterfaceAddress>> NetworkInterface::getInterfaceAddresses() const {
 
-       /*auto result = jxx::NEW<jxx::util::ArrayList<InterfaceAddress>>();
+        auto result = jxx::NEW<jxx::util::ArrayList<InterfaceAddress>>();
 
-        for (const auto& address :
-            interfaceAddresses_) {
-
+        for (const auto& address : interfaceAddresses_) {
             result->add(address);
         }
-        */
-        return nullptr;
-        //return jxx::CAST<jxx::util::List<InterfaceAddress>>(result);
+
+        return jxx::CAST<jxx::util::List<InterfaceAddress>, jxx::lang::Object>(result);
     }
 
     jxx::Ptr<jxx::util::Enumeration<NetworkInterface>> NetworkInterface::getSubInterfaces() const {
@@ -1039,8 +1036,8 @@ namespace jxx::net {
         std::vector<
             jxx::Ptr<NetworkInterface>>
             empty;
-        return nullptr;
-        //return jxx::NEW<jxx::util::VectorEnumeration<NetworkInterface>>(std::move(empty));
+        return jxx::NEW<jxx::util::VectorEnumeration<NetworkInterface>>(
+            std::move(empty));
     }
 
     jxx::lang::jbool
