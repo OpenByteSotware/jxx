@@ -220,4 +220,27 @@ namespace jxx::net
     }
 
     jxx::lang::jint InetAddress::familyValue_() const noexcept { return family_; }
+
+    jxx::lang::ByteArray InetAddress::copyAddressBytes_(
+        jxx::lang::ByteArray bytes) {
+
+        if (bytes == nullptr) {
+            return nullptr;
+        }
+
+        auto copy =
+            jxx::NEW<
+                jxx::lang::ByteArrayType>(
+                    bytes->length);
+
+        for (std::uint32_t index = 0;
+             index < bytes->length;
+             ++index) {
+
+            (*copy)[index] =
+                (*bytes)[index];
+        }
+
+        return copy;
+    }
 }

@@ -1,6 +1,6 @@
 #pragma once
-#include "lang/jxx.lang.ClassInfo.h"
 
+#include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
@@ -14,8 +14,8 @@ namespace jxx::net {
 
     class InetAddress : public jxx::lang::ClassBase<InetAddress, jxx::lang::Object> {
 public:
-    using JavaSuper = jxx::lang::Object;
-    using Super = jxx::lang::ClassBase<InetAddress, jxx::lang::Object>;
+    using JxxSuper = jxx::lang::Object;
+    using Super = jxx::lang::ClassBase<InetAddress, JxxSuper>;
 
     public:
         using InetAddressArray = jxx::JxxArray<jxx::Ptr<InetAddress>, 1U>;
