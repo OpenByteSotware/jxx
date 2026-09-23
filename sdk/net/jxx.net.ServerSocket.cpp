@@ -9,6 +9,7 @@
     #include <sys/socket.h>
 #endif
 
+#include <cerrno>
 #include <cstring>
 #include <stdexcept>
 
@@ -21,6 +22,8 @@
 #include "net/jxx.net.InetSocketAddress.h"
 #include "net/jxx.net.Socket.h"
 #include "net/jxx.net.SocketException.h"
+#include "net/jxx.net.SocketTimeoutException.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
 #include "net/jxx.net.SocketImplFactory.h"
 
 namespace
@@ -196,8 +199,17 @@ namespace jxx::net
         sockaddr_storage remote{};
         socklen_t len = sizeof(remote);
         const auto s = ::accept(state_->socket, reinterpret_cast<sockaddr*>(&remote), &len);
-        if (s == internal::kInvalidSocket)
+        if (s == internal::kInvalidSocket) {
+#if defined(_WIN32)
+            const auto error = ::WSAGetLastError();
+            if (soTimeout_ > 0 && (error == WSAETIMEDOUT || error == WSAEWOULDBLOCK))
+                throw ::jxx::net::SocketTimeoutException("accept timed out");
+#else
+            if (soTimeout_ > 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
+                throw ::jxx::net::SocketTimeoutException("accept timed out");
+#endif
             throwSE_("accept failed");
+        }
 
         sockaddr_storage local{};
         socklen_t llen = sizeof(local);
@@ -268,6 +280,8 @@ namespace jxx::net
 
     void ServerSocket::setSoTimeout(jxx::lang::jint timeout)
     {
+        if (timeout < 0)
+            throw ::jxx::lang::IllegalArgumentException();
         ensureCreated_();
         soTimeout_ = timeout;
     #if defined(_WIN32)
