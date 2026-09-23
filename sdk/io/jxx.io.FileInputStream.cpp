@@ -1,16 +1,53 @@
-#include <cstdio>
 #include <algorithm>
 #include <cerrno>
+#include <cstdio>
 #include <limits>
+#include <string>
 
 #include "io/jxx.io.File.h"
 #include "io/jxx.io.FileDescriptor.h"
 #include "io/jxx.io.FileNotFoundException.h"
 #include "io/jxx.io.IOHelper.h"
 #include "io/jxx.io.IOException.h"
-#include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.String.h"
 #include "jxx.io.FileInputStream.h"
+
+namespace
+{
+    long long tellFile_(FILE* handle)
+    {
+#if defined(_WIN32)
+        return ::_ftelli64(handle);
+#else
+        return static_cast<long long>(::ftello(handle));
+#endif
+    }
+
+    int seekFile_(FILE* handle, long long offset, int origin)
+    {
+#if defined(_WIN32)
+        return ::_fseeki64(handle, offset, origin);
+#else
+        return ::fseeko(handle, static_cast<off_t>(offset), origin);
+#endif
+    }
+
+    FILE* openInputFile_(const ::jxx::Ptr<::jxx::lang::String>& path)
+    {
+#if defined(_WIN32)
+        const auto chars = path->toCharArray();
+        std::wstring wide;
+        wide.reserve(chars->length);
+        for (std::uint32_t index = 0; index < chars->length; ++index) {
+            wide.push_back(static_cast<wchar_t>((*chars)[index]));
+        }
+        return ::_wfopen(wide.c_str(), L"rb");
+#else
+        return std::fopen(path->utf8().c_str(), "rb");
+#endif
+    }
+}
 
 namespace jxx::io
 {
@@ -18,7 +55,7 @@ namespace jxx::io
 	{
 		if (!n) throw ::jxx::lang::NullPointerException();
 		const auto file = ::jxx::NEW<File>(n);
-		handle_ = std::fopen(file->getPath()->utf8().c_str(), "rb");
+		handle_ = openInputFile_(file->getPath());
 		if (!handle_) throw FileNotFoundException(file->getPath());
 		owned_ = true;
 		descriptor_ = ::jxx::NEW<FileDescriptor>(handle_, false);
@@ -27,7 +64,7 @@ namespace jxx::io
 	FileInputStream::FileInputStream(const ::jxx::Ptr<File>& f)
 	{
 		if (!f) throw ::jxx::lang::NullPointerException();
-		handle_ = std::fopen(f->getPath()->utf8().c_str(), "rb");
+		handle_ = openInputFile_(f->getPath());
 		if (!handle_) throw FileNotFoundException(f->getPath());
 		owned_ = true;
 		descriptor_ = ::jxx::NEW<FileDescriptor>(handle_, false);
@@ -53,15 +90,15 @@ namespace jxx::io
 	{
 		return synchronized([&]() -> ::jxx::lang::jlong
 	  {
-			   if (!handle_)throw IOException("Stream Closed"); if (n <= 0)return 0; auto p = std::ftell(handle_); if (p < 0)throw IOException(); const auto step = std::min<::jxx::lang::jlong>(n, static_cast<::jxx::lang::jlong>(std::numeric_limits<long>::max())); if (std::fseek(handle_, static_cast<long>(step), SEEK_CUR) != 0)throw IOException(); auto q = std::ftell(handle_); if (q < 0)throw IOException(); return static_cast<::jxx::lang::jlong>(q - p);
+			   if (!handle_)throw IOException("Stream Closed"); if (n <= 0)return 0; auto p = tellFile_(handle_); if (p < 0)throw IOException(); const auto step = static_cast<long long>(n); if (seekFile_(handle_, step, SEEK_CUR) != 0)throw IOException(); auto q = tellFile_(handle_); if (q < 0)throw IOException(); return static_cast<::jxx::lang::jlong>(q - p);
 	  });
 	} ::jxx::lang::jint FileInputStream::available()
 	{
 		return synchronized([&]() -> ::jxx::lang::jint
 	  {
-			   if (!handle_)throw IOException("Stream Closed"); auto p = std::ftell(handle_); if (p < 0)throw IOException(); if (std::fseek(handle_, 0, SEEK_END) != 0)throw IOException(); auto e = std::ftell(handle_); if (e < 0) {
-				   std::fseek(handle_, p, SEEK_SET); throw IOException();
-			   }if (std::fseek(handle_, p, SEEK_SET) != 0)throw IOException(); const auto remaining = std::max<long>(0, e - p); const auto maximum = std::numeric_limits<::jxx::lang::jint>::max(); return remaining > maximum ? maximum : static_cast<::jxx::lang::jint>(remaining);
+			   if (!handle_)throw IOException("Stream Closed"); auto p = tellFile_(handle_); if (p < 0)throw IOException(); if (seekFile_(handle_, 0, SEEK_END) != 0)throw IOException(); auto e = tellFile_(handle_); if (e < 0) {
+				   seekFile_(handle_, p, SEEK_SET); throw IOException();
+			   }if (seekFile_(handle_, p, SEEK_SET) != 0)throw IOException(); const auto remaining = std::max<long long>(0, e - p); const auto maximum = std::numeric_limits<::jxx::lang::jint>::max(); return remaining > maximum ? maximum : static_cast<::jxx::lang::jint>(remaining);
 	  });
 	} void FileInputStream::close()
 	{

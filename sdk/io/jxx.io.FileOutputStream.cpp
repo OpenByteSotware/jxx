@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <string>
 
 #include "io/jxx.io.File.h"
 #include "io/jxx.io.FileDescriptor.h"
@@ -8,6 +9,26 @@
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
 #include "jxx.io.FileOutputStream.h"
+
+namespace
+{
+    FILE* openOutputFile_(
+        const ::jxx::Ptr<::jxx::lang::String>& path,
+        ::jxx::lang::jbool append)
+    {
+#if defined(_WIN32)
+        const auto chars = path->toCharArray();
+        std::wstring wide;
+        wide.reserve(chars->length);
+        for (std::uint32_t index = 0; index < chars->length; ++index) {
+            wide.push_back(static_cast<wchar_t>((*chars)[index]));
+        }
+        return ::_wfopen(wide.c_str(), append ? L"ab" : L"wb");
+#else
+        return std::fopen(path->utf8().c_str(), append ? "ab" : "wb");
+#endif
+    }
+}
 
 namespace jxx::io
 {
@@ -21,7 +42,7 @@ namespace jxx::io
 	} FileOutputStream::FileOutputStream(const ::jxx::Ptr<File>& f, ::jxx::lang::jbool a)
 	{
 		if (!f) throw ::jxx::lang::NullPointerException();
-		handle_ = std::fopen(f->getPath()->utf8().c_str(), a ? "ab" : "wb"); if (!handle_)throw FileNotFoundException(f->getPath()); owned_ = true; descriptor_ = ::jxx::NEW<FileDescriptor>(handle_, false);
+		handle_ = openOutputFile_(f->getPath(), a); if (!handle_)throw FileNotFoundException(f->getPath()); owned_ = true; descriptor_ = ::jxx::NEW<FileDescriptor>(handle_, false);
 	} FileOutputStream::FileOutputStream(const ::jxx::Ptr<FileDescriptor>& d) :descriptor_(d)
 	{
 		if (!d) throw ::jxx::lang::NullPointerException();
