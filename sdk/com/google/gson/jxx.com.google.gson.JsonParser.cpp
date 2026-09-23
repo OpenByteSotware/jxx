@@ -1,9 +1,6 @@
-#include "com/google/gson/jxx.com.google.gson.JsonParser.h"
-
 #include <cctype>
 #include <cstdlib>
 #include <string>
-
 #include "com/google/gson/jxx.com.google.gson.JsonArray.h"
 #include "com/google/gson/jxx.com.google.gson.JsonNull.h"
 #include "com/google/gson/jxx.com.google.gson.JsonObject.h"
@@ -12,6 +9,7 @@
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
 #include "io/jxx.io.Reader.h"
+#include "com/google/gson/jxx.com.google.gson.JsonParser.h"
 
 namespace com::google::gson {
 namespace {

@@ -395,6 +395,11 @@ namespace jxx::net {
 
     jxx::lang::jint
         NetworkInterface::getMTU() const {
+        if (mtu_ < 0) {
+            throw jxx::net::SocketException(
+                "unable to determine interface MTU");
+        }
+
         return mtu_;
     }
 
@@ -448,7 +453,7 @@ namespace jxx::net {
             ERROR_BUFFER_OVERFLOW &&
             initialResult != NO_ERROR) {
 
-            throw jxx::net::SocketException(
+            throw std::runtime_error(
                 "GetAdaptersAddresses size query failed");
         }
 
@@ -470,7 +475,7 @@ namespace jxx::net {
                 &bufferSize);
 
         if (queryResult != NO_ERROR) {
-            throw jxx::net::SocketException(
+            throw std::runtime_error(
                 "GetAdaptersAddresses failed");
         }
 
@@ -576,7 +581,7 @@ namespace jxx::net {
         ifaddrs* addressList = nullptr;
 
         if (::getifaddrs(&addressList) != 0) {
-            throw jxx::net::SocketException(
+            throw std::runtime_error(
                 "getifaddrs failed");
         }
 
@@ -892,7 +897,7 @@ namespace jxx::net {
             ERROR_BUFFER_OVERFLOW &&
             initialResult != NO_ERROR) {
 
-            throw jxx::net::SocketException(
+            throw std::runtime_error(
                 "GetAdaptersAddresses size query failed");
         }
 
@@ -914,7 +919,7 @@ namespace jxx::net {
                 &bufferSize);
 
         if (queryResult != NO_ERROR) {
-            throw jxx::net::SocketException(
+            throw std::runtime_error(
                 "GetAdaptersAddresses failed");
         }
 
@@ -956,7 +961,7 @@ namespace jxx::net {
         ifaddrs* addressList = nullptr;
 
         if (::getifaddrs(&addressList) != 0) {
-            throw jxx::net::SocketException(
+            throw std::runtime_error(
                 "getifaddrs failed");
         }
 

@@ -1,7 +1,5 @@
-#include "com/google/gson/jxx.com.google.gson.JsonStreamParser.h"
-
 #include <cctype>
-
+#include "com/google/gson/jxx.com.google.gson.JsonStreamParser.h"
 #include "com/google/gson/jxx.com.google.gson.JsonParser.h"
 #include "com/google/gson/jxx.com.google.gson.JsonSyntaxException.h"
 #include "io/jxx.io.StringReader.h"

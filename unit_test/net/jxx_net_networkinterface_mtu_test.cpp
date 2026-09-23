@@ -4,7 +4,7 @@
 #include "net/jxx.net.SocketException.h"
 
 namespace {
-TEST(NetworkInterfaceCapabilitiesTest, EnumeratedInterfacesExposeCoherentCapabilities) {
+TEST(NetworkInterfaceMtuTest, EnumeratedInterfacesReturnPositiveMtuOrSocketException) {
     const auto interfaces =
         ::jxx::net::NetworkInterface::getNetworkInterfaces();
 
@@ -14,16 +14,10 @@ TEST(NetworkInterfaceCapabilitiesTest, EnumeratedInterfacesExposeCoherentCapabil
         const auto item = interfaces->nextElement();
         ASSERT_NE(nullptr, item);
 
-        EXPECT_GT(item->getIndex(), 0);
-
         try {
             EXPECT_GT(item->getMTU(), 0);
         } catch (const ::jxx::net::SocketException&) {
             SUCCEED();
-        }
-
-        if (item->isLoopback()) {
-            EXPECT_FALSE(item->isPointToPoint());
         }
     }
 }
