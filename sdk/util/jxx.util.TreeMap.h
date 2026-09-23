@@ -3,17 +3,25 @@
 #include <map>
 #include <utility>
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.ClassCastException.h"
+#include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "util/jxx.util.AbstractMap.h"
 #include "util/jxx.util.ComparatorSuper.h"
 #include "lang/jxx.lang.Comparable.h"
 #include "lang/jxx.lang.Cloneable.h"
 #include "io/jxx.io.SerializableI.h"
+#include "lang/jxx.lang.IllegalStateException.h"
+#include "util/jxx.util.ConcurrentModificationException.h"
+#include "util/jxx.util.NoSuchElementException.h"
+
 
 namespace jxx {
 namespace util {
 
 template <typename K, typename V>
-class TreeMap : public ClassBase<TreeMap<K,V>, AbstractMap<K, V>,
+class TreeMap : public ::jxx::lang::ClassBase<TreeMap<K,V>, AbstractMap<K, V>,
     jxx::lang::Cloneable, 
     jxx::io::SerializableI>
  {
@@ -23,14 +31,14 @@ private:
 
         bool operator()(const jxx::Ptr<K>& a, const jxx::Ptr<K>& b) const {
             if (a == nullptr || b == nullptr) {
-                throw NullPointerException();
+                throw ::jxx::lang::NullPointerException();
             }
             if (comp_ != nullptr) {
-                return comp_->compare(a, b) < 0;
+                return comp_->compareSuper(a, b) < 0;
             }
             auto comparable = jxx::CAST<jxx::lang::Comparable<K>, jxx::lang::Object>(a);
             if (comparable == nullptr) {
-                throw ClassCastException();
+                throw ::jxx::lang::ClassCastException();
             }
             return comparable->compareTo(b) < 0;
         }
@@ -44,6 +52,10 @@ private:
     jxx::Ptr<Set<MapEntry<K, V>>> entrySetView_;
 
 public:
+    void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>&) override { throw ::jxx::lang::UnsupportedOperationException(); }
+    void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>&) override { throw ::jxx::lang::UnsupportedOperationException(); }
+    void readObjectNoData() override { clear(); }
+
     TreeMap()
         : map_(KeyLess{nullptr})
         , comparator_(nullptr)
@@ -61,14 +73,14 @@ public:
     // Standalone approximation of TreeMap(Map<? extends K, ? extends V> m)
     explicit TreeMap(const jxx::Ptr<Map<K, V>> m)
         : TreeMap() {
-        if (m == nullptr) throw NullPointerException();
+        if (m == nullptr) throw ::jxx::lang::NullPointerException();
         putAll(m);
     }
 
     // Standalone approximation of TreeMap(SortedMap<K, ? extends V> m)
     explicit TreeMap(const jxx::Ptr<TreeMap<K, V>> m)
         : TreeMap(m == nullptr ? jxx::Ptr<ComparatorSuper<K>>(nullptr) : m->comparator()) {
-        if (m == nullptr) throw NullPointerException();
+        if (m == nullptr) throw ::jxx::lang::NullPointerException();
         putAll(m);
     }
 
@@ -92,13 +104,13 @@ public:
             for (const auto& kv : map_) if (kv.second == nullptr) return true;
         } else {
             for (const auto& kv : map_) {
-                if (kv.second != nullptr && value->equals(jxx::lang::ptr_static_cast<jxx::lang::Object>(kv.second))) return true;
+                if (kv.second != nullptr && value->equals(::jxx::CAST<::jxx::lang::Object>(kv.second))) return true;
             }
         }
         return false;
     }
 
-    virtual jxx::Ptr<V> get(const jxx::Ptr<jxx::lang::Object> key) override {
+    virtual jxx::Ptr<V> get(const jxx::Ptr<jxx::lang::Object>& key) override {
         auto castKey = jxx::CAST<K, jxx::lang::Object>(key);
         if (castKey == nullptr) return nullptr;
         auto it = map_.find(castKey);
@@ -107,7 +119,7 @@ public:
     }
 
     virtual jxx::Ptr<V> put(const jxx::Ptr<K>& key, const jxx::Ptr<V>& value) override {
-        if (key == nullptr) throw NullPointerException();
+        if (key == nullptr) throw ::jxx::lang::NullPointerException();
         auto it = map_.find(key);
         if (it == map_.end()) {
             map_.emplace(key, value);
@@ -131,7 +143,7 @@ public:
     }
 
     virtual void putAll(const jxx::Ptr<Map<K, V>>& m) override {
-        if (m == nullptr) throw NullPointerException();
+        if (m == nullptr) throw ::jxx::lang::NullPointerException();
         auto it = m->entrySet()->iterator();
         while (it->hasNext()) {
             auto e = it->next();
@@ -146,13 +158,13 @@ public:
         }
     }
 
-    virtual jxx::Ptr<K> firstKey() {
-        if (map_.empty()) throw NoSuchElementException();
+    virtual jxx::Ptr<K> firstKey() const {
+        if (map_.empty()) throw ::jxx::util::NoSuchElementException();
         return map_.begin()->first;
     }
 
-    virtual jxx::Ptr<K> lastKey() {
-        if (map_.empty()) throw NoSuchElementException();
+    virtual jxx::Ptr<K> lastKey() const {
+        if (map_.empty()) throw ::jxx::util::NoSuchElementException();
         auto it = map_.end();
         --it;
         return it->first;
@@ -191,7 +203,7 @@ public:
     }
 
     virtual jxx::Ptr<MapEntry<K, V>> lowerEntry(const jxx::Ptr<K> key) {
-        if (key == nullptr) throw NullPointerException();
+        if (key == nullptr) throw ::jxx::lang::NullPointerException();
         auto it = map_.lower_bound(key);
         if (it == map_.begin()) return nullptr;
         if (it == map_.end() || !keysEqual(it->first, key)) {
@@ -209,7 +221,7 @@ public:
     }
 
     virtual jxx::Ptr<MapEntry<K, V>> floorEntry(const jxx::Ptr<K> key) {
-        if (key == nullptr) throw NullPointerException();
+        if (key == nullptr) throw ::jxx::lang::NullPointerException();
         auto it = map_.upper_bound(key);
         if (it == map_.begin()) return nullptr;
         --it;
@@ -222,7 +234,7 @@ public:
     }
 
     virtual jxx::Ptr<MapEntry<K, V>> ceilingEntry(const jxx::Ptr<K> key) {
-        if (key == nullptr) throw NullPointerException();
+        if (key == nullptr) throw ::jxx::lang::NullPointerException();
         auto it = map_.lower_bound(key);
         if (it == map_.end()) return nullptr;
         return makeEntryView(it->first);
@@ -234,7 +246,7 @@ public:
     }
 
     virtual jxx::Ptr<MapEntry<K, V>> higherEntry(const jxx::Ptr<K> key) {
-        if (key == nullptr) throw NullPointerException();
+        if (key == nullptr) throw ::jxx::lang::NullPointerException();
         auto it = map_.upper_bound(key);
         if (it == map_.end()) return nullptr;
         return makeEntryView(it->first);
@@ -244,6 +256,9 @@ public:
         auto e = higherEntry(key);
         return e == nullptr ? nullptr : e->getKey();
     }
+
+    virtual jxx::Ptr<Set<K>> keySet() override { return AbstractMap<K, V>::keySet(); }
+    virtual jxx::Ptr<Collection<V>> values() override { return AbstractMap<K, V>::values(); }
 
     virtual jxx::Ptr<Set<MapEntry<K, V>>> entrySet() override {
         if (entrySetView_ == nullptr) entrySetView_ = jxx::Ptr<Set<MapEntry<K, V>>>(new EntrySet(this));
@@ -263,10 +278,10 @@ private:
         if (a == nullptr) return b == nullptr;
         if (b == nullptr) return false;
         if (comparator_ != nullptr) {
-            return comparator_->compare(a, b) == 0;
+            return comparator_->compareSuper(a, b) == 0;
         }
         auto comparable = jxx::CAST<jxx::lang::Comparable<K>, jxx::lang::Object>(a);
-        if (comparable == nullptr) throw ClassCastException();
+        if (comparable == nullptr) throw ::jxx::lang::ClassCastException();
         return comparable->compareTo(b) == 0;
     }
 
@@ -287,8 +302,8 @@ protected:
         virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& o) const override {
             auto other = jxx::CAST<MapEntry<K, V>, jxx::lang::Object>(o);
             if (other == nullptr) return false;
-            auto k1 = getKey();
-            auto v1 = getValue();
+            const auto& k1 = key_;
+            auto v1 = map_->get(::jxx::CAST<::jxx::lang::Object>(key_));
             auto k2 = other->getKey();
             auto v2 = other->getValue();
             jxx::lang::jbool keyEqual = (k1 == nullptr) ? (k2 == nullptr) : k1->equals(k2);
@@ -297,7 +312,7 @@ protected:
         }
         virtual jxx::lang::jint hashCode() const override {
             jxx::lang::jint kh = (key_ == nullptr) ? 0 : key_->hashCode();
-            auto value = getValue();
+            auto value = map_->get(::jxx::CAST<::jxx::lang::Object>(key_));
             jxx::lang::jint vh = (value == nullptr) ? 0 : value->hashCode();
             return kh ^ vh;
         }
@@ -328,14 +343,14 @@ protected:
         virtual jxx::lang::jbool hasNext() override { return current_ != end_; }
         virtual jxx::Ptr<MapEntry<K, V>> next() override {
             checkForComodification();
-            if (current_ == end_) throw NoSuchElementException();
+            if (current_ == end_) throw ::jxx::util::NoSuchElementException();
             lastReturnedKey_ = current_->first;
             ++current_;
             canRemove_ = true;
             return map_->makeEntryView(lastReturnedKey_);
         }
         virtual void remove() override {
-            if (!canRemove_) throw IllegalStateException();
+            if (!canRemove_) throw ::jxx::lang::IllegalStateException();
             checkForComodification();
             map_->remove(lastReturnedKey_);
             expectedModCount_ = map_->modCount_;
@@ -344,7 +359,7 @@ protected:
         }
     private:
         void checkForComodification() {
-            if (map_->modCount_ != expectedModCount_) throw ConcurrentModificationException();
+            if (map_->modCount_ != expectedModCount_) throw ::jxx::util::ConcurrentModificationException();
         }
     };
 
@@ -366,10 +381,10 @@ protected:
         virtual jxx::Ptr<Iterator<MapEntry<K, V>>> iterator() override {
             return jxx::Ptr<Iterator<MapEntry<K, V>>>(new EntryIterator(map_));
         }
-        virtual jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1>> toArray() override {
+        virtual ::jxx::lang::ObjectArray toArray() override {
             return AbstractCollection<MapEntry<K, V>>::toArray();
         }
-        virtual jxx::lang::jbool add(const jxx::Ptr<MapEntry<K, V>>& /*e*/) override { throw UnsupportedOperationException(); }
+        virtual jxx::lang::jbool add(const jxx::Ptr<MapEntry<K, V>>& /*e*/) override { throw ::jxx::lang::UnsupportedOperationException(); }
         virtual jxx::lang::jbool remove(const jxx::Ptr<jxx::lang::Object>& o) override {
             auto e = jxx::CAST<MapEntry<K, V>, jxx::lang::Object>(o);
             if (e == nullptr) return false;
@@ -383,7 +398,7 @@ protected:
             return true;
         }
         virtual jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny>& c) override { return AbstractCollection<MapEntry<K, V>>::containsAll(c); }
-        virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<MapEntry<K, V>>>& /*c*/) override { throw UnsupportedOperationException(); }
+        virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<MapEntry<K, V>>>& /*c*/) override { throw ::jxx::lang::UnsupportedOperationException(); }
         virtual jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny>& c) override { return AbstractSet<MapEntry<K, V>>::removeAll(c); }
         virtual jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny>& c) override { return AbstractCollection<MapEntry<K, V>>::retainAll(c); }
         virtual void clear() override { map_->clear(); }

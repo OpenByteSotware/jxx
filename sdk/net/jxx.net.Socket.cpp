@@ -1,4 +1,12 @@
 #include "net/jxx.net.Socket.h"
+#include <cerrno>
+#if !defined(_WIN32)
+#include <fcntl.h>
+#include <sys/select.h>
+#endif
+#include "lang/jxx.lang.IllegalArgumentException.h"
+#include "net/jxx.net.ConnectException.h"
+#include "net/jxx.net.SocketTimeoutException.h"
 
 #if defined(_WIN32)
     #include <winsock2.h>
@@ -188,37 +196,41 @@ namespace jxx::net
         connect(std::move(endpoint), 0);
     }
 
-    void Socket::connect(const jxx::Ptr<SocketAddress>& endpoint,
-                         jxx::lang::jint /*timeout*/)
+    void Socket::connect(const jxx::Ptr<SocketAddress>& endpoint, jxx::lang::jint timeout)
     {
-        auto isa = std::dynamic_pointer_cast<InetSocketAddress>(endpoint);
-        if (!isa)
-            throw std::invalid_argument("unsupported socket address");
-        auto addr = isa->getAddress();
-        if (!addr && isa->isUnresolved())
-            addr = InetAddress::getByName(isa->getHostString());
-        if (!addr)
-            throw UnknownHostException("unable to resolve host");
-
-        remoteAddr_ = addr;
-        remotePort_ = isa->getPort();
-        ensureCreated_(true);
-
-        socklen_t len = 0;
-        auto ss = toSockaddr_(addr, isa->getPort(), len);
-        if (::connect(state_->socket, reinterpret_cast<sockaddr*>(&ss), len) != 0)
-            throwSE_("connect failed");
-
-        sockaddr_storage local{};
-        socklen_t llen = sizeof(local);
-        if (::getsockname(state_->socket, reinterpret_cast<sockaddr*>(&local), &llen) == 0)
-        {
-            localAddr_ = fromSockaddr_(local);
-            localPort_ = portFromSockaddr_(local);
+        if (endpoint == nullptr || timeout < 0) throw ::jxx::lang::IllegalArgumentException();
+        auto isa=std::dynamic_pointer_cast<InetSocketAddress>(endpoint); if(!isa) throw ::jxx::lang::IllegalArgumentException();
+        auto addr=isa->getAddress(); if(!addr&&isa->isUnresolved()) addr=InetAddress::getByName(isa->getHostString()); if(!addr) throw UnknownHostException("unable to resolve host");
+        remoteAddr_=addr; remotePort_=isa->getPort(); ensureCreated_(true); socklen_t len=0; auto ss=toSockaddr_(addr,isa->getPort(),len); int result=0;
+        if(timeout==0) result=::connect(state_->socket,reinterpret_cast<sockaddr*>(&ss),len); else {
+#if defined(_WIN32)
+            u_long mode=1; if(::ioctlsocket(state_->socket,FIONBIO,&mode)!=0) throw ConnectException("nonblocking connect failed");
+#else
+            const int flags=::fcntl(state_->socket,F_GETFL,0); if(flags<0||::fcntl(state_->socket,F_SETFL,flags|O_NONBLOCK)!=0) throw ConnectException("nonblocking connect failed");
+#endif
+            result=::connect(state_->socket,reinterpret_cast<sockaddr*>(&ss),len);
+#if defined(_WIN32)
+            const int error=result==0?0: ::WSAGetLastError(); const bool pending=result!=0&&(error==WSAEWOULDBLOCK||error==WSAEINPROGRESS||error==WSAEINVAL);
+#else
+            const bool pending=result!=0&&(errno==EINPROGRESS||errno==EWOULDBLOCK);
+#endif
+            if(pending){fd_set writes;FD_ZERO(&writes);FD_SET(state_->socket,&writes);timeval wait{};wait.tv_sec=timeout/1000;wait.tv_usec=(timeout%1000)*1000;
+#if defined(_WIN32)
+                const int selected=::select(0,nullptr,&writes,nullptr,&wait);
+#else
+                const int selected=::select(state_->socket+1,nullptr,&writes,nullptr,&wait);
+#endif
+                if(selected==0){internal::closeNativeSocket(state_->socket);state_->socket=internal::kInvalidSocket;throw SocketTimeoutException("connect timed out");}
+                if(selected<0){internal::closeNativeSocket(state_->socket);state_->socket=internal::kInvalidSocket;throw ConnectException("connect wait failed");}
+                int socketError=0;socklen_t errorLength=sizeof(socketError);if(::getsockopt(state_->socket,SOL_SOCKET,SO_ERROR,reinterpret_cast<char*>(&socketError),&errorLength)!=0||socketError!=0){internal::closeNativeSocket(state_->socket);state_->socket=internal::kInvalidSocket;throw ConnectException("connect failed");} result=0;}
+#if defined(_WIN32)
+            mode=0;::ioctlsocket(state_->socket,FIONBIO,&mode);
+#else
+            if(state_->socket!=internal::kInvalidSocket)::fcntl(state_->socket,F_SETFL,flags);
+#endif
         }
-
-        connected_ = true;
-        bound_ = true;
+        if(result!=0){internal::closeNativeSocket(state_->socket);state_->socket=internal::kInvalidSocket;throw ConnectException("connect failed");}
+        sockaddr_storage local{};socklen_t llen=sizeof(local);if(::getsockname(state_->socket,reinterpret_cast<sockaddr*>(&local),&llen)==0){localAddr_=fromSockaddr_(local);localPort_=portFromSockaddr_(local);} connected_=true;bound_=true;
     }
 
     void Socket::bind(const jxx::Ptr<SocketAddress>& bindpoint)

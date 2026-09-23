@@ -2,6 +2,9 @@
 
 #include <stdexcept>
 
+#include "io/jxx.io.IOHelper.h"
+#include "net/jxx.net.SocketException.h"
+
 #if defined(_WIN32)
     #include <winsock2.h>
 #else
@@ -13,7 +16,7 @@ namespace
 {
     [[noreturn]] void throwIOE_(const char* msg)
     {
-        throw std::runtime_error(msg);
+        throw ::jxx::net::SocketException(msg);
     }
 }
 
@@ -35,8 +38,9 @@ namespace jxx::net::internal
                                                   jxx::lang::jint off,
                                                   jxx::lang::jint len)
     {
-        if (!state_ || !b)
-            throwIOE_("null state/buffer");
+        if (!state_)
+            throwIOE_("null socket state");
+        ::jxx::io::IOHelper::checkBounds(b, off, len);
         if (len == 0)
             return 0;
 
@@ -99,8 +103,9 @@ namespace jxx::net::internal
                                          jxx::lang::jint off,
                                          jxx::lang::jint len)
     {
-        if (!state_ || !b)
-            throwIOE_("null state/buffer");
+        if (!state_)
+            throwIOE_("null socket state");
+        ::jxx::io::IOHelper::checkBounds(b, off, len);
         if (len == 0)
             return;
 
@@ -108,12 +113,17 @@ namespace jxx::net::internal
         if (state_->closed || state_->outputShutdown || state_->socket == kInvalidSocket)
             throwIOE_("socket closed for output");
 
-        const auto rc = ::send(state_->socket,
-                               reinterpret_cast<const char*>(&(*b)[off]),
-                               static_cast<int>(len),
-                               0);
-        if (rc < 0 || rc != len)
-            throwIOE_("socket send failed");
+        ::jxx::lang::jint sent = 0;
+        while (sent < len) {
+            const auto rc = ::send(
+                state_->socket,
+                reinterpret_cast<const char*>(&(*b)[off + sent]),
+                static_cast<int>(len - sent),
+                0);
+            if (rc <= 0)
+                throwIOE_("socket send failed");
+            sent += static_cast<::jxx::lang::jint>(rc);
+        }
     }
 
     void NativeSocketOutputStream::flush()
