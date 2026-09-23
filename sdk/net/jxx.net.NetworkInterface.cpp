@@ -405,44 +405,12 @@ namespace jxx::net {
 
     jxx::lang::ByteArray
         NetworkInterface::getHardwareAddress() const {
-        if (hardwareAddr_ == nullptr) {
-            return nullptr;
-        }
-
-        auto copy =
-            std::make_shared<
-                jxx::lang::ByteArrayType>(
-                    hardwareAddr_->length);
-
-        for (std::uint32_t index = 0;
-             index < hardwareAddr_->length;
-             ++index) {
-
-            (*copy)[index] =
-                (*hardwareAddr_)[index];
-        }
-
-        return copy;
+        return hardwareAddr_;
     }
 
     jxx::Ptr<jxx::lang::String>
         NetworkInterface::toString() const {
-        std::string value(
-            "name:");
-
-        value += name_ != nullptr
-            ? name_->utf8()
-            : std::string();
-
-        if (displayName_ != nullptr) {
-            value += " (";
-            value += displayName_->utf8();
-            value += ")";
-        }
-
-        return jxx::NEW<
-            jxx::lang::String>(
-                value);
+        return jxx::NEW<jxx::lang::String>(name_ != nullptr ? name_->utf8() : "");
     }
 
     jxx::Ptr<NetworkInterface>
@@ -884,9 +852,39 @@ namespace jxx::net {
                 auto candidate =
                     addresses->nextElement();
 
-                if (candidate != nullptr &&
-                    candidate->equals(address)) {
+                if (candidate == nullptr) {
+                    continue;
+                }
 
+                const auto candidateBytes =
+                    candidate->getAddress();
+
+                const auto requestedBytes =
+                    address->getAddress();
+
+                if (candidateBytes == nullptr ||
+                    requestedBytes == nullptr ||
+                    candidateBytes->length !=
+                        requestedBytes->length) {
+
+                    continue;
+                }
+
+                auto equal = true;
+
+                for (std::uint32_t index = 0;
+                     index < candidateBytes->length;
+                     ++index) {
+
+                    if ((*candidateBytes)[index] !=
+                        (*requestedBytes)[index]) {
+
+                        equal = false;
+                        break;
+                    }
+                }
+
+                if (equal) {
                     return networkInterface;
                 }
             }
