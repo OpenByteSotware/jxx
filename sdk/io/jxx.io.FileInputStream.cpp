@@ -13,11 +13,23 @@
 
 namespace jxx::io
 {
-	FileInputStream::FileInputStream(const ::jxx::Ptr<::jxx::lang::String>& n) :FileInputStream(n ? ::jxx::NEW<File>(n) : ::jxx::Ptr<File>())
+	FileInputStream::FileInputStream(const ::jxx::Ptr<::jxx::lang::String>& n)
 	{
-	} FileInputStream::FileInputStream(const ::jxx::Ptr<File>& f)
+		if (!n) throw ::jxx::lang::NullPointerException();
+		const auto file = ::jxx::NEW<File>(n);
+		handle_ = std::fopen(file->getPath()->utf8().c_str(), "rb");
+		if (!handle_) throw FileNotFoundException(file->getPath());
+		owned_ = true;
+		descriptor_ = ::jxx::NEW<FileDescriptor>(handle_, false);
+	}
+
+	FileInputStream::FileInputStream(const ::jxx::Ptr<File>& f)
 	{
-		handle_ = std::fopen(f->getPath()->utf8().c_str(), "rb"); if (!handle_)throw FileNotFoundException(f->getPath()); owned_ = true; descriptor_ = ::jxx::NEW<FileDescriptor>(handle_, false);
+		if (!f) throw ::jxx::lang::NullPointerException();
+		handle_ = std::fopen(f->getPath()->utf8().c_str(), "rb");
+		if (!handle_) throw FileNotFoundException(f->getPath());
+		owned_ = true;
+		descriptor_ = ::jxx::NEW<FileDescriptor>(handle_, false);
 	} FileInputStream::FileInputStream(const ::jxx::Ptr<FileDescriptor>& d) :descriptor_(d)
 	{
 		if (!d)throw ::jxx::lang::NullPointerException(); handle_ = d->nativeHandle(); if (!handle_)throw FileNotFoundException();
