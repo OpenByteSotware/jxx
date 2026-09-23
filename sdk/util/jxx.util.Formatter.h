@@ -31,7 +31,7 @@ namespace jxx::util
         ~Formatter() override = default;
 
     public:
-        jxx::Ptr<Locale> locale() const noexcept;
+        jxx::Ptr<Locale> locale() const;
         void flush();
         void close();
         jxx::lang::jbool closed() const noexcept;

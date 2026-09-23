@@ -1159,8 +1159,9 @@ namespace jxx::util
         : locale_(std::move(locale))
     {}
 
-    jxx::Ptr<Locale> Formatter::locale() const noexcept
+    jxx::Ptr<Locale> Formatter::locale() const
     {
+        ensureOpen_();
         return locale_;
     }
 
@@ -1212,6 +1213,7 @@ namespace jxx::util
 
     jxx::Ptr<jxx::lang::String> Formatter::toString() const
     {
+        ensureOpen_();
         return jxx::NEW<jxx::lang::String>(buffer_);
     }
 }

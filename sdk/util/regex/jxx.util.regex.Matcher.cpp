@@ -83,23 +83,34 @@ jxx::Ptr<Matcher> Matcher::reset(const jxx::Ptr<jxx::lang::CharSequence> input) 
 }
 
 jxx::lang::jbool Matcher::matches() {
-    hasMatch_ = static_cast<jxx::lang::jbool>(std::regex_match(inputUtf8_, lastMatch_, pattern_->nativeRegex()));
+    const auto first = inputUtf8_.cbegin() + static_cast<std::ptrdiff_t>(regionStart_);
+    const auto last = inputUtf8_.cbegin() + static_cast<std::ptrdiff_t>(regionEnd_);
+    hasMatch_ = static_cast<jxx::lang::jbool>(
+        std::regex_match(first, last, lastMatch_, pattern_->nativeRegex()));
+    matchBase_ = regionStart_;
     if (hasMatch_) {
-        searchPos_ = static_cast<std::size_t>(lastMatch_.position() + lastMatch_.length());
+        searchPos_ = regionEnd_;
     }
+    hitEnd_ = true;
+    requireEnd_ = false;
     return hasMatch_;
 }
 
 jxx::lang::jbool Matcher::lookingAt() {
+    const auto first = inputUtf8_.cbegin() + static_cast<std::ptrdiff_t>(regionStart_);
+    const auto last = inputUtf8_.cbegin() + static_cast<std::ptrdiff_t>(regionEnd_);
     hasMatch_ = static_cast<jxx::lang::jbool>(std::regex_search(
-        inputUtf8_.cbegin(),
-        inputUtf8_.cend(),
+        first,
+        last,
         lastMatch_,
         pattern_->nativeRegex(),
         std::regex_constants::match_continuous));
+    matchBase_ = regionStart_;
     if (hasMatch_) {
-        searchPos_ = static_cast<std::size_t>(lastMatch_.position() + lastMatch_.length());
+        searchPos_ = regionStart_ + static_cast<std::size_t>(lastMatch_.length());
     }
+    hitEnd_ = hasMatch_ && searchPos_ == regionEnd_;
+    requireEnd_ = false;
     return hasMatch_;
 }
 

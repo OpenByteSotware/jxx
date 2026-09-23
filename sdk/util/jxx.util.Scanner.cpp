@@ -653,13 +653,20 @@ jxx::lang::jbyte Scanner::nextByte() {
 jxx::lang::jbyte Scanner::nextByte(jxx::lang::jint radix) {
     ensureOpen();
     if (radix < 2 || radix > 36) {
-        throw jxx::lang::IllegalArgumentException();
+        throw jxx::lang::IllegalArgumentException("radix out of range: 2-36");
     }
-    auto token = next();
+    std::size_t tokenStart = 0;
+    std::size_t tokenEnd = 0;
+    if (!locateNextToken(position_, tokenStart, tokenEnd)) {
+        throw jxx::util::NoSuchElementException();
+    }
+    const auto token = tokenString(tokenStart, tokenEnd);
     jxx::lang::jbyte value = 0;
     if (!tryParseByte(token, radix, value)) {
         throw InputMismatchException();
     }
+    position_ = tokenEnd;
+    clearMatchResult();
     return value;
 }
 
@@ -688,11 +695,18 @@ jxx::lang::jshort Scanner::nextShort(jxx::lang::jint radix) {
     if (radix < 2 || radix > 36) {
         throw jxx::lang::IllegalArgumentException("radix out of range: 2-36");
     }
-    auto token = next();
+    std::size_t tokenStart = 0;
+    std::size_t tokenEnd = 0;
+    if (!locateNextToken(position_, tokenStart, tokenEnd)) {
+        throw jxx::util::NoSuchElementException();
+    }
+    const auto token = tokenString(tokenStart, tokenEnd);
     jxx::lang::jshort value = 0;
     if (!tryParseShort(token, radix, value)) {
         throw InputMismatchException();
     }
+    position_ = tokenEnd;
+    clearMatchResult();
     return value;
 }
 
@@ -721,11 +735,18 @@ jxx::lang::jint Scanner::nextInt(jxx::lang::jint radix) {
     if (radix < 2 || radix > 36) {
         throw jxx::lang::IllegalArgumentException("radix out of range: 2-36");
     }
-    auto token = next();
+    std::size_t tokenStart = 0;
+    std::size_t tokenEnd = 0;
+    if (!locateNextToken(position_, tokenStart, tokenEnd)) {
+        throw jxx::util::NoSuchElementException();
+    }
+    const auto token = tokenString(tokenStart, tokenEnd);
     jxx::lang::jint value = 0;
     if (!tryParseInt(token, radix, value)) {
         throw InputMismatchException();
     }
+    position_ = tokenEnd;
+    clearMatchResult();
     return value;
 }
 
@@ -754,11 +775,18 @@ jxx::lang::jlong Scanner::nextLong(jxx::lang::jint radix) {
     if (radix < 2 || radix > 36) {
         throw jxx::lang::IllegalArgumentException("radix out of range: 2-36");
     }
-    auto token = next();
+    std::size_t tokenStart = 0;
+    std::size_t tokenEnd = 0;
+    if (!locateNextToken(position_, tokenStart, tokenEnd)) {
+        throw jxx::util::NoSuchElementException();
+    }
+    const auto token = tokenString(tokenStart, tokenEnd);
     jxx::lang::jlong value = 0;
     if (!tryParseLong(token, radix, value)) {
         throw InputMismatchException();
     }
+    position_ = tokenEnd;
+    clearMatchResult();
     return value;
 }
 
@@ -773,11 +801,18 @@ jxx::lang::jbool Scanner::hasNextFloat() {
 
 jxx::lang::jfloat Scanner::nextFloat() {
     ensureOpen();
-    auto token = next();
+    std::size_t tokenStart = 0;
+    std::size_t tokenEnd = 0;
+    if (!locateNextToken(position_, tokenStart, tokenEnd)) {
+        throw jxx::util::NoSuchElementException();
+    }
+    const auto token = tokenString(tokenStart, tokenEnd);
     jxx::lang::jfloat value = 0.0f;
     if (!tryParseFloat(token, value)) {
         throw InputMismatchException();
     }
+    position_ = tokenEnd;
+    clearMatchResult();
     return value;
 }
 
@@ -792,11 +827,18 @@ jxx::lang::jbool Scanner::hasNextDouble() {
 
 jxx::lang::jdouble Scanner::nextDouble() {
     ensureOpen();
-    auto token = next();
+    std::size_t tokenStart = 0;
+    std::size_t tokenEnd = 0;
+    if (!locateNextToken(position_, tokenStart, tokenEnd)) {
+        throw jxx::util::NoSuchElementException();
+    }
+    const auto token = tokenString(tokenStart, tokenEnd);
     jxx::lang::jdouble value = 0.0;
     if (!tryParseDouble(token, value)) {
         throw InputMismatchException();
     }
+    position_ = tokenEnd;
+    clearMatchResult();
     return value;
 }
 
