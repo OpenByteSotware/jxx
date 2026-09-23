@@ -1,12 +1,9 @@
 #pragma once
 #include "io/jxx.io.InputStream.h"
 
-/* Cross-platform forward declaration of FILE */
-#ifdef _WIN32
-	/* MSVC / Windows CRT */
+#if defined(_WIN32)
 typedef struct _iobuf FILE;
 #else
-	/* glibc / POSIX */
 typedef struct _IO_FILE FILE;
 #endif
 
@@ -29,7 +26,7 @@ namespace jxx::io
 	::jxx::lang::jint available()override; void close()override; 
 	::jxx::Ptr<FileDescriptor> getFD()const;
 	private: 
-		std::FILE* handle_ = nullptr;
+		FILE* handle_ = nullptr;
 		   ::jxx::Ptr<FileDescriptor> descriptor_; 
 		   ::jxx::lang::jbool owned_ = false;
 	};

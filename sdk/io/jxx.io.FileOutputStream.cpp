@@ -1,9 +1,11 @@
+#include <cstdio>
 
 #include "io/jxx.io.File.h"
 #include "io/jxx.io.FileDescriptor.h"
 #include "io/jxx.io.FileNotFoundException.h"
 #include "io/jxx.io.IOHelper.h"
 #include "io/jxx.io.IOException.h"
+#include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
 #include "io/jxx.io.FileOutputStream.h"
 
@@ -11,15 +13,20 @@ namespace jxx::io
 {
 	FileOutputStream::FileOutputStream(const ::jxx::Ptr<::jxx::lang::String>& n) :FileOutputStream(n, false)
 	{
-	} FileOutputStream::FileOutputStream(const ::jxx::Ptr<::jxx::lang::String>& n, ::jxx::lang::jbool a) :FileOutputStream(::jxx::NEW<File>(n), a)
+	} FileOutputStream::FileOutputStream(const ::jxx::Ptr<::jxx::lang::String>& n, ::jxx::lang::jbool a) :FileOutputStream(n ? ::jxx::NEW<File>(n) : ::jxx::Ptr<File>(), a)
 	{
+		if (!n) throw ::jxx::lang::NullPointerException();
 	} FileOutputStream::FileOutputStream(const ::jxx::Ptr<File>& f) :FileOutputStream(f, false)
 	{
 	} FileOutputStream::FileOutputStream(const ::jxx::Ptr<File>& f, ::jxx::lang::jbool a)
 	{
+		if (!f) throw ::jxx::lang::NullPointerException();
 		handle_ = std::fopen(f->getPath()->utf8().c_str(), a ? "ab" : "wb"); if (!handle_)throw FileNotFoundException(f->getPath()); owned_ = true; descriptor_ = ::jxx::NEW<FileDescriptor>(handle_, false);
-	} FileOutputStream::FileOutputStream(const ::jxx::Ptr<FileDescriptor>& d) :handle_(d ? d->nativeHandle() : nullptr), descriptor_(d)
+	} FileOutputStream::FileOutputStream(const ::jxx::Ptr<FileDescriptor>& d) :descriptor_(d)
 	{
+		if (!d) throw ::jxx::lang::NullPointerException();
+		handle_ = d->nativeHandle();
+		if (!handle_) throw FileNotFoundException();
 	} FileOutputStream::~FileOutputStream()
 	{
 		close();

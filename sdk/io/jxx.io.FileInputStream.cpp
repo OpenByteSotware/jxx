@@ -13,7 +13,7 @@
 
 namespace jxx::io
 {
-	FileInputStream::FileInputStream(const ::jxx::Ptr<::jxx::lang::String>& n) :FileInputStream(::jxx::NEW<File>(n))
+	FileInputStream::FileInputStream(const ::jxx::Ptr<::jxx::lang::String>& n) :FileInputStream(n ? ::jxx::NEW<File>(n) : ::jxx::Ptr<File>())
 	{
 	} FileInputStream::FileInputStream(const ::jxx::Ptr<File>& f)
 	{

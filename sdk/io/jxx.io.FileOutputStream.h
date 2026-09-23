@@ -1,6 +1,11 @@
 #pragma once
-#include <cstdio>
 #include "io/jxx.io.OutputStream.h"
+#if defined(_WIN32)
+typedef struct _iobuf FILE;
+#else
+typedef struct _IO_FILE FILE;
+#endif
+
 namespace jxx::lang
 {
 	class String;
@@ -20,7 +25,7 @@ namespace jxx::io
 	void write(const ::jxx::lang::ByteArray& b, ::jxx::lang::jint o, ::jxx::lang::jint l)override;
 	void flush()override; void close()override; ::jxx::Ptr<FileDescriptor> getFD()const;
 	private: 
-		std::FILE* handle_ = nullptr; 
+		FILE* handle_ = nullptr; 
 		::jxx::Ptr<FileDescriptor> descriptor_; 
 		::jxx::lang::jbool owned_ = false;
 	};
