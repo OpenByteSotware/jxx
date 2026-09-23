@@ -7,7 +7,7 @@
 #include "io/jxx.io.IOException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
-#include "io/jxx.io.FileOutputStream.h"
+#include "jxx.io.FileOutputStream.h"
 
 namespace jxx::io
 {
@@ -29,7 +29,7 @@ namespace jxx::io
 		if (!handle_) throw FileNotFoundException();
 	} FileOutputStream::~FileOutputStream()
 	{
-		close();
+		try { close(); } catch (...) {}
 	} void FileOutputStream::write(::jxx::lang::jint b)
 	{
 		synchronized([&]
@@ -52,7 +52,12 @@ namespace jxx::io
 	{
 		synchronized([&]
 	  {
-			   if (owned_ && handle_)std::fclose(handle_); handle_ = nullptr; owned_ = false;
+			   if (!handle_) return;
+			   auto* const handle = handle_;
+			   const auto owned = owned_;
+			   handle_ = nullptr;
+			   owned_ = false;
+			   if (owned && std::fclose(handle) != 0) throw IOException();
 	  });
 	} ::jxx::Ptr<FileDescriptor> FileOutputStream::getFD()const
 	{

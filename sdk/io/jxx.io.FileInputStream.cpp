@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cerrno>
 #include <limits>
+
 #include "io/jxx.io.File.h"
 #include "io/jxx.io.FileDescriptor.h"
 #include "io/jxx.io.FileNotFoundException.h"
@@ -9,7 +10,7 @@
 #include "io/jxx.io.IOException.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.NullPointerException.h"
-#include "io/jxx.io.FileInputStream.h"
+#include "jxx.io.FileInputStream.h"
 
 namespace jxx::io
 {
@@ -35,7 +36,7 @@ namespace jxx::io
 		if (!d)throw ::jxx::lang::NullPointerException(); handle_ = d->nativeHandle(); if (!handle_)throw FileNotFoundException();
 	} FileInputStream::~FileInputStream()
 	{
-		close();
+		try { close(); } catch (...) {}
 	} ::jxx::lang::jint FileInputStream::read()
 	{
 		return synchronized([&]() -> ::jxx::lang::jint
@@ -66,7 +67,12 @@ namespace jxx::io
 	{
 		synchronized([&]
 	  {
-			   if (owned_ && handle_)std::fclose(handle_); handle_ = nullptr; owned_ = false;
+			   if (!handle_) return;
+			   auto* const handle = handle_;
+			   const auto owned = owned_;
+			   handle_ = nullptr;
+			   owned_ = false;
+			   if (owned && std::fclose(handle) != 0) throw IOException();
 	  });
 	} ::jxx::Ptr<FileDescriptor> FileInputStream::getFD()const
 	{
