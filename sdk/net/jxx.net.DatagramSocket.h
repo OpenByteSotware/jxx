@@ -7,6 +7,9 @@
 #include <utility>
 #include <system_error>
 
+#include "lang/jxx.lang.IllegalArgumentException.h"
+#include "net/jxx.net.SocketException.h"
+
 #if defined(_WIN32)
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -164,13 +167,13 @@ namespace jxx::net {
         void joinGroupIPv4(const std::string& groupAddress, const std::string& localInterfaceIPv4 = "0.0.0.0") {
             ensure_open();
             if (family_ != AF_INET) {
-                throw std::logic_error("Socket is not IPv4; construct with Family::IPv4 for IPv4 multicast");
+                throw jxx::net::SocketException("socket is not IPv4");
             }
             ip_mreq mreq{};
             mreq.imr_multiaddr.s_addr = ::inet_addr(groupAddress.c_str());
             mreq.imr_interface.s_addr = ::inet_addr(localInterfaceIPv4.c_str());
             if (mreq.imr_multiaddr.s_addr == INADDR_NONE) {
-                throw std::invalid_argument("joinGroupIPv4: invalid group address");
+                throw jxx::lang::IllegalArgumentException("joinGroupIPv4: invalid group address");
             }
             if (setsockopt(sock_, IPPROTO_IP, IP_ADD_MEMBERSHIP,
 #if defined(_WIN32)
@@ -186,13 +189,13 @@ namespace jxx::net {
         void leaveGroupIPv4(const std::string& groupAddress, const std::string& localInterfaceIPv4 = "0.0.0.0") {
             ensure_open();
             if (family_ != AF_INET) {
-                throw std::logic_error("Socket is not IPv4; construct with Family::IPv4 for IPv4 multicast");
+                throw jxx::net::SocketException("socket is not IPv4");
             }
             ip_mreq mreq{};
             mreq.imr_multiaddr.s_addr = ::inet_addr(groupAddress.c_str());
             mreq.imr_interface.s_addr = ::inet_addr(localInterfaceIPv4.c_str());
             if (mreq.imr_multiaddr.s_addr == INADDR_NONE) {
-                throw std::invalid_argument("leaveGroupIPv4: invalid group address");
+                throw jxx::lang::IllegalArgumentException("leaveGroupIPv4: invalid group address");
             }
             if (setsockopt(sock_, IPPROTO_IP, IP_DROP_MEMBERSHIP,
 #if defined(_WIN32)
@@ -209,7 +212,7 @@ namespace jxx::net {
         void setMulticastTTL(int ttl) {
             ensure_open();
             if (family_ != AF_INET) {
-                throw std::logic_error("setMulticastTTL: socket is not IPv4");
+                throw jxx::net::SocketException("socket is not IPv4");
             }
             unsigned char t = static_cast<unsigned char>(ttl);
             if (setsockopt(sock_, IPPROTO_IP, IP_MULTICAST_TTL,
@@ -249,7 +252,7 @@ namespace jxx::net {
             }
             in_addr ia{}; ia.s_addr = ::inet_addr(localInterfaceIPv4.c_str());
             if (ia.s_addr == INADDR_NONE) {
-                throw std::invalid_argument("setMulticastInterfaceIPv4: invalid interface address");
+                throw jxx::lang::IllegalArgumentException("setMulticastInterfaceIPv4: invalid interface address");
             }
             if (setsockopt(sock_, IPPROTO_IP, IP_MULTICAST_IF,
 #if defined(_WIN32)
@@ -267,19 +270,19 @@ namespace jxx::net {
         void joinGroupIPv6(const std::string& groupAddress, unsigned int ifindex = 0) {
             ensure_open();
             if (family_ != AF_INET6) {
-                throw std::logic_error("Socket is not IPv6; construct with Family::IPv6 for IPv6 multicast");
+                throw jxx::net::SocketException("socket is not IPv6");
             }
             ipv6_mreq mreq{};
             // Convert textual address to in6_addr
 #if defined(_WIN32)
             IN6_ADDR addr6{};
             if (InetPtonA(AF_INET6, groupAddress.c_str(), &addr6) != 1) {
-                throw std::invalid_argument("joinGroupIPv6: invalid group address");
+                throw jxx::lang::IllegalArgumentException("joinGroupIPv6: invalid group address");
             }
             std::memcpy(&mreq.ipv6mr_multiaddr, &addr6, sizeof(IN6_ADDR));
 #else
             if (::inet_pton(AF_INET6, groupAddress.c_str(), &mreq.ipv6mr_multiaddr) != 1) {
-                throw std::invalid_argument("joinGroupIPv6: invalid group address");
+                throw jxx::lang::IllegalArgumentException("joinGroupIPv6: invalid group address");
             }
 #endif
             mreq.ipv6mr_interface = ifindex;
@@ -297,18 +300,18 @@ namespace jxx::net {
         void leaveGroupIPv6(const std::string& groupAddress, unsigned int ifindex = 0) {
             ensure_open();
             if (family_ != AF_INET6) {
-                throw std::logic_error("Socket is not IPv6; construct with Family::IPv6 for IPv6 multicast");
+                throw jxx::net::SocketException("socket is not IPv6");
             }
             ipv6_mreq mreq{};
 #if defined(_WIN32)
             IN6_ADDR addr6{};
             if (InetPtonA(AF_INET6, groupAddress.c_str(), &addr6) != 1) {
-                throw std::invalid_argument("leaveGroupIPv6: invalid group address");
+                throw jxx::lang::IllegalArgumentException("leaveGroupIPv6: invalid group address");
             }
             std::memcpy(&mreq.ipv6mr_multiaddr, &addr6, sizeof(IN6_ADDR));
 #else
             if (::inet_pton(AF_INET6, groupAddress.c_str(), &mreq.ipv6mr_multiaddr) != 1) {
-                throw std::invalid_argument("leaveGroupIPv6: invalid group address");
+                throw jxx::lang::IllegalArgumentException("leaveGroupIPv6: invalid group address");
             }
 #endif
             mreq.ipv6mr_interface = ifindex;
@@ -327,7 +330,7 @@ namespace jxx::net {
         void setMulticastHopsIPv6(int hops) {
             ensure_open();
             if (family_ != AF_INET6) {
-                throw std::logic_error("setMulticastHopsIPv6: socket is not IPv6");
+                throw jxx::net::SocketException("socket is not IPv6");
             }
             int h = hops;
             if (setsockopt(sock_, IPPROTO_IPV6, IPV6_MULTICAST_HOPS,
@@ -384,6 +387,9 @@ namespace jxx::net {
 
         void bind(const std::string& localAddress, std::uint16_t localPort) {
             ensure_open();
+            if (bound_) {
+                throw jxx::net::SocketException("DatagramSocket is already bound");
+            }
             // Allow re-bind options to be set before bind if desired
             sockaddr_storage addr{}; socklen_t len{};
             fill_sockaddr(localAddress, localPort, addr, len);
@@ -391,6 +397,7 @@ namespace jxx::net {
                 throw std::runtime_error("bind failed: " + sock_error_string());
             }
             update_local_endpoint();
+            bound_ = true;
         }
 
         // Optional: set a default remote peer (like Java connect(); filters inbound)
@@ -421,12 +428,16 @@ namespace jxx::net {
             ::connect(sock_, reinterpret_cast<sockaddr*>(&ra), sizeof(sockaddr_in));
 #endif
             connected_ = false;
+            bound_ = false;
             peerAddress_.clear(); peerPort_ = 0;
         }
 
         // Send a packet; if connected and packet.address empty, send to connected peer
         void send(const DatagramPacket& pkt) {
             ensure_open();
+            if (pkt.length > pkt.buffer.size()) {
+                throw jxx::lang::IllegalArgumentException("DatagramPacket length exceeds buffer size");
+            }
             const std::uint8_t* data = pkt.buffer.data();
             std::size_t len = pkt.length;
 
@@ -441,7 +452,7 @@ namespace jxx::net {
             // Else use destination from packet
             sockaddr_storage ra{}; socklen_t rlen{};
             if (pkt.address.empty() || pkt.port == 0) {
-                throw std::invalid_argument("DatagramPacket missing destination address/port");
+                throw jxx::lang::IllegalArgumentException("DatagramPacket missing destination address/port");
             }
             fill_sockaddr(pkt.address, pkt.port, ra, rlen);
             auto sent = ::sendto(sock_,
@@ -460,7 +471,7 @@ namespace jxx::net {
         void receive(DatagramPacket& pkt) {
             ensure_open();
             if (pkt.buffer.empty()) {
-                throw std::invalid_argument("DatagramPacket buffer is empty (set capacity first)");
+                throw jxx::lang::IllegalArgumentException("DatagramPacket buffer is empty (set capacity first)");
             }
             sockaddr_storage from{}; socklen_t flen = sizeof(from);
 
@@ -482,6 +493,9 @@ namespace jxx::net {
         // -------- Options (Java parity) --------
         void setSoTimeout(int millis) {
             ensure_open();
+            if (millis < 0) {
+                throw jxx::lang::IllegalArgumentException("timeout is negative");
+            }
 #if defined(_WIN32)
             DWORD tv = static_cast<DWORD>(millis);
             if (setsockopt(sock_, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&tv), sizeof(tv)) != 0) {
@@ -530,6 +544,8 @@ namespace jxx::net {
         std::string   getLocalAddress() const { return localAddress_; }
 
         bool isClosed() const noexcept { return sock_ == invalid_socket(); }
+        bool isBound() const noexcept { return bound_; }
+        bool isConnected() const noexcept { return connected_; }
 
         void close() noexcept {
             if (!isClosed()) {
@@ -537,6 +553,7 @@ namespace jxx::net {
                 sock_ = invalid_socket();
             }
             connected_ = false;
+            bound_ = false;
             peerAddress_.clear(); peerPort_ = 0;
             localAddress_.clear(); localPort_ = 0;
         }
@@ -590,12 +607,13 @@ namespace jxx::net {
             }
 
         void ensure_open() const {
-            if (isClosed()) throw std::logic_error("DatagramSocket is closed");
+            if (isClosed()) throw jxx::net::SocketException("DatagramSocket is closed");
         }
 
         void move_from(DatagramSocket&& other) noexcept {
             sock_ = other.sock_; other.sock_ = invalid_socket();
             connected_ = other.connected_; other.connected_ = false;
+            bound_ = other.bound_; other.bound_ = false;
             localAddress_ = std::move(other.localAddress_); other.localAddress_.clear();
             peerAddress_ = std::move(other.peerAddress_);  other.peerAddress_.clear();
             localPort_ = other.localPort_;               other.localPort_ = 0;
@@ -619,6 +637,7 @@ namespace jxx::net {
         socket_t    sock_{ invalid_socket() };
         int family_{ AF_UNSPEC }; // AF_INET or AF_INET6
         bool        connected_{ false };
+        bool        bound_{ false };
         std::string localAddress_;
         std::uint16_t localPort_{ 0 };
 

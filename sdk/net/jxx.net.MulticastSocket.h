@@ -72,16 +72,20 @@ public:
         // setTimeToLive (Java: int TTL). For IPv6 we map to hop limit.
         // We try IPv4 first; if not valid for current socket, try IPv6.
         void setTimeToLive(int ttl) {
-            lastTtl_ = ttl;
+            if (ttl < 0 || ttl > 255) {
+                throw jxx::lang::IllegalArgumentException("time to live out of range");
+            }
             // Try IPv4 setter
             try {
                 setMulticastTTL(ttl);
+                lastTtl_ = ttl;
                 return;
             }
             catch (...) {
                 // Fall through and try IPv6
             }
             setMulticastHopsIPv6(ttl);
+            lastTtl_ = ttl;
         }
 
         int getTimeToLive() const noexcept { return lastTtl_; }
@@ -90,7 +94,6 @@ public:
         // - setLoopback(true/false) -> intuitive enable/disable
         // - setLoopbackMode(disable) -> Java parity (true means disable)
         void setLoopback(bool enable) {
-            lastLoopbackEnabled_ = enable;
             bool ok = false;
             // Try IPv4
             try { setMulticastLoopIPv4(enable); ok = true; }
@@ -98,7 +101,10 @@ public:
             // Try IPv6
             try { setMulticastLoopIPv6(enable); ok = true; }
             catch (...) {}
-            if (!ok) throw std::logic_error("setLoopback: neither IPv4 nor IPv6 multicast loop option applied");
+            if (!ok) {
+                throw jxx::net::SocketException("multicast loop option could not be applied");
+            }
+            lastLoopbackEnabled_ = enable;
         }
 
         // Java-parity: true means disable loopback
