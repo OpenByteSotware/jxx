@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <array>
 
+#include "lang/jxx.lang.IllegalStateException.h"
 #include "lang/jxx.lang.String.h"
 #include "net/jxx.net.ProtocolException.h"
 #include "net/jxx.net.HttpURLConnection.h"
@@ -28,6 +29,8 @@ namespace jxx::net
 
     void HttpURLConnection::setRequestMethod(const jxx::Ptr<jxx::lang::String>& method)
     {
+        if (connected_)
+            throw ::jxx::lang::IllegalStateException();
         if (!method)
             throw ::jxx::net::ProtocolException("null method");
         const auto m = method->utf8();

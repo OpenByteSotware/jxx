@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
+
 #include "net/jxx.net.NetworkInterface.h"
+
 namespace {
 TEST(NetworkInterfaceAddressTest, EnumeratedInterfacesExposeNonNullAddressesWhenPresent) {
     const auto interfaces=::jxx::net::NetworkInterface::getNetworkInterfaces();
@@ -9,7 +11,10 @@ TEST(NetworkInterfaceAddressTest, EnumeratedInterfacesExposeNonNullAddressesWhen
         ASSERT_NE(nullptr,interfaceValue);
         const auto addresses=interfaceValue->getInetAddresses();
         ASSERT_NE(nullptr,addresses);
-        while(addresses->hasMoreElements()) EXPECT_NE(nullptr,addresses->nextElement());
+        while(addresses->hasMoreElements()) {
+            const auto address=addresses->nextElement();
+            EXPECT_NE(nullptr,address);
+        }
     }
 }
 }

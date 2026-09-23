@@ -1,5 +1,6 @@
 #include "io/jxx.io.InputStream.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.IllegalStateException.h"
 #include "net/internal/jxx.net.internal.UrlUtil.h"
 #include "net/jxx.net.ContentHandler.h"
 #include "net/jxx.net.ContentHandlerFactory.h"
@@ -162,21 +163,21 @@ namespace jxx::net
     }
 
     jxx::lang::jbool URLConnection::getDoInput() const noexcept { return doInput_; }
-    void URLConnection::setDoInput(jxx::lang::jbool x) { doInput_ = x; }
+    void URLConnection::setDoInput(jxx::lang::jbool x) { if (connected_) throw ::jxx::lang::IllegalStateException(); doInput_ = x; }
     jxx::lang::jbool URLConnection::getDoOutput() const noexcept { return doOutput_; }
-    void URLConnection::setDoOutput(jxx::lang::jbool x) { doOutput_ = x; }
+    void URLConnection::setDoOutput(jxx::lang::jbool x) { if (connected_) throw ::jxx::lang::IllegalStateException(); doOutput_ = x; }
     jxx::lang::jbool URLConnection::getUseCaches() const noexcept { return useCaches_; }
-    void URLConnection::setUseCaches(jxx::lang::jbool x) { useCaches_ = x; }
+    void URLConnection::setUseCaches(jxx::lang::jbool x) { if (connected_) throw ::jxx::lang::IllegalStateException(); useCaches_ = x; }
     jxx::lang::jbool URLConnection::getDefaultUseCaches() const noexcept { return defaultUseCaches_; }
     void URLConnection::setDefaultUseCaches(jxx::lang::jbool x) { defaultUseCaches_ = x; }
     jxx::lang::jlong URLConnection::getIfModifiedSince() const noexcept { return ifModifiedSince_; }
-    void URLConnection::setIfModifiedSince(jxx::lang::jlong x) { ifModifiedSince_ = x; }
+    void URLConnection::setIfModifiedSince(jxx::lang::jlong x) { if (connected_) throw ::jxx::lang::IllegalStateException(); ifModifiedSince_ = x; }
     jxx::lang::jbool URLConnection::getAllowUserInteraction() const noexcept { return allowUserInteraction_; }
-    void URLConnection::setAllowUserInteraction(jxx::lang::jbool x) { allowUserInteraction_ = x; }
+    void URLConnection::setAllowUserInteraction(jxx::lang::jbool x) { if (connected_) throw ::jxx::lang::IllegalStateException(); allowUserInteraction_ = x; }
     jxx::lang::jint URLConnection::getConnectTimeout() const noexcept { return connectTimeout_; }
-    void URLConnection::setConnectTimeout(jxx::lang::jint x) { connectTimeout_ = x; }
+    void URLConnection::setConnectTimeout(jxx::lang::jint x) { if (x < 0) throw ::jxx::lang::IllegalArgumentException(); connectTimeout_ = x; }
     jxx::lang::jint URLConnection::getReadTimeout() const noexcept { return readTimeout_; }
-    void URLConnection::setReadTimeout(jxx::lang::jint x) { readTimeout_ = x; }
+    void URLConnection::setReadTimeout(jxx::lang::jint x) { if (x < 0) throw ::jxx::lang::IllegalArgumentException(); readTimeout_ = x; }
 
     void URLConnection::setRequestProperty(const jxx::Ptr<jxx::lang::String>& key,
                                            const jxx::Ptr<jxx::lang::String>& value)

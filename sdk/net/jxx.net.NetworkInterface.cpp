@@ -48,7 +48,7 @@
 #include "util/jxx.util.ArrayList.h"
 #include "util/jxx.util.Enumeration.h"
 #include "util/jxx.util.List.h"
-//#include "util/jxx.util.VectorEnumeration.h"
+#include "util/jxx.util.VectorEnumeration.h"
 
 namespace {
 
@@ -703,8 +703,8 @@ namespace jxx::net {
     jxx::Ptr<
         jxx::util::Enumeration<InetAddress>>
         NetworkInterface::getInetAddresses() const {
-        return nullptr;
-       // return jxx::NEW<jxx::util::VectorEnumeration<InetAddress>>(inetAddresses_);
+        return jxx::NEW<jxx::util::VectorEnumeration<InetAddress>>(
+            inetAddresses_);
     }
 
     jxx::Ptr<NetworkInterface>
@@ -1016,8 +1016,8 @@ namespace jxx::net {
 
             result.push_back(item.second);
         }
-        return nullptr;
-        //return jxx::NEW<jxx::util::VectorEnumeration<NetworkInterface>>(std::move(result));
+        return jxx::NEW<jxx::util::VectorEnumeration<NetworkInterface>>(
+            std::move(result));
     }
 
     jxx::Ptr<jxx::util::List<InterfaceAddress>> NetworkInterface::getInterfaceAddresses() const {
