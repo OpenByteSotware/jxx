@@ -43,12 +43,13 @@
 #include "net/jxx.net.Inet6Address.h"
 #include "net/jxx.net.InetAddress.h"
 #include "net/jxx.net.InterfaceAddress.h"
-#include "net/jxx.net.NetworkInterface.h"
+#include "net/jxx.net.SocketException.h"
 
 #include "util/jxx.util.ArrayList.h"
 #include "util/jxx.util.Enumeration.h"
 #include "util/jxx.util.List.h"
 #include "util/jxx.util.VectorEnumeration.h"
+#include "net/jxx.net.NetworkInterface.h"
 
 namespace {
 
@@ -447,7 +448,7 @@ namespace jxx::net {
             ERROR_BUFFER_OVERFLOW &&
             initialResult != NO_ERROR) {
 
-            throw std::runtime_error(
+            throw jxx::net::SocketException(
                 "GetAdaptersAddresses size query failed");
         }
 
@@ -469,7 +470,7 @@ namespace jxx::net {
                 &bufferSize);
 
         if (queryResult != NO_ERROR) {
-            throw std::runtime_error(
+            throw jxx::net::SocketException(
                 "GetAdaptersAddresses failed");
         }
 
@@ -575,7 +576,7 @@ namespace jxx::net {
         ifaddrs* addressList = nullptr;
 
         if (::getifaddrs(&addressList) != 0) {
-            throw std::runtime_error(
+            throw jxx::net::SocketException(
                 "getifaddrs failed");
         }
 
@@ -891,7 +892,7 @@ namespace jxx::net {
             ERROR_BUFFER_OVERFLOW &&
             initialResult != NO_ERROR) {
 
-            throw std::runtime_error(
+            throw jxx::net::SocketException(
                 "GetAdaptersAddresses size query failed");
         }
 
@@ -913,7 +914,7 @@ namespace jxx::net {
                 &bufferSize);
 
         if (queryResult != NO_ERROR) {
-            throw std::runtime_error(
+            throw jxx::net::SocketException(
                 "GetAdaptersAddresses failed");
         }
 
@@ -955,7 +956,7 @@ namespace jxx::net {
         ifaddrs* addressList = nullptr;
 
         if (::getifaddrs(&addressList) != 0) {
-            throw std::runtime_error(
+            throw jxx::net::SocketException(
                 "getifaddrs failed");
         }
 
