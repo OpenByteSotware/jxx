@@ -72,6 +72,7 @@ namespace jxx::io
 			   const auto owned = owned_;
 			   handle_ = nullptr;
 			   owned_ = false;
+			   if (owned && descriptor_) descriptor_->invalidate(handle);
 			   if (owned && std::fclose(handle) != 0) throw IOException();
 	  });
 	} ::jxx::Ptr<FileDescriptor> FileInputStream::getFD()const
