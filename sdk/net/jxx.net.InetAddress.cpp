@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 
+#include "lang/jxx.lang.IllegalArgumentException.h"
 #include "net/internal/jxx.net.internal.NetPlatform.h"
 #include "net/jxx.net.Inet4Address.h"
 #include "net/jxx.net.Inet6Address.h"
@@ -156,18 +157,19 @@ namespace jxx::net
         return out;
     }
 
-    jxx::Ptr<InetAddress> InetAddress::getLoopbackAddress()
-    {
-        try
-        {
-            return getByName(jxx::NEW<jxx::lang::String>("localhost"));
-        }
-        catch (...)
-        {
-            auto arr = jxx::NEW<jxx::lang::ByteArrayType>(4);
-            (*arr)[0] = 127; (*arr)[1] = 0; (*arr)[2] = 0; (*arr)[3] = 1;
-            return getByAddress(jxx::NEW<jxx::lang::String>("localhost"), arr);
-        }
+    jxx::Ptr<InetAddress> InetAddress::getLoopbackAddress() {
+        auto address =
+            jxx::NEW<jxx::lang::ByteArrayType>(4);
+
+        (*address)[0] = 127;
+        (*address)[1] = 0;
+        (*address)[2] = 0;
+        (*address)[3] = 1;
+
+        return getByAddress(
+            jxx::NEW<jxx::lang::String>(
+                "localhost"),
+            address);
     }
 
     jxx::Ptr<InetAddress> InetAddress::getLocalHost()
@@ -195,8 +197,27 @@ namespace jxx::net
     jxx::lang::jbool InetAddress::isMCSiteLocal() const { return false; }
     jxx::lang::jbool InetAddress::isMCOrgLocal() const { return false; }
 
-    jxx::lang::jbool InetAddress::isReachable(jxx::lang::jint /*timeout*/) const { return true; }
-    jxx::lang::jbool InetAddress::isReachable(const jxx::Ptr<NetworkInterface>& /*netif*/, jxx::lang::jint /*ttl*/, jxx::lang::jint /*timeout*/) const { return true; }
+    jxx::lang::jbool InetAddress::isReachable(
+        jxx::lang::jint timeout) const {
+
+        if (timeout < 0) {
+            throw jxx::lang::IllegalArgumentException();
+        }
+
+        return isLoopbackAddress();
+    }
+
+    jxx::lang::jbool InetAddress::isReachable(
+        const jxx::Ptr<NetworkInterface>& /*netif*/,
+        jxx::lang::jint ttl,
+        jxx::lang::jint timeout) const {
+
+        if (ttl < 0 || timeout < 0) {
+            throw jxx::lang::IllegalArgumentException();
+        }
+
+        return isLoopbackAddress();
+    }
 
     jxx::Ptr<jxx::lang::String> InetAddress::toString() const
     {
@@ -220,27 +241,4 @@ namespace jxx::net
     }
 
     jxx::lang::jint InetAddress::familyValue_() const noexcept { return family_; }
-
-    jxx::lang::ByteArray InetAddress::copyAddressBytes_(
-        jxx::lang::ByteArray bytes) {
-
-        if (bytes == nullptr) {
-            return nullptr;
-        }
-
-        auto copy =
-            jxx::NEW<
-                jxx::lang::ByteArrayType>(
-                    bytes->length);
-
-        for (std::uint32_t index = 0;
-             index < bytes->length;
-             ++index) {
-
-            (*copy)[index] =
-                (*bytes)[index];
-        }
-
-        return copy;
-    }
 }
