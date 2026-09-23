@@ -55,6 +55,7 @@ namespace jxx::io
 	{
 		if (!n) throw ::jxx::lang::NullPointerException();
 		const auto file = ::jxx::NEW<File>(n);
+		if (file->isDirectory()) throw FileNotFoundException(file->getPath());
 		handle_ = openInputFile_(file->getPath());
 		if (!handle_) throw FileNotFoundException(file->getPath());
 		owned_ = true;
@@ -64,6 +65,7 @@ namespace jxx::io
 	FileInputStream::FileInputStream(const ::jxx::Ptr<File>& f)
 	{
 		if (!f) throw ::jxx::lang::NullPointerException();
+		if (f->isDirectory()) throw FileNotFoundException(f->getPath());
 		handle_ = openInputFile_(f->getPath());
 		if (!handle_) throw FileNotFoundException(f->getPath());
 		owned_ = true;

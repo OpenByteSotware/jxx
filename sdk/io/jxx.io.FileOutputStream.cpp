@@ -61,7 +61,7 @@ namespace jxx::io
 	{
 		synchronized([&]
 	  {
-			   if (!handle_)throw IOException("Stream Closed"); IOHelper::checkBounds(b, o, l); if (std::fwrite(&(*b)[o], 1, static_cast<std::size_t>(l), handle_) != static_cast<std::size_t>(l))throw IOException();
+			   if (!handle_)throw IOException("Stream Closed"); IOHelper::checkBounds(b, o, l); if (l == 0)return; if (std::fwrite(&(*b)[o], 1, static_cast<std::size_t>(l), handle_) != static_cast<std::size_t>(l))throw IOException();
 	  });
 	} void FileOutputStream::flush()
 	{

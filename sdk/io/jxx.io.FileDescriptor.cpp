@@ -1,4 +1,9 @@
 #include <cstdio>
+#if defined(_WIN32)
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
 
 #include "io/jxx.io.SyncFailedException.h"
 #include "io/jxx.io.FileDescriptor.h"
@@ -49,6 +54,17 @@ namespace jxx::io
             if (!handle_ || std::fflush(handle_) != 0) {
                 throw SyncFailedException();
             }
+#if defined(_WIN32)
+            const auto descriptor = ::_fileno(handle_);
+            if (descriptor < 0 || ::_commit(descriptor) != 0) {
+                throw SyncFailedException();
+            }
+#else
+            const auto descriptor = ::fileno(handle_);
+            if (descriptor < 0 || ::fsync(descriptor) != 0) {
+                throw SyncFailedException();
+            }
+#endif
         });
     }
 
