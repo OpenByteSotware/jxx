@@ -1,10 +1,15 @@
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
 #include "lang/jxx.lang.String.h"
-#include "jxx.util.Calendar.h"
+#include "util/jxx.util.Calendar.h"
 
 
 namespace jxx::util {
+
+::jxx::Ptr<::jxx::lang::ClassAny>
+Calendar::Class() {
+    return JxxClassInfoMarker::Class();
+}
 
 void Calendar::civil_from_days(int z, int& y, unsigned& m, unsigned& d) {
     z += 719468;
@@ -19,7 +24,7 @@ void Calendar::civil_from_days(int z, int& y, unsigned& m, unsigned& d) {
     y += (m <= 2);
 }
 
-void Calendar::epoch_to_local_parts(jxx::lang::jlong epochMillis, jxx::lang::jint tzOffsetMillis,
+void Calendar::epoch_to_local_parts(::jxx::lang::jlong epochMillis, ::jxx::lang::jint tzOffsetMillis,
                                        int& y, unsigned& mo, unsigned& da,
                                        int& hh, int& mm, int& ss, int& ms,
                                        int& dow_java) {
@@ -50,52 +55,52 @@ void Calendar::epoch_to_local_parts(jxx::lang::jlong epochMillis, jxx::lang::jin
 
 Calendar::Calendar() {
     std::time_t now = std::time(nullptr);
-    millis_ = (jxx::lang::jlong)now * 1000;
+    millis_ = (::jxx::lang::jlong)now * 1000;
     tz_ = TimeZone::getDefault();
 }
 
-jxx::Ptr<Calendar> Calendar::getInstance() {
-    return jxx::NEW<Calendar>();
+::jxx::Ptr<Calendar> Calendar::getInstance() {
+    return ::jxx::NEW<Calendar>();
 }
 
-jxx::lang::jlong Calendar::getTimeInMillis() const { return millis_; }
-void Calendar::setTimeInMillis(jxx::lang::jlong millis) { millis_ = millis; }
+::jxx::lang::jlong Calendar::getTimeInMillis() const { return millis_; }
+void Calendar::setTimeInMillis(::jxx::lang::jlong millis) { millis_ = millis; }
 
-jxx::Ptr<Date> Calendar::getTime() const { return jxx::NEW<Date>(millis_); }
+::jxx::Ptr<Date> Calendar::getTime() const { return ::jxx::NEW<Date>(millis_); }
 
-void Calendar::setTime(const jxx::Ptr<Date> date) {
-    if (!date) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("null"));
+void Calendar::setTime(const ::jxx::Ptr<Date> date) {
+    if (!date) throw ::jxx::lang::NullPointerException(::jxx::NEW<::jxx::lang::String>("null"));
     millis_ = date->getTime();
 }
 
-jxx::Ptr<TimeZone> Calendar::getTimeZone() const {
+::jxx::Ptr<TimeZone> Calendar::getTimeZone() const {
     return tz_ ? tz_ : TimeZone::getDefault();
 }
 
-void Calendar::setTimeZone(const jxx::Ptr<TimeZone> tz) {
-    if (!tz) throw jxx::lang::NullPointerException(jxx::NEW<jxx::lang::String>("null"));
+void Calendar::setTimeZone(const ::jxx::Ptr<TimeZone> tz) {
+    if (!tz) throw ::jxx::lang::NullPointerException(::jxx::NEW<::jxx::lang::String>("null"));
     tz_ = std::move(tz);
 }
 
-jxx::lang::jint Calendar::get(jxx::lang::jint field) const {
+::jxx::lang::jint Calendar::get(::jxx::lang::jint field) const {
     auto tz = getTimeZone();
-    jxx::lang::jint off = tz ? tz->getOffset(millis_) : 0;
+    ::jxx::lang::jint off = tz ? tz->getOffset(millis_) : 0;
 
     int y, hh, mm, ss, ms, dow;
     unsigned mo, da;
     epoch_to_local_parts(millis_, off, y, mo, da, hh, mm, ss, ms, dow);
 
     switch (field) {
-        case YEAR: return (jxx::lang::jint)y;
-        case MONTH: return (jxx::lang::jint)(mo - 1);
-        case DAY_OF_MONTH: return (jxx::lang::jint)da;
-        case HOUR_OF_DAY: return (jxx::lang::jint)hh;
-        case MINUTE: return (jxx::lang::jint)mm;
-        case SECOND: return (jxx::lang::jint)ss;
-        case MILLISECOND: return (jxx::lang::jint)ms;
-        case DAY_OF_WEEK: return (jxx::lang::jint)dow;
+        case YEAR: return (::jxx::lang::jint)y;
+        case MONTH: return (::jxx::lang::jint)(mo - 1);
+        case DAY_OF_MONTH: return (::jxx::lang::jint)da;
+        case HOUR_OF_DAY: return (::jxx::lang::jint)hh;
+        case MINUTE: return (::jxx::lang::jint)mm;
+        case SECOND: return (::jxx::lang::jint)ss;
+        case MILLISECOND: return (::jxx::lang::jint)ms;
+        case DAY_OF_WEEK: return (::jxx::lang::jint)dow;
         default:
-            throw jxx::lang::IndexOutOfBoundsException(jxx::NEW<jxx::lang::String>("Unsupported Calendar field"));
+            throw ::jxx::lang::IndexOutOfBoundsException(::jxx::NEW<::jxx::lang::String>("Unsupported Calendar field"));
     }
 }
 

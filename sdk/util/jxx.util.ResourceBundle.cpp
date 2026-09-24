@@ -14,22 +14,27 @@
 #include "util/jxx.util.NoSuchElementException.h"
 
 namespace jxx::util {
+
+::jxx::Ptr<::jxx::lang::ClassAny>
+ResourceBundle::Class() {
+    return JxxClassInfoMarker::Class();
+}
 namespace {
 
 using Factory = ResourceBundle::BundleFactory;
 
-class KeyEnumeration final : public Enumeration<jxx::lang::String> {
+class KeyEnumeration final : public Enumeration<::jxx::lang::String> {
 public:
     explicit KeyEnumeration(
-        std::vector<jxx::Ptr<jxx::lang::String>> values)
+        std::vector<::jxx::Ptr<::jxx::lang::String>> values)
         : values_(std::move(values)) {
     }
 
-    jxx::lang::jbool hasMoreElements() override {
+    ::jxx::lang::jbool hasMoreElements() override {
         return index_ < values_.size();
     }
 
-    jxx::Ptr<jxx::lang::String> nextElement() override {
+    ::jxx::Ptr<::jxx::lang::String> nextElement() override {
         if (!hasMoreElements()) {
             throw NoSuchElementException();
         }
@@ -37,7 +42,7 @@ public:
     }
 
 private:
-    std::vector<jxx::Ptr<jxx::lang::String>> values_;
+    std::vector<::jxx::Ptr<::jxx::lang::String>> values_;
     std::size_t index_ = 0;
 };
 
@@ -51,8 +56,8 @@ std::unordered_map<std::string, Factory>& registry() {
     return value;
 }
 
-std::unordered_map<std::string, jxx::Ptr<ResourceBundle>>& cache() {
-    static std::unordered_map<std::string, jxx::Ptr<ResourceBundle>> value;
+std::unordered_map<std::string, ::jxx::Ptr<ResourceBundle>>& cache() {
+    static std::unordered_map<std::string, ::jxx::Ptr<ResourceBundle>> value;
     return value;
 }
 
@@ -66,7 +71,7 @@ void appendCandidate(
 
 std::vector<std::string> candidateNames(
     const std::string& baseName,
-    const jxx::Ptr<Locale>& locale) {
+    const ::jxx::Ptr<Locale>& locale) {
     std::vector<std::string> result;
     const auto language = locale->getLanguage()->utf8();
     const auto script = locale->getScript()->utf8();
@@ -99,16 +104,16 @@ std::vector<std::string> candidateNames(
 
 } // namespace
 
-jxx::Ptr<ResourceBundle> ResourceBundle::getBundle(
-    const jxx::Ptr<jxx::lang::String>& baseName) {
+::jxx::Ptr<ResourceBundle> ResourceBundle::getBundle(
+    const ::jxx::Ptr<::jxx::lang::String>& baseName) {
     return getBundle(baseName, Locale::getDefault());
 }
 
-jxx::Ptr<ResourceBundle> ResourceBundle::getBundle(
-    const jxx::Ptr<jxx::lang::String>& baseName,
-    const jxx::Ptr<Locale>& locale) {
+::jxx::Ptr<ResourceBundle> ResourceBundle::getBundle(
+    const ::jxx::Ptr<::jxx::lang::String>& baseName,
+    const ::jxx::Ptr<Locale>& locale) {
     if (baseName == nullptr || locale == nullptr) {
-        throw jxx::lang::NullPointerException();
+        throw ::jxx::lang::NullPointerException();
     }
 
     const auto base = baseName->utf8();
@@ -121,8 +126,8 @@ jxx::Ptr<ResourceBundle> ResourceBundle::getBundle(
         return cached->second;
     }
 
-    jxx::Ptr<ResourceBundle> parent;
-    jxx::Ptr<ResourceBundle> selected;
+    ::jxx::Ptr<ResourceBundle> parent;
+    ::jxx::Ptr<ResourceBundle> selected;
     for (auto iterator = candidates.rbegin();
          iterator != candidates.rend();
          ++iterator) {
@@ -147,9 +152,9 @@ jxx::Ptr<ResourceBundle> ResourceBundle::getBundle(
     }
 
     throw MissingResourceException(
-        jxx::NEW<jxx::lang::String>("Cannot find resource bundle"),
+        ::jxx::NEW<::jxx::lang::String>("Cannot find resource bundle"),
         baseName,
-        jxx::NEW<jxx::lang::String>(""));
+        ::jxx::NEW<::jxx::lang::String>(""));
 }
 
 void ResourceBundle::clearCache() {
@@ -158,20 +163,20 @@ void ResourceBundle::clearCache() {
 }
 
 void ResourceBundle::registerBundle(
-    const jxx::Ptr<jxx::lang::String>& bundleName,
+    const ::jxx::Ptr<::jxx::lang::String>& bundleName,
     const BundleFactory& factory) {
     if (bundleName == nullptr || !factory) {
-        throw jxx::lang::NullPointerException();
+        throw ::jxx::lang::NullPointerException();
     }
     std::lock_guard<std::mutex> lock(registryMutex());
     registry()[bundleName->utf8()] = factory;
     cache().clear();
 }
 
-jxx::Ptr<jxx::lang::Object> ResourceBundle::getObject(
-    const jxx::Ptr<jxx::lang::String>& key) {
+::jxx::Ptr<::jxx::lang::Object> ResourceBundle::getObject(
+    const ::jxx::Ptr<::jxx::lang::String>& key) {
     if (key == nullptr) {
-        throw jxx::lang::NullPointerException();
+        throw ::jxx::lang::NullPointerException();
     }
 
     auto value = handleGetObject(key);
@@ -183,21 +188,21 @@ jxx::Ptr<jxx::lang::Object> ResourceBundle::getObject(
     }
 
     throw MissingResourceException(
-        jxx::NEW<jxx::lang::String>("Cannot find resource for key"),
+        ::jxx::NEW<::jxx::lang::String>("Cannot find resource for key"),
         baseBundleName_,
         key);
 }
 
-jxx::Ptr<jxx::lang::String> ResourceBundle::getString(
-    const jxx::Ptr<jxx::lang::String>& key) {
-    return jxx::CAST<jxx::lang::String>(getObject(key));
+::jxx::Ptr<::jxx::lang::String> ResourceBundle::getString(
+    const ::jxx::Ptr<::jxx::lang::String>& key) {
+    return ::jxx::CAST<::jxx::lang::String>(getObject(key));
 }
 
-jxx::Ptr<Enumeration<jxx::lang::String>> ResourceBundle::getKeys() {
-    std::vector<jxx::Ptr<jxx::lang::String>> keys;
+::jxx::Ptr<Enumeration<::jxx::lang::String>> ResourceBundle::getKeys() {
+    std::vector<::jxx::Ptr<::jxx::lang::String>> keys;
     std::unordered_set<std::string> seen;
 
-    for (auto bundle = jxx::CAST<ResourceBundle>(thisPtr());
+    for (auto bundle = ::jxx::CAST<ResourceBundle>(thisPtr());
          bundle != nullptr;
          bundle = bundle->parent_) {
         auto local = bundle->getLocalKeys();
@@ -212,18 +217,18 @@ jxx::Ptr<Enumeration<jxx::lang::String>> ResourceBundle::getKeys() {
         }
     }
 
-    return jxx::Ptr<Enumeration<jxx::lang::String>>(
+    return ::jxx::Ptr<Enumeration<::jxx::lang::String>>(
         new KeyEnumeration(std::move(keys)));
 }
 
 
-jxx::lang::jbool ResourceBundle::containsKey(
-    const jxx::Ptr<jxx::lang::String>& key) {
+::jxx::lang::jbool ResourceBundle::containsKey(
+    const ::jxx::Ptr<::jxx::lang::String>& key) {
     if (key == nullptr) {
-        throw jxx::lang::NullPointerException();
+        throw ::jxx::lang::NullPointerException();
     }
 
-    for (auto bundle = jxx::CAST<ResourceBundle>(thisPtr());
+    for (auto bundle = ::jxx::CAST<ResourceBundle>(thisPtr());
          bundle != nullptr;
          bundle = bundle->parent_) {
         if (bundle->handleGetObject(key) != nullptr) {
@@ -233,29 +238,29 @@ jxx::lang::jbool ResourceBundle::containsKey(
     return false;
 }
 
-jxx::Ptr<Set<jxx::lang::String>> ResourceBundle::keySet() {
-    auto result = jxx::NEW<HashSet<jxx::lang::String>>();
+::jxx::Ptr<Set<::jxx::lang::String>> ResourceBundle::keySet() {
+    auto result = ::jxx::NEW<HashSet<::jxx::lang::String>>();
     auto keys = getKeys();
     while (keys->hasMoreElements()) {
         result->add(keys->nextElement());
     }
-    return jxx::CAST<Set<jxx::lang::String>>(result);
+    return ::jxx::CAST<Set<::jxx::lang::String>>(result);
 }
 
 void ResourceBundle::setParent(
-    const jxx::Ptr<ResourceBundle>& parent) {
+    const ::jxx::Ptr<ResourceBundle>& parent) {
     parent_ = parent;
 }
 
-jxx::Ptr<ResourceBundle> ResourceBundle::getParent() const {
+::jxx::Ptr<ResourceBundle> ResourceBundle::getParent() const {
     return parent_;
 }
 
-jxx::Ptr<Locale> ResourceBundle::getLocale() const {
+::jxx::Ptr<Locale> ResourceBundle::getLocale() const {
     return locale_;
 }
 
-jxx::Ptr<jxx::lang::String>
+::jxx::Ptr<::jxx::lang::String>
 ResourceBundle::getBaseBundleName() const {
     return baseBundleName_;
 }

@@ -7,39 +7,41 @@
 #include "util/jxx.util.logging.Formatter.h"
 namespace jxx::util::logging
 {
-	Handler::Handler() :errorManager_(jxx::NEW<ErrorManager>()), level_(Level::ALL())
+	::jxx::Ptr<::jxx::lang::ClassAny> Handler::Class() { return JxxClassInfoMarker::Class(); }
+
+	Handler::Handler() :errorManager_(::jxx::NEW<ErrorManager>()), level_(Level::ALL())
 	{
-	}void Handler::setFormatter(const jxx::Ptr<Formatter>& v)
+	}void Handler::setFormatter(const ::jxx::Ptr<Formatter>& v)
 	{
-		std::lock_guard<std::recursive_mutex>l(mutex_); if (v == nullptr)throw jxx::lang::NullPointerException(); formatter_ = v;
-	}jxx::Ptr<Formatter>Handler::getFormatter()const
+		std::lock_guard<std::recursive_mutex>l(mutex_); if (v == nullptr)throw ::jxx::lang::NullPointerException(); formatter_ = v;
+	}::jxx::Ptr<Formatter>Handler::getFormatter()const
 	{
 		std::lock_guard<std::recursive_mutex>l(mutex_); return formatter_;
-	}void Handler::setEncoding(const jxx::Ptr<jxx::lang::String>& v)
+	}void Handler::setEncoding(const ::jxx::Ptr<::jxx::lang::String>& v)
 	{
 		std::lock_guard<std::recursive_mutex>l(mutex_); encoding_ = v;
-	}jxx::Ptr<jxx::lang::String>Handler::getEncoding()const
+	}::jxx::Ptr<::jxx::lang::String>Handler::getEncoding()const
 	{
 		std::lock_guard<std::recursive_mutex>l(mutex_); return encoding_;
-	}void Handler::setFilter(const jxx::Ptr<Filter>& v)
+	}void Handler::setFilter(const ::jxx::Ptr<Filter>& v)
 	{
 		std::lock_guard<std::recursive_mutex>l(mutex_); filter_ = v;
-	}jxx::Ptr<Filter>Handler::getFilter()const
+	}::jxx::Ptr<Filter>Handler::getFilter()const
 	{
 		std::lock_guard<std::recursive_mutex>l(mutex_); return filter_;
-	}void Handler::setErrorManager(const jxx::Ptr<ErrorManager>& v)
+	}void Handler::setErrorManager(const ::jxx::Ptr<ErrorManager>& v)
 	{
-		if (v == nullptr)throw jxx::lang::NullPointerException(); std::lock_guard<std::recursive_mutex>l(mutex_); errorManager_ = v;
-	}jxx::Ptr<ErrorManager>Handler::getErrorManager()const
+		if (v == nullptr)throw ::jxx::lang::NullPointerException(); std::lock_guard<std::recursive_mutex>l(mutex_); errorManager_ = v;
+	}::jxx::Ptr<ErrorManager>Handler::getErrorManager()const
 	{
 		std::lock_guard<std::recursive_mutex>l(mutex_); return errorManager_;
-	}void Handler::setLevel(const jxx::Ptr<Level>& v)
+	}void Handler::setLevel(const ::jxx::Ptr<Level>& v)
 	{
-		if (v == nullptr)throw jxx::lang::NullPointerException(); std::lock_guard<std::recursive_mutex>l(mutex_); level_ = v;
-	}jxx::Ptr<Level>Handler::getLevel()const
+		if (v == nullptr)throw ::jxx::lang::NullPointerException(); std::lock_guard<std::recursive_mutex>l(mutex_); level_ = v;
+	}::jxx::Ptr<Level>Handler::getLevel()const
 	{
 		std::lock_guard<std::recursive_mutex>l(mutex_); return level_;
-	}jxx::lang::jbool Handler::isLoggable(const jxx::Ptr<LogRecord>& r)const
+	}::jxx::lang::jbool Handler::isLoggable(const ::jxx::Ptr<LogRecord>& r)const
 	{
         if (r == nullptr || r->getLevel() == nullptr) {
             return false;
@@ -48,7 +50,7 @@ namespace jxx::util::logging
         return r->getLevel()->intValue() >= level_->intValue() &&
                r->getLevel()->intValue() != Level::OFF()->intValue() &&
                (filter_ == nullptr || filter_->isLoggable(r));
-	}void Handler::reportError(const jxx::Ptr<jxx::lang::String>& m, const jxx::Ptr<jxx::lang::Exception>& e, jxx::lang::jint c)
+	}void Handler::reportError(const ::jxx::Ptr<::jxx::lang::String>& m, const ::jxx::Ptr<::jxx::lang::Exception>& e, ::jxx::lang::jint c)
 	{
 		getErrorManager()->error(m, e, c);
 	}
