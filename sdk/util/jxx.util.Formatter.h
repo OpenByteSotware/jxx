@@ -3,9 +3,10 @@
 #include <string>
 
 #include "lang/jxx_types.h"
+#include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.buildin_array.h"
-#include "jxx.util.Locale.h"
+#include "util/jxx.util.Locale.h"
 
 namespace jxx::lang {
     class String;
@@ -23,32 +24,34 @@ namespace jxx::util
      * and stores formatted output internally.
      */
     class Formatter final
-        : public jxx::lang::Object
+        : public ::jxx::lang::ClassBase<
+              Formatter,
+              ::jxx::lang::Object>
     {
     public:
         Formatter();
-        explicit Formatter(const jxx::Ptr<Locale>& locale);
+        explicit Formatter(const ::jxx::Ptr<Locale>& locale);
         ~Formatter() override = default;
 
     public:
-        jxx::Ptr<Locale> locale() const;
+        ::jxx::Ptr<Locale> locale() const;
         void flush();
         void close();
-        jxx::lang::jbool closed() const noexcept;
+        ::jxx::lang::jbool closed() const noexcept;
 
-        jxx::Ptr<Formatter> format(const jxx::Ptr<jxx::lang::String>& formatString,
-            const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>& args);
+        ::jxx::Ptr<Formatter> format(const ::jxx::Ptr<::jxx::lang::String>& formatString,
+            const ::jxx::Ptr<::jxx::JxxArray<::jxx::Ptr<::jxx::lang::Object>, 1U>>& args);
 
-        jxx::Ptr<Formatter> format(const jxx::Ptr<Locale>& locale,
-            const jxx::Ptr<jxx::lang::String>& formatString,
-            const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>& args);
+        ::jxx::Ptr<Formatter> format(const ::jxx::Ptr<Locale>& locale,
+            const ::jxx::Ptr<::jxx::lang::String>& formatString,
+            const ::jxx::Ptr<::jxx::JxxArray<::jxx::Ptr<::jxx::lang::Object>, 1U>>& args);
 
-        jxx::Ptr<jxx::lang::String> toString() const override;
+        ::jxx::Ptr<::jxx::lang::String> toString() const override;
 
     private:
         std::string buffer_;
-        jxx::Ptr<Locale> locale_;
-        jxx::lang::jbool closed_ = false;
+        ::jxx::Ptr<Locale> locale_;
+        ::jxx::lang::jbool closed_ = false;
 
     private:
         void ensureOpen_() const;

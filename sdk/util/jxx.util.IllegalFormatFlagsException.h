@@ -6,12 +6,12 @@
 
 namespace jxx::util {
 
-class IllegalFormatFlagsException : public jxx::lang::RuntimeException {
+class IllegalFormatFlagsException : public ::jxx::lang::RuntimeException {
 public:
-    using JxxSuper = jxx::lang::RuntimeException;
-    using JxxClassInfoMarker = jxx::lang::ClassInfo<IllegalFormatFlagsException, JxxSuper>;
+    using JxxSuper = ::jxx::lang::RuntimeException;
+    using JxxClassInfoMarker = ::jxx::lang::ClassInfo<IllegalFormatFlagsException, JxxSuper>;
 
-    static jxx::Ptr<jxx::lang::ClassAny> Class();
+    static ::jxx::Ptr<::jxx::lang::ClassAny> Class();
 
     IllegalFormatFlagsException() = default;
 
@@ -22,10 +22,10 @@ public:
     ~IllegalFormatFlagsException() override = default;
 
 public:
-    using jxx::lang::RuntimeException::RuntimeException;
+    using ::jxx::lang::RuntimeException::RuntimeException;
     JXX_OBJECT_CLONE(IllegalFormatFlagsException)
 protected:
-    const char* typeName() const noexcept override { return "NoSuchElementException"; }
+    const char* typeName() const noexcept override { return "IllegalFormatFlagsException"; }
 };
 
 } // namespace jxx::util

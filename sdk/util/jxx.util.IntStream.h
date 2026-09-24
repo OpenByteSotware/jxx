@@ -13,25 +13,29 @@ namespace jxx::util {
  *   - toArray()
  *   - size()
  */
-class IntStream final : public jxx::lang::Object, public jxx::io::SerializableI {
+class IntStream final
+    : public ::jxx::lang::ClassBase<
+          IntStream,
+          ::jxx::lang::Object,
+          ::jxx::io::SerializableI> {
 public:
     IntStream() = default;
-    explicit IntStream(jxx::lang::IntArray backing);
+    explicit IntStream(const ::jxx::lang::IntArray& backing);
 
-    static jxx::Ptr<IntStream> of(jxx::lang::IntArray backing);
+    static ::jxx::Ptr<IntStream> of(const ::jxx::lang::IntArray& backing);
 
     // Java: int[] toArray()
-    jxx::lang::IntArray toArray() const;
+    ::jxx::lang::IntArray toArray() const;
 
     // convenience
-    jxx::lang::jint size() const;
+    ::jxx::lang::jint size() const;
 
-    virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out) override;
-    virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in) override;
+    virtual void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override;
+    virtual void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override;
     virtual void readObjectNoData() override;
 
 private:
-    jxx::lang::IntArray data_;
+    ::jxx::lang::IntArray data_;
 };
 
 }
