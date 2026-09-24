@@ -16,17 +16,13 @@ public:
         const ::jxx::Ptr<::jxx::lang::String>& name = DEFAULT(),
         ::jxx::lang::jbool required = false,
         ::jxx::lang::jbool nillable = false,
-        const ::jxx::Ptr<::jxx::lang::String>& defaultValue = DEFAULT())
-        : Super(), name_(name), required_(required), nillable_(nillable),
-          defaultValue_(defaultValue) {}
+        const ::jxx::Ptr<::jxx::lang::String>& defaultValue = DEFAULT());
 
-    static ::jxx::Ptr<::jxx::lang::String> DEFAULT() {
-        return ::jxx::NEW<::jxx::lang::String>("##default");
-    }
-    ::jxx::Ptr<::jxx::lang::String> name() const { return name_; }
-    ::jxx::lang::jbool required() const noexcept { return required_; }
-    ::jxx::lang::jbool nillable() const noexcept { return nillable_; }
-    ::jxx::Ptr<::jxx::lang::String> defaultValue() const { return defaultValue_; }
+    static ::jxx::Ptr<::jxx::lang::String> DEFAULT();
+    ::jxx::Ptr<::jxx::lang::String> name() const;
+    ::jxx::lang::jbool required() const noexcept;
+    ::jxx::lang::jbool nillable() const noexcept;
+    ::jxx::Ptr<::jxx::lang::String> defaultValue() const;
 
 private:
     ::jxx::Ptr<::jxx::lang::String> name_;
