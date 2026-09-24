@@ -7,12 +7,13 @@
 #include "util/function/jxx.util.function.DoubleConsumer.h"
 #include "util/function/jxx.util.function.IntConsumer.h"
 #include "util/function/jxx.util.function.LongConsumer.h"
+#include "lang/jxx.lang.ClassInfo.h"
 #include "util/jxx.util.Iterator.h"
 
 namespace jxx::util {
 
 template <typename T, typename TConsumer>
-class PrimitiveIterator : public virtual Iterator<T> {
+class PrimitiveIterator : public ::jxx::lang::InterfaceBase<PrimitiveIterator<T, TConsumer>, Iterator<T>> {
 public:
     ~PrimitiveIterator() override = default;
 
@@ -21,9 +22,9 @@ public:
 };
 
 class PrimitiveIteratorOfInt
-    : public virtual PrimitiveIterator<
+    : public ::jxx::lang::InterfaceBase<PrimitiveIteratorOfInt, PrimitiveIterator<
           ::jxx::lang::Integer,
-          ::jxx::util::function::IntConsumer> {
+          ::jxx::util::function::IntConsumer>> {
 public:
     ~PrimitiveIteratorOfInt() override = default;
     virtual ::jxx::lang::jint nextInt() = 0;
@@ -40,9 +41,9 @@ public:
 };
 
 class PrimitiveIteratorOfLong
-    : public virtual PrimitiveIterator<
+    : public ::jxx::lang::InterfaceBase<PrimitiveIteratorOfLong, PrimitiveIterator<
           ::jxx::lang::Long,
-          ::jxx::util::function::LongConsumer> {
+          ::jxx::util::function::LongConsumer>> {
 public:
     ~PrimitiveIteratorOfLong() override = default;
     virtual ::jxx::lang::jlong nextLong() = 0;
@@ -59,9 +60,9 @@ public:
 };
 
 class PrimitiveIteratorOfDouble
-    : public virtual PrimitiveIterator<
+    : public ::jxx::lang::InterfaceBase<PrimitiveIteratorOfDouble, PrimitiveIterator<
           ::jxx::lang::Double,
-          ::jxx::util::function::DoubleConsumer> {
+          ::jxx::util::function::DoubleConsumer>> {
 public:
     ~PrimitiveIteratorOfDouble() override = default;
     virtual ::jxx::lang::jdouble nextDouble() = 0;
