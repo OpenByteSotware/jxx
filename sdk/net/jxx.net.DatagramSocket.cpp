@@ -1,3 +1,4 @@
+
 #include <cstdint>
 #include <cstring>
 #include <string>
@@ -5,11 +6,8 @@
 #include <vector>
 #include <utility>
 #include <system_error>
-#include "net/jxx.net.DatagramSocket.h"
-#include "net/jxx.net.SocketTimeoutException.h"
-#include "net/jxx.net.UnknownHostException.h"
-#include "lang/jxx.lang.IllegalArgumentException.h"
-#include "net/jxx.net.SocketException.h"
+
+
 #if defined(_WIN32)
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -17,6 +15,15 @@
 #else
 #include <net/if.h>   // if_nametoindex (IPv6 multicast interface lookup)
 #endif
+
+#include "net/jxx.net.DatagramSocket.h"
+#include "lang/jxx.lang.NullPointerException.h"
+#include "net/jxx.net.InetAddress.h"
+#include "net/jxx.net.InetSocketAddress.h"
+#include "net/jxx.net.SocketTimeoutException.h"
+#include "net/jxx.net.UnknownHostException.h"
+#include "net/jxx.net.SocketException.h"
+
 
 #if defined(_WIN32)
 #ifndef NOMINMAX
@@ -110,6 +117,8 @@ namespace jxx::net {
         return std::string(host);
     }
 
+
+struct NativeDatagramPacket { std::vector<std::uint8_t> buffer; std::size_t offset{0}; std::size_t length{0}; std::string address; std::uint16_t port{0}; };
 
     class DatagramSocket::Impl {
     public:
@@ -440,7 +449,7 @@ namespace jxx::net {
         }
 
         // Send a packet; if connected and packet.address empty, send to connected peer
-        void send(const DatagramPacket& pkt) {
+        void send(const NativeDatagramPacket& pkt) {
             ensure_open();
             if (pkt.offset > pkt.buffer.size() || pkt.length > pkt.buffer.size() - pkt.offset) {
                 throw jxx::lang::IllegalArgumentException("DatagramPacket length exceeds buffer size");
@@ -483,7 +492,7 @@ namespace jxx::net {
 
         // Receive into packet's buffer; fills pkt.length and sender address/port.
         // The packet's buffer capacity determines max datagram size we can accept.
-        void receive(DatagramPacket& pkt) {
+        void receive(NativeDatagramPacket& pkt) {
             ensure_open();
             if (pkt.buffer.empty()) {
                 throw jxx::lang::IllegalArgumentException("DatagramPacket buffer is empty (set capacity first)");
@@ -745,65 +754,54 @@ namespace jxx::net {
         int soTimeout_{ 0 };
         bool broadcast_{ false };
         bool reuseAddress_{ false };
+    public:
+        void setTrafficClass(int value) { ensure_open(); if (::setsockopt(sock_, IPPROTO_IP, IP_TOS, reinterpret_cast<const char*>(&value), sizeof(value)) != 0) throw jxx::net::SocketException("setsockopt IP_TOS failed: " + sock_error_string()); }
+        int getTrafficClass() const { ensure_open(); int value=0; socklen_t length=sizeof(value); if (::getsockopt(sock_, IPPROTO_IP, IP_TOS, reinterpret_cast<char*>(&value), &length) != 0) throw jxx::net::SocketException("getsockopt IP_TOS failed: " + sock_error_string()); return value; }
     };
 
 
-DatagramPacket::DatagramPacket() = default;
-DatagramPacket::DatagramPacket(std::size_t capacity)
-    : buffer(capacity), offset(0), length(0) {}
-DatagramPacket::DatagramPacket(const std::vector<std::uint8_t>& payload,
-    const std::string& valueAddress, std::uint16_t valuePort)
-    : buffer(payload), offset(0), length(payload.size()),
-      address(valueAddress), port(valuePort) {}
-void DatagramPacket::setData(const std::vector<std::uint8_t>& data) {
-    buffer=data; offset=0; length=data.size();
-}
-void DatagramPacket::setData(const std::vector<std::uint8_t>& data,
-    std::size_t valueOffset, std::size_t valueLength) {
-    if (valueOffset > data.size() || valueLength > data.size()-valueOffset)
-        throw jxx::lang::IllegalArgumentException("packet range out of bounds");
-    buffer=data; offset=valueOffset; length=valueLength;
-}
-void DatagramPacket::setLength(std::size_t valueLength) {
-    if (valueLength > buffer.size()-offset)
-        throw jxx::lang::IllegalArgumentException("packet length out of bounds");
-    length=valueLength;
-}
 
-DatagramSocket::DatagramSocket() : impl_(std::make_unique<Impl>()) {}
-DatagramSocket::DatagramSocket(Family f) : impl_(std::make_unique<Impl>(f)) {}
-DatagramSocket::DatagramSocket(std::uint16_t p,const std::string& a)
- : impl_(std::make_unique<Impl>(p,a)) {}
-DatagramSocket::DatagramSocket(DatagramSocket&&) noexcept=default;
-DatagramSocket& DatagramSocket::operator=(DatagramSocket&&) noexcept=default;
-DatagramSocket::~DatagramSocket()=default;
-#define DVOID(name,args,call) void DatagramSocket::name args { impl_->name call; }
-DVOID(joinGroupIPv4,(const std::string&a,const std::string&i),(a,i))
-DVOID(leaveGroupIPv4,(const std::string&a,const std::string&i),(a,i))
-DVOID(setMulticastTTL,(int v),(v)) DVOID(setMulticastLoopIPv4,(bool v),(v))
-DVOID(setMulticastInterfaceIPv4,(const std::string&a),(a))
-DVOID(joinGroupIPv6,(const std::string&a,unsigned i),(a,i))
-DVOID(leaveGroupIPv6,(const std::string&a,unsigned i),(a,i))
-DVOID(setMulticastHopsIPv6,(int v),(v)) DVOID(setMulticastLoopIPv6,(bool v),(v))
-DVOID(setMulticastInterfaceIPv6,(unsigned v),(v))
-DVOID(bind,(std::uint16_t p),(p)) DVOID(bind,(const std::string&a,std::uint16_t p),(a,p))
-DVOID(connect,(const std::string&a,std::uint16_t p),(a,p)) DVOID(disconnect,(),())
-DVOID(send,(const DatagramPacket&p),(p)) DVOID(receive,(DatagramPacket&p),(p))
-DVOID(setSoTimeout,(int v),(v)) DVOID(setBroadcast,(bool v),(v)) DVOID(setReuseAddress,(bool v),(v))
-DVOID(setSendBufferSize,(int v),(v)) DVOID(setReceiveBufferSize,(int v),(v))
-#undef DVOID
-int DatagramSocket::getSoTimeout() const noexcept{return impl_->getSoTimeout();}
-bool DatagramSocket::getBroadcast() const noexcept{return impl_->getBroadcast();}
-bool DatagramSocket::getReuseAddress() const noexcept{return impl_->getReuseAddress();}
-int DatagramSocket::getSendBufferSize() const{return impl_->getSendBufferSize();}
-int DatagramSocket::getReceiveBufferSize() const{return impl_->getReceiveBufferSize();}
-std::uint16_t DatagramSocket::getLocalPort() const noexcept{return impl_->getLocalPort();}
-std::string DatagramSocket::getLocalAddress() const{return impl_->getLocalAddress();}
-std::string DatagramSocket::getRemoteAddress() const{return impl_->getRemoteAddress();}
-std::uint16_t DatagramSocket::getRemotePort() const noexcept{return impl_->getRemotePort();}
-bool DatagramSocket::isClosed() const noexcept{return !impl_||impl_->isClosed();}
-bool DatagramSocket::isBound() const noexcept{return impl_&&impl_->isBound();}
-bool DatagramSocket::isConnected() const noexcept{return impl_&&impl_->isConnected();}
-void DatagramSocket::close() noexcept{if(impl_)impl_->close();}
+static void validatePort_(::jxx::lang::jint port) {
+    if (port < 0 || port > 65535) throw jxx::lang::IllegalArgumentException("port out of range");
+}
+DatagramPacket::DatagramPacket(const jxx::lang::ByteArray& b):DatagramPacket(b,0,b?b->length:0){}
+DatagramPacket::DatagramPacket(const jxx::lang::ByteArray& b,::jxx::lang::jint n):DatagramPacket(b,0,n){}
+DatagramPacket::DatagramPacket(const jxx::lang::ByteArray& b,::jxx::lang::jint o,::jxx::lang::jint n):buffer_(b),offset_(o),length_(n){validateRange_(o,n);}
+DatagramPacket::DatagramPacket(const jxx::lang::ByteArray& b,::jxx::lang::jint n,const jxx::Ptr<InetAddress>& a,::jxx::lang::jint p):DatagramPacket(b,0,n,a,p){}
+DatagramPacket::DatagramPacket(const jxx::lang::ByteArray& b,::jxx::lang::jint o,::jxx::lang::jint n,const jxx::Ptr<InetAddress>& a,::jxx::lang::jint p):DatagramPacket(b,o,n){setAddress(a);setPort(p);}
+DatagramPacket::DatagramPacket(const jxx::lang::ByteArray& b,::jxx::lang::jint n,const jxx::Ptr<SocketAddress>& a):DatagramPacket(b,0,n,a){}
+DatagramPacket::DatagramPacket(const jxx::lang::ByteArray& b,::jxx::lang::jint o,::jxx::lang::jint n,const jxx::Ptr<SocketAddress>& a):DatagramPacket(b,o,n){setSocketAddress(a);}
+void DatagramPacket::validateRange_(::jxx::lang::jint o,::jxx::lang::jint n)const{if(!buffer_)throw jxx::lang::NullPointerException();if(o<0||n<0||o>buffer_->length||n>buffer_->length-o)throw jxx::lang::IllegalArgumentException("packet range out of bounds");}
+jxx::Ptr<InetAddress> DatagramPacket::getAddress()const{return address_;} ::jxx::lang::jint DatagramPacket::getPort()const noexcept{return port_;} jxx::lang::ByteArray DatagramPacket::getData()const{return buffer_;} ::jxx::lang::jint DatagramPacket::getOffset()const noexcept{return offset_;} ::jxx::lang::jint DatagramPacket::getLength()const noexcept{return length_;}
+jxx::Ptr<jxx::lang::String> DatagramPacket::getAddressText()const{return address_?address_->getHostAddress():nullptr;}
+jxx::Ptr<SocketAddress> DatagramPacket::getSocketAddress()const{return address_?jxx::NEW<InetSocketAddress>(address_,port_):nullptr;}
+void DatagramPacket::setAddress(const jxx::Ptr<InetAddress>&a){address_=a;} void DatagramPacket::setPort(::jxx::lang::jint p){validatePort_(p);port_=p;}
+void DatagramPacket::setData(const jxx::lang::ByteArray&b){buffer_=b;offset_=0;length_=b?b->length:0;if(!b)throw jxx::lang::NullPointerException();}
+void DatagramPacket::setData(const jxx::lang::ByteArray&b,::jxx::lang::jint o,::jxx::lang::jint n){buffer_=b;validateRange_(o,n);offset_=o;length_=n;} void DatagramPacket::setLength(::jxx::lang::jint n){validateRange_(offset_,n);length_=n;}
+void DatagramPacket::setSocketAddress(const jxx::Ptr<SocketAddress>&a){auto i=std::dynamic_pointer_cast<InetSocketAddress>(a);if(!i)throw jxx::lang::IllegalArgumentException("unsupported socket address");if(i->isUnresolved())throw jxx::lang::IllegalArgumentException("unresolved socket address");address_=i->getAddress();port_=i->getPort();}
 
+DatagramSocket::DatagramSocket():impl_(std::make_unique<Impl>()){} DatagramSocket::DatagramSocket(Family f):impl_(std::make_unique<Impl>(f)){}
+DatagramSocket::DatagramSocket(::jxx::lang::jint p):DatagramSocket(jxx::NEW<InetSocketAddress>(p)){}
+DatagramSocket::DatagramSocket(::jxx::lang::jint p,const jxx::Ptr<InetAddress>&a):DatagramSocket(jxx::NEW<InetSocketAddress>(a,p)){}
+DatagramSocket::DatagramSocket(const jxx::Ptr<SocketAddress>&a):impl_(std::make_unique<Impl>()){if(a)bind(a);}
+DatagramSocket::DatagramSocket(DatagramSocket&&)noexcept=default; DatagramSocket& DatagramSocket::operator=(DatagramSocket&&)noexcept=default; DatagramSocket::~DatagramSocket()=default;
+void DatagramSocket::bind(const jxx::Ptr<SocketAddress>&a){auto i=std::dynamic_pointer_cast<InetSocketAddress>(a);if(!i)throw jxx::lang::IllegalArgumentException("unsupported socket address");impl_->bind(i->getHostString()->utf8(),static_cast<std::uint16_t>(i->getPort()));}
+void DatagramSocket::connect(const jxx::Ptr<InetAddress>&a,::jxx::lang::jint p){if(!a)throw jxx::lang::NullPointerException();validatePort_(p);impl_->connect(a->getHostAddress()->utf8(),static_cast<std::uint16_t>(p));}
+void DatagramSocket::connect(const jxx::Ptr<SocketAddress>&a){auto i=std::dynamic_pointer_cast<InetSocketAddress>(a);if(!i||i->isUnresolved())throw jxx::lang::IllegalArgumentException("unsupported socket address");connect(i->getAddress(),i->getPort());}
+void DatagramSocket::disconnect(){impl_->disconnect();}
+static NativeDatagramPacket native_(const jxx::Ptr<DatagramPacket>&p){if(!p)throw jxx::lang::NullPointerException();NativeDatagramPacket n;auto b=p->getData();n.offset=p->getOffset();n.length=p->getLength();n.buffer.resize(b?b->length:0);for(::jxx::lang::jint i=0;b&&i<b->length;++i)n.buffer[i]=static_cast<std::uint8_t>((*b)[i]);auto a=p->getAddressText();n.address=a?a->utf8():std::string();n.port=static_cast<std::uint16_t>(p->getPort());return n;}
+void DatagramSocket::send(const jxx::Ptr<DatagramPacket>&p){auto n=native_(p);impl_->send(n);} void DatagramSocket::receive(const jxx::Ptr<DatagramPacket>&p){auto n=native_(p);impl_->receive(n);auto b=p->getData();for(std::size_t i=0;b&&i<n.length&&n.offset+i<static_cast<std::size_t>(b->length);++i)(*b)[static_cast<::jxx::lang::jint>(n.offset+i)]=static_cast<::jxx::lang::jbyte>(n.buffer[n.offset+i]);p->setLength(static_cast<::jxx::lang::jint>(n.length));p->setAddress(InetAddress::getByName(jxx::NEW<jxx::lang::String>(n.address)));p->setPort(n.port);}
+void DatagramSocket::close()noexcept{if(impl_)impl_->close();}
+jxx::Ptr<InetAddress> DatagramSocket::getInetAddress()const{auto a=impl_->getRemoteAddress();return a.empty()?nullptr:InetAddress::getByName(jxx::NEW<jxx::lang::String>(a));} jxx::Ptr<InetAddress> DatagramSocket::getLocalAddress()const{auto a=impl_->getLocalAddress();return a.empty()?nullptr:InetAddress::getByName(jxx::NEW<jxx::lang::String>(a));}
+::jxx::lang::jint DatagramSocket::getPort()const noexcept{return impl_->getRemotePort();} ::jxx::lang::jint DatagramSocket::getLocalPort()const noexcept{return impl_->isBound()?impl_->getLocalPort():-1;}
+jxx::Ptr<SocketAddress> DatagramSocket::getRemoteSocketAddress()const{auto a=getInetAddress();return a?jxx::NEW<InetSocketAddress>(a,getPort()):nullptr;} jxx::Ptr<SocketAddress> DatagramSocket::getLocalSocketAddress()const{auto a=getLocalAddress();return a?jxx::NEW<InetSocketAddress>(a,getLocalPort()):nullptr;} jxx::Ptr<jxx::nio::channels::DatagramChannel> DatagramSocket::getChannel()const{return nullptr;}
+::jxx::lang::jbool DatagramSocket::isBound()const noexcept{return impl_&&impl_->isBound();} ::jxx::lang::jbool DatagramSocket::isConnected()const noexcept{return impl_&&impl_->isConnected();} ::jxx::lang::jbool DatagramSocket::isClosed()const noexcept{return !impl_||impl_->isClosed();}
+#define V(n,t) void DatagramSocket::n(t v){impl_->n(v);} 
+V(setSoTimeout,::jxx::lang::jint) V(setSendBufferSize,::jxx::lang::jint) V(setReceiveBufferSize,::jxx::lang::jint) V(setReuseAddress,::jxx::lang::jbool) V(setBroadcast,::jxx::lang::jbool)
+#undef V
+::jxx::lang::jint DatagramSocket::getSoTimeout()const noexcept{return impl_->getSoTimeout();} ::jxx::lang::jint DatagramSocket::getSendBufferSize()const{return impl_->getSendBufferSize();} ::jxx::lang::jint DatagramSocket::getReceiveBufferSize()const{return impl_->getReceiveBufferSize();} ::jxx::lang::jbool DatagramSocket::getReuseAddress()const noexcept{return impl_->getReuseAddress();} ::jxx::lang::jbool DatagramSocket::getBroadcast()const noexcept{return impl_->getBroadcast();}
+void DatagramSocket::setTrafficClass(::jxx::lang::jint t){if(t<0||t>255)throw jxx::lang::IllegalArgumentException("traffic class out of range");impl_->setTrafficClass(t);} ::jxx::lang::jint DatagramSocket::getTrafficClass()const{return impl_->getTrafficClass();}
+#define M(n,args,call) void DatagramSocket::n args{impl_->n call;}
+M(joinGroupIPv4,(const std::string&a,const std::string&i),(a,i)) M(leaveGroupIPv4,(const std::string&a,const std::string&i),(a,i)) M(setMulticastTTL,(int v),(v)) M(setMulticastLoopIPv4,(bool v),(v)) M(setMulticastInterfaceIPv4,(const std::string&a),(a)) M(joinGroupIPv6,(const std::string&a,unsigned i),(a,i)) M(leaveGroupIPv6,(const std::string&a,unsigned i),(a,i)) M(setMulticastHopsIPv6,(int v),(v)) M(setMulticastLoopIPv6,(bool v),(v)) M(setMulticastInterfaceIPv6,(unsigned i),(i))
+#undef M
 } // namespace jxx::net

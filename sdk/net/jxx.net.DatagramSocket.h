@@ -1,87 +1,125 @@
 #pragma once
 
-#include <cstdint>
 #include <memory>
 #include <string>
-#include <vector>
 
+#include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.buildin_array.h"
+#include "net/jxx.net.SocketAddress.h"
+
+namespace jxx::lang { class String; }
+namespace jxx::nio::channels { class DatagramChannel; }
 namespace jxx::net {
+class InetAddress;
+class InetSocketAddress;
 
 enum class Family { Any, IPv4, IPv6 };
 
-struct DatagramPacket {
-    std::vector<std::uint8_t> buffer;
-    std::size_t offset{0};
-    std::size_t length{0};
-    std::string address;
-    std::uint16_t port{0};
+class DatagramPacket final : public jxx::lang::ClassBase<DatagramPacket, jxx::lang::Object> {
+public:
+    using JxxSuper = jxx::lang::Object;
+    using Super = jxx::lang::ClassBase<DatagramPacket, JxxSuper>;
 
-    DatagramPacket();
-    explicit DatagramPacket(std::size_t capacity);
-    DatagramPacket(const std::vector<std::uint8_t>& payload,
-        const std::string& address, std::uint16_t port);
+    explicit DatagramPacket(const jxx::lang::ByteArray& buffer);
+    DatagramPacket(const jxx::lang::ByteArray& buffer, ::jxx::lang::jint length);
+    DatagramPacket(const jxx::lang::ByteArray& buffer, ::jxx::lang::jint offset,
+        ::jxx::lang::jint length);
+    DatagramPacket(const jxx::lang::ByteArray& buffer, ::jxx::lang::jint length,
+        const jxx::Ptr<InetAddress>& address, ::jxx::lang::jint port);
+    DatagramPacket(const jxx::lang::ByteArray& buffer, ::jxx::lang::jint offset,
+        ::jxx::lang::jint length, const jxx::Ptr<InetAddress>& address,
+        ::jxx::lang::jint port);
+    DatagramPacket(const jxx::lang::ByteArray& buffer, ::jxx::lang::jint length,
+        const jxx::Ptr<SocketAddress>& address);
+    DatagramPacket(const jxx::lang::ByteArray& buffer, ::jxx::lang::jint offset,
+        ::jxx::lang::jint length, const jxx::Ptr<SocketAddress>& address);
+    ~DatagramPacket() override = default;
 
-    void setData(const std::vector<std::uint8_t>& data);
-    void setData(const std::vector<std::uint8_t>& data,
-        std::size_t offset, std::size_t length);
-    void setLength(std::size_t length);
+    jxx::Ptr<InetAddress> getAddress() const;
+    jxx::Ptr<jxx::lang::String> getAddressText() const;
+    ::jxx::lang::jint getPort() const noexcept;
+    jxx::lang::ByteArray getData() const;
+    ::jxx::lang::jint getOffset() const noexcept;
+    ::jxx::lang::jint getLength() const noexcept;
+    jxx::Ptr<SocketAddress> getSocketAddress() const;
+    void setAddress(const jxx::Ptr<InetAddress>& address);
+    void setPort(::jxx::lang::jint port);
+    void setData(const jxx::lang::ByteArray& buffer);
+    void setData(const jxx::lang::ByteArray& buffer, ::jxx::lang::jint offset,
+        ::jxx::lang::jint length);
+    void setLength(::jxx::lang::jint length);
+    void setSocketAddress(const jxx::Ptr<SocketAddress>& address);
+
+private:
+    void validateRange_(::jxx::lang::jint offset, ::jxx::lang::jint length) const;
+    jxx::lang::ByteArray buffer_;
+    ::jxx::lang::jint offset_{0};
+    ::jxx::lang::jint length_{0};
+    jxx::Ptr<InetAddress> address_;
+    ::jxx::lang::jint port_{-1};
 };
 
-class DatagramSocket {
+class DatagramSocket : public jxx::lang::ClassBase<DatagramSocket, jxx::lang::Object> {
 public:
+    using JxxSuper = jxx::lang::Object;
+    using Super = jxx::lang::ClassBase<DatagramSocket, JxxSuper>;
+
     DatagramSocket();
+    explicit DatagramSocket(::jxx::lang::jint port);
+    DatagramSocket(::jxx::lang::jint port, const jxx::Ptr<InetAddress>& localAddress);
+    explicit DatagramSocket(const jxx::Ptr<SocketAddress>& bindAddress);
     explicit DatagramSocket(Family family);
-    explicit DatagramSocket(std::uint16_t localPort,
-        const std::string& localAddress = std::string());
     DatagramSocket(const DatagramSocket&) = delete;
     DatagramSocket& operator=(const DatagramSocket&) = delete;
     DatagramSocket(DatagramSocket&& other) noexcept;
     DatagramSocket& operator=(DatagramSocket&& other) noexcept;
-    virtual ~DatagramSocket();
+    ~DatagramSocket() override;
 
-    void joinGroupIPv4(const std::string& groupAddress,
-        const std::string& localInterfaceIPv4 = "0.0.0.0");
-    void leaveGroupIPv4(const std::string& groupAddress,
-        const std::string& localInterfaceIPv4 = "0.0.0.0");
-    void setMulticastTTL(int ttl);
-    void setMulticastLoopIPv4(bool enable);
-    void setMulticastInterfaceIPv4(const std::string& address);
-    void joinGroupIPv6(const std::string& groupAddress, unsigned ifindex = 0);
-    void leaveGroupIPv6(const std::string& groupAddress, unsigned ifindex = 0);
-    void setMulticastHopsIPv6(int hops);
-    void setMulticastLoopIPv6(bool enable);
-    void setMulticastInterfaceIPv6(unsigned ifindex);
-
-    void bind(std::uint16_t localPort);
-    void bind(const std::string& localAddress, std::uint16_t localPort);
-    void connect(const std::string& remoteHost, std::uint16_t remotePort);
+    void bind(const jxx::Ptr<SocketAddress>& address);
+    void connect(const jxx::Ptr<InetAddress>& address, ::jxx::lang::jint port);
+    void connect(const jxx::Ptr<SocketAddress>& address);
     void disconnect();
-    void send(const DatagramPacket& packet);
-    void receive(DatagramPacket& packet);
-
-    void setSoTimeout(int millis);
-    int getSoTimeout() const noexcept;
-    void setBroadcast(bool enabled);
-    bool getBroadcast() const noexcept;
-    void setReuseAddress(bool enabled);
-    bool getReuseAddress() const noexcept;
-    void setSendBufferSize(int size);
-    int getSendBufferSize() const;
-    void setReceiveBufferSize(int size);
-    int getReceiveBufferSize() const;
-
-    std::uint16_t getLocalPort() const noexcept;
-    std::string getLocalAddress() const;
-    std::string getRemoteAddress() const;
-    std::uint16_t getRemotePort() const noexcept;
-    bool isClosed() const noexcept;
-    bool isBound() const noexcept;
-    bool isConnected() const noexcept;
+    void send(const jxx::Ptr<DatagramPacket>& packet);
+    void receive(const jxx::Ptr<DatagramPacket>& packet);
     void close() noexcept;
+
+    jxx::Ptr<InetAddress> getInetAddress() const;
+    jxx::Ptr<InetAddress> getLocalAddress() const;
+    ::jxx::lang::jint getPort() const noexcept;
+    ::jxx::lang::jint getLocalPort() const noexcept;
+    jxx::Ptr<SocketAddress> getRemoteSocketAddress() const;
+    jxx::Ptr<SocketAddress> getLocalSocketAddress() const;
+    jxx::Ptr<jxx::nio::channels::DatagramChannel> getChannel() const;
+    ::jxx::lang::jbool isBound() const noexcept;
+    ::jxx::lang::jbool isConnected() const noexcept;
+    ::jxx::lang::jbool isClosed() const noexcept;
+
+    void setSoTimeout(::jxx::lang::jint timeout);
+    ::jxx::lang::jint getSoTimeout() const noexcept;
+    void setSendBufferSize(::jxx::lang::jint size);
+    ::jxx::lang::jint getSendBufferSize() const;
+    void setReceiveBufferSize(::jxx::lang::jint size);
+    ::jxx::lang::jint getReceiveBufferSize() const;
+    void setReuseAddress(::jxx::lang::jbool enabled);
+    ::jxx::lang::jbool getReuseAddress() const noexcept;
+    void setBroadcast(::jxx::lang::jbool enabled);
+    ::jxx::lang::jbool getBroadcast() const noexcept;
+    void setTrafficClass(::jxx::lang::jint trafficClass);
+    ::jxx::lang::jint getTrafficClass() const;
+
+    // Native multicast extensions used by MulticastSocket.
+    void joinGroupIPv4(const std::string&, const std::string& = "0.0.0.0");
+    void leaveGroupIPv4(const std::string&, const std::string& = "0.0.0.0");
+    void setMulticastTTL(int); void setMulticastLoopIPv4(bool);
+    void setMulticastInterfaceIPv4(const std::string&);
+    void joinGroupIPv6(const std::string&, unsigned = 0);
+    void leaveGroupIPv6(const std::string&, unsigned = 0);
+    void setMulticastHopsIPv6(int); void setMulticastLoopIPv6(bool);
+    void setMulticastInterfaceIPv6(unsigned);
 
 private:
     class Impl;
     std::unique_ptr<Impl> impl_;
 };
-
 } // namespace jxx::net
