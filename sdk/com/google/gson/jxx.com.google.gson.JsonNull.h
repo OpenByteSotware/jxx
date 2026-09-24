@@ -4,7 +4,7 @@ namespace com::google::gson {
 class JsonNull final : public ::jxx::lang::ClassBase<JsonNull, JsonElement> {
 public:
     static ::jxx::Ptr<JsonNull> INSTANCE();
-    ::jxx::lang::jbool isJsonNull() const noexcept override { return true; }
+    ::jxx::lang::jbool isJsonNull() const noexcept override;
     ::jxx::Ptr<JsonElement> deepCopy() override;
     ::jxx::lang::jbool equals(
         const ::jxx::Ptr<::jxx::lang::Object>& other) const override;

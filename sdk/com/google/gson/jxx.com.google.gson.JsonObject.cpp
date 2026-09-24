@@ -57,4 +57,5 @@ JsonObject::entrySet() const {
     output += '}';
     return ::jxx::NEW<::jxx::lang::String>(output);
 }
+::jxx::lang::jbool JsonObject::isJsonObject() const noexcept { return true; }
 } // namespace com::google::gson

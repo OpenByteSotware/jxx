@@ -9,7 +9,7 @@ public:
     explicit JsonPrimitive(::jxx::lang::jchar value);
     explicit JsonPrimitive(::jxx::lang::jlong value);
     explicit JsonPrimitive(::jxx::lang::jdouble value);
-    ::jxx::lang::jbool isJsonPrimitive() const noexcept override { return true; }
+    ::jxx::lang::jbool isJsonPrimitive() const noexcept override;
     ::jxx::lang::jbool isString() const noexcept;
     ::jxx::lang::jbool isBoolean() const noexcept;
     ::jxx::lang::jbool isNumber() const noexcept;

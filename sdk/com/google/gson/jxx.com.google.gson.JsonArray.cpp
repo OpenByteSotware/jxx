@@ -34,4 +34,5 @@ void JsonArray::set(::jxx::lang::jint index,const ::jxx::Ptr<JsonElement>& eleme
 ::jxx::lang::jbool JsonArray::equals(const ::jxx::Ptr<::jxx::lang::Object>& other) const{const auto array=std::dynamic_pointer_cast<JsonArray>(other);if(array==nullptr||array->size()!=size())return false;for(::jxx::lang::jint i=0;i<size();++i){const auto a=get(i);const auto b=array->get(i);if(a==nullptr?b!=nullptr:!a->equals(b))return false;}return true;}
 ::jxx::lang::jint JsonArray::hashCode() const{::jxx::lang::jint result=1;for(::jxx::lang::jint i=0;i<size();++i){const auto value=get(i);result=31*result+(value==nullptr?0:value->hashCode());}return result;}
 ::jxx::Ptr<::jxx::lang::String> JsonArray::toString() const{std::string out="[";for(::jxx::lang::jint i=0;i<size();++i){if(i)out+=',';out+=get(i)->toString()->utf8();}return ::jxx::NEW<::jxx::lang::String>(out+"]");}
+::jxx::lang::jbool JsonArray::isJsonArray() const noexcept { return true; }
 } // namespace com::google::gson

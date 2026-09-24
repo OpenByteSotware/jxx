@@ -6,7 +6,7 @@ namespace com::google::gson {
 class JsonArray final : public ::jxx::lang::ClassBase<JsonArray, JsonElement> {
 public:
     JsonArray();
-    ::jxx::lang::jbool isJsonArray() const noexcept override { return true; }
+    ::jxx::lang::jbool isJsonArray() const noexcept override;
     void add(const ::jxx::Ptr<JsonElement>& element);
     void add(const ::jxx::Ptr<::jxx::lang::String>& value);
     void add(::jxx::lang::jbool value);

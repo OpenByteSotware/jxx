@@ -61,4 +61,5 @@ JsonPrimitive::JsonPrimitive(::jxx::lang::jdouble value):kind_(Kind::DECIMAL),va
 	return static_cast<::jxx::lang::jfloat>(::jxx::lang::Float::parseFloat(value_));
 }
 
+::jxx::lang::jbool JsonPrimitive::isJsonPrimitive() const noexcept { return true; }
 } // namespace com::google::gson

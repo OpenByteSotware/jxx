@@ -13,4 +13,6 @@ namespace com::google::gson::internal
 	{
 		return ::jxx::NEW<::jxx::lang::String>(value_);
 	}
+void StringWriter::flush() {}
+void StringWriter::close() {}
 }

@@ -7,7 +7,8 @@ class StringWriter final : public ::jxx::io::Writer {
 public:
  void write(const ::jxx::lang::CharArray& b,::jxx::lang::jint o,::jxx::lang::jint n) override;
  void write(const ::jxx::Ptr<::jxx::lang::String>& value) override;
- void flush() override {} void close() override {}
+ void flush() override;
+ void close() override;
  ::jxx::Ptr<::jxx::lang::String> toString() const;
 private: std::string value_;
 };}

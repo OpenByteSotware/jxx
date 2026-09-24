@@ -10,7 +10,7 @@ class JsonObject final : public ::jxx::lang::ClassBase<JsonObject, JsonElement> 
 public:
     JsonObject();
     explicit JsonObject(const ::jxx::Ptr<JsonObject>& source);
-    ::jxx::lang::jbool isJsonObject() const noexcept override { return true; }
+    ::jxx::lang::jbool isJsonObject() const noexcept override;
     void add(const ::jxx::Ptr<::jxx::lang::String>& property,const ::jxx::Ptr<JsonElement>& value);
     void addProperty(const ::jxx::Ptr<::jxx::lang::String>& property,const ::jxx::Ptr<::jxx::lang::String>& value);
     void addProperty(const ::jxx::Ptr<::jxx::lang::String>& property,::jxx::lang::jbool value);
