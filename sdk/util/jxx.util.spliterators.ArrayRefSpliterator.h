@@ -63,8 +63,8 @@ namespace jxx {
                 virtual ~ArrayRefSpliterator() = default;
 
                 virtual jxx::lang::jbool tryAdvance(
-                    jxx::Ptr<
-                    jxx::util::function::Consumer<E>>
+                    const jxx::Ptr<
+                    jxx::util::function::Consumer<E>>&
                     action) override {
 
                     if (action == nullptr) {
@@ -83,8 +83,8 @@ namespace jxx {
                 }
 
                 virtual void forEachRemaining(
-                    jxx::Ptr<
-                    jxx::util::function::Consumer<E>>
+                    const jxx::Ptr<
+                    jxx::util::function::Consumer<E>>&
                     action) override {
 
                     if (action == nullptr) {

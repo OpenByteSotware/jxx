@@ -7,19 +7,19 @@
 
 namespace jxx::util {
 template <typename E>
-class Iterator : public jxx::lang::InterfaceBase<Iterator<E>> {
+class Iterator : public ::jxx::lang::InterfaceBase<Iterator<E>> {
 public:
     virtual ~Iterator() = default;
-    virtual jxx::lang::jbool hasNext() = 0;
-    virtual jxx::Ptr<E> next() = 0;
+    virtual ::jxx::lang::jbool hasNext() = 0;
+    virtual ::jxx::Ptr<E> next() = 0;
 
     virtual void remove() {
-        throw jxx::lang::UnsupportedOperationException();
+        throw ::jxx::lang::UnsupportedOperationException();
     }
 
     virtual void forEachRemaining(
-        const jxx::Ptr<jxx::util::function::Consumer<E>>& action) {
-        if (action == nullptr) throw jxx::lang::NullPointerException();
+        const ::jxx::Ptr<::jxx::util::function::Consumer<E>>& action) {
+        if (action == nullptr) throw ::jxx::lang::NullPointerException();
         while (hasNext()) action->accept(next());
     }
 };
