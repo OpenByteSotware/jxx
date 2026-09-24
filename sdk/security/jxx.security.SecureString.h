@@ -1,37 +1,55 @@
 #pragma once
 
 #include <cstddef>
-#include <string>
 #include <vector>
 
+#include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.buildin_array.h"
 
 namespace jxx::security {
 
-class SecureString : public jxx::lang::Object {
+class SecureString final
+    : public ::jxx::lang::ClassBase<
+          SecureString,
+          ::jxx::lang::Object> {
 public:
+    using JxxSuper = ::jxx::lang::Object;
+    using Super = ::jxx::lang::ClassBase<SecureString, JxxSuper>;
+
     SecureString();
-    SecureString(const char* data, std::size_t length);
-    explicit SecureString(const std::string& value);
+    explicit SecureString(const ::jxx::Ptr<::jxx::lang::String>& value);
+    explicit SecureString(const ::jxx::lang::ByteArray& value);
+    SecureString(
+        const ::jxx::lang::ByteArray& value,
+        ::jxx::lang::jint offset,
+        ::jxx::lang::jint length);
+
     SecureString(const SecureString&) = delete;
     SecureString& operator=(const SecureString&) = delete;
     SecureString(SecureString&& other) noexcept;
     SecureString& operator=(SecureString&& other) noexcept;
     ~SecureString() override;
 
-    void assign(const char* data, std::size_t length);
-    void assign(const std::string& value);
-    void clear();
-    void push_back(char value);
-    std::size_t size() const noexcept;
-    bool empty() const noexcept;
-    const char* c_str() const noexcept;
-    char* data() noexcept;
-    const char* data() const noexcept;
-    void secure_wipe() noexcept;
+    void assign(const ::jxx::Ptr<::jxx::lang::String>& value);
+    void assign(const ::jxx::lang::ByteArray& value);
+    void assign(
+        const ::jxx::lang::ByteArray& value,
+        ::jxx::lang::jint offset,
+        ::jxx::lang::jint length);
+    void clear() noexcept;
+    void append(::jxx::lang::jbyte value);
+    ::jxx::lang::jint length() const noexcept;
+    ::jxx::lang::jbool isEmpty() const noexcept;
+    ::jxx::Ptr<::jxx::lang::String> toString() const override;
+    ::jxx::lang::ByteArray toByteArray() const;
 
 private:
-    void move_from(SecureString&& other) noexcept;
+    void assignNative_(const char* data, std::size_t length);
+    void moveFrom_(SecureString&& other) noexcept;
+    void secureWipe_() noexcept;
+
     std::vector<char> buffer_;
 };
 
