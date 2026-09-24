@@ -58,7 +58,7 @@ jxx::lang::jint Random::next(jxx::lang::jint bits) {
         static_cast<std::uint32_t>(nextSeed >> (48 - bits)));
 }
 
-void Random::nextBytes(jxx::lang::ByteArray bytes) {
+void Random::nextBytes(const ::jxx::lang::ByteArray& bytes) {
     if (bytes == nullptr) {
         throw jxx::lang::NullPointerException();
     }

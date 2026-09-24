@@ -9,9 +9,9 @@ namespace jxx::util {
     class DuplicateFormatFlagsException : public IllegalFormatException {
 public:
     using JxxSuper = IllegalFormatException;
-    using JxxClassInfoMarker = jxx::lang::ClassInfo<DuplicateFormatFlagsException, JxxSuper>;
+    using JxxClassInfoMarker = ::jxx::lang::ClassInfo<DuplicateFormatFlagsException, JxxSuper>;
 
-    static jxx::Ptr<jxx::lang::ClassAny> Class();
+    static ::jxx::Ptr<::jxx::lang::ClassAny> Class();
 
     DuplicateFormatFlagsException() = default;
 
