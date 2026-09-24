@@ -12,6 +12,6 @@ public:
     using Super = jxx::lang::ClassBase<SocketAddress, jxx::lang::Object>;
 
     public:
-        ~SocketAddress() override = default;
+        ~SocketAddress() override;
     };
 }

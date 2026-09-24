@@ -12,6 +12,6 @@ public:
     using Super = jxx::lang::ClassBase<Proxy, jxx::lang::Object>;
 
     public:
-        ~Proxy() override = default;
+        ~Proxy() override;
     };
 }
