@@ -9,6 +9,8 @@
 
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "net/jxx.net.SocketException.h"
+#include "net/jxx.net.SocketTimeoutException.h"
+#include "net/jxx.net.UnknownHostException.h"
 
 #if defined(_WIN32)
 #include <winsock2.h>
@@ -40,7 +42,7 @@ static inline void wsa_ensure_started() {
     if (!started) {
         WSADATA wsa{};
         int rc = WSAStartup(MAKEWORD(2, 2), &wsa);
-        if (rc != 0) throw std::runtime_error("WSAStartup failed: " + std::to_string(rc));
+        if (rc != 0) throw jxx::net::SocketException("WSAStartup failed: " + std::to_string(rc));
         started = true;
     }
 }
@@ -103,9 +105,9 @@ namespace jxx::net {
         int rc = ::getaddrinfo(host.c_str(), portstr.c_str(), &hints, &res);
         if (rc != 0 || !res) {
 #if defined(_WIN32)
-            throw std::runtime_error("getaddrinfo failed: " + std::to_string(rc));
+            throw jxx::net::UnknownHostException("getaddrinfo failed: " + std::to_string(rc));
 #else
-            throw std::runtime_error(std::string("getaddrinfo failed: ") + gai_strerror(rc));
+            throw jxx::net::UnknownHostException(std::string("getaddrinfo failed: ") + gai_strerror(rc));
 #endif
         }
         std::memset(&out_addr, 0, sizeof(out_addr));
@@ -121,9 +123,9 @@ namespace jxx::net {
             NI_NUMERICHOST | NI_NUMERICSERV);
         if (rc != 0) {
 #if defined(_WIN32)
-            throw std::runtime_error("getnameinfo failed: " + std::to_string(rc));
+            throw jxx::net::SocketException("getnameinfo failed: " + std::to_string(rc));
 #else
-            throw std::runtime_error(std::string("getnameinfo failed: ") + gai_strerror(rc));
+            throw jxx::net::SocketException(std::string("getnameinfo failed: ") + gai_strerror(rc));
 #endif
         }
         portOut = static_cast<std::uint16_t>(std::stoul(serv));
@@ -186,7 +188,7 @@ namespace jxx::net {
                 & mreq,
 #endif
                 sizeof(mreq)) != 0) {
-                throw std::runtime_error("IP_ADD_MEMBERSHIP failed: " + sock_error_string());
+                throw jxx::net::SocketException("IP_ADD_MEMBERSHIP failed: " + sock_error_string());
             }
         }
 
@@ -212,7 +214,7 @@ namespace jxx::net {
                 & mreq,
 #endif
                 sizeof(mreq)) != 0) {
-                throw std::runtime_error("IP_DROP_MEMBERSHIP failed: " + sock_error_string());
+                throw jxx::net::SocketException("IP_DROP_MEMBERSHIP failed: " + sock_error_string());
             }
         }
 
@@ -233,7 +235,7 @@ namespace jxx::net {
                 & t,
 #endif
                 sizeof(t)) != 0) {
-                throw std::runtime_error("IP_MULTICAST_TTL failed: " + sock_error_string());
+                throw jxx::net::SocketException("IP_MULTICAST_TTL failed: " + sock_error_string());
             }
         }
 
@@ -241,7 +243,7 @@ namespace jxx::net {
         void setMulticastLoopIPv4(bool enable) {
             ensure_open();
             if (family_ != AF_INET) {
-                throw std::logic_error("setMulticastLoopIPv4: socket is not IPv4");
+                throw jxx::net::SocketException("socket is not IPv4");
             }
             unsigned char on = enable ? 1 : 0;
             if (setsockopt(sock_, IPPROTO_IP, IP_MULTICAST_LOOP,
@@ -251,7 +253,7 @@ namespace jxx::net {
                 & on,
 #endif
                 sizeof(on)) != 0) {
-                throw std::runtime_error("IP_MULTICAST_LOOP failed: " + sock_error_string());
+                throw jxx::net::SocketException("IP_MULTICAST_LOOP failed: " + sock_error_string());
             }
         }
 
@@ -273,7 +275,7 @@ namespace jxx::net {
                 & ia,
 #endif
                 sizeof(ia)) != 0) {
-                throw std::runtime_error("IP_MULTICAST_IF failed: " + sock_error_string());
+                throw jxx::net::SocketException("IP_MULTICAST_IF failed: " + sock_error_string());
             }
         }
 
@@ -309,7 +311,7 @@ namespace jxx::net {
                 & mreq,
 #endif
                 sizeof(mreq)) != 0) {
-                throw std::runtime_error("IPV6_JOIN_GROUP failed: " + sock_error_string());
+                throw jxx::net::SocketException("IPV6_JOIN_GROUP failed: " + sock_error_string());
             }
         }
 
@@ -342,7 +344,7 @@ namespace jxx::net {
                 & mreq,
 #endif
                 sizeof(mreq)) != 0) {
-                throw std::runtime_error("IPV6_LEAVE_GROUP failed: " + sock_error_string());
+                throw jxx::net::SocketException("IPV6_LEAVE_GROUP failed: " + sock_error_string());
             }
         }
 
@@ -363,7 +365,7 @@ namespace jxx::net {
                 & h,
 #endif
                 sizeof(h)) != 0) {
-                throw std::runtime_error("IPV6_MULTICAST_HOPS failed: " + sock_error_string());
+                throw jxx::net::SocketException("IPV6_MULTICAST_HOPS failed: " + sock_error_string());
             }
         }
 
@@ -371,7 +373,7 @@ namespace jxx::net {
         void setMulticastLoopIPv6(bool enable) {
             ensure_open();
             if (family_ != AF_INET6) {
-                throw std::logic_error("setMulticastLoopIPv6: socket is not IPv6");
+                throw jxx::net::SocketException("socket is not IPv6");
             }
             unsigned int on = enable ? 1u : 0u;
             if (setsockopt(sock_, IPPROTO_IPV6, IPV6_MULTICAST_LOOP,
@@ -381,7 +383,7 @@ namespace jxx::net {
                 & on,
 #endif
                 sizeof(on)) != 0) {
-                throw std::runtime_error("IPV6_MULTICAST_LOOP failed: " + sock_error_string());
+                throw jxx::net::SocketException("IPV6_MULTICAST_LOOP failed: " + sock_error_string());
             }
         }
 
@@ -399,7 +401,7 @@ namespace jxx::net {
                 & idx,
 #endif
                 sizeof(idx)) != 0) {
-                throw std::runtime_error("IPV6_MULTICAST_IF failed: " + sock_error_string());
+                throw jxx::net::SocketException("IPV6_MULTICAST_IF failed: " + sock_error_string());
             }
         }
 
@@ -417,7 +419,7 @@ namespace jxx::net {
             sockaddr_storage addr{}; socklen_t len{};
             fill_sockaddr(localAddress, localPort, addr, len);
             if (::bind(sock_, reinterpret_cast<sockaddr*>(&addr), len) != 0) {
-                throw std::runtime_error("bind failed: " + sock_error_string());
+                throw jxx::net::SocketException("bind failed: " + sock_error_string());
             }
             update_local_endpoint();
             bound_ = true;
@@ -429,7 +431,7 @@ namespace jxx::net {
             sockaddr_storage ra{}; socklen_t rlen{};
             fill_sockaddr(remoteHost, remotePort, ra, rlen);
             if (::connect(sock_, reinterpret_cast<sockaddr*>(&ra), rlen) != 0) {
-                throw std::runtime_error("connect failed: " + sock_error_string());
+                throw jxx::net::SocketException("connect failed: " + sock_error_string());
             }
             connected_ = true;
             peerAddress_ = sockaddr_to_ip(reinterpret_cast<sockaddr*>(&ra), rlen, peerPort_);
@@ -467,7 +469,7 @@ namespace jxx::net {
             if (connected_ && pkt.address.empty()) {
                 auto sent = ::send(sock_, reinterpret_cast<const char*>(data), static_cast<int>(len), 0);
                 if (sent < 0 || static_cast<std::size_t>(sent) != len) {
-                    throw std::runtime_error("send failed: " + sock_error_string());
+                    throw jxx::net::SocketException("send failed: " + sock_error_string());
                 }
                 return;
             }
@@ -485,7 +487,7 @@ namespace jxx::net {
                 reinterpret_cast<const sockaddr*>(&ra),
                 rlen);
             if (sent < 0 || static_cast<std::size_t>(sent) != len) {
-                throw std::runtime_error("sendto failed: " + sock_error_string());
+                throw jxx::net::SocketException("sendto failed: " + sock_error_string());
             }
         }
 
@@ -505,9 +507,12 @@ namespace jxx::net {
                 reinterpret_cast<sockaddr*>(&from),
                 &flen);
             if (recvd < 0) {
-                int e = last_sock_error();
-                // Timeout manifests as EAGAIN/WOULDBLOCK or WSAETIMEDOUT depending on platform
-                throw std::runtime_error("recvfrom failed: " + sock_strerror(e));
+                const int error = last_sock_error();
+                if (is_sock_wouldblock(error)) {
+                    throw jxx::net::SocketTimeoutException("receive timed out");
+                }
+                throw jxx::net::SocketException(
+                    "recvfrom failed: " + sock_strerror(error));
             }
             pkt.length = static_cast<std::size_t>(recvd);
             pkt.address = sockaddr_to_ip(reinterpret_cast<sockaddr*>(&from), flen, pkt.port);
@@ -522,17 +527,20 @@ namespace jxx::net {
 #if defined(_WIN32)
             DWORD tv = static_cast<DWORD>(millis);
             if (setsockopt(sock_, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&tv), sizeof(tv)) != 0) {
-                throw std::runtime_error("setsockopt SO_RCVTIMEO failed: " + sock_error_string());
+                throw jxx::net::SocketException("setsockopt SO_RCVTIMEO failed: " + sock_error_string());
             }
 #else
             timeval tv{};
             tv.tv_sec = millis / 1000;
             tv.tv_usec = (millis % 1000) * 1000;
             if (setsockopt(sock_, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) != 0) {
-                throw std::runtime_error("setsockopt SO_RCVTIMEO failed: " + sock_error_string());
+                throw jxx::net::SocketException("setsockopt SO_RCVTIMEO failed: " + sock_error_string());
             }
 #endif
+            soTimeout_ = millis;
         }
+
+        int getSoTimeout() const noexcept { return soTimeout_; }
 
         void setBroadcast(bool enabled) {
             ensure_open();
@@ -544,7 +552,7 @@ namespace jxx::net {
                 & val,
 #endif
                 sizeof(val)) != 0) {
-                throw std::runtime_error("setsockopt SO_BROADCAST failed: " + sock_error_string());
+                throw jxx::net::SocketException("setsockopt SO_BROADCAST failed: " + sock_error_string());
             }
         }
 
@@ -558,7 +566,7 @@ namespace jxx::net {
                 & val,
 #endif
                 sizeof(val)) != 0) {
-                throw std::runtime_error("setsockopt SO_REUSEADDR failed: " + sock_error_string());
+                throw jxx::net::SocketException("setsockopt SO_REUSEADDR failed: " + sock_error_string());
             }
         }
 
@@ -579,6 +587,7 @@ namespace jxx::net {
             bound_ = false;
             peerAddress_.clear(); peerPort_ = 0;
             localAddress_.clear(); localPort_ = 0;
+            soTimeout_ = 0;
         }
 
     private:
@@ -612,7 +621,7 @@ namespace jxx::net {
                 sock_ = ::socket(family_, SOCK_DGRAM, IPPROTO_UDP);
             }
             if (sock_ == invalid_socket()) {
-                throw std::runtime_error("socket() failed: " + sock_error_string());
+                throw jxx::net::SocketException("socket() failed: " + sock_error_string());
             }
 
 #ifdef IPV6_V6ONLY
@@ -641,12 +650,13 @@ namespace jxx::net {
             peerAddress_ = std::move(other.peerAddress_);  other.peerAddress_.clear();
             localPort_ = other.localPort_;               other.localPort_ = 0;
             peerPort_ = other.peerPort_;                other.peerPort_ = 0;
+            soTimeout_ = other.soTimeout_;               other.soTimeout_ = 0;
         }
 
         void update_local_endpoint() {
             sockaddr_storage la{}; socklen_t llen = sizeof(la);
             if (::getsockname(sock_, reinterpret_cast<sockaddr*>(&la), &llen) != 0) {
-                throw std::runtime_error("getsockname failed: " + sock_error_string());
+                throw jxx::net::SocketException("getsockname failed: " + sock_error_string());
             }
             localAddress_ = sockaddr_to_ip(reinterpret_cast<sockaddr*>(&la), llen, localPort_);
         }
@@ -666,6 +676,7 @@ namespace jxx::net {
 
         std::string peerAddress_;
         std::uint16_t peerPort_{ 0 };
+        int soTimeout_{ 0 };
     };
 
 } // namespace jxx::net
