@@ -11,9 +11,7 @@
 namespace jxx::io::internal {
 
 struct PipeState final {
-    explicit PipeState(::jxx::lang::jint capacityValue)
-        : buffer(static_cast<std::size_t>(capacityValue)) {
-    }
+    explicit PipeState(::jxx::lang::jint capacityValue);
 
     std::mutex mutex;
     std::condition_variable readable;
