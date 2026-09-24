@@ -554,7 +554,10 @@ namespace jxx::net {
                 sizeof(val)) != 0) {
                 throw jxx::net::SocketException("setsockopt SO_BROADCAST failed: " + sock_error_string());
             }
+            broadcast_ = enabled;
         }
+
+        bool getBroadcast() const noexcept { return broadcast_; }
 
         void setReuseAddress(bool enabled) {
             ensure_open();
@@ -568,11 +571,16 @@ namespace jxx::net {
                 sizeof(val)) != 0) {
                 throw jxx::net::SocketException("setsockopt SO_REUSEADDR failed: " + sock_error_string());
             }
+            reuseAddress_ = enabled;
         }
+
+        bool getReuseAddress() const noexcept { return reuseAddress_; }
 
         // -------- Query / lifecycle --------
         std::uint16_t getLocalPort() const { return localPort_; }
-        std::string   getLocalAddress() const { return localAddress_; }
+        std::string getLocalAddress() const { return localAddress_; }
+        std::string getRemoteAddress() const { return peerAddress_; }
+        std::uint16_t getRemotePort() const noexcept { return peerPort_; }
 
         bool isClosed() const noexcept { return sock_ == invalid_socket(); }
         bool isBound() const noexcept { return bound_; }
@@ -588,6 +596,8 @@ namespace jxx::net {
             peerAddress_.clear(); peerPort_ = 0;
             localAddress_.clear(); localPort_ = 0;
             soTimeout_ = 0;
+            broadcast_ = false;
+            reuseAddress_ = false;
         }
 
     private:
@@ -651,6 +661,8 @@ namespace jxx::net {
             localPort_ = other.localPort_;               other.localPort_ = 0;
             peerPort_ = other.peerPort_;                other.peerPort_ = 0;
             soTimeout_ = other.soTimeout_;               other.soTimeout_ = 0;
+            broadcast_ = other.broadcast_;               other.broadcast_ = false;
+            reuseAddress_ = other.reuseAddress_;          other.reuseAddress_ = false;
         }
 
         void update_local_endpoint() {
@@ -677,6 +689,8 @@ namespace jxx::net {
         std::string peerAddress_;
         std::uint16_t peerPort_{ 0 };
         int soTimeout_{ 0 };
+        bool broadcast_{ false };
+        bool reuseAddress_{ false };
     };
 
 } // namespace jxx::net
