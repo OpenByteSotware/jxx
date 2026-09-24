@@ -11,7 +11,7 @@
 
 namespace jxx::util {
 namespace {
-    std::tm toUtcTm(jxx::lang::jlong epochMillis, jxx::lang::jint totalOffsetMillis) {
+    std::tm toUtcTm(::jxx::lang::jlong epochMillis, ::jxx::lang::jint totalOffsetMillis) {
         std::time_t seconds = static_cast<std::time_t>((epochMillis + totalOffsetMillis) / 1000LL);
         std::tm out{};
     #if defined(_WIN32)
@@ -34,18 +34,18 @@ namespace {
     }
 }
 
-DateFormat::DateFormat(const jxx::Ptr<jxx::lang::String>& pattern, const jxx::Ptr<Locale>& locale)
+DateFormat::DateFormat(const ::jxx::Ptr<::jxx::lang::String>& pattern, const ::jxx::Ptr<Locale>& locale)
     : pattern_(pattern ? pattern : StringPool::intern("yyyy-MM-dd HH:mm:ss")),
       locale_(locale ? locale : Locale::getDefault()) {}
 
-jxx::Ptr<DateFormat> DateFormat::ofPattern(const jxx::Ptr<jxx::lang::String>& pattern,
-                                           const jxx::Ptr<Locale>& locale) {
-    return jxx::NEW<DateFormat>(pattern, locale);
+::jxx::Ptr<DateFormat> DateFormat::ofPattern(const ::jxx::Ptr<::jxx::lang::String>& pattern,
+                                           const ::jxx::Ptr<Locale>& locale) {
+    return ::jxx::NEW<DateFormat>(pattern, locale);
 }
 
-jxx::Ptr<jxx::lang::String> DateFormat::format(jxx::lang::jlong epochMillis,
-                                               const jxx::Ptr<TimeZone>& timeZone) const {
-    jxx::lang::jint totalOffsetMillis = timeZone ? timeZone->getOffset(epochMillis) : 0;
+::jxx::Ptr<::jxx::lang::String> DateFormat::format(::jxx::lang::jlong epochMillis,
+                                               const ::jxx::Ptr<TimeZone>& timeZone) const {
+    ::jxx::lang::jint totalOffsetMillis = timeZone ? timeZone->getOffset(epochMillis) : 0;
     std::tm tm = toUtcTm(epochMillis, totalOffsetMillis);
     std::string pattern = pattern_ ? pattern_->utf8() : std::string("yyyy-MM-dd HH:mm:ss");
     std::string out;
@@ -67,7 +67,7 @@ jxx::Ptr<jxx::lang::String> DateFormat::format(jxx::lang::jlong epochMillis,
         ++i;
     }
 
-    return jxx::lang::String::valueOf(out.c_str());
+    return ::jxx::lang::String::valueOf(out.c_str());
 }
 
 } // namespace jxx::util

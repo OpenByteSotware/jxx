@@ -5,15 +5,20 @@
 
 namespace jxx::util {
 
+::jxx::Ptr<::jxx::lang::ClassAny>
+NumberFormat::Class() {
+    return JxxClassInfoMarker::Class();
+}
+
 NumberFormat::NumberFormat()
     : decimalSeparator_('.'), groupingSeparator_(','), groupingUsed_(true) {}
 
-jxx::Ptr<NumberFormat> NumberFormat::getInstance(const jxx::Ptr<Locale>& locale) {
+::jxx::Ptr<NumberFormat> NumberFormat::getInstance(const ::jxx::Ptr<Locale>& locale) {
     return DecimalFormat::ofPattern(StringPool::intern("#,##0.###"), locale ? locale : Locale::getDefault());
 }
 
-void NumberFormat::setGroupingUsed(jxx::lang::jbool groupingUsed) { groupingUsed_ = groupingUsed; }
-jxx::lang::jbool NumberFormat::isGroupingUsed() const { return groupingUsed_; }
+void NumberFormat::setGroupingUsed(::jxx::lang::jbool groupingUsed) { groupingUsed_ = groupingUsed; }
+::jxx::lang::jbool NumberFormat::isGroupingUsed() const { return groupingUsed_; }
 char NumberFormat::getDecimalSeparator() const { return decimalSeparator_; }
 char NumberFormat::getGroupingSeparator() const { return groupingSeparator_; }
 
