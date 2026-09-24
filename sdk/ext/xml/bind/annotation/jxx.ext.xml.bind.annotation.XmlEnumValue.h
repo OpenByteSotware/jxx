@@ -6,9 +6,8 @@ namespace jxx::ext::xml::bind::annotation {
 class XmlEnumValue final
     : public ::jxx::lang::ClassBase<XmlEnumValue, ::jxx::lang::Object> {
 public:
-    explicit XmlEnumValue(const ::jxx::Ptr<::jxx::lang::String>& value)
-        : value_(value) {}
-    ::jxx::Ptr<::jxx::lang::String> value() const { return value_; }
+    explicit XmlEnumValue(const ::jxx::Ptr<::jxx::lang::String>& value);
+    ::jxx::Ptr<::jxx::lang::String> value() const;
 private:
     ::jxx::Ptr<::jxx::lang::String> value_;
 };

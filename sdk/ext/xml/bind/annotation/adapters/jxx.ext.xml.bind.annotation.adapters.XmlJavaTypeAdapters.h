@@ -16,10 +16,9 @@ public:
         ::jxx::Ptr<XmlJavaTypeAdapter>, 1U>;
 
     explicit XmlJavaTypeAdapters(
-        const ::jxx::Ptr<AdapterArray>& value)
-        : value_(value) {}
+        const ::jxx::Ptr<AdapterArray>& value);
 
-    ::jxx::Ptr<AdapterArray> value() const { return value_; }
+    ::jxx::Ptr<AdapterArray> value() const;
 
 private:
     ::jxx::Ptr<AdapterArray> value_;

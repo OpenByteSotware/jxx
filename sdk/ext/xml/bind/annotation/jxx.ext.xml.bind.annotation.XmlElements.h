@@ -8,8 +8,8 @@ class XmlElements final
     : public ::jxx::lang::ClassBase<XmlElements, ::jxx::lang::Object> {
 public:
     using ElementArray = ::jxx::lang::JxxArray<::jxx::Ptr<XmlElement>, 1U>;
-    explicit XmlElements(const ::jxx::Ptr<ElementArray>& value) : value_(value) {}
-    ::jxx::Ptr<ElementArray> value() const { return value_; }
+    explicit XmlElements(const ::jxx::Ptr<ElementArray>& value);
+    ::jxx::Ptr<ElementArray> value() const;
 private:
     ::jxx::Ptr<ElementArray> value_;
 };

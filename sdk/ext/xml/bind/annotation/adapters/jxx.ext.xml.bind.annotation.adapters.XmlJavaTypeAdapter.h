@@ -14,11 +14,10 @@ class XmlJavaTypeAdapter final
 public:
     XmlJavaTypeAdapter(
         const ::jxx::Ptr<::jxx::lang::ClassAny>& value,
-        const ::jxx::Ptr<::jxx::lang::ClassAny>& type = nullptr)
-        : value_(value), type_(type) {}
+        const ::jxx::Ptr<::jxx::lang::ClassAny>& type = nullptr);
 
-    ::jxx::Ptr<::jxx::lang::ClassAny> value() const { return value_; }
-    ::jxx::Ptr<::jxx::lang::ClassAny> type() const { return type_; }
+    ::jxx::Ptr<::jxx::lang::ClassAny> value() const;
+    ::jxx::Ptr<::jxx::lang::ClassAny> type() const;
 
 private:
     ::jxx::Ptr<::jxx::lang::ClassAny> value_;
