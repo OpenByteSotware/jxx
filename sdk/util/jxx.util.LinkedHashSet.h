@@ -16,9 +16,11 @@ namespace jxx::util {
 
 template <typename E>
 class LinkedHashSet final
-    : public AbstractSet<E>,
-      public virtual ::jxx::lang::Cloneable,
-      public virtual ::jxx::io::SerializableI {
+    : public ::jxx::lang::ClassBase<
+          LinkedHashSet<E>,
+          AbstractSet<E>,
+          ::jxx::lang::Cloneable,
+          ::jxx::io::SerializableI> {
 public:
     using JxxSuper = AbstractSet<E>;
 

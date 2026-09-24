@@ -43,7 +43,7 @@ static std::regex_constants::syntax_option_type toSyntaxFlags(jxx::lang::jint fl
     return syntax;
 }
 
-static std::string compilePatternUtf8(const jxx::Ptr<jxx::lang::String> regex, jxx::lang::jint flags) {
+static std::string compilePatternUtf8(const jxx::Ptr<jxx::lang::String>& regex, jxx::lang::jint flags) {
     if (regex == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -73,7 +73,7 @@ static jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> vectorToStringAr
 } // anonymous namespace
 
 Pattern::Pattern(
-    jxx::Ptr<jxx::lang::String> regex,
+    const jxx::Ptr<jxx::lang::String>& regex,
     jxx::lang::jint flags,
     std::string compiledPatternUtf8,
     std::regex compiled)
@@ -83,11 +83,11 @@ Pattern::Pattern(
     , compiled_(std::move(compiled)) {
 }
 
-jxx::Ptr<Pattern> Pattern::compile(const jxx::Ptr<jxx::lang::String> regex) {
+jxx::Ptr<Pattern> Pattern::compile(const jxx::Ptr<jxx::lang::String>& regex) {
     return compile(regex, static_cast<jxx::lang::jint>(0));
 }
 
-jxx::Ptr<Pattern> Pattern::compile(const jxx::Ptr<jxx::lang::String> regex, jxx::lang::jint flags) {
+jxx::Ptr<Pattern> Pattern::compile(const jxx::Ptr<jxx::lang::String>& regex, jxx::lang::jint flags) {
     if (regex == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -101,13 +101,13 @@ jxx::Ptr<Pattern> Pattern::compile(const jxx::Ptr<jxx::lang::String> regex, jxx:
 }
 
 jxx::lang::jbool Pattern::matches(
-    jxx::Ptr<jxx::lang::String> regex,
-    jxx::Ptr<jxx::lang::CharSequence> input) {
+    const jxx::Ptr<jxx::lang::String>& regex,
+    const jxx::Ptr<jxx::lang::CharSequence>& input) {
     auto p = compile(regex);
     return p->matcher(input)->matches();
 }
 
-jxx::Ptr<Matcher> Pattern::matcher(const jxx::Ptr<jxx::lang::CharSequence> input) {
+jxx::Ptr<Matcher> Pattern::matcher(const jxx::Ptr<jxx::lang::CharSequence>& input) {
     return jxx::NEW<Matcher>(jxx::CAST<Pattern>(jxx::CAST<jxx::lang::Object>(shared_from_this())), input);
 }
 
@@ -120,12 +120,12 @@ jxx::lang::jint Pattern::flags() const {
 }
 
 jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> Pattern::split(
-    jxx::Ptr<jxx::lang::CharSequence> input) {
+    const jxx::Ptr<jxx::lang::CharSequence>& input) {
     return split(input, static_cast<jxx::lang::jint>(0));
 }
 
 jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> Pattern::split(
-    jxx::Ptr<jxx::lang::CharSequence> input,
+    const jxx::Ptr<jxx::lang::CharSequence>& input,
     jxx::lang::jint limit) {
     auto src = toStringPtr(input);
     std::string in = src->utf8();

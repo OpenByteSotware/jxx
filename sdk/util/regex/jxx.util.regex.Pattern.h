@@ -6,6 +6,7 @@
 #include "lang/jxx.lang.buildin_array.h"
 #include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.CharSequence.h"
+#include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 
@@ -21,28 +22,26 @@ namespace regex {
 class Matcher;
 class PatternSyntaxException;
 
-class Pattern final : public jxx::lang::Object, public virtual jxx::io::SerializableI {
+class Pattern final
+    : public ::jxx::lang::ClassBase<Pattern, ::jxx::lang::Object, ::jxx::io::SerializableI> {
 public:
-    static constexpr jxx::lang::jint UNIX_LINES = 0x01;
-    static constexpr jxx::lang::jint CASE_INSENSITIVE = 0x02;
-    static constexpr jxx::lang::jint COMMENTS = 0x04;
-    static constexpr jxx::lang::jint MULTILINE = 0x08;
-    static constexpr jxx::lang::jint LITERAL = 0x10;
-    static constexpr jxx::lang::jint DOTALL = 0x20;
-    static constexpr jxx::lang::jint UNICODE_CASE = 0x40;
-    static constexpr jxx::lang::jint CANON_EQ = 0x80;
-    static constexpr jxx::lang::jint UNICODE_CHARACTER_CLASS = 0x100;
-
-    template<class _Ty, class... _Types>
-    friend void std::_Construct_in_place(_Ty&, _Types&&...);
+    static constexpr ::jxx::lang::jint UNIX_LINES = 0x01;
+    static constexpr ::jxx::lang::jint CASE_INSENSITIVE = 0x02;
+    static constexpr ::jxx::lang::jint COMMENTS = 0x04;
+    static constexpr ::jxx::lang::jint MULTILINE = 0x08;
+    static constexpr ::jxx::lang::jint LITERAL = 0x10;
+    static constexpr ::jxx::lang::jint DOTALL = 0x20;
+    static constexpr ::jxx::lang::jint UNICODE_CASE = 0x40;
+    static constexpr ::jxx::lang::jint CANON_EQ = 0x80;
+    static constexpr ::jxx::lang::jint UNICODE_CHARACTER_CLASS = 0x100;
     Pattern(
-        jxx::Ptr<jxx::lang::String> regex,
-        jxx::lang::jint flags,
+        const ::jxx::Ptr<::jxx::lang::String>& regex,
+        ::jxx::lang::jint flags,
         std::string compiledPatternUtf8,
         std::regex compiled);
 private:
-    jxx::Ptr<jxx::lang::String> regex_;
-    jxx::lang::jint flags_;
+    ::jxx::Ptr<::jxx::lang::String> regex_;
+    ::jxx::lang::jint flags_;
     std::string compiledPatternUtf8_;
     std::regex compiled_;
 
@@ -51,30 +50,30 @@ private:
 public:
     virtual ~Pattern() = default;
 
-    static jxx::Ptr<Pattern> compile(const jxx::Ptr<jxx::lang::String> regex);
-    static jxx::Ptr<Pattern> compile(const jxx::Ptr<jxx::lang::String> regex, jxx::lang::jint flags);
-    static jxx::lang::jbool matches(
-        jxx::Ptr<jxx::lang::String> regex,
-        jxx::Ptr<jxx::lang::CharSequence> input);
+    static ::jxx::Ptr<Pattern> compile(const ::jxx::Ptr<::jxx::lang::String>& regex);
+    static ::jxx::Ptr<Pattern> compile(const ::jxx::Ptr<::jxx::lang::String>& regex, ::jxx::lang::jint flags);
+    static ::jxx::lang::jbool matches(
+        const ::jxx::Ptr<::jxx::lang::String>& regex,
+        const ::jxx::Ptr<::jxx::lang::CharSequence>& input);
 
-    jxx::Ptr<Matcher> matcher(const jxx::Ptr<jxx::lang::CharSequence> input);
-    jxx::Ptr<jxx::lang::String> pattern() const;
-    jxx::lang::jint flags() const;
+    ::jxx::Ptr<Matcher> matcher(const ::jxx::Ptr<::jxx::lang::CharSequence>& input);
+    ::jxx::Ptr<::jxx::lang::String> pattern() const;
+    ::jxx::lang::jint flags() const;
 
-    jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> split(
-        jxx::Ptr<jxx::lang::CharSequence> input);
-    jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> split(
-        jxx::Ptr<jxx::lang::CharSequence> input,
-        jxx::lang::jint limit);
+    ::jxx::Ptr<::jxx::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>> split(
+        const ::jxx::Ptr<::jxx::lang::CharSequence>& input);
+    ::jxx::Ptr<::jxx::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>> split(
+        const ::jxx::Ptr<::jxx::lang::CharSequence>& input,
+        ::jxx::lang::jint limit);
 
-    static jxx::Ptr<jxx::lang::String> quote(const jxx::Ptr<jxx::lang::String> s);
-    virtual jxx::Ptr<jxx::lang::String> toString() const override;
+    static ::jxx::Ptr<::jxx::lang::String> quote(const ::jxx::Ptr<::jxx::lang::String> s);
+    virtual ::jxx::Ptr<::jxx::lang::String> toString() const override;
 
     const std::regex& nativeRegex() const;
     const std::string& nativePatternUtf8() const;
 
-    virtual void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out) override;
-    virtual void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in) override;
+    virtual void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override;
+    virtual void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override;
     virtual void readObjectNoData() override;
 };
 
