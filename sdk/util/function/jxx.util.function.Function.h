@@ -1,67 +1,70 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.IllegalStateException.h"
+#include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.Object.h"
 
-namespace jxx {
-namespace util {
-namespace function {
+namespace jxx::util::function {
 
 template <typename T, typename R>
-class Function {
+class Function
+    : public ::jxx::lang::InterfaceBase<Function<T, R>> {
 public:
-    virtual ~Function() = default;
-    virtual jxx::Ptr<R> apply(const jxx::Ptr<T> t) = 0;
+    ~Function() override = default;
+    virtual ::jxx::Ptr<R> apply(const ::jxx::Ptr<T>& value) = 0;
 
     template <typename V>
-    jxx::Ptr<Function<V, R>> compose(const jxx::Ptr<Function<V, T>> before) {
-        class ComposeFunction : public virtual Function<V, R> {
-        private:
-            jxx::Ptr<Function<V, T>> before_;
-            jxx::Ptr<Function<T, R>> after_;
+    ::jxx::Ptr<Function<V, R>> compose(
+        const ::jxx::Ptr<Function<V, T>>& before) {
+        if (before == nullptr) throw ::jxx::lang::NullPointerException();
+        class Composed final : public ::jxx::lang::ClassBase<Composed, ::jxx::lang::Object, Function<V, R>> {
         public:
-            ComposeFunction(const jxx::Ptr<Function<V, T>> before, jxx::Ptr<Function<T, R>> after)
-                : before_(before), after_(after) {}
-            
-            virtual ~ComposeFunction() = default;
-            
-            virtual jxx::Ptr<R> apply(const jxx::Ptr<V> v) override {
-                return after_->apply(before_->apply(v));
+            Composed(const ::jxx::Ptr<Function<V, T>>& first, const ::jxx::Ptr<Function<T, R>>& second)
+                : first_(first), second_(second) {}
+            ::jxx::Ptr<R> apply(const ::jxx::Ptr<V>& value) override {
+                return second_->apply(first_->apply(value));
             }
+        private:
+            ::jxx::Ptr<Function<V, T>> first_;
+            ::jxx::Ptr<Function<T, R>> second_;
         };
-        
-        return jxx::Ptr<Function<V, R>>(new ComposeFunction(before, jxx::Ptr<Function<T, R>>(this)));
+        return ::jxx::CAST<Function<V, R>>(::jxx::NEW<Composed>(before, self_()));
     }
 
     template <typename V>
-    jxx::Ptr<Function<T, V>> andThen(const jxx::Ptr<Function<R, V>> after) {
-        class AndThenFunction : public virtual Function<T, V> {
-        private:
-            jxx::Ptr<Function<T, R>> before_;
-            jxx::Ptr<Function<R, V>> after_;
+    ::jxx::Ptr<Function<T, V>> andThen(const ::jxx::Ptr<Function<R, V>>& after) {
+        if (after == nullptr) throw ::jxx::lang::NullPointerException();
+        class Chained final : public ::jxx::lang::ClassBase<Chained, ::jxx::lang::Object, Function<T, V>> {
         public:
-            AndThenFunction(const jxx::Ptr<Function<T, R>> before, jxx::Ptr<Function<R, V>> after)
-                : before_(before), after_(after) {}
-            
-            virtual ~AndThenFunction() = default;
-            
-            virtual jxx::Ptr<V> apply(const jxx::Ptr<T> t) override {
-                return after_->apply(before_->apply(t));
+            Chained(const ::jxx::Ptr<Function<T, R>>& first, const ::jxx::Ptr<Function<R, V>>& second)
+                : first_(first), second_(second) {}
+            ::jxx::Ptr<V> apply(const ::jxx::Ptr<T>& value) override {
+                return second_->apply(first_->apply(value));
             }
+        private:
+            ::jxx::Ptr<Function<T, R>> first_;
+            ::jxx::Ptr<Function<R, V>> second_;
         };
-        
-        return jxx::Ptr<Function<T, V>>(new AndThenFunction(jxx::Ptr<Function<T, R>>(this), after));
+        return ::jxx::CAST<Function<T, V>>(::jxx::NEW<Chained>(self_(), after));
     }
 
-    static jxx::Ptr<Function<T, T>> identity() {
-        class IdentityFunction : public virtual Function<T, T> {
+    static ::jxx::Ptr<Function<T, T>> identity() {
+        class Identity final : public ::jxx::lang::ClassBase<Identity, ::jxx::lang::Object, Function<T, T>> {
         public:
-            virtual ~IdentityFunction() = default;
-            virtual jxx::Ptr<T> apply(const jxx::Ptr<T> t) override { return t; }
+            ::jxx::Ptr<T> apply(const ::jxx::Ptr<T>& value) override { return value; }
         };
-        return jxx::Ptr<Function<T, T>>(new IdentityFunction());
+        return ::jxx::CAST<Function<T, T>>(::jxx::NEW<Identity>());
+    }
+
+private:
+    ::jxx::Ptr<Function<T, R>> self_() {
+        auto* object = dynamic_cast<::jxx::lang::Object*>(this);
+        if (object == nullptr) throw ::jxx::lang::IllegalStateException();
+        auto self = ::jxx::CAST<Function<T, R>>(object->thisPtr());
+        if (self == nullptr) throw ::jxx::lang::IllegalStateException();
+        return self;
     }
 };
 
-} // namespace function
-} // namespace util
-} // namespace jxx
+} // namespace jxx::util::function

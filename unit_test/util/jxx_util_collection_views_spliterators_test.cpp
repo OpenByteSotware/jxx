@@ -13,7 +13,7 @@ using S = ::jxx::lang::String;
 class CountingConsumer final
     : public ::jxx::util::function::Consumer<S> {
 public:
-    void acceptSuper(const ::jxx::Ptr<S> value) override {
+    void acceptSuper(const ::jxx::Ptr<S>& value) override {
         if (value != nullptr) ++count;
     }
     ::jxx::lang::jint count = 0;

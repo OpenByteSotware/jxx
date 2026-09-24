@@ -15,7 +15,7 @@ using MapType = ::jxx::util::concurrent::ConcurrentHashMap<S, S>;
 
 class IdentityValue final : public ::jxx::util::function::Function<S, S> {
 public:
-    ::jxx::Ptr<S> apply(const ::jxx::Ptr<S> key) override {
+    ::jxx::Ptr<S> apply(const ::jxx::Ptr<S>& key) override {
         return ::jxx::NEW<S>(key->utf8());
     }
 };

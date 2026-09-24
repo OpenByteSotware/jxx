@@ -37,7 +37,7 @@ private:
 
 class RecordingConsumer final : public ::jxx::util::function::Consumer<String> {
 public:
-    void acceptSuper(const ::jxx::Ptr<String> value) override {
+    void acceptSuper(const ::jxx::Ptr<String>& value) override {
         values += value->utf8();
     }
     std::string values;

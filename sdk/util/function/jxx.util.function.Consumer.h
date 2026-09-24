@@ -1,52 +1,78 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.IllegalStateException.h"
+#include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.Object.h"
 #include "util/function/jxx.util.function.ConsumerSuper.h"
-#include "lang/jxx.lang.NullPointerException.h"
 
-namespace jxx {
-namespace util {
-namespace function {
+namespace jxx::util::function {
 
 template <typename T>
-class Consumer : public virtual ConsumerSuper<T> {
+class Consumer
+    : public ::jxx::lang::InterfaceBase<Consumer<T>, ConsumerSuper<T>> {
 public:
-    virtual ~Consumer() = default;
-    
-    virtual void acceptSuper(const jxx::Ptr<T> value) {
-		(void)value; // Suppress unused parameter warning
-    }
-    virtual void accept(const jxx::Ptr<T> value) {
-        acceptSuper(value);
+    ~Consumer() override = default;
+
+    void acceptSuper(const ::jxx::Ptr<T>& value) override {
+        accept(value);
     }
 
-    virtual jxx::Ptr<Consumer<T>> andThen(const jxx::Ptr<ConsumerSuper<T>> after) {
+    virtual void accept(const ::jxx::Ptr<T>& value) {
+        (void)value;
+    }
+
+    ::jxx::Ptr<Consumer<T>> andThen(
+        const ::jxx::Ptr<ConsumerSuper<T>>& after) {
         if (after == nullptr) {
-            throw jxx::lang::NullPointerException();
+            throw ::jxx::lang::NullPointerException();
         }
 
-  
-        class AndThenConsumer : public virtual Consumer<T> {
-        private:
-            jxx::Ptr<ConsumerSuper<T>> first_;
-            jxx::Ptr<ConsumerSuper<T>> second_;
+        class AndThenConsumer final
+            : public ::jxx::lang::ClassBase<
+                  AndThenConsumer,
+                  ::jxx::lang::Object,
+                  Consumer<T>> {
         public:
-            AndThenConsumer(const jxx::Ptr<ConsumerSuper<T>> first, jxx::Ptr<ConsumerSuper<T>> second)
-                : first_(first), second_(second) {}
-            virtual ~AndThenConsumer() = default;
-            virtual void acceptSuper(const jxx::Ptr<T> value) override {
+            AndThenConsumer(
+                const ::jxx::Ptr<ConsumerSuper<T>>& first,
+                const ::jxx::Ptr<ConsumerSuper<T>>& second)
+                : first_(first)
+                , second_(second) {
+            }
+
+            void acceptSuper(
+                const ::jxx::Ptr<T>& value) override {
                 first_->acceptSuper(value);
                 second_->acceptSuper(value);
             }
-            virtual void accept(const jxx::Ptr<T> value) {
+
+            void accept(
+                const ::jxx::Ptr<T>& value) override {
                 acceptSuper(value);
             }
+
+        private:
+            ::jxx::Ptr<ConsumerSuper<T>> first_;
+            ::jxx::Ptr<ConsumerSuper<T>> second_;
         };
 
-        return jxx::Ptr<Consumer<T>>(new AndThenConsumer(jxx::Ptr<ConsumerSuper<T>>(this), after));
+        return ::jxx::CAST<Consumer<T>>(
+            ::jxx::NEW<AndThenConsumer>(selfSuper_(), after));
+    }
+
+private:
+    ::jxx::Ptr<ConsumerSuper<T>> selfSuper_() {
+        auto* object = dynamic_cast<::jxx::lang::Object*>(this);
+        if (object == nullptr) {
+            throw ::jxx::lang::IllegalStateException();
+        }
+        auto self = ::jxx::CAST<ConsumerSuper<T>>(object->thisPtr());
+        if (self == nullptr) {
+            throw ::jxx::lang::IllegalStateException();
+        }
+        return self;
     }
 };
 
-} // namespace function
-} // namespace util
-} // namespace jxx
+} // namespace jxx::util::function

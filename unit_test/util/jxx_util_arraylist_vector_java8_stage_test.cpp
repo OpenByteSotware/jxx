@@ -18,7 +18,7 @@ public:
 
 class Upper final : public ::jxx::util::function::UnaryOperator<S> {
 public:
-    ::jxx::Ptr<S> apply(const ::jxx::Ptr<S> value) override {
+    ::jxx::Ptr<S> apply(const ::jxx::Ptr<S>& value) override {
         return ::jxx::NEW<S>(
             value->utf8() == "a" ? "A" : value->utf8());
     }

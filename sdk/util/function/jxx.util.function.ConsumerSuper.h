@@ -1,18 +1,17 @@
 #pragma once
 
-#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.ClassInfo.h"
 
-namespace jxx {
-namespace util {
-namespace function {
+namespace jxx::util::function {
 
 template <typename T>
-class ConsumerSuper {
+class ConsumerSuper
+    : public ::jxx::lang::InterfaceBase<ConsumerSuper<T>> {
 public:
-    virtual ~ConsumerSuper() = default;
-    virtual void acceptSuper(const jxx::Ptr<T> value) = 0;
+    ~ConsumerSuper() override = default;
+
+    virtual void acceptSuper(
+        const ::jxx::Ptr<T>& value) = 0;
 };
 
-} // namespace function
-} // namespace util
-} // namespace jxx
+} // namespace jxx::util::function
