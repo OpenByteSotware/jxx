@@ -4,9 +4,5 @@
 
 namespace jxx::org::w3c::dom {
 
-::jxx::Ptr<::jxx::lang::ClassAny>
-Node::Class() {
-    return JxxClassInfoMarker::Class();
-}
 
 } // namespace jxx::org::w3c::dom

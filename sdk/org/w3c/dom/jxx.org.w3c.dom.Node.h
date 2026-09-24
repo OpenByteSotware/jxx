@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lang/jxx.lang.ClassInfoMarker.h"
+#include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx_types.h"
 #include "org/w3c/dom/events/jxx.org.w3c.dom.events.EventTarget.h"
 
@@ -88,15 +88,10 @@ class UserDataHandler;
  * through ClassBase and implement this interface.
  */
 class Node
-    : public virtual ::jxx::org::w3c::dom::events::EventTarget {
+    : public ::jxx::lang::InterfaceBase<
+          Node,
+          ::jxx::org::w3c::dom::events::EventTarget> {
 public:
-    using JxxClassInfoMarker =
-        ::jxx::lang::ClassInfo<
-            Node,
-            ::jxx::lang::Object>;
-
-    static ::jxx::Ptr<::jxx::lang::ClassAny>
-    Class();
 
     enum : ::jxx::lang::jshort {
         ELEMENT_NODE = 1,

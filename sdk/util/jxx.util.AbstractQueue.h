@@ -193,7 +193,7 @@ private:
      * comparison is performed through the shared Object identity.
      */
     jxx::lang::jbool isSameCollection_(
-        jxx::Ptr<wildcard::CollectionExtends<E>>
+        const jxx::Ptr<wildcard::CollectionExtends<E>>&
             collection) const {
 
         auto collectionObject =
