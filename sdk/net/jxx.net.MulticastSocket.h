@@ -1,6 +1,8 @@
 #pragma once
 #include "lang/jxx.lang.ClassInfo.h"
 #include "jxx.net.DatagramSocket.h"
+#include "jxx.net.SocketException.h"
+#include "jxx.lang.IllegalArgumentException.h"
 
 #if defined(_WIN32)
 #include <winsock2.h>
@@ -19,7 +21,7 @@ namespace jxx::net {
 
     class MulticastSocket : public jxx::lang::ClassBase<MulticastSocket, DatagramSocket> {
 public:
-    using JavaSuper = DatagramSocket;
+    using JxxSuper = DatagramSocket;
     using Super = jxx::lang::ClassBase<MulticastSocket, DatagramSocket>;
 
     public:
