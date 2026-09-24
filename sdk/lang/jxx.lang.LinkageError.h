@@ -25,16 +25,14 @@ public:
     explicit LinkageError(const char* message);
 
 protected:
-    explicit LinkageError(const ::jxx::Ptr<Throwable>& cause)
-        : JxxSuper(cause) {}
+    explicit LinkageError(const ::jxx::Ptr<Throwable>& cause);
 
     LinkageError(
         const ::jxx::Ptr<String>& message,
-        const ::jxx::Ptr<Throwable>& cause)
-        : JxxSuper(message, cause) {}
+        const ::jxx::Ptr<Throwable>& cause);
 
     JXX_OBJECT_CLONE(LinkageError)
 
-    const char* typeName() const noexcept override { return "LinkageError"; }
+    const char* typeName() const noexcept override;
 };
 }

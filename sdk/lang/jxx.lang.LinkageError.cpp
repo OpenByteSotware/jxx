@@ -12,3 +12,9 @@ jxx::lang::LinkageError::LinkageError(const ::jxx::Ptr<::jxx::lang::String>& mes
 jxx::lang::LinkageError::LinkageError(const char* message)
     : jxx::lang::LinkageError::JxxSuper(message) {
 }
+
+namespace jxx::lang {
+LinkageError::LinkageError(const ::jxx::Ptr<Throwable>& cause):JxxSuper(cause){}
+LinkageError::LinkageError(const ::jxx::Ptr<String>&message,const ::jxx::Ptr<Throwable>&cause):JxxSuper(message,cause){}
+const char* LinkageError::typeName()const noexcept{return "LinkageError";}
+}
