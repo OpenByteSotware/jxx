@@ -44,7 +44,7 @@ public:
     ::jxx::lang::jint getRawOffset() const override;
     void setRawOffset(::jxx::lang::jint offset);
     ::jxx::lang::jbool useDaylightTime() const override;
-    ::jxx::lang::jbool inDaylightTime(const ::jxx::Ptr<Date> date) const override;
+    ::jxx::lang::jbool inDaylightTime(const ::jxx::Ptr<Date>& date) const override;
     ::jxx::lang::jint getDSTSavings() const;
     void setDSTSavings(::jxx::lang::jint milliseconds);
     void setStartYear(::jxx::lang::jint year);

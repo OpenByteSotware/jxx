@@ -1,20 +1,21 @@
 #pragma once
 
 #include "lang/jxx_types.h"
+#include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
 
 namespace jxx::util {
 
-class Date : public jxx::lang::Object {
+class Date : public ::jxx::lang::ClassBase<Date, ::jxx::lang::Object> {
 public:
     Date();
-    explicit Date(jxx::lang::jlong epochMillis);
+    explicit Date(::jxx::lang::jlong epochMillis);
 
-    jxx::lang::jlong getTime() const;
-    void setTime(jxx::lang::jlong epochMillis);
+    ::jxx::lang::jlong getTime() const;
+    void setTime(::jxx::lang::jlong epochMillis);
 
 private:
-    jxx::lang::jlong time_ = 0;
+    ::jxx::lang::jlong time_ = 0;
 };
 
 } // namespace jxx::util
