@@ -4,6 +4,14 @@
 
 namespace jxx::net
 {
+    jxx::Ptr<URLConnection> URLStreamHandler::openConnection(
+        const jxx::Ptr<URL>& u,
+        const jxx::Ptr<Proxy>& proxy)
+    {
+        (void)proxy;
+        return openConnection(u);
+    }
+
     jxx::lang::jint URLStreamHandler::getDefaultPort() const
     {
         return -1;

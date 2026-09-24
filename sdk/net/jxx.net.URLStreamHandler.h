@@ -20,11 +20,9 @@ public:
 
     protected:
         virtual jxx::Ptr<URLConnection> openConnection(const jxx::Ptr<URL>& u) = 0;
-        virtual jxx::Ptr<URLConnection> openConnection(const jxx::Ptr<URL>& u,
-                                                       const jxx::Ptr<Proxy>& /*p*/)
-        {
-            return openConnection(std::move(u));
-        }
+        virtual jxx::Ptr<URLConnection> openConnection(
+            const jxx::Ptr<URL>& u,
+            const jxx::Ptr<Proxy>& proxy);
 
         virtual jxx::lang::jint getDefaultPort() const;
         virtual jxx::lang::jbool equals(const jxx::Ptr<URL>& u1,
