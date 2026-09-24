@@ -11,7 +11,7 @@ using S = ::jxx::lang::String;
 
 class RemoveB final : public ::jxx::util::function::PredicateSuper<S> {
 public:
-    ::jxx::lang::jbool test(const ::jxx::Ptr<S> value) override {
+    ::jxx::lang::jbool test(const ::jxx::Ptr<::jxx::lang::String>&value) override {
         return value->utf8() == "b";
     }
 };
