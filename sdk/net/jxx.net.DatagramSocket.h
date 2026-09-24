@@ -435,6 +435,10 @@ namespace jxx::net {
             }
             connected_ = true;
             peerAddress_ = sockaddr_to_ip(reinterpret_cast<sockaddr*>(&ra), rlen, peerPort_);
+            if (!bound_) {
+                update_local_endpoint();
+                bound_ = true;
+            }
         }
 
         void disconnect() {
@@ -471,6 +475,10 @@ namespace jxx::net {
                 if (sent < 0 || static_cast<std::size_t>(sent) != len) {
                     throw jxx::net::SocketException("send failed: " + sock_error_string());
                 }
+                if (!bound_) {
+                    update_local_endpoint();
+                    bound_ = true;
+                }
                 return;
             }
 
@@ -488,6 +496,10 @@ namespace jxx::net {
                 rlen);
             if (sent < 0 || static_cast<std::size_t>(sent) != len) {
                 throw jxx::net::SocketException("sendto failed: " + sock_error_string());
+            }
+            if (!bound_) {
+                update_local_endpoint();
+                bound_ = true;
             }
         }
 
@@ -516,6 +528,10 @@ namespace jxx::net {
             }
             pkt.length = static_cast<std::size_t>(recvd);
             pkt.address = sockaddr_to_ip(reinterpret_cast<sockaddr*>(&from), flen, pkt.port);
+            if (!bound_) {
+                update_local_endpoint();
+                bound_ = true;
+            }
         }
 
         // -------- Options (Java parity) --------
@@ -575,6 +591,66 @@ namespace jxx::net {
         }
 
         bool getReuseAddress() const noexcept { return reuseAddress_; }
+
+        void setSendBufferSize(int size) {
+            ensure_open();
+            if (size <= 0) {
+                throw jxx::lang::IllegalArgumentException(
+                    "send buffer size must be positive");
+            }
+            if (::setsockopt(sock_, SOL_SOCKET, SO_SNDBUF,
+#if defined(_WIN32)
+                reinterpret_cast<const char*>(&size),
+#else
+                &size,
+#endif
+                sizeof(size)) != 0) {
+                throw jxx::net::SocketException(
+                    "setsockopt SO_SNDBUF failed: " + sock_error_string());
+            }
+        }
+
+        int getSendBufferSize() const {
+            ensure_open();
+            int size = 0;
+            socklen_t length = sizeof(size);
+            if (::getsockopt(sock_, SOL_SOCKET, SO_SNDBUF,
+                reinterpret_cast<char*>(&size), &length) != 0) {
+                throw jxx::net::SocketException(
+                    "getsockopt SO_SNDBUF failed: " + sock_error_string());
+            }
+            return size;
+        }
+
+        void setReceiveBufferSize(int size) {
+            ensure_open();
+            if (size <= 0) {
+                throw jxx::lang::IllegalArgumentException(
+                    "receive buffer size must be positive");
+            }
+            if (::setsockopt(sock_, SOL_SOCKET, SO_RCVBUF,
+#if defined(_WIN32)
+                reinterpret_cast<const char*>(&size),
+#else
+                &size,
+#endif
+                sizeof(size)) != 0) {
+                throw jxx::net::SocketException(
+                    "setsockopt SO_RCVBUF failed: " + sock_error_string());
+            }
+        }
+
+        int getReceiveBufferSize() const {
+            ensure_open();
+            int size = 0;
+            socklen_t length = sizeof(size);
+            if (::getsockopt(sock_, SOL_SOCKET, SO_RCVBUF,
+                reinterpret_cast<char*>(&size), &length) != 0) {
+                throw jxx::net::SocketException(
+                    "getsockopt SO_RCVBUF failed: " + sock_error_string());
+            }
+            return size;
+        }
 
         // -------- Query / lifecycle --------
         std::uint16_t getLocalPort() const { return localPort_; }
