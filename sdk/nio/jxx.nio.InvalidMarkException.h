@@ -10,7 +10,7 @@ public:
     using jxx::lang::RuntimeException::RuntimeException;
     JXX_OBJECT_CLONE(InvalidMarkException)
 protected:
-    const char* typeName() const noexcept override { return "InvalidMarkException"; }
+    const char* typeName() const noexcept override;
 };
 
 } // namespace jxx::nio

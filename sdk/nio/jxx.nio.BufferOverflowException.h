@@ -10,7 +10,7 @@ public:
     using jxx::lang::RuntimeException::RuntimeException;
     JXX_OBJECT_CLONE(BufferOverflowException)
 protected:
-    const char* typeName() const noexcept override { return "BufferOverflowException"; }
+    const char* typeName() const noexcept override;
 };
 
 } // namespace jxx::nio
