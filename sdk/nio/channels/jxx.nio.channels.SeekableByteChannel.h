@@ -6,8 +6,10 @@
 namespace jxx::nio::channels
 {
     class SeekableByteChannel
-        : public ReadableByteChannel
-        , public WritableByteChannel
+        : public jxx::lang::InterfaceBase<
+              SeekableByteChannel,
+              ReadableByteChannel,
+              WritableByteChannel>
     {
     public:
         ~SeekableByteChannel() override = default;

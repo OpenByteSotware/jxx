@@ -1,11 +1,12 @@
 #pragma once
 
 #include "lang/jxx_types.h"
+#include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
 
 namespace jxx::nio
 {
-    class Buffer : public jxx::lang::Object
+    class Buffer : public jxx::lang::ClassBase<Buffer, jxx::lang::Object>
     {
     protected:
         Buffer(jxx::lang::jint mark,
@@ -14,6 +15,9 @@ namespace jxx::nio
                jxx::lang::jint cap);
 
     public:
+        using JxxSuper = jxx::lang::Object;
+        using Super = jxx::lang::ClassBase<Buffer, JxxSuper>;
+
         ~Buffer() override = default;
 
     public:

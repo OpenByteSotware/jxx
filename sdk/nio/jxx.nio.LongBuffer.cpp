@@ -22,7 +22,7 @@ namespace jxx::nio
                  jxx::lang::jint offset,
                  jxx::lang::jint capacity,
                  jxx::lang::jbool readOnly)
-        : Buffer(-1, 0, capacity, capacity),
+        : Super(-1, 0, capacity, capacity),
           storage_(std::move(storage)),
           offset_(offset),
           readOnly_(readOnly)

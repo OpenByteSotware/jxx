@@ -6,7 +6,7 @@
 
 namespace jxx::nio::channels
 {
-    class WritableByteChannel : public Channel
+    class WritableByteChannel : public jxx::lang::InterfaceBase<WritableByteChannel, Channel>
     {
     public:
         ~WritableByteChannel() override = default;

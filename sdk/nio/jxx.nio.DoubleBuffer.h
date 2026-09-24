@@ -9,9 +9,12 @@
 
 namespace jxx::nio
 {
-    class DoubleBuffer final : public Buffer
+    class DoubleBuffer final : public jxx::lang::ClassBase<DoubleBuffer, Buffer>
     {
     public:
+        using JxxSuper = Buffer;
+        using Super = jxx::lang::ClassBase<DoubleBuffer, JxxSuper>;
+
         ~DoubleBuffer() override = default;
 
         static jxx::Ptr<DoubleBuffer> allocate(jxx::lang::jint capacity);

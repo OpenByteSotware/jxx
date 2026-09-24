@@ -9,9 +9,12 @@
 
 namespace jxx::nio
 {
-    class IntBuffer final : public Buffer
+    class IntBuffer final : public jxx::lang::ClassBase<IntBuffer, Buffer>
     {
     public:
+        using JxxSuper = Buffer;
+        using Super = jxx::lang::ClassBase<IntBuffer, JxxSuper>;
+
         ~IntBuffer() override = default;
 
         static jxx::Ptr<IntBuffer> allocate(jxx::lang::jint capacity);

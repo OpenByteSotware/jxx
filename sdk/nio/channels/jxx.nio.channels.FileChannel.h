@@ -5,6 +5,7 @@
 
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
 #include "io/jxx.io.File.h"
 #include "nio/jxx.nio.ByteBuffer.h"
@@ -13,12 +14,18 @@
 
 namespace jxx::nio::channels
 {
-    class FileChannel final : public jxx::lang::Object, SeekableByteChannel
+    class FileChannel final : public jxx::lang::ClassBase<FileChannel, jxx::lang::Object, SeekableByteChannel>
     {
     public:
-        class MapMode final : public jxx::lang::Object
+        using JxxSuper = jxx::lang::Object;
+        using Super = jxx::lang::ClassBase<FileChannel, JxxSuper, SeekableByteChannel>;
+
+        class MapMode final : public jxx::lang::ClassBase<MapMode, jxx::lang::Object>
         {
         public:
+            using JxxSuper = jxx::lang::Object;
+            using Super = jxx::lang::ClassBase<MapMode, JxxSuper>;
+
             static jxx::Ptr<MapMode> READ_ONLY;
             static jxx::Ptr<MapMode> READ_WRITE;
             static jxx::Ptr<MapMode> PRIVATE_;

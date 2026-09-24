@@ -10,9 +10,12 @@
 
 namespace jxx::nio
 {
-    class CharBuffer final : public Buffer
+    class CharBuffer final : public jxx::lang::ClassBase<CharBuffer, Buffer>
     {
     public:
+        using JxxSuper = Buffer;
+        using Super = jxx::lang::ClassBase<CharBuffer, JxxSuper>;
+
         // Add friend declarations to allow construction
         template<class _Ty, class... _Types>
         friend void std::_Construct_in_place(_Ty&, _Types&&...);

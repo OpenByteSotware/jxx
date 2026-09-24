@@ -9,9 +9,12 @@
 
 namespace jxx::nio
 {
-    class MappedByteBuffer final : public ByteBuffer
+    class MappedByteBuffer final : public jxx::lang::ClassBase<MappedByteBuffer, ByteBuffer>
     {
     public:
+        using JxxSuper = ByteBuffer;
+        using Super = jxx::lang::ClassBase<MappedByteBuffer, JxxSuper>;
+
         ~MappedByteBuffer() override = default;
 
     public:

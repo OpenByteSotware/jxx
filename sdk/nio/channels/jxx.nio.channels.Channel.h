@@ -8,8 +8,10 @@
 namespace jxx::nio::channels
 {
     class Channel
-        : public jxx::lang::AutoCloseable
-        , public jxx::io::Closeable
+        : public jxx::lang::InterfaceBase<
+              Channel,
+              jxx::lang::AutoCloseable,
+              jxx::io::Closeable>
     {
     public:
         ~Channel() override = default;

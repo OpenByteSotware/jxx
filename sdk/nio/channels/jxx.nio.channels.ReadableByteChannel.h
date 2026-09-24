@@ -6,7 +6,7 @@
 
 namespace jxx::nio::channels
 {
-    class ReadableByteChannel : public Channel
+    class ReadableByteChannel : public jxx::lang::InterfaceBase<ReadableByteChannel, Channel>
     {
     public:
         ~ReadableByteChannel() override = default;

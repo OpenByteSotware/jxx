@@ -1,16 +1,27 @@
 #pragma once
 
 #include "lang/jxx_types.h"
+#include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
+
+#if defined(BIG_ENDIAN)
+#undef BIG_ENDIAN
+#endif
+#if defined(LITTLE_ENDIAN)
+#undef LITTLE_ENDIAN
+#endif
 
 namespace jxx::lang {
     class String;
 }
 namespace jxx::nio
 {
-    class ByteOrder final : public jxx::lang::Object
+    class ByteOrder final : public jxx::lang::ClassBase<ByteOrder, jxx::lang::Object>
     {
     public:
+        using JxxSuper = jxx::lang::Object;
+        using Super = jxx::lang::ClassBase<ByteOrder, JxxSuper>;
+
         static jxx::Ptr<ByteOrder> BIG_ENDIAN;
         static jxx::Ptr<ByteOrder> LITTLE_ENDIAN;
 

@@ -9,9 +9,12 @@
 
 namespace jxx::nio
 {
-    class ShortBuffer final : public Buffer
+    class ShortBuffer final : public jxx::lang::ClassBase<ShortBuffer, Buffer>
     {
     public:
+        using JxxSuper = Buffer;
+        using Super = jxx::lang::ClassBase<ShortBuffer, JxxSuper>;
+
         ShortBuffer(std::shared_ptr<std::vector<jxx::lang::jshort>> storage,
             jxx::lang::jint offset,
             jxx::lang::jint capacity,

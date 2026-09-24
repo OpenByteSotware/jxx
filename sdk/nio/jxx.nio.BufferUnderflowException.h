@@ -1,13 +1,16 @@
 #pragma once
 
 #include <memory>
+#include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.RuntimeException.h"
 
 namespace jxx::nio {
 
-class BufferUnderflowException : public jxx::lang::RuntimeException {
+class BufferUnderflowException : public jxx::lang::ClassBase<BufferUnderflowException, jxx::lang::RuntimeException> {
 public:
-    using jxx::lang::RuntimeException::RuntimeException;
+    using JxxSuper = jxx::lang::RuntimeException;
+    using Super = jxx::lang::ClassBase<BufferUnderflowException, JxxSuper>;
+    using Super::Super;
     JXX_OBJECT_CLONE(BufferUnderflowException)
 protected:
     const char* typeName() const noexcept override;

@@ -25,7 +25,7 @@ namespace jxx::nio
                                        const std::string& path,
                                        jxx::lang::jlong fileOffset,
                                        jxx::Ptr<ByteOrder> order)
-        : ByteBuffer(std::move(storage), offset, capacity, readOnly, true, std::move(order)),
+        : Super(std::move(storage), offset, capacity, readOnly, true, std::move(order)),
           path_(path),
           fileOffset_(fileOffset)
     {

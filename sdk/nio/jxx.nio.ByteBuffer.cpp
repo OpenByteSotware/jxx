@@ -23,7 +23,7 @@ namespace jxx::nio
                            jxx::lang::jbool readOnly,
                            jxx::lang::jbool direct,
                            jxx::Ptr<ByteOrder> order)
-        : Buffer(-1, 0, capacity, capacity),
+        : Super(-1, 0, capacity, capacity),
           storage_(std::move(storage)),
           offset_(offset),
           readOnly_(readOnly),

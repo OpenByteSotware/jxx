@@ -9,9 +9,12 @@
 
 namespace jxx::nio
 {
-    class LongBuffer final : public Buffer
+    class LongBuffer final : public jxx::lang::ClassBase<LongBuffer, Buffer>
     {
     public:
+        using JxxSuper = Buffer;
+        using Super = jxx::lang::ClassBase<LongBuffer, JxxSuper>;
+
         ~LongBuffer() override = default;
 
         static jxx::Ptr<LongBuffer> allocate(jxx::lang::jint capacity);

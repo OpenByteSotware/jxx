@@ -10,9 +10,12 @@
 
 namespace jxx::nio
 {
-    class ByteBuffer : public Buffer
+    class ByteBuffer : public jxx::lang::ClassBase<ByteBuffer, Buffer>
     {
     public:
+        using JxxSuper = Buffer;
+        using Super = jxx::lang::ClassBase<ByteBuffer, JxxSuper>;
+
         ByteBuffer(std::shared_ptr<std::vector<jxx::lang::jbyte>> storage,
                    jxx::lang::jint offset,
                    jxx::lang::jint capacity,
