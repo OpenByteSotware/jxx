@@ -12,3 +12,5 @@ jxx::lang::NoSuchFieldError::NoSuchFieldError(const ::jxx::Ptr<::jxx::lang::Stri
 jxx::lang::NoSuchFieldError::NoSuchFieldError(const char* message)
     : jxx::lang::NoSuchFieldError::JxxSuper(message) {
 }
+
+const char* jxx::lang::NoSuchFieldError::typeName() const noexcept { return "NoSuchFieldError"; }

@@ -26,6 +26,6 @@ public:
 protected:
     JXX_OBJECT_CLONE(InstantiationError)
 
-    const char* typeName() const noexcept override { return "InstantiationError"; }
+    const char* typeName() const noexcept override;
 };
 }

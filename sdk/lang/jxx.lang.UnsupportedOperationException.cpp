@@ -12,3 +12,5 @@ jxx::lang::UnsupportedOperationException::UnsupportedOperationException(const ::
 jxx::lang::UnsupportedOperationException::UnsupportedOperationException(const char* message)
     : jxx::lang::UnsupportedOperationException::JxxSuper(message) {
 }
+
+const char* jxx::lang::UnsupportedOperationException::typeName() const noexcept { return "UnsupportedOperationException"; }

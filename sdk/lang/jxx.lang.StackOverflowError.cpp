@@ -12,3 +12,5 @@ jxx::lang::StackOverflowError::StackOverflowError(const ::jxx::Ptr<::jxx::lang::
 jxx::lang::StackOverflowError::StackOverflowError(const char* message)
     : jxx::lang::StackOverflowError::JxxSuper(message) {
 }
+
+const char* jxx::lang::StackOverflowError::typeName() const noexcept { return "StackOverflowError"; }

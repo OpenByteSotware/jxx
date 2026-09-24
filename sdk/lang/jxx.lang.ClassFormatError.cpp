@@ -12,3 +12,5 @@ jxx::lang::ClassFormatError::ClassFormatError(const ::jxx::Ptr<::jxx::lang::Stri
 jxx::lang::ClassFormatError::ClassFormatError(const char* message)
     : jxx::lang::ClassFormatError::JxxSuper(message) {
 }
+
+const char* jxx::lang::ClassFormatError::typeName() const noexcept { return "ClassFormatError"; }

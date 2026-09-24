@@ -12,3 +12,5 @@ jxx::lang::InterruptedException::InterruptedException(const ::jxx::Ptr<::jxx::la
 jxx::lang::InterruptedException::InterruptedException(const char* message)
     : jxx::lang::InterruptedException::JxxSuper(message) {
 }
+
+const char* jxx::lang::InterruptedException::typeName() const noexcept { return "InterruptedException"; }

@@ -26,6 +26,6 @@ public:
 protected:
     JXX_OBJECT_CLONE(NoClassDefFoundError)
 
-    const char* typeName() const noexcept override { return "NoClassDefFoundError"; }
+    const char* typeName() const noexcept override;
 };
 }

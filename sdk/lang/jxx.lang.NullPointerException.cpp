@@ -12,3 +12,5 @@ jxx::lang::NullPointerException::NullPointerException(const ::jxx::Ptr<::jxx::la
 jxx::lang::NullPointerException::NullPointerException(const char* message)
     : jxx::lang::NullPointerException::JxxSuper(message) {
 }
+
+const char* jxx::lang::NullPointerException::typeName() const noexcept { return "NullPointerException"; }

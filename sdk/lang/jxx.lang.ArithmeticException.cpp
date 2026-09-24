@@ -12,3 +12,5 @@ jxx::lang::ArithmeticException::ArithmeticException(const ::jxx::Ptr<::jxx::lang
 jxx::lang::ArithmeticException::ArithmeticException(const char* message)
     : jxx::lang::ArithmeticException::JxxSuper(message) {
 }
+
+const char* jxx::lang::ArithmeticException::typeName() const noexcept { return "ArithmeticException"; }

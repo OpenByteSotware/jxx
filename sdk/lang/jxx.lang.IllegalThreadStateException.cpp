@@ -12,3 +12,5 @@ jxx::lang::IllegalThreadStateException::IllegalThreadStateException(const ::jxx:
 jxx::lang::IllegalThreadStateException::IllegalThreadStateException(const char* message)
     : jxx::lang::IllegalThreadStateException::JxxSuper(message) {
 }
+
+const char* jxx::lang::IllegalThreadStateException::typeName() const noexcept { return "IllegalThreadStateException"; }

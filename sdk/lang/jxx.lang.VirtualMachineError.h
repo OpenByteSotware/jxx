@@ -26,6 +26,6 @@ public:
 protected:
     JXX_OBJECT_CLONE(VirtualMachineError)
 
-    const char* typeName() const noexcept override { return "VirtualMachineError"; }
+    const char* typeName() const noexcept override;
 };
 }

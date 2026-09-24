@@ -12,3 +12,5 @@ jxx::lang::IndexOutOfBoundsException::IndexOutOfBoundsException(const ::jxx::Ptr
 jxx::lang::IndexOutOfBoundsException::IndexOutOfBoundsException(const char* message)
     : jxx::lang::IndexOutOfBoundsException::JxxSuper(message) {
 }
+
+const char* jxx::lang::IndexOutOfBoundsException::typeName() const noexcept { return "IndexOutOfBoundsException"; }

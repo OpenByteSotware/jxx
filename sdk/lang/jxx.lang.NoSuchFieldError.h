@@ -26,6 +26,6 @@ public:
 protected:
     JXX_OBJECT_CLONE(NoSuchFieldError)
 
-    const char* typeName() const noexcept override { return "NoSuchFieldError"; }
+    const char* typeName() const noexcept override;
 };
 }

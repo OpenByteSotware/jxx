@@ -12,3 +12,5 @@ jxx::lang::ArrayStoreException::ArrayStoreException(const ::jxx::Ptr<::jxx::lang
 jxx::lang::ArrayStoreException::ArrayStoreException(const char* message)
     : jxx::lang::ArrayStoreException::JxxSuper(message) {
 }
+
+const char* jxx::lang::ArrayStoreException::typeName() const noexcept { return "ArrayStoreException"; }

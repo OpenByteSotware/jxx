@@ -556,3 +556,4 @@ namespace jxx::lang {
 
     }*/
 } // namespace jxx::lang
+const jxx::lang::ClassAny::Meta& jxx::lang::ClassAny::meta() const noexcept { return meta_; }

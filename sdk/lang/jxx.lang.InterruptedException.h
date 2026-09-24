@@ -29,7 +29,7 @@ public:
     explicit InterruptedException(const char* message);
     JXX_OBJECT_CLONE(InterruptedException)
 protected:
-    const char* typeName() const noexcept override { return "InterruptedException"; }
+    const char* typeName() const noexcept override;
 };
 
 } // namespace jxx::lang

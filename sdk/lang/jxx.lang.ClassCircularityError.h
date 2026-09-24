@@ -26,6 +26,6 @@ public:
 protected:
     JXX_OBJECT_CLONE(ClassCircularityError)
 
-    const char* typeName() const noexcept override { return "ClassCircularityError"; }
+    const char* typeName() const noexcept override;
 };
 }

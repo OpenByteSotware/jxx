@@ -26,6 +26,6 @@ public:
 protected:
     JXX_OBJECT_CLONE(InternalError)
 
-    const char* typeName() const noexcept override { return "InternalError"; }
+    const char* typeName() const noexcept override;
 };
 }

@@ -12,3 +12,5 @@ jxx::lang::InternalError::InternalError(const ::jxx::Ptr<::jxx::lang::String>& m
 jxx::lang::InternalError::InternalError(const char* message)
     : jxx::lang::InternalError::JxxSuper(message) {
 }
+
+const char* jxx::lang::InternalError::typeName() const noexcept { return "InternalError"; }

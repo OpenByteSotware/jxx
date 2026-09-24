@@ -12,3 +12,5 @@ jxx::lang::NoSuchFieldException::NoSuchFieldException(const ::jxx::Ptr<::jxx::la
 jxx::lang::NoSuchFieldException::NoSuchFieldException(const char* message)
     : jxx::lang::NoSuchFieldException::JxxSuper(message) {
 }
+
+const char* jxx::lang::NoSuchFieldException::typeName() const noexcept { return "NoSuchFieldException"; }

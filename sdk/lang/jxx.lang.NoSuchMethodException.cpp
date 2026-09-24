@@ -12,3 +12,5 @@ jxx::lang::NoSuchMethodException::NoSuchMethodException(const ::jxx::Ptr<::jxx::
 jxx::lang::NoSuchMethodException::NoSuchMethodException(const char* message)
     : jxx::lang::NoSuchMethodException::JxxSuper(message) {
 }
+
+const char* jxx::lang::NoSuchMethodException::typeName() const noexcept { return "NoSuchMethodException"; }

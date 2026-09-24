@@ -30,7 +30,7 @@ public:
         
     protected:
         JXX_OBJECT_CLONE(IllegalMonitorStateException)
-        const char* typeName() const noexcept override { return "IllegalMonitorStateException"; }
+        const char* typeName() const noexcept override;
     };
 
 } // namespace jxx::lang

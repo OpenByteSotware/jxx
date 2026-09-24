@@ -30,7 +30,7 @@ public:
         
     protected:
         JXX_OBJECT_CLONE(NegativeArraySizeException)
-        const char* typeName() const noexcept override { return "NegativeArraySizeException"; }
+        const char* typeName() const noexcept override;
     };
 
 } // namespace jxx::lang

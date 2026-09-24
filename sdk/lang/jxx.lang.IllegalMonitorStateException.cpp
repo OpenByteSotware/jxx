@@ -12,3 +12,5 @@ jxx::lang::IllegalMonitorStateException::IllegalMonitorStateException(const ::jx
 jxx::lang::IllegalMonitorStateException::IllegalMonitorStateException(const char* message)
     : jxx::lang::IllegalMonitorStateException::JxxSuper(message) {
 }
+
+const char* jxx::lang::IllegalMonitorStateException::typeName() const noexcept { return "IllegalMonitorStateException"; }

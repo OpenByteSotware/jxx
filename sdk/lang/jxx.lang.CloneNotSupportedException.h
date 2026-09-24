@@ -29,7 +29,7 @@ public:
     explicit CloneNotSupportedException(const char* message);
     JXX_OBJECT_CLONE(CloneNotSupportedException)
 protected:
-    const char* typeName() const noexcept override { return "CloneNotSupportedException"; }
+    const char* typeName() const noexcept override;
 };
 
 } // namespace jxx::lang

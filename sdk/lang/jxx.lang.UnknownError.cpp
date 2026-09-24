@@ -12,3 +12,5 @@ jxx::lang::UnknownError::UnknownError(const ::jxx::Ptr<::jxx::lang::String>& mes
 jxx::lang::UnknownError::UnknownError(const char* message)
     : jxx::lang::UnknownError::JxxSuper(message) {
 }
+
+const char* jxx::lang::UnknownError::typeName() const noexcept { return "UnknownError"; }

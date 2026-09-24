@@ -26,6 +26,6 @@ public:
 protected:
     JXX_OBJECT_CLONE(OutOfMemoryError)
 
-    const char* typeName() const noexcept override { return "OutOfMemoryError"; }
+    const char* typeName() const noexcept override;
 };
 }

@@ -30,7 +30,7 @@ public:
     
 protected:
     JXX_OBJECT_CLONE(InstantiationException)
-    const char* typeName() const noexcept override { return "InstantiationException"; }
+    const char* typeName() const noexcept override;
 };
 
 } // namespace jxx::lang

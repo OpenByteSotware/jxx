@@ -12,3 +12,5 @@ jxx::lang::IllegalAccessException::IllegalAccessException(const ::jxx::Ptr<::jxx
 jxx::lang::IllegalAccessException::IllegalAccessException(const char* message)
     : jxx::lang::IllegalAccessException::JxxSuper(message) {
 }
+
+const char* jxx::lang::IllegalAccessException::typeName() const noexcept { return "IllegalAccessException"; }

@@ -12,3 +12,5 @@ jxx::lang::IllegalStateException::IllegalStateException(const ::jxx::Ptr<::jxx::
 jxx::lang::IllegalStateException::IllegalStateException(const char* message)
     : jxx::lang::IllegalStateException::JxxSuper(message) {
 }
+
+const char* jxx::lang::IllegalStateException::typeName() const noexcept { return "IllegalStateException"; }

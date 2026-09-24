@@ -12,3 +12,5 @@ jxx::lang::VirtualMachineError::VirtualMachineError(const ::jxx::Ptr<::jxx::lang
 jxx::lang::VirtualMachineError::VirtualMachineError(const char* message)
     : jxx::lang::VirtualMachineError::JxxSuper(message) {
 }
+
+const char* jxx::lang::VirtualMachineError::typeName() const noexcept { return "VirtualMachineError"; }

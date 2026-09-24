@@ -30,7 +30,7 @@ public:
         
     protected:
         JXX_OBJECT_CLONE(ArrayStoreException)
-        const char* typeName() const noexcept override { return "ArrayStoreException"; }
+        const char* typeName() const noexcept override;
     };
 
 } // namespace jxx::lang

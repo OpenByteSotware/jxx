@@ -13,3 +13,5 @@ jxx::lang::OutOfMemoryError::OutOfMemoryError(const ::jxx::Ptr<::jxx::lang::Stri
 jxx::lang::OutOfMemoryError::OutOfMemoryError(const char* message)
     : jxx::lang::OutOfMemoryError::JxxSuper(message) {
 }
+
+const char* jxx::lang::OutOfMemoryError::typeName() const noexcept { return "OutOfMemoryError"; }

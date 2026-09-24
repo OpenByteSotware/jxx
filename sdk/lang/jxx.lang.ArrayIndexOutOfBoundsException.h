@@ -33,7 +33,7 @@ public:
     
 protected:
     JXX_OBJECT_CLONE(ArrayIndexOutOfBoundsException)
-    const char* typeName() const noexcept override { return "ArrayIndexOutOfBoundsException"; }
+    const char* typeName() const noexcept override;
 };
 
 } // namespace jxx::lang

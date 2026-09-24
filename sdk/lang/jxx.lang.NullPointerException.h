@@ -29,7 +29,7 @@ public:
         
     protected:
         JXX_OBJECT_CLONE(NullPointerException)
-        const char* typeName() const noexcept override { return "NullPointerException"; }
+        const char* typeName() const noexcept override;
     };
 
 } // namespace jxx::lang

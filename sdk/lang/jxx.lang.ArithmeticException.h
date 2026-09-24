@@ -30,7 +30,7 @@ public:
     
 protected:
     JXX_OBJECT_CLONE(ArithmeticException)
-    const char* typeName() const noexcept override { return "ArithmeticException"; }
+    const char* typeName() const noexcept override;
 };
 
 } // namespace jxx::lang

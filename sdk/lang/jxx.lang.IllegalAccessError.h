@@ -26,6 +26,6 @@ public:
 protected:
     JXX_OBJECT_CLONE(IllegalAccessError)
 
-    const char* typeName() const noexcept override { return "IllegalAccessError"; }
+    const char* typeName() const noexcept override;
 };
 }

@@ -29,7 +29,7 @@ public:
     explicit SecurityException(const char* message);
     JXX_OBJECT_CLONE(SecurityException)
 protected:
-    const char* typeName() const noexcept override { return "SecurityException"; }
+    const char* typeName() const noexcept override;
 };
 
 } // namespace jxx::lang

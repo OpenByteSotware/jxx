@@ -12,3 +12,5 @@ jxx::lang::NegativeArraySizeException::NegativeArraySizeException(const ::jxx::P
 jxx::lang::NegativeArraySizeException::NegativeArraySizeException(const char* message)
     : jxx::lang::NegativeArraySizeException::JxxSuper(message) {
 }
+
+const char* jxx::lang::NegativeArraySizeException::typeName() const noexcept { return "NegativeArraySizeException"; }

@@ -30,7 +30,7 @@ public:
         
     protected:
         JXX_OBJECT_CLONE(IllegalStateException)
-        const char* typeName() const noexcept override { return "IllegalStateException"; }
+        const char* typeName() const noexcept override;
     };
 
 } // namespace jxx::lang

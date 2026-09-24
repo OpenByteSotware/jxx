@@ -23,3 +23,5 @@ jxx::lang::ArrayIndexOutOfBoundsException::ArrayIndexOutOfBoundsException(
           ::jxx::NEW<::jxx::lang::String>(
               std::to_string(index))) {
 }
+
+const char* jxx::lang::ArrayIndexOutOfBoundsException::typeName() const noexcept { return "ArrayIndexOutOfBoundsException"; }

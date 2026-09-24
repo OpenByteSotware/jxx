@@ -26,6 +26,6 @@ public:
 protected:
     JXX_OBJECT_CLONE(StackOverflowError)
 
-    const char* typeName() const noexcept override { return "StackOverflowError"; }
+    const char* typeName() const noexcept override;
 };
 }

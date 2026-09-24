@@ -13,3 +13,5 @@ jxx::lang::VerifyError::VerifyError(const ::jxx::Ptr<::jxx::lang::String>& messa
 jxx::lang::VerifyError::VerifyError(const char* message)
     : jxx::lang::VerifyError::JxxSuper(message) {
 }
+
+const char* jxx::lang::VerifyError::typeName() const noexcept { return "VerifyError"; }

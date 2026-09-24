@@ -29,7 +29,7 @@ public:
     explicit IllegalAccessException(const char* message);
     JXX_OBJECT_CLONE(IllegalAccessException)
 protected:
-    const char* typeName() const noexcept override { return "IllegalAccessException"; }
+    const char* typeName() const noexcept override;
 };
 
 } // namespace jxx::lang

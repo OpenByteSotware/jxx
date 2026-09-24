@@ -29,7 +29,7 @@ public:
     explicit IllegalThreadStateException(const char* message);
         JXX_OBJECT_CLONE(IllegalThreadStateException)
     protected:
-        const char* typeName() const noexcept override { return "IllegalThreadStateException"; }
+        const char* typeName() const noexcept override;
     };
 
 } // namespace jxx::lang

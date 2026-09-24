@@ -26,6 +26,6 @@ public:
 protected:
     JXX_OBJECT_CLONE(AbstractMethodError)
 
-    const char* typeName() const noexcept override { return "AbstractMethodError"; }
+    const char* typeName() const noexcept override;
 };
 }

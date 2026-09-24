@@ -29,7 +29,7 @@ public:
     explicit UnsupportedOperationException(const char* message);
     JXX_OBJECT_CLONE(UnsupportedOperationException)
 protected:
-    const char* typeName() const noexcept override { return "UnsupportedOperationException"; }
+    const char* typeName() const noexcept override;
 };
 
 } // namespace jxx::lang

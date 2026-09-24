@@ -26,6 +26,6 @@ public:
 protected:
     JXX_OBJECT_CLONE(NoSuchMethodError)
 
-    const char* typeName() const noexcept override { return "NoSuchMethodError"; }
+    const char* typeName() const noexcept override;
 };
 }

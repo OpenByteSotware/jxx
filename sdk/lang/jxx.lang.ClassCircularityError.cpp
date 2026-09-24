@@ -12,3 +12,5 @@ jxx::lang::ClassCircularityError::ClassCircularityError(const ::jxx::Ptr<::jxx::
 jxx::lang::ClassCircularityError::ClassCircularityError(const char* message)
     : jxx::lang::ClassCircularityError::JxxSuper(message) {
 }
+
+const char* jxx::lang::ClassCircularityError::typeName() const noexcept { return "ClassCircularityError"; }

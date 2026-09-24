@@ -12,3 +12,5 @@ jxx::lang::CloneNotSupportedException::CloneNotSupportedException(const ::jxx::P
 jxx::lang::CloneNotSupportedException::CloneNotSupportedException(const char* message)
     : jxx::lang::CloneNotSupportedException::JxxSuper(message) {
 }
+
+const char* jxx::lang::CloneNotSupportedException::typeName() const noexcept { return "CloneNotSupportedException"; }

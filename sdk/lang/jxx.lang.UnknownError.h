@@ -26,6 +26,6 @@ public:
 protected:
     JXX_OBJECT_CLONE(UnknownError)
 
-    const char* typeName() const noexcept override { return "UnknownError"; }
+    const char* typeName() const noexcept override;
 };
 }

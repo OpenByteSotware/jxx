@@ -12,3 +12,5 @@ jxx::lang::ClassCastException::ClassCastException(const ::jxx::Ptr<::jxx::lang::
 jxx::lang::ClassCastException::ClassCastException(const char* message)
     : jxx::lang::ClassCastException::JxxSuper(message) {
 }
+
+const char* jxx::lang::ClassCastException::typeName() const noexcept { return "ClassCastException"; }

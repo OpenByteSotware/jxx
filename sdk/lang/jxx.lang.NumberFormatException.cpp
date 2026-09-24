@@ -12,3 +12,5 @@ jxx::lang::NumberFormatException::NumberFormatException(const ::jxx::Ptr<::jxx::
 jxx::lang::NumberFormatException::NumberFormatException(const char* message)
     : jxx::lang::NumberFormatException::JxxSuper(message) {
 }
+
+const char* jxx::lang::NumberFormatException::typeName() const noexcept { return "NumberFormatException"; }

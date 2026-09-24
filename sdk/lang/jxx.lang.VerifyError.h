@@ -26,6 +26,6 @@ public:
 protected:
     JXX_OBJECT_CLONE(VerifyError)
 
-    const char* typeName() const noexcept override { return "VerifyError"; }
+    const char* typeName() const noexcept override;
 };
 }

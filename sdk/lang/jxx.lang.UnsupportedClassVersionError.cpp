@@ -12,3 +12,5 @@ jxx::lang::UnsupportedClassVersionError::UnsupportedClassVersionError(const ::jx
 jxx::lang::UnsupportedClassVersionError::UnsupportedClassVersionError(const char* message)
     : jxx::lang::UnsupportedClassVersionError::JxxSuper(message) {
 }
+
+const char* jxx::lang::UnsupportedClassVersionError::typeName() const noexcept { return "UnsupportedClassVersionError"; }

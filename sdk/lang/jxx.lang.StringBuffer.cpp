@@ -1,7 +1,7 @@
-#include "jxx.lang.String.h"
-#include "jxx.lang.NullPointerException.h"
-#include "jxx.lang.StringIndexOutOfBoundsException.h"
-#include "jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.StringIndexOutOfBoundsException.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.StringBuffer.h"
 
 #include "lang/jxx.lang.Class.h"
@@ -558,3 +558,7 @@ void StringBuffer::readObjectNoData() {
 }
 
 } // namespace jxx::lang
+
+bool jxx::lang::StringBuffer::isHigh_(char16_t c) { return c >= 0xD800 && c <= 0xDBFF; }
+
+bool jxx::lang::StringBuffer::isLow_(char16_t c) { return c >= 0xDC00 && c <= 0xDFFF; }

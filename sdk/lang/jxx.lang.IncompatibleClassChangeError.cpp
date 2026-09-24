@@ -12,3 +12,5 @@ jxx::lang::IncompatibleClassChangeError::IncompatibleClassChangeError(const ::jx
 jxx::lang::IncompatibleClassChangeError::IncompatibleClassChangeError(const char* message)
     : jxx::lang::IncompatibleClassChangeError::JxxSuper(message) {
 }
+
+const char* jxx::lang::IncompatibleClassChangeError::typeName() const noexcept { return "IncompatibleClassChangeError"; }

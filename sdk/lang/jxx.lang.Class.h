@@ -150,7 +150,7 @@ namespace jxx::lang {
         // ---------------------------------------------------------------------
         // JXX helpers
         // ---------------------------------------------------------------------
-        const Meta& meta() const noexcept { return meta_; }
+        const Meta& meta() const noexcept;
 
         //void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out);
        // void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in);

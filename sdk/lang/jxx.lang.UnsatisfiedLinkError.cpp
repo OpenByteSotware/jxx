@@ -13,3 +13,5 @@ jxx::lang::UnsatisfiedLinkError::UnsatisfiedLinkError(const ::jxx::Ptr<::jxx::la
 jxx::lang::UnsatisfiedLinkError::UnsatisfiedLinkError(const char* message)
     : jxx::lang::UnsatisfiedLinkError::JxxSuper(message) {
 }
+
+const char* jxx::lang::UnsatisfiedLinkError::typeName() const noexcept { return "UnsatisfiedLinkError"; }

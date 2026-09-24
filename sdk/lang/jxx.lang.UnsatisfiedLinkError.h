@@ -26,6 +26,6 @@ public:
 protected:
     JXX_OBJECT_CLONE(UnsatisfiedLinkError)
 
-    const char* typeName() const noexcept override { return "UnsatisfiedLinkError"; }
+    const char* typeName() const noexcept override;
 };
 }

@@ -30,7 +30,7 @@ public:
     
 protected:
     JXX_OBJECT_CLONE(ClassCastException)
-    const char* typeName() const noexcept override { return "ClassCastException"; }
+    const char* typeName() const noexcept override;
 };
 
 } // namespace jxx::lang

@@ -26,6 +26,6 @@ public:
 protected:
     JXX_OBJECT_CLONE(UnsupportedClassVersionError)
 
-    const char* typeName() const noexcept override { return "UnsupportedClassVersionError"; }
+    const char* typeName() const noexcept override;
 };
 }

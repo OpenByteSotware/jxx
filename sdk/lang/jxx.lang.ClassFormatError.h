@@ -26,6 +26,6 @@ public:
 protected:
     JXX_OBJECT_CLONE(ClassFormatError)
 
-    const char* typeName() const noexcept override { return "ClassFormatError"; }
+    const char* typeName() const noexcept override;
 };
 }

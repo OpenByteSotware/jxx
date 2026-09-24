@@ -30,7 +30,7 @@ public:
     
 protected:
     JXX_OBJECT_CLONE(NoSuchFieldException)
-    const char* typeName() const noexcept override { return "NoSuchFieldException"; }
+    const char* typeName() const noexcept override;
 };
 
 } // namespace jxx::lang

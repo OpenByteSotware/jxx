@@ -12,3 +12,5 @@ jxx::lang::AbstractMethodError::AbstractMethodError(const ::jxx::Ptr<::jxx::lang
 jxx::lang::AbstractMethodError::AbstractMethodError(const char* message)
     : jxx::lang::AbstractMethodError::JxxSuper(message) {
 }
+
+const char* jxx::lang::AbstractMethodError::typeName() const noexcept { return "AbstractMethodError"; }

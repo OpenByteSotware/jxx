@@ -12,3 +12,5 @@ jxx::lang::InstantiationError::InstantiationError(const ::jxx::Ptr<::jxx::lang::
 jxx::lang::InstantiationError::InstantiationError(const char* message)
     : jxx::lang::InstantiationError::JxxSuper(message) {
 }
+
+const char* jxx::lang::InstantiationError::typeName() const noexcept { return "InstantiationError"; }

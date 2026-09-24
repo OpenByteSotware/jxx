@@ -12,3 +12,5 @@ jxx::lang::NoClassDefFoundError::NoClassDefFoundError(const ::jxx::Ptr<::jxx::la
 jxx::lang::NoClassDefFoundError::NoClassDefFoundError(const char* message)
     : jxx::lang::NoClassDefFoundError::JxxSuper(message) {
 }
+
+const char* jxx::lang::NoClassDefFoundError::typeName() const noexcept { return "NoClassDefFoundError"; }
