@@ -8,14 +8,14 @@ namespace com::google::gson {
 }
 
 JsonSyntaxException::JsonSyntaxException()
-    : JxxSuper() {}
+    : Super() {}
 
 JsonSyntaxException::JsonSyntaxException(
     const ::jxx::Ptr<::jxx::lang::String>& message)
-    : JxxSuper(message) {}
+    : Super(message) {}
 
-JsonSyntaxException::JsonSyntaxException(const ::jxx::Ptr<::jxx::lang::Throwable>& cause) : JxxSuper(cause) {}
-JsonSyntaxException::JsonSyntaxException(const ::jxx::Ptr<::jxx::lang::String>& message, const ::jxx::Ptr<::jxx::lang::Throwable>& cause) : JxxSuper(message,cause) {}
+JsonSyntaxException::JsonSyntaxException(const ::jxx::Ptr<::jxx::lang::Throwable>& cause) : Super(cause) {}
+JsonSyntaxException::JsonSyntaxException(const ::jxx::Ptr<::jxx::lang::String>& message, const ::jxx::Ptr<::jxx::lang::Throwable>& cause) : Super(message,cause) {}
 ::jxx::Ptr<::jxx::lang::Object> JsonSyntaxException::cloneImpl() const {
     return ::jxx::CAST<::jxx::lang::Object>(
         ::jxx::NEW<JsonSyntaxException>(*this));

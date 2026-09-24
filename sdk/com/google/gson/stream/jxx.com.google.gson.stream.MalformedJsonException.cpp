@@ -3,5 +3,5 @@ namespace com::google::gson::stream {
 MalformedJsonException::MalformedJsonException() = default;
 MalformedJsonException::MalformedJsonException(
     const ::jxx::Ptr<::jxx::lang::String>& message)
-    : ::jxx::io::IOException(message) {}
+    : Super(message) {}
 } // namespace com::google::gson::stream

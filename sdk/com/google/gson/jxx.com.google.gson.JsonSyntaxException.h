@@ -1,14 +1,16 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "lang/jxx.lang.ClassInfoMarker.h"
 #include "com/google/gson/jxx.com.google.gson.JsonParseException.h"
 
 namespace com::google::gson {
 
-class JsonSyntaxException
-    : public JsonParseException {
+class JsonSyntaxException : public ::jxx::lang::ClassBase<JsonSyntaxException, JsonParseException> {
 public:
     using JxxSuper = JsonParseException;
+    using Super = ::jxx::lang::ClassBase<JsonSyntaxException, JxxSuper>;
+
     using JxxClassInfoMarker =
         ::jxx::lang::ClassInfo<JsonSyntaxException, JxxSuper>;
 
