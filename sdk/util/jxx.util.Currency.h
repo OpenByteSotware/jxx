@@ -1,6 +1,7 @@
 #pragma once
 
 #include "lang/jxx_types.h"
+#include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
 #include "util/jxx.util.Locale.h"
 
@@ -10,20 +11,20 @@ class String;
 
 namespace jxx::util {
 
-class Currency : public jxx::lang::Object {
+class Currency : public ::jxx::lang::ClassBase<Currency, ::jxx::lang::Object> {
 private:
-    jxx::Ptr<jxx::lang::String> code_;
-    jxx::Ptr<jxx::lang::String> symbol_;
+    ::jxx::Ptr<::jxx::lang::String> code_;
+    ::jxx::Ptr<::jxx::lang::String> symbol_;
 
 public:
-    Currency(const jxx::Ptr<jxx::lang::String>& code, const jxx::Ptr<jxx::lang::String>& symbol);
+    Currency(const ::jxx::Ptr<::jxx::lang::String>& code, const ::jxx::Ptr<::jxx::lang::String>& symbol);
 
-    static jxx::Ptr<Currency> getInstance(const jxx::Ptr<jxx::lang::String>& code);
-    static jxx::Ptr<Currency> getInstance(const jxx::Ptr<Locale>& locale);
+    static ::jxx::Ptr<Currency> getInstance(const ::jxx::Ptr<::jxx::lang::String>& code);
+    static ::jxx::Ptr<Currency> getInstance(const ::jxx::Ptr<Locale>& locale);
 
-    jxx::Ptr<jxx::lang::String> getCurrencyCode() const;
-    jxx::Ptr<jxx::lang::String> getSymbol() const;
-    jxx::Ptr<jxx::lang::String> toString() const override;
+    ::jxx::Ptr<::jxx::lang::String> getCurrencyCode() const;
+    ::jxx::Ptr<::jxx::lang::String> getSymbol() const;
+    ::jxx::Ptr<::jxx::lang::String> toString() const override;
 };
 
 } // namespace jxx::util

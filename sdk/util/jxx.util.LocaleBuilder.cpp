@@ -10,27 +10,27 @@ LocaleBuilder::LocaleBuilder()
       region_(StringPool::intern("")),
       variant_(StringPool::intern("")) {}
 
-jxx::Ptr<LocaleBuilder> LocaleBuilder::setLanguage(const jxx::Ptr<jxx::lang::String>& language) {
+::jxx::Ptr<LocaleBuilder> LocaleBuilder::setLanguage(const ::jxx::Ptr<::jxx::lang::String>& language) {
     language_ = language ? language : StringPool::intern("");
     return getThis<LocaleBuilder>();
 }
 
-jxx::Ptr<LocaleBuilder> LocaleBuilder::setScript(const jxx::Ptr<jxx::lang::String>& script) {
+::jxx::Ptr<LocaleBuilder> LocaleBuilder::setScript(const ::jxx::Ptr<::jxx::lang::String>& script) {
     script_ = script ? script : StringPool::intern("");
     return getThis<LocaleBuilder>();
 }
 
-jxx::Ptr<LocaleBuilder> LocaleBuilder::setRegion(const jxx::Ptr<jxx::lang::String>& region) {
+::jxx::Ptr<LocaleBuilder> LocaleBuilder::setRegion(const ::jxx::Ptr<::jxx::lang::String>& region) {
     region_ = region ? region : StringPool::intern("");
     return getThis<LocaleBuilder>();
 }
 
-jxx::Ptr<LocaleBuilder> LocaleBuilder::setVariant(const jxx::Ptr<jxx::lang::String>& variant) {
+::jxx::Ptr<LocaleBuilder> LocaleBuilder::setVariant(const ::jxx::Ptr<::jxx::lang::String>& variant) {
     variant_ = variant ? variant : StringPool::intern("");
     return getThis<LocaleBuilder>();
 }
 
-jxx::Ptr<LocaleBuilder> LocaleBuilder::clear() {
+::jxx::Ptr<LocaleBuilder> LocaleBuilder::clear() {
     language_ = StringPool::intern("");
     script_ = StringPool::intern("");
     region_ = StringPool::intern("");
@@ -38,7 +38,7 @@ jxx::Ptr<LocaleBuilder> LocaleBuilder::clear() {
     return getThis<LocaleBuilder>();
 }
 
-jxx::Ptr<Locale> LocaleBuilder::build() {
+::jxx::Ptr<Locale> LocaleBuilder::build() {
     return Locale::intern(language_, script_, region_, variant_);
 }
 
