@@ -10,22 +10,22 @@ jxx::Ptr<jxx::lang::ClassAny> SyncFailedException::Class()
 }
 
 SyncFailedException::SyncFailedException()
-    : JxxSuper()
+    : Super()
 {
 }
 
 SyncFailedException::SyncFailedException(const jxx::Ptr<jxx::lang::String>& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 SyncFailedException::SyncFailedException(const char* message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 SyncFailedException::SyncFailedException(const std::string& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 

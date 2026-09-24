@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include <string>
 
@@ -7,9 +8,10 @@
 
 namespace jxx::io {
 
-class InterruptedIOException : public IOException {
+class InterruptedIOException : public ::jxx::lang::ClassBase<InterruptedIOException, IOException> {
 public:
     using JxxSuper = IOException;
+    using Super = ::jxx::lang::ClassBase<InterruptedIOException, JxxSuper>;
     using JxxClassInfoMarker =
         jxx::lang::ClassInfo<InterruptedIOException, JxxSuper>;
 

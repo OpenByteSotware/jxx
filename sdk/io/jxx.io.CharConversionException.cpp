@@ -10,22 +10,22 @@ jxx::Ptr<jxx::lang::ClassAny> CharConversionException::Class()
 }
 
 CharConversionException::CharConversionException()
-    : JxxSuper()
+    : Super()
 {
 }
 
 CharConversionException::CharConversionException(const jxx::Ptr<jxx::lang::String>& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 CharConversionException::CharConversionException(const char* message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 CharConversionException::CharConversionException(const std::string& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 

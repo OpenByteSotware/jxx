@@ -10,22 +10,22 @@ jxx::Ptr<jxx::lang::ClassAny> StreamCorruptedException::Class()
 }
 
 StreamCorruptedException::StreamCorruptedException()
-    : JxxSuper()
+    : Super()
 {
 }
 
 StreamCorruptedException::StreamCorruptedException(const jxx::Ptr<jxx::lang::String>& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 StreamCorruptedException::StreamCorruptedException(const char* message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 StreamCorruptedException::StreamCorruptedException(const std::string& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 

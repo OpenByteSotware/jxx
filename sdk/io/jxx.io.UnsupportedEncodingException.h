@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include <string>
 
@@ -7,9 +8,10 @@
 
 namespace jxx::io {
 
-class UnsupportedEncodingException : public IOException {
+class UnsupportedEncodingException : public ::jxx::lang::ClassBase<UnsupportedEncodingException, IOException> {
 public:
     using JxxSuper = IOException;
+    using Super = ::jxx::lang::ClassBase<UnsupportedEncodingException, JxxSuper>;
     using JxxClassInfoMarker =
         jxx::lang::ClassInfo<UnsupportedEncodingException, JxxSuper>;
 

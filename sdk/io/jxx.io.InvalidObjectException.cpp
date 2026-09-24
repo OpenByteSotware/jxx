@@ -10,22 +10,22 @@ jxx::Ptr<jxx::lang::ClassAny> InvalidObjectException::Class()
 }
 
 InvalidObjectException::InvalidObjectException()
-    : JxxSuper()
+    : Super()
 {
 }
 
 InvalidObjectException::InvalidObjectException(const jxx::Ptr<jxx::lang::String>& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 InvalidObjectException::InvalidObjectException(const char* message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 InvalidObjectException::InvalidObjectException(const std::string& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 

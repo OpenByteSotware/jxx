@@ -10,22 +10,22 @@ jxx::Ptr<jxx::lang::ClassAny> IOException::Class()
 }
 
 IOException::IOException()
-    : JxxSuper()
+    : Super()
 {
 }
 
 IOException::IOException(const jxx::Ptr<jxx::lang::String>& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 IOException::IOException(const char* message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 IOException::IOException(const std::string& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 

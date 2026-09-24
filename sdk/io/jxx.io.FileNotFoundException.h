@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include <string>
 
@@ -7,9 +8,10 @@
 
 namespace jxx::io {
 
-class FileNotFoundException : public IOException {
+class FileNotFoundException : public ::jxx::lang::ClassBase<FileNotFoundException, IOException> {
 public:
     using JxxSuper = IOException;
+    using Super = ::jxx::lang::ClassBase<FileNotFoundException, JxxSuper>;
     using JxxClassInfoMarker =
         jxx::lang::ClassInfo<FileNotFoundException, JxxSuper>;
 

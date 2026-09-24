@@ -1,13 +1,15 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "lang/jxx.lang.ClassInfoMarker.h"
 #include "lang/jxx.lang.Error.h"
 
 namespace jxx::io {
 
-class IOError : public jxx::lang::Error {
+class IOError : public ::jxx::lang::ClassBase<IOError, jxx::lang::Error> {
 public:
     using JxxSuper = jxx::lang::Error;
+    using Super = ::jxx::lang::ClassBase<IOError, JxxSuper>;
     using JxxClassInfoMarker = jxx::lang::ClassInfo<IOError, JxxSuper>;
 
     static jxx::Ptr<jxx::lang::ClassAny> Class();

@@ -12,7 +12,7 @@ jxx::Ptr<jxx::lang::ClassAny> UncheckedIOException::Class()
 }
 
 UncheckedIOException::UncheckedIOException(const jxx::Ptr<IOException>& cause)
-    : JxxSuper(cause == nullptr ? nullptr : cause->getMessage(), cause)
+    : Super(cause == nullptr ? nullptr : cause->getMessage(), cause)
     , cause_(cause)
 {
     if (cause == nullptr) {
@@ -23,7 +23,7 @@ UncheckedIOException::UncheckedIOException(const jxx::Ptr<IOException>& cause)
 UncheckedIOException::UncheckedIOException(
     const jxx::Ptr<jxx::lang::String>& message,
     const jxx::Ptr<IOException>& cause)
-    : JxxSuper(message, cause)
+    : Super(message, cause)
     , cause_(cause)
 {
     if (cause == nullptr) {

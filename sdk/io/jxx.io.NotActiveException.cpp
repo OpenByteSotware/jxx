@@ -10,22 +10,22 @@ jxx::Ptr<jxx::lang::ClassAny> NotActiveException::Class()
 }
 
 NotActiveException::NotActiveException()
-    : JxxSuper()
+    : Super()
 {
 }
 
 NotActiveException::NotActiveException(const jxx::Ptr<jxx::lang::String>& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 NotActiveException::NotActiveException(const char* message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 NotActiveException::NotActiveException(const std::string& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 

@@ -10,22 +10,22 @@ jxx::Ptr<jxx::lang::ClassAny> UTFDataFormatException::Class()
 }
 
 UTFDataFormatException::UTFDataFormatException()
-    : JxxSuper()
+    : Super()
 {
 }
 
 UTFDataFormatException::UTFDataFormatException(const jxx::Ptr<jxx::lang::String>& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 UTFDataFormatException::UTFDataFormatException(const char* message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 UTFDataFormatException::UTFDataFormatException(const std::string& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 

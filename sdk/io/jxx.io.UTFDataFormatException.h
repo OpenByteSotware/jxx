@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include <string>
 
@@ -7,9 +8,10 @@
 
 namespace jxx::io {
 
-class UTFDataFormatException : public IOException {
+class UTFDataFormatException : public ::jxx::lang::ClassBase<UTFDataFormatException, IOException> {
 public:
     using JxxSuper = IOException;
+    using Super = ::jxx::lang::ClassBase<UTFDataFormatException, JxxSuper>;
     using JxxClassInfoMarker =
         jxx::lang::ClassInfo<UTFDataFormatException, JxxSuper>;
 

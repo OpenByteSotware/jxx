@@ -10,14 +10,14 @@ namespace jxx::io {
 
 OptionalDataException::OptionalDataException(
     ::jxx::lang::jint lengthValue)
-    : JxxSuper()
+    : Super()
     , length(lengthValue)
     , eof(false) {
 }
 
 OptionalDataException::OptionalDataException(
     ::jxx::lang::jbool endOfData)
-    : JxxSuper()
+    : Super()
     , length(0)
     , eof(endOfData) {
 }

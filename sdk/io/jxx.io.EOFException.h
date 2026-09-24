@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include <string>
 
@@ -7,9 +8,10 @@
 
 namespace jxx::io {
 
-class EOFException : public IOException {
+class EOFException : public ::jxx::lang::ClassBase<EOFException, IOException> {
 public:
     using JxxSuper = IOException;
+    using Super = ::jxx::lang::ClassBase<EOFException, JxxSuper>;
     using JxxClassInfoMarker =
         jxx::lang::ClassInfo<EOFException, JxxSuper>;
 

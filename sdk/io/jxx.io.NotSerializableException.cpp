@@ -10,22 +10,22 @@ jxx::Ptr<jxx::lang::ClassAny> NotSerializableException::Class()
 }
 
 NotSerializableException::NotSerializableException()
-    : JxxSuper()
+    : Super()
 {
 }
 
 NotSerializableException::NotSerializableException(const jxx::Ptr<jxx::lang::String>& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 NotSerializableException::NotSerializableException(const char* message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 NotSerializableException::NotSerializableException(const std::string& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 

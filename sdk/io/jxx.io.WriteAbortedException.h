@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "io/jxx.io.ObjectStreamException.h"
 #include "lang/jxx.lang.ClassInfoMarker.h"
@@ -6,9 +7,10 @@
 
 namespace jxx::io {
 
-class WriteAbortedException : public ObjectStreamException {
+class WriteAbortedException : public ::jxx::lang::ClassBase<WriteAbortedException, ObjectStreamException> {
 public:
     using JxxSuper = ObjectStreamException;
+    using Super = ::jxx::lang::ClassBase<WriteAbortedException, JxxSuper>;
     using JxxClassInfoMarker =
         ::jxx::lang::ClassInfo<WriteAbortedException, JxxSuper>;
 

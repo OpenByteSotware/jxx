@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include <string>
 
@@ -7,9 +8,10 @@
 
 namespace jxx::io {
 
-class NotSerializableException : public ObjectStreamException {
+class NotSerializableException : public ::jxx::lang::ClassBase<NotSerializableException, ObjectStreamException> {
 public:
     using JxxSuper = ObjectStreamException;
+    using Super = ::jxx::lang::ClassBase<NotSerializableException, JxxSuper>;
     using JxxClassInfoMarker =
         jxx::lang::ClassInfo<NotSerializableException, JxxSuper>;
 

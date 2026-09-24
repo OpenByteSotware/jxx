@@ -10,22 +10,22 @@ jxx::Ptr<jxx::lang::ClassAny> EOFException::Class()
 }
 
 EOFException::EOFException()
-    : JxxSuper()
+    : Super()
 {
 }
 
 EOFException::EOFException(const jxx::Ptr<jxx::lang::String>& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 EOFException::EOFException(const char* message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 EOFException::EOFException(const std::string& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 

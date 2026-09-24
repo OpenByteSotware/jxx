@@ -10,7 +10,7 @@ jxx::Ptr<jxx::lang::ClassAny> IOError::Class()
 }
 
 IOError::IOError(const jxx::Ptr<jxx::lang::Throwable>& cause)
-    : JxxSuper(cause == nullptr ? nullptr : cause->getMessage(), cause)
+    : Super(cause == nullptr ? nullptr : cause->getMessage(), cause)
     , cause_(cause)
 {
 }

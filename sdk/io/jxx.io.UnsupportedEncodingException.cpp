@@ -10,22 +10,22 @@ jxx::Ptr<jxx::lang::ClassAny> UnsupportedEncodingException::Class()
 }
 
 UnsupportedEncodingException::UnsupportedEncodingException()
-    : JxxSuper()
+    : Super()
 {
 }
 
 UnsupportedEncodingException::UnsupportedEncodingException(const jxx::Ptr<jxx::lang::String>& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 UnsupportedEncodingException::UnsupportedEncodingException(const char* message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 UnsupportedEncodingException::UnsupportedEncodingException(const std::string& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 

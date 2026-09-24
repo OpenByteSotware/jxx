@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include <string>
 
@@ -7,9 +8,10 @@
 
 namespace jxx::io {
 
-class StreamCorruptedException : public ObjectStreamException {
+class StreamCorruptedException : public ::jxx::lang::ClassBase<StreamCorruptedException, ObjectStreamException> {
 public:
     using JxxSuper = ObjectStreamException;
+    using Super = ::jxx::lang::ClassBase<StreamCorruptedException, JxxSuper>;
     using JxxClassInfoMarker =
         jxx::lang::ClassInfo<StreamCorruptedException, JxxSuper>;
 

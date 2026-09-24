@@ -10,22 +10,22 @@ jxx::Ptr<jxx::lang::ClassAny> ObjectStreamException::Class()
 }
 
 ObjectStreamException::ObjectStreamException()
-    : JxxSuper()
+    : Super()
 {
 }
 
 ObjectStreamException::ObjectStreamException(const jxx::Ptr<jxx::lang::String>& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 ObjectStreamException::ObjectStreamException(const char* message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 ObjectStreamException::ObjectStreamException(const std::string& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 

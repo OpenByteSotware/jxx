@@ -10,22 +10,22 @@ jxx::Ptr<jxx::lang::ClassAny> FileNotFoundException::Class()
 }
 
 FileNotFoundException::FileNotFoundException()
-    : JxxSuper()
+    : Super()
 {
 }
 
 FileNotFoundException::FileNotFoundException(const jxx::Ptr<jxx::lang::String>& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 FileNotFoundException::FileNotFoundException(const char* message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 FileNotFoundException::FileNotFoundException(const std::string& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 

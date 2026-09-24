@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include <string>
 
@@ -7,9 +8,10 @@
 
 namespace jxx::io {
 
-class NotActiveException : public ObjectStreamException {
+class NotActiveException : public ::jxx::lang::ClassBase<NotActiveException, ObjectStreamException> {
 public:
     using JxxSuper = ObjectStreamException;
+    using Super = ::jxx::lang::ClassBase<NotActiveException, JxxSuper>;
     using JxxClassInfoMarker =
         jxx::lang::ClassInfo<NotActiveException, JxxSuper>;
 

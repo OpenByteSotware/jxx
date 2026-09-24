@@ -10,22 +10,22 @@ jxx::Ptr<jxx::lang::ClassAny> InterruptedIOException::Class()
 }
 
 InterruptedIOException::InterruptedIOException()
-    : JxxSuper()
+    : Super()
 {
 }
 
 InterruptedIOException::InterruptedIOException(const jxx::Ptr<jxx::lang::String>& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 InterruptedIOException::InterruptedIOException(const char* message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 
 InterruptedIOException::InterruptedIOException(const std::string& message)
-    : JxxSuper(message)
+    : Super(message)
 {
 }
 

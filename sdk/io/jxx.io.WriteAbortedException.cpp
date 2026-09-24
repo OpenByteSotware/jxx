@@ -12,7 +12,7 @@ namespace jxx::io {
 WriteAbortedException::WriteAbortedException(
     const ::jxx::Ptr<::jxx::lang::String>& message,
     const ::jxx::Ptr<::jxx::lang::Exception>& exception)
-    : JxxSuper(message)
+    : Super(message)
     , detail(exception) {
 }
 

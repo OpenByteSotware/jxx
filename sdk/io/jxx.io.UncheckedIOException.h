@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "lang/jxx.lang.ClassInfoMarker.h"
 #include "lang/jxx.lang.RuntimeException.h"
@@ -6,9 +7,10 @@
 
 namespace jxx::io {
 
-class UncheckedIOException : public jxx::lang::RuntimeException {
+class UncheckedIOException : public ::jxx::lang::ClassBase<UncheckedIOException, jxx::lang::RuntimeException> {
 public:
     using JxxSuper = jxx::lang::RuntimeException;
+    using Super = ::jxx::lang::ClassBase<UncheckedIOException, JxxSuper>;
     using JxxClassInfoMarker =
         jxx::lang::ClassInfo<UncheckedIOException, JxxSuper>;
 

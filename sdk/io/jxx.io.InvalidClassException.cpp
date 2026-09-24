@@ -13,13 +13,13 @@ namespace jxx::io {
 
 InvalidClassException::InvalidClassException(
     const ::jxx::Ptr<::jxx::lang::String>& reason)
-    : JxxSuper(reason) {
+    : Super(reason) {
 }
 
 InvalidClassException::InvalidClassException(
     const ::jxx::Ptr<::jxx::lang::String>& className,
     const ::jxx::Ptr<::jxx::lang::String>& reason)
-    : JxxSuper(reason)
+    : Super(reason)
     , classname(className) {
 }
 

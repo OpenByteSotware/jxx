@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include <string>
 
@@ -7,9 +8,10 @@
 
 namespace jxx::io {
 
-class SyncFailedException : public IOException {
+class SyncFailedException : public ::jxx::lang::ClassBase<SyncFailedException, IOException> {
 public:
     using JxxSuper = IOException;
+    using Super = ::jxx::lang::ClassBase<SyncFailedException, JxxSuper>;
     using JxxClassInfoMarker =
         jxx::lang::ClassInfo<SyncFailedException, JxxSuper>;
 

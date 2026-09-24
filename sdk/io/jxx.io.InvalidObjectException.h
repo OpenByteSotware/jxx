@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include <string>
 
@@ -7,9 +8,10 @@
 
 namespace jxx::io {
 
-class InvalidObjectException : public ObjectStreamException {
+class InvalidObjectException : public ::jxx::lang::ClassBase<InvalidObjectException, ObjectStreamException> {
 public:
     using JxxSuper = ObjectStreamException;
+    using Super = ::jxx::lang::ClassBase<InvalidObjectException, JxxSuper>;
     using JxxClassInfoMarker =
         jxx::lang::ClassInfo<InvalidObjectException, JxxSuper>;
 
