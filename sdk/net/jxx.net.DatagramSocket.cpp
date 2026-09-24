@@ -1,4 +1,3 @@
-
 #include <cstdint>
 #include <cstring>
 #include <string>
@@ -6,7 +5,6 @@
 #include <vector>
 #include <utility>
 #include <system_error>
-
 
 #if defined(_WIN32)
 #include <winsock2.h>
@@ -402,10 +400,12 @@ struct NativeDatagramPacket { std::vector<std::uint8_t> buffer; std::size_t offs
             if (bound_) {
                 throw jxx::net::SocketException("DatagramSocket is already bound");
             }
-            // Allow re-bind options to be set before bind if desired
-            sockaddr_storage addr{}; socklen_t len{};
-            fill_sockaddr(localAddress, localPort, addr, len);
-            if (::bind(sock_, reinterpret_cast<sockaddr*>(&addr), len) != 0) {
+
+            sockaddr_storage address{};
+            socklen_t addressLength{};
+            fill_sockaddr(localAddress, localPort, address, addressLength, family_);
+            const auto* socketAddress = reinterpret_cast<const sockaddr*>(&address);
+            if (::bind(sock_, socketAddress, addressLength) != 0) {
                 throw jxx::net::SocketException("bind failed: " + sock_error_string());
             }
             update_local_endpoint();
@@ -785,7 +785,21 @@ DatagramSocket::DatagramSocket(::jxx::lang::jint p):DatagramSocket(jxx::NEW<Inet
 DatagramSocket::DatagramSocket(::jxx::lang::jint p,const jxx::Ptr<InetAddress>&a):DatagramSocket(jxx::NEW<InetSocketAddress>(a,p)){}
 DatagramSocket::DatagramSocket(const jxx::Ptr<SocketAddress>&a):impl_(std::make_unique<Impl>()){if(a)bind(a);}
 DatagramSocket::DatagramSocket(DatagramSocket&&)noexcept=default; DatagramSocket& DatagramSocket::operator=(DatagramSocket&&)noexcept=default; DatagramSocket::~DatagramSocket()=default;
-void DatagramSocket::bind(const jxx::Ptr<SocketAddress>&a){auto i=std::dynamic_pointer_cast<InetSocketAddress>(a);if(!i)throw jxx::lang::IllegalArgumentException("unsupported socket address");impl_->bind(i->getHostString()->utf8(),static_cast<std::uint16_t>(i->getPort()));}
+void DatagramSocket::bind(const jxx::Ptr<SocketAddress>& address) {
+    const auto inetAddress = std::dynamic_pointer_cast<InetSocketAddress>(address);
+    if (inetAddress == nullptr) {
+        throw jxx::lang::IllegalArgumentException("unsupported socket address");
+    }
+    if (inetAddress->isUnresolved()) {
+        throw jxx::lang::IllegalArgumentException("unresolved socket address");
+    }
+    const auto resolvedAddress = inetAddress->getAddress();
+    if (resolvedAddress == nullptr) {
+        throw jxx::lang::IllegalArgumentException("socket address has no address");
+    }
+    impl_->bind(resolvedAddress->getHostAddress()->utf8(),
+        static_cast<std::uint16_t>(inetAddress->getPort()));
+}
 void DatagramSocket::connect(const jxx::Ptr<InetAddress>&a,::jxx::lang::jint p){if(!a)throw jxx::lang::NullPointerException();validatePort_(p);impl_->connect(a->getHostAddress()->utf8(),static_cast<std::uint16_t>(p));}
 void DatagramSocket::connect(const jxx::Ptr<SocketAddress>&a){auto i=std::dynamic_pointer_cast<InetSocketAddress>(a);if(!i||i->isUnresolved())throw jxx::lang::IllegalArgumentException("unsupported socket address");connect(i->getAddress(),i->getPort());}
 void DatagramSocket::disconnect(){impl_->disconnect();}
