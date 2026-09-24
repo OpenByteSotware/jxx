@@ -1,26 +1,27 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
 #include "util/jxx.util.Comparator.h"
 #include "util/jxx.util.Map.h"
 
-namespace jxx::util
-{
-    template<typename K, typename V>
-    class SortedMap : public Map<K, V>
-    {
-    protected:
-        SortedMap() = default;
+namespace jxx::util {
 
-    public:
-        ~SortedMap() override = default;
+template <typename K, typename V>
+class SortedMap
+    : public ::jxx::lang::InterfaceBase<SortedMap<K, V>, Map<K, V>> {
+public:
+    ~SortedMap() override = default;
 
-    public:
-        virtual jxx::Ptr<Comparator<K>> comparator() const = 0;
-        virtual jxx::Ptr<K> firstKey() const = 0;
-        virtual jxx::Ptr<K> lastKey() const = 0;
-        virtual jxx::Ptr<SortedMap<K, V>> subMap(const jxx::Ptr<K> fromKey,
-                                                 jxx::Ptr<K> toKey) const = 0;
-        virtual jxx::Ptr<SortedMap<K, V>> headMap(const jxx::Ptr<K> toKey) const = 0;
-        virtual jxx::Ptr<SortedMap<K, V>> tailMap(const jxx::Ptr<K> fromKey) const = 0;
-    };
-}
+    virtual ::jxx::Ptr<Comparator<K>> comparator() const = 0;
+    virtual ::jxx::Ptr<K> firstKey() const = 0;
+    virtual ::jxx::Ptr<K> lastKey() const = 0;
+    virtual ::jxx::Ptr<SortedMap<K, V>> subMap(
+        const ::jxx::Ptr<K>& fromKey,
+        const ::jxx::Ptr<K>& toKey) const = 0;
+    virtual ::jxx::Ptr<SortedMap<K, V>> headMap(
+        const ::jxx::Ptr<K>& toKey) const = 0;
+    virtual ::jxx::Ptr<SortedMap<K, V>> tailMap(
+        const ::jxx::Ptr<K>& fromKey) const = 0;
+};
+
+} // namespace jxx::util
