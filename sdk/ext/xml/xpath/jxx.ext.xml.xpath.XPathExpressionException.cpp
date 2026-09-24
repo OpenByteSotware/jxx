@@ -2,5 +2,5 @@
 namespace jxx::ext::xml::xpath {
 XPathExpressionException::XPathExpressionException() = default;
 XPathExpressionException::XPathExpressionException(const ::jxx::Ptr<::jxx::lang::String>& message)
-    : ::jxx::lang::Exception(message) {}
+    : Super(message) {}
 } // namespace jxx::ext::xml::xpath

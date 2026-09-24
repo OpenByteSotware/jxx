@@ -1,13 +1,15 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "ext/xml/bind/jxx.ext.xml.bind.JAXBException.h"
 
 namespace jxx::ext::xml::bind {
 
 class UnmarshalException
-    : public JAXBException {
+    : public ::jxx::lang::ClassBase<UnmarshalException, JAXBException> {
 public:
     using JxxSuper = JAXBException;
+    using Super = ::jxx::lang::ClassBase<UnmarshalException, JxxSuper>;
     using JxxClassInfoMarker =
         ::jxx::lang::ClassInfo<UnmarshalException, JxxSuper>;
 

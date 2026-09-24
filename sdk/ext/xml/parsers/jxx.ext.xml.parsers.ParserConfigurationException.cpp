@@ -9,12 +9,12 @@ namespace jxx::ext::xml::parsers {
 }
 
 ParserConfigurationException::ParserConfigurationException()
-    : JxxSuper() {
+    : Super() {
 }
 
 ParserConfigurationException::ParserConfigurationException(
     const ::jxx::Ptr<::jxx::lang::String>& message)
-    : JxxSuper(message) {
+    : Super(message) {
 }
 
 ParserConfigurationException::~ParserConfigurationException() = default;

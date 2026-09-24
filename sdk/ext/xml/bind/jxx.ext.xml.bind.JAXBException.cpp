@@ -8,16 +8,16 @@ namespace jxx::ext::xml::bind {
 }
 
 JAXBException::JAXBException()
-    : JxxSuper() {}
+    : Super() {}
 
 JAXBException::JAXBException(
     const ::jxx::Ptr<::jxx::lang::String>& message)
-    : JxxSuper(message) {}
+    : Super(message) {}
 
 JAXBException::JAXBException(
     const ::jxx::Ptr<::jxx::lang::String>& message,
     const ::jxx::Ptr<::jxx::lang::Throwable>& cause)
-    : JxxSuper(message, cause) {}
+    : Super(message, cause) {}
 
 ::jxx::Ptr<::jxx::lang::Object> JAXBException::cloneImpl() const {
     return ::jxx::CAST<::jxx::lang::Object>(

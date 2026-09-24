@@ -9,12 +9,12 @@ namespace jxx::ext::xml::parsers {
 }
 
 FactoryConfigurationError::FactoryConfigurationError()
-    : JxxSuper() {
+    : Super() {
 }
 
 FactoryConfigurationError::FactoryConfigurationError(
     const ::jxx::Ptr<::jxx::lang::String>& message)
-    : JxxSuper(message) {
+    : Super(message) {
 }
 
 FactoryConfigurationError::~FactoryConfigurationError() = default;

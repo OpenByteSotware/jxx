@@ -1,12 +1,16 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "ext/xml/parsers/jxx.ext.xml.parsers.SAXParser.h"
 
 namespace jxx::ext::xml::parsers::internal {
 
 class PugiSAXParser final
-    : public ::jxx::ext::xml::parsers::SAXParser {
+    : public ::jxx::lang::ClassBase<PugiSAXParser, ::jxx::ext::xml::parsers::SAXParser> {
 public:
+    using JxxSuper = ::jxx::ext::xml::parsers::SAXParser;
+    using Super = ::jxx::lang::ClassBase<PugiSAXParser, JxxSuper>;
+
     PugiSAXParser(
         ::jxx::lang::jbool namespaceAware,
         ::jxx::lang::jbool validating,

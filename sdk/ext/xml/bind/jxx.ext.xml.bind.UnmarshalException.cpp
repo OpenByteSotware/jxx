@@ -8,11 +8,11 @@ namespace jxx::ext::xml::bind {
 }
 
 UnmarshalException::UnmarshalException()
-    : JxxSuper() {}
+    : Super() {}
 
 UnmarshalException::UnmarshalException(
     const ::jxx::Ptr<::jxx::lang::String>& message)
-    : JxxSuper(message) {}
+    : Super(message) {}
 
 ::jxx::Ptr<::jxx::lang::Object> UnmarshalException::cloneImpl() const {
     return ::jxx::CAST<::jxx::lang::Object>(

@@ -12,7 +12,7 @@ PugiSAXParser::PugiSAXParser(
     ::jxx::lang::jbool validating,
     const ::jxx::Ptr<::jxx::ext::xml::validation::Schema>& schema,
     ::jxx::lang::jbool xIncludeAware)
-    : SAXParser()
+    : Super()
     , reader_(
           ::jxx::org::xml::sax::helpers::XMLReaderFactory::
               createXMLReader())

@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "lang/jxx.lang.ClassInfoMarker.h"
 #include "lang/jxx.lang.Error.h"
@@ -6,9 +7,10 @@
 namespace jxx::ext::xml::parsers {
 
 class FactoryConfigurationError
-    : public ::jxx::lang::Error {
+    : public ::jxx::lang::ClassBase<FactoryConfigurationError, ::jxx::lang::Error> {
 public:
     using JxxSuper = ::jxx::lang::Error;
+    using Super = ::jxx::lang::ClassBase<FactoryConfigurationError, JxxSuper>;
     using JxxClassInfoMarker =
         ::jxx::lang::ClassInfo<FactoryConfigurationError, JxxSuper>;
 

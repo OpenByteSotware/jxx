@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 
 #include "lang/jxx.lang.ClassInfoMarker.h"
 #include "lang/jxx.lang.Exception.h"
@@ -6,9 +7,10 @@
 namespace jxx::ext::xml::parsers {
 
 class ParserConfigurationException
-    : public ::jxx::lang::Exception {
+    : public ::jxx::lang::ClassBase<ParserConfigurationException, ::jxx::lang::Exception> {
 public:
     using JxxSuper = ::jxx::lang::Exception;
+    using Super = ::jxx::lang::ClassBase<ParserConfigurationException, JxxSuper>;
     using JxxClassInfoMarker =
         ::jxx::lang::ClassInfo<ParserConfigurationException, JxxSuper>;
 
