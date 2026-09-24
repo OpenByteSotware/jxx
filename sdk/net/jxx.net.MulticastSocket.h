@@ -1,148 +1,50 @@
 #pragma once
-#include "lang/jxx.lang.ClassInfo.h"
-#include "jxx.net.DatagramSocket.h"
-#include "jxx.net.SocketException.h"
-#include "jxx.lang.IllegalArgumentException.h"
 
-#if defined(_WIN32)
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#pragma comment(lib, "Ws2_32.lib")
-#else
-#include <net/if.h> // if_nametoindex helper used in examples
-#endif
-
+#include <cstdint>
 #include <string>
-#include <stdexcept>
-#include <utility>
+#include <vector>
+
+#include "lang/jxx.lang.ClassInfo.h"
+#include "net/jxx.net.DatagramSocket.h"
 
 namespace jxx::net {
-    
 
-    class MulticastSocket : public jxx::lang::ClassBase<MulticastSocket, DatagramSocket> {
+class MulticastSocket : public jxx::lang::ClassBase<MulticastSocket, DatagramSocket> {
 public:
     using JxxSuper = DatagramSocket;
-    using Super = jxx::lang::ClassBase<MulticastSocket, DatagramSocket>;
+    using Super = jxx::lang::ClassBase<MulticastSocket, JxxSuper>;
 
-    public:
-        // ---- Constructors (mirror Java) ----
-        // Unbound (choose family automatically; see notes below)
-        MulticastSocket()
-            
-        : Super() {}
+    MulticastSocket();
+    explicit MulticastSocket(Family family);
+    explicit MulticastSocket(std::uint16_t localPort, Family family = Family::Any);
+    ~MulticastSocket() override = default;
 
-        // Unbound with explicit address family preference
-        explicit MulticastSocket(Family fam)
-            
-        : Super(fam) {}
+    void joinGroup(const std::string& groupIPv4,
+        const std::string& interfaceIPv4 = "0.0.0.0");
+    void leaveGroup(const std::string& groupIPv4,
+        const std::string& interfaceIPv4 = "0.0.0.0");
+    void joinGroupV6(const std::string& groupIPv6, unsigned interfaceIndex = 0);
+    void leaveGroupV6(const std::string& groupIPv6, unsigned interfaceIndex = 0);
 
-        // Bind immediately to local port on ANY address (0.0.0.0 or ::)
-        explicit MulticastSocket(std::uint16_t localPort, Family fam = Family::Any)
-            
-        : Super(fam) {
-            // Bind to ANY address for the selected family
-            if (fam == Family::IPv6) {
-                bind("::", localPort);
-            }
-            else {
-                bind("0.0.0.0", localPort);
-            }
-        }
+    void setTimeToLive(int ttl);
+    int getTimeToLive() const noexcept;
+    void setLoopback(bool enabled);
+    void setLoopbackMode(bool disable);
+    bool isLoopbackEnabled() const noexcept;
 
-        // ---- Java-like API ----
+    void setInterface(const std::string& localInterfaceIPv4);
+    std::string getInterface() const;
+    void setNetworkInterface(unsigned interfaceIndex);
+    unsigned getNetworkInterface() const noexcept;
 
-        // joinGroup (IPv4): group like "239.255.0.1" and optional interface IPv4 address.
-        void joinGroup(const std::string& groupIPv4, const std::string& ifaceIPv4 = "0.0.0.0") {
-            joinGroupIPv4(groupIPv4, ifaceIPv4);
-        }
+    void sendToGroup(const std::vector<std::uint8_t>& payload,
+        const std::string& groupAddress, std::uint16_t port);
 
-        // leaveGroup (IPv4)
-        void leaveGroup(const std::string& groupIPv4, const std::string& ifaceIPv4 = "0.0.0.0") {
-            leaveGroupIPv4(groupIPv4, ifaceIPv4);
-        }
-
-        // joinGroup (IPv6): group like "ff12::1234" and interface index (0 = default)
-        void joinGroupV6(const std::string& groupIPv6, unsigned ifindex = 0) {
-            joinGroupIPv6(groupIPv6, ifindex);
-        }
-
-        // leaveGroup (IPv6)
-        void leaveGroupV6(const std::string& groupIPv6, unsigned ifindex = 0) {
-            leaveGroupIPv6(groupIPv6, ifindex);
-        }
-
-        // setTimeToLive (Java: int TTL). For IPv6 we map to hop limit.
-        // We try IPv4 first; if not valid for current socket, try IPv6.
-        void setTimeToLive(int ttl) {
-            if (ttl < 0 || ttl > 255) {
-                throw jxx::lang::IllegalArgumentException("time to live out of range");
-            }
-            // Try IPv4 setter
-            try {
-                setMulticastTTL(ttl);
-                lastTtl_ = ttl;
-                return;
-            }
-            catch (...) {
-                // Fall through and try IPv6
-            }
-            setMulticastHopsIPv6(ttl);
-            lastTtl_ = ttl;
-        }
-
-        int getTimeToLive() const noexcept { return lastTtl_; }
-
-        // Java has setLoopbackMode(boolean disable). Here we provide both:
-        // - setLoopback(true/false) -> intuitive enable/disable
-        // - setLoopbackMode(disable) -> Java parity (true means disable)
-        void setLoopback(bool enable) {
-            bool ok = false;
-            // Try IPv4
-            try { setMulticastLoopIPv4(enable); ok = true; }
-            catch (...) {}
-            // Try IPv6
-            try { setMulticastLoopIPv6(enable); ok = true; }
-            catch (...) {}
-            if (!ok) {
-                throw jxx::net::SocketException("multicast loop option could not be applied");
-            }
-            lastLoopbackEnabled_ = enable;
-        }
-
-        // Java-parity: true means disable loopback
-        void setLoopbackMode(bool disable) { setLoopback(!disable); }
-
-        bool isLoopbackEnabled() const noexcept { return lastLoopbackEnabled_; }
-
-        // Java's setInterface/getInterface for IPv4
-        void setInterface(const std::string& localInterfaceIPv4) {
-            setMulticastInterfaceIPv4(localInterfaceIPv4);
-            lastIfaceV4_ = localInterfaceIPv4;
-        }
-        std::string getInterface() const { return lastIfaceV4_; }
-
-        // Java's setNetworkInterface/getNetworkInterface, IPv6 by index
-        void setNetworkInterface(unsigned ifindex) {
-            setMulticastInterfaceIPv6(ifindex);
-            lastIfindexV6_ = ifindex;
-        }
-        unsigned getNetworkInterface() const noexcept { return lastIfindexV6_; }
-
-        // Convenience send to a multicast group (IPv4 or IPv6)
-        void sendToGroup(const std::vector<std::uint8_t>& payload,
-            const std::string& groupAddr,
-            std::uint16_t port)
-        {
-            DatagramPacket pkt(payload, groupAddr, port);
-            send(pkt);
-        }
-
-    private:
-        // Cached options for getters (OS query not done portably)
-        int         lastTtl_{ 1 };             // default TTL/hop limit
-        bool        lastLoopbackEnabled_{ true };
-        std::string lastIfaceV4_{};
-        unsigned    lastIfindexV6_{ 0 };
-    };
+private:
+    int lastTtl_{1};
+    bool lastLoopbackEnabled_{true};
+    std::string lastInterfaceIPv4_;
+    unsigned lastInterfaceIndexIPv6_{0};
+};
 
 } // namespace jxx::net

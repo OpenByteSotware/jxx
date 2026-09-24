@@ -11,7 +11,7 @@ namespace jxx::net
 
     class ContentHandler : public jxx::lang::ClassBase<ContentHandler, jxx::lang::Object> {
 public:
-    using JavaSuper = jxx::lang::Object;
+    using JxxSuper = jxx::lang::Object;
     using Super = jxx::lang::ClassBase<ContentHandler, jxx::lang::Object>;
 
     public:

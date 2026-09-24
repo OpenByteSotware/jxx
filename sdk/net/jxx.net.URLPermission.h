@@ -9,7 +9,7 @@ namespace jxx::net
 {
     class URLPermission final : public jxx::lang::ClassBase<URLPermission, jxx::lang::Object> {
 public:
-    using JavaSuper = jxx::lang::Object;
+    using JxxSuper = jxx::lang::Object;
     using Super = jxx::lang::ClassBase<URLPermission, jxx::lang::Object>;
 
     public:

@@ -7,7 +7,7 @@ namespace jxx::net
 {
     class ConnectException : public jxx::lang::ClassBase<ConnectException, SocketException> {
 public:
-    using JavaSuper = SocketException;
+    using JxxSuper = SocketException;
     using Super = jxx::lang::ClassBase<ConnectException, SocketException>;
 
     public:

@@ -21,7 +21,7 @@ namespace jxx::net
 
     class SocketImpl : public jxx::lang::ClassBase<SocketImpl, jxx::lang::Object, SocketOptions> {
 public:
-    using JavaSuper = jxx::lang::Object;
+    using JxxSuper = jxx::lang::Object;
     using Super = jxx::lang::ClassBase<SocketImpl, jxx::lang::Object, SocketOptions>;
 
     protected:

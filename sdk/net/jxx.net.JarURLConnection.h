@@ -9,7 +9,7 @@ namespace jxx::net
 
     class JarURLConnection : public jxx::lang::ClassBase<JarURLConnection, URLConnection> {
 public:
-    using JavaSuper = URLConnection;
+    using JxxSuper = URLConnection;
     using Super = jxx::lang::ClassBase<JarURLConnection, URLConnection>;
 
     protected:

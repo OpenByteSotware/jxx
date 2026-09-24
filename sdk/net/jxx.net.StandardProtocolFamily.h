@@ -9,7 +9,7 @@ namespace jxx::net
 {
     class StandardProtocolFamily final : public jxx::lang::ClassBase<StandardProtocolFamily, jxx::lang::Object> {
 public:
-    using JavaSuper = jxx::lang::Object;
+    using JxxSuper = jxx::lang::Object;
     using Super = jxx::lang::ClassBase<StandardProtocolFamily, jxx::lang::Object>;
 
     public:

@@ -23,7 +23,7 @@ namespace jxx::net
 
     class URLConnection : public jxx::lang::ClassBase<URLConnection, jxx::lang::Object> {
 public:
-    using JavaSuper = jxx::lang::Object;
+    using JxxSuper = jxx::lang::Object;
     using Super = jxx::lang::ClassBase<URLConnection, jxx::lang::Object>;
 
     protected:

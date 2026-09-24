@@ -8,7 +8,7 @@ namespace jxx::net
 {
     class SocketAddress : public jxx::lang::ClassBase<SocketAddress, jxx::lang::Object> {
 public:
-    using JavaSuper = jxx::lang::Object;
+    using JxxSuper = jxx::lang::Object;
     using Super = jxx::lang::ClassBase<SocketAddress, jxx::lang::Object>;
 
     public:

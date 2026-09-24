@@ -7,7 +7,7 @@ namespace jxx::net
 {
     class BindException : public jxx::lang::ClassBase<BindException, SocketException> {
 public:
-    using JavaSuper = SocketException;
+    using JxxSuper = SocketException;
     using Super = jxx::lang::ClassBase<BindException, SocketException>;
 
     public:

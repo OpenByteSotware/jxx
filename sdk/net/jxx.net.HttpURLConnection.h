@@ -7,7 +7,7 @@ namespace jxx::net
 {
     class HttpURLConnection : public jxx::lang::ClassBase<HttpURLConnection, URLConnection> {
 public:
-    using JavaSuper = URLConnection;
+    using JxxSuper = URLConnection;
     using Super = jxx::lang::ClassBase<HttpURLConnection, URLConnection>;
 
     protected:

@@ -38,7 +38,7 @@ namespace jxx::net
 
     class Socket final : public jxx::lang::ClassBase<Socket, jxx::lang::Object> {
 public:
-    using JavaSuper = jxx::lang::Object;
+    using JxxSuper = jxx::lang::Object;
     using Super = jxx::lang::ClassBase<Socket, jxx::lang::Object>;
 
     public:

@@ -11,7 +11,7 @@ namespace jxx::net
 
     class URI final : public jxx::lang::ClassBase<URI, jxx::lang::Object> {
 public:
-    using JavaSuper = jxx::lang::Object;
+    using JxxSuper = jxx::lang::Object;
     using Super = jxx::lang::ClassBase<URI, jxx::lang::Object>;
 
     public:

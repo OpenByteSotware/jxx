@@ -12,7 +12,7 @@ namespace jxx::net
 
     class URLStreamHandler : public jxx::lang::ClassBase<URLStreamHandler, jxx::lang::Object> {
 public:
-    using JavaSuper = jxx::lang::Object;
+    using JxxSuper = jxx::lang::Object;
     using Super = jxx::lang::ClassBase<URLStreamHandler, jxx::lang::Object>;
 
     public:

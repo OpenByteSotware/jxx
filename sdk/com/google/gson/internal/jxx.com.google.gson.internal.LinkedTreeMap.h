@@ -25,8 +25,8 @@ class LinkedTreeMap
           LinkedTreeMap<K, V>,
           jxx::util::LinkedHashMap<K, V>> {
 private:
-    using JavaSuper = jxx::util::LinkedHashMap<K, V>;
-    using Super = jxx::lang::ClassBase<LinkedTreeMap<K, V>, JavaSuper>;
+    using JxxSuper = jxx::util::LinkedHashMap<K, V>;
+    using Super = jxx::lang::ClassBase<LinkedTreeMap<K, V>, JxxSuper>;
 
 public:
     using KeyType = K;
@@ -53,7 +53,7 @@ public:
             throw jxx::lang::NullPointerException();
         }
 
-        return JavaSuper::put(key, value);
+        return JxxSuper::put(key, value);
     }
 
     jxx::Ptr<jxx::util::Comparator<K>> comparator() const {
