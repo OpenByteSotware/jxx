@@ -170,10 +170,14 @@ namespace jxx::net {
                 throw jxx::net::SocketException("socket is not IPv4");
             }
             ip_mreq mreq{};
-            mreq.imr_multiaddr.s_addr = ::inet_addr(groupAddress.c_str());
-            mreq.imr_interface.s_addr = ::inet_addr(localInterfaceIPv4.c_str());
-            if (mreq.imr_multiaddr.s_addr == INADDR_NONE) {
-                throw jxx::lang::IllegalArgumentException("joinGroupIPv4: invalid group address");
+            if (::inet_pton(AF_INET, groupAddress.c_str(), &mreq.imr_multiaddr) != 1 ||
+                !IN_MULTICAST(ntohl(mreq.imr_multiaddr.s_addr))) {
+                throw jxx::lang::IllegalArgumentException(
+                    "joinGroupIPv4: address is not an IPv4 multicast group");
+            }
+            if (::inet_pton(AF_INET, localInterfaceIPv4.c_str(), &mreq.imr_interface) != 1) {
+                throw jxx::lang::IllegalArgumentException(
+                    "joinGroupIPv4: invalid interface address");
             }
             if (setsockopt(sock_, IPPROTO_IP, IP_ADD_MEMBERSHIP,
 #if defined(_WIN32)
@@ -192,10 +196,14 @@ namespace jxx::net {
                 throw jxx::net::SocketException("socket is not IPv4");
             }
             ip_mreq mreq{};
-            mreq.imr_multiaddr.s_addr = ::inet_addr(groupAddress.c_str());
-            mreq.imr_interface.s_addr = ::inet_addr(localInterfaceIPv4.c_str());
-            if (mreq.imr_multiaddr.s_addr == INADDR_NONE) {
-                throw jxx::lang::IllegalArgumentException("leaveGroupIPv4: invalid group address");
+            if (::inet_pton(AF_INET, groupAddress.c_str(), &mreq.imr_multiaddr) != 1 ||
+                !IN_MULTICAST(ntohl(mreq.imr_multiaddr.s_addr))) {
+                throw jxx::lang::IllegalArgumentException(
+                    "leaveGroupIPv4: address is not an IPv4 multicast group");
+            }
+            if (::inet_pton(AF_INET, localInterfaceIPv4.c_str(), &mreq.imr_interface) != 1) {
+                throw jxx::lang::IllegalArgumentException(
+                    "leaveGroupIPv4: invalid interface address");
             }
             if (setsockopt(sock_, IPPROTO_IP, IP_DROP_MEMBERSHIP,
 #if defined(_WIN32)
@@ -211,6 +219,9 @@ namespace jxx::net {
         // Set IPv4 multicast TTL (hop count). Default in many stacks is 1.
         void setMulticastTTL(int ttl) {
             ensure_open();
+            if (ttl < 0 || ttl > 255) {
+                throw jxx::lang::IllegalArgumentException("multicast TTL out of range");
+            }
             if (family_ != AF_INET) {
                 throw jxx::net::SocketException("socket is not IPv4");
             }
@@ -248,11 +259,12 @@ namespace jxx::net {
         void setMulticastInterfaceIPv4(const std::string& localInterfaceIPv4) {
             ensure_open();
             if (family_ != AF_INET) {
-                throw std::logic_error("setMulticastInterfaceIPv4: socket is not IPv4");
+                throw jxx::net::SocketException("socket is not IPv4");
             }
-            in_addr ia{}; ia.s_addr = ::inet_addr(localInterfaceIPv4.c_str());
-            if (ia.s_addr == INADDR_NONE) {
-                throw jxx::lang::IllegalArgumentException("setMulticastInterfaceIPv4: invalid interface address");
+            in_addr ia{};
+            if (::inet_pton(AF_INET, localInterfaceIPv4.c_str(), &ia) != 1) {
+                throw jxx::lang::IllegalArgumentException(
+                    "setMulticastInterfaceIPv4: invalid interface address");
             }
             if (setsockopt(sock_, IPPROTO_IP, IP_MULTICAST_IF,
 #if defined(_WIN32)
@@ -276,13 +288,17 @@ namespace jxx::net {
             // Convert textual address to in6_addr
 #if defined(_WIN32)
             IN6_ADDR addr6{};
-            if (InetPtonA(AF_INET6, groupAddress.c_str(), &addr6) != 1) {
-                throw jxx::lang::IllegalArgumentException("joinGroupIPv6: invalid group address");
+            if (InetPtonA(AF_INET6, groupAddress.c_str(), &addr6) != 1 ||
+                addr6.u.Byte[0] != 0xff) {
+                throw jxx::lang::IllegalArgumentException(
+                    "joinGroupIPv6: address is not an IPv6 multicast group");
             }
             std::memcpy(&mreq.ipv6mr_multiaddr, &addr6, sizeof(IN6_ADDR));
 #else
-            if (::inet_pton(AF_INET6, groupAddress.c_str(), &mreq.ipv6mr_multiaddr) != 1) {
-                throw jxx::lang::IllegalArgumentException("joinGroupIPv6: invalid group address");
+            if (::inet_pton(AF_INET6, groupAddress.c_str(), &mreq.ipv6mr_multiaddr) != 1 ||
+                mreq.ipv6mr_multiaddr.s6_addr[0] != 0xff) {
+                throw jxx::lang::IllegalArgumentException(
+                    "joinGroupIPv6: address is not an IPv6 multicast group");
             }
 #endif
             mreq.ipv6mr_interface = ifindex;
@@ -305,13 +321,17 @@ namespace jxx::net {
             ipv6_mreq mreq{};
 #if defined(_WIN32)
             IN6_ADDR addr6{};
-            if (InetPtonA(AF_INET6, groupAddress.c_str(), &addr6) != 1) {
-                throw jxx::lang::IllegalArgumentException("leaveGroupIPv6: invalid group address");
+            if (InetPtonA(AF_INET6, groupAddress.c_str(), &addr6) != 1 ||
+                addr6.u.Byte[0] != 0xff) {
+                throw jxx::lang::IllegalArgumentException(
+                    "leaveGroupIPv6: address is not an IPv6 multicast group");
             }
             std::memcpy(&mreq.ipv6mr_multiaddr, &addr6, sizeof(IN6_ADDR));
 #else
-            if (::inet_pton(AF_INET6, groupAddress.c_str(), &mreq.ipv6mr_multiaddr) != 1) {
-                throw jxx::lang::IllegalArgumentException("leaveGroupIPv6: invalid group address");
+            if (::inet_pton(AF_INET6, groupAddress.c_str(), &mreq.ipv6mr_multiaddr) != 1 ||
+                mreq.ipv6mr_multiaddr.s6_addr[0] != 0xff) {
+                throw jxx::lang::IllegalArgumentException(
+                    "leaveGroupIPv6: address is not an IPv6 multicast group");
             }
 #endif
             mreq.ipv6mr_interface = ifindex;
@@ -329,6 +349,9 @@ namespace jxx::net {
         // IPv6 hop limit (TTL analog)
         void setMulticastHopsIPv6(int hops) {
             ensure_open();
+            if (hops < 0 || hops > 255) {
+                throw jxx::lang::IllegalArgumentException("multicast hop limit out of range");
+            }
             if (family_ != AF_INET6) {
                 throw jxx::net::SocketException("socket is not IPv6");
             }
@@ -366,7 +389,7 @@ namespace jxx::net {
         void setMulticastInterfaceIPv6(unsigned int ifindex) {
             ensure_open();
             if (family_ != AF_INET6) {
-                throw std::logic_error("setMulticastInterfaceIPv6: socket is not IPv6");
+                throw jxx::net::SocketException("socket is not IPv6");
             }
             unsigned int idx = ifindex;
             if (setsockopt(sock_, IPPROTO_IPV6, IPV6_MULTICAST_IF,
