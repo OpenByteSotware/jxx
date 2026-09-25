@@ -3,6 +3,7 @@
 #include <chrono>
 #include <mutex>
 #include <shared_mutex>
+#include <thread>
 #include <unordered_map>
 #include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.ClassInfo.h"
@@ -17,12 +18,12 @@ class ReentrantReadWriteLock final : public ::jxx::lang::ClassBase<ReentrantRead
 public:
  using JxxSuper=::jxx::lang::Object;using Super=::jxx::lang::ClassBase<ReentrantReadWriteLock,JxxSuper,ReadWriteLock,::jxx::io::SerializableI>;using JxxClassInfoMarker=::jxx::lang::ClassInfo<ReentrantReadWriteLock,JxxSuper,ReadWriteLock,::jxx::io::SerializableI>;static ::jxx::Ptr<::jxx::lang::ClassAny>Class(){return JxxClassInfoMarker::Class();}
  ReentrantReadWriteLock():ReentrantReadWriteLock(false){}explicit ReentrantReadWriteLock(::jxx::lang::jbool fair):Super(),fair_(fair),read_(::jxx::NEW<ReadLockImpl>(this)),write_(::jxx::NEW<WriteLockImpl>(this)){}
- ::jxx::Ptr<Lock>readLock()override{return ::jxx::CAST<Lock>(read_);}::jxx::Ptr<Lock>writeLock()override{return ::jxx::CAST<Lock>(write_);}::jxx::lang::jbool isFair()const noexcept{return fair_;}::jxx::lang::jbool isWriteLocked()const noexcept{return writeLocked_.load();}::jxx::lang::jbool isWriteLockedByCurrentThread()const noexcept{return writeHolds_[this]>0;}::jxx::lang::jint getWriteHoldCount()const noexcept{return writeHolds_[this];}::jxx::lang::jint getReadHoldCount()const noexcept{return readHolds_[this];}::jxx::lang::jint getReadLockCount()const noexcept{return readCount_.load();}::jxx::lang::jbool hasQueuedThreads()const noexcept{return queued_.load()>0;}::jxx::lang::jint getQueueLength()const noexcept{return queued_.load();}
+ ::jxx::Ptr<Lock>readLock()override{return ::jxx::CAST<Lock>(read_);}::jxx::Ptr<Lock>writeLock()override{return ::jxx::CAST<Lock>(write_);}::jxx::lang::jbool isFair()const noexcept{return fair_;}::jxx::lang::jbool isWriteLocked()const noexcept{return writeLocked_.load();}::jxx::lang::jbool isWriteLockedByCurrentThread()const noexcept{return writeHolds_[std::this_thread::get_id()]>0;}::jxx::lang::jint getWriteHoldCount()const noexcept{return writeHolds_[std::this_thread::get_id()];}::jxx::lang::jint getReadHoldCount()const noexcept{return readHolds_[std::this_thread::get_id()];}::jxx::lang::jint getReadLockCount()const noexcept{return readCount_.load();}::jxx::lang::jbool hasQueuedThreads()const noexcept{return queued_.load()>0;}::jxx::lang::jint getQueueLength()const noexcept{return queued_.load();}
  void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>&out)override{(void)out;}void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>&in)override{(void)in;}void readObjectNoData()override{}
 private:
- void readAcquired_(){++readCount_;++readHolds_[this];}
- void readReleased_(){auto& c=readHolds_[this];if(c<=0)throw ::jxx::lang::IllegalMonitorStateException();--c;--readCount_;}
- void writeAcquired_(){writeLocked_=true;++writeHolds_[this];}
- void writeReleased_(){auto& c=writeHolds_[this];if(c<=0)throw ::jxx::lang::IllegalMonitorStateException();if(--c==0)writeLocked_=false;}
- std::shared_timed_mutex mutex_;::jxx::lang::jbool fair_;std::atomic<::jxx::lang::jint> readCount_{0};std::atomic<::jxx::lang::jint> queued_{0};std::atomic<::jxx::lang::jbool> writeLocked_{false};inline static thread_local std::unordered_map<const ReentrantReadWriteLock*,::jxx::lang::jint> readHolds_;inline static thread_local std::unordered_map<const ReentrantReadWriteLock*,::jxx::lang::jint> writeHolds_;::jxx::Ptr<ReadLockImpl>read_;::jxx::Ptr<WriteLockImpl>write_;
+ void readAcquired_(){++readCount_;++readHolds_[std::this_thread::get_id()];}
+ void readReleased_(){auto& c=readHolds_[std::this_thread::get_id()];if(c<=0)throw ::jxx::lang::IllegalMonitorStateException();--c;--readCount_;}
+ void writeAcquired_(){writeLocked_=true;++writeHolds_[std::this_thread::get_id()];}
+ void writeReleased_(){auto& c=writeHolds_[std::this_thread::get_id()];if(c<=0)throw ::jxx::lang::IllegalMonitorStateException();if(--c==0)writeLocked_=false;}
+ std::shared_timed_mutex mutex_;::jxx::lang::jbool fair_;std::atomic<::jxx::lang::jint> readCount_{0};std::atomic<::jxx::lang::jint> queued_{0};std::atomic<::jxx::lang::jbool> writeLocked_{false};inline static thread_local std::unordered_map<std::thread::id,::jxx::lang::jint> readHolds_;inline static thread_local std::unordered_map<std::thread::id,::jxx::lang::jint> writeHolds_;::jxx::Ptr<ReadLockImpl>read_;::jxx::Ptr<WriteLockImpl>write_;
 }; }

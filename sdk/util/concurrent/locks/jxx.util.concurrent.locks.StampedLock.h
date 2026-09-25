@@ -57,7 +57,7 @@ public:
         if (::jxx::lang::Thread::interrupted()) {
             throw ::jxx::lang::InterruptedException();
         }
-        const auto deadline = std::chrono::steady_clock::now() + unit->toChrono(time);
+        const auto deadline = deadlineAfter_(unit->toChrono(time));
         std::unique_lock<std::mutex> lock(mutex_);
         while (writer_ || readers_ != 0) {
             const auto now = std::chrono::steady_clock::now();
@@ -97,7 +97,7 @@ public:
         if (::jxx::lang::Thread::interrupted()) {
             throw ::jxx::lang::InterruptedException();
         }
-        const auto deadline = std::chrono::steady_clock::now() + unit->toChrono(time);
+        const auto deadline = deadlineAfter_(unit->toChrono(time));
         std::unique_lock<std::mutex> lock(mutex_);
         while (writer_) {
             const auto now = std::chrono::steady_clock::now();
@@ -302,6 +302,16 @@ private:
     static constexpr ::jxx::lang::jlong READ = 1;
     static constexpr ::jxx::lang::jlong WRITE = 2;
     static constexpr ::jxx::lang::jlong OPTIMISTIC = 3;
+
+    static std::chrono::steady_clock::time_point deadlineAfter_(
+        std::chrono::steady_clock::duration duration) {
+        const auto now = std::chrono::steady_clock::now();
+        if (duration <= std::chrono::steady_clock::duration::zero()) return now;
+        const auto remaining = std::chrono::steady_clock::time_point::max() - now;
+        return duration >= remaining
+            ? std::chrono::steady_clock::time_point::max()
+            : now + duration;
+    }
 
     ::jxx::lang::jlong grantRead_() {
         ++readers_;
