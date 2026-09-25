@@ -48,6 +48,8 @@ target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty
 target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/fmt/include)
 target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/libunicode/src)
 target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/pugixml/src)
+target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/openssl/include
+)
 
 target_compile_features(jxxsdk PRIVATE cxx_std_17)
 target_compile_options(jxxsdk PRIVATE /utf-8)

@@ -73,7 +73,7 @@ endif()
 target_include_directories(
     all_tests
     PRIVATE
-	"${CMAKE_CURRENT_SOURCE_DIR}/support"
+        "${CMAKE_CURRENT_SOURCE_DIR}/support"
         "${CMAKE_SOURCE_DIR}/sdk"
         "${CMAKE_SOURCE_DIR}/sdk/defines"
         "${CMAKE_SOURCE_DIR}/sdk/lang"
@@ -85,6 +85,135 @@ target_include_directories(
         "${CMAKE_SOURCE_DIR}/sdk/security"
 )
 
+# -----------------------------------------------------------------------------
+# Vendored OpenSSL 1.1.1w
+#
+# Use absolute imported-library locations so Visual Studio never receives only
+# the bare filename "libssl_static.lib". The root may be overridden when
+# configuring with -DJXX_OPENSSL_ROOT=<path>.
+# -----------------------------------------------------------------------------
+set(
+    JXX_OPENSSL_ROOT
+    "${CMAKE_SOURCE_DIR}/3rdparty/openssl"
+    CACHE PATH
+    "Path to the vendored OpenSSL 1.1.1w directory"
+)
+
+set(
+    JXX_OPENSSL_INCLUDE_DIR
+    "${JXX_OPENSSL_ROOT}/include"
+)
+
+if(WIN32)
+    set(
+        JXX_OPENSSL_SSL_LIBRARY
+        "${JXX_OPENSSL_ROOT}/libssl_static.lib"
+    )
+    set(
+        JXX_OPENSSL_CRYPTO_LIBRARY
+        "${JXX_OPENSSL_ROOT}/libcrypto_static.lib"
+    )
+else()
+    set(
+        JXX_OPENSSL_SSL_LIBRARY
+        "${JXX_OPENSSL_ROOT}/libssl.a"
+    )
+    set(
+        JXX_OPENSSL_CRYPTO_LIBRARY
+        "${JXX_OPENSSL_ROOT}/libcrypto.a"
+    )
+endif()
+
+foreach(
+    required_path
+    IN ITEMS
+        "${JXX_OPENSSL_INCLUDE_DIR}"
+        "${JXX_OPENSSL_SSL_LIBRARY}"
+        "${JXX_OPENSSL_CRYPTO_LIBRARY}"
+)
+    if(NOT EXISTS "${required_path}")
+        message(
+            FATAL_ERROR
+            "Required vendored OpenSSL path does not exist: ${required_path}"
+        )
+    endif()
+endforeach()
+
+add_library(
+    JXX_OpenSSL_SSL
+    STATIC
+    IMPORTED
+    GLOBAL
+)
+set_target_properties(
+    JXX_OpenSSL_SSL
+    PROPERTIES
+        IMPORTED_LOCATION
+            "${JXX_OPENSSL_SSL_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES
+            "${JXX_OPENSSL_INCLUDE_DIR}"
+)
+add_library(
+    JXX::OpenSSL::SSL
+    ALIAS
+    JXX_OpenSSL_SSL
+)
+
+add_library(
+    JXX_OpenSSL_Crypto
+    STATIC
+    IMPORTED
+    GLOBAL
+)
+set_target_properties(
+    JXX_OpenSSL_Crypto
+    PROPERTIES
+        IMPORTED_LOCATION
+            "${JXX_OPENSSL_CRYPTO_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES
+            "${JXX_OPENSSL_INCLUDE_DIR}"
+)
+add_library(
+    JXX::OpenSSL::Crypto
+    ALIAS
+    JXX_OpenSSL_Crypto
+)
+
+# jxxsdk is a static library, so OpenSSL is PUBLIC to propagate both vendored
+# archives to final executables such as all_tests.
+target_link_libraries(
+    jxxsdk
+    PUBLIC
+        JXX::OpenSSL::SSL
+        JXX::OpenSSL::Crypto
+)
+
+target_compile_definitions(
+    jxxsdk
+    PUBLIC
+        JXX_WITH_OPENSSL_TLS=1
+        JXX_OPENSSL_VERSION_1_1_1W=1
+)
+
+if(WIN32)
+    target_link_libraries(
+        jxxsdk
+        PUBLIC
+            Crypt32
+            Ws2_32
+    )
+elseif(UNIX AND NOT APPLE)
+    find_package(Threads REQUIRED)
+    target_link_libraries(
+        jxxsdk
+        PUBLIC
+            Threads::Threads
+            dl
+    )
+endif()
+
+# Link the test executable after jxxsdk has acquired its PUBLIC OpenSSL usage
+# requirements. Do not add bare libssl/libcrypto filenames here.
 target_link_libraries(
     all_tests
     PRIVATE
@@ -96,14 +225,6 @@ target_link_libraries(
         unicode::unicode
         pugixml::pugixml
 )
-
-if(UNIX AND NOT APPLE)
-    target_link_libraries(
-        all_tests
-        PRIVATE
-            dl
-    )
-endif()
 
 include(GoogleTest)
 

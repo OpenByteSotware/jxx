@@ -136,10 +136,18 @@ top level directory do these commands
 git submodule add --name libunicode https://github.com/OpenByteSotware/libunicode 3rdparty/libunicode
 git submodule add --name libgsl https://github.com/OpenByteSotware/GSL 3rdparty/gsl
 git submodule add --name libfmt https://github.com/OpenByteSotware/fmt 3rdparty/fmt
-git submodule add --name libfmt https://github.com/OpenByteSotware/fmt 3rdparty/fmt
+git submodule add --name libwxwidgets https://github.com/OpenByteSotware/wxWidgets 3rdparty/wxWidgets
 git submodule add --name libpugixml https://github.com/OpenByteSotware/pugixml 3rdparty/pugixml
 git submodule add --name libopenssl https://github.com/OpenByteSotware/openssl 3rdparty/openssl
 
+
+
+Building openssl
+
+Need Strawberry perl
+nasm
+VS console window building for x64
+perl Configure VC-WIN64A --prefix=C:\<fullpath>\jxx\3rdparty\openssl --openssl dir=C:\<fullpath>\jxx\3rdparty\openssl\ssl
 
 
 
