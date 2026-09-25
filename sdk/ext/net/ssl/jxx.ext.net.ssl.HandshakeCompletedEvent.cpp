@@ -1,6 +1,8 @@
 #include "ext/net/ssl/jxx.ext.net.ssl.HandshakeCompletedEvent.h"
 
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLSocket.h"
+#include "ext/security/cert/internal/jxx.ext.security.cert.internal.DerX509Certificate.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SSLPeerUnverifiedException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 
 namespace jxx::ext::net::ssl {
@@ -41,7 +43,26 @@ HandshakeCompletedEvent::getPeerCertificates() const {
 
 ::jxx::Ptr<HandshakeCompletedEvent::LegacyCertificateArray>
 HandshakeCompletedEvent::getPeerCertificateChain() const {
-    return nullptr;
+    const auto certificates = session_->getPeerCertificates();
+    if (certificates == nullptr)
+        throw ::jxx::ext::net::ssl::SSLPeerUnverifiedException(
+            "peer not authenticated");
+
+    const auto result = ::jxx::NEW<LegacyCertificateArray>(
+        certificates->length);
+    for (::jxx::lang::jint index = 0;
+         index < certificates->length;
+         ++index) {
+        if ((*certificates)[index] == nullptr)
+            throw ::jxx::ext::net::ssl::SSLPeerUnverifiedException(
+                "peer certificate chain contains a null certificate");
+        (*result)[index] = ::jxx::CAST<
+            ::jxx::ext::security::cert::X509Certificate>(
+                ::jxx::NEW<
+                    ::jxx::ext::security::cert::internal::DerX509Certificate>(
+                        (*certificates)[index]->getEncoded()));
+    }
+    return result;
 }
 
 ::jxx::Ptr<::jxx::security::Principal>

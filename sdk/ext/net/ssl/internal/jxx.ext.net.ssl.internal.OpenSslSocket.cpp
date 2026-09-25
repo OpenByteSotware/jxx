@@ -10,6 +10,7 @@
 #include <openssl/ssl.h>
 #include <openssl/rand.h>
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSession.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslX509Certificate.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSessionContext.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslStreams.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.HandshakeCompletedEvent.h"
@@ -147,13 +148,51 @@ namespace jxx::ext::net::ssl::internal
             ? config_->clientSessionContext
             : config_->serverSessionContext;
 
+        using SessionCertificateArray = OpenSslSession::CertificateArray;
+
+        ::jxx::Ptr<SessionCertificateArray> peerCertificates;
+        STACK_OF(X509)* peerChain = SSL_get_peer_cert_chain(ssl);
+        if (peerChain != nullptr) {
+            const int peerCount = sk_X509_num(peerChain);
+            peerCertificates = ::jxx::NEW<SessionCertificateArray>(peerCount);
+            for (int index = 0; index < peerCount; ++index) {
+                X509* certificate = sk_X509_value(peerChain, index);
+                const int encodedLength = i2d_X509(certificate, nullptr);
+                if (encodedLength <= 0)
+                    throw ::jxx::io::IOException("Could not encode peer certificate");
+                const auto encoded = ::jxx::NEW<
+                    ::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(encodedLength);
+                unsigned char* cursor = reinterpret_cast<unsigned char*>(&(*encoded)[0]);
+                if (i2d_X509(certificate, &cursor) != encodedLength)
+                    throw ::jxx::io::IOException("Could not encode peer certificate");
+                (*peerCertificates)[index] = ::jxx::CAST<::jxx::security::cert::Certificate>(
+                    ::jxx::NEW<OpenSslX509Certificate>(encoded));
+            }
+        }
+
+        ::jxx::Ptr<SessionCertificateArray> localCertificates;
+        X509* localLeaf = SSL_get_certificate(ssl);
+        if (localLeaf != nullptr) {
+            localCertificates = ::jxx::NEW<SessionCertificateArray>(1);
+            const int encodedLength = i2d_X509(localLeaf, nullptr);
+            if (encodedLength <= 0)
+                throw ::jxx::io::IOException("Could not encode local certificate");
+            const auto encoded = ::jxx::NEW<
+                ::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(encodedLength);
+            unsigned char* cursor = reinterpret_cast<unsigned char*>(&(*encoded)[0]);
+            if (i2d_X509(localLeaf, &cursor) != encodedLength)
+                throw ::jxx::io::IOException("Could not encode local certificate");
+            (*localCertificates)[0] = ::jxx::CAST<::jxx::security::cert::Certificate>(
+                ::jxx::NEW<OpenSslX509Certificate>(encoded));
+        }
+
         session_ = ::jxx::NEW<OpenSslSession>(
             ::jxx::NEW<::jxx::lang::String>(SSL_get_cipher_name(ssl)),
             ::jxx::NEW<::jxx::lang::String>(SSL_get_version(ssl)),
             host_,
             port_,
-            nullptr,
-            nullptr,
+            peerCertificates,
+            localCertificates,
             sessionId,
             sessionContext);
 
