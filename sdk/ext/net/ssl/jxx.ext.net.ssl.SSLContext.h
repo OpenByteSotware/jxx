@@ -12,4 +12,13 @@ static ::jxx::Ptr<SSLContext> getInstance(const ::jxx::Ptr<::jxx::lang::String>&
 void init(const ::jxx::Ptr<KeyManagerArray>& keys,const ::jxx::Ptr<TrustManagerArray>& trusts,const ::jxx::Ptr<::jxx::security::SecureRandom>& random);
 ::jxx::Ptr<SSLSocketFactory> getSocketFactory(); ::jxx::Ptr<::jxx::lang::String> getProtocol()const;
 ~SSLContext() override;
-private: explicit SSLContext(const ::jxx::Ptr<::jxx::lang::String>& protocol); class Native; std::shared_ptr<Native> native_; ::jxx::Ptr<::jxx::lang::String> protocol_;}; }
+
+// Public for jxx::NEW<SSLContext>(...) construction. Public application
+// construction remains discouraged; use getInstance() or getDefault().
+explicit SSLContext(const ::jxx::Ptr<::jxx::lang::String>& protocol);
+
+private:
+class Native;
+std::shared_ptr<Native> native_;
+::jxx::Ptr<::jxx::lang::String> protocol_;
+}; }
