@@ -12,6 +12,7 @@
 #include "net/jxx.net.URLStreamHandlerFactory.h"
 #include "io/jxx.io.InputStream.h"
 #include "io/jxx.io.FileInputStream.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslHttpsURLConnection.h"
 
 namespace
 {
@@ -120,7 +121,9 @@ namespace
                 const auto type = jxx::net::URLConnection::guessContentTypeFromName(jxx::NEW<jxx::lang::String>(p));
                 return jxx::NEW<BasicURLConnection>(u, p, type ? type->utf8() : std::string());
             }
-            if (proto == "http" || proto == "https")
+            if (proto == "https")
+                return ::jxx::ext::net::ssl::internal::openHttpsConnection(u);
+            if (proto == "http")
                 return jxx::NEW<BasicHttpURLConnection>(u);
             if (proto == "jar")
             {

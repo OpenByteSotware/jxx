@@ -8,3 +8,6 @@
 [submodule "libfmt"]
 	path = 3rdparty/fmt
 	url = https://github.com/OpenByteSotware/fmt
+[submodule "libopenssl"]
+	path = 3rdparty/openssl
+	url = https://github.com/OpenByteSotware/openssl
