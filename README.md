@@ -249,4 +249,392 @@ int main()
 
     return jxx::swing::SwingUtilities::run();
 }
-`
+
+
+
+
+# Building OpenSSL 1.1.1w for the JXX SDK
+
+This section documents the prerequisites and build steps for producing static OpenSSL 1.1.1w libraries for the JXX SDK on Windows x64 and Linux x64.
+
+> **JXX integration layout**
+>
+> OpenSSL headers and libraries are stored under:
+>
+> ```text
+> jxx/3rdparty/openssl/
+> ```
+
+## 1. Required output
+
+The JXX Windows build uses the static OpenSSL libraries:
+
+```text
+jxx/3rdparty/openssl/libssl_static.lib
+jxx/3rdparty/openssl/libcrypto_static.lib
+```
+
+The JXX Linux build uses:
+
+```text
+jxx/3rdparty/openssl/libssl.a
+jxx/3rdparty/openssl/libcrypto.a
+```
+
+The public OpenSSL headers must be available under:
+
+```text
+jxx/3rdparty/openssl/include/openssl/
+```
+
+## 2. Windows x64 prerequisites
+
+Install the following applications and Visual Studio components:
+
+1. **Visual Studio 2026 or Visual Studio 2026 Build Tools**
+   - Desktop development with C++
+   - MSVC x64 compiler and libraries
+   - Windows 10 or Windows 11 SDK
+   - Windows SDK Resource Compiler (`rc.exe`)
+
+2. **Native Windows Perl**
+   - Strawberry Perl or another native Windows Perl distribution is recommended.
+   - Do not use MSYS2 Perl for an MSVC build.
+   - Verify that Perl reports a native Windows target rather than `x86_64-msys-thread-multi`:
+
+   ```cmd
+   perl -v
+   ```
+
+3. **NASM**
+   - Required for the optimized x64 assembly implementation.
+
+   ```cmd
+   nasm -v
+   ```
+
+4. **OpenSSL 1.1.1w source archive**
+   - Extract the archive to the intended build directory.
+
+## 3. Initialize the Windows x64 build environment
+
+Use an **x64 Native Tools Command Prompt**. Alternatively, initialize an existing Command Prompt with the Build Tools environment:
+
+```cmd
+call "C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64
+```
+
+For a Professional installation, use its corresponding `VsDevCmd.bat` or `vcvarsall.bat` path.
+
+Verify that the compiler targets x64:
+
+```cmd
+cl
+```
+
+The output must include:
+
+```text
+for x64
+```
+
+Verify the required tools:
+
+```cmd
+where cl
+where nmake
+where rc
+where perl
+where nasm
+```
+
+## 4. Windows SDK environment workaround
+
+A correctly configured Visual Studio developer prompt should populate these paths automatically. If `stdlib.h`, `kernel32.lib`, or `rc.exe` cannot be found, add the installed Windows SDK paths explicitly.
+
+The following example uses Windows SDK `10.0.26100.0`:
+
+```cmd
+set "WindowsSdkVersion=10.0.26100.0"
+set "WindowsSdkRoot=C:\Program Files (x86)\Windows Kits\10"
+
+set "INCLUDE=%WindowsSdkRoot%\Include\%WindowsSdkVersion%\ucrt;%WindowsSdkRoot%\Include\%WindowsSdkVersion%\shared;%WindowsSdkRoot%\Include\%WindowsSdkVersion%\um;%WindowsSdkRoot%\Include\%WindowsSdkVersion%\winrt;%INCLUDE%"
+
+set "LIB=%WindowsSdkRoot%\Lib\%WindowsSdkVersion%\ucrt\x64;%WindowsSdkRoot%\Lib\%WindowsSdkVersion%\um\x64;%LIB%"
+
+set "PATH=%WindowsSdkRoot%\bin\%WindowsSdkVersion%\x64;%PATH%"
+```
+
+Confirm that the files exist before using a different SDK version:
+
+```cmd
+dir "%WindowsSdkRoot%\Include\%WindowsSdkVersion%\ucrt\stdlib.h"
+dir "%WindowsSdkRoot%\Lib\%WindowsSdkVersion%\um\x64\kernel32.lib"
+where rc
+```
+
+### Compiler sanity check
+
+Create a minimal C file:
+
+```c
+#include <stdlib.h>
+
+int main(void)
+{
+    return EXIT_SUCCESS;
+}
+```
+
+Build it:
+
+```cmd
+cl main.c
+```
+
+Do not continue until this command creates `main.exe` without a missing-header or missing-library error.
+
+## 5. Configure OpenSSL for Windows x64
+
+From the extracted OpenSSL 1.1.1w source directory, configure a static x64 MSVC build:
+
+```cmd
+perl Configure VC-WIN64A no-shared
+```
+
+To set explicit runtime directories, add `--prefix` and `--openssldir`. Avoid installing over an existing source tree unless that layout is intentional.
+
+Example staging directory:
+
+```cmd
+perl Configure VC-WIN64A no-shared ^
+  --prefix=C:\projects\SourceCode\git_repos\open_source\jxx\3rdparty\openssl-install ^
+  --openssldir=C:\projects\SourceCode\git_repos\open_source\jxx\3rdparty\openssl-install\ssl
+```
+
+A successful configuration ends with:
+
+```text
+OpenSSL has been successfully configured
+```
+
+## 6. Build, test, and install on Windows
+
+Build:
+
+```cmd
+nmake
+```
+
+Run the OpenSSL test suite:
+
+```cmd
+nmake test
+```
+
+Install into the configured prefix when a staging prefix was specified:
+
+```cmd
+nmake install
+```
+
+Expected build outputs include:
+
+```text
+libcrypto.lib
+libcrypto_static.lib
+libssl.lib
+libssl_static.lib
+```
+
+For static JXX integration, use:
+
+```text
+libcrypto_static.lib
+libssl_static.lib
+```
+
+The smaller `libcrypto.lib` and `libssl.lib` files are used with the DLL build and are not the selected JXX static libraries.
+
+## 7. Verify the Windows libraries
+
+Confirm that the generated libraries contain x64 objects:
+
+```cmd
+dumpbin /headers libssl_static.lib | findstr /i "machine x64 8664"
+dumpbin /headers libcrypto_static.lib | findstr /i "machine x64 8664"
+```
+
+Copy the static libraries and headers into the JXX third-party directory if they were built in a separate staging directory:
+
+```text
+jxx/3rdparty/openssl/
+├── include/
+│   └── openssl/
+├── libcrypto_static.lib
+└── libssl_static.lib
+```
+
+## 8. Windows CMake integration
+
+```cmake
+set(JXX_OPENSSL_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/openssl")
+
+target_include_directories(jxxsdk PRIVATE
+    "${JXX_OPENSSL_ROOT}/include"
+)
+
+target_link_libraries(jxxsdk PRIVATE
+    "${JXX_OPENSSL_ROOT}/libssl_static.lib"
+    "${JXX_OPENSSL_ROOT}/libcrypto_static.lib"
+    ws2_32
+    crypt32
+    bcrypt
+    advapi32
+)
+```
+
+Keep `libssl_static.lib` before `libcrypto_static.lib` in the link list because SSL depends on Crypto.
+
+## 9. Linux x64 prerequisites
+
+### Debian or Ubuntu
+
+```bash
+sudo apt-get update
+sudo apt-get install -y build-essential perl nasm
+```
+
+### RHEL, Rocky Linux, or AlmaLinux
+
+```bash
+sudo dnf groupinstall -y "Development Tools"
+sudo dnf install -y perl nasm
+```
+
+Verify:
+
+```bash
+gcc --version
+make --version
+perl -v
+nasm -v
+```
+
+## 10. Configure OpenSSL for Linux x64
+
+From the extracted OpenSSL 1.1.1w source directory:
+
+```bash
+./config no-shared \
+  --prefix=/opt/openssl-1.1.1w \
+  --openssldir=/opt/openssl-1.1.1w/ssl
+```
+
+For a position-independent static library suitable for inclusion in a shared JXX library, use:
+
+```bash
+./config no-shared -fPIC \
+  --prefix=/opt/openssl-1.1.1w \
+  --openssldir=/opt/openssl-1.1.1w/ssl
+```
+
+## 11. Build, test, and install on Linux
+
+```bash
+make -j"$(nproc)"
+make test
+sudo make install
+```
+
+Expected static libraries:
+
+```text
+libssl.a
+libcrypto.a
+```
+
+Copy the Linux libraries into the JXX third-party layout selected by the project, while retaining the shared OpenSSL headers under `jxx/3rdparty/openssl/include`.
+
+## 12. Linux CMake integration
+
+If the Linux static libraries are stored in a platform subdirectory:
+
+```cmake
+set(JXX_OPENSSL_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/openssl")
+
+target_include_directories(jxxsdk PRIVATE
+    "${JXX_OPENSSL_ROOT}/include"
+)
+
+target_link_libraries(jxxsdk PRIVATE
+    "${JXX_OPENSSL_ROOT}/linux/libssl.a"
+    "${JXX_OPENSSL_ROOT}/linux/libcrypto.a"
+    dl
+    pthread
+)
+```
+
+## 13. Troubleshooting
+
+### Perl reports `x86_64-msys-thread-multi`
+
+Use a native Windows Perl distribution and ensure its `perl.exe` appears before MSYS2 in `PATH`:
+
+```cmd
+where perl
+perl -v
+```
+
+### `stdlib.h` cannot be found
+
+The Windows SDK UCRT include directory is missing from `INCLUDE`. Add:
+
+```text
+C:\Program Files (x86)\Windows Kits\10\Include\<SDK-version>\ucrt
+```
+
+Also include the SDK `shared`, `um`, and `winrt` directories.
+
+### `kernel32.lib` cannot be found
+
+The x64 Windows SDK library directories are missing from `LIB`. Add:
+
+```text
+C:\Program Files (x86)\Windows Kits\10\Lib\<SDK-version>\ucrt\x64
+C:\Program Files (x86)\Windows Kits\10\Lib\<SDK-version>\um\x64
+```
+
+### `rc` is not recognized
+
+Add the x64 Windows SDK binary directory to `PATH`:
+
+```text
+C:\Program Files (x86)\Windows Kits\10\bin\<SDK-version>\x64
+```
+
+Then verify:
+
+```cmd
+where rc
+```
+
+### Compiler reports `for x86`
+
+The wrong Visual Studio environment is active. Reinitialize it for x64:
+
+```cmd
+call "C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64
+```
+
+Verify that `cl` reports `for x64` before configuring OpenSSL with `VC-WIN64A`.
+
+## 14. Clean rebuild
+
+When changing architecture or major configuration options, use a clean source tree whenever practical. Otherwise, clean the existing build before reconfiguration:
+
+```cmd
+nmake clean
+```
+
+Then run `perl Configure VC-WIN64A no-shared` again from the correctly initialized x64 environment.
