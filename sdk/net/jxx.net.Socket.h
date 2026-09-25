@@ -36,7 +36,7 @@ namespace jxx::net
 
     class ServerSocket;
 
-    class Socket final : public jxx::lang::ClassBase<Socket, jxx::lang::Object> {
+    class Socket : public jxx::lang::ClassBase<Socket, jxx::lang::Object> {
 public:
     using JxxSuper = jxx::lang::Object;
     using Super = jxx::lang::ClassBase<Socket, jxx::lang::Object>;
@@ -66,10 +66,10 @@ public:
     public:
         static void setSocketImplFactory(const jxx::Ptr<SocketImplFactory>& fac);
 
-        void connect(const jxx::Ptr<SocketAddress>& endpoint);
-        void connect(const jxx::Ptr<SocketAddress>& endpoint,
+        virtual void connect(const jxx::Ptr<SocketAddress>& endpoint);
+        virtual void connect(const jxx::Ptr<SocketAddress>& endpoint,
                      jxx::lang::jint timeout);
-        void bind(const jxx::Ptr<SocketAddress>& bindpoint);
+        virtual void bind(const jxx::Ptr<SocketAddress>& bindpoint);
 
         jxx::Ptr<InetAddress> getInetAddress() const;
         jxx::Ptr<InetAddress> getLocalAddress() const;
@@ -79,8 +79,8 @@ public:
         jxx::Ptr<SocketAddress> getLocalSocketAddress() const;
         jxx::Ptr<jxx::nio::channels::SocketChannel> getChannel() const;
 
-        jxx::Ptr<jxx::io::InputStream> getInputStream();
-        jxx::Ptr<jxx::io::OutputStream> getOutputStream();
+        virtual jxx::Ptr<jxx::io::InputStream> getInputStream();
+        virtual jxx::Ptr<jxx::io::OutputStream> getOutputStream();
 
         void setTcpNoDelay(jxx::lang::jbool on);
         jxx::lang::jbool getTcpNoDelay() const;
@@ -103,9 +103,9 @@ public:
         void setReuseAddress(jxx::lang::jbool on);
         jxx::lang::jbool getReuseAddress() const;
 
-        void shutdownInput();
-        void shutdownOutput();
-        void close();
+        virtual void shutdownInput();
+        virtual void shutdownOutput();
+        virtual void close();
 
         jxx::lang::jbool isConnected() const noexcept;
         jxx::lang::jbool isBound() const noexcept;
