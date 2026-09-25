@@ -10,6 +10,8 @@
 #include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Exceptions.h"
+#include "lang/jxx.lang.InterruptedException.h"
+#include "lang/jxx.lang.Thread.h"
 #include "util/jxx.util.AbstractQueue.h"
 #include "util/jxx.util.Iterator.h"
 #include "util/jxx.util.NoSuchElementException.h"
@@ -68,6 +70,7 @@ public:
     }
 
     void put(const ::jxx::Ptr<E>& element) override {
+        if (::jxx::lang::Thread::interrupted()) throw ::jxx::lang::InterruptedException();
         requireElement_(element);
         std::unique_lock<std::mutex> lock(mutex_);
         notFull_.wait(lock, [&] { return queue_.size() < static_cast<std::size_t>(capacity_); });
@@ -91,6 +94,7 @@ public:
     }
 
     void transfer(const ::jxx::Ptr<E>& element) override {
+        if (::jxx::lang::Thread::interrupted()) throw ::jxx::lang::InterruptedException();
         requireElement_(element);
         std::unique_lock<std::mutex> lock(mutex_);
         const auto token=++nextTransferToken_;
@@ -125,6 +129,7 @@ public:
     }
 
     ::jxx::Ptr<E> take() override {
+        if (::jxx::lang::Thread::interrupted()) throw ::jxx::lang::InterruptedException();
         std::unique_lock<std::mutex> lock(mutex_);
         ++waitingConsumers_;
         notEmpty_.notify_all();
