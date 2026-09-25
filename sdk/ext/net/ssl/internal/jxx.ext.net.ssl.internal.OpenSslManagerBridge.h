@@ -15,6 +15,7 @@ public:
         const std::shared_ptr<OpenSslContextConfig>& config);
 
     int verifyPeer(X509_STORE_CTX* storeContext) noexcept;
+    int selectServerIdentity(SSL* ssl) noexcept;
     int selectClientCertificate(
         SSL* ssl,
         X509** certificate,

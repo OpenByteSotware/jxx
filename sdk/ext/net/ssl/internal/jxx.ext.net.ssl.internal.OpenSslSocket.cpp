@@ -98,7 +98,10 @@ namespace jxx::ext::net::ssl::internal
         }
 		SSL_CTX_set_min_proto_version(native_->context, TLS1_2_VERSION); 
 		SSL_CTX_set_max_proto_version(native_->context, TLS1_3_VERSION); 
-		SSL_CTX_set_verify(native_->context, SSL_VERIFY_PEER, nullptr);
+		int verifyMode = SSL_VERIFY_PEER;
+            if (!client_ && need_) verifyMode |= SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
+            if (!client_ && !need_ && !want_) verifyMode = SSL_VERIFY_NONE;
+            SSL_CTX_set_verify(native_->context, verifyMode, nullptr);
 		if (SSL_CTX_set_default_verify_paths(native_->context) != 1)
             throw ::jxx::io::IOException("Could not load default trust paths");
 
@@ -116,10 +119,19 @@ namespace jxx::ext::net::ssl::internal
 		BIO_set_conn_hostname(native_->connection, endpoint.c_str());
 		SSL* ssl = nullptr; BIO_get_ssl(native_->connection, &ssl);
         SSL_set_ex_data(ssl, openSslManagerBridgeExDataIndex(), native_->managerBridge.get());
-		SSL_set_tlsext_host_name(ssl, host_->utf8().c_str());
-		SSL_set1_host(ssl, host_->utf8().c_str()); 
-		if (BIO_do_connect(native_->connection) <= 0 ||
-			BIO_do_handshake(native_->connection) <= 0)throw ::jxx::io::IOException("TLS handshake failed"); SSL_SESSION* nativeSession = SSL_get_session(ssl);
+		if (client_) {
+            SSL_set_connect_state(ssl);
+            if (host_ != nullptr && !host_->utf8().empty()) {
+                SSL_set_tlsext_host_name(ssl, host_->utf8().c_str());
+                SSL_set1_host(ssl, host_->utf8().c_str());
+            }
+        } else {
+            SSL_set_accept_state(ssl);
+            if (native_->managerBridge->selectServerIdentity(ssl) != 1)
+                throw ::jxx::io::IOException("No usable server certificate identity");
+        } 
+        if ((client_ && BIO_do_connect(native_->connection) <= 0) ||
+            BIO_do_handshake(native_->connection) <= 0)throw ::jxx::io::IOException("TLS handshake failed"); SSL_SESSION* nativeSession = SSL_get_session(ssl);
         unsigned int nativeIdLength = 0;
         const unsigned char* nativeId = nativeSession == nullptr
             ? nullptr

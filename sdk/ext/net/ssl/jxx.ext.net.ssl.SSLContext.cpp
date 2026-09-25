@@ -4,6 +4,7 @@
 
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocketFactory.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslServerSocketFactory.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSessionContext.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
@@ -81,7 +82,7 @@ void SSLContext::init(
 ::jxx::Ptr<SSLContext> SSLContext::getInstance(const ::jxx::Ptr<::jxx::lang::String>& protocol,const ::jxx::Ptr<::jxx::lang::String>& provider){if(provider==nullptr)throw ::jxx::lang::IllegalArgumentException();if(provider->utf8()!="OpenSSL")throw ::jxx::lang::IllegalArgumentException();return getInstance(protocol);}
 ::jxx::Ptr<SSLContext> SSLContext::getInstance(const ::jxx::Ptr<::jxx::lang::String>& protocol,const ::jxx::Ptr<::jxx::security::Provider>& provider){if(provider==nullptr)throw ::jxx::lang::IllegalArgumentException();return getInstance(protocol,provider->getName());}
 ::jxx::Ptr<::jxx::security::Provider> SSLContext::getProvider()const{return provider_;}
-::jxx::Ptr<SSLServerSocketFactory> SSLContext::getServerSocketFactory(){throw ::jxx::lang::UnsupportedOperationException();}
+::jxx::Ptr<SSLServerSocketFactory> SSLContext::getServerSocketFactory(){return ::jxx::NEW<internal::OpenSslServerSocketFactory>(config_);}
 ::jxx::Ptr<SSLSessionContext> SSLContext::getClientSessionContext(){return clientSessionContext_;}
 ::jxx::Ptr<SSLSessionContext> SSLContext::getServerSessionContext(){return serverSessionContext_;}
 ::jxx::Ptr<SSLEngine> SSLContext::createSSLEngine(){throw ::jxx::lang::UnsupportedOperationException();}

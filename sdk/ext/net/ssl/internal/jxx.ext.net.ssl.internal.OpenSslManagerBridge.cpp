@@ -67,13 +67,63 @@ int OpenSslManagerBridge::verifyPeer(X509_STORE_CTX* storeContext) noexcept {
             if (encoded == nullptr) return 0;
             (*converted)[index] = ::jxx::NEW<OpenSslX509Certificate>(encoded);
         }
-        manager->checkServerTrusted(
-            converted,
-            ::jxx::NEW<::jxx::lang::String>("UNKNOWN"));
+        SSL* ssl = static_cast<SSL*>(X509_STORE_CTX_get_ex_data(
+            storeContext, SSL_get_ex_data_X509_STORE_CTX_idx()));
+        if (ssl != nullptr && SSL_is_server(ssl))
+            manager->checkClientTrusted(
+                converted,
+                ::jxx::NEW<::jxx::lang::String>("UNKNOWN"));
+        else
+            manager->checkServerTrusted(
+                converted,
+                ::jxx::NEW<::jxx::lang::String>("UNKNOWN"));
         X509_STORE_CTX_set_error(storeContext, X509_V_OK);
         return 1;
     } catch (...) {
         X509_STORE_CTX_set_error(storeContext, X509_V_ERR_APPLICATION_VERIFICATION);
+        return 0;
+    }
+}
+
+
+int OpenSslManagerBridge::selectServerIdentity(SSL* ssl) noexcept {
+    try {
+        const auto manager = findKeyManager(config_);
+        if (manager == nullptr) return 0;
+        const auto alias = manager->chooseServerAlias(
+            ::jxx::NEW<::jxx::lang::String>("RSA"), nullptr, nullptr);
+        if (alias == nullptr) return 0;
+        const auto chain = manager->getCertificateChain(alias);
+        const auto key = manager->getPrivateKey(alias);
+        if (chain == nullptr || chain->length == 0 || key == nullptr) return 0;
+        const auto leafBytes = (*chain)[0]->getEncoded();
+        const unsigned char* certCursor = reinterpret_cast<const unsigned char*>(&(*leafBytes)[0]);
+        X509* leaf = d2i_X509(nullptr, &certCursor, leafBytes->length);
+        const auto keyBytes = key->getEncoded();
+        const unsigned char* keyCursor = reinterpret_cast<const unsigned char*>(&(*keyBytes)[0]);
+        EVP_PKEY* decodedKey = d2i_AutoPrivateKey(nullptr, &keyCursor, keyBytes->length);
+        if (leaf == nullptr || decodedKey == nullptr ||
+            SSL_use_certificate(ssl, leaf) != 1 ||
+            SSL_use_PrivateKey(ssl, decodedKey) != 1 ||
+            SSL_check_private_key(ssl) != 1) {
+            if (leaf != nullptr) X509_free(leaf);
+            if (decodedKey != nullptr) EVP_PKEY_free(decodedKey);
+            return 0;
+        }
+        X509_free(leaf);
+        EVP_PKEY_free(decodedKey);
+        for (::jxx::lang::jint index = 1; index < chain->length; ++index) {
+            const auto bytes = (*chain)[index]->getEncoded();
+            const unsigned char* cursor = reinterpret_cast<const unsigned char*>(&(*bytes)[0]);
+            X509* extra = d2i_X509(nullptr, &cursor, bytes->length);
+            if (extra == nullptr || SSL_add1_chain_cert(ssl, extra) != 1) {
+                if (extra != nullptr) X509_free(extra);
+                return 0;
+            }
+            X509_free(extra);
+        }
+        return 1;
+    } catch (...) {
         return 0;
     }
 }

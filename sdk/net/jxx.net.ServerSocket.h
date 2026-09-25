@@ -26,7 +26,7 @@ namespace jxx::nio::channels
 
 namespace jxx::net
 {
-    class ServerSocket final : public jxx::lang::ClassBase<ServerSocket, jxx::lang::Object> {
+    class ServerSocket : public jxx::lang::ClassBase<ServerSocket, jxx::lang::Object> {
 public:
     using JxxSuper = jxx::lang::Object;
     using Super = jxx::lang::ClassBase<ServerSocket, jxx::lang::Object>;
@@ -50,8 +50,8 @@ public:
         jxx::Ptr<InetAddress> getInetAddress() const;
         jxx::lang::jint getLocalPort() const noexcept;
         jxx::Ptr<SocketAddress> getLocalSocketAddress() const;
-        jxx::Ptr<Socket> accept();
-        void close();
+        virtual jxx::Ptr<Socket> accept();
+        virtual void close();
         jxx::Ptr<jxx::nio::channels::ServerSocketChannel> getChannel() const;
         jxx::lang::jbool isBound() const noexcept;
         jxx::lang::jbool isClosed() const noexcept;
