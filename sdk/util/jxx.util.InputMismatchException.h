@@ -7,12 +7,12 @@
 namespace jxx {
 namespace util {
 
-class InputMismatchException : public virtual NoSuchElementException {
+class InputMismatchException : public NoSuchElementException {
 public:
     using JxxSuper = NoSuchElementException;
-    using JxxClassInfoMarker = jxx::lang::ClassInfo<InputMismatchException, JxxSuper>;
+    using JxxClassInfoMarker = ::jxx::lang::ClassInfo<InputMismatchException, JxxSuper>;
 
-    static jxx::Ptr<jxx::lang::ClassAny> Class();
+    static ::jxx::Ptr<::jxx::lang::ClassAny> Class();
 
     InputMismatchException() = default;
 
@@ -23,7 +23,7 @@ public:
     ~InputMismatchException() override = default;
 
 public:
-    using NoSuchElementException::NoSuchElementException;
+    using JxxSuper::JxxSuper;
 
 protected:
     JXX_OBJECT_CLONE(InputMismatchException)

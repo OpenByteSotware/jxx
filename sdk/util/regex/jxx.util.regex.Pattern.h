@@ -66,7 +66,7 @@ public:
         const ::jxx::Ptr<::jxx::lang::CharSequence>& input,
         ::jxx::lang::jint limit);
 
-    static ::jxx::Ptr<::jxx::lang::String> quote(const ::jxx::Ptr<::jxx::lang::String> s);
+    static ::jxx::Ptr<::jxx::lang::String> quote(const ::jxx::Ptr<::jxx::lang::String>& s);
     virtual ::jxx::Ptr<::jxx::lang::String> toString() const override;
 
     const std::regex& nativeRegex() const;

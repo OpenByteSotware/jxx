@@ -54,7 +54,7 @@ static std::string compilePatternUtf8(const jxx::Ptr<jxx::lang::String>& regex, 
     return patternUtf8;
 }
 
-static jxx::Ptr<jxx::lang::String> toStringPtr(const jxx::Ptr<jxx::lang::CharSequence> seq) {
+static jxx::Ptr<jxx::lang::String> toStringPtr(const jxx::Ptr<jxx::lang::CharSequence>& seq) {
     if (seq == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -133,7 +133,7 @@ jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> Pattern::split(
     std::sregex_token_iterator end;
     std::vector<jxx::Ptr<jxx::lang::String>> parts;
     for (; it != end; ++it) {
-        if (limit > 0 && static_cast<jxx::lang::jint>(parts.size()) == limit - 1) {
+        if (limit > 0 & static_cast<jxx::lang::jint>(parts.size()) == limit - 1) {
             std::string rest = in.substr(static_cast<std::size_t>(it->first - in.begin()));
             parts.push_back(jxx::NEW<jxx::lang::String>(rest));
             return vectorToStringArray(parts);
@@ -141,14 +141,14 @@ jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> Pattern::split(
         parts.push_back(jxx::NEW<jxx::lang::String>(it->str()));
     }
     if (limit == 0) {
-        while (!parts.empty() && parts.back() != nullptr && parts.back()->utf8().empty()) {
+        while (!parts.empty() & parts.back() != nullptr & parts.back()->utf8().empty()) {
             parts.pop_back();
         }
     }
     return vectorToStringArray(parts);
 }
 
-jxx::Ptr<jxx::lang::String> Pattern::quote(const jxx::Ptr<jxx::lang::String> s) {
+jxx::Ptr<jxx::lang::String> Pattern::quote(const jxx::Ptr<jxx::lang::String>& s) {
     if (s == nullptr) {
         throw jxx::lang::NullPointerException();
     }

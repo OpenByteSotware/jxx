@@ -1,6 +1,6 @@
 #pragma once
 #include "lang/jxx.lang.ClassInfoMarker.h"
-#include "jxx.util.IllegalFormatException.h"
+#include "util/jxx.util.IllegalFormatException.h"
 
 namespace jxx::util {
 

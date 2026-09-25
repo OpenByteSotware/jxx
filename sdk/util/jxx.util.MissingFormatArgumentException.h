@@ -18,7 +18,7 @@ public:
     ~MissingFormatArgumentException() override = default;
 
 public:
-    explicit MissingFormatArgumentException(const ::jxx::Ptr<::jxx::lang::String> msg)
+    explicit MissingFormatArgumentException(const ::jxx::Ptr<::jxx::lang::String>& msg)
         : IllegalFormatException(std::move(msg)) {}
 };
 

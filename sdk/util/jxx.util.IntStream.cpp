@@ -1,5 +1,5 @@
 #include "lang/jxx.lang.buildin_array.h"
-#include "jxx.util.IntStream.h"
+#include "util/jxx.util.IntStream.h"
 
 namespace jxx::util {
 

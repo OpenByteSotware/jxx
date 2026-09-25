@@ -23,10 +23,10 @@
 #include "lang/jxx.lang.Character.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Number.h"
-#include "jxx.util.TimeZone.h"
-#include "jxx.util.FormatterClosedException.h"
-#include "jxx.util.IllegalFormatException.h"
-#include "jxx.util.Formatter.h"
+#include "util/jxx.util.TimeZone.h"
+#include "util/jxx.util.FormatterClosedException.h"
+#include "util/jxx.util.IllegalFormatException.h"
+#include "util/jxx.util.Formatter.h"
 
 namespace jxx::util
 {

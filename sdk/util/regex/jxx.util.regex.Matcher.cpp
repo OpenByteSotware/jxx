@@ -13,7 +13,7 @@ namespace util {
 namespace regex {
 namespace {
 
-static jxx::Ptr<jxx::lang::String> toStringPtr(const jxx::Ptr<jxx::lang::CharSequence> seq) {
+static jxx::Ptr<jxx::lang::String> toStringPtr(const jxx::Ptr<jxx::lang::CharSequence>& seq) {
     if (seq == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -33,7 +33,7 @@ static std::string escapeReplacement(const std::string& s) {
 
 } // anonymous namespace
 
-Matcher::Matcher(const jxx::Ptr<Pattern> pattern, jxx::Ptr<jxx::lang::CharSequence> input)
+Matcher::Matcher(const jxx::Ptr<Pattern>& pattern, const jxx::Ptr<jxx::lang::CharSequence>& input)
     : pattern_(pattern)
     , input_(toStringPtr(input))
     , inputUtf8_(input_->utf8())
@@ -74,7 +74,7 @@ jxx::Ptr<Matcher> Matcher::reset() {
     return jxx::CAST<Matcher>(jxx::CAST<jxx::lang::Object>(shared_from_this()));
 }
 
-jxx::Ptr<Matcher> Matcher::reset(const jxx::Ptr<jxx::lang::CharSequence> input) {
+jxx::Ptr<Matcher> Matcher::reset(const jxx::Ptr<jxx::lang::CharSequence>& input) {
     input_ = toStringPtr(input);
     inputUtf8_ = input_->utf8();
     regionStart_ = 0;
@@ -109,7 +109,7 @@ jxx::lang::jbool Matcher::lookingAt() {
     if (hasMatch_) {
         searchPos_ = regionStart_ + static_cast<std::size_t>(lastMatch_.length());
     }
-    hitEnd_ = hasMatch_ && searchPos_ == regionEnd_;
+    hitEnd_ = hasMatch_ & searchPos_ == regionEnd_;
     requireEnd_ = false;
     return hasMatch_;
 }
@@ -214,7 +214,7 @@ jxx::Ptr<jxx::lang::StringBuffer> Matcher::appendTail(const jxx::Ptr<jxx::lang::
     appendPos_=regionEnd_; return buffer;
 }
 
-jxx::Ptr<jxx::lang::String> Matcher::replaceAll(const jxx::Ptr<jxx::lang::String> replacement) {
+jxx::Ptr<jxx::lang::String> Matcher::replaceAll(const jxx::Ptr<jxx::lang::String>& replacement) {
     if (replacement == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -222,7 +222,7 @@ jxx::Ptr<jxx::lang::String> Matcher::replaceAll(const jxx::Ptr<jxx::lang::String
         std::regex_replace(inputUtf8_, pattern_->nativeRegex(), replacement->utf8()));
 }
 
-jxx::Ptr<jxx::lang::String> Matcher::replaceFirst(const jxx::Ptr<jxx::lang::String> replacement) {
+jxx::Ptr<jxx::lang::String> Matcher::replaceFirst(const jxx::Ptr<jxx::lang::String>& replacement) {
     if (replacement == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -234,7 +234,7 @@ jxx::Ptr<jxx::lang::String> Matcher::replaceFirst(const jxx::Ptr<jxx::lang::Stri
             std::regex_constants::format_first_only));
 }
 
-jxx::Ptr<jxx::lang::String> Matcher::quoteReplacement(const jxx::Ptr<jxx::lang::String> s) {
+jxx::Ptr<jxx::lang::String> Matcher::quoteReplacement(const jxx::Ptr<jxx::lang::String>& s) {
     if (s == nullptr) {
         throw jxx::lang::NullPointerException();
     }

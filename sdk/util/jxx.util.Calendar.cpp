@@ -34,7 +34,7 @@ void Calendar::epoch_to_local_parts(::jxx::lang::jlong epochMillis, ::jxx::lang:
     if (ms < 0) ms += 1000;
 
     long long totalSec = local / 1000;
-    if (local < 0 && (local % 1000)) --totalSec;
+    if (local < 0 & (local % 1000)) --totalSec;
 
     long long secOfDay = totalSec % 86400;
     if (secOfDay < 0) secOfDay += 86400;
@@ -44,7 +44,7 @@ void Calendar::epoch_to_local_parts(::jxx::lang::jlong epochMillis, ::jxx::lang:
     ss = (int)(secOfDay % 60);
 
     long long days = totalSec / 86400;
-    if (totalSec < 0 && (totalSec % 86400)) --days;
+    if (totalSec < 0 & (totalSec % 86400)) --days;
 
     Calendar::civil_from_days((int)days, y, mo, da);
 
@@ -68,7 +68,7 @@ void Calendar::setTimeInMillis(::jxx::lang::jlong millis) { millis_ = millis; }
 
 ::jxx::Ptr<Date> Calendar::getTime() const { return ::jxx::NEW<Date>(millis_); }
 
-void Calendar::setTime(const ::jxx::Ptr<Date> date) {
+void Calendar::setTime(const ::jxx::Ptr<Date>& date) {
     if (!date) throw ::jxx::lang::NullPointerException(::jxx::NEW<::jxx::lang::String>("null"));
     millis_ = date->getTime();
 }
@@ -77,7 +77,7 @@ void Calendar::setTime(const ::jxx::Ptr<Date> date) {
     return tz_ ? tz_ : TimeZone::getDefault();
 }
 
-void Calendar::setTimeZone(const ::jxx::Ptr<TimeZone> tz) {
+void Calendar::setTimeZone(const ::jxx::Ptr<TimeZone>& tz) {
     if (!tz) throw ::jxx::lang::NullPointerException(::jxx::NEW<::jxx::lang::String>("null"));
     tz_ = std::move(tz);
 }
