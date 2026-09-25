@@ -1,22 +1,11 @@
-#include <sstream>
 #include "lang/jxx.lang.ClassInfo.h"
-
 #include "util/regex/jxx.util.regex.PatternSyntaxException.h"
 
-namespace jxx {
-namespace util {
-namespace regex {
+namespace jxx::util::regex {
 
-} // namespace regex
-} // namespace util
-} // namespace jxx
-
-jxx::Ptr<jxx::lang::ClassAny> jxx::util::regex::PatternSyntaxException::Class()
-{
+::jxx::Ptr<::jxx::lang::ClassAny>
+PatternSyntaxException::Class() {
     return JxxClassInfoMarker::Class();
 }
 
-const char* jxx::util::regex::PatternSyntaxException::typeName() const noexcept
-{
-    return "PatternSyntaxException";
-}
+} // namespace jxx::util::regex

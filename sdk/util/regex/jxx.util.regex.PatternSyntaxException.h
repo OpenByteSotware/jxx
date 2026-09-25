@@ -8,12 +8,12 @@ namespace jxx {
 namespace util {
 namespace regex {
 
-class PatternSyntaxException final : public virtual jxx::lang::IllegalArgumentException {
+class PatternSyntaxException final : public ::jxx::lang::IllegalArgumentException {
 public:
-    using JxxSuper = jxx::lang::IllegalArgumentException;
-    using JxxClassInfoMarker = jxx::lang::ClassInfo<PatternSyntaxException, JxxSuper>;
+    using JxxSuper = ::jxx::lang::IllegalArgumentException;
+    using JxxClassInfoMarker = ::jxx::lang::ClassInfo<PatternSyntaxException, JxxSuper>;
 
-    static jxx::Ptr<jxx::lang::ClassAny> Class();
+    static ::jxx::Ptr<::jxx::lang::ClassAny> Class();
 
     PatternSyntaxException() = default;
 
@@ -24,7 +24,7 @@ public:
     ~PatternSyntaxException() override = default;
 
 public:
-    using IllegalArgumentException::IllegalArgumentException;
+    using JxxSuper::JxxSuper;
     
 protected:
     JXX_OBJECT_CLONE(PatternSyntaxException)

@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.NullPointerException.h"
 
 #include "util/jxx.util.Collection.h"
 #include "util/jxx.util.Iterator.h"
@@ -12,23 +13,23 @@ namespace wildcard {
 template <typename T>
 class CollectionAnyView : public virtual CollectionAny {
 private:
-    jxx::Ptr<Collection<T>> inner;
+    ::jxx::Ptr<Collection<T>> inner;
 
-    class ObjectIteratorView : public virtual Iterator<jxx::lang::Object> {
+    class ObjectIteratorView : public virtual Iterator<::jxx::lang::Object> {
     private:
-        jxx::Ptr<Iterator<T>> innerIterator;
+        ::jxx::Ptr<Iterator<T>> innerIterator;
 
     public:
-        explicit ObjectIteratorView(const jxx::Ptr<Iterator<T>> it)
+        explicit ObjectIteratorView(const ::jxx::Ptr<Iterator<T>>& it)
             : innerIterator(it) {}
 
         virtual ~ObjectIteratorView() = default;
 
-        virtual jbool hasNext() override {
+        virtual ::jxx::lang::jbool hasNext() override {
             return innerIterator->hasNext();
         }
 
-        virtual jxx::Ptr<jxx::lang::Object> next() override {
+        virtual ::jxx::Ptr<::jxx::lang::Object> next() override {
             return innerIterator->next();
         }
 
@@ -38,48 +39,48 @@ private:
     };
 
 public:
-    explicit CollectionAnyView(const jxx::Ptr<Collection<T>> c)
+    explicit CollectionAnyView(const ::jxx::Ptr<Collection<T>>& c)
         : inner(c) {
         if (inner == nullptr) {
-            throw NullPointerException();
+            throw ::jxx::lang::NullPointerException();
         }
     }
 
     virtual ~CollectionAnyView() = default;
 
-    virtual jint size() override {
+    virtual ::jxx::lang::jint size() override {
         return inner->size();
     }
 
-    virtual jbool containsObject(const jxx::Ptr<jxx::lang::Object> o) override {
-        return inner->contains(const jxx::Ptr<T>(o));
+    virtual ::jxx::lang::jbool containsObject(const ::jxx::Ptr<::jxx::lang::Object>& o) override {
+        return inner->contains(::jxx::CAST<T>(o));
     }
 
-    virtual jxx::Ptr<Iterator<jxx::lang::Object>> iteratorObject() override {
-        return jxx::Ptr<Iterator<jxx::lang::Object>>(new ObjectIteratorView(inner->iterator()));
+    virtual ::jxx::Ptr<Iterator<::jxx::lang::Object>> iteratorObject() override {
+        return ::jxx::Ptr<Iterator<::jxx::lang::Object>>(new ObjectIteratorView(inner->iterator()));
     }
 };
 
 template <typename Base, typename Derived>
 class CollectionExtendsView : public virtual CollectionExtends<Base> {
 private:
-    jxx::Ptr<Collection<Derived>> inner;
+    ::jxx::Ptr<Collection<Derived>> inner;
 
     class BaseIteratorView : public virtual Iterator<Base> {
     private:
-        jxx::Ptr<Iterator<Derived>> innerIterator;
+        ::jxx::Ptr<Iterator<Derived>> innerIterator;
 
     public:
-        explicit BaseIteratorView(const jxx::Ptr<Iterator<Derived>> it)
+        explicit BaseIteratorView(const ::jxx::Ptr<Iterator<Derived>>& it)
             : innerIterator(it) {}
 
         virtual ~BaseIteratorView() = default;
 
-        virtual jbool hasNext() override {
+        virtual ::jxx::lang::jbool hasNext() override {
             return innerIterator->hasNext();
         }
 
-        virtual jxx::Ptr<Base> next() override {
+        virtual ::jxx::Ptr<Base> next() override {
             return innerIterator->next();
         }
 
@@ -88,21 +89,21 @@ private:
         }
     };
 
-    class ObjectIteratorView : public virtual Iterator<jxx::lang::Object> {
+    class ObjectIteratorView : public virtual Iterator<::jxx::lang::Object> {
     private:
-        jxx::Ptr<Iterator<Derived>> innerIterator;
+        ::jxx::Ptr<Iterator<Derived>> innerIterator;
 
     public:
-        explicit ObjectIteratorView(const jxx::Ptr<Iterator<Derived>> it)
+        explicit ObjectIteratorView(const ::jxx::Ptr<Iterator<Derived>>& it)
             : innerIterator(it) {}
 
         virtual ~ObjectIteratorView() = default;
 
-        virtual jbool hasNext() override {
+        virtual ::jxx::lang::jbool hasNext() override {
             return innerIterator->hasNext();
         }
 
-        virtual jxx::Ptr<jxx::lang::Object> next() override {
+        virtual ::jxx::Ptr<::jxx::lang::Object> next() override {
             return innerIterator->next();
         }
 
@@ -112,29 +113,29 @@ private:
     };
 
 public:
-    explicit CollectionExtendsView(const jxx::Ptr<Collection<Derived>> c)
+    explicit CollectionExtendsView(const ::jxx::Ptr<Collection<Derived>>& c)
         : inner(c) {
         if (inner == nullptr) {
-            throw NullPointerException();
+            throw ::jxx::lang::NullPointerException();
         }
     }
 
     virtual ~CollectionExtendsView() = default;
 
-    virtual jint size() override {
+    virtual ::jxx::lang::jint size() override {
         return inner->size();
     }
 
-    virtual jbool containsObject(const jxx::Ptr<jxx::lang::Object> o) override {
-        return inner->contains(const jxx::Ptr<Derived>(o));
+    virtual ::jxx::lang::jbool containsObject(const ::jxx::Ptr<::jxx::lang::Object>& o) override {
+        return inner->contains(::jxx::CAST<Derived>(o));
     }
 
-    virtual jxx::Ptr<Iterator<jxx::lang::Object>> iteratorObject() override {
-        return jxx::Ptr<Iterator<jxx::lang::Object>>(new ObjectIteratorView(inner->iterator()));
+    virtual ::jxx::Ptr<Iterator<::jxx::lang::Object>> iteratorObject() override {
+        return ::jxx::Ptr<Iterator<::jxx::lang::Object>>(new ObjectIteratorView(inner->iterator()));
     }
 
-    virtual jxx::Ptr<Iterator<Base>> iteratorExtends() override {
-        return jxx::Ptr<Iterator<Base>>(new BaseIteratorView(inner->iterator()));
+    virtual ::jxx::Ptr<Iterator<Base>> iteratorExtends() override {
+        return ::jxx::Ptr<Iterator<Base>>(new BaseIteratorView(inner->iterator()));
     }
 };
 
