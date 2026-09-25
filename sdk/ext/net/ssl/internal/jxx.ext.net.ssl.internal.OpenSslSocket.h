@@ -16,6 +16,8 @@ class OpenSslSocket final
           OpenSslSocket,
           ::jxx::ext::net::ssl::SSLSocket> {
 public:
+    explicit OpenSslSocket(const std::shared_ptr<OpenSslContextConfig>& config);
+
     OpenSslSocket(
         const ::jxx::Ptr<::jxx::lang::String>& host,
         ::jxx::lang::jint port,
@@ -30,6 +32,11 @@ public:
         const std::shared_ptr<OpenSslContextConfig>& config);
 
     ~OpenSslSocket() override;
+
+    void connect(const ::jxx::Ptr<::jxx::net::SocketAddress>& endpoint) override;
+    void connect(const ::jxx::Ptr<::jxx::net::SocketAddress>& endpoint,
+                 ::jxx::lang::jint timeout) override;
+    void bind(const ::jxx::Ptr<::jxx::net::SocketAddress>& bindpoint) override;
 
     void startHandshake() override;
     ::jxx::Ptr<::jxx::io::InputStream> getInputStream() override;
@@ -63,6 +70,7 @@ private:
     std::shared_ptr<OpenSslContextConfig> config_;
     std::unique_ptr<OpenSslSocketNative> native_;
     ::jxx::Ptr<::jxx::lang::String> host_;
+    ::jxx::Ptr<::jxx::net::Socket> pendingTransport_;
     ::jxx::lang::jint port_;
     ::jxx::Ptr<::jxx::net::Socket> transport_;
     ::jxx::lang::jbool autoClose_ = false;

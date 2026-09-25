@@ -19,6 +19,8 @@
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.IllegalStateException.h"
 #include "lang/jxx.lang.UnsupportedOperationException.h"
+#include "net/jxx.net.InetSocketAddress.h"
+#include "net/jxx.net.SocketException.h"
 namespace jxx::ext::net::ssl::internal
 {
     namespace {
@@ -52,11 +54,34 @@ namespace jxx::ext::net::ssl::internal
         }
     }
 
-	OpenSslSocket::OpenSslSocket(const ::jxx::Ptr<::jxx::lang::String>& h, ::jxx::lang::jint p, const std::shared_ptr<OpenSslContextConfig>& config) :config_(config), native_(new OpenSslSocketNative()), host_(h), port_(p)
-	{
-	}OpenSslSocket::~OpenSslSocket() = default; void OpenSslSocket::startHandshake()
-	{
-		if (session_ != nullptr)return; native_->context = SSL_CTX_new(TLS_client_method());
+    OpenSslSocket::OpenSslSocket(const std::shared_ptr<OpenSslContextConfig>& config)
+        : config_(config), native_(new OpenSslSocketNative()), port_(0),
+          pendingTransport_(::jxx::NEW<::jxx::net::Socket>()) {}
+
+    OpenSslSocket::OpenSslSocket(const ::jxx::Ptr<::jxx::lang::String>& h,
+        ::jxx::lang::jint p, const std::shared_ptr<OpenSslContextConfig>& config)
+        : config_(config), native_(new OpenSslSocketNative()), host_(h), port_(p) {}
+
+    void OpenSslSocket::bind(const ::jxx::Ptr<::jxx::net::SocketAddress>& point) {
+        if (transport_ != nullptr || session_ != nullptr) throw ::jxx::net::SocketException("already connected");
+        pendingTransport_->bind(point);
+    }
+    void OpenSslSocket::connect(const ::jxx::Ptr<::jxx::net::SocketAddress>& endpoint) { connect(endpoint, 0); }
+    void OpenSslSocket::connect(const ::jxx::Ptr<::jxx::net::SocketAddress>& endpoint, ::jxx::lang::jint timeout) {
+        if (transport_ != nullptr || session_ != nullptr) throw ::jxx::net::SocketException("already connected");
+        const auto inet = ::jxx::CAST<::jxx::net::InetSocketAddress>(endpoint);
+        if (inet == nullptr) throw ::jxx::lang::IllegalArgumentException("unsupported socket address");
+        pendingTransport_->connect(endpoint, timeout);
+        host_ = inet->getHostString(); port_ = inet->getPort();
+        transport_ = pendingTransport_; pendingTransport_ = nullptr; autoClose_ = true;
+    }
+
+    OpenSslSocket::~OpenSslSocket() = default;
+    void OpenSslSocket::startHandshake()
+    {
+        if (session_ != nullptr) return;
+        if (transport_ == nullptr && (host_ == nullptr || host_->utf8().empty()))
+            throw ::jxx::net::SocketException("socket is not connected"); native_->context = SSL_CTX_new(TLS_client_method());
         if (native_->context == nullptr) throw ::jxx::io::IOException("SSL_CTX_new failed");
 
         int minimumVersion = TLS1_2_VERSION;

@@ -9,6 +9,7 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
 #include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "net/jxx.net.InetAddress.h"
+#include "net/jxx.net.InetSocketAddress.h"
 #include "io/jxx.io.InputStream.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 
@@ -52,9 +53,7 @@ OpenSslSocketFactory::getSupportedCipherSuites() const {
 
 ::jxx::Ptr<::jxx::net::Socket>
 OpenSslSocketFactory::createSocket() {
-    throw ::jxx::lang::UnsupportedOperationException(
-        ::jxx::NEW<::jxx::lang::String>(
-            "Unconnected OpenSSL sockets are not implemented"));
+    return ::jxx::NEW<OpenSslSocket>(config_);
 }
 
 ::jxx::Ptr<::jxx::net::Socket>
@@ -68,9 +67,12 @@ OpenSslSocketFactory::createSocket(
 OpenSslSocketFactory::createSocket(
     const ::jxx::Ptr<::jxx::lang::String>& host,
     ::jxx::lang::jint port,
-    const ::jxx::Ptr<::jxx::net::InetAddress>&,
-    ::jxx::lang::jint) {
-    return createSocket(host, port);
+    const ::jxx::Ptr<::jxx::net::InetAddress>& local,
+    ::jxx::lang::jint localPort) {
+    const auto socket = ::jxx::NEW<OpenSslSocket>(config_);
+    socket->bind(::jxx::NEW<::jxx::net::InetSocketAddress>(local, localPort));
+    socket->connect(::jxx::NEW<::jxx::net::InetSocketAddress>(host, port));
+    return socket;
 }
 
 ::jxx::Ptr<::jxx::net::Socket>
@@ -84,9 +86,12 @@ OpenSslSocketFactory::createSocket(
 OpenSslSocketFactory::createSocket(
     const ::jxx::Ptr<::jxx::net::InetAddress>& host,
     ::jxx::lang::jint port,
-    const ::jxx::Ptr<::jxx::net::InetAddress>&,
-    ::jxx::lang::jint) {
-    return createSocket(host, port);
+    const ::jxx::Ptr<::jxx::net::InetAddress>& local,
+    ::jxx::lang::jint localPort) {
+    const auto socket = ::jxx::NEW<OpenSslSocket>(config_);
+    socket->bind(::jxx::NEW<::jxx::net::InetSocketAddress>(local, localPort));
+    socket->connect(::jxx::NEW<::jxx::net::InetSocketAddress>(host, port));
+    return socket;
 }
 
 ::jxx::Ptr<::jxx::net::Socket>
