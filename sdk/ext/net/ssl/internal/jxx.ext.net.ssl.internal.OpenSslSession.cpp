@@ -19,7 +19,8 @@ OpenSslSession::OpenSslSession(
     ::jxx::lang::jint port,
     const ::jxx::Ptr<CertificateArray>& peerCertificates,
     const ::jxx::Ptr<CertificateArray>& localCertificates,
-    const ::jxx::lang::ByteArray& id)
+    const ::jxx::lang::ByteArray& id,
+    const ::jxx::Ptr<::jxx::ext::net::ssl::SSLSessionContext>& context)
     : cipher_(cipher)
     , protocol_(protocol)
     , host_(host)
@@ -29,6 +30,7 @@ OpenSslSession::OpenSslSession(
     , id_(id == nullptr
           ? ::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(0)
           : id)
+    , context_(context)
     , creationTime_(nowMillis())
     , lastAccessedTime_(creationTime_) {
 }
@@ -47,7 +49,7 @@ void OpenSslSession::touch() const { lastAccessedTime_ = nowMillis(); }
 ::jxx::lang::jint OpenSslSession::getPeerPort() const { touch(); return port_; }
 ::jxx::Ptr<::jxx::security::Principal> OpenSslSession::getPeerPrincipal() const { touch(); throw ::jxx::ext::net::ssl::SSLPeerUnverifiedException("peer principal unavailable"); }
 ::jxx::Ptr<::jxx::lang::String> OpenSslSession::getProtocol() const { touch(); return protocol_; }
-::jxx::Ptr<::jxx::ext::net::ssl::SSLSessionContext> OpenSslSession::getSessionContext() const { return nullptr; }
+::jxx::Ptr<::jxx::ext::net::ssl::SSLSessionContext> OpenSslSession::getSessionContext() const { return context_; }
 ::jxx::Ptr<::jxx::lang::Object> OpenSslSession::getValue(const ::jxx::Ptr<::jxx::lang::String>& name) const {if(name==nullptr)throw ::jxx::lang::IllegalArgumentException();std::lock_guard<std::mutex> l(mutex_);auto i=values_.find(name->utf8());return i==values_.end()?nullptr:i->second;}
 ::jxx::Ptr<OpenSslSession::StringArray> OpenSslSession::getValueNames() const {std::lock_guard<std::mutex> l(mutex_);auto r=::jxx::NEW<StringArray>(static_cast<::jxx::lang::jint>(values_.size()));::jxx::lang::jint i=0;for(const auto&v:values_)(*r)[i++]=::jxx::NEW<::jxx::lang::String>(v.first);return r;}
 void OpenSslSession::invalidate() { std::lock_guard<std::mutex> l(mutex_); valid_=false; values_.clear(); }

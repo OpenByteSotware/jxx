@@ -11,6 +11,7 @@ namespace jxx::security
 namespace jxx::ext::net::ssl::internal
 {
 	class OpenSslContextConfig;
+	class OpenSslSessionContext;
 }
 namespace jxx::ext::net::ssl
 {
@@ -31,6 +32,10 @@ namespace jxx::ext::net::ssl
 		::jxx::Ptr<SSLParameters> getDefaultSSLParameters(); ::jxx::Ptr<SSLParameters> getSupportedSSLParameters();
 		::jxx::Ptr<::jxx::lang::String> getProtocol()const; ::jxx::Ptr<::jxx::security::Provider> getProvider()const;
 		private: 
-			::jxx::Ptr<::jxx::lang::String> protocol_; ::jxx::Ptr<::jxx::security::Provider> provider_; std::shared_ptr<::jxx::ext::net::ssl::internal::OpenSslContextConfig> config_;
+			::jxx::Ptr<::jxx::lang::String> protocol_;
+            ::jxx::Ptr<::jxx::security::Provider> provider_;
+            std::shared_ptr<::jxx::ext::net::ssl::internal::OpenSslContextConfig> config_;
+            ::jxx::Ptr<::jxx::ext::net::ssl::internal::OpenSslSessionContext> clientSessionContext_;
+            ::jxx::Ptr<::jxx::ext::net::ssl::internal::OpenSslSessionContext> serverSessionContext_;
 	};
 }
