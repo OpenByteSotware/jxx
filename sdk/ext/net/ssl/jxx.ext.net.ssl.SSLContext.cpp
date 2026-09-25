@@ -24,7 +24,9 @@ SSLContext::SSLContext(const ::jxx::Ptr<::jxx::lang::String>& protocol)
           protocol,
           nullptr,
           nullptr,
-          nullptr))
+          nullptr,
+          clientSessionContext_,
+          serverSessionContext_))
     , clientSessionContext_(::jxx::NEW<internal::OpenSslSessionContext>())
     , serverSessionContext_(::jxx::NEW<internal::OpenSslSessionContext>()) {
     if (protocol_ == nullptr) throw ::jxx::lang::NullPointerException();
@@ -59,7 +61,12 @@ void SSLContext::init(
     const ::jxx::Ptr<TrustManagerArray>& trustManagers,
     const ::jxx::Ptr<::jxx::security::SecureRandom>& secureRandom) {
     config_ = std::make_shared<internal::OpenSslContextConfig>(
-        protocol_, keyManagers, trustManagers, secureRandom);
+        protocol_,
+        keyManagers,
+        trustManagers,
+        secureRandom,
+        clientSessionContext_,
+        serverSessionContext_);
 }
 
 ::jxx::Ptr<SSLSocketFactory> SSLContext::getSocketFactory() {
