@@ -55,7 +55,6 @@ private:
             std::unique_lock<std::mutex> conditionLock(mutex_);
             const auto observed = generation_;
             ++waiters_;
-            ++waiters_;
             const auto holds = owner_->releaseFully_();
             while (generation_ == observed) {
                 condition_.wait_for(conditionLock, std::chrono::milliseconds(10));
