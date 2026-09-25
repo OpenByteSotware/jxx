@@ -7,7 +7,7 @@ namespace jxx {
 namespace util {
 
 template <typename E>
-class Enumeration  {
+class Enumeration : public ::jxx::lang::InterfaceBase<Enumeration<E>> {
 public:
     virtual ~Enumeration() = default;
     virtual ::jxx::lang::jbool hasMoreElements() = 0;

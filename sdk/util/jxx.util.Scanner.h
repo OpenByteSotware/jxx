@@ -27,9 +27,11 @@ namespace util {
 class Locale;
 
 class Scanner final
-    : public virtual ::jxx::lang::Object
-    , public virtual Iterator<::jxx::lang::String>
-    , public virtual ::jxx::io::Closeable {
+    : public ::jxx::lang::ClassBase<
+          Scanner,
+          ::jxx::lang::Object,
+          Iterator<::jxx::lang::String>,
+          ::jxx::io::Closeable> {
 private:
     ::jxx::Ptr<::jxx::lang::String> source_;
     std::string sourceUtf8_;
