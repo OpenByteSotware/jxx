@@ -7,6 +7,8 @@
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.Runnable.h"
+#include "lang/jxx.lang.Thread.h"
+#include "lang/jxx.lang.InterruptedException.h"
 #include "lang/jxx_types.h"
 #include "util/jxx.util.concurrent.Callable.h"
 #include "util/jxx.util.concurrent.CancellationException.h"
@@ -38,30 +40,30 @@ private:
     mutable std::mutex mutex_;
     std::condition_variable condition_;
     State state_ = State::NEW;
-    jxx::Ptr<Callable<V>> callable_;
-    jxx::Ptr<V> result_;
+    ::jxx::Ptr<Callable<V>> callable_;
+    ::jxx::Ptr<V> result_;
     std::exception_ptr failure_;
 
 public:
-    explicit FutureTask(const jxx::Ptr<Callable<V>>& callable)
+    explicit FutureTask(const ::jxx::Ptr<Callable<V>>& callable)
         : Super(), callable_(callable) {
         if (callable_ == nullptr) {
-            throw jxx::lang::NullPointerException();
+            throw ::jxx::lang::NullPointerException();
         }
     }
 
     FutureTask(
-        const jxx::Ptr<jxx::lang::Runnable>& runnable,
-        const jxx::Ptr<V>& result)
-        : FutureTask(jxx::CAST<Callable<V>>(
-              jxx::NEW<RunnableAdapter<V>>(runnable, result))) {
+        const ::jxx::Ptr<::jxx::lang::Runnable>& runnable,
+        const ::jxx::Ptr<V>& result)
+        : FutureTask(::jxx::CAST<Callable<V>>(
+              ::jxx::NEW<RunnableAdapter<V>>(runnable, result))) {
         if (runnable == nullptr) {
-            throw jxx::lang::NullPointerException();
+            throw ::jxx::lang::NullPointerException();
         }
     }
 
-    jxx::lang::jbool cancel(
-        jxx::lang::jbool mayInterruptIfRunning) override {
+    ::jxx::lang::jbool cancel(
+        ::jxx::lang::jbool mayInterruptIfRunning) override {
         {
             std::lock_guard<std::mutex> lock(mutex_);
             if (state_ == State::NEW ||
@@ -78,18 +80,18 @@ public:
         return true;
     }
 
-    jxx::lang::jbool isCancelled() override {
+    ::jxx::lang::jbool isCancelled() override {
         std::lock_guard<std::mutex> lock(mutex_);
         return state_ == State::CANCELLED;
     }
 
-    jxx::lang::jbool isDone() override {
+    ::jxx::lang::jbool isDone() override {
         std::lock_guard<std::mutex> lock(mutex_);
         return isTerminal_(state_);
     }
 
     void run() override {
-        jxx::Ptr<Callable<V>> callable;
+        ::jxx::Ptr<Callable<V>> callable;
         {
             std::lock_guard<std::mutex> lock(mutex_);
             if (state_ != State::NEW) {
@@ -108,17 +110,18 @@ public:
         }
     }
 
-    jxx::Ptr<V> get() override {
+    ::jxx::Ptr<V> get() override {
+        if (::jxx::lang::Thread::interrupted()) throw ::jxx::lang::InterruptedException();
         std::unique_lock<std::mutex> lock(mutex_);
         condition_.wait(lock, [&] { return isTerminal_(state_); });
         return report_();
     }
 
-    jxx::Ptr<V> get(
-        jxx::lang::jlong timeout,
-        const jxx::Ptr<TimeUnit>& unit) override {
+    ::jxx::Ptr<V> get(
+        ::jxx::lang::jlong timeout,
+        const ::jxx::Ptr<TimeUnit>& unit) override {
         if (unit == nullptr) {
-            throw jxx::lang::NullPointerException();
+            throw ::jxx::lang::NullPointerException();
         }
         std::unique_lock<std::mutex> lock(mutex_);
         if (isTerminal_(state_)) {
@@ -140,8 +143,8 @@ protected:
     virtual void done() {
     }
 
-    void set(const jxx::Ptr<V>& value) {
-        jxx::lang::jbool completed = false;
+    void set(const ::jxx::Ptr<V>& value) {
+        ::jxx::lang::jbool completed = false;
         {
             std::lock_guard<std::mutex> lock(mutex_);
             if (state_ == State::NEW || state_ == State::RUNNING) {
@@ -158,7 +161,7 @@ protected:
     }
 
     void setException(std::exception_ptr failure) {
-        jxx::lang::jbool completed = false;
+        ::jxx::lang::jbool completed = false;
         {
             std::lock_guard<std::mutex> lock(mutex_);
             if (state_ == State::NEW || state_ == State::RUNNING) {
@@ -174,8 +177,8 @@ protected:
         }
     }
 
-    jxx::lang::jbool runAndReset() {
-        jxx::Ptr<Callable<V>> callable;
+    ::jxx::lang::jbool runAndReset() {
+        ::jxx::Ptr<Callable<V>> callable;
         {
             std::lock_guard<std::mutex> lock(mutex_);
             if (state_ != State::NEW) {
@@ -201,18 +204,18 @@ protected:
         return true;
     }
 
-    jxx::Ptr<jxx::lang::Object> cloneImpl() const override {
-        throw jxx::lang::CloneNotSupportedException();
+    ::jxx::Ptr<::jxx::lang::Object> cloneImpl() const override {
+        throw ::jxx::lang::CloneNotSupportedException();
     }
 
 private:
-    static jxx::lang::jbool isTerminal_(State state) noexcept {
+    static ::jxx::lang::jbool isTerminal_(State state) noexcept {
         return state == State::NORMAL ||
                state == State::EXCEPTIONAL ||
                state == State::CANCELLED;
     }
 
-    jxx::Ptr<V> report_() {
+    ::jxx::Ptr<V> report_() {
         if (state_ == State::CANCELLED) {
             throw CancellationException();
         }
@@ -220,7 +223,7 @@ private:
             try {
                 std::rethrow_exception(failure_);
             }
-            catch (const jxx::lang::Throwable& failure) {
+            catch (const ::jxx::lang::Throwable& failure) {
                 throw ExecutionException(failure.cloneThrowable());
             }
             catch (...) {

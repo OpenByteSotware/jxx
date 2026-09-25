@@ -10,18 +10,18 @@
 namespace jxx::util::concurrent {
 
 ThreadPoolExecutor::ThreadPoolExecutor(
-    jxx::lang::jint core,
-    jxx::lang::jint maximum,
-    jxx::lang::jlong keepAlive,
-    const jxx::Ptr<TimeUnit>& unit)
+    ::jxx::lang::jint core,
+    ::jxx::lang::jint maximum,
+    ::jxx::lang::jlong keepAlive,
+    const ::jxx::Ptr<TimeUnit>& unit)
     : corePoolSize_(core)
     , maximumPoolSize_(maximum)
     , keepAliveTime_(keepAlive)
     , keepAliveUnit_(unit) {
     if (core < 0 || maximum <= 0 || maximum < core || keepAlive < 0) {
-        throw jxx::lang::IllegalArgumentException();
+        throw ::jxx::lang::IllegalArgumentException();
     }
-    if (unit == nullptr) throw jxx::lang::NullPointerException();
+    if (unit == nullptr) throw ::jxx::lang::NullPointerException();
 }
 
 ThreadPoolExecutor::~ThreadPoolExecutor() {
@@ -31,9 +31,9 @@ ThreadPoolExecutor::~ThreadPoolExecutor() {
     }
 }
 
-jxx::lang::jbool ThreadPoolExecutor::cachedMode_() const noexcept {
+::jxx::lang::jbool ThreadPoolExecutor::cachedMode_() const noexcept {
     return corePoolSize_ == 0 &&
-        maximumPoolSize_ == std::numeric_limits<jxx::lang::jint>::max();
+        maximumPoolSize_ == std::numeric_limits<::jxx::lang::jint>::max();
 }
 
 void ThreadPoolExecutor::startWorkerLocked_() {
@@ -43,9 +43,9 @@ void ThreadPoolExecutor::startWorkerLocked_() {
 }
 
 void ThreadPoolExecutor::execute(
-    const jxx::Ptr<jxx::lang::Runnable>& command) {
-    if (command == nullptr) throw jxx::lang::NullPointerException();
-    jxx::Ptr<RejectedExecutionHandler> rejectionHandler;
+    const ::jxx::Ptr<::jxx::lang::Runnable>& command) {
+    if (command == nullptr) throw ::jxx::lang::NullPointerException();
+    ::jxx::Ptr<RejectedExecutionHandler> rejectionHandler;
     {
         std::lock_guard<std::mutex> lock(mutex_);
         if (shutdown_) {
@@ -56,14 +56,14 @@ void ThreadPoolExecutor::execute(
         ++submittedTaskCount_;
         if (liveWorkerCount_ < corePoolSize_ ||
             (cachedMode_() && liveWorkerCount_ < maximumPoolSize_ &&
-             activeCount_ + static_cast<jxx::lang::jint>(queue_.size()) > liveWorkerCount_)) {
+             activeCount_ + static_cast<::jxx::lang::jint>(queue_.size()) > liveWorkerCount_)) {
             startWorkerLocked_();
         }
         }
     }
     if (rejectionHandler != nullptr) {
         rejectionHandler->rejectedExecution(
-            command, jxx::CAST<ThreadPoolExecutor>(thisPtr()));
+            command, ::jxx::CAST<ThreadPoolExecutor>(thisPtr()));
         return;
     }
     if (isShutdown()) {
@@ -74,7 +74,7 @@ void ThreadPoolExecutor::execute(
 
 void ThreadPoolExecutor::workerLoop_() {
     for (;;) {
-        jxx::Ptr<jxx::lang::Runnable> task;
+        ::jxx::Ptr<::jxx::lang::Runnable> task;
         {
             std::unique_lock<std::mutex> lock(mutex_);
             const auto shouldStop = [&] {
@@ -121,9 +121,9 @@ void ThreadPoolExecutor::shutdown() {
     workAvailable_.notify_all();
 }
 
-jxx::Ptr<jxx::util::List<jxx::lang::Runnable>>
+::jxx::Ptr<::jxx::util::List<::jxx::lang::Runnable>>
 ThreadPoolExecutor::shutdownNow() {
-    auto result = jxx::NEW<jxx::util::ArrayList<jxx::lang::Runnable>>();
+    auto result = ::jxx::NEW<::jxx::util::ArrayList<::jxx::lang::Runnable>>();
     {
         std::lock_guard<std::mutex> lock(mutex_);
         shutdown_ = true;
@@ -134,68 +134,68 @@ ThreadPoolExecutor::shutdownNow() {
         }
     }
     workAvailable_.notify_all();
-    return jxx::CAST<jxx::util::List<jxx::lang::Runnable>>(result);
+    return ::jxx::CAST<::jxx::util::List<::jxx::lang::Runnable>>(result);
 }
 
-jxx::lang::jbool ThreadPoolExecutor::isShutdown() {
+::jxx::lang::jbool ThreadPoolExecutor::isShutdown() {
     std::lock_guard<std::mutex> lock(mutex_);
     return shutdown_;
 }
 
-jxx::lang::jbool ThreadPoolExecutor::isTerminated() {
+::jxx::lang::jbool ThreadPoolExecutor::isTerminated() {
     std::lock_guard<std::mutex> lock(mutex_);
     return shutdown_ && queue_.empty() && activeCount_ == 0 && liveWorkerCount_ == 0;
 }
 
-jxx::lang::jbool ThreadPoolExecutor::awaitTermination(
-    jxx::lang::jlong timeout,
-    const jxx::Ptr<TimeUnit>& unit) {
-    if (unit == nullptr) throw jxx::lang::NullPointerException();
+::jxx::lang::jbool ThreadPoolExecutor::awaitTermination(
+    ::jxx::lang::jlong timeout,
+    const ::jxx::Ptr<TimeUnit>& unit) {
+    if (unit == nullptr) throw ::jxx::lang::NullPointerException();
     std::unique_lock<std::mutex> lock(mutex_);
     return terminated_.wait_for(lock, unit->toChrono(timeout), [&] {
         return shutdown_ && queue_.empty() && activeCount_ == 0 && liveWorkerCount_ == 0;
     });
 }
 
-jxx::lang::jint ThreadPoolExecutor::getCorePoolSize() const noexcept { return corePoolSize_; }
-jxx::lang::jint ThreadPoolExecutor::getMaximumPoolSize() const noexcept { return maximumPoolSize_; }
-jxx::lang::jlong ThreadPoolExecutor::getKeepAliveTime(const jxx::Ptr<TimeUnit>& unit) const {
-    if (unit == nullptr) throw jxx::lang::NullPointerException();
+::jxx::lang::jint ThreadPoolExecutor::getCorePoolSize() const noexcept { return corePoolSize_; }
+::jxx::lang::jint ThreadPoolExecutor::getMaximumPoolSize() const noexcept { return maximumPoolSize_; }
+::jxx::lang::jlong ThreadPoolExecutor::getKeepAliveTime(const ::jxx::Ptr<TimeUnit>& unit) const {
+    if (unit == nullptr) throw ::jxx::lang::NullPointerException();
     return unit->convert(keepAliveTime_, keepAliveUnit_);
 }
-jxx::lang::jint ThreadPoolExecutor::getPoolSize() {
+::jxx::lang::jint ThreadPoolExecutor::getPoolSize() {
     std::lock_guard<std::mutex> lock(mutex_);
     return liveWorkerCount_;
 }
-jxx::lang::jint ThreadPoolExecutor::getActiveCount() {
+::jxx::lang::jint ThreadPoolExecutor::getActiveCount() {
     std::lock_guard<std::mutex> lock(mutex_);
     return activeCount_;
 }
-jxx::lang::jint ThreadPoolExecutor::getLargestPoolSize() {
+::jxx::lang::jint ThreadPoolExecutor::getLargestPoolSize() {
     std::lock_guard<std::mutex> lock(mutex_);
     return largestPoolSize_;
 }
-jxx::lang::jlong ThreadPoolExecutor::getCompletedTaskCount() {
+::jxx::lang::jlong ThreadPoolExecutor::getCompletedTaskCount() {
     std::lock_guard<std::mutex> lock(mutex_);
     return completedTaskCount_;
 }
-jxx::lang::jlong ThreadPoolExecutor::getTaskCount() {
+::jxx::lang::jlong ThreadPoolExecutor::getTaskCount() {
     std::lock_guard<std::mutex> lock(mutex_);
     return submittedTaskCount_;
 }
 void ThreadPoolExecutor::setRejectedExecutionHandler(
-    const jxx::Ptr<RejectedExecutionHandler>& handler) {
-    if (handler == nullptr) throw jxx::lang::NullPointerException();
+    const ::jxx::Ptr<RejectedExecutionHandler>& handler) {
+    if (handler == nullptr) throw ::jxx::lang::NullPointerException();
     std::lock_guard<std::mutex> lock(mutex_);
     handler_ = handler;
 }
-jxx::Ptr<RejectedExecutionHandler> ThreadPoolExecutor::getRejectedExecutionHandler() {
+::jxx::Ptr<RejectedExecutionHandler> ThreadPoolExecutor::getRejectedExecutionHandler() {
     std::lock_guard<std::mutex> lock(mutex_);
     return handler_;
 }
-void ThreadPoolExecutor::reject_(const jxx::Ptr<jxx::lang::Runnable>& command) {
+void ThreadPoolExecutor::reject_(const ::jxx::Ptr<::jxx::lang::Runnable>& command) {
     if (handler_ != nullptr) {
-        handler_->rejectedExecution(command, jxx::CAST<ThreadPoolExecutor>(thisPtr()));
+        handler_->rejectedExecution(command, ::jxx::CAST<ThreadPoolExecutor>(thisPtr()));
         return;
     }
     throw RejectedExecutionException();
