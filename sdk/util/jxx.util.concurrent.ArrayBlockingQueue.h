@@ -89,6 +89,7 @@ public:
 
     void put(const ::jxx::Ptr<E>& element) override {
         requireElement_(element);
+        if (::jxx::lang::Thread::interrupted()) throw ::jxx::lang::InterruptedException();
         std::unique_lock<std::mutex> lock(mutex_);
         notFull_.wait(lock, [&] { return queue_.size() < static_cast<std::size_t>(capacity_); });
         queue_.push_back(element);
@@ -120,6 +121,7 @@ public:
     }
 
     ::jxx::Ptr<E> take() override {
+        if (::jxx::lang::Thread::interrupted()) throw ::jxx::lang::InterruptedException();
         std::unique_lock<std::mutex> lock(mutex_);
         notEmpty_.wait(lock, [&] { return !queue_.empty(); });
         auto result = queue_.front();
