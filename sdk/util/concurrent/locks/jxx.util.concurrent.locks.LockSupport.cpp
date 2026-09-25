@@ -17,7 +17,7 @@ struct Parker final {
     std::mutex mutex;
     std::condition_variable condition;
     ::jxx::lang::jbool permit = false;
-    jxx::Ptr<jxx::lang::Object> blocker;
+    ::jxx::Ptr<::jxx::lang::Object> blocker;
 };
 
 std::mutex registryMutex;
@@ -32,21 +32,21 @@ std::shared_ptr<Parker> parkerFor(::jxx::lang::jlong id) {
     return parker;
 }
 
-jxx::Ptr<jxx::lang::Thread> currentThread() {
-    auto thread = jxx::lang::Thread::currentThread();
+::jxx::Ptr<::jxx::lang::Thread> currentThread() {
+    auto thread = ::jxx::lang::Thread::currentThread();
     if (!thread) {
-        throw jxx::lang::IllegalStateException();
+        throw ::jxx::lang::IllegalStateException();
     }
     return thread;
 }
 
-::jxx::lang::jbool shouldReturn(const jxx::Ptr<jxx::lang::Thread>& thread,
+::jxx::lang::jbool shouldReturn(const ::jxx::Ptr<::jxx::lang::Thread>& thread,
                    const std::shared_ptr<Parker>& parker) {
     return parker->permit || thread->isInterrupted();
 }
 
 template<typename DeadlinePredicate>
-void parkImpl(const jxx::Ptr<jxx::lang::Object>& blocker,
+void parkImpl(const ::jxx::Ptr<::jxx::lang::Object>& blocker,
               DeadlinePredicate waitStep) {
     auto thread = currentThread();
     auto parker = parkerFor(thread->getId());
@@ -80,11 +80,11 @@ void parkImpl(const jxx::Ptr<jxx::lang::Object>& blocker,
 
 } // namespace
 
-jxx::Ptr<jxx::lang::ClassAny> LockSupport::Class() {
+::jxx::Ptr<::jxx::lang::ClassAny> LockSupport::Class() {
     return JxxClassInfoMarker::Class();
 }
 
-void LockSupport::unpark(const jxx::Ptr<jxx::lang::Thread>& thread) {
+void LockSupport::unpark(const ::jxx::Ptr<::jxx::lang::Thread>& thread) {
     if (!thread) {
         return;
     }
@@ -100,7 +100,7 @@ void LockSupport::park() {
     park(nullptr);
 }
 
-void LockSupport::park(const jxx::Ptr<jxx::lang::Object>& blocker) {
+void LockSupport::park(const ::jxx::Ptr<::jxx::lang::Object>& blocker) {
     parkImpl(blocker, [](Parker& parker, std::unique_lock<std::mutex>& lock) {
         parker.condition.wait(lock);
         return true;
@@ -111,7 +111,7 @@ void LockSupport::parkNanos(::jxx::lang::jlong nanos) {
     parkNanos(nullptr, nanos);
 }
 
-void LockSupport::parkNanos(const jxx::Ptr<jxx::lang::Object>& blocker,
+void LockSupport::parkNanos(const ::jxx::Ptr<::jxx::lang::Object>& blocker,
                             ::jxx::lang::jlong nanos) {
     if (nanos <= 0) {
         return;
@@ -138,7 +138,7 @@ void LockSupport::parkUntil(::jxx::lang::jlong deadline) {
     parkUntil(nullptr, deadline);
 }
 
-void LockSupport::parkUntil(const jxx::Ptr<jxx::lang::Object>& blocker,
+void LockSupport::parkUntil(const ::jxx::Ptr<::jxx::lang::Object>& blocker,
                             ::jxx::lang::jlong deadline) {
     const auto target = std::chrono::system_clock::time_point(
         std::chrono::milliseconds(deadline));
@@ -158,10 +158,10 @@ void LockSupport::parkUntil(const jxx::Ptr<jxx::lang::Object>& blocker,
     });
 }
 
-jxx::Ptr<jxx::lang::Object> LockSupport::getBlocker(
-    const jxx::Ptr<jxx::lang::Thread>& thread) {
+::jxx::Ptr<::jxx::lang::Object> LockSupport::getBlocker(
+    const ::jxx::Ptr<::jxx::lang::Thread>& thread) {
     if (!thread) {
-        throw jxx::lang::NullPointerException();
+        throw ::jxx::lang::NullPointerException();
     }
     auto parker = parkerFor(thread->getId());
     std::lock_guard<std::mutex> lock(parker->mutex);
