@@ -1,9 +1,13 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocket.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocketNative.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
+#include "security/jxx.security.SecureRandom.h"
+#include "lang/jxx.lang.NullPointerException.h"
 #include <algorithm>
 #include <openssl/bio.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>
+#include <openssl/rand.h>
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSession.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslStreams.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.HandshakeCompletedEvent.h"
@@ -11,17 +15,103 @@
 #include "io/jxx.io.IOException.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.IllegalStateException.h"
+#include "lang/jxx.lang.UnsupportedOperationException.h"
 namespace jxx::ext::net::ssl::internal
 {
-	OpenSslSocket::OpenSslSocket(const ::jxx::Ptr<::jxx::lang::String>& h, ::jxx::lang::jint p) :native_(new OpenSslSocketNative()), host_(h), port_(p)
+    namespace {
+        std::vector<std::string> toVector(const ::jxx::Ptr<OpenSslSocket::StringArray>& values) {
+            if (values == nullptr) throw ::jxx::lang::IllegalArgumentException();
+            std::vector<std::string> result;
+            result.reserve(static_cast<std::size_t>(values->length));
+            for (::jxx::lang::jint index = 0; index < values->length; ++index) {
+                if ((*values)[index] == nullptr) throw ::jxx::lang::IllegalArgumentException();
+                result.push_back((*values)[index]->utf8());
+            }
+            return result;
+        }
+
+        ::jxx::Ptr<OpenSslSocket::StringArray> toArray(const std::vector<std::string>& values) {
+            const auto result = ::jxx::NEW<OpenSslSocket::StringArray>(
+                static_cast<::jxx::lang::jint>(values.size()));
+            for (std::size_t index = 0; index < values.size(); ++index)
+                (*result)[static_cast<::jxx::lang::jint>(index)] =
+                    ::jxx::NEW<::jxx::lang::String>(values[index]);
+            return result;
+        }
+
+        std::string join(const std::vector<std::string>& values, const char delimiter) {
+            std::string result;
+            for (const auto& value : values) {
+                if (!result.empty()) result.push_back(delimiter);
+                result += value;
+            }
+            return result;
+        }
+    }
+
+	OpenSslSocket::OpenSslSocket(const ::jxx::Ptr<::jxx::lang::String>& h, ::jxx::lang::jint p, const std::shared_ptr<OpenSslContextConfig>& config) :config_(config), native_(new OpenSslSocketNative()), host_(h), port_(p)
 	{
 	}OpenSslSocket::~OpenSslSocket() = default; void OpenSslSocket::startHandshake()
 	{
 		if (session_ != nullptr)return; native_->context = SSL_CTX_new(TLS_client_method());
+        if (native_->context == nullptr) throw ::jxx::io::IOException("SSL_CTX_new failed");
+
+        int minimumVersion = TLS1_2_VERSION;
+        int maximumVersion = TLS1_3_VERSION;
+        if (!enabledProtocols_.empty()) {
+            bool tls12 = false;
+            bool tls13 = false;
+            for (const auto& protocol : enabledProtocols_) {
+                if (protocol == "TLSv1.2") tls12 = true;
+                else if (protocol == "TLSv1.3") tls13 = true;
+                else throw ::jxx::lang::IllegalArgumentException();
+            }
+            if (!tls12 && !tls13) throw ::jxx::lang::IllegalArgumentException();
+            minimumVersion = tls12 ? TLS1_2_VERSION : TLS1_3_VERSION;
+            maximumVersion = tls13 ? TLS1_3_VERSION : TLS1_2_VERSION;
+        }
+        if (SSL_CTX_set_min_proto_version(native_->context, minimumVersion) != 1 ||
+            SSL_CTX_set_max_proto_version(native_->context, maximumVersion) != 1)
+            throw ::jxx::io::IOException("Could not apply enabled TLS protocols");
+
+        if (!enabledCipherSuites_.empty()) {
+            std::vector<std::string> tls13Suites;
+            std::vector<std::string> legacySuites;
+            for (const auto& cipher : enabledCipherSuites_) {
+                if (cipher.rfind("TLS_", 0) == 0) tls13Suites.push_back(cipher);
+                else legacySuites.push_back(cipher);
+            }
+            if (!legacySuites.empty() &&
+                SSL_CTX_set_cipher_list(native_->context, join(legacySuites, ':').c_str()) != 1)
+                throw ::jxx::lang::IllegalArgumentException();
+            if (!tls13Suites.empty() &&
+                SSL_CTX_set_ciphersuites(native_->context, join(tls13Suites, ':').c_str()) != 1)
+                throw ::jxx::lang::IllegalArgumentException();
+        }
+
+        if (config_ != nullptr && config_->secureRandom != nullptr) {
+            const auto seed = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(64);
+            config_->secureRandom->nextBytes(seed);
+            RAND_seed(&(*seed)[0], seed->length);
+        }
 		SSL_CTX_set_min_proto_version(native_->context, TLS1_2_VERSION); 
 		SSL_CTX_set_max_proto_version(native_->context, TLS1_3_VERSION); 
 		SSL_CTX_set_verify(native_->context, SSL_VERIFY_PEER, nullptr);
-		SSL_CTX_set_default_verify_paths(native_->context); 
+		if (config_ == nullptr || config_->trustManagers == nullptr || config_->trustManagers->length == 0) {
+            if (SSL_CTX_set_default_verify_paths(native_->context) != 1)
+                throw ::jxx::io::IOException("Could not load default trust paths");
+        } else {
+            // Generic TrustManager is a marker interface. Until X509TrustManager
+            // callback APIs are available, reject non-empty custom managers.
+            throw ::jxx::lang::UnsupportedOperationException(
+                ::jxx::NEW<::jxx::lang::String>(
+                    "Custom TrustManager requires X509TrustManager support"));
+        }
+        if (config_ != nullptr && config_->keyManagers != nullptr && config_->keyManagers->length != 0) {
+            throw ::jxx::lang::UnsupportedOperationException(
+                ::jxx::NEW<::jxx::lang::String>(
+                    "Custom KeyManager requires X509KeyManager support"));
+        } 
 		native_->connection = BIO_new_ssl_connect(native_->context); 
 		std::string endpoint = host_->utf8() + ":" + std::to_string(port_); 
 		BIO_set_conn_hostname(native_->connection, endpoint.c_str());
@@ -62,17 +152,21 @@ namespace jxx::ext::net::ssl::internal
 		auto a = ::jxx::NEW<StringArray>(2); (*a)[0] = ::jxx::NEW<::jxx::lang::String>("TLSv1.2"); (*a)[1] = ::jxx::NEW<::jxx::lang::String>("TLSv1.3"); return a;
 	}::jxx::Ptr<OpenSslSocket::StringArray> OpenSslSocket::getEnabledProtocols()const
 	{
-		return getSupportedProtocols();
-	}void OpenSslSocket::setEnabledProtocols(const ::jxx::Ptr<StringArray>&)
+		return enabledProtocols_.empty() ? getSupportedProtocols() : toArray(enabledProtocols_);
+	}void OpenSslSocket::setEnabledProtocols(const ::jxx::Ptr<StringArray>& values)
 	{
+        if (session_ != nullptr) throw ::jxx::lang::IllegalStateException();
+        enabledProtocols_ = toVector(values);
 	}::jxx::Ptr<OpenSslSocket::StringArray> OpenSslSocket::getSupportedCipherSuites()const
 	{
 		return ::jxx::NEW<StringArray>(0);
 	}::jxx::Ptr<OpenSslSocket::StringArray> OpenSslSocket::getEnabledCipherSuites()const
 	{
-		return getSupportedCipherSuites();
-	}void OpenSslSocket::setEnabledCipherSuites(const ::jxx::Ptr<StringArray>&)
+		return enabledCipherSuites_.empty() ? getSupportedCipherSuites() : toArray(enabledCipherSuites_);
+	}void OpenSslSocket::setEnabledCipherSuites(const ::jxx::Ptr<StringArray>& values)
 	{
+        if (session_ != nullptr) throw ::jxx::lang::IllegalStateException();
+        enabledCipherSuites_ = toVector(values);
 	}::jxx::Ptr<SSLSession> OpenSslSocket::getSession()
 	{
 		startHandshake(); return session_;

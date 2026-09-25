@@ -6,10 +6,12 @@
 #include <vector>
 
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocket.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
 #include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "net/jxx.net.InetAddress.h"
 
 namespace jxx::ext::net::ssl::internal {
+OpenSslSocketFactory::OpenSslSocketFactory(const std::shared_ptr<OpenSslContextConfig>& config):config_(config){}
 namespace {
 
 ::jxx::Ptr<OpenSslSocketFactory::StringArray> cipherSuites() {
@@ -57,7 +59,7 @@ OpenSslSocketFactory::createSocket() {
 OpenSslSocketFactory::createSocket(
     const ::jxx::Ptr<::jxx::lang::String>& host,
     ::jxx::lang::jint port) {
-    return ::jxx::NEW<OpenSslSocket>(host, port);
+    return ::jxx::NEW<OpenSslSocket>(host, port, config_);
 }
 
 ::jxx::Ptr<::jxx::net::Socket>
