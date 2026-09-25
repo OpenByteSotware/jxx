@@ -38,6 +38,12 @@ HandshakeCompletedEvent::getPeerCertificates() const {
     return session_->getPeerCertificates();
 }
 
+
+::jxx::Ptr<HandshakeCompletedEvent::LegacyCertificateArray>
+HandshakeCompletedEvent::getPeerCertificateChain() const {
+    return nullptr;
+}
+
 ::jxx::Ptr<::jxx::security::Principal>
 HandshakeCompletedEvent::getLocalPrincipal() const {
     return session_->getLocalPrincipal();

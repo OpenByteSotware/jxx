@@ -96,4 +96,9 @@ OpenSslSocketFactory::createSocket(
     return createSocket(host, port);
 }
 
+::jxx::Ptr<::jxx::net::Socket>
+OpenSslSocketFactory::createSocket(const ::jxx::Ptr<::jxx::net::Socket>& socket,const ::jxx::Ptr<::jxx::io::InputStream>& consumed,::jxx::lang::jbool autoClose) {
+    return SSLSocketFactory::createSocket(socket, consumed, autoClose);
+}
+
 } // namespace jxx::ext::net::ssl::internal

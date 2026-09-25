@@ -177,24 +177,28 @@ namespace jxx::ext::net::ssl::internal
 		listeners_.erase(std::remove(listeners_.begin(), listeners_.end(), l), listeners_.end());
 	}void OpenSslSocket::setUseClientMode(::jxx::lang::jbool v)
 	{
+        if (session_ != nullptr) throw ::jxx::lang::IllegalStateException();
 		client_ = v;
 	}::jxx::lang::jbool OpenSslSocket::getUseClientMode()const
 	{
 		return client_;
 	}void OpenSslSocket::setNeedClientAuth(::jxx::lang::jbool v)
 	{
+        if (session_ != nullptr) throw ::jxx::lang::IllegalStateException();
 		need_ = v; if (v)want_ = false;
 	}::jxx::lang::jbool OpenSslSocket::getNeedClientAuth()const
 	{
 		return need_;
 	}void OpenSslSocket::setWantClientAuth(::jxx::lang::jbool v)
 	{
+        if (session_ != nullptr) throw ::jxx::lang::IllegalStateException();
 		want_ = v; if (v)need_ = false;
 	}::jxx::lang::jbool OpenSslSocket::getWantClientAuth()const
 	{
 		return want_;
 	}void OpenSslSocket::setEnableSessionCreation(::jxx::lang::jbool v)
 	{
+        if (session_ != nullptr) throw ::jxx::lang::IllegalStateException();
 		create_ = v;
 	}::jxx::lang::jbool OpenSslSocket::getEnableSessionCreation()const
 	{

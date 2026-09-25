@@ -10,4 +10,4 @@ class OpenSslSocketFactory final:public ::jxx::lang::ClassBase<OpenSslSocketFact
 ::jxx::Ptr<::jxx::net::Socket> createSocket(const ::jxx::Ptr<::jxx::lang::String>&,::jxx::lang::jint,const ::jxx::Ptr<::jxx::net::InetAddress>&,::jxx::lang::jint)override;
 ::jxx::Ptr<::jxx::net::Socket> createSocket(const ::jxx::Ptr<::jxx::net::InetAddress>&,::jxx::lang::jint)override;
 ::jxx::Ptr<::jxx::net::Socket> createSocket(const ::jxx::Ptr<::jxx::net::InetAddress>&,::jxx::lang::jint,const ::jxx::Ptr<::jxx::net::InetAddress>&,::jxx::lang::jint)override;
-::jxx::Ptr<::jxx::net::Socket> createSocket(const ::jxx::Ptr<::jxx::net::Socket>&,const ::jxx::Ptr<::jxx::lang::String>&,::jxx::lang::jint,::jxx::lang::jbool)override;private:std::shared_ptr<OpenSslContextConfig> config_;};}
+::jxx::Ptr<::jxx::net::Socket> createSocket(const ::jxx::Ptr<::jxx::net::Socket>&,const ::jxx::Ptr<::jxx::lang::String>&,::jxx::lang::jint,::jxx::lang::jbool)override;::jxx::Ptr<::jxx::net::Socket> createSocket(const ::jxx::Ptr<::jxx::net::Socket>&,const ::jxx::Ptr<::jxx::io::InputStream>&,::jxx::lang::jbool)override;private:std::shared_ptr<OpenSslContextConfig> config_;};}
