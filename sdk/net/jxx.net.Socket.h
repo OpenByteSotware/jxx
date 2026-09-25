@@ -119,6 +119,10 @@ public:
 
         jxx::Ptr<jxx::lang::String> toString() const override;
 
+    public:
+        // Internal transport bridge used by secure socket providers.
+        internal::NativeSocket nativeSocketHandle() const noexcept;
+
     private:
         friend class ServerSocket;
         

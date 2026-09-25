@@ -9,6 +9,8 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
 #include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "net/jxx.net.InetAddress.h"
+#include "io/jxx.io.InputStream.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
 
 namespace jxx::ext::net::ssl::internal {
 OpenSslSocketFactory::OpenSslSocketFactory(const std::shared_ptr<OpenSslContextConfig>& config):config_(config){}
@@ -89,16 +91,42 @@ OpenSslSocketFactory::createSocket(
 
 ::jxx::Ptr<::jxx::net::Socket>
 OpenSslSocketFactory::createSocket(
-    const ::jxx::Ptr<::jxx::net::Socket>&,
+    const ::jxx::Ptr<::jxx::net::Socket>& socket,
     const ::jxx::Ptr<::jxx::lang::String>& host,
     ::jxx::lang::jint port,
-    ::jxx::lang::jbool) {
-    return createSocket(host, port);
+    ::jxx::lang::jbool autoClose) {
+    if (socket == nullptr || host == nullptr)
+        throw ::jxx::lang::IllegalArgumentException();
+    return ::jxx::NEW<OpenSslSocket>(
+        socket, host, port, autoClose,
+        std::vector<unsigned char>(), config_);
 }
 
 ::jxx::Ptr<::jxx::net::Socket>
-OpenSslSocketFactory::createSocket(const ::jxx::Ptr<::jxx::net::Socket>& socket,const ::jxx::Ptr<::jxx::io::InputStream>& consumed,::jxx::lang::jbool autoClose) {
-    return SSLSocketFactory::createSocket(socket, consumed, autoClose);
+OpenSslSocketFactory::createSocket(
+    const ::jxx::Ptr<::jxx::net::Socket>& socket,
+    const ::jxx::Ptr<::jxx::io::InputStream>& consumed,
+    ::jxx::lang::jbool autoClose) {
+    if (socket == nullptr || consumed == nullptr)
+        throw ::jxx::lang::IllegalArgumentException();
+    std::vector<unsigned char> alreadyConsumed;
+    const auto buffer = ::jxx::NEW<
+        ::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(4096);
+    for (;;) {
+        const auto count = consumed->read(buffer, 0, buffer->length);
+        if (count < 0) break;
+        if (count == 0) continue;
+        for (::jxx::lang::jint index = 0; index < count; ++index)
+            alreadyConsumed.push_back(
+                static_cast<unsigned char>((*buffer)[index]));
+    }
+    const auto address = socket->getInetAddress();
+    const auto host = address == nullptr
+        ? ::jxx::NEW<::jxx::lang::String>("")
+        : address->getHostAddress();
+    return ::jxx::NEW<OpenSslSocket>(
+        socket, host, socket->getPort(), autoClose,
+        alreadyConsumed, config_);
 }
 
 } // namespace jxx::ext::net::ssl::internal

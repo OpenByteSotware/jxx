@@ -2,6 +2,7 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocketNative.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslManagerBridge.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.LayeredSocketBio.h"
 #include "security/jxx.security.SecureRandom.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include <algorithm>
@@ -110,15 +111,41 @@ namespace jxx::ext::net::ssl::internal
         SSL_CTX_set_client_cert_cb(
             native_->context,
             openSslClientCertificateCallback); 
-		native_->connection = BIO_new_ssl_connect(native_->context); 
-		std::string endpoint = host_->utf8() + ":" + std::to_string(port_); 
-		BIO_set_conn_hostname(native_->connection, endpoint.c_str());
-		SSL* ssl = nullptr; BIO_get_ssl(native_->connection, &ssl);
+        SSL* ssl = SSL_new(native_->context);
+        if (ssl == nullptr)
+            throw ::jxx::io::IOException("SSL_new failed");
+
+        if (transport_ != nullptr) {
+            BIO* transportBio = createLayeredSocketBio(
+                transport_->nativeSocketHandle(), consumed_);
+            if (transportBio == nullptr) {
+                SSL_free(ssl);
+                throw ::jxx::io::IOException("Could not create layered socket BIO");
+            }
+            SSL_set_bio(ssl, transportBio, transportBio);
+            native_->connection = BIO_new(BIO_f_ssl());
+            if (native_->connection == nullptr) {
+                SSL_free(ssl);
+                throw ::jxx::io::IOException("Could not create SSL BIO");
+            }
+            BIO_set_ssl(native_->connection, ssl, BIO_CLOSE);
+        } else {
+            SSL_free(ssl);
+            native_->connection = BIO_new_ssl_connect(native_->context);
+            if (native_->connection == nullptr)
+                throw ::jxx::io::IOException("Could not create SSL connect BIO");
+            BIO_get_ssl(native_->connection, &ssl);
+            std::string endpoint = host_->utf8() + ":" + std::to_string(port_);
+            BIO_set_conn_hostname(native_->connection, endpoint.c_str());
+        }
         SSL_set_ex_data(ssl, openSslManagerBridgeExDataIndex(), native_->managerBridge.get());
 		SSL_set_tlsext_host_name(ssl, host_->utf8().c_str());
 		SSL_set1_host(ssl, host_->utf8().c_str()); 
-		if (BIO_do_connect(native_->connection) <= 0 ||
-			BIO_do_handshake(native_->connection) <= 0)throw ::jxx::io::IOException("TLS handshake failed"); session_ = ::jxx::NEW<OpenSslSession>(::jxx::NEW<::jxx::lang::String>(SSL_get_cipher_name(ssl)), ::jxx::NEW<::jxx::lang::String>(SSL_get_version(ssl)), host_, port_); const auto socket = ::jxx::CAST<::jxx::ext::net::ssl::SSLSocket>(
+        if ((transport_ == nullptr && BIO_do_connect(native_->connection) <= 0) ||
+            BIO_do_handshake(native_->connection) <= 0) {
+            close();
+            throw ::jxx::io::IOException("TLS handshake failed");
+        } session_ = ::jxx::NEW<OpenSslSession>(::jxx::NEW<::jxx::lang::String>(SSL_get_cipher_name(ssl)), ::jxx::NEW<::jxx::lang::String>(SSL_get_version(ssl)), host_, port_); const auto socket = ::jxx::CAST<::jxx::ext::net::ssl::SSLSocket>(
 			   this->thisPtr());
 		if (socket == nullptr) {
 			throw ::jxx::lang::IllegalStateException(
@@ -139,7 +166,11 @@ namespace jxx::ext::net::ssl::internal
 		startHandshake(); return ::jxx::NEW<OpenSslOutputStream>(this);
 	}void OpenSslSocket::close()
 	{
-		native_.reset(new OpenSslSocketNative()); session_ = nullptr;
+        native_.reset(new OpenSslSocketNative());
+        session_ = nullptr;
+        if (autoClose_ && transport_ != nullptr && !transport_->isClosed())
+            transport_->close();
+        transport_ = nullptr;
 	}int OpenSslSocket::tlsRead(unsigned char* b, int n)
 	{
 		startHandshake(); int r = BIO_read(native_->connection, b, n); return r <= 0 ? -1 : r;

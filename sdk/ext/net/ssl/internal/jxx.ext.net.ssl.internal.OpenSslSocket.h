@@ -1,6 +1,80 @@
 #pragma once
+
 #include <memory>
-#include <vector>
 #include <string>
+#include <vector>
+
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLSocket.h"
-namespace jxx::ext::net::ssl::internal { class OpenSslContextConfig; class OpenSslSocketNative; class OpenSslSocket final:public ::jxx::lang::ClassBase<OpenSslSocket,::jxx::ext::net::ssl::SSLSocket>{public:OpenSslSocket(const ::jxx::Ptr<::jxx::lang::String>& host,::jxx::lang::jint port,const std::shared_ptr<OpenSslContextConfig>& config);~OpenSslSocket()override;void startHandshake()override;::jxx::Ptr<::jxx::io::InputStream> getInputStream()override;::jxx::Ptr<::jxx::io::OutputStream> getOutputStream()override;void close()override;::jxx::Ptr<StringArray> getSupportedCipherSuites()const override;::jxx::Ptr<StringArray> getEnabledCipherSuites()const override;void setEnabledCipherSuites(const ::jxx::Ptr<StringArray>&)override;::jxx::Ptr<StringArray> getSupportedProtocols()const override;::jxx::Ptr<StringArray> getEnabledProtocols()const override;void setEnabledProtocols(const ::jxx::Ptr<StringArray>&)override;::jxx::Ptr<SSLSession> getSession()override;void addHandshakeCompletedListener(const ::jxx::Ptr<HandshakeCompletedListener>&)override;void removeHandshakeCompletedListener(const ::jxx::Ptr<HandshakeCompletedListener>&)override;void setUseClientMode(::jxx::lang::jbool)override;::jxx::lang::jbool getUseClientMode()const override;void setNeedClientAuth(::jxx::lang::jbool)override;::jxx::lang::jbool getNeedClientAuth()const override;void setWantClientAuth(::jxx::lang::jbool)override;::jxx::lang::jbool getWantClientAuth()const override;void setEnableSessionCreation(::jxx::lang::jbool)override;::jxx::lang::jbool getEnableSessionCreation()const override;int tlsRead(unsigned char*,int);int tlsWrite(const unsigned char*,int);private:std::shared_ptr<OpenSslContextConfig> config_;std::unique_ptr<OpenSslSocketNative> native_;::jxx::Ptr<::jxx::lang::String> host_;::jxx::lang::jint port_;::jxx::Ptr<SSLSession> session_;std::vector<::jxx::Ptr<HandshakeCompletedListener>> listeners_;std::vector<std::string> enabledCipherSuites_;std::vector<std::string> enabledProtocols_;::jxx::lang::jbool client_=true,need_=false,want_=false,create_=true;};}
+
+namespace jxx::ext::net::ssl::internal {
+
+class OpenSslContextConfig;
+class OpenSslSocketNative;
+
+class OpenSslSocket final
+    : public ::jxx::lang::ClassBase<
+          OpenSslSocket,
+          ::jxx::ext::net::ssl::SSLSocket> {
+public:
+    OpenSslSocket(
+        const ::jxx::Ptr<::jxx::lang::String>& host,
+        ::jxx::lang::jint port,
+        const std::shared_ptr<OpenSslContextConfig>& config);
+
+    OpenSslSocket(
+        const ::jxx::Ptr<::jxx::net::Socket>& transport,
+        const ::jxx::Ptr<::jxx::lang::String>& host,
+        ::jxx::lang::jint port,
+        ::jxx::lang::jbool autoClose,
+        const std::vector<unsigned char>& consumed,
+        const std::shared_ptr<OpenSslContextConfig>& config);
+
+    ~OpenSslSocket() override;
+
+    void startHandshake() override;
+    ::jxx::Ptr<::jxx::io::InputStream> getInputStream() override;
+    ::jxx::Ptr<::jxx::io::OutputStream> getOutputStream() override;
+    void close() override;
+
+    ::jxx::Ptr<StringArray> getSupportedCipherSuites() const override;
+    ::jxx::Ptr<StringArray> getEnabledCipherSuites() const override;
+    void setEnabledCipherSuites(const ::jxx::Ptr<StringArray>& values) override;
+    ::jxx::Ptr<StringArray> getSupportedProtocols() const override;
+    ::jxx::Ptr<StringArray> getEnabledProtocols() const override;
+    void setEnabledProtocols(const ::jxx::Ptr<StringArray>& values) override;
+    ::jxx::Ptr<SSLSession> getSession() override;
+    void addHandshakeCompletedListener(
+        const ::jxx::Ptr<HandshakeCompletedListener>& listener) override;
+    void removeHandshakeCompletedListener(
+        const ::jxx::Ptr<HandshakeCompletedListener>& listener) override;
+    void setUseClientMode(::jxx::lang::jbool value) override;
+    ::jxx::lang::jbool getUseClientMode() const override;
+    void setNeedClientAuth(::jxx::lang::jbool value) override;
+    ::jxx::lang::jbool getNeedClientAuth() const override;
+    void setWantClientAuth(::jxx::lang::jbool value) override;
+    ::jxx::lang::jbool getWantClientAuth() const override;
+    void setEnableSessionCreation(::jxx::lang::jbool value) override;
+    ::jxx::lang::jbool getEnableSessionCreation() const override;
+
+    int tlsRead(unsigned char* data, int length);
+    int tlsWrite(const unsigned char* data, int length);
+
+private:
+    std::shared_ptr<OpenSslContextConfig> config_;
+    std::unique_ptr<OpenSslSocketNative> native_;
+    ::jxx::Ptr<::jxx::lang::String> host_;
+    ::jxx::lang::jint port_;
+    ::jxx::Ptr<::jxx::net::Socket> transport_;
+    ::jxx::lang::jbool autoClose_ = false;
+    std::vector<unsigned char> consumed_;
+    ::jxx::Ptr<SSLSession> session_;
+    std::vector<::jxx::Ptr<HandshakeCompletedListener>> listeners_;
+    std::vector<std::string> enabledCipherSuites_;
+    std::vector<std::string> enabledProtocols_;
+    ::jxx::lang::jbool client_ = true;
+    ::jxx::lang::jbool need_ = false;
+    ::jxx::lang::jbool want_ = false;
+    ::jxx::lang::jbool create_ = true;
+};
+
+} // namespace jxx::ext::net::ssl::internal
