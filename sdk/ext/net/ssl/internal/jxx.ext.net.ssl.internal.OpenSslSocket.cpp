@@ -1,6 +1,7 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocket.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocketNative.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslManagerBridge.h"
 #include "security/jxx.security.SecureRandom.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include <algorithm>
@@ -97,25 +98,23 @@ namespace jxx::ext::net::ssl::internal
 		SSL_CTX_set_min_proto_version(native_->context, TLS1_2_VERSION); 
 		SSL_CTX_set_max_proto_version(native_->context, TLS1_3_VERSION); 
 		SSL_CTX_set_verify(native_->context, SSL_VERIFY_PEER, nullptr);
-		if (config_ == nullptr || config_->trustManagers == nullptr || config_->trustManagers->length == 0) {
-            if (SSL_CTX_set_default_verify_paths(native_->context) != 1)
-                throw ::jxx::io::IOException("Could not load default trust paths");
-        } else {
-            // Generic TrustManager is a marker interface. Until X509TrustManager
-            // callback APIs are available, reject non-empty custom managers.
-            throw ::jxx::lang::UnsupportedOperationException(
-                ::jxx::NEW<::jxx::lang::String>(
-                    "Custom TrustManager requires X509TrustManager support"));
-        }
-        if (config_ != nullptr && config_->keyManagers != nullptr && config_->keyManagers->length != 0) {
-            throw ::jxx::lang::UnsupportedOperationException(
-                ::jxx::NEW<::jxx::lang::String>(
-                    "Custom KeyManager requires X509KeyManager support"));
-        } 
+		if (SSL_CTX_set_default_verify_paths(native_->context) != 1)
+            throw ::jxx::io::IOException("Could not load default trust paths");
+
+        native_->managerBridge =
+            std::make_unique<OpenSslManagerBridge>(config_);
+        SSL_CTX_set_cert_verify_callback(
+            native_->context,
+            openSslVerifyCallback,
+            native_->managerBridge.get());
+        SSL_CTX_set_client_cert_cb(
+            native_->context,
+            openSslClientCertificateCallback); 
 		native_->connection = BIO_new_ssl_connect(native_->context); 
 		std::string endpoint = host_->utf8() + ":" + std::to_string(port_); 
 		BIO_set_conn_hostname(native_->connection, endpoint.c_str());
 		SSL* ssl = nullptr; BIO_get_ssl(native_->connection, &ssl);
+        SSL_set_ex_data(ssl, openSslManagerBridgeExDataIndex(), native_->managerBridge.get());
 		SSL_set_tlsext_host_name(ssl, host_->utf8().c_str());
 		SSL_set1_host(ssl, host_->utf8().c_str()); 
 		if (BIO_do_connect(native_->connection) <= 0 ||
