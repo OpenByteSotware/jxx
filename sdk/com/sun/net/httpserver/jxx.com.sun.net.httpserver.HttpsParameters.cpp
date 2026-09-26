@@ -1,0 +1,5 @@
+#include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.HttpsParameters.h"
+namespace jxx::com::sun::net::httpserver {
+::jxx::Ptr<HttpsParameters::StringArray> HttpsParameters::copy(const ::jxx::Ptr<StringArray>&s){if(!s)return nullptr;auto d=::jxx::NEW<StringArray>(s->length);for(::jxx::lang::jint i=0;i<s->length;++i)(*d)[i]=(*s)[i];return d;}
+::jxx::Ptr<HttpsParameters::StringArray>HttpsParameters::getCipherSuites()const{return copy(suites_);}void HttpsParameters::setCipherSuites(const ::jxx::Ptr<StringArray>&v){suites_=copy(v);}::jxx::Ptr<HttpsParameters::StringArray>HttpsParameters::getProtocols()const{return copy(protocols_);}void HttpsParameters::setProtocols(const ::jxx::Ptr<StringArray>&v){protocols_=copy(v);}::jxx::lang::jbool HttpsParameters::getNeedClientAuth()const noexcept{return need_;}void HttpsParameters::setNeedClientAuth(::jxx::lang::jbool v)noexcept{need_=v;if(v)want_=false;}::jxx::lang::jbool HttpsParameters::getWantClientAuth()const noexcept{return want_;}void HttpsParameters::setWantClientAuth(::jxx::lang::jbool v)noexcept{want_=v;if(v)need_=false;}
+}
