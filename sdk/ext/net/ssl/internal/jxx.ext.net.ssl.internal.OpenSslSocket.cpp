@@ -117,6 +117,10 @@ void OpenSslSocket::startHandshake() {
     if (!client_ && config_ != nullptr && config_->serverSessionContext != nullptr)
         configureServerSessionCache(
             native_->context, config_->serverSessionContext.get());
+    if (!client_ && !create_) {
+        SSL_CTX_set_session_cache_mode(native_->context, SSL_SESS_CACHE_OFF);
+        SSL_CTX_set_options(native_->context, SSL_OP_NO_TICKET);
+    }
     native_->managerBridge = std::make_unique<OpenSslManagerBridge>(config_);
     SSL_CTX_set_cert_verify_callback(native_->context, openSslVerifyCallback, native_->managerBridge.get());
     SSL_CTX_set_client_cert_cb(native_->context, openSslClientCertificateCallback);

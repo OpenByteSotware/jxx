@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <ctime>
 #include <vector>
 
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLSession.h"
@@ -83,6 +84,42 @@ void OpenSslSessionContext::enforceCacheSizeLocked() {
     }
 }
 
+void OpenSslSessionContext::purgeNativeExpiredLocked() {
+    if (timeoutSeconds_ <= 0) return;
+    const auto current = static_cast<long>(std::time(nullptr));
+    const auto purge = [&](auto& cache, auto& order) {
+        for (auto iterator = cache.begin(); iterator != cache.end();) {
+            SSL_SESSION* session = iterator->second;
+            const bool expired = session == nullptr ||
+                current - SSL_SESSION_get_time(session) >= timeoutSeconds_;
+            if (!expired) { ++iterator; continue; }
+            const auto key = iterator->first;
+            if (session != nullptr) SSL_SESSION_free(session);
+            iterator = cache.erase(iterator);
+            order.erase(std::remove(order.begin(), order.end(), key), order.end());
+        }
+    };
+    purge(nativeSessions_, nativeInsertionOrder_);
+    purge(nativeSessionsById_, nativeIdInsertionOrder_);
+}
+
+void OpenSslSessionContext::enforceNativeCacheSizeLocked() {
+    if (cacheSize_ <= 0) return;
+    const auto enforce = [&](auto& cache, auto& order) {
+        while (static_cast<::jxx::lang::jint>(cache.size()) > cacheSize_ &&
+               !order.empty()) {
+            const auto key = order.front();
+            order.pop_front();
+            const auto found = cache.find(key);
+            if (found == cache.end()) continue;
+            SSL_SESSION_free(found->second);
+            cache.erase(found);
+        }
+    };
+    enforce(nativeSessions_, nativeInsertionOrder_);
+    enforce(nativeSessionsById_, nativeIdInsertionOrder_);
+}
+
 ::jxx::Ptr<::jxx::util::Enumeration<OpenSslSessionContext::IdArray>>
 OpenSslSessionContext::getIds() {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -115,6 +152,7 @@ void OpenSslSessionContext::setSessionTimeout(::jxx::lang::jint seconds) {
     std::lock_guard<std::mutex> lock(mutex_);
     timeoutSeconds_ = seconds;
     purgeExpiredLocked();
+    purgeNativeExpiredLocked();
 }
 
 ::jxx::lang::jint OpenSslSessionContext::getSessionCacheSize() const {
@@ -173,6 +211,7 @@ SSL_SESSION* OpenSslSessionContext::acquireNativeSession(
     const auto key = endpointKey(peerHost, peerPort);
     if (key.empty()) return nullptr;
     std::lock_guard<std::mutex> lock(mutex_);
+    purgeNativeExpiredLocked();
     const auto found = nativeSessions_.find(key);
     if (found == nativeSessions_.end()) return nullptr;
     SSL_SESSION_up_ref(found->second);
@@ -192,9 +231,15 @@ void OpenSslSessionContext::registerNativeSession(
     if (found != nativeSessions_.end()) {
         SSL_SESSION_free(found->second);
         found->second = session;
+        nativeInsertionOrder_.erase(
+            std::remove(nativeInsertionOrder_.begin(), nativeInsertionOrder_.end(), key),
+            nativeInsertionOrder_.end());
     } else {
         nativeSessions_.emplace(key, session);
     }
+    nativeInsertionOrder_.push_back(key);
+    purgeNativeExpiredLocked();
+    enforceNativeCacheSizeLocked();
 }
 
 
@@ -213,6 +258,7 @@ SSL_SESSION* OpenSslSessionContext::acquireNativeSessionById(
     const auto key = nativeIdKey(sessionId, sessionIdLength);
     if (key.empty()) return nullptr;
     std::lock_guard<std::mutex> lock(mutex_);
+    purgeNativeExpiredLocked();
     const auto found = nativeSessionsById_.find(key);
     if (found == nativeSessionsById_.end()) return nullptr;
     SSL_SESSION_up_ref(found->second);
@@ -233,7 +279,13 @@ void OpenSslSessionContext::registerNativeSessionById(SSL_SESSION* session) {
     else {
         SSL_SESSION_free(found->second);
         found->second = session;
+        nativeIdInsertionOrder_.erase(
+            std::remove(nativeIdInsertionOrder_.begin(), nativeIdInsertionOrder_.end(), key),
+            nativeIdInsertionOrder_.end());
     }
+    nativeIdInsertionOrder_.push_back(key);
+    purgeNativeExpiredLocked();
+    enforceNativeCacheSizeLocked();
 }
 
 void OpenSslSessionContext::removeNativeSessionById(SSL_SESSION* session) {
@@ -247,6 +299,9 @@ void OpenSslSessionContext::removeNativeSessionById(SSL_SESSION* session) {
     if (found == nativeSessionsById_.end()) return;
     SSL_SESSION_free(found->second);
     nativeSessionsById_.erase(found);
+    nativeIdInsertionOrder_.erase(
+        std::remove(nativeIdInsertionOrder_.begin(), nativeIdInsertionOrder_.end(), key),
+        nativeIdInsertionOrder_.end());
 }
 
 } // namespace jxx::ext::net::ssl::internal

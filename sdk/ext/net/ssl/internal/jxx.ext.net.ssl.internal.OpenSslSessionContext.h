@@ -49,6 +49,8 @@ private:
         const ::jxx::lang::ByteArray& sessionId);
     void purgeExpiredLocked();
     void enforceCacheSizeLocked();
+    void purgeNativeExpiredLocked();
+    void enforceNativeCacheSizeLocked();
 
     mutable std::mutex mutex_;
     std::unordered_map<
@@ -57,6 +59,8 @@ private:
     std::deque<std::string> insertionOrder_;
     std::unordered_map<std::string, SSL_SESSION*> nativeSessions_;
     std::unordered_map<std::string, SSL_SESSION*> nativeSessionsById_;
+    std::deque<std::string> nativeInsertionOrder_;
+    std::deque<std::string> nativeIdInsertionOrder_;
     ::jxx::lang::jint timeoutSeconds_ = 86400;
     ::jxx::lang::jint cacheSize_ = 0;
 };

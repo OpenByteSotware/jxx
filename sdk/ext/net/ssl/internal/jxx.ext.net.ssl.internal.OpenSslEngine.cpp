@@ -98,6 +98,10 @@ void OpenSslEngine::ensureInitialized() {
     if (!clientMode_ && config_ != nullptr && config_->serverSessionContext != nullptr)
         configureServerSessionCache(
             context_, config_->serverSessionContext.get());
+    if (!clientMode_ && !enableSessionCreation_) {
+        SSL_CTX_set_session_cache_mode(context_, SSL_SESS_CACHE_OFF);
+        SSL_CTX_set_options(context_, SSL_OP_NO_TICKET);
+    }
     managerBridge_ = std::make_unique<OpenSslManagerBridge>(config_);
     SSL_CTX_set_cert_verify_callback(
         context_, openSslVerifyCallback, managerBridge_.get());
