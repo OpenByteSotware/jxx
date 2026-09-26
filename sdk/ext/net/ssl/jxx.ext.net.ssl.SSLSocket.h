@@ -29,6 +29,7 @@ public:
     virtual ::jxx::Ptr<StringArray> getEnabledProtocols() const = 0;
     virtual void setEnabledProtocols(const ::jxx::Ptr<StringArray>& values) = 0;
     virtual ::jxx::Ptr<SSLSession> getSession() = 0;
+    virtual ::jxx::Ptr<SSLSession> getHandshakeSession() const;
     virtual void addHandshakeCompletedListener(const ::jxx::Ptr<HandshakeCompletedListener>& listener) = 0;
     virtual void removeHandshakeCompletedListener(const ::jxx::Ptr<HandshakeCompletedListener>& listener) = 0;
     virtual void startHandshake() = 0;

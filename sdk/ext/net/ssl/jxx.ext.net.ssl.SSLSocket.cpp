@@ -26,4 +26,6 @@ void SSLSocket::setSSLParameters(
     else { setNeedClientAuth(false); setWantClientAuth(false); }
 }
 
+::jxx::Ptr<SSLSession> SSLSocket::getHandshakeSession() const { return nullptr; }
+
 } // namespace jxx::ext::net::ssl

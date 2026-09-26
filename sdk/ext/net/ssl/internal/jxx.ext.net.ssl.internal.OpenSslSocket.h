@@ -73,6 +73,7 @@ public:
         const ::jxx::Ptr<StringArray>& values) override;
 
     ::jxx::Ptr<SSLSession> getSession() override;
+    ::jxx::Ptr<SSLSession> getHandshakeSession() const override;
     void addHandshakeCompletedListener(
         const ::jxx::Ptr<HandshakeCompletedListener>& listener) override;
     void removeHandshakeCompletedListener(
@@ -108,6 +109,7 @@ private:
     ::jxx::lang::jbool autoClose_ = false;
     std::vector<unsigned char> consumed_;
     ::jxx::Ptr<SSLSession> session_;
+    ::jxx::lang::jbool handshakeInProgress_ = false;
     std::vector<::jxx::Ptr<HandshakeCompletedListener>> listeners_;
     std::vector<std::string> enabledCipherSuites_;
     std::vector<std::string> enabledProtocols_;

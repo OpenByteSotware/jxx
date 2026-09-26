@@ -75,6 +75,7 @@ OpenSslSocket::~OpenSslSocket() = default;
 
 void OpenSslSocket::startHandshake() {
     if (session_ != nullptr) return;
+    handshakeInProgress_ = true;
     if (transport_ == nullptr &&
         (host_ == nullptr || host_->utf8().empty() || port_ <= 0))
         throw ::jxx::lang::IllegalStateException("SSL socket is not connected");
@@ -220,6 +221,7 @@ void OpenSslSocket::startHandshake() {
     if (self == nullptr) throw ::jxx::lang::IllegalStateException("OpenSslSocket has no JXX-managed self reference");
     auto event = ::jxx::NEW<HandshakeCompletedEvent>(self, session_);
     for (const auto& listener : listeners_) listener->handshakeCompleted(event);
+    handshakeInProgress_ = false;
 }
 
 ::jxx::Ptr<::jxx::io::InputStream> OpenSslSocket::getInputStream(){startHandshake();return ::jxx::NEW<OpenSslInputStream>(this);}
@@ -234,6 +236,7 @@ void OpenSslSocket::setEnabledProtocols(const ::jxx::Ptr<StringArray>&v){if(sess
 ::jxx::Ptr<OpenSslSocket::StringArray> OpenSslSocket::getEnabledCipherSuites()const{return enabledCipherSuites_.empty()?getSupportedCipherSuites():toArray(enabledCipherSuites_);}
 void OpenSslSocket::setEnabledCipherSuites(const ::jxx::Ptr<StringArray>&v){if(session_!=nullptr)throw ::jxx::lang::IllegalStateException();enabledCipherSuites_=toVector(v);}
 ::jxx::Ptr<OpenSslSocket::SSLSession> OpenSslSocket::getSession(){startHandshake();return session_;}
+::jxx::Ptr<OpenSslSocket::SSLSession> OpenSslSocket::getHandshakeSession() const { return handshakeInProgress_ ? session_ : nullptr; }
 void OpenSslSocket::addHandshakeCompletedListener(const ::jxx::Ptr<HandshakeCompletedListener>&v){if(v==nullptr)throw ::jxx::lang::IllegalArgumentException();listeners_.push_back(v);}
 void OpenSslSocket::removeHandshakeCompletedListener(const ::jxx::Ptr<HandshakeCompletedListener>&v){listeners_.erase(std::remove(listeners_.begin(),listeners_.end(),v),listeners_.end());}
 void OpenSslSocket::setUseClientMode(::jxx::lang::jbool v){if(session_!=nullptr)throw ::jxx::lang::IllegalStateException();client_=v;}
