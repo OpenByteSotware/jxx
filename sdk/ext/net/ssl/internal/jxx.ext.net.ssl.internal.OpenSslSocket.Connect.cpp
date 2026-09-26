@@ -2,6 +2,7 @@
 
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.IllegalStateException.h"
+#include "net/jxx.net.InetAddress.h"
 #include "net/jxx.net.InetSocketAddress.h"
 #include "net/jxx.net.Socket.h"
 #include "net/jxx.net.SocketAddress.h"
@@ -13,15 +14,12 @@ void OpenSslSocket::bind(
     if (session_ != nullptr)
         throw ::jxx::lang::IllegalStateException(
             "SSL socket is already handshaking or connected");
-
     if (transport_ != nullptr) {
         transport_->bind(bindpoint);
         return;
     }
-
     if (pendingTransport_ == nullptr)
         pendingTransport_ = ::jxx::NEW<::jxx::net::Socket>();
-
     pendingTransport_->bind(bindpoint);
 }
 
@@ -34,11 +32,9 @@ void OpenSslSocket::connect(
     const ::jxx::Ptr<::jxx::net::SocketAddress>& endpoint,
     ::jxx::lang::jint timeout) {
     if (endpoint == nullptr)
-        throw ::jxx::lang::IllegalArgumentException(
-            "endpoint is null");
+        throw ::jxx::lang::IllegalArgumentException("endpoint is null");
     if (timeout < 0)
-        throw ::jxx::lang::IllegalArgumentException(
-            "timeout is negative");
+        throw ::jxx::lang::IllegalArgumentException("timeout is negative");
     if (session_ != nullptr)
         throw ::jxx::lang::IllegalStateException(
             "SSL socket handshake has already started");
@@ -54,7 +50,6 @@ void OpenSslSocket::connect(
 
     if (pendingTransport_ == nullptr)
         pendingTransport_ = ::jxx::NEW<::jxx::net::Socket>();
-
     pendingTransport_->connect(endpoint, timeout);
     transport_ = pendingTransport_;
     pendingTransport_ = nullptr;
@@ -62,7 +57,8 @@ void OpenSslSocket::connect(
     port_ = inetEndpoint->getPort();
     host_ = inetEndpoint->getHostString();
     if (host_ == nullptr || host_->utf8().empty()) {
-        const auto address = inetEndpoint->getAddress();
+        const ::jxx::Ptr<::jxx::net::InetAddress> address =
+            inetEndpoint->getAddress();
         if (address != nullptr)
             host_ = address->getHostAddress();
     }
