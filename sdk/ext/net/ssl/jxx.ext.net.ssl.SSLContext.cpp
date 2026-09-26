@@ -144,6 +144,10 @@ SSLContext::getDefaultSSLParameters() {
     const auto parameters = ::jxx::NEW<SSLParameters>();
     const auto factory = getSocketFactory();
     parameters->setCipherSuites(factory->getDefaultCipherSuites());
+    const auto protocols = ::jxx::NEW<SSLParameters::StringArray>(2);
+    (*protocols)[0] = ::jxx::NEW<::jxx::lang::String>("TLSv1.2");
+    (*protocols)[1] = ::jxx::NEW<::jxx::lang::String>("TLSv1.3");
+    parameters->setProtocols(protocols);
     return parameters;
 }
 
@@ -152,6 +156,10 @@ SSLContext::getSupportedSSLParameters() {
     const auto parameters = ::jxx::NEW<SSLParameters>();
     const auto factory = getSocketFactory();
     parameters->setCipherSuites(factory->getSupportedCipherSuites());
+    const auto protocols = ::jxx::NEW<SSLParameters::StringArray>(2);
+    (*protocols)[0] = ::jxx::NEW<::jxx::lang::String>("TLSv1.2");
+    (*protocols)[1] = ::jxx::NEW<::jxx::lang::String>("TLSv1.3");
+    parameters->setProtocols(protocols);
     return parameters;
 }
 
