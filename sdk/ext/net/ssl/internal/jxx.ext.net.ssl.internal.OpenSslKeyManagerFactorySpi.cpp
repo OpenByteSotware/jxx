@@ -1,0 +1,3 @@
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslKeyManagerFactorySpi.h"
+#include "lang/jxx.lang.IllegalStateException.h"
+namespace jxx::ext::net::ssl::internal {::jxx::Ptr<OpenSslKeyManagerFactorySpi::KeyManagerArray>OpenSslKeyManagerFactorySpi::engineGetKeyManagers(){if(!initialized_)throw ::jxx::lang::IllegalStateException();return ::jxx::NEW<KeyManagerArray>(0);}void OpenSslKeyManagerFactorySpi::engineInit(const ::jxx::Ptr<::jxx::security::KeyStore>&,const ::jxx::Ptr<CharArray>&){initialized_=true;}void OpenSslKeyManagerFactorySpi::engineInit(const ::jxx::Ptr<::jxx::ext::net::ssl::ManagerFactoryParameters>&){initialized_=true;}}

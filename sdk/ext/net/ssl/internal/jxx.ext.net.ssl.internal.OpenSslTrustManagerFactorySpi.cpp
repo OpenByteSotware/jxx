@@ -1,0 +1,3 @@
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslTrustManagerFactorySpi.h"
+#include "lang/jxx.lang.IllegalStateException.h"
+namespace jxx::ext::net::ssl::internal {::jxx::Ptr<OpenSslTrustManagerFactorySpi::TrustManagerArray>OpenSslTrustManagerFactorySpi::engineGetTrustManagers(){if(!initialized_)throw ::jxx::lang::IllegalStateException();return ::jxx::NEW<TrustManagerArray>(0);}void OpenSslTrustManagerFactorySpi::engineInit(const ::jxx::Ptr<::jxx::security::KeyStore>&){initialized_=true;}void OpenSslTrustManagerFactorySpi::engineInit(const ::jxx::Ptr<::jxx::ext::net::ssl::ManagerFactoryParameters>&){initialized_=true;}}
