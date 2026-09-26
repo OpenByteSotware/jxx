@@ -22,9 +22,17 @@ namespace {
 
 OpenSslSessionContext::OpenSslSessionContext() = default;
 
+OpenSslSessionContext::~OpenSslSessionContext() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (auto& entry : nativeSessions_)
+        SSL_SESSION_free(entry.second);
+    nativeSessions_.clear();
+}
+
 std::string OpenSslSessionContext::keyOf(
     const ::jxx::lang::ByteArray& sessionId) {
     if (sessionId == nullptr) throw ::jxx::lang::NullPointerException();
+    if (sessionId->length == 0) return std::string();
     return std::string(
         reinterpret_cast<const char*>(&(*sessionId)[0]),
         static_cast<std::size_t>(sessionId->length));
@@ -42,7 +50,7 @@ void OpenSslSessionContext::purgeExpiredLocked() {
     const auto current = nowMillis();
     for (auto iterator = sessions_.begin(); iterator != sessions_.end();) {
         const auto& session = iterator->second;
-        const bool expired = timeoutSeconds_ > 0 &&
+        const bool expired = session != nullptr && timeoutSeconds_ > 0 &&
             current - session->getCreationTime() >=
                 static_cast<::jxx::lang::jlong>(timeoutSeconds_) * 1000;
         if (session == nullptr || !session->isValid() || expired) {
@@ -143,6 +151,47 @@ void OpenSslSessionContext::removeSession(
     insertionOrder_.erase(
         std::remove(insertionOrder_.begin(), insertionOrder_.end(), key),
         insertionOrder_.end());
+}
+
+
+namespace {
+std::string endpointKey(
+    const ::jxx::Ptr<::jxx::lang::String>& peerHost,
+    ::jxx::lang::jint peerPort) {
+    if (peerHost == nullptr || peerHost->utf8().empty() || peerPort < 0)
+        return std::string();
+    return peerHost->utf8() + ":" + std::to_string(peerPort);
+}
+} // namespace
+
+SSL_SESSION* OpenSslSessionContext::acquireNativeSession(
+    const ::jxx::Ptr<::jxx::lang::String>& peerHost,
+    ::jxx::lang::jint peerPort) {
+    const auto key = endpointKey(peerHost, peerPort);
+    if (key.empty()) return nullptr;
+    std::lock_guard<std::mutex> lock(mutex_);
+    const auto found = nativeSessions_.find(key);
+    if (found == nativeSessions_.end()) return nullptr;
+    SSL_SESSION_up_ref(found->second);
+    return found->second;
+}
+
+void OpenSslSessionContext::registerNativeSession(
+    const ::jxx::Ptr<::jxx::lang::String>& peerHost,
+    ::jxx::lang::jint peerPort,
+    SSL_SESSION* session) {
+    if (session == nullptr) return;
+    const auto key = endpointKey(peerHost, peerPort);
+    if (key.empty()) return;
+    SSL_SESSION_up_ref(session);
+    std::lock_guard<std::mutex> lock(mutex_);
+    const auto found = nativeSessions_.find(key);
+    if (found != nativeSessions_.end()) {
+        SSL_SESSION_free(found->second);
+        found->second = session;
+    } else {
+        nativeSessions_.emplace(key, session);
+    }
 }
 
 } // namespace jxx::ext::net::ssl::internal

@@ -116,6 +116,17 @@ void OpenSslEngine::ensureInitialized() {
 
     if (clientMode_) {
         SSL_set_connect_state(ssl_);
+        if (config_ != nullptr && config_->clientSessionContext != nullptr) {
+            SSL_SESSION* cached = config_->clientSessionContext->acquireNativeSession(
+                getPeerHost(), getPeerPort());
+            if (cached != nullptr) {
+                const int applied = SSL_set_session(ssl_, cached);
+                SSL_SESSION_free(cached);
+                if (applied != 1)
+                    throw ::jxx::ext::net::ssl::SSLProtocolException(
+                        "could not apply cached TLS session");
+            }
+        }
         const auto peerHost = explicitSniHost_ != nullptr
             ? explicitSniHost_ : getPeerHost();
         if (peerHost != nullptr && !peerHost->utf8().empty()) {
@@ -187,6 +198,10 @@ void OpenSslEngine::completeSession() {
         throw ::jxx::ext::net::ssl::SSLHandshakeException(
             "session creation is disabled");
     SSL_SESSION* nativeSession = SSL_get_session(ssl_);
+    if (clientMode_ && nativeSession != nullptr && config_ != nullptr &&
+        config_->clientSessionContext != nullptr)
+        config_->clientSessionContext->registerNativeSession(
+            getPeerHost(), getPeerPort(), nativeSession);
     unsigned int idLength = 0;
     const unsigned char* id = nativeSession == nullptr
         ? nullptr

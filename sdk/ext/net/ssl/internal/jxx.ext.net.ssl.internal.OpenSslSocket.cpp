@@ -8,7 +8,6 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslX509Certificate.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.HandshakeCompletedEvent.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.HandshakeCompletedListener.h"
-#include "ext/net/ssl/jxx.ext.net.ssl.SSLHandshakeException.h"
 #include "io/jxx.io.IOException.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.IllegalStateException.h"
@@ -150,23 +149,20 @@ void OpenSslSocket::startHandshake() {
         BIO_set_conn_hostname(native_->connection, endpoint.c_str());
     }
     SSL_set_ex_data(ssl, openSslManagerBridgeExDataIndex(), native_->managerBridge.get());
+    if (client_ && config_ != nullptr && config_->clientSessionContext != nullptr) {
+        SSL_SESSION* cached = config_->clientSessionContext->acquireNativeSession(
+            host_, port_);
+        if (cached != nullptr) {
+            const int applied = SSL_set_session(ssl, cached);
+            SSL_SESSION_free(cached);
+            if (applied != 1)
+                throw ::jxx::io::IOException("Could not apply cached TLS session");
+        }
+    }
     if (client_) {
         SSL_set_connect_state(ssl);
-        const auto verificationHost =
-            sniHost_ != nullptr ? sniHost_ : host_;
-        if (verificationHost != nullptr &&
-            !verificationHost->utf8().empty()) {
-            if (SSL_set_tlsext_host_name(
-                    ssl, verificationHost->utf8().c_str()) != 1)
-                throw ::jxx::io::IOException(
-                    "Could not configure TLS SNI host");
-            if (endpointIdentificationAlgorithm_ != nullptr &&
-                endpointIdentificationAlgorithm_->utf8() == "HTTPS" &&
-                SSL_set1_host(
-                    ssl, verificationHost->utf8().c_str()) != 1)
-                throw ::jxx::io::IOException(
-                    "Could not configure HTTPS endpoint identification");
-        }
+        SSL_set_tlsext_host_name(ssl, host_->utf8().c_str());
+        SSL_set1_host(ssl, host_->utf8().c_str());
     } else {
         SSL_set_accept_state(ssl);
         if (native_->managerBridge->selectServerIdentity(ssl) != 1)
@@ -180,10 +176,11 @@ void OpenSslSocket::startHandshake() {
             "pre-consumed TLS bytes require the SSLEngine memory-BIO path");
     if (BIO_do_handshake(native_->connection) <= 0)
         throw ::jxx::io::IOException("TLS handshake failed");
-    if (!create_ && !SSL_session_reused(ssl))
-        throw ::jxx::ext::net::ssl::SSLHandshakeException(
-            "session creation is disabled");
-    SSL_SESSION* ns = SSL_get_session(ssl); unsigned int idn = 0;
+    SSL_SESSION* ns = SSL_get_session(ssl);
+    if (client_ && ns != nullptr && config_ != nullptr &&
+        config_->clientSessionContext != nullptr)
+        config_->clientSessionContext->registerNativeSession(host_, port_, ns);
+    unsigned int idn = 0;
     const unsigned char* id = ns == nullptr ? nullptr : SSL_SESSION_get_id(ns, &idn);
     auto sid = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(static_cast<::jxx::lang::jint>(idn));
     for (unsigned int i = 0; i < idn; ++i) (*sid)[static_cast<::jxx::lang::jint>(i)] = static_cast<::jxx::lang::jbyte>(id[i]);
@@ -214,11 +211,7 @@ void OpenSslSocket::startHandshake() {
     auto self = ::jxx::CAST<::jxx::ext::net::ssl::SSLSocket>(thisPtr());
     if (self == nullptr) throw ::jxx::lang::IllegalStateException("OpenSslSocket has no JXX-managed self reference");
     auto event = ::jxx::NEW<HandshakeCompletedEvent>(self, session_);
-    const auto listenerSnapshot = listeners_;
-    for (const auto& listener : listenerSnapshot) {
-        if (listener != nullptr)
-            listener->handshakeCompleted(event);
-    }
+    for (const auto& listener : listeners_) listener->handshakeCompleted(event);
 }
 
 ::jxx::Ptr<::jxx::io::InputStream> OpenSslSocket::getInputStream(){startHandshake();return ::jxx::NEW<OpenSslInputStream>(this);}
@@ -229,36 +222,12 @@ int OpenSslSocket::tlsWrite(const unsigned char* b,int n){startHandshake();int r
 ::jxx::Ptr<OpenSslSocket::StringArray> OpenSslSocket::getSupportedProtocols()const{return toArray({"TLSv1.2","TLSv1.3"});}
 ::jxx::Ptr<OpenSslSocket::StringArray> OpenSslSocket::getEnabledProtocols()const{return enabledProtocols_.empty()?getSupportedProtocols():toArray(enabledProtocols_);}
 void OpenSslSocket::setEnabledProtocols(const ::jxx::Ptr<StringArray>&v){if(session_!=nullptr)throw ::jxx::lang::IllegalStateException();enabledProtocols_=toVector(v);}
-::jxx::Ptr<OpenSslSocket::StringArray>
-OpenSslSocket::getSupportedCipherSuites() const {
-    SSL_CTX* context = SSL_CTX_new(TLS_method());
-    if (context == nullptr)
-        throw ::jxx::io::IOException("SSL_CTX_new failed");
-    STACK_OF(SSL_CIPHER)* ciphers = SSL_CTX_get_ciphers(context);
-    const int count = ciphers == nullptr ? 0 : sk_SSL_CIPHER_num(ciphers);
-    const auto result = ::jxx::NEW<StringArray>(count);
-    for (int index = 0; index < count; ++index) {
-        const SSL_CIPHER* cipher = sk_SSL_CIPHER_value(ciphers, index);
-        const char* name = cipher == nullptr ? nullptr : SSL_CIPHER_get_name(cipher);
-        (*result)[index] = ::jxx::NEW<::jxx::lang::String>(
-            name == nullptr ? "" : name);
-    }
-    SSL_CTX_free(context);
-    return result;
-}
+::jxx::Ptr<OpenSslSocket::StringArray> OpenSslSocket::getSupportedCipherSuites()const{return ::jxx::NEW<StringArray>(0);}
 ::jxx::Ptr<OpenSslSocket::StringArray> OpenSslSocket::getEnabledCipherSuites()const{return enabledCipherSuites_.empty()?getSupportedCipherSuites():toArray(enabledCipherSuites_);}
 void OpenSslSocket::setEnabledCipherSuites(const ::jxx::Ptr<StringArray>&v){if(session_!=nullptr)throw ::jxx::lang::IllegalStateException();enabledCipherSuites_=toVector(v);}
 ::jxx::Ptr<OpenSslSocket::SSLSession> OpenSslSocket::getSession(){startHandshake();return session_;}
 void OpenSslSocket::addHandshakeCompletedListener(const ::jxx::Ptr<HandshakeCompletedListener>&v){if(v==nullptr)throw ::jxx::lang::IllegalArgumentException();listeners_.push_back(v);}
-void OpenSslSocket::removeHandshakeCompletedListener(
-    const ::jxx::Ptr<HandshakeCompletedListener>& listener) {
-    if (listener == nullptr)
-        throw ::jxx::lang::IllegalArgumentException();
-    const auto found = std::find(listeners_.begin(), listeners_.end(), listener);
-    if (found == listeners_.end())
-        throw ::jxx::lang::IllegalArgumentException();
-    listeners_.erase(found);
-}
+void OpenSslSocket::removeHandshakeCompletedListener(const ::jxx::Ptr<HandshakeCompletedListener>&v){listeners_.erase(std::remove(listeners_.begin(),listeners_.end(),v),listeners_.end());}
 void OpenSslSocket::setUseClientMode(::jxx::lang::jbool v){if(session_!=nullptr)throw ::jxx::lang::IllegalStateException();client_=v;}
 ::jxx::lang::jbool OpenSslSocket::getUseClientMode()const{return client_;}
 void OpenSslSocket::setNeedClientAuth(::jxx::lang::jbool v){if(session_!=nullptr)throw ::jxx::lang::IllegalStateException();need_=v;if(v)want_=false;}

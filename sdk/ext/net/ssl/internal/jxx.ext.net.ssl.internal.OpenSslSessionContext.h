@@ -4,6 +4,7 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <openssl/ssl.h>
 
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLSessionContext.h"
 
@@ -16,7 +17,7 @@ class OpenSslSessionContext final
           ::jxx::ext::net::ssl::SSLSessionContext> {
 public:
     OpenSslSessionContext();
-    ~OpenSslSessionContext() override = default;
+    ~OpenSslSessionContext() override;
 
     ::jxx::Ptr<::jxx::util::Enumeration<IdArray>> getIds() override;
     ::jxx::Ptr<::jxx::ext::net::ssl::SSLSession> getSession(
@@ -29,6 +30,13 @@ public:
     void registerSession(
         const ::jxx::Ptr<::jxx::ext::net::ssl::SSLSession>& session);
     void removeSession(const ::jxx::lang::ByteArray& sessionId);
+    SSL_SESSION* acquireNativeSession(
+        const ::jxx::Ptr<::jxx::lang::String>& peerHost,
+        ::jxx::lang::jint peerPort);
+    void registerNativeSession(
+        const ::jxx::Ptr<::jxx::lang::String>& peerHost,
+        ::jxx::lang::jint peerPort,
+        SSL_SESSION* session);
 
 private:
     static std::string keyOf(const ::jxx::lang::ByteArray& sessionId);
@@ -42,6 +50,7 @@ private:
         std::string,
         ::jxx::Ptr<::jxx::ext::net::ssl::SSLSession>> sessions_;
     std::deque<std::string> insertionOrder_;
+    std::unordered_map<std::string, SSL_SESSION*> nativeSessions_;
     ::jxx::lang::jint timeoutSeconds_ = 86400;
     ::jxx::lang::jint cacheSize_ = 0;
 };
