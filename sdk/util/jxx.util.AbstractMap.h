@@ -305,8 +305,13 @@ public:
                     jxx::CAST<jxx::lang::Object>(
                         otherValue);
 
-                if (otherObject == nullptr ||
-                    !value->equals(otherObject)) {
+                auto valueObject =
+                    jxx::CAST<jxx::lang::Object>(
+                        value);
+
+                if (valueObject == nullptr ||
+                    otherObject == nullptr ||
+                    !valueObject->equals(otherObject)) {
 
                     return false;
                 }
