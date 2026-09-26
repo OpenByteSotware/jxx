@@ -12,6 +12,11 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSession.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSessionContext.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLHandshakeException.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SSLParameters.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SNIHostName.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslX509Certificate.h"
+#include "util/jxx.util.ArrayList.h"
+#include <openssl/x509.h>
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLPeerUnverifiedException.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLProtocolException.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
@@ -111,9 +116,17 @@ void OpenSslEngine::ensureInitialized() {
 
     if (clientMode_) {
         SSL_set_connect_state(ssl_);
-        const auto peerHost = getPeerHost();
+        const auto peerHost = explicitSniHost_ != nullptr
+            ? explicitSniHost_ : getPeerHost();
         if (peerHost != nullptr && !peerHost->utf8().empty()) {
-            SSL_set_tlsext_host_name(ssl_, peerHost->utf8().c_str());
+            if (SSL_set_tlsext_host_name(ssl_, peerHost->utf8().c_str()) != 1)
+                throw ::jxx::ext::net::ssl::SSLProtocolException(
+                    "could not configure SNI host");
+            if (endpointIdentificationAlgorithm_ != nullptr &&
+                endpointIdentificationAlgorithm_->utf8() == "HTTPS" &&
+                SSL_set1_host(ssl_, peerHost->utf8().c_str()) != 1)
+                throw ::jxx::ext::net::ssl::SSLProtocolException(
+                    "could not configure HTTPS endpoint identification");
         }
     } else {
         SSL_set_accept_state(ssl_);
@@ -170,6 +183,9 @@ void OpenSslEngine::updateHandshakeStatus(int error) {
 
 void OpenSslEngine::completeSession() {
     if (session_ != nullptr) return;
+    if (!enableSessionCreation_ && !SSL_session_reused(ssl_))
+        throw ::jxx::ext::net::ssl::SSLHandshakeException(
+            "session creation is disabled");
     SSL_SESSION* nativeSession = SSL_get_session(ssl_);
     unsigned int idLength = 0;
     const unsigned char* id = nativeSession == nullptr
@@ -181,13 +197,51 @@ void OpenSslEngine::completeSession() {
     for (unsigned int index = 0; index < idLength; ++index)
         (*sessionId)[static_cast<::jxx::lang::jint>(index)] =
             static_cast<::jxx::lang::jbyte>(id[index]);
+    using CertificateArray = OpenSslSession::CertificateArray;
+    ::jxx::Ptr<CertificateArray> peerCertificates;
+    STACK_OF(X509)* chain = SSL_get_peer_cert_chain(ssl_);
+    if (chain != nullptr) {
+        const int count = sk_X509_num(chain);
+        peerCertificates = ::jxx::NEW<CertificateArray>(count);
+        for (int index = 0; index < count; ++index) {
+            X509* certificate = sk_X509_value(chain, index);
+            const int length = i2d_X509(certificate, nullptr);
+            if (length <= 0) throw ::jxx::ext::net::ssl::SSLProtocolException(
+                "could not encode peer certificate");
+            const auto encoded = ::jxx::NEW<
+                ::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(length);
+            unsigned char* cursor = reinterpret_cast<unsigned char*>(&(*encoded)[0]);
+            if (i2d_X509(certificate, &cursor) != length)
+                throw ::jxx::ext::net::ssl::SSLProtocolException(
+                    "could not encode peer certificate");
+            (*peerCertificates)[index] = ::jxx::CAST<
+                ::jxx::security::cert::Certificate>(
+                    ::jxx::NEW<OpenSslX509Certificate>(encoded));
+        }
+    }
+    ::jxx::Ptr<CertificateArray> localCertificates;
+    X509* local = SSL_get_certificate(ssl_);
+    if (local != nullptr) {
+        const int length = i2d_X509(local, nullptr);
+        const auto encoded = ::jxx::NEW<
+            ::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(length);
+        unsigned char* cursor = reinterpret_cast<unsigned char*>(&(*encoded)[0]);
+        if (length <= 0 || i2d_X509(local, &cursor) != length)
+            throw ::jxx::ext::net::ssl::SSLProtocolException(
+                "could not encode local certificate");
+        localCertificates = ::jxx::NEW<CertificateArray>(1);
+        (*localCertificates)[0] = ::jxx::CAST<
+            ::jxx::security::cert::Certificate>(
+                ::jxx::NEW<OpenSslX509Certificate>(encoded));
+    }
     const auto context = clientMode_
         ? config_->clientSessionContext
         : config_->serverSessionContext;
     session_ = ::jxx::NEW<OpenSslSession>(
         ::jxx::NEW<::jxx::lang::String>(SSL_get_cipher_name(ssl_)),
         ::jxx::NEW<::jxx::lang::String>(SSL_get_version(ssl_)),
-        getPeerHost(), getPeerPort(), nullptr, nullptr, sessionId, context);
+        getPeerHost(), getPeerPort(), peerCertificates,
+        localCertificates, sessionId, context);
     if (context != nullptr) context->registerSession(session_);
 }
 
@@ -434,6 +488,45 @@ void OpenSslEngine::setEnabledCipherSuites(
 SSLEngineResult::HandshakeStatus
 OpenSslEngine::getHandshakeStatus() const {
     return handshakeStatus_;
+}
+
+::jxx::Ptr<SSLParameters> OpenSslEngine::getSSLParameters() const {
+    const auto parameters = SSLEngine::getSSLParameters();
+    parameters->setEndpointIdentificationAlgorithm(
+        endpointIdentificationAlgorithm_);
+    if (explicitSniHost_ != nullptr) {
+        const auto names = ::jxx::NEW<
+            ::jxx::util::ArrayList<::jxx::ext::net::ssl::SNIServerName>>();
+        names->add(::jxx::NEW<::jxx::ext::net::ssl::SNIHostName>(
+            explicitSniHost_));
+        parameters->setServerNames(names);
+    }
+    return parameters;
+}
+
+void OpenSslEngine::setSSLParameters(
+    const ::jxx::Ptr<SSLParameters>& parameters) {
+    if (handshakeStarted_) throw ::jxx::lang::IllegalStateException();
+    SSLEngine::setSSLParameters(parameters);
+    endpointIdentificationAlgorithm_ =
+        parameters->getEndpointIdentificationAlgorithm();
+    if (endpointIdentificationAlgorithm_ != nullptr &&
+        !endpointIdentificationAlgorithm_->utf8().empty() &&
+        endpointIdentificationAlgorithm_->utf8() != "HTTPS")
+        throw ::jxx::lang::IllegalArgumentException(
+            "unsupported endpoint identification algorithm");
+    explicitSniHost_ = nullptr;
+    const auto names = parameters->getServerNames();
+    if (names != nullptr) {
+        for (::jxx::lang::jint index = 0; index < names->size(); ++index) {
+            const auto host = ::jxx::CAST<::jxx::ext::net::ssl::SNIHostName>(
+                names->get(index));
+            if (host != nullptr) {
+                explicitSniHost_ = host->getAsciiName();
+                break;
+            }
+        }
+    }
 }
 
 ::jxx::Ptr<SSLSession> OpenSslEngine::getSession() const {

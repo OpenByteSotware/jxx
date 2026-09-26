@@ -41,6 +41,9 @@ public:
     SSLEngineResult::HandshakeStatus getHandshakeStatus() const override;
     ::jxx::lang::jbool getNeedClientAuth() const override;
     ::jxx::Ptr<SSLSession> getSession() const override;
+    ::jxx::Ptr<SSLParameters> getSSLParameters() const override;
+    void setSSLParameters(
+        const ::jxx::Ptr<SSLParameters>& parameters) override;
     ::jxx::Ptr<StringArray> getSupportedCipherSuites() const override;
     ::jxx::Ptr<StringArray> getSupportedProtocols() const override;
     ::jxx::lang::jbool getUseClientMode() const override;
@@ -93,6 +96,8 @@ private:
     bio_st* outboundBio_ = nullptr;
     std::unique_ptr<OpenSslManagerBridge> managerBridge_;
     ::jxx::Ptr<SSLSession> session_;
+    ::jxx::Ptr<::jxx::lang::String> endpointIdentificationAlgorithm_;
+    ::jxx::Ptr<::jxx::lang::String> explicitSniHost_;
     std::vector<std::string> enabledCipherSuites_;
     std::vector<std::string> enabledProtocols_;
     SSLEngineResult::HandshakeStatus handshakeStatus_ =
