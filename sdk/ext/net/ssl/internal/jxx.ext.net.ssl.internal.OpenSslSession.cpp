@@ -1,9 +1,10 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSession.h"
-#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSessionContext.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.X509Principal.h"
 #include <openssl/x509.h>
 
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLPeerUnverifiedException.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SSLSessionBindingEvent.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SSLSessionBindingListener.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 
@@ -56,7 +57,6 @@ OpenSslSession::OpenSslSession(
           ? ::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(0)
           : id)
     , context_(context)
-    , concreteContext_(::jxx::CAST<OpenSslSessionContext>(context))
     , creationTime_(nowMillis())
     , lastAccessedTime_(creationTime_) {
 }
@@ -90,26 +90,9 @@ OpenSslSession::getPeerPrincipal() const {
 ::jxx::Ptr<::jxx::ext::net::ssl::SSLSessionContext> OpenSslSession::getSessionContext() const { return context_; }
 ::jxx::Ptr<::jxx::lang::Object> OpenSslSession::getValue(const ::jxx::Ptr<::jxx::lang::String>& name) const {if(name==nullptr)throw ::jxx::lang::IllegalArgumentException();std::lock_guard<std::mutex> l(mutex_);auto i=values_.find(name->utf8());return i==values_.end()?nullptr:i->second;}
 ::jxx::Ptr<OpenSslSession::StringArray> OpenSslSession::getValueNames() const {std::lock_guard<std::mutex> l(mutex_);auto r=::jxx::NEW<StringArray>(static_cast<::jxx::lang::jint>(values_.size()));::jxx::lang::jint i=0;for(const auto&v:values_)(*r)[i++]=::jxx::NEW<::jxx::lang::String>(v.first);return r;}
-void OpenSslSession::invalidate() {
-    ::jxx::lang::ByteArray sessionId;
-    ::jxx::Ptr<::jxx::lang::String> peerHost;
-    ::jxx::lang::jint peerPort = -1;
-    std::shared_ptr<OpenSslSessionContext> context;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (!valid_) return;
-        valid_ = false;
-        values_.clear();
-        sessionId = id_;
-        peerHost = host_;
-        peerPort = port_;
-        context = concreteContext_.lock();
-    }
-    if (context != nullptr)
-        context->invalidateSession(sessionId, peerHost, peerPort);
-}
+void OpenSslSession::invalidate() { std::lock_guard<std::mutex> l(mutex_); valid_=false; values_.clear(); }
 ::jxx::lang::jbool OpenSslSession::isValid() const { return valid_; }
-void OpenSslSession::putValue(const ::jxx::Ptr<::jxx::lang::String>& name,const ::jxx::Ptr<::jxx::lang::Object>& value){if(name==nullptr||value==nullptr)throw ::jxx::lang::IllegalArgumentException();std::lock_guard<std::mutex> l(mutex_);values_[name->utf8()]=value;}
-void OpenSslSession::removeValue(const ::jxx::Ptr<::jxx::lang::String>& name){if(name==nullptr)throw ::jxx::lang::IllegalArgumentException();std::lock_guard<std::mutex> l(mutex_);values_.erase(name->utf8());}
+void OpenSslSession::putValue(const ::jxx::Ptr<::jxx::lang::String>&name,const ::jxx::Ptr<::jxx::lang::Object>&value){if(name==nullptr||value==nullptr)throw ::jxx::lang::IllegalArgumentException();::jxx::Ptr<::jxx::lang::Object>old;{std::lock_guard<std::mutex>lock(mutex_);auto f=values_.find(name->utf8());if(f!=values_.end())old=f->second;values_[name->utf8()]=value;}auto e=::jxx::NEW<::jxx::ext::net::ssl::SSLSessionBindingEvent>(::jxx::CAST<::jxx::ext::net::ssl::SSLSession>(thisPtr()),name);auto nl=::jxx::CAST<::jxx::ext::net::ssl::SSLSessionBindingListener>(value);if(nl!=nullptr)nl->valueBound(e);auto ol=::jxx::CAST<::jxx::ext::net::ssl::SSLSessionBindingListener>(old);if(ol!=nullptr)ol->valueUnbound(e);}
+void OpenSslSession::removeValue(const ::jxx::Ptr<::jxx::lang::String>&name){if(name==nullptr)throw ::jxx::lang::IllegalArgumentException();::jxx::Ptr<::jxx::lang::Object>removed;{std::lock_guard<std::mutex>lock(mutex_);auto f=values_.find(name->utf8());if(f==values_.end())return;removed=f->second;values_.erase(f);}auto l=::jxx::CAST<::jxx::ext::net::ssl::SSLSessionBindingListener>(removed);if(l!=nullptr)l->valueUnbound(::jxx::NEW<::jxx::ext::net::ssl::SSLSessionBindingEvent>(::jxx::CAST<::jxx::ext::net::ssl::SSLSession>(thisPtr()),name));}
 
 } // namespace jxx::ext::net::ssl::internal

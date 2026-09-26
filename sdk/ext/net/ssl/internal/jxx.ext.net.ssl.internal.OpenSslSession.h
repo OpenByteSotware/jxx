@@ -4,12 +4,10 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
-#include <memory>
 
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLSession.h"
 
 namespace jxx::ext::net::ssl::internal {
-class OpenSslSessionContext;
 
 class OpenSslSession final
     : public ::jxx::lang::ClassBase<
@@ -68,7 +66,6 @@ private:
     ::jxx::Ptr<CertificateArray> localCertificates_;
     ::jxx::lang::ByteArray id_;
     ::jxx::Ptr<::jxx::ext::net::ssl::SSLSessionContext> context_;
-    std::weak_ptr<OpenSslSessionContext> concreteContext_;
     ::jxx::lang::jlong creationTime_;
     mutable ::jxx::lang::jlong lastAccessedTime_;
     ::jxx::lang::jbool valid_ = true;

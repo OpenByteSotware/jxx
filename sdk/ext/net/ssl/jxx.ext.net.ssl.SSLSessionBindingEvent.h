@@ -1,0 +1,4 @@
+#pragma once
+#include "io/jxx.io.SerializableI.h"
+#include "util/jxx.util.EventObject.h"
+namespace jxx::ext::net::ssl { class SSLSession; class SSLSessionBindingEvent final:public ::jxx::lang::ClassBase<SSLSessionBindingEvent,::jxx::util::EventObject,::jxx::io::SerializableI>{public:using JxxSuper=::jxx::util::EventObject;using Super=::jxx::lang::ClassBase<SSLSessionBindingEvent,JxxSuper,::jxx::io::SerializableI>;SSLSessionBindingEvent(const ::jxx::Ptr<SSLSession>& session,const ::jxx::Ptr<::jxx::lang::String>& name);::jxx::Ptr<::jxx::lang::String>getName()const;::jxx::Ptr<SSLSession>getSession()const;void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output)override;void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input)override;void readObjectNoData()override;private: ::jxx::Ptr<::jxx::lang::String> name_;};}
