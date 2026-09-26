@@ -72,6 +72,10 @@ namespace jxx::com::sun::net::httpserver::internal
 		if (i)input_ = i; if (o)output_ = o;
 	}::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpPrincipal>DefaultHttpExchange::getPrincipal()
 	{
-		return nullptr;
+		return principal_;
+	}
+	void DefaultHttpExchange::setPrincipalInternal(const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpPrincipal>& principal)
+	{
+		principal_ = principal;
 	}
 }
