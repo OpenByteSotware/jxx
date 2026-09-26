@@ -14,6 +14,8 @@
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "security/jxx.security.SecureRandom.h"
+#include "net/jxx.net.Socket.h"
+#include "net/internal/jxx.net.internal.NetPlatform.h"
 
 #include <algorithm>
 #include <string>
@@ -72,7 +74,8 @@ OpenSslSocket::~OpenSslSocket() = default;
 
 void OpenSslSocket::startHandshake() {
     if (session_ != nullptr) return;
-    if (host_ == nullptr || host_->utf8().empty() || port_ <= 0)
+    if (transport_ == nullptr &&
+        (host_ == nullptr || host_->utf8().empty() || port_ <= 0))
         throw ::jxx::lang::IllegalStateException("SSL socket is not connected");
     native_->context = SSL_CTX_new(client_ ? TLS_client_method() : TLS_server_method());
     if (native_->context == nullptr) throw ::jxx::io::IOException("SSL_CTX_new failed");
@@ -113,12 +116,38 @@ void OpenSslSocket::startHandshake() {
     native_->managerBridge = std::make_unique<OpenSslManagerBridge>(config_);
     SSL_CTX_set_cert_verify_callback(native_->context, openSslVerifyCallback, native_->managerBridge.get());
     SSL_CTX_set_client_cert_cb(native_->context, openSslClientCertificateCallback);
-    native_->connection = BIO_new_ssl_connect(native_->context);
-    if (native_->connection == nullptr) throw ::jxx::io::IOException("BIO_new_ssl_connect failed");
-    const std::string endpoint = host_->utf8() + ":" + std::to_string(port_);
-    BIO_set_conn_hostname(native_->connection, endpoint.c_str());
-    SSL* ssl = nullptr; BIO_get_ssl(native_->connection, &ssl);
-    if (ssl == nullptr) throw ::jxx::io::IOException("Could not acquire SSL handle");
+    SSL* ssl = SSL_new(native_->context);
+    if (ssl == nullptr)
+        throw ::jxx::io::IOException("SSL_new failed");
+    if (transport_ != nullptr) {
+        const auto handle = transport_->nativeSocketHandle();
+        if (handle == ::jxx::net::internal::kInvalidSocket) {
+            SSL_free(ssl);
+            throw ::jxx::io::IOException("layered socket has no native transport");
+        }
+        BIO* socketBio = BIO_new_socket(
+            static_cast<int>(handle), BIO_NOCLOSE);
+        if (socketBio == nullptr) {
+            SSL_free(ssl);
+            throw ::jxx::io::IOException("BIO_new_socket failed");
+        }
+        SSL_set_bio(ssl, socketBio, socketBio);
+        native_->connection = BIO_new(BIO_f_ssl());
+        if (native_->connection == nullptr) {
+            SSL_free(ssl);
+            throw ::jxx::io::IOException("BIO_f_ssl allocation failed");
+        }
+        BIO_set_ssl(native_->connection, ssl, BIO_CLOSE);
+    } else {
+        native_->connection = BIO_new_ssl_connect(native_->context);
+        if (native_->connection == nullptr) {
+            SSL_free(ssl);
+            throw ::jxx::io::IOException("BIO_new_ssl_connect failed");
+        }
+        BIO_get_ssl(native_->connection, &ssl);
+        const std::string endpoint = host_->utf8() + ":" + std::to_string(port_);
+        BIO_set_conn_hostname(native_->connection, endpoint.c_str());
+    }
     SSL_set_ex_data(ssl, openSslManagerBridgeExDataIndex(), native_->managerBridge.get());
     if (client_) {
         SSL_set_connect_state(ssl);
@@ -129,7 +158,13 @@ void OpenSslSocket::startHandshake() {
         if (native_->managerBridge->selectServerIdentity(ssl) != 1)
             throw ::jxx::io::IOException("No usable server certificate identity");
     }
-    if ((client_ && BIO_do_connect(native_->connection) <= 0) || BIO_do_handshake(native_->connection) <= 0)
+    if (transport_ == nullptr && client_ &&
+        BIO_do_connect(native_->connection) <= 0)
+        throw ::jxx::io::IOException("TLS transport connect failed");
+    if (!consumed_.empty())
+        throw ::jxx::io::IOException(
+            "pre-consumed TLS bytes require the SSLEngine memory-BIO path");
+    if (BIO_do_handshake(native_->connection) <= 0)
         throw ::jxx::io::IOException("TLS handshake failed");
     SSL_SESSION* ns = SSL_get_session(ssl); unsigned int idn = 0;
     const unsigned char* id = ns == nullptr ? nullptr : SSL_SESSION_get_id(ns, &idn);

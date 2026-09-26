@@ -4,6 +4,9 @@
 #include "ext/security/cert/internal/jxx.ext.security.cert.internal.DerX509Certificate.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLPeerUnverifiedException.h"
 #include "lang/jxx.lang.NullPointerException.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "lang/jxx.lang.IllegalStateException.h"
 
 namespace jxx::ext::net::ssl {
 
@@ -73,6 +76,30 @@ HandshakeCompletedEvent::getLocalPrincipal() const {
 ::jxx::Ptr<::jxx::security::Principal>
 HandshakeCompletedEvent::getPeerPrincipal() const {
     return session_->getPeerPrincipal();
+}
+
+
+void HandshakeCompletedEvent::writeObject(
+    const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) {
+    if (output == nullptr) throw ::jxx::lang::NullPointerException();
+    output->writeObject(::jxx::CAST<::jxx::lang::Object>(getSocket()));
+    output->writeObject(::jxx::CAST<::jxx::lang::Object>(session_));
+}
+
+void HandshakeCompletedEvent::readObject(
+    const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) {
+    if (input == nullptr) throw ::jxx::lang::NullPointerException();
+    const auto socket = ::jxx::CAST<SSLSocket>(input->readObject());
+    const auto session = ::jxx::CAST<SSLSession>(input->readObject());
+    if (socket == nullptr || session == nullptr)
+        throw ::jxx::lang::IllegalStateException(
+            "invalid serialized handshake-completed event");
+    session_ = session;
+}
+
+void HandshakeCompletedEvent::readObjectNoData() {
+    throw ::jxx::lang::IllegalStateException(
+        "handshake-completed event requires serialized data");
 }
 
 } // namespace jxx::ext::net::ssl

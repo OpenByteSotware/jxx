@@ -1,10 +1,34 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSession.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.X509Principal.h"
+#include <openssl/x509.h>
 
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLPeerUnverifiedException.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 
 namespace jxx::ext::net::ssl::internal {
+
+namespace {
+::jxx::Ptr<::jxx::security::Principal> certificatePrincipal(
+    const ::jxx::Ptr<OpenSslSession::CertificateArray>& certificates) {
+    if (certificates == nullptr || certificates->length == 0 ||
+        (*certificates)[0] == nullptr) return nullptr;
+    const auto encoded = (*certificates)[0]->getEncoded();
+    if (encoded == nullptr || encoded->length == 0) return nullptr;
+    const unsigned char* cursor = reinterpret_cast<const unsigned char*>(&(*encoded)[0]);
+    X509* certificate = d2i_X509(nullptr, &cursor, encoded->length);
+    if (certificate == nullptr) return nullptr;
+    char* text = X509_NAME_oneline(X509_get_subject_name(certificate), nullptr, 0);
+    ::jxx::Ptr<::jxx::security::Principal> result;
+    if (text != nullptr) {
+        result = ::jxx::NEW<X509Principal>(
+            ::jxx::NEW<::jxx::lang::String>(text));
+        OPENSSL_free(text);
+    }
+    X509_free(certificate);
+    return result;
+}
+} // namespace
 
 ::jxx::lang::jlong OpenSslSession::nowMillis() {
     return static_cast<::jxx::lang::jlong>(
@@ -42,12 +66,24 @@ void OpenSslSession::touch() const { lastAccessedTime_ = nowMillis(); }
 ::jxx::lang::ByteArray OpenSslSession::getId() const { touch(); const auto r=::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::jbyte,1U>>(id_->length);for(::jxx::lang::jint i=0;i<id_->length;++i)(*r)[i]=(*id_)[i];return r; }
 ::jxx::lang::jlong OpenSslSession::getLastAccessedTime() const { return lastAccessedTime_; }
 ::jxx::Ptr<OpenSslSession::CertificateArray> OpenSslSession::getLocalCertificates() const { touch(); return localCertificates_; }
-::jxx::Ptr<::jxx::security::Principal> OpenSslSession::getLocalPrincipal() const { touch(); return nullptr; }
+::jxx::Ptr<::jxx::security::Principal>
+OpenSslSession::getLocalPrincipal() const {
+    touch();
+    return certificatePrincipal(localCertificates_);
+}
 ::jxx::lang::jint OpenSslSession::getPacketBufferSize() const { touch(); return 16709; }
 ::jxx::Ptr<OpenSslSession::CertificateArray> OpenSslSession::getPeerCertificates() const { touch(); if(peerCertificates_==nullptr)throw ::jxx::ext::net::ssl::SSLPeerUnverifiedException("peer not authenticated");return peerCertificates_; }
 ::jxx::Ptr<::jxx::lang::String> OpenSslSession::getPeerHost() const { touch(); return host_; }
 ::jxx::lang::jint OpenSslSession::getPeerPort() const { touch(); return port_; }
-::jxx::Ptr<::jxx::security::Principal> OpenSslSession::getPeerPrincipal() const { touch(); throw ::jxx::ext::net::ssl::SSLPeerUnverifiedException("peer principal unavailable"); }
+::jxx::Ptr<::jxx::security::Principal>
+OpenSslSession::getPeerPrincipal() const {
+    touch();
+    const auto principal = certificatePrincipal(peerCertificates_);
+    if (principal == nullptr)
+        throw ::jxx::ext::net::ssl::SSLPeerUnverifiedException(
+            "peer not authenticated");
+    return principal;
+}
 ::jxx::Ptr<::jxx::lang::String> OpenSslSession::getProtocol() const { touch(); return protocol_; }
 ::jxx::Ptr<::jxx::ext::net::ssl::SSLSessionContext> OpenSslSession::getSessionContext() const { return context_; }
 ::jxx::Ptr<::jxx::lang::Object> OpenSslSession::getValue(const ::jxx::Ptr<::jxx::lang::String>& name) const {if(name==nullptr)throw ::jxx::lang::IllegalArgumentException();std::lock_guard<std::mutex> l(mutex_);auto i=values_.find(name->utf8());return i==values_.end()?nullptr:i->second;}

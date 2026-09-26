@@ -115,15 +115,27 @@ OpenSslSocketFactory::createSocket(
     if (socket == nullptr || consumed == nullptr)
         throw ::jxx::lang::IllegalArgumentException();
     std::vector<unsigned char> alreadyConsumed;
-    const auto buffer = ::jxx::NEW<
-        ::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(4096);
-    for (;;) {
-        const auto count = consumed->read(buffer, 0, buffer->length);
-        if (count < 0) break;
-        if (count == 0) continue;
-        for (::jxx::lang::jint index = 0; index < count; ++index)
-            alreadyConsumed.push_back(
-                static_cast<unsigned char>((*buffer)[index]));
+    const auto available = consumed->available();
+    if (available < 0)
+        throw ::jxx::lang::IllegalArgumentException();
+    if (available > 0) {
+        const auto buffer = ::jxx::NEW<
+            ::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(available);
+        ::jxx::lang::jint remaining = available;
+        while (remaining > 0) {
+            const auto count = consumed->read(
+                buffer,
+                0,
+                remaining < buffer->length
+                    ? remaining
+                    : buffer->length);
+            if (count < 0) break;
+            if (count == 0) break;
+            remaining -= count;
+            for (::jxx::lang::jint index = 0; index < count; ++index)
+                alreadyConsumed.push_back(
+                    static_cast<unsigned char>((*buffer)[index]));
+        }
     }
     const auto address = socket->getInetAddress();
     const auto host = address == nullptr
