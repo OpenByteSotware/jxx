@@ -3,6 +3,7 @@
 #include <mutex>
 
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslEngine.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslServerSocketFactory.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSessionContext.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocketFactory.h"
@@ -124,13 +125,18 @@ SSLContext::getServerSessionContext() {
 }
 
 ::jxx::Ptr<SSLEngine> SSLContext::createSSLEngine() {
-    throw ::jxx::lang::UnsupportedOperationException();
+    return ::jxx::NEW<internal::OpenSslEngine>(config_, nullptr, -1);
 }
 
 ::jxx::Ptr<SSLEngine> SSLContext::createSSLEngine(
-    const ::jxx::Ptr<::jxx::lang::String>&,
-    ::jxx::lang::jint) {
-    throw ::jxx::lang::UnsupportedOperationException();
+    const ::jxx::Ptr<::jxx::lang::String>& peerHost,
+    ::jxx::lang::jint peerPort) {
+    if (peerHost == nullptr)
+        throw ::jxx::lang::NullPointerException();
+    if (peerPort < 0 || peerPort > 65535)
+        throw ::jxx::lang::IllegalArgumentException();
+    return ::jxx::NEW<internal::OpenSslEngine>(
+        config_, peerHost, peerPort);
 }
 
 ::jxx::Ptr<SSLParameters>
