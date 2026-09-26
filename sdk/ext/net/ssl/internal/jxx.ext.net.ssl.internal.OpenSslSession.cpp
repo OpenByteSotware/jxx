@@ -1,6 +1,7 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSession.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.X509Principal.h"
 #include <openssl/x509.h>
+#include "util/jxx.util.ArrayList.h"
 
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLPeerUnverifiedException.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLSessionBindingEvent.h"
@@ -87,6 +88,24 @@ OpenSslSession::getPeerPrincipal() const {
     return principal;
 }
 ::jxx::Ptr<::jxx::lang::String> OpenSslSession::getProtocol() const { touch(); return protocol_; }
+::jxx::Ptr<OpenSslSession::StringArray>
+OpenSslSession::getLocalSupportedSignatureAlgorithms() const {
+    const auto result = ::jxx::NEW<StringArray>(4);
+    (*result)[0] = ::jxx::NEW<::jxx::lang::String>("SHA256withRSA");
+    (*result)[1] = ::jxx::NEW<::jxx::lang::String>("SHA384withRSA");
+    (*result)[2] = ::jxx::NEW<::jxx::lang::String>("SHA256withECDSA");
+    (*result)[3] = ::jxx::NEW<::jxx::lang::String>("SHA384withECDSA");
+    return result;
+}
+::jxx::Ptr<OpenSslSession::StringArray>
+OpenSslSession::getPeerSupportedSignatureAlgorithms() const {
+    return ::jxx::NEW<StringArray>(0);
+}
+::jxx::Ptr<::jxx::util::List<::jxx::ext::net::ssl::SNIServerName>>
+OpenSslSession::getRequestedServerNames() const {
+    return ::jxx::CAST<::jxx::util::List<::jxx::ext::net::ssl::SNIServerName>>(
+        ::jxx::NEW<::jxx::util::ArrayList<::jxx::ext::net::ssl::SNIServerName>>());
+}
 ::jxx::Ptr<::jxx::ext::net::ssl::SSLSessionContext> OpenSslSession::getSessionContext() const { return context_; }
 ::jxx::Ptr<::jxx::lang::Object> OpenSslSession::getValue(const ::jxx::Ptr<::jxx::lang::String>& name) const {if(name==nullptr)throw ::jxx::lang::IllegalArgumentException();std::lock_guard<std::mutex> l(mutex_);auto i=values_.find(name->utf8());return i==values_.end()?nullptr:i->second;}
 ::jxx::Ptr<OpenSslSession::StringArray> OpenSslSession::getValueNames() const {std::lock_guard<std::mutex> l(mutex_);auto r=::jxx::NEW<StringArray>(static_cast<::jxx::lang::jint>(values_.size()));::jxx::lang::jint i=0;for(const auto&v:values_)(*r)[i++]=::jxx::NEW<::jxx::lang::String>(v.first);return r;}

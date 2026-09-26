@@ -5,16 +5,19 @@
 #include <string>
 #include <unordered_map>
 
-#include "ext/net/ssl/jxx.ext.net.ssl.SSLSession.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.ExtendedSSLSession.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SNIServerName.h"
+#include "util/jxx.util.List.h"
 
 namespace jxx::ext::net::ssl::internal {
 
 class OpenSslSession final
     : public ::jxx::lang::ClassBase<
           OpenSslSession,
-          ::jxx::lang::Object,
-          ::jxx::ext::net::ssl::SSLSession> {
+          ::jxx::ext::net::ssl::ExtendedSSLSession> {
 public:
+    using JxxSuper = ::jxx::ext::net::ssl::ExtendedSSLSession;
+    using Super = ::jxx::lang::ClassBase<OpenSslSession, JxxSuper>;
     using CertificateArray = SSLSession::CertificateArray;
     using StringArray = SSLSession::StringArray;
 
@@ -41,6 +44,10 @@ public:
     ::jxx::lang::jint getPeerPort() const override;
     ::jxx::Ptr<::jxx::security::Principal> getPeerPrincipal() const override;
     ::jxx::Ptr<::jxx::lang::String> getProtocol() const override;
+    ::jxx::Ptr<StringArray> getLocalSupportedSignatureAlgorithms() const override;
+    ::jxx::Ptr<StringArray> getPeerSupportedSignatureAlgorithms() const override;
+    ::jxx::Ptr<::jxx::util::List<::jxx::ext::net::ssl::SNIServerName>>
+    getRequestedServerNames() const override;
     ::jxx::Ptr<::jxx::ext::net::ssl::SSLSessionContext>
     getSessionContext() const override;
     ::jxx::Ptr<::jxx::lang::Object> getValue(
