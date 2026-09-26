@@ -10,6 +10,10 @@ template <typename E>
 class List
     : public ::jxx::lang::InterfaceBase<List<E>, Collection<E>> {
 public:
+    // Keep Collection<E>::add(E) visible alongside List<E>::add(index, E).
+    // This avoids creating a second virtual overrider in the List branch.
+    using Collection<E>::add;
+
     ~List() override = default;
 
     virtual ::jxx::lang::jbool addAll(
