@@ -4,6 +4,7 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslManagerBridge.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSession.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSessionContext.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslServerSessionCache.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslStreams.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslX509Certificate.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.HandshakeCompletedEvent.h"
@@ -113,6 +114,9 @@ void OpenSslSocket::startHandshake() {
     SSL_CTX_set_verify(native_->context, verify, nullptr);
     if (SSL_CTX_set_default_verify_paths(native_->context) != 1)
         throw ::jxx::io::IOException("Could not load default trust paths");
+    if (!client_ && config_ != nullptr && config_->serverSessionContext != nullptr)
+        configureServerSessionCache(
+            native_->context, config_->serverSessionContext.get());
     native_->managerBridge = std::make_unique<OpenSslManagerBridge>(config_);
     SSL_CTX_set_cert_verify_callback(native_->context, openSslVerifyCallback, native_->managerBridge.get());
     SSL_CTX_set_client_cert_cb(native_->context, openSslClientCertificateCallback);

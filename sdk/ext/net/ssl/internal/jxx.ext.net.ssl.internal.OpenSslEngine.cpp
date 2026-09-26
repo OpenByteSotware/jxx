@@ -11,6 +11,7 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslManagerBridge.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSession.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSessionContext.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslServerSessionCache.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLHandshakeException.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLParameters.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SNIHostName.h"
@@ -94,6 +95,9 @@ void OpenSslEngine::ensureInitialized() {
             throw ::jxx::lang::IllegalArgumentException();
     }
 
+    if (!clientMode_ && config_ != nullptr && config_->serverSessionContext != nullptr)
+        configureServerSessionCache(
+            context_, config_->serverSessionContext.get());
     managerBridge_ = std::make_unique<OpenSslManagerBridge>(config_);
     SSL_CTX_set_cert_verify_callback(
         context_, openSslVerifyCallback, managerBridge_.get());

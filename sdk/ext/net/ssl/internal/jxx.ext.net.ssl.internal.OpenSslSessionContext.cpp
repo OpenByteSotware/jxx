@@ -27,6 +27,9 @@ OpenSslSessionContext::~OpenSslSessionContext() {
     for (auto& entry : nativeSessions_)
         SSL_SESSION_free(entry.second);
     nativeSessions_.clear();
+    for (auto& entry : nativeSessionsById_)
+        SSL_SESSION_free(entry.second);
+    nativeSessionsById_.clear();
 }
 
 std::string OpenSslSessionContext::keyOf(
@@ -192,6 +195,58 @@ void OpenSslSessionContext::registerNativeSession(
     } else {
         nativeSessions_.emplace(key, session);
     }
+}
+
+
+namespace {
+std::string nativeIdKey(const unsigned char* sessionId, int length) {
+    if (sessionId == nullptr || length <= 0) return std::string();
+    return std::string(
+        reinterpret_cast<const char*>(sessionId),
+        static_cast<std::size_t>(length));
+}
+} // namespace
+
+SSL_SESSION* OpenSslSessionContext::acquireNativeSessionById(
+    const unsigned char* sessionId,
+    ::jxx::lang::jint sessionIdLength) {
+    const auto key = nativeIdKey(sessionId, sessionIdLength);
+    if (key.empty()) return nullptr;
+    std::lock_guard<std::mutex> lock(mutex_);
+    const auto found = nativeSessionsById_.find(key);
+    if (found == nativeSessionsById_.end()) return nullptr;
+    SSL_SESSION_up_ref(found->second);
+    return found->second;
+}
+
+void OpenSslSessionContext::registerNativeSessionById(SSL_SESSION* session) {
+    if (session == nullptr || SSL_SESSION_is_resumable(session) != 1) return;
+    unsigned int length = 0;
+    const unsigned char* id = SSL_SESSION_get_id(session, &length);
+    const auto key = nativeIdKey(id, static_cast<int>(length));
+    if (key.empty()) return;
+    SSL_SESSION_up_ref(session);
+    std::lock_guard<std::mutex> lock(mutex_);
+    const auto found = nativeSessionsById_.find(key);
+    if (found == nativeSessionsById_.end())
+        nativeSessionsById_.emplace(key, session);
+    else {
+        SSL_SESSION_free(found->second);
+        found->second = session;
+    }
+}
+
+void OpenSslSessionContext::removeNativeSessionById(SSL_SESSION* session) {
+    if (session == nullptr) return;
+    unsigned int length = 0;
+    const unsigned char* id = SSL_SESSION_get_id(session, &length);
+    const auto key = nativeIdKey(id, static_cast<int>(length));
+    if (key.empty()) return;
+    std::lock_guard<std::mutex> lock(mutex_);
+    const auto found = nativeSessionsById_.find(key);
+    if (found == nativeSessionsById_.end()) return;
+    SSL_SESSION_free(found->second);
+    nativeSessionsById_.erase(found);
 }
 
 } // namespace jxx::ext::net::ssl::internal

@@ -37,6 +37,11 @@ public:
         const ::jxx::Ptr<::jxx::lang::String>& peerHost,
         ::jxx::lang::jint peerPort,
         SSL_SESSION* session);
+    SSL_SESSION* acquireNativeSessionById(
+        const unsigned char* sessionId,
+        ::jxx::lang::jint sessionIdLength);
+    void registerNativeSessionById(SSL_SESSION* session);
+    void removeNativeSessionById(SSL_SESSION* session);
 
 private:
     static std::string keyOf(const ::jxx::lang::ByteArray& sessionId);
@@ -51,6 +56,7 @@ private:
         ::jxx::Ptr<::jxx::ext::net::ssl::SSLSession>> sessions_;
     std::deque<std::string> insertionOrder_;
     std::unordered_map<std::string, SSL_SESSION*> nativeSessions_;
+    std::unordered_map<std::string, SSL_SESSION*> nativeSessionsById_;
     ::jxx::lang::jint timeoutSeconds_ = 86400;
     ::jxx::lang::jint cacheSize_ = 0;
 };
