@@ -2,6 +2,8 @@
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpServer.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpContext.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpExchange.h"
+#include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpsExchange.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SSLSocket.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.Http11Parser.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.Headers.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.HttpHandler.h"
@@ -117,7 +119,17 @@ namespace jxx::com::sun::net::httpserver::internal
 					headers->add(::jxx::NEW<::jxx::lang::String>(h.first.c_str()),
 						::jxx::NEW<::jxx::lang::String>(h.second.c_str())); 
 				auto body = ::jxx::NEW<::jxx::lang::ByteArrayType>((::jxx::lang::jint)
-					request.body.size()); for (::jxx::lang::jint i = 0; i < body->length; ++i)(*body)[i] = (::jxx::lang::jbyte)request.body[(std::size_t)i]; auto exchange = ::jxx::NEW<DefaultHttpExchange>(socket, context, ::jxx::NEW<::jxx::lang::String>(request.method.c_str()), uri, ::jxx::NEW<::jxx::lang::String>(request.version.c_str()), headers, body); context->getHandler()->handle(exchange); if (exchange->getResponseCode() < 0)exchange->sendResponseHeaders(200, -1); exchange->getResponseBody()->flush(); buffer.erase(buffer.begin(), buffer.begin() + (std::ptrdiff_t)used); if (!request.keepAlive) {
+					request.body.size()); for (::jxx::lang::jint i = 0; i < body->length; ++i)(*body)[i] = (::jxx::lang::jbyte)request.body[(std::size_t)i]; auto httpExchange = ::jxx::NEW<DefaultHttpExchange>(socket, context, ::jxx::NEW<::jxx::lang::String>(request.method.c_str()), uri, ::jxx::NEW<::jxx::lang::String>(request.version.c_str()), headers, body);
+				::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpExchange> exchange = httpExchange;
+				auto sslSocket = ::jxx::CAST<::jxx::ext::net::ssl::SSLSocket>(socket);
+				if (sslSocket != nullptr) {
+					sslSocket->startHandshake();
+					auto session = sslSocket->getSession();
+					exchange = ::jxx::NEW<DefaultHttpsExchange>(httpExchange, session);
+				}
+				context->getHandler()->handle(exchange);
+				if (exchange->getResponseCode() < 0) exchange->sendResponseHeaders(200, -1);
+				exchange->getResponseBody()->flush(); buffer.erase(buffer.begin(), buffer.begin() + (std::ptrdiff_t)used); if (!request.keepAlive) {
 					exchange->close(); return;
 				}if (buffer.empty())continue;
 			}
