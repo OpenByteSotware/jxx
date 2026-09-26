@@ -1,4 +1,5 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSession.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSessionContext.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.X509Principal.h"
 #include <openssl/x509.h>
 
@@ -55,6 +56,7 @@ OpenSslSession::OpenSslSession(
           ? ::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(0)
           : id)
     , context_(context)
+    , concreteContext_(::jxx::CAST<OpenSslSessionContext>(context))
     , creationTime_(nowMillis())
     , lastAccessedTime_(creationTime_) {
 }
@@ -88,7 +90,24 @@ OpenSslSession::getPeerPrincipal() const {
 ::jxx::Ptr<::jxx::ext::net::ssl::SSLSessionContext> OpenSslSession::getSessionContext() const { return context_; }
 ::jxx::Ptr<::jxx::lang::Object> OpenSslSession::getValue(const ::jxx::Ptr<::jxx::lang::String>& name) const {if(name==nullptr)throw ::jxx::lang::IllegalArgumentException();std::lock_guard<std::mutex> l(mutex_);auto i=values_.find(name->utf8());return i==values_.end()?nullptr:i->second;}
 ::jxx::Ptr<OpenSslSession::StringArray> OpenSslSession::getValueNames() const {std::lock_guard<std::mutex> l(mutex_);auto r=::jxx::NEW<StringArray>(static_cast<::jxx::lang::jint>(values_.size()));::jxx::lang::jint i=0;for(const auto&v:values_)(*r)[i++]=::jxx::NEW<::jxx::lang::String>(v.first);return r;}
-void OpenSslSession::invalidate() { std::lock_guard<std::mutex> l(mutex_); valid_=false; values_.clear(); }
+void OpenSslSession::invalidate() {
+    ::jxx::lang::ByteArray sessionId;
+    ::jxx::Ptr<::jxx::lang::String> peerHost;
+    ::jxx::lang::jint peerPort = -1;
+    std::shared_ptr<OpenSslSessionContext> context;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!valid_) return;
+        valid_ = false;
+        values_.clear();
+        sessionId = id_;
+        peerHost = host_;
+        peerPort = port_;
+        context = concreteContext_.lock();
+    }
+    if (context != nullptr)
+        context->invalidateSession(sessionId, peerHost, peerPort);
+}
 ::jxx::lang::jbool OpenSslSession::isValid() const { return valid_; }
 void OpenSslSession::putValue(const ::jxx::Ptr<::jxx::lang::String>& name,const ::jxx::Ptr<::jxx::lang::Object>& value){if(name==nullptr||value==nullptr)throw ::jxx::lang::IllegalArgumentException();std::lock_guard<std::mutex> l(mutex_);values_[name->utf8()]=value;}
 void OpenSslSession::removeValue(const ::jxx::Ptr<::jxx::lang::String>& name){if(name==nullptr)throw ::jxx::lang::IllegalArgumentException();std::lock_guard<std::mutex> l(mutex_);values_.erase(name->utf8());}

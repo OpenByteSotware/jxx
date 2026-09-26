@@ -30,6 +30,10 @@ public:
     void registerSession(
         const ::jxx::Ptr<::jxx::ext::net::ssl::SSLSession>& session);
     void removeSession(const ::jxx::lang::ByteArray& sessionId);
+    void invalidateSession(
+        const ::jxx::lang::ByteArray& sessionId,
+        const ::jxx::Ptr<::jxx::lang::String>& peerHost,
+        ::jxx::lang::jint peerPort);
     SSL_SESSION* acquireNativeSession(
         const ::jxx::Ptr<::jxx::lang::String>& peerHost,
         ::jxx::lang::jint peerPort);

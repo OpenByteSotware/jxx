@@ -12,6 +12,10 @@
 
 namespace jxx::ext::net::ssl::internal {
 namespace {
+std::string endpointKey(
+    const ::jxx::Ptr<::jxx::lang::String>& peerHost,
+    ::jxx::lang::jint peerPort);
+
 
 ::jxx::lang::jlong nowMillis() {
     return static_cast<::jxx::lang::jlong>(
@@ -192,6 +196,43 @@ void OpenSslSessionContext::removeSession(
     insertionOrder_.erase(
         std::remove(insertionOrder_.begin(), insertionOrder_.end(), key),
         insertionOrder_.end());
+}
+
+void OpenSslSessionContext::invalidateSession(
+    const ::jxx::lang::ByteArray& sessionId,
+    const ::jxx::Ptr<::jxx::lang::String>& peerHost,
+    ::jxx::lang::jint peerPort) {
+    const auto idKey = sessionId == nullptr ? std::string() : keyOf(sessionId);
+    const auto peerKey = endpointKey(peerHost, peerPort);
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    if (!idKey.empty()) {
+        sessions_.erase(idKey);
+        insertionOrder_.erase(
+            std::remove(insertionOrder_.begin(), insertionOrder_.end(), idKey),
+            insertionOrder_.end());
+        const auto nativeId = nativeSessionsById_.find(idKey);
+        if (nativeId != nativeSessionsById_.end()) {
+            SSL_SESSION_free(nativeId->second);
+            nativeSessionsById_.erase(nativeId);
+        }
+        nativeIdInsertionOrder_.erase(
+            std::remove(nativeIdInsertionOrder_.begin(),
+                        nativeIdInsertionOrder_.end(), idKey),
+            nativeIdInsertionOrder_.end());
+    }
+
+    if (!peerKey.empty()) {
+        const auto nativePeer = nativeSessions_.find(peerKey);
+        if (nativePeer != nativeSessions_.end()) {
+            SSL_SESSION_free(nativePeer->second);
+            nativeSessions_.erase(nativePeer);
+        }
+        nativeInsertionOrder_.erase(
+            std::remove(nativeInsertionOrder_.begin(),
+                        nativeInsertionOrder_.end(), peerKey),
+            nativeInsertionOrder_.end());
+    }
 }
 
 
