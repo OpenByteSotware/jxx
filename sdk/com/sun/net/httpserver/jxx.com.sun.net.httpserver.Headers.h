@@ -48,6 +48,10 @@ public:
     ::jxx::Ptr<ValueList> remove(
         const ::jxx::Ptr<::jxx::lang::Object>& key) override;
 
+    ::jxx::Ptr<::jxx::util::Set<::jxx::util::MapEntry<::jxx::lang::String, ValueList>>> entrySet() override;
+    ::jxx::Ptr<::jxx::util::Set<::jxx::lang::String>> keySet() override;
+    ::jxx::Ptr<::jxx::util::Collection<ValueList>> values() override;
+
     void clear() override;
 
     void putAll(

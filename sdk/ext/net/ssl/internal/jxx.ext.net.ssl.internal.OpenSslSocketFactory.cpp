@@ -94,28 +94,40 @@ OpenSslSocketFactory::createSocket(
     if (socket == nullptr)
         throw ::jxx::lang::NullPointerException();
     std::vector<unsigned char> alreadyConsumed;
-    const auto available = consumed == nullptr
-        ? 0
-        : consumed->available();
-    if (available < 0)
-        throw ::jxx::lang::IllegalArgumentException();
-    if (available > 0) {
+    if (consumed != nullptr) {
+        constexpr ::jxx::lang::jint bufferSize = 8192;
         const auto buffer = ::jxx::NEW<
-            ::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(available);
-        ::jxx::lang::jint remaining = available;
-        while (remaining > 0) {
+            ::jxx::lang::JxxArray<
+                ::jxx::lang::jbyte,
+                1U>>(bufferSize);
+
+        for (;;) {
             const auto count = consumed->read(
                 buffer,
                 0,
-                remaining < buffer->length
-                    ? remaining
-                    : buffer->length);
+                buffer->length);
+
             if (count < 0) break;
-            if (count == 0) break;
-            remaining -= count;
-            for (::jxx::lang::jint index = 0; index < count; ++index)
+            if (count == 0) {
+                const auto single = consumed->read();
+                if (single < 0) break;
                 alreadyConsumed.push_back(
-                    static_cast<unsigned char>((*buffer)[index]));
+                    static_cast<unsigned char>(single));
+                continue;
+            }
+
+            alreadyConsumed.reserve(
+                alreadyConsumed.size() +
+                static_cast<std::size_t>(count));
+
+            for (::jxx::lang::jint index = 0;
+                 index < count;
+                 ++index)
+            {
+                alreadyConsumed.push_back(
+                    static_cast<unsigned char>(
+                        (*buffer)[index]));
+            }
         }
     }
     const auto address = socket->getInetAddress();

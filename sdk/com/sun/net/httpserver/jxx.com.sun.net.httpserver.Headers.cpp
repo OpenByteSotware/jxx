@@ -4,6 +4,7 @@
 #include "util/jxx.util.ArrayList.h"
 #include "util/jxx.util.Iterator.h"
 #include "util/jxx.util.MapEntry.h"
+#include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.ReadOnlyViews.h"
 
 #include <string>
 
@@ -178,6 +179,30 @@ void Headers::set(
     }
     return JxxSuper::remove(
         ::jxx::CAST<::jxx::lang::Object>(normalized));
+}
+
+::jxx::Ptr<::jxx::util::Set<::jxx::util::MapEntry<::jxx::lang::String, Headers::ValueList>>> Headers::entrySet()
+{
+    auto delegate = JxxSuper::entrySet();
+    if (!frozen_) return delegate;
+    return ::jxx::CAST<::jxx::util::Set<::jxx::util::MapEntry<::jxx::lang::String, ValueList>>>(
+        ::jxx::NEW<::jxx::com::sun::net::httpserver::internal::ReadOnlyEntrySet<::jxx::lang::String, ValueList>>(delegate));
+}
+
+::jxx::Ptr<::jxx::util::Set<::jxx::lang::String>> Headers::keySet()
+{
+    auto delegate = JxxSuper::keySet();
+    if (!frozen_) return delegate;
+    return ::jxx::CAST<::jxx::util::Set<::jxx::lang::String>>(
+        ::jxx::NEW<::jxx::com::sun::net::httpserver::internal::ReadOnlySet<::jxx::lang::String>>(delegate));
+}
+
+::jxx::Ptr<::jxx::util::Collection<Headers::ValueList>> Headers::values()
+{
+    auto delegate = JxxSuper::values();
+    if (!frozen_) return delegate;
+    return ::jxx::CAST<::jxx::util::Collection<ValueList>>(
+        ::jxx::NEW<::jxx::com::sun::net::httpserver::internal::ReadOnlyCollection<ValueList>>(delegate));
 }
 
 void Headers::clear()
