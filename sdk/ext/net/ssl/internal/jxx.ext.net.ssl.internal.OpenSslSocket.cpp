@@ -1,5 +1,6 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslCipherSuites.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.LayeredSocketBio.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocket.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocketNative.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslManagerBridge.h"
@@ -135,11 +136,13 @@ void OpenSslSocket::startHandshake() {
             SSL_free(ssl);
             throw ::jxx::io::IOException("layered socket has no native transport");
         }
-        BIO* socketBio = BIO_new_socket(
-            static_cast<int>(handle), BIO_NOCLOSE);
+        BIO* socketBio = createLayeredSocketBio(
+            handle,
+            consumed_);
         if (socketBio == nullptr) {
             SSL_free(ssl);
-            throw ::jxx::io::IOException("BIO_new_socket failed");
+            throw ::jxx::io::IOException(
+                "layered socket BIO allocation failed");
         }
         SSL_set_bio(ssl, socketBio, socketBio);
         native_->connection = BIO_new(BIO_f_ssl());
@@ -181,9 +184,6 @@ void OpenSslSocket::startHandshake() {
     if (transport_ == nullptr && client_ &&
         BIO_do_connect(native_->connection) <= 0)
         throw ::jxx::io::IOException("TLS transport connect failed");
-    if (!consumed_.empty())
-        throw ::jxx::io::IOException(
-            "pre-consumed TLS bytes require the SSLEngine memory-BIO path");
     if (BIO_do_handshake(native_->connection) <= 0)
         throw ::jxx::io::IOException("TLS handshake failed");
     SSL_SESSION* ns = SSL_get_session(ssl);
