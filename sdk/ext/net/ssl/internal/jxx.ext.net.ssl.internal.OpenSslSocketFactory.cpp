@@ -13,6 +13,7 @@
 #include "net/jxx.net.InetSocketAddress.h"
 #include "io/jxx.io.InputStream.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.NullPointerException.h"
 
 namespace jxx::ext::net::ssl::internal {
 OpenSslSocketFactory::OpenSslSocketFactory(const std::shared_ptr<OpenSslContextConfig>& config):config_(config){}
@@ -77,6 +78,8 @@ OpenSslSocketFactory::createSocket(
     ::jxx::lang::jint port,
     ::jxx::lang::jbool autoClose) {
     if (socket == nullptr || host == nullptr)
+        throw ::jxx::lang::NullPointerException();
+    if (port < 0 || port > 65535)
         throw ::jxx::lang::IllegalArgumentException();
     return ::jxx::NEW<OpenSslSocket>(
         socket, host, port, autoClose,
@@ -88,10 +91,12 @@ OpenSslSocketFactory::createSocket(
     const ::jxx::Ptr<::jxx::net::Socket>& socket,
     const ::jxx::Ptr<::jxx::io::InputStream>& consumed,
     ::jxx::lang::jbool autoClose) {
-    if (socket == nullptr || consumed == nullptr)
-        throw ::jxx::lang::IllegalArgumentException();
+    if (socket == nullptr)
+        throw ::jxx::lang::NullPointerException();
     std::vector<unsigned char> alreadyConsumed;
-    const auto available = consumed->available();
+    const auto available = consumed == nullptr
+        ? 0
+        : consumed->available();
     if (available < 0)
         throw ::jxx::lang::IllegalArgumentException();
     if (available > 0) {
@@ -117,9 +122,11 @@ OpenSslSocketFactory::createSocket(
     const auto host = address == nullptr
         ? ::jxx::NEW<::jxx::lang::String>("")
         : address->getHostAddress();
-    return ::jxx::NEW<OpenSslSocket>(
+    const auto layered = ::jxx::NEW<OpenSslSocket>(
         socket, host, socket->getPort(), autoClose,
         alreadyConsumed, config_);
+    layered->setUseClientMode(false);
+    return layered;
 }
 
 } // namespace jxx::ext::net::ssl::internal
