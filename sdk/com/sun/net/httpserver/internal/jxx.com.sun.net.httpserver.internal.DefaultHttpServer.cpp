@@ -3,13 +3,12 @@
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpContext.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpExchange.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpsExchange.h"
-#include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpsParameters.h"
-#include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.HttpsConfigurator.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLSocket.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.Http11Parser.h"
+#include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.ServerConnectionTask.h"
+#include "util/jxx.util.concurrent.Executor.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.Headers.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.HttpHandler.h"
-#include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.Authenticator.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.Filter.h"
 #include "io/jxx.io.InputStream.h"
 #include "io/jxx.io.OutputStream.h"
@@ -93,36 +92,29 @@ namespace jxx::com::sun::net::httpserver::internal
 	{
 		while (running_) {
 			try {
-				auto s = serverSocket_->accept(); if (s)workers_.emplace_back(&DefaultHttpServer::serve, this, s);
+				auto socket = serverSocket_->accept();
+				if (socket == nullptr) continue;
+				if (executor_ != nullptr) {
+					auto task = ::jxx::NEW<ServerConnectionTask>(
+						[this, socket] { serve(socket); });
+					executor_->execute(
+						::jxx::CAST<::jxx::lang::Runnable>(task));
+				}
+				else {
+					workers_.emplace_back(
+						&DefaultHttpServer::serve,
+						this,
+						socket);
+				}
 			}
 			catch (...) {
-				if (!running_)break;
+				if (!running_) break;
 			}
 		}
 	}
 	void DefaultHttpServer::serve(const ::jxx::Ptr<::jxx::net::Socket>& socket)
 	{
 		if (!socket)return; try {
-			auto sslSocket = ::jxx::CAST<::jxx::ext::net::ssl::SSLSocket>(socket);
-			if (sslSocket != nullptr && httpsConfigurator_ != nullptr) {
-				auto remoteAddress = ::jxx::CAST<::jxx::net::InetSocketAddress>(socket->getRemoteSocketAddress());
-				if (remoteAddress == nullptr) throw ::jxx::lang::IllegalStateException();
-				auto httpsParameters = ::jxx::NEW<DefaultHttpsParameters>(remoteAddress, httpsConfigurator_);
-				httpsConfigurator_->configure(httpsParameters);
-				auto sslParameters = httpsParameters->getAppliedSSLParameters();
-				if (sslParameters != nullptr) {
-					sslSocket->setSSLParameters(sslParameters);
-				}
-				else {
-					auto suites = httpsParameters->getCipherSuites();
-					if (suites != nullptr) sslSocket->setEnabledCipherSuites(suites);
-					auto protocols = httpsParameters->getProtocols();
-					if (protocols != nullptr) sslSocket->setEnabledProtocols(protocols);
-					sslSocket->setNeedClientAuth(httpsParameters->getNeedClientAuth());
-					sslSocket->setWantClientAuth(httpsParameters->getWantClientAuth());
-				}
-				sslSocket->startHandshake();
-			}
 			auto in = socket->getInputStream(); std::vector<unsigned char>buffer; buffer.reserve(8192); Http11Parser parser; for (;;) {
 				ParsedRequest request; std::size_t used = 0;
 				std::string error; 
@@ -145,29 +137,14 @@ namespace jxx::com::sun::net::httpserver::internal
 				auto body = ::jxx::NEW<::jxx::lang::ByteArrayType>((::jxx::lang::jint)
 					request.body.size()); for (::jxx::lang::jint i = 0; i < body->length; ++i)(*body)[i] = (::jxx::lang::jbyte)request.body[(std::size_t)i]; auto httpExchange = ::jxx::NEW<DefaultHttpExchange>(socket, context, ::jxx::NEW<::jxx::lang::String>(request.method.c_str()), uri, ::jxx::NEW<::jxx::lang::String>(request.version.c_str()), headers, body);
 				::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpExchange> exchange = httpExchange;
+				auto sslSocket = ::jxx::CAST<::jxx::ext::net::ssl::SSLSocket>(socket);
 				if (sslSocket != nullptr) {
+					sslSocket->startHandshake();
 					auto session = sslSocket->getSession();
 					exchange = ::jxx::NEW<DefaultHttpsExchange>(httpExchange, session);
 				}
-				auto authenticator = context->getAuthenticator();
-				if (authenticator != nullptr) {
-					auto result = authenticator->authenticate(exchange);
-					auto success = ::jxx::CAST<::jxx::com::sun::net::httpserver::Authenticator::Success>(result);
-					if (success != nullptr) {
-						httpExchange->setPrincipalInternal(success->getPrincipal());
-					}
-					else {
-						auto retry = ::jxx::CAST<::jxx::com::sun::net::httpserver::Authenticator::Retry>(result);
-						auto failure = ::jxx::CAST<::jxx::com::sun::net::httpserver::Authenticator::Failure>(result);
-						const ::jxx::lang::jint code = retry != nullptr ? retry->getResponseCode() : (failure != nullptr ? failure->getResponseCode() : 403);
-						exchange->sendResponseHeaders(code, -1);
-						exchange->getResponseBody()->flush();
-						buffer.erase(buffer.begin(), buffer.begin() + static_cast<std::ptrdiff_t>(used));
-						if (!request.keepAlive) { exchange->close(); return; }
-						continue;
-					}
-				}
-				auto chain = ::jxx::NEW<::jxx::com::sun::net::httpserver::Filter::Chain>(context->getFilters(), context->getHandler());
+				auto chain = ::jxx::NEW<::jxx::com::sun::net::httpserver::Filter::Chain>(
+					context->getFilters(), context->getHandler());
 				chain->doFilter(exchange);
 				if (exchange->getResponseCode() < 0) exchange->sendResponseHeaders(200, -1);
 				exchange->getResponseBody()->flush(); buffer.erase(buffer.begin(), buffer.begin() + (std::ptrdiff_t)used); if (!request.keepAlive) {
