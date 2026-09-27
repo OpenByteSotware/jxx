@@ -8,6 +8,7 @@
 
 namespace jxx::ext::net::ssl {
 
+class SNIMatcher;
 class SNIServerName;
 
 class SSLParameters
@@ -47,6 +48,15 @@ public:
     void setServerNames(
         const ::jxx::Ptr<::jxx::util::List<SNIServerName>>& names);
 
+    ::jxx::Ptr<::jxx::util::List<SNIMatcher>>
+    getSNIMatchers() const;
+    void setSNIMatchers(
+        const ::jxx::Ptr<::jxx::util::List<SNIMatcher>>& matchers);
+
+    ::jxx::lang::jbool getUseCipherSuitesOrder() const;
+    void setUseCipherSuitesOrder(
+        ::jxx::lang::jbool value);
+
 private:
     static ::jxx::Ptr<StringArray> copyOf(
         const ::jxx::Ptr<StringArray>& values);
@@ -57,6 +67,8 @@ private:
     ::jxx::lang::jbool want_ = false;
     ::jxx::Ptr<::jxx::lang::String> endpointIdentificationAlgorithm_;
     ::jxx::Ptr<::jxx::util::List<SNIServerName>> serverNames_;
+    ::jxx::Ptr<::jxx::util::List<SNIMatcher>> sniMatchers_;
+    ::jxx::lang::jbool useCipherSuitesOrder_ = false;
 };
 
 } // namespace jxx::ext::net::ssl

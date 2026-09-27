@@ -97,6 +97,10 @@ void OpenSslSocket::startHandshake() {
     if (SSL_CTX_set_min_proto_version(native_->context, minv) != 1 ||
         SSL_CTX_set_max_proto_version(native_->context, maxv) != 1)
         throw ::jxx::io::IOException("Could not apply enabled TLS protocols");
+    if (!client_ && useCipherSuitesOrder_)
+        SSL_CTX_set_options(
+            native_->context,
+            SSL_OP_CIPHER_SERVER_PREFERENCE);
     if (!enabledCipherSuites_.empty()) {
         std::vector<std::string> modern, legacy;
         for (const auto& c : enabledCipherSuites_)
@@ -124,12 +128,7 @@ void OpenSslSocket::startHandshake() {
         SSL_CTX_set_session_cache_mode(native_->context, SSL_SESS_CACHE_OFF);
         SSL_CTX_set_options(native_->context, SSL_OP_NO_TICKET);
     }
-    native_->managerBridge =
-        std::make_unique<OpenSslManagerBridge>(config_);
-    native_->managerBridge->setSocket(
-        ::jxx::CAST<
-            ::jxx::ext::net::ssl::SSLSocket>(
-                this->thisPtr()));
+    native_->managerBridge = std::make_unique<OpenSslManagerBridge>(config_);
     SSL_CTX_set_cert_verify_callback(native_->context, openSslVerifyCallback, native_->managerBridge.get());
     SSL_CTX_set_client_cert_cb(native_->context, openSslClientCertificateCallback);
     SSL* ssl = SSL_new(native_->context);

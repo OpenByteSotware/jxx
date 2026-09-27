@@ -117,6 +117,7 @@ private:
     ::jxx::lang::jbool need_ = false;
     ::jxx::lang::jbool want_ = false;
     ::jxx::lang::jbool create_ = true;
+    ::jxx::lang::jbool useCipherSuitesOrder_ = false;
 };
 
 } // namespace jxx::ext::net::ssl::internal

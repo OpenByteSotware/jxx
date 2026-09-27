@@ -1,6 +1,7 @@
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLParameters.h"
 
 #include "ext/net/ssl/jxx.ext.net.ssl.SNIServerName.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SNIMatcher.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "util/jxx.util.ArrayList.h"
 
@@ -78,6 +79,47 @@ void SSLParameters::setServerNames(
         copy->add(candidate);
     }
     serverNames_ = copy;
+}
+
+::jxx::Ptr<::jxx::util::List<SNIMatcher>>
+SSLParameters::getSNIMatchers() const {
+    if (sniMatchers_ == nullptr) return nullptr;
+    const auto copy = ::jxx::NEW<::jxx::util::ArrayList<SNIMatcher>>();
+    for (::jxx::lang::jint index = 0; index < sniMatchers_->size(); ++index)
+        copy->add(sniMatchers_->get(index));
+    return copy;
+}
+
+void SSLParameters::setSNIMatchers(
+    const ::jxx::Ptr<::jxx::util::List<SNIMatcher>>& matchers) {
+    if (matchers == nullptr) {
+        sniMatchers_ = nullptr;
+        return;
+    }
+    const auto copy = ::jxx::NEW<::jxx::util::ArrayList<SNIMatcher>>();
+    for (::jxx::lang::jint index = 0; index < matchers->size(); ++index) {
+        const ::jxx::Ptr<SNIMatcher> candidate = matchers->get(index);
+        if (candidate == nullptr)
+            throw ::jxx::lang::IllegalArgumentException();
+        for (::jxx::lang::jint previous = 0; previous < index; ++previous) {
+            const ::jxx::Ptr<SNIMatcher> existing = matchers->get(previous);
+            if (existing != nullptr &&
+                existing->getType() == candidate->getType())
+                throw ::jxx::lang::IllegalArgumentException();
+        }
+        copy->add(candidate);
+    }
+    sniMatchers_ = copy;
+}
+
+::jxx::lang::jbool
+SSLParameters::getUseCipherSuitesOrder() const {
+    return useCipherSuitesOrder_;
+}
+
+void SSLParameters::setUseCipherSuitesOrder(
+    ::jxx::lang::jbool value) {
+    useCipherSuitesOrder_ = value;
 }
 
 } // namespace jxx::ext::net::ssl

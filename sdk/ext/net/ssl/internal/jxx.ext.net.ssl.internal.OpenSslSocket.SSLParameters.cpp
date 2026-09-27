@@ -13,6 +13,8 @@ OpenSslSocket::getSSLParameters() const {
     const auto parameters = SSLSocket::getSSLParameters();
     parameters->setEndpointIdentificationAlgorithm(
         endpointIdentificationAlgorithm_);
+    parameters->setUseCipherSuitesOrder(
+        useCipherSuitesOrder_);
 
     if (sniHost_ != nullptr) {
         const auto names = ::jxx::NEW<
@@ -37,6 +39,8 @@ void OpenSslSocket::setSSLParameters(
 
     endpointIdentificationAlgorithm_ =
         parameters->getEndpointIdentificationAlgorithm();
+    useCipherSuitesOrder_ =
+        parameters->getUseCipherSuitesOrder();
     if (endpointIdentificationAlgorithm_ != nullptr &&
         !endpointIdentificationAlgorithm_->utf8().empty() &&
         endpointIdentificationAlgorithm_->utf8() != "HTTPS")

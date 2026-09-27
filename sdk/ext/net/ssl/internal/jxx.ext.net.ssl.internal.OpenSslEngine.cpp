@@ -103,16 +103,16 @@ void OpenSslEngine::ensureInitialized() {
         SSL_CTX_set_session_cache_mode(context_, SSL_SESS_CACHE_OFF);
         SSL_CTX_set_options(context_, SSL_OP_NO_TICKET);
     }
-    managerBridge_ =
-        std::make_unique<OpenSslManagerBridge>(config_);
-    managerBridge_->setEngine(
-        ::jxx::CAST<
-            ::jxx::ext::net::ssl::SSLEngine>(
-                this->thisPtr()));
+    managerBridge_ = std::make_unique<OpenSslManagerBridge>(config_);
     SSL_CTX_set_cert_verify_callback(
         context_, openSslVerifyCallback, managerBridge_.get());
     SSL_CTX_set_client_cert_cb(context_, openSslClientCertificateCallback);
     SSL_CTX_set_default_verify_paths(context_);
+
+    if (!clientMode_ && useCipherSuitesOrder_)
+        SSL_CTX_set_options(
+            context_,
+            SSL_OP_CIPHER_SERVER_PREFERENCE);
 
     ssl_ = SSL_new(context_);
     if (ssl_ == nullptr)
@@ -522,6 +522,8 @@ OpenSslEngine::getHandshakeStatus() const {
     const auto parameters = SSLEngine::getSSLParameters();
     parameters->setEndpointIdentificationAlgorithm(
         endpointIdentificationAlgorithm_);
+    parameters->setUseCipherSuitesOrder(
+        useCipherSuitesOrder_);
     if (explicitSniHost_ != nullptr) {
         const auto names = ::jxx::NEW<
             ::jxx::util::ArrayList<::jxx::ext::net::ssl::SNIServerName>>();
@@ -538,6 +540,8 @@ void OpenSslEngine::setSSLParameters(
     SSLEngine::setSSLParameters(parameters);
     endpointIdentificationAlgorithm_ =
         parameters->getEndpointIdentificationAlgorithm();
+    useCipherSuitesOrder_ =
+        parameters->getUseCipherSuitesOrder();
     if (endpointIdentificationAlgorithm_ != nullptr &&
         !endpointIdentificationAlgorithm_->utf8().empty() &&
         endpointIdentificationAlgorithm_->utf8() != "HTTPS")

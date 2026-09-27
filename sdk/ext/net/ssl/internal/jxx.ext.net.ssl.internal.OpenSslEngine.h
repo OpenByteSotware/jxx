@@ -106,6 +106,7 @@ private:
     ::jxx::lang::jbool needClientAuth_ = false;
     ::jxx::lang::jbool wantClientAuth_ = false;
     ::jxx::lang::jbool enableSessionCreation_ = true;
+    ::jxx::lang::jbool useCipherSuitesOrder_ = false;
     ::jxx::lang::jbool initialized_ = false;
     ::jxx::lang::jbool handshakeStarted_ = false;
     ::jxx::lang::jbool handshakeFinishedReported_ = false;
