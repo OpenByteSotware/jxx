@@ -101,10 +101,35 @@ void OpenSslSocket::startHandshake() {
         throw ::jxx::io::IOException("SSL socket is closed");
     if (session_ != nullptr) return;
     handshakeInProgress_ = true;
-    struct HandshakeStateReset final {
-        ::jxx::lang::jbool& value;
-        ~HandshakeStateReset() { value = false; }
-    } handshakeStateReset{handshakeInProgress_};
+    const auto resetHandshakeState = [this]() {
+        handshakeSession_ = nullptr;
+        handshakeInProgress_ = false;
+    };
+    const std::shared_ptr<void> handshakeStateGuard(
+        nullptr,
+        [resetHandshakeState](void*) {
+            resetHandshakeState();
+        });
+
+    const auto handshakeContext =
+        client_
+            ? config_->clientSessionContext
+            : config_->serverSessionContext;
+
+    handshakeSession_ = ::jxx::NEW<OpenSslSession>(
+        ::jxx::NEW<::jxx::lang::String>(
+            "SSL_NULL_WITH_NULL_NULL"),
+        ::jxx::NEW<::jxx::lang::String>(
+            "NONE"),
+        host_,
+        port_,
+        nullptr,
+        nullptr,
+        ::jxx::NEW<
+            ::jxx::lang::JxxArray<
+                ::jxx::lang::jbyte,
+                1U>>(0),
+        handshakeContext);
     if (transport_ == nullptr &&
         (host_ == nullptr || host_->utf8().empty() || port_ <= 0))
         throw ::jxx::lang::IllegalStateException("SSL socket is not connected");
@@ -285,6 +310,7 @@ void OpenSslSocket::close() {
     }
     native_.reset(new OpenSslSocketNative());
     session_ = nullptr;
+    handshakeSession_ = nullptr;
     handshakeInProgress_ = false;
     closed_ = true;
     if (autoClose_ && transport_ != nullptr) transport_->close();
@@ -320,7 +346,13 @@ OpenSslSocket::getSupportedCipherSuites() const {
 ::jxx::Ptr<OpenSslSocket::StringArray> OpenSslSocket::getEnabledCipherSuites()const{return enabledCipherSuites_.empty()?getSupportedCipherSuites():toArray(enabledCipherSuites_);}
 void OpenSslSocket::setEnabledCipherSuites(const ::jxx::Ptr<StringArray>&v){if(session_!=nullptr)throw ::jxx::lang::IllegalStateException();enabledCipherSuites_=toVector(v);}
 ::jxx::Ptr<OpenSslSocket::SSLSession> OpenSslSocket::getSession(){startHandshake();return session_;}
-::jxx::Ptr<OpenSslSocket::SSLSession> OpenSslSocket::getHandshakeSession() const { return handshakeInProgress_ ? session_ : nullptr; }
+::jxx::Ptr<OpenSslSocket::SSLSession>
+OpenSslSocket::getHandshakeSession() const {
+    std::lock_guard<std::recursive_mutex> tlsLock(tlsMutex_);
+    return handshakeInProgress_
+        ? handshakeSession_
+        : nullptr;
+}
 void OpenSslSocket::addHandshakeCompletedListener(
     const ::jxx::Ptr<HandshakeCompletedListener>& listener) {
     if (listener == nullptr)

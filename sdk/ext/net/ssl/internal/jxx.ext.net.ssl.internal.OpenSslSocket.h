@@ -110,6 +110,7 @@ private:
     ::jxx::lang::jbool autoClose_ = false;
     std::vector<unsigned char> consumed_;
     ::jxx::Ptr<SSLSession> session_;
+    ::jxx::Ptr<SSLSession> handshakeSession_;
     ::jxx::lang::jbool handshakeInProgress_ = false;
     std::vector<::jxx::Ptr<HandshakeCompletedListener>> listeners_;
     mutable std::mutex listenerMutex_;
