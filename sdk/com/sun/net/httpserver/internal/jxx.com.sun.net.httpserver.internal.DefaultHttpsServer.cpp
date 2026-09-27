@@ -4,19 +4,69 @@
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLServerSocketFactory.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "net/jxx.net.InetSocketAddress.h"
+
 namespace jxx::com::sun::net::httpserver::internal {
-DefaultHttpsServer::DefaultHttpsServer():Super(),delegate_(nullptr){}
-DefaultHttpsServer::DefaultHttpsServer(const ::jxx::Ptr<::jxx::net::InetSocketAddress>&a,::jxx::lang::jint b):Super(),delegate_(nullptr){address_=a;backlog_=b<=0?50:b;}
-void DefaultHttpsServer::setHttpsConfigurator(const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpsConfigurator>&c){if(!c)throw ::jxx::lang::NullPointerException();configurator_=c;}
-::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpsConfigurator>DefaultHttpsServer::getHttpsConfigurator(){return configurator_;}
-void DefaultHttpsServer::bind(const ::jxx::Ptr<::jxx::net::InetSocketAddress>&a,::jxx::lang::jint b){if(!a)throw ::jxx::lang::NullPointerException();address_=a;backlog_=b<=0?50:b;}
-void DefaultHttpsServer::start(){if(!configurator_||!address_)throw ::jxx::lang::IllegalStateException();auto factory=configurator_->getSSLContext()->getServerSocketFactory();auto listener=factory->createServerSocket(address_->getPort(),backlog_,address_->getAddress());auto old=delegate_;delegate_=::jxx::NEW<DefaultHttpServer>(listener,address_,configurator_);if(old){delegate_->setExecutor(old->getExecutor());}delegate_->start();}
-void DefaultHttpsServer::stop(::jxx::lang::jint d){if(delegate_)delegate_->stop(d);}
-void DefaultHttpsServer::setExecutor(const ::jxx::Ptr<::jxx::util::concurrent::Executor>&e){if(!delegate_)delegate_=::jxx::NEW<DefaultHttpServer>();delegate_->setExecutor(e);}
-::jxx::Ptr<::jxx::util::concurrent::Executor>DefaultHttpsServer::getExecutor(){return delegate_?delegate_->getExecutor():nullptr;}
-::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>DefaultHttpsServer::createContext(const ::jxx::Ptr<::jxx::lang::String>&p,const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpHandler>&h){if(!delegate_)delegate_=::jxx::NEW<DefaultHttpServer>();return delegate_->createContext(p,h);}
-::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>DefaultHttpsServer::createContext(const ::jxx::Ptr<::jxx::lang::String>&p){if(!delegate_)delegate_=::jxx::NEW<DefaultHttpServer>();return delegate_->createContext(p);}
-void DefaultHttpsServer::removeContext(const ::jxx::Ptr<::jxx::lang::String>&p){delegate_->removeContext(p);}
-void DefaultHttpsServer::removeContext(const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>&c){delegate_->removeContext(c);}
-::jxx::Ptr<::jxx::net::InetSocketAddress>DefaultHttpsServer::getAddress(){return address_;}
+
+DefaultHttpsServer::DefaultHttpsServer()
+    : Super(), delegate_(::jxx::NEW<DefaultHttpServer>()) {}
+
+DefaultHttpsServer::DefaultHttpsServer(const ::jxx::Ptr<::jxx::net::InetSocketAddress>& address, ::jxx::lang::jint backlog)
+    : DefaultHttpsServer()
+{
+    if (!address) throw ::jxx::lang::NullPointerException();
+    address_ = address;
+    backlog_ = backlog <= 0 ? 50 : backlog;
 }
+
+void DefaultHttpsServer::ensurePublicOwner_()
+{
+    if (ownerInstalled_) return;
+    delegate_->setPublicOwnerInternal(::jxx::CAST<::jxx::com::sun::net::httpserver::HttpServer>(this->thisPtr()));
+    ownerInstalled_ = true;
+}
+
+void DefaultHttpsServer::setHttpsConfigurator(const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpsConfigurator>& config)
+{
+    if (!config) throw ::jxx::lang::NullPointerException();
+    if (started_) throw ::jxx::lang::IllegalStateException();
+    configurator_ = config;
+}
+::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpsConfigurator> DefaultHttpsServer::getHttpsConfigurator(){ return configurator_; }
+
+void DefaultHttpsServer::bind(const ::jxx::Ptr<::jxx::net::InetSocketAddress>& address, ::jxx::lang::jint backlog)
+{
+    if (!address) throw ::jxx::lang::NullPointerException();
+    if (started_ || address_) throw ::jxx::lang::IllegalStateException();
+    address_ = address;
+    backlog_ = backlog <= 0 ? 50 : backlog;
+}
+
+void DefaultHttpsServer::start()
+{
+    if (started_ || !configurator_ || !address_) throw ::jxx::lang::IllegalStateException();
+    ensurePublicOwner_();
+    auto listener = configurator_->getSSLContext()->getServerSocketFactory()->createServerSocket(address_->getPort(), backlog_, address_->getAddress());
+    delegate_->installListenerInternal(listener, address_, configurator_);
+    started_ = true;
+    delegate_->start();
+}
+void DefaultHttpsServer::stop(::jxx::lang::jint delay){ delegate_->stop(delay); }
+void DefaultHttpsServer::setExecutor(const ::jxx::Ptr<::jxx::util::concurrent::Executor>& executor){ if(started_)throw ::jxx::lang::IllegalStateException(); delegate_->setExecutor(executor); }
+::jxx::Ptr<::jxx::util::concurrent::Executor> DefaultHttpsServer::getExecutor(){ return delegate_->getExecutor(); }
+
+::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext> DefaultHttpsServer::createContext(const ::jxx::Ptr<::jxx::lang::String>& path,const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpHandler>& handler)
+{
+    if (!handler) throw ::jxx::lang::NullPointerException();
+    ensurePublicOwner_();
+    return delegate_->createContext(path, handler);
+}
+::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext> DefaultHttpsServer::createContext(const ::jxx::Ptr<::jxx::lang::String>& path)
+{
+    ensurePublicOwner_();
+    return delegate_->createContext(path);
+}
+void DefaultHttpsServer::removeContext(const ::jxx::Ptr<::jxx::lang::String>& path){ delegate_->removeContext(path); }
+void DefaultHttpsServer::removeContext(const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>& context){ delegate_->removeContext(context); }
+::jxx::Ptr<::jxx::net::InetSocketAddress> DefaultHttpsServer::getAddress(){ return address_; }
+
+} // namespace jxx::com::sun::net::httpserver::internal
