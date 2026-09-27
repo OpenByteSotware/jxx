@@ -1,4 +1,5 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslCipherSuites.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocket.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocketNative.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslManagerBridge.h"
@@ -232,7 +233,12 @@ int OpenSslSocket::tlsWrite(const unsigned char* b,int n){startHandshake();int r
 ::jxx::Ptr<OpenSslSocket::StringArray> OpenSslSocket::getSupportedProtocols()const{return toArray({"TLSv1.2","TLSv1.3"});}
 ::jxx::Ptr<OpenSslSocket::StringArray> OpenSslSocket::getEnabledProtocols()const{return enabledProtocols_.empty()?getSupportedProtocols():toArray(enabledProtocols_);}
 void OpenSslSocket::setEnabledProtocols(const ::jxx::Ptr<StringArray>&v){if(session_!=nullptr)throw ::jxx::lang::IllegalStateException();enabledProtocols_=toVector(v);}
-::jxx::Ptr<OpenSslSocket::StringArray> OpenSslSocket::getSupportedCipherSuites()const{return ::jxx::NEW<StringArray>(0);}
+::jxx::Ptr<OpenSslSocket::StringArray>
+OpenSslSocket::getSupportedCipherSuites() const {
+    return client_
+        ? clientSupportedCipherSuites()
+        : serverSupportedCipherSuites();
+}
 ::jxx::Ptr<OpenSslSocket::StringArray> OpenSslSocket::getEnabledCipherSuites()const{return enabledCipherSuites_.empty()?getSupportedCipherSuites():toArray(enabledCipherSuites_);}
 void OpenSslSocket::setEnabledCipherSuites(const ::jxx::Ptr<StringArray>&v){if(session_!=nullptr)throw ::jxx::lang::IllegalStateException();enabledCipherSuites_=toVector(v);}
 ::jxx::Ptr<OpenSslSocket::SSLSession> OpenSslSocket::getSession(){startHandshake();return session_;}

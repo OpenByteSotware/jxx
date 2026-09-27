@@ -8,6 +8,7 @@
 #include <openssl/ssl.h>
 
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslCipherSuites.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslManagerBridge.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSession.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSessionContext.h"
@@ -489,10 +490,9 @@ void OpenSslEngine::setEnabledProtocols(
 
 ::jxx::Ptr<OpenSslEngine::StringArray>
 OpenSslEngine::getSupportedCipherSuites() const {
-    return toArray({
-        "TLS_AES_128_GCM_SHA256",
-        "TLS_AES_256_GCM_SHA384",
-        "TLS_CHACHA20_POLY1305_SHA256"});
+    return clientMode_
+        ? clientSupportedCipherSuites()
+        : serverSupportedCipherSuites();
 }
 
 ::jxx::Ptr<OpenSslEngine::StringArray>
