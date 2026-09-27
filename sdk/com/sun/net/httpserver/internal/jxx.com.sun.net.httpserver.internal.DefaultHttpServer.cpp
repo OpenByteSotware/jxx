@@ -133,7 +133,11 @@ namespace jxx::com::sun::net::httpserver::internal
 				}auto headers = ::jxx::NEW<::jxx::com::sun::net::httpserver::Headers>();
 				for (const auto& h : request.headers)
 					headers->add(::jxx::NEW<::jxx::lang::String>(h.first.c_str()),
-						::jxx::NEW<::jxx::lang::String>(h.second.c_str())); 
+						::jxx::NEW<::jxx::lang::String>(h.second.c_str()));
+				for (const auto& trailer : request.trailers)
+					headers->add(::jxx::NEW<::jxx::lang::String>(trailer.first.c_str()),
+						::jxx::NEW<::jxx::lang::String>(trailer.second.c_str()));
+				headers->freezeInternal(); 
 				auto body = ::jxx::NEW<::jxx::lang::ByteArrayType>((::jxx::lang::jint)
 					request.body.size()); for (::jxx::lang::jint i = 0; i < body->length; ++i)(*body)[i] = (::jxx::lang::jbyte)request.body[(std::size_t)i]; auto httpExchange = ::jxx::NEW<DefaultHttpExchange>(socket, context, ::jxx::NEW<::jxx::lang::String>(request.method.c_str()), uri, ::jxx::NEW<::jxx::lang::String>(request.version.c_str()), headers, body);
 				::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpExchange> exchange = httpExchange;

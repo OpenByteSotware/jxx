@@ -14,6 +14,23 @@ Headers::Headers()
 {
 }
 
+void Headers::freezeInternal()
+{
+    frozen_ = true;
+}
+
+::jxx::lang::jbool Headers::isFrozenInternal() const noexcept
+{
+    return frozen_;
+}
+
+void Headers::ensureMutable_() const
+{
+    if (frozen_) {
+        throw ::jxx::lang::UnsupportedOperationException();
+    }
+}
+
 ::jxx::Ptr<::jxx::lang::String> Headers::normalizeKey_(
     const ::jxx::Ptr<::jxx::lang::String>& key)
 {
@@ -86,6 +103,7 @@ void Headers::add(
     const ::jxx::Ptr<::jxx::lang::String>& key,
     const ::jxx::Ptr<::jxx::lang::String>& value)
 {
+    ensureMutable_();
     validateValue_(value);
     auto normalized = normalizeKey_(key);
     auto values = JxxSuper::get(
@@ -104,6 +122,7 @@ void Headers::set(
     const ::jxx::Ptr<::jxx::lang::String>& key,
     const ::jxx::Ptr<::jxx::lang::String>& value)
 {
+    ensureMutable_();
     validateValue_(value);
     auto values = ::jxx::NEW<
         ::jxx::util::ArrayList<::jxx::lang::String>>();
@@ -144,6 +163,7 @@ void Headers::set(
     const ::jxx::Ptr<::jxx::lang::String>& key,
     const ::jxx::Ptr<ValueList>& value)
 {
+    ensureMutable_();
     validateList_(value);
     return JxxSuper::put(normalizeKey_(key), value);
 }
@@ -151,6 +171,7 @@ void Headers::set(
 ::jxx::Ptr<Headers::ValueList> Headers::remove(
     const ::jxx::Ptr<::jxx::lang::Object>& key)
 {
+    ensureMutable_();
     auto normalized = normalizeObjectKey_(key);
     if (normalized == nullptr) {
         return nullptr;
@@ -159,10 +180,17 @@ void Headers::set(
         ::jxx::CAST<::jxx::lang::Object>(normalized));
 }
 
+void Headers::clear()
+{
+    ensureMutable_();
+    JxxSuper::clear();
+}
+
 void Headers::putAll(
     const ::jxx::Ptr<
         ::jxx::util::Map<::jxx::lang::String, ValueList>>& source)
 {
+    ensureMutable_();
     if (source == nullptr) {
         throw ::jxx::lang::NullPointerException();
     }

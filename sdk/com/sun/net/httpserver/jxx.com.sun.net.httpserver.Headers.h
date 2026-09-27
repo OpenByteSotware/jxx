@@ -21,6 +21,9 @@ public:
 
     Headers();
 
+    void freezeInternal();
+    ::jxx::lang::jbool isFrozenInternal() const noexcept;
+
     void add(
         const ::jxx::Ptr<::jxx::lang::String>& key,
         const ::jxx::Ptr<::jxx::lang::String>& value);
@@ -45,11 +48,15 @@ public:
     ::jxx::Ptr<ValueList> remove(
         const ::jxx::Ptr<::jxx::lang::Object>& key) override;
 
+    void clear() override;
+
     void putAll(
         const ::jxx::Ptr<
             ::jxx::util::Map<::jxx::lang::String, ValueList>>& source) override;
 
 private:
+    void ensureMutable_() const;
+
     static ::jxx::Ptr<::jxx::lang::String> normalizeKey_(
         const ::jxx::Ptr<::jxx::lang::String>& key);
 
@@ -58,6 +65,8 @@ private:
 
     static void validateValue_(
         const ::jxx::Ptr<::jxx::lang::String>& value);
+
+    ::jxx::lang::jbool frozen_ = false;
 
     static void validateList_(
         const ::jxx::Ptr<ValueList>& values);
