@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
@@ -12,14 +10,10 @@ class Provider;
 class SecureRandom;
 }
 
-namespace jxx::ext::net::ssl::internal {
-class OpenSslContextConfig;
-class OpenSslSessionContext;
-}
-
 namespace jxx::ext::net::ssl {
 
 class KeyManager;
+class SSLContextSpi;
 class SSLParameters;
 class SSLServerSocketFactory;
 class SSLEngine;
@@ -27,7 +21,7 @@ class SSLSessionContext;
 class SSLSocketFactory;
 class TrustManager;
 
-class SSLContext final
+class SSLContext
     : public ::jxx::lang::ClassBase<
           SSLContext,
           ::jxx::lang::Object> {
@@ -39,9 +33,11 @@ public:
     using TrustManagerArray = ::jxx::lang::JxxArray<
         ::jxx::Ptr<TrustManager>, 1U>;
 
-    explicit SSLContext(
+    SSLContext(
+        const ::jxx::Ptr<SSLContextSpi>& contextSpi,
+        const ::jxx::Ptr<::jxx::security::Provider>& provider,
         const ::jxx::Ptr<::jxx::lang::String>& protocol);
-    ~SSLContext() override;
+    ~SSLContext() override = default;
 
     static ::jxx::Ptr<SSLContext> getInstance(
         const ::jxx::Ptr<::jxx::lang::String>& protocol);
@@ -53,7 +49,8 @@ public:
         const ::jxx::Ptr<::jxx::security::Provider>& provider);
 
     static ::jxx::Ptr<SSLContext> getDefault();
-    static void setDefault(const ::jxx::Ptr<SSLContext>& context);
+    static void setDefault(
+        const ::jxx::Ptr<SSLContext>& context);
 
     void init(
         const ::jxx::Ptr<KeyManagerArray>& keyManagers,
@@ -74,11 +71,9 @@ public:
     ::jxx::Ptr<::jxx::security::Provider> getProvider() const;
 
 private:
-    ::jxx::Ptr<::jxx::lang::String> protocol_;
+    ::jxx::Ptr<SSLContextSpi> contextSpi_;
     ::jxx::Ptr<::jxx::security::Provider> provider_;
-    ::jxx::Ptr<internal::OpenSslSessionContext> clientSessionContext_;
-    ::jxx::Ptr<internal::OpenSslSessionContext> serverSessionContext_;
-    std::shared_ptr<internal::OpenSslContextConfig> config_;
+    ::jxx::Ptr<::jxx::lang::String> protocol_;
 };
 
 } // namespace jxx::ext::net::ssl

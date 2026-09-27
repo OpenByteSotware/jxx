@@ -2,15 +2,12 @@
 
 #include <mutex>
 
-#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
-#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslEngine.h"
-#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslServerSocketFactory.h"
-#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSessionContext.h"
-#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocketFactory.h"
-#include "ext/net/ssl/jxx.ext.net.ssl.SSLParameters.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextSpi.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SSLContextSpi.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
-#include "lang/jxx.lang.UnsupportedOperationException.h"
+#include "security/jxx.security.NoSuchAlgorithmException.h"
+#include "security/jxx.security.NoSuchProviderException.h"
 #include "security/jxx.security.Provider.h"
 
 namespace jxx::ext::net::ssl {
@@ -19,75 +16,99 @@ namespace {
 std::mutex defaultContextMutex;
 ::jxx::Ptr<SSLContext> defaultContext;
 
+void validateProtocol(
+    const ::jxx::Ptr<::jxx::lang::String>& protocol)
+{
+    if (protocol == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+    const auto value = protocol->utf8();
+    if (value != "TLS" && value != "TLSv1" &&
+        value != "TLSv1.2" && value != "TLSv1.3")
+    {
+        throw ::jxx::security::NoSuchAlgorithmException(
+            "Unsupported SSLContext protocol");
+    }
+}
+
+::jxx::Ptr<::jxx::security::Provider> openSslProvider() {
+    return ::jxx::NEW<::jxx::security::Provider>(
+        ::jxx::NEW<::jxx::lang::String>("OpenSSL"));
+}
+
 } // namespace
 
 SSLContext::SSLContext(
+    const ::jxx::Ptr<SSLContextSpi>& contextSpi,
+    const ::jxx::Ptr<::jxx::security::Provider>& provider,
     const ::jxx::Ptr<::jxx::lang::String>& protocol)
-    : protocol_(protocol)
-    , provider_(::jxx::NEW<::jxx::security::Provider>(
-          ::jxx::NEW<::jxx::lang::String>("OpenSSL")))
-    , clientSessionContext_(
-          ::jxx::NEW<internal::OpenSslSessionContext>())
-    , serverSessionContext_(
-          ::jxx::NEW<internal::OpenSslSessionContext>())
-    , config_(std::make_shared<internal::OpenSslContextConfig>(
-          protocol_,
-          nullptr,
-          nullptr,
-          nullptr,
-          clientSessionContext_,
-          serverSessionContext_)) {
-    if (protocol_ == nullptr)
+    : contextSpi_(contextSpi)
+    , provider_(provider)
+    , protocol_(protocol) {
+    if (contextSpi_ == nullptr || provider_ == nullptr ||
+        protocol_ == nullptr)
+    {
         throw ::jxx::lang::NullPointerException();
+    }
 }
-
-SSLContext::~SSLContext() = default;
 
 ::jxx::Ptr<SSLContext> SSLContext::getInstance(
     const ::jxx::Ptr<::jxx::lang::String>& protocol) {
-    if (protocol == nullptr)
-        throw ::jxx::lang::NullPointerException();
-
-    const auto value = protocol->utf8();
-    if (value != "TLS" &&
-        value != "TLSv1" &&
-        value != "TLSv1.2" &&
-        value != "TLSv1.3")
-        throw ::jxx::lang::IllegalArgumentException();
-
-    return ::jxx::NEW<SSLContext>(protocol);
+    validateProtocol(protocol);
+    const auto provider = openSslProvider();
+    return ::jxx::NEW<SSLContext>(
+        ::jxx::NEW<internal::OpenSslContextSpi>(protocol),
+        provider,
+        protocol);
 }
 
 ::jxx::Ptr<SSLContext> SSLContext::getInstance(
     const ::jxx::Ptr<::jxx::lang::String>& protocol,
     const ::jxx::Ptr<::jxx::lang::String>& provider) {
-    if (provider == nullptr)
+    validateProtocol(protocol);
+    if (provider == nullptr || provider->utf8().empty()) {
         throw ::jxx::lang::IllegalArgumentException();
-    if (provider->utf8() != "OpenSSL")
-        throw ::jxx::lang::IllegalArgumentException();
+    }
+    if (provider->utf8() != "OpenSSL") {
+        throw ::jxx::security::NoSuchProviderException(
+            "SSLContext provider is not installed");
+    }
     return getInstance(protocol);
 }
 
 ::jxx::Ptr<SSLContext> SSLContext::getInstance(
     const ::jxx::Ptr<::jxx::lang::String>& protocol,
     const ::jxx::Ptr<::jxx::security::Provider>& provider) {
-    if (provider == nullptr)
+    validateProtocol(protocol);
+    if (provider == nullptr) {
         throw ::jxx::lang::IllegalArgumentException();
-    return getInstance(protocol, provider->getName());
+    }
+    if (provider->getName() == nullptr ||
+        provider->getName()->utf8() != "OpenSSL")
+    {
+        throw ::jxx::security::NoSuchAlgorithmException(
+            "Provider does not implement the SSLContext protocol");
+    }
+    return ::jxx::NEW<SSLContext>(
+        ::jxx::NEW<internal::OpenSslContextSpi>(protocol),
+        provider,
+        protocol);
 }
 
 ::jxx::Ptr<SSLContext> SSLContext::getDefault() {
     std::lock_guard<std::mutex> lock(defaultContextMutex);
-    if (defaultContext == nullptr)
+    if (defaultContext == nullptr) {
         defaultContext = getInstance(
             ::jxx::NEW<::jxx::lang::String>("TLS"));
+    }
     return defaultContext;
 }
 
 void SSLContext::setDefault(
     const ::jxx::Ptr<SSLContext>& context) {
-    if (context == nullptr)
+    if (context == nullptr) {
         throw ::jxx::lang::NullPointerException();
+    }
     std::lock_guard<std::mutex> lock(defaultContextMutex);
     defaultContext = context;
 }
@@ -96,78 +117,47 @@ void SSLContext::init(
     const ::jxx::Ptr<KeyManagerArray>& keyManagers,
     const ::jxx::Ptr<TrustManagerArray>& trustManagers,
     const ::jxx::Ptr<::jxx::security::SecureRandom>& secureRandom) {
-    config_ = std::make_shared<internal::OpenSslContextConfig>(
-        protocol_,
-        keyManagers,
-        trustManagers,
-        secureRandom,
-        clientSessionContext_,
-        serverSessionContext_);
+    contextSpi_->engineInit(
+        keyManagers, trustManagers, secureRandom);
 }
 
-::jxx::Ptr<SSLSocketFactory> SSLContext::getSocketFactory() {
-    return ::jxx::NEW<internal::OpenSslSocketFactory>(config_);
+::jxx::Ptr<SSLSocketFactory>
+SSLContext::getSocketFactory() {
+    return contextSpi_->engineGetSocketFactory();
 }
-
 ::jxx::Ptr<SSLServerSocketFactory>
 SSLContext::getServerSocketFactory() {
-    return ::jxx::NEW<internal::OpenSslServerSocketFactory>(config_);
+    return contextSpi_->engineGetServerSocketFactory();
 }
-
 ::jxx::Ptr<SSLSessionContext>
 SSLContext::getClientSessionContext() {
-    return clientSessionContext_;
+    return contextSpi_->engineGetClientSessionContext();
 }
-
 ::jxx::Ptr<SSLSessionContext>
 SSLContext::getServerSessionContext() {
-    return serverSessionContext_;
+    return contextSpi_->engineGetServerSessionContext();
 }
-
-::jxx::Ptr<SSLEngine> SSLContext::createSSLEngine() {
-    return ::jxx::NEW<internal::OpenSslEngine>(config_, nullptr, -1);
+::jxx::Ptr<SSLEngine>
+SSLContext::createSSLEngine() {
+    return contextSpi_->engineCreateSSLEngine();
 }
-
 ::jxx::Ptr<SSLEngine> SSLContext::createSSLEngine(
     const ::jxx::Ptr<::jxx::lang::String>& peerHost,
     ::jxx::lang::jint peerPort) {
-    if (peerHost == nullptr)
-        throw ::jxx::lang::NullPointerException();
-    if (peerPort < 0 || peerPort > 65535)
-        throw ::jxx::lang::IllegalArgumentException();
-    return ::jxx::NEW<internal::OpenSslEngine>(
-        config_, peerHost, peerPort);
+    return contextSpi_->engineCreateSSLEngine(peerHost, peerPort);
 }
-
 ::jxx::Ptr<SSLParameters>
 SSLContext::getDefaultSSLParameters() {
-    const auto parameters = ::jxx::NEW<SSLParameters>();
-    const auto factory = getSocketFactory();
-    parameters->setCipherSuites(factory->getDefaultCipherSuites());
-    const auto protocols = ::jxx::NEW<SSLParameters::StringArray>(2);
-    (*protocols)[0] = ::jxx::NEW<::jxx::lang::String>("TLSv1.2");
-    (*protocols)[1] = ::jxx::NEW<::jxx::lang::String>("TLSv1.3");
-    parameters->setProtocols(protocols);
-    return parameters;
+    return contextSpi_->engineGetDefaultSSLParameters();
 }
-
 ::jxx::Ptr<SSLParameters>
 SSLContext::getSupportedSSLParameters() {
-    const auto parameters = ::jxx::NEW<SSLParameters>();
-    const auto factory = getSocketFactory();
-    parameters->setCipherSuites(factory->getSupportedCipherSuites());
-    const auto protocols = ::jxx::NEW<SSLParameters::StringArray>(2);
-    (*protocols)[0] = ::jxx::NEW<::jxx::lang::String>("TLSv1.2");
-    (*protocols)[1] = ::jxx::NEW<::jxx::lang::String>("TLSv1.3");
-    parameters->setProtocols(protocols);
-    return parameters;
+    return contextSpi_->engineGetSupportedSSLParameters();
 }
-
 ::jxx::Ptr<::jxx::lang::String>
 SSLContext::getProtocol() const {
     return protocol_;
 }
-
 ::jxx::Ptr<::jxx::security::Provider>
 SSLContext::getProvider() const {
     return provider_;
