@@ -1,3 +1,262 @@
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.Http11Parser.h"
-#include <algorithm><cctype><cstdlib>
-namespace jxx::com::sun::net::httpserver::internal { static std::string lower(std::string s){std::transform(s.begin(),s.end(),s.begin(),[](unsigned char c){return(char)std::tolower(c);});return s;} bool Http11Parser::parseContentLength(const std::vector<std::pair<std::string,std::string>>&h,std::size_t&v){v=0;bool found=false;for(const auto&e:h)if(lower(e.first)=="content-length"){char*end=nullptr;auto n=std::strtoull(e.second.c_str(),&end,10);if(!end||*end)return false;if(found&&v!=n)return false;v=(std::size_t)n;found=true;}return true;} Http11Parser::Result Http11Parser::parse(const unsigned char*d,std::size_t n,ParsedRequest&o,std::size_t&used,std::string&err)const{used=0;const std::string s((const char*)d,n);auto end=s.find("\r\n\r\n");if(end==std::string::npos)return Result::NeedMore;auto lineEnd=s.find("\r\n");if(lineEnd==std::string::npos){err="bad request line";return Result::Error;}auto a=s.find(' '),b=s.find(' ',a+1);if(a==std::string::npos||b==std::string::npos||b>=lineEnd){err="bad request line";return Result::Error;}o.method=s.substr(0,a);o.target=s.substr(a+1,b-a-1);o.version=s.substr(b+1,lineEnd-b-1);std::size_t p=lineEnd+2;while(p<end){auto e=s.find("\r\n",p);auto c=s.find(':',p);if(c==std::string::npos||c>=e){err="bad header";return Result::Error;}std::string name=s.substr(p,c-p),value=s.substr(c+1,e-c-1);while(!value.empty()&&(value.front()==' '||value.front()=='\t'))value.erase(value.begin());o.headers.emplace_back(std::move(name),std::move(value));p=e+2;}std::size_t len=0;if(!parseContentLength(o.headers,len)){err="invalid content-length";return Result::Error;}auto body=end+4;if(n<body+len)return Result::NeedMore;o.body.assign(d+body,d+body+len);used=body+len;o.keepAlive=o.version=="HTTP/1.1";for(const auto&e:o.headers)if(lower(e.first)=="connection"){auto v=lower(e.second);if(v=="close")o.keepAlive=false;if(v=="keep-alive")o.keepAlive=true;}return Result::Complete;} }
+
+#include <algorithm>
+#include <cctype>
+#include <cerrno>
+#include <cstdlib>
+#include <limits>
+
+namespace jxx::com::sun::net::httpserver::internal {
+namespace {
+
+std::string lower(std::string value)
+{
+    std::transform(
+        value.begin(), value.end(), value.begin(),
+        [](unsigned char character) {
+            return static_cast<char>(std::tolower(character));
+        });
+    return value;
+}
+
+std::string trim(std::string value)
+{
+    while (!value.empty() &&
+           (value.front() == ' ' || value.front() == '\t')) {
+        value.erase(value.begin());
+    }
+    while (!value.empty() &&
+           (value.back() == ' ' || value.back() == '\t')) {
+        value.pop_back();
+    }
+    return value;
+}
+
+bool parseHeaderLine(
+    const std::string& source,
+    std::size_t begin,
+    std::size_t end,
+    std::pair<std::string, std::string>& output)
+{
+    const auto colon = source.find(':', begin);
+    if (colon == std::string::npos || colon >= end || colon == begin) {
+        return false;
+    }
+    output.first = source.substr(begin, colon - begin);
+    output.second = trim(source.substr(colon + 1, end - colon - 1));
+    return true;
+}
+
+bool hasChunkedTransferEncoding(
+    const std::vector<std::pair<std::string, std::string>>& headers,
+    bool& unsupported)
+{
+    unsupported = false;
+    bool chunked = false;
+    for (const auto& header : headers) {
+        if (lower(header.first) != "transfer-encoding") continue;
+        std::string value = lower(header.second);
+        std::size_t position = 0;
+        while (position <= value.size()) {
+            const auto comma = value.find(',', position);
+            const auto token = trim(value.substr(
+                position,
+                comma == std::string::npos
+                    ? std::string::npos
+                    : comma - position));
+            if (token == "chunked") chunked = true;
+            else if (!token.empty() && token != "identity") unsupported = true;
+            if (comma == std::string::npos) break;
+            position = comma + 1;
+        }
+    }
+    return chunked;
+}
+
+Http11Parser::Result decodeChunked(
+    const std::string& source,
+    std::size_t bodyStart,
+    ParsedRequest& output,
+    std::size_t& consumed,
+    std::string& error)
+{
+    std::size_t position = bodyStart;
+    output.body.clear();
+    output.trailers.clear();
+
+    for (;;) {
+        const auto lineEnd = source.find("\r\n", position);
+        if (lineEnd == std::string::npos) return Http11Parser::Result::NeedMore;
+
+        std::string sizeText = source.substr(position, lineEnd - position);
+        const auto extension = sizeText.find(';');
+        if (extension != std::string::npos) sizeText.erase(extension);
+        sizeText = trim(sizeText);
+        if (sizeText.empty()) {
+            error = "invalid chunk size";
+            return Http11Parser::Result::Error;
+        }
+
+        errno = 0;
+        char* end = nullptr;
+        const auto chunkSize = std::strtoull(sizeText.c_str(), &end, 16);
+        if (errno == ERANGE || end == nullptr || *end != '\0' ||
+            chunkSize > std::numeric_limits<std::size_t>::max()) {
+            error = "invalid chunk size";
+            return Http11Parser::Result::Error;
+        }
+
+        position = lineEnd + 2;
+        if (chunkSize == 0) {
+            for (;;) {
+                const auto trailerEnd = source.find("\r\n", position);
+                if (trailerEnd == std::string::npos)
+                    return Http11Parser::Result::NeedMore;
+                if (trailerEnd == position) {
+                    consumed = trailerEnd + 2;
+                    return Http11Parser::Result::Complete;
+                }
+                std::pair<std::string, std::string> trailer;
+                if (!parseHeaderLine(source, position, trailerEnd, trailer)) {
+                    error = "invalid trailer";
+                    return Http11Parser::Result::Error;
+                }
+                const auto name = lower(trailer.first);
+                if (name == "content-length" ||
+                    name == "transfer-encoding" ||
+                    name == "host") {
+                    error = "forbidden trailer";
+                    return Http11Parser::Result::Error;
+                }
+                output.trailers.push_back(std::move(trailer));
+                position = trailerEnd + 2;
+            }
+        }
+
+        if (chunkSize > source.size() - position)
+            return Http11Parser::Result::NeedMore;
+        const auto dataEnd = position + static_cast<std::size_t>(chunkSize);
+        if (source.size() < dataEnd + 2)
+            return Http11Parser::Result::NeedMore;
+        if (source.compare(dataEnd, 2, "\r\n") != 0) {
+            error = "invalid chunk terminator";
+            return Http11Parser::Result::Error;
+        }
+
+        output.body.insert(
+            output.body.end(),
+            reinterpret_cast<const unsigned char*>(source.data() + position),
+            reinterpret_cast<const unsigned char*>(source.data() + dataEnd));
+        position = dataEnd + 2;
+    }
+}
+
+} // namespace
+
+bool Http11Parser::parseContentLength(
+    const std::vector<std::pair<std::string, std::string>>& headers,
+    std::size_t& value,
+    bool& present)
+{
+    value = 0;
+    present = false;
+    for (const auto& header : headers) {
+        if (lower(header.first) != "content-length") continue;
+        errno = 0;
+        char* end = nullptr;
+        const auto parsed = std::strtoull(header.second.c_str(), &end, 10);
+        if (errno == ERANGE || end == nullptr || *end != '\0' ||
+            parsed > std::numeric_limits<std::size_t>::max()) {
+            return false;
+        }
+        if (present && value != static_cast<std::size_t>(parsed)) return false;
+        value = static_cast<std::size_t>(parsed);
+        present = true;
+    }
+    return true;
+}
+
+Http11Parser::Result Http11Parser::parse(
+    const unsigned char* data,
+    std::size_t size,
+    ParsedRequest& output,
+    std::size_t& consumed,
+    std::string& error) const
+{
+    consumed = 0;
+    output = ParsedRequest{};
+    const std::string source(reinterpret_cast<const char*>(data), size);
+    const auto headersEnd = source.find("\r\n\r\n");
+    if (headersEnd == std::string::npos) return Result::NeedMore;
+
+    const auto requestLineEnd = source.find("\r\n");
+    if (requestLineEnd == std::string::npos) return Result::NeedMore;
+    const auto firstSpace = source.find(' ');
+    const auto secondSpace = source.find(' ', firstSpace + 1);
+    if (firstSpace == std::string::npos || secondSpace == std::string::npos ||
+        secondSpace >= requestLineEnd) {
+        error = "bad request line";
+        return Result::Error;
+    }
+
+    output.method = source.substr(0, firstSpace);
+    output.target = source.substr(firstSpace + 1, secondSpace - firstSpace - 1);
+    output.version = source.substr(secondSpace + 1, requestLineEnd - secondSpace - 1);
+    if (output.version != "HTTP/1.0" && output.version != "HTTP/1.1") {
+        error = "unsupported HTTP version";
+        return Result::Error;
+    }
+
+    std::size_t position = requestLineEnd + 2;
+    while (position < headersEnd) {
+        const auto lineEnd = source.find("\r\n", position);
+        std::pair<std::string, std::string> header;
+        if (lineEnd == std::string::npos || lineEnd > headersEnd ||
+            !parseHeaderLine(source, position, lineEnd, header)) {
+            error = "bad header";
+            return Result::Error;
+        }
+        output.headers.push_back(std::move(header));
+        position = lineEnd + 2;
+    }
+
+    std::size_t contentLength = 0;
+    bool contentLengthPresent = false;
+    if (!parseContentLength(output.headers, contentLength, contentLengthPresent)) {
+        error = "invalid content-length";
+        return Result::Error;
+    }
+
+    bool unsupportedTransferEncoding = false;
+    const bool chunked = hasChunkedTransferEncoding(
+        output.headers, unsupportedTransferEncoding);
+    if (unsupportedTransferEncoding || (chunked && contentLengthPresent)) {
+        error = "invalid transfer framing";
+        return Result::Error;
+    }
+
+    const auto bodyStart = headersEnd + 4;
+    if (chunked) {
+        const auto result = decodeChunked(
+            source, bodyStart, output, consumed, error);
+        if (result != Result::Complete) return result;
+    }
+    else {
+        if (source.size() - bodyStart < contentLength) return Result::NeedMore;
+        output.body.assign(
+            data + bodyStart,
+            data + bodyStart + contentLength);
+        consumed = bodyStart + contentLength;
+    }
+
+    output.keepAlive = output.version == "HTTP/1.1";
+    for (const auto& header : output.headers) {
+        if (lower(header.first) != "connection") continue;
+        const auto value = lower(header.second);
+        if (value == "close") output.keepAlive = false;
+        if (value == "keep-alive") output.keepAlive = true;
+    }
+    return Result::Complete;
+}
+
+} // namespace jxx::com::sun::net::httpserver::internal
