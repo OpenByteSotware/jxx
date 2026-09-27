@@ -4,6 +4,10 @@
 #include <openssl/x509.h>
 
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslX509Certificate.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SSLEngine.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SSLSocket.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.X509ExtendedKeyManager.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.X509ExtendedTrustManager.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.X509KeyManager.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.X509TrustManager.h"
 #include "lang/jxx.lang.String.h"
@@ -44,11 +48,86 @@ namespace {
     return nullptr;
 }
 
+::jxx::Ptr<::jxx::ext::net::ssl::X509ExtendedTrustManager>
+findExtendedTrustManager(
+    const std::shared_ptr<OpenSslContextConfig>& config)
+{
+    if (config == nullptr || config->trustManagers == nullptr) {
+        return nullptr;
+    }
+    for (::jxx::lang::jint index = 0;
+         index < config->trustManagers->length;
+         ++index)
+    {
+        const auto manager =
+            ::jxx::CAST<
+                ::jxx::ext::net::ssl::X509ExtendedTrustManager>(
+                    (*config->trustManagers)[index]);
+        if (manager != nullptr) {
+            return manager;
+        }
+    }
+    return nullptr;
+}
+
+::jxx::Ptr<::jxx::ext::net::ssl::X509ExtendedKeyManager>
+findExtendedKeyManager(
+    const std::shared_ptr<OpenSslContextConfig>& config)
+{
+    if (config == nullptr || config->keyManagers == nullptr) {
+        return nullptr;
+    }
+    for (::jxx::lang::jint index = 0;
+         index < config->keyManagers->length;
+         ++index)
+    {
+        const auto manager =
+            ::jxx::CAST<
+                ::jxx::ext::net::ssl::X509ExtendedKeyManager>(
+                    (*config->keyManagers)[index]);
+        if (manager != nullptr) {
+            return manager;
+        }
+    }
+    return nullptr;
+}
+
+::jxx::Ptr<::jxx::lang::String> authenticationType(SSL* ssl) {
+    const SSL_CIPHER* cipher =
+        ssl == nullptr
+            ? nullptr
+            : SSL_get_current_cipher(ssl);
+    if (cipher == nullptr) {
+        return ::jxx::NEW<::jxx::lang::String>(
+            "UNKNOWN");
+    }
+    const int nid = SSL_CIPHER_get_auth_nid(cipher);
+    const char* name = OBJ_nid2sn(nid);
+    return ::jxx::NEW<::jxx::lang::String>(
+        name == nullptr ? "UNKNOWN" : name);
+}
+
 } // namespace
 
 OpenSslManagerBridge::OpenSslManagerBridge(
     const std::shared_ptr<OpenSslContextConfig>& config)
     : config_(config) {
+}
+
+void OpenSslManagerBridge::setSocket(
+    const ::jxx::Ptr<
+        ::jxx::ext::net::ssl::SSLSocket>& socket)
+{
+    socket_ = socket;
+    engine_ = nullptr;
+}
+
+void OpenSslManagerBridge::setEngine(
+    const ::jxx::Ptr<
+        ::jxx::ext::net::ssl::SSLEngine>& engine)
+{
+    engine_ = engine;
+    socket_ = nullptr;
 }
 
 int OpenSslManagerBridge::verifyPeer(X509_STORE_CTX* storeContext) noexcept {
@@ -69,14 +148,37 @@ int OpenSslManagerBridge::verifyPeer(X509_STORE_CTX* storeContext) noexcept {
         }
         SSL* ssl = static_cast<SSL*>(X509_STORE_CTX_get_ex_data(
             storeContext, SSL_get_ex_data_X509_STORE_CTX_idx()));
-        if (ssl != nullptr && SSL_is_server(ssl))
+        const auto authType = authenticationType(ssl);
+        const bool serverMode =
+            ssl != nullptr && SSL_is_server(ssl);
+        const auto extended =
+            findExtendedTrustManager(config_);
+
+        if (extended != nullptr && engine_ != nullptr) {
+            if (serverMode) {
+                extended->checkClientTrusted(
+                    converted, authType, engine_);
+            } else {
+                extended->checkServerTrusted(
+                    converted, authType, engine_);
+            }
+        } else if (extended != nullptr && socket_ != nullptr) {
+            if (serverMode) {
+                extended->checkClientTrusted(
+                    converted, authType,
+                    ::jxx::CAST<::jxx::net::Socket>(socket_));
+            } else {
+                extended->checkServerTrusted(
+                    converted, authType,
+                    ::jxx::CAST<::jxx::net::Socket>(socket_));
+            }
+        } else if (serverMode) {
             manager->checkClientTrusted(
-                converted,
-                ::jxx::NEW<::jxx::lang::String>("UNKNOWN"));
-        else
+                converted, authType);
+        } else {
             manager->checkServerTrusted(
-                converted,
-                ::jxx::NEW<::jxx::lang::String>("UNKNOWN"));
+                converted, authType);
+        }
         X509_STORE_CTX_set_error(storeContext, X509_V_OK);
         return 1;
     } catch (...) {
@@ -90,8 +192,17 @@ int OpenSslManagerBridge::selectServerIdentity(SSL* ssl) noexcept {
     try {
         const auto manager = findKeyManager(config_);
         if (manager == nullptr) return 0;
-        const auto alias = manager->chooseServerAlias(
-            ::jxx::NEW<::jxx::lang::String>("RSA"), nullptr, nullptr);
+        const auto keyType =
+            ::jxx::NEW<::jxx::lang::String>("RSA");
+        const auto extended =
+            findExtendedKeyManager(config_);
+        const auto alias =
+            extended != nullptr && engine_ != nullptr
+                ? extended->chooseEngineServerAlias(
+                      keyType, nullptr, engine_)
+                : manager->chooseServerAlias(
+                      keyType, nullptr,
+                      ::jxx::CAST<::jxx::net::Socket>(socket_));
         if (alias == nullptr) return 0;
         const auto chain = manager->getCertificateChain(alias);
         const auto key = manager->getPrivateKey(alias);
@@ -138,7 +249,15 @@ int OpenSslManagerBridge::selectClientCertificate(
         const auto types = ::jxx::NEW<::jxx::ext::net::ssl::X509KeyManager::StringArray>(2);
         (*types)[0] = ::jxx::NEW<::jxx::lang::String>("RSA");
         (*types)[1] = ::jxx::NEW<::jxx::lang::String>("EC");
-        const auto alias = manager->chooseClientAlias(types, nullptr, nullptr);
+        const auto extended =
+            findExtendedKeyManager(config_);
+        const auto alias =
+            extended != nullptr && engine_ != nullptr
+                ? extended->chooseEngineClientAlias(
+                      types, nullptr, engine_)
+                : manager->chooseClientAlias(
+                      types, nullptr,
+                      ::jxx::CAST<::jxx::net::Socket>(socket_));
         if (alias == nullptr) return 0;
         const auto chain = manager->getCertificateChain(alias);
         const auto key = manager->getPrivateKey(alias);

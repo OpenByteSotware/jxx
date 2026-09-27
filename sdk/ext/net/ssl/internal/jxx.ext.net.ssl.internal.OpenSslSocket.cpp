@@ -11,9 +11,6 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslX509Certificate.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.HandshakeCompletedEvent.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.HandshakeCompletedListener.h"
-#include "ext/net/ssl/jxx.ext.net.ssl.SSLException.h"
-#include "ext/net/ssl/jxx.ext.net.ssl.SSLHandshakeException.h"
-#include "ext/net/ssl/jxx.ext.net.ssl.SSLProtocolException.h"
 #include "io/jxx.io.IOException.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.IllegalStateException.h"
@@ -55,23 +52,6 @@ std::string join(const std::vector<std::string>& v) {
     for (const auto& s : v) { if (!r.empty()) r.push_back(':'); r += s; }
     return r;
 }
-[[noreturn]] void throwTlsFailure(SSL* ssl, int operation, const char* message) {
-    const int error = ssl == nullptr ? SSL_ERROR_SSL : SSL_get_error(ssl, operation);
-    switch (error) {
-    case SSL_ERROR_SSL:
-        throw ::jxx::ext::net::ssl::SSLProtocolException(message);
-    case SSL_ERROR_SYSCALL:
-        throw ::jxx::ext::net::ssl::SSLException(message);
-    case SSL_ERROR_ZERO_RETURN:
-        throw ::jxx::ext::net::ssl::SSLException("TLS peer closed the connection");
-    case SSL_ERROR_WANT_READ:
-    case SSL_ERROR_WANT_WRITE:
-        throw ::jxx::ext::net::ssl::SSLException("TLS operation requires additional I/O");
-    default:
-        throw ::jxx::ext::net::ssl::SSLException(message);
-    }
-}
-
 }
 
 OpenSslSocket::OpenSslSocket(const std::shared_ptr<OpenSslContextConfig>& config)
@@ -144,7 +124,12 @@ void OpenSslSocket::startHandshake() {
         SSL_CTX_set_session_cache_mode(native_->context, SSL_SESS_CACHE_OFF);
         SSL_CTX_set_options(native_->context, SSL_OP_NO_TICKET);
     }
-    native_->managerBridge = std::make_unique<OpenSslManagerBridge>(config_);
+    native_->managerBridge =
+        std::make_unique<OpenSslManagerBridge>(config_);
+    native_->managerBridge->setSocket(
+        ::jxx::CAST<
+            ::jxx::ext::net::ssl::SSLSocket>(
+                this->thisPtr()));
     SSL_CTX_set_cert_verify_callback(native_->context, openSslVerifyCallback, native_->managerBridge.get());
     SSL_CTX_set_client_cert_cb(native_->context, openSslClientCertificateCallback);
     SSL* ssl = SSL_new(native_->context);
@@ -201,24 +186,11 @@ void OpenSslSocket::startHandshake() {
         if (native_->managerBridge->selectServerIdentity(ssl) != 1)
             throw ::jxx::io::IOException("No usable server certificate identity");
     }
-    if (transport_ == nullptr && client_) {
-        const int connectResult = BIO_do_connect(native_->connection);
-        if (connectResult <= 0) {
-            close();
-            throw ::jxx::ext::net::ssl::SSLException("TLS transport connect failed");
-        }
-    }
-    const int handshakeResult = BIO_do_handshake(native_->connection);
-    if (handshakeResult <= 0) {
-        SSL* failedSsl = nullptr;
-        BIO_get_ssl(native_->connection, &failedSsl);
-        try {
-            throwTlsFailure(failedSsl, handshakeResult, "TLS handshake failed");
-        } catch (const ::jxx::ext::net::ssl::SSLException&) {
-            close();
-            throw;
-        }
-    }
+    if (transport_ == nullptr && client_ &&
+        BIO_do_connect(native_->connection) <= 0)
+        throw ::jxx::io::IOException("TLS transport connect failed");
+    if (BIO_do_handshake(native_->connection) <= 0)
+        throw ::jxx::io::IOException("TLS handshake failed");
     SSL_SESSION* ns = SSL_get_session(ssl);
     if (client_ && ns != nullptr && config_ != nullptr &&
         config_->clientSessionContext != nullptr)
@@ -261,23 +233,8 @@ void OpenSslSocket::startHandshake() {
 ::jxx::Ptr<::jxx::io::InputStream> OpenSslSocket::getInputStream(){startHandshake();return ::jxx::NEW<OpenSslInputStream>(this);}
 ::jxx::Ptr<::jxx::io::OutputStream> OpenSslSocket::getOutputStream(){startHandshake();return ::jxx::NEW<OpenSslOutputStream>(this);}
 void OpenSslSocket::close(){native_.reset(new OpenSslSocketNative());session_=nullptr;if(autoClose_&&transport_!=nullptr)transport_->close();}
-int OpenSslSocket::tlsRead(unsigned char* data, int length) {
-    startHandshake();
-    const int result = BIO_read(native_->connection, data, length);
-    if (result > 0) return result;
-    SSL* ssl = nullptr;
-    BIO_get_ssl(native_->connection, &ssl);
-    if (ssl != nullptr && SSL_get_error(ssl, result) == SSL_ERROR_ZERO_RETURN) return -1;
-    throwTlsFailure(ssl, result, "TLS read failed");
-}
-int OpenSslSocket::tlsWrite(const unsigned char* data, int length) {
-    startHandshake();
-    const int result = BIO_write(native_->connection, data, length);
-    if (result > 0) return result;
-    SSL* ssl = nullptr;
-    BIO_get_ssl(native_->connection, &ssl);
-    throwTlsFailure(ssl, result, "TLS write failed");
-}
+int OpenSslSocket::tlsRead(unsigned char* b,int n){startHandshake();int r=BIO_read(native_->connection,b,n);return r<=0?-1:r;}
+int OpenSslSocket::tlsWrite(const unsigned char* b,int n){startHandshake();int r=BIO_write(native_->connection,b,n);if(r<=0)throw ::jxx::io::IOException("TLS write failed");return r;}
 ::jxx::Ptr<OpenSslSocket::StringArray> OpenSslSocket::getSupportedProtocols()const{return toArray({"TLSv1.2","TLSv1.3"});}
 ::jxx::Ptr<OpenSslSocket::StringArray> OpenSslSocket::getEnabledProtocols()const{return enabledProtocols_.empty()?getSupportedProtocols():toArray(enabledProtocols_);}
 void OpenSslSocket::setEnabledProtocols(const ::jxx::Ptr<StringArray>&v){if(session_!=nullptr)throw ::jxx::lang::IllegalStateException();enabledProtocols_=toVector(v);}

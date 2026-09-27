@@ -103,7 +103,12 @@ void OpenSslEngine::ensureInitialized() {
         SSL_CTX_set_session_cache_mode(context_, SSL_SESS_CACHE_OFF);
         SSL_CTX_set_options(context_, SSL_OP_NO_TICKET);
     }
-    managerBridge_ = std::make_unique<OpenSslManagerBridge>(config_);
+    managerBridge_ =
+        std::make_unique<OpenSslManagerBridge>(config_);
+    managerBridge_->setEngine(
+        ::jxx::CAST<
+            ::jxx::ext::net::ssl::SSLEngine>(
+                this->thisPtr()));
     SSL_CTX_set_cert_verify_callback(
         context_, openSslVerifyCallback, managerBridge_.get());
     SSL_CTX_set_client_cert_cb(context_, openSslClientCertificateCallback);
