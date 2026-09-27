@@ -1,35 +1,177 @@
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.Headers.h"
+
 #include "lang/jxx.lang.Exceptions.h"
 #include "util/jxx.util.ArrayList.h"
-namespace jxx::com::sun::net::httpserver
+#include "util/jxx.util.Iterator.h"
+#include "util/jxx.util.MapEntry.h"
+
+#include <string>
+
+namespace jxx::com::sun::net::httpserver {
+
+Headers::Headers()
+    : JxxSuper()
 {
-	namespace
-	{
-		::jxx::Ptr<::jxx::lang::String> normalized(const ::jxx::Ptr<::jxx::lang::String>& key)
-		{
-			if (!key)throw ::jxx::lang::NullPointerException(); auto s = key->utf8(); for (auto& c : s)if (c >= 'A' && c <= 'Z')c = (char)(c - 'A' + 'a'); return ::jxx::NEW<::jxx::lang::String>(s.c_str());
-		}
-	}
-	Headers::Headers() :JxxSuper()
-	{
-	}
-	void Headers::add(const ::jxx::Ptr<::jxx::lang::String>& key, const ::jxx::Ptr<::jxx::lang::String>& value)
-	{
-		if (!value)
-			throw ::jxx::lang::NullPointerException(); 
-		auto k = normalized(key); auto list = this->get(k);
-		if (!list) {
-			list = ::jxx::NEW<::jxx::util::ArrayList<::jxx::lang::String>>(); 
-			this->put(k, list);
-		}
-		list->add(value);
-	}
-	void Headers::set(const ::jxx::Ptr<::jxx::lang::String>& key, const ::jxx::Ptr<::jxx::lang::String>& value)
-	{
-		if (!value)throw ::jxx::lang::NullPointerException(); auto list = ::jxx::NEW<::jxx::util::ArrayList<::jxx::lang::String>>(); list->add(value); this->put(normalized(key), list);
-	}
-	::jxx::Ptr<::jxx::lang::String> Headers::getFirst(const ::jxx::Ptr<::jxx::lang::String>& key)
-	{
-		auto list = this->get(normalized(key)); return(!list || list->isEmpty()) ? nullptr : list->get(0);
-	}
 }
+
+::jxx::Ptr<::jxx::lang::String> Headers::normalizeKey_(
+    const ::jxx::Ptr<::jxx::lang::String>& key)
+{
+    if (key == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+
+    std::string text = key->utf8();
+    if (text.empty()) {
+        throw ::jxx::lang::IllegalArgumentException();
+    }
+
+    for (auto& character : text) {
+        const unsigned char value = static_cast<unsigned char>(character);
+        if (value <= 32U || value >= 127U || character == ':') {
+            throw ::jxx::lang::IllegalArgumentException();
+        }
+        if (character >= 'A' && character <= 'Z') {
+            character = static_cast<char>(character - 'A' + 'a');
+        }
+    }
+
+    return ::jxx::NEW<::jxx::lang::String>(text.c_str());
+}
+
+::jxx::Ptr<::jxx::lang::String> Headers::normalizeObjectKey_(
+    const ::jxx::Ptr<::jxx::lang::Object>& key)
+{
+    if (key == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+
+    auto stringKey = ::jxx::CAST<::jxx::lang::String>(key);
+    if (stringKey == nullptr) {
+        return nullptr;
+    }
+
+    return normalizeKey_(stringKey);
+}
+
+void Headers::validateValue_(
+    const ::jxx::Ptr<::jxx::lang::String>& value)
+{
+    if (value == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+
+    const auto text = value->utf8();
+    if (text.find('\r') != std::string::npos ||
+        text.find('\n') != std::string::npos) {
+        throw ::jxx::lang::IllegalArgumentException();
+    }
+}
+
+void Headers::validateList_(
+    const ::jxx::Ptr<ValueList>& values)
+{
+    if (values == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+
+    for (::jxx::lang::jint index = 0;
+         index < values->size();
+         ++index) {
+        validateValue_(values->get(index));
+    }
+}
+
+void Headers::add(
+    const ::jxx::Ptr<::jxx::lang::String>& key,
+    const ::jxx::Ptr<::jxx::lang::String>& value)
+{
+    validateValue_(value);
+    auto normalized = normalizeKey_(key);
+    auto values = JxxSuper::get(
+        ::jxx::CAST<::jxx::lang::Object>(normalized));
+
+    if (values == nullptr) {
+        values = ::jxx::NEW<
+            ::jxx::util::ArrayList<::jxx::lang::String>>();
+        JxxSuper::put(normalized, values);
+    }
+
+    values->add(value);
+}
+
+void Headers::set(
+    const ::jxx::Ptr<::jxx::lang::String>& key,
+    const ::jxx::Ptr<::jxx::lang::String>& value)
+{
+    validateValue_(value);
+    auto values = ::jxx::NEW<
+        ::jxx::util::ArrayList<::jxx::lang::String>>();
+    values->add(value);
+    JxxSuper::put(normalizeKey_(key), values);
+}
+
+::jxx::Ptr<::jxx::lang::String> Headers::getFirst(
+    const ::jxx::Ptr<::jxx::lang::String>& key)
+{
+    auto values = get(
+        ::jxx::CAST<::jxx::lang::Object>(key));
+    return values == nullptr || values->isEmpty()
+        ? nullptr
+        : values->get(0);
+}
+
+::jxx::lang::jbool Headers::containsKey(
+    const ::jxx::Ptr<::jxx::lang::Object>& key)
+{
+    auto normalized = normalizeObjectKey_(key);
+    return normalized != nullptr && JxxSuper::containsKey(
+        ::jxx::CAST<::jxx::lang::Object>(normalized));
+}
+
+::jxx::Ptr<Headers::ValueList> Headers::get(
+    const ::jxx::Ptr<::jxx::lang::Object>& key)
+{
+    auto normalized = normalizeObjectKey_(key);
+    if (normalized == nullptr) {
+        return nullptr;
+    }
+    return JxxSuper::get(
+        ::jxx::CAST<::jxx::lang::Object>(normalized));
+}
+
+::jxx::Ptr<Headers::ValueList> Headers::put(
+    const ::jxx::Ptr<::jxx::lang::String>& key,
+    const ::jxx::Ptr<ValueList>& value)
+{
+    validateList_(value);
+    return JxxSuper::put(normalizeKey_(key), value);
+}
+
+::jxx::Ptr<Headers::ValueList> Headers::remove(
+    const ::jxx::Ptr<::jxx::lang::Object>& key)
+{
+    auto normalized = normalizeObjectKey_(key);
+    if (normalized == nullptr) {
+        return nullptr;
+    }
+    return JxxSuper::remove(
+        ::jxx::CAST<::jxx::lang::Object>(normalized));
+}
+
+void Headers::putAll(
+    const ::jxx::Ptr<
+        ::jxx::util::Map<::jxx::lang::String, ValueList>>& source)
+{
+    if (source == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+
+    auto entries = source->entrySet()->iterator();
+    while (entries->hasNext()) {
+        auto entry = entries->next();
+        put(entry->getKey(), entry->getValue());
+    }
+}
+
+} // namespace jxx::com::sun::net::httpserver
