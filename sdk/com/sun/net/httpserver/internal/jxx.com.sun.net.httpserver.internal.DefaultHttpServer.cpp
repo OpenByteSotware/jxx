@@ -56,11 +56,26 @@ namespace jxx::com::sun::net::httpserver::internal
 	}
 	void DefaultHttpServer::start()
 	{
-		if (!address_)throw ::jxx::lang::IllegalStateException(); bool expected = false; if (!running_.compare_exchange_strong(expected, true))throw ::jxx::lang::IllegalStateException(); acceptThread_ = std::thread(&DefaultHttpServer::acceptLoop, this);
+		if (!address_ || stopped_)throw ::jxx::lang::IllegalStateException(); bool expected = false; if (!running_.compare_exchange_strong(expected, true))throw ::jxx::lang::IllegalStateException(); acceptThread_ = std::thread(&DefaultHttpServer::acceptLoop, this);
 	}
 	void DefaultHttpServer::stop(::jxx::lang::jint delay)
 	{
-		if (delay < 0)throw ::jxx::lang::IllegalArgumentException(); if (!running_.exchange(false))return; serverSocket_->close(); if (acceptThread_.joinable())acceptThread_.join(); if (delay > 0)std::this_thread::sleep_for(std::chrono::seconds(delay)); for (auto& t : workers_)if (t.joinable())t.join(); workers_.clear();
+		if (delay < 0) throw ::jxx::lang::IllegalArgumentException();
+		stopped_ = true;
+		const bool wasRunning = running_.exchange(false);
+		if (serverSocket_ != nullptr) serverSocket_->close();
+		if (wasRunning && acceptThread_.joinable()) acceptThread_.join();
+		const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(delay);
+		{
+			std::unique_lock<std::mutex> lock(activeMutex_);
+			if (delay > 0) activeCondition_.wait_until(lock, deadline, [this] { return activeConnections_.empty(); });
+		}
+		closeActiveConnections_();
+		{
+			std::lock_guard<std::mutex> lock(workersMutex_);
+			for (auto& worker : workers_) if (worker.joinable()) worker.join();
+			workers_.clear();
+		}
 	}
 	void DefaultHttpServer::setExecutor(const ::jxx::Ptr<::jxx::util::concurrent::Executor>& e)
 	{
@@ -94,6 +109,7 @@ namespace jxx::com::sun::net::httpserver::internal
 			try {
 				auto socket = serverSocket_->accept();
 				if (socket == nullptr) continue;
+				registerConnection_(socket);
 				if (executor_ != nullptr) {
 					auto task = ::jxx::NEW<ServerConnectionTask>(
 						[this, socket] { serve(socket); });
@@ -101,6 +117,7 @@ namespace jxx::com::sun::net::httpserver::internal
 						::jxx::CAST<::jxx::lang::Runnable>(task));
 				}
 				else {
+					std::lock_guard<std::mutex> lock(workersMutex_);
 					workers_.emplace_back(
 						&DefaultHttpServer::serve,
 						this,
@@ -114,7 +131,13 @@ namespace jxx::com::sun::net::httpserver::internal
 	}
 	void DefaultHttpServer::serve(const ::jxx::Ptr<::jxx::net::Socket>& socket)
 	{
-		if (!socket)return; try {
+		if (!socket) return;
+		struct ConnectionGuard {
+			DefaultHttpServer* server;
+			::jxx::Ptr<::jxx::net::Socket> socket;
+			~ConnectionGuard() { server->unregisterConnection_(socket); }
+		} guard{this, socket};
+		try {
 			auto in = socket->getInputStream(); std::vector<unsigned char>buffer; buffer.reserve(8192); Http11Parser parser; for (;;) {
 				ParsedRequest request; std::size_t used = 0;
 				std::string error; 
@@ -154,6 +177,30 @@ namespace jxx::com::sun::net::httpserver::internal
 		}
 		catch (...) {
 			simpleResponse(socket, 500, "Internal Server Error"); socket->close();
+		}
+	}
+	void DefaultHttpServer::registerConnection_(const ::jxx::Ptr<::jxx::net::Socket>& socket)
+	{
+		std::lock_guard<std::mutex> lock(activeMutex_);
+		activeConnections_[socket.get()] = socket;
+	}
+	void DefaultHttpServer::unregisterConnection_(const ::jxx::Ptr<::jxx::net::Socket>& socket)
+	{
+		{
+			std::lock_guard<std::mutex> lock(activeMutex_);
+			activeConnections_.erase(socket.get());
+		}
+		activeCondition_.notify_all();
+	}
+	void DefaultHttpServer::closeActiveConnections_()
+	{
+		std::vector<::jxx::Ptr<::jxx::net::Socket>> snapshot;
+		{
+			std::lock_guard<std::mutex> lock(activeMutex_);
+			for (const auto& entry : activeConnections_) snapshot.push_back(entry.second);
+		}
+		for (const auto& socket : snapshot) {
+			try { if (socket != nullptr) socket->close(); } catch (...) {}
 		}
 	}
 	::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>DefaultHttpServer::match(const std::string& p)
