@@ -46,22 +46,7 @@ namespace jxx::com::sun::net::httpserver::internal
 	DefaultHttpServer::DefaultHttpServer(const ::jxx::Ptr<::jxx::net::InetSocketAddress>& a, ::jxx::lang::jint b) :DefaultHttpServer()
 	{
 		bind(a, b);
-	}
-	void DefaultHttpServer::setPublicOwnerInternal(const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpServer>& owner)
-	{
-		if (!owner) throw ::jxx::lang::NullPointerException();
-		if (running_ || !contexts_.empty()) throw ::jxx::lang::IllegalStateException();
-		publicOwner_ = owner;
-	}
-	void DefaultHttpServer::installListenerInternal(const ::jxx::Ptr<::jxx::net::ServerSocket>& listener,const ::jxx::Ptr<::jxx::net::InetSocketAddress>& address,const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpsConfigurator>& configurator)
-	{
-		if (!listener || !address || !configurator) throw ::jxx::lang::NullPointerException();
-		if (running_) throw ::jxx::lang::IllegalStateException();
-		serverSocket_ = listener;
-		address_ = address;
-		httpsConfigurator_ = configurator;
-	}
- DefaultHttpServer::~DefaultHttpServer()
+	} DefaultHttpServer::~DefaultHttpServer()
 	{
 		stop(0);
 	}
@@ -86,7 +71,7 @@ namespace jxx::com::sun::net::httpserver::internal
 	}
 	::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>DefaultHttpServer::createContext(const ::jxx::Ptr<::jxx::lang::String>& p, const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpHandler>& h)
 	{
-		auto owner = publicOwner_ ? publicOwner_ : ::jxx::CAST<::jxx::com::sun::net::httpserver::HttpServer>(this->thisPtr()); auto c = ::jxx::NEW<DefaultHttpContext>(owner, p, h); std::lock_guard<std::mutex>lock(mutex_); for (auto& e : contexts_)if (e->getPath()->equals(p))throw ::jxx::lang::IllegalArgumentException(); contexts_.push_back(c); return c;
+		auto c = ::jxx::NEW<DefaultHttpContext>(::jxx::CAST<::jxx::com::sun::net::httpserver::HttpServer>(this->thisPtr()), p, h); std::lock_guard<std::mutex>lock(mutex_); for (auto& e : contexts_)if (e->getPath()->equals(p))throw ::jxx::lang::IllegalArgumentException(); contexts_.push_back(c); return c;
 	}
 	::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>DefaultHttpServer::createContext(const ::jxx::Ptr<::jxx::lang::String>& p)
 	{
