@@ -485,7 +485,6 @@ namespace jxx::net
     {
         if (!state_)
             return;
-
         internal::NativeSocket socket = internal::kInvalidSocket;
         {
             std::lock_guard<std::mutex> lock(state_->m);
@@ -497,7 +496,6 @@ namespace jxx::net
             socket = state_->socket;
             state_->socket = internal::kInvalidSocket;
         }
-
         if (socket != internal::kInvalidSocket)
         {
         #if defined(_WIN32)
