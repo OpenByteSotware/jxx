@@ -46,8 +46,27 @@ namespace jxx::com::sun::net::httpserver::internal
 	}
 	void DefaultHttpExchange::close()
 	{
-		if (closed_)return; closed_ = true; if (input_)input_->close(); if (output_)output_->close(); if (socket_)socket_->close();
-	}::jxx::Ptr<::jxx::io::InputStream>DefaultHttpExchange::getRequestBody()
+		if (closed_) return;
+		closed_ = true;
+		completeInternal();
+	}
+	void DefaultHttpExchange::completeInternal()
+	{
+		if (completed_) return;
+		try {
+			if (output_) output_->close();
+			else if (responseCode_ == -1) reusable_ = false;
+		}
+		catch (...) {
+			reusable_ = false;
+			completed_ = true;
+			throw;
+		}
+		if (input_) input_->close();
+		completed_ = true;
+	}
+	::jxx::lang::jbool DefaultHttpExchange::isCompletedInternal() const noexcept { return completed_; }
+	::jxx::lang::jbool DefaultHttpExchange::isConnectionReusableInternal() const noexcept { return completed_ && reusable_; }::jxx::Ptr<::jxx::io::InputStream>DefaultHttpExchange::getRequestBody()
 	{
 		return input_;
 	}::jxx::Ptr<::jxx::io::OutputStream>DefaultHttpExchange::getResponseBody()
