@@ -44,11 +44,15 @@ namespace jxx::net::internal
         if (len == 0)
             return 0;
 
-        std::lock_guard<std::mutex> lock(state_->m);
-        if (state_->closed || state_->inputShutdown || state_->socket == kInvalidSocket)
-            return -1;
+        NativeSocket socket = kInvalidSocket;
+        {
+            std::lock_guard<std::mutex> lock(state_->m);
+            if (state_->closed || state_->inputShutdown || state_->socket == kInvalidSocket)
+                return -1;
+            socket = state_->socket;
+        }
 
-        const auto rc = ::recv(state_->socket,
+        const auto rc = ::recv(socket,
                                reinterpret_cast<char*>(&(*b)[off]),
                                static_cast<int>(len),
                                0);
@@ -109,14 +113,18 @@ namespace jxx::net::internal
         if (len == 0)
             return;
 
-        std::lock_guard<std::mutex> lock(state_->m);
-        if (state_->closed || state_->outputShutdown || state_->socket == kInvalidSocket)
-            throwIOE_("socket closed for output");
+        NativeSocket socket = kInvalidSocket;
+        {
+            std::lock_guard<std::mutex> lock(state_->m);
+            if (state_->closed || state_->outputShutdown || state_->socket == kInvalidSocket)
+                throwIOE_("socket closed for output");
+            socket = state_->socket;
+        }
 
         ::jxx::lang::jint sent = 0;
         while (sent < len) {
             const auto rc = ::send(
-                state_->socket,
+                socket,
                 reinterpret_cast<const char*>(&(*b)[off + sent]),
                 static_cast<int>(len - sent),
                 0);

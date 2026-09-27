@@ -483,14 +483,29 @@ namespace jxx::net
 
     void Socket::close()
     {
-        if (!state_ || state_->closed)
+        if (!state_)
             return;
-        std::lock_guard<std::mutex> lock(state_->m);
-        if (!state_->closed)
+
+        internal::NativeSocket socket = internal::kInvalidSocket;
         {
-            internal::closeNativeSocket(state_->socket);
-            state_->socket = internal::kInvalidSocket;
+            std::lock_guard<std::mutex> lock(state_->m);
+            if (state_->closed)
+                return;
             state_->closed = true;
+            state_->inputShutdown = true;
+            state_->outputShutdown = true;
+            socket = state_->socket;
+            state_->socket = internal::kInvalidSocket;
+        }
+
+        if (socket != internal::kInvalidSocket)
+        {
+        #if defined(_WIN32)
+            ::shutdown(socket, SD_BOTH);
+        #else
+            ::shutdown(socket, SHUT_RDWR);
+        #endif
+            internal::closeNativeSocket(socket);
         }
     }
 
