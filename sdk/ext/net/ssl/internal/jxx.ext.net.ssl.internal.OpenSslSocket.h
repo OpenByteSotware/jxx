@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -111,6 +112,9 @@ private:
     ::jxx::Ptr<SSLSession> session_;
     ::jxx::lang::jbool handshakeInProgress_ = false;
     std::vector<::jxx::Ptr<HandshakeCompletedListener>> listeners_;
+    mutable std::mutex listenerMutex_;
+    mutable std::recursive_mutex tlsMutex_;
+    ::jxx::lang::jbool closed_ = false;
     std::vector<std::string> enabledCipherSuites_;
     std::vector<std::string> enabledProtocols_;
     ::jxx::lang::jbool client_ = true;
