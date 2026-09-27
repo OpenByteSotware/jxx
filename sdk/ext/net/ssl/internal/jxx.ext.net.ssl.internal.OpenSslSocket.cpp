@@ -240,12 +240,28 @@ void OpenSslSocket::startHandshake() {
             throw ::jxx::ext::net::ssl::SSLException("TLS transport connect failed");
         }
     }
-    const int handshakeResult = BIO_do_handshake(native_->connection);
-    if (handshakeResult <= 0) {
+    for (;;) {
+        const int handshakeResult =
+            BIO_do_handshake(native_->connection);
+        if (handshakeResult > 0) break;
+
         SSL* failedSsl = nullptr;
         BIO_get_ssl(native_->connection, &failedSsl);
+        const int error = failedSsl == nullptr
+            ? SSL_ERROR_SSL
+            : SSL_get_error(failedSsl, handshakeResult);
+
+        if (error == SSL_ERROR_WANT_READ ||
+            error == SSL_ERROR_WANT_WRITE)
+        {
+            continue;
+        }
+
         try {
-            throwTlsFailure(failedSsl, handshakeResult, "TLS handshake failed");
+            throwTlsFailure(
+                failedSsl,
+                handshakeResult,
+                "TLS handshake failed");
         } catch (const ::jxx::ext::net::ssl::SSLException&) {
             close();
             throw;
@@ -318,21 +334,46 @@ void OpenSslSocket::close() {
 int OpenSslSocket::tlsRead(unsigned char* data, int length) {
     std::lock_guard<std::recursive_mutex> tlsLock(tlsMutex_);
     startHandshake();
-    const int result = BIO_read(native_->connection, data, length);
-    if (result > 0) return result;
-    SSL* ssl = nullptr;
-    BIO_get_ssl(native_->connection, &ssl);
-    if (ssl != nullptr && SSL_get_error(ssl, result) == SSL_ERROR_ZERO_RETURN) return -1;
-    throwTlsFailure(ssl, result, "TLS read failed");
+    for (;;) {
+        const int result = BIO_read(native_->connection, data, length);
+        if (result > 0) return result;
+        SSL* ssl = nullptr;
+        BIO_get_ssl(native_->connection, &ssl);
+        const int error = ssl == nullptr
+            ? SSL_ERROR_SSL
+            : SSL_get_error(ssl, result);
+        if (error == SSL_ERROR_ZERO_RETURN) return -1;
+        if (error == SSL_ERROR_WANT_READ ||
+            error == SSL_ERROR_WANT_WRITE)
+            continue;
+        throwTlsFailure(ssl, result, "TLS read failed");
+    }
 }
+
 int OpenSslSocket::tlsWrite(const unsigned char* data, int length) {
     std::lock_guard<std::recursive_mutex> tlsLock(tlsMutex_);
     startHandshake();
-    const int result = BIO_write(native_->connection, data, length);
-    if (result > 0) return result;
-    SSL* ssl = nullptr;
-    BIO_get_ssl(native_->connection, &ssl);
-    throwTlsFailure(ssl, result, "TLS write failed");
+    int written = 0;
+    while (written < length) {
+        const int result = BIO_write(
+            native_->connection,
+            data + written,
+            length - written);
+        if (result > 0) {
+            written += result;
+            continue;
+        }
+        SSL* ssl = nullptr;
+        BIO_get_ssl(native_->connection, &ssl);
+        const int error = ssl == nullptr
+            ? SSL_ERROR_SSL
+            : SSL_get_error(ssl, result);
+        if (error == SSL_ERROR_WANT_READ ||
+            error == SSL_ERROR_WANT_WRITE)
+            continue;
+        throwTlsFailure(ssl, result, "TLS write failed");
+    }
+    return written;
 }
 ::jxx::Ptr<OpenSslSocket::StringArray> OpenSslSocket::getSupportedProtocols()const{return toArray({"TLSv1.2","TLSv1.3"});}
 ::jxx::Ptr<OpenSslSocket::StringArray> OpenSslSocket::getEnabledProtocols()const{return enabledProtocols_.empty()?getSupportedProtocols():toArray(enabledProtocols_);}
