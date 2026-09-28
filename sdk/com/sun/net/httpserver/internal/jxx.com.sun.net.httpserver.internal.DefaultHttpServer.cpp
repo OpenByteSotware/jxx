@@ -23,6 +23,7 @@
 #include "net/jxx.net.ServerSocket.h"
 #include "net/jxx.net.URI.h"
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_Array.h"
 #include "util/jxx.util.concurrent.RejectedExecutionException.h"
 namespace jxx::com::sun::net::httpserver::internal
@@ -33,6 +34,23 @@ namespace jxx::com::sun::net::httpserver::internal
 		{
 			auto a = ::jxx::NEW<::jxx::lang::ByteArrayType>((::jxx::lang::jint)s.size()); 
 			for (::jxx::lang::jint i = 0; i < a->length; ++i)(*a)[i] = (::jxx::lang::jbyte)s[(std::size_t)i]; out->write(a, 0, a->length); out->flush();
+		}
+		using TlsStringArray = ::jxx::ext::net::ssl::SSLSocket::StringArray;
+		bool containsTlsValue(const ::jxx::Ptr<TlsStringArray>& supported,const ::jxx::Ptr<::jxx::lang::String>& requested)
+		{
+			if (supported == nullptr || requested == nullptr) return false;
+			for (::jxx::lang::jint index = 0; index < supported->length; ++index) {
+				auto candidate = (*supported)[index];
+				if (candidate != nullptr && candidate->equals(requested)) return true;
+			}
+			return false;
+		}
+		void validateTlsValues(const ::jxx::Ptr<TlsStringArray>& requested,const ::jxx::Ptr<TlsStringArray>& supported)
+		{
+			if (requested == nullptr) return;
+			for (::jxx::lang::jint index = 0; index < requested->length; ++index) {
+				if (!containsTlsValue(supported, (*requested)[index])) throw ::jxx::lang::IllegalArgumentException();
+			}
 		}
 		void simpleResponse(const ::jxx::Ptr<::jxx::net::Socket>& s, int code, const char* reason)
 		{
@@ -223,20 +241,29 @@ namespace jxx::com::sun::net::httpserver::internal
 					httpsConfigurator_->configure(httpsParameters);
 					auto aggregate = httpsParameters->getAppliedSSLParameters();
 					if (aggregate != nullptr) {
+						validateTlsValues(aggregate->getCipherSuites(), sslSocket->getSupportedCipherSuites());
+						validateTlsValues(aggregate->getProtocols(), sslSocket->getSupportedProtocols());
 						sslSocket->setSSLParameters(aggregate);
 					}
 					else {
 						auto suites = httpsParameters->getCipherSuites();
+						validateTlsValues(suites, sslSocket->getSupportedCipherSuites());
 						if (suites != nullptr) sslSocket->setEnabledCipherSuites(suites);
 						auto protocols = httpsParameters->getProtocols();
+						validateTlsValues(protocols, sslSocket->getSupportedProtocols());
 						if (protocols != nullptr) sslSocket->setEnabledProtocols(protocols);
+						sslSocket->setNeedClientAuth(false);
+						sslSocket->setWantClientAuth(false);
 						if (httpsParameters->getNeedClientAuth()) sslSocket->setNeedClientAuth(true);
 						else if (httpsParameters->getWantClientAuth()) sslSocket->setWantClientAuth(true);
 					}
+					socket->setSoTimeout(tlsHandshakeTimeoutMillis_);
 					sslSocket->startHandshake();
 					handshakeComplete = true;
+					socket->setSoTimeout(0);
 				}
-				catch (const ::jxx::ext::net::ssl::SSLException&) {
+				catch (...) {
+					try { socket->setSoTimeout(0); } catch (...) {}
 					socket->close();
 					return;
 				}
