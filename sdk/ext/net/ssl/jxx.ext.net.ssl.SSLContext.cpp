@@ -100,6 +100,7 @@ SSLContext::SSLContext(
     if (defaultContext == nullptr) {
         defaultContext = getInstance(
             ::jxx::NEW<::jxx::lang::String>("TLS"));
+        defaultContext->init(nullptr, nullptr, nullptr);
     }
     return defaultContext;
 }

@@ -49,6 +49,9 @@ private:
     ::jxx::Ptr<OpenSslSessionContext> clientSessionContext_;
     ::jxx::Ptr<OpenSslSessionContext> serverSessionContext_;
     std::shared_ptr<OpenSslContextConfig> config_;
+    ::jxx::lang::jbool initialized_ = false;
+
+    void requireInitialized() const;
 };
 
 } // namespace jxx::ext::net::ssl::internal
