@@ -19,9 +19,12 @@ namespace jxx::com::sun::net::httpserver::internal
 	::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpHandler> DefaultHttpContext::getHandler()
 	{
 		return handler_;
-	} void DefaultHttpContext::setHandler(const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpHandler>& h)
+	}
+	void DefaultHttpContext::setHandler(const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpHandler>& h)
 	{
-		if (!h)throw ::jxx::lang::NullPointerException(); handler_ = h;
+		if (!h) throw ::jxx::lang::NullPointerException();
+		if (handler_) throw ::jxx::lang::IllegalArgumentException();
+		handler_ = h;
 	}
 	::jxx::Ptr<::jxx::lang::String>DefaultHttpContext::getPath()
 	{

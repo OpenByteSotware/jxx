@@ -4,6 +4,9 @@
 
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextSpi.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLContextSpi.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SSLPermission.h"
+#include "lang/jxx.lang.SecurityManager.h"
+#include "lang/jxx.lang.System.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "security/jxx.security.NoSuchAlgorithmException.h"
@@ -133,6 +136,17 @@ void SSLContext::setDefault(
     if (context == nullptr) {
         throw ::jxx::lang::NullPointerException();
     }
+
+    const auto securityManager =
+        ::jxx::lang::System::getSecurityManager();
+
+    if (securityManager != nullptr) {
+        securityManager->checkPermission(
+            ::jxx::NEW<SSLPermission>(
+                ::jxx::NEW<::jxx::lang::String>(
+                    "setDefaultSSLContext")));
+    }
+
     std::lock_guard<std::mutex> lock(defaultContextMutex);
     defaultContext = context;
 }
