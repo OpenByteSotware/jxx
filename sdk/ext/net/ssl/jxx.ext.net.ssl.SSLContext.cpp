@@ -22,13 +22,51 @@ void validateProtocol(
     if (protocol == nullptr) {
         throw ::jxx::lang::NullPointerException();
     }
+
     const auto value = protocol->utf8();
-    if (value != "TLS" && value != "TLSv1" &&
-        value != "TLSv1.2" && value != "TLSv1.3")
+    if (value.empty()) {
+        throw ::jxx::security::NoSuchAlgorithmException(
+            "SSLContext protocol is empty");
+    }
+
+    if (value != "TLS" &&
+        value != "TLSv1" &&
+        value != "TLSv1.2" &&
+        value != "TLSv1.3")
     {
         throw ::jxx::security::NoSuchAlgorithmException(
-            "Unsupported SSLContext protocol");
+            "OpenSSL provider does not implement the requested SSLContext protocol");
     }
+}
+
+void validateProviderName(
+    const ::jxx::Ptr<::jxx::lang::String>& provider)
+{
+    if (provider == nullptr || provider->utf8().empty()) {
+        throw ::jxx::lang::IllegalArgumentException();
+    }
+
+    if (provider->utf8() != "OpenSSL") {
+        throw ::jxx::security::NoSuchProviderException(
+            "SSLContext provider is not installed");
+    }
+}
+
+void validateProvider(
+    const ::jxx::Ptr<::jxx::security::Provider>& provider,
+    const ::jxx::Ptr<::jxx::lang::String>& protocol)
+{
+    if (provider == nullptr) {
+        throw ::jxx::lang::IllegalArgumentException();
+    }
+
+    const auto name = provider->getName();
+    if (name == nullptr || name->utf8() != "OpenSSL") {
+        throw ::jxx::security::NoSuchAlgorithmException(
+            "Provider does not implement the requested SSLContext protocol");
+    }
+
+    validateProtocol(protocol);
 }
 
 ::jxx::Ptr<::jxx::security::Provider> openSslProvider() {
@@ -66,29 +104,14 @@ SSLContext::SSLContext(
     const ::jxx::Ptr<::jxx::lang::String>& protocol,
     const ::jxx::Ptr<::jxx::lang::String>& provider) {
     validateProtocol(protocol);
-    if (provider == nullptr || provider->utf8().empty()) {
-        throw ::jxx::lang::IllegalArgumentException();
-    }
-    if (provider->utf8() != "OpenSSL") {
-        throw ::jxx::security::NoSuchProviderException(
-            "SSLContext provider is not installed");
-    }
+    validateProviderName(provider);
     return getInstance(protocol);
 }
 
 ::jxx::Ptr<SSLContext> SSLContext::getInstance(
     const ::jxx::Ptr<::jxx::lang::String>& protocol,
     const ::jxx::Ptr<::jxx::security::Provider>& provider) {
-    validateProtocol(protocol);
-    if (provider == nullptr) {
-        throw ::jxx::lang::IllegalArgumentException();
-    }
-    if (provider->getName() == nullptr ||
-        provider->getName()->utf8() != "OpenSSL")
-    {
-        throw ::jxx::security::NoSuchAlgorithmException(
-            "Provider does not implement the SSLContext protocol");
-    }
+    validateProvider(provider, protocol);
     return ::jxx::NEW<SSLContext>(
         ::jxx::NEW<internal::OpenSslContextSpi>(protocol),
         provider,
