@@ -90,24 +90,65 @@ namespace jxx::com::sun::net::httpserver::internal
 	}
 	void DefaultHttpServer::start()
 	{
-		if (!address_ || stopped_) throw ::jxx::lang::IllegalStateException();
+		std::lock_guard<std::mutex> shutdownLock(shutdownMutex_);
+		if (!address_ || stopped_ || shutdownInProgress_ || shutdownComplete_) throw ::jxx::lang::IllegalStateException();
 		bool expected = false;
 		if (!running_.compare_exchange_strong(expected, true)) throw ::jxx::lang::IllegalStateException();
 		taskLifetime_ = ::jxx::CAST<DefaultHttpServer>(this->thisPtr());
-		acceptThread_ = std::thread(&DefaultHttpServer::acceptLoop, this);
+		try {
+			acceptThread_ = std::thread(&DefaultHttpServer::acceptLoop, this);
+		}
+		catch (...) {
+			running_ = false;
+			taskLifetime_.reset();
+			throw;
+		}
 	}
 	void DefaultHttpServer::stop(::jxx::lang::jint delay)
 	{
 		if (delay < 0) throw ::jxx::lang::IllegalArgumentException();
-		stopped_ = true;
-		const bool wasRunning = running_.exchange(false);
-		if (serverSocket_) serverSocket_->close();
-		if (wasRunning && acceptThread_.joinable()) acceptThread_.join();
+		{
+			std::unique_lock<std::mutex> shutdownLock(shutdownMutex_);
+			if (shutdownComplete_) return;
+			if (shutdownInProgress_) {
+				shutdownCondition_.wait(shutdownLock, [this] { return shutdownComplete_; });
+				return;
+			}
+			shutdownInProgress_ = true;
+			stopped_ = true;
+		}
+
+		running_ = false;
+		try { if (serverSocket_) serverSocket_->close(); } catch (...) {}
+		if (acceptThread_.joinable()) {
+			if (acceptThread_.get_id() == std::this_thread::get_id()) acceptThread_.detach();
+			else acceptThread_.join();
+		}
+
 		const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(delay);
-		{ std::unique_lock<std::mutex> lock(activeMutex_); if (delay > 0) activeCondition_.wait_until(lock, deadline, [this] { return activeConnections_.empty(); }); }
+		{
+			std::unique_lock<std::mutex> lock(activeMutex_);
+			if (delay > 0) activeCondition_.wait_until(lock, deadline, [this] { return activeConnections_.empty(); });
+		}
 		closeActiveConnections_();
-		{ std::lock_guard<std::mutex> lock(workersMutex_); for (auto& worker : workers_) if (worker.joinable()) worker.join(); workers_.clear(); }
+
+		{
+			std::lock_guard<std::mutex> lock(workersMutex_);
+			for (auto& worker : workers_) {
+				if (!worker.joinable()) continue;
+				if (worker.get_id() == std::this_thread::get_id()) worker.detach();
+				else worker.join();
+			}
+			workers_.clear();
+		}
 		taskLifetime_.reset();
+
+		{
+			std::lock_guard<std::mutex> shutdownLock(shutdownMutex_);
+			shutdownInProgress_ = false;
+			shutdownComplete_ = true;
+		}
+		shutdownCondition_.notify_all();
 	}
 	void DefaultHttpServer::setExecutor(const ::jxx::Ptr<::jxx::util::concurrent::Executor>& e)
 	{
