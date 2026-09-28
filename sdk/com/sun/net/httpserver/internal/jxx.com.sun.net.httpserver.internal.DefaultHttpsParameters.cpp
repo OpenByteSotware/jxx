@@ -22,7 +22,7 @@ DefaultHttpsParameters::DefaultHttpsParameters(const ::jxx::Ptr<::jxx::net::Inet
 }
 void DefaultHttpsParameters::setSSLParameters(const ::jxx::Ptr<::jxx::ext::net::ssl::SSLParameters>& parameters)
 {
-    if (parameters == nullptr) throw ::jxx::lang::NullPointerException();
+    if (parameters == nullptr) return;
     parameters_ = copyParameters_(parameters);
     setCipherSuites(parameters_->getCipherSuites());
     setProtocols(parameters_->getProtocols());

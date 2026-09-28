@@ -1,3 +1,4 @@
+#include <exception>
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpExchange.h"
 #include "io/jxx.io.ByteArrayInputStream.h"
 #include "io/jxx.io.InputStream.h"
@@ -53,17 +54,24 @@ namespace jxx::com::sun::net::httpserver::internal
 	void DefaultHttpExchange::completeInternal()
 	{
 		if (completed_) return;
+		std::exception_ptr firstFailure;
 		try {
-			if (output_) output_->close();
+			if (output_ != nullptr) output_->close();
 			else if (responseCode_ == -1) reusable_ = false;
 		}
 		catch (...) {
 			reusable_ = false;
-			completed_ = true;
-			throw;
+			firstFailure = std::current_exception();
 		}
-		if (input_) input_->close();
+		try {
+			if (input_ != nullptr) input_->close();
+		}
+		catch (...) {
+			reusable_ = false;
+			if (!firstFailure) firstFailure = std::current_exception();
+		}
 		completed_ = true;
+		if (firstFailure) std::rethrow_exception(firstFailure);
 	}
 	::jxx::lang::jbool DefaultHttpExchange::isCompletedInternal() const noexcept { return completed_; }
 	::jxx::lang::jbool DefaultHttpExchange::isResponseCommittedInternal() const noexcept { return responseCode_ >= 0; }
