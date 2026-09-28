@@ -9,6 +9,6 @@ namespace jxx::com::sun::net::httpserver::internal
 	}
 	::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpsServer> DefaultHttpServerProvider::createHttpsServer(const ::jxx::Ptr<::jxx::net::InetSocketAddress>& a, ::jxx::lang::jint b)
 	{
-		return a ? ::jxx::CAST<::jxx::com::sun::net::httpserver::HttpsServer>(::jxx::NEW<DefaultHttpsServer>(a, b)): :: jxx::CAST<::jxx::com::sun::net::httpserver::HttpsServer>(::jxx::NEW<DefaultHttpsServer>());
+		return a ? ::jxx::CAST<::jxx::com::sun::net::httpserver::HttpsServer>(::jxx::NEW<DefaultHttpsServer>(a, b)): ::jxx::CAST<::jxx::com::sun::net::httpserver::HttpsServer>(::jxx::NEW<DefaultHttpsServer>());
 	}
 }
