@@ -2,6 +2,7 @@
 
 #include <openssl/evp.h>
 #include <openssl/x509.h>
+#include <openssl/x509v3.h>
 
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslX509Certificate.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslPublicKey.h"
@@ -49,6 +50,23 @@ primitiveSet(const ::jxx::Ptr<::jxx::security::CryptoPrimitive>& primitive) {
         ::jxx::util::HashSet<::jxx::security::CryptoPrimitive>>();
     result->add(primitive);
     return result;
+}
+
+::jxx::lang::jbool isCurrentlyValid(X509* certificate) {
+    return certificate != nullptr &&
+        X509_cmp_current_time(X509_get0_notBefore(certificate)) <= 0 &&
+        X509_cmp_current_time(X509_get0_notAfter(certificate)) >= 0;
+}
+
+::jxx::lang::jbool validatesIssuerLink(
+    X509* certificate,
+    X509* issuer) {
+    if (certificate == nullptr || issuer == nullptr) return false;
+    if (!isCurrentlyValid(certificate) || !isCurrentlyValid(issuer))
+        return false;
+    if (X509_check_issued(issuer, certificate) != X509_V_OK)
+        return false;
+    return X509_check_ca(issuer) > 0;
 }
 
 ::jxx::lang::jbool permitsCertificateSignature(
@@ -329,6 +347,7 @@ int OpenSslManagerBridge::selectServerIdentity(SSL* ssl) noexcept {
         const unsigned char* keyCursor = reinterpret_cast<const unsigned char*>(&(*keyBytes)[0]);
         EVP_PKEY* decodedKey = d2i_AutoPrivateKey(nullptr, &keyCursor, keyBytes->length);
         if (leaf == nullptr || decodedKey == nullptr ||
+            !isCurrentlyValid(leaf) ||
             !permitsLocalIdentity(algorithmConstraints_, leaf, key) ||
             SSL_use_certificate(ssl, leaf) != 1 ||
             SSL_use_PrivateKey(ssl, decodedKey) != 1 ||
@@ -339,16 +358,19 @@ int OpenSslManagerBridge::selectServerIdentity(SSL* ssl) noexcept {
         }
         X509_free(leaf);
         EVP_PKEY_free(decodedKey);
+        X509* previousCertificate = leaf;
         for (::jxx::lang::jint index = 1; index < chain->length; ++index) {
             const auto bytes = (*chain)[index]->getEncoded();
             const unsigned char* cursor = reinterpret_cast<const unsigned char*>(&(*bytes)[0]);
             X509* extra = d2i_X509(nullptr, &cursor, bytes->length);
             if (extra == nullptr ||
+                !validatesIssuerLink(previousCertificate, extra) ||
                 !permitsCertificateSignature(algorithmConstraints_, extra) ||
                 SSL_add1_chain_cert(ssl, extra) != 1) {
                 if (extra != nullptr) X509_free(extra);
                 return 0;
             }
+            previousCertificate = extra;
             X509_free(extra);
         }
         return 1;
@@ -390,18 +412,21 @@ int OpenSslManagerBridge::selectClientCertificate(
             reinterpret_cast<const unsigned char*>(&(*keyBytes)[0]);
         EVP_PKEY* decodedKey = d2i_AutoPrivateKey(nullptr, &keyCursor, keyBytes->length);
         if (leaf == nullptr || decodedKey == nullptr ||
+            !isCurrentlyValid(leaf) ||
             !permitsLocalIdentity(algorithmConstraints_, leaf, key)) {
             if (leaf != nullptr) X509_free(leaf);
             if (decodedKey != nullptr) EVP_PKEY_free(decodedKey);
             return 0;
         }
 
+        X509* previousCertificate = leaf;
         for (::jxx::lang::jint index = 1; index < chain->length; ++index) {
             const auto bytes = (*chain)[index]->getEncoded();
             const unsigned char* cursor =
                 reinterpret_cast<const unsigned char*>(&(*bytes)[0]);
             X509* extra = d2i_X509(nullptr, &cursor, bytes->length);
             if (extra == nullptr ||
+                !validatesIssuerLink(previousCertificate, extra) ||
                 !permitsCertificateSignature(algorithmConstraints_, extra) ||
                 SSL_add1_chain_cert(ssl, extra) != 1) {
                 if (extra != nullptr) X509_free(extra);
@@ -409,6 +434,7 @@ int OpenSslManagerBridge::selectClientCertificate(
                 EVP_PKEY_free(decodedKey);
                 return 0;
             }
+            previousCertificate = extra;
             X509_free(extra);
         }
         *certificate = leaf;
