@@ -17,30 +17,58 @@ bool decodeBase64(const std::string& text, std::string& output)
     std::array<int, 256> values{};
     values.fill(-1);
     for (std::size_t index = 0; index < alphabet.size(); ++index) {
-        values[static_cast<unsigned char>(alphabet[index])] =
-            static_cast<int>(index);
+        values[static_cast<unsigned char>(alphabet[index])] = static_cast<int>(index);
     }
 
     output.clear();
-    int accumulator = 0;
-    int bits = -8;
-    for (unsigned char character : text) {
-        if (character == '=') {
-            break;
-        }
-        const int value = values[character];
-        if (value < 0) {
-            return false;
-        }
-        accumulator = (accumulator << 6) | value;
-        bits += 6;
-        if (bits >= 0) {
-            output.push_back(
-                static_cast<char>((accumulator >> bits) & 0xff));
-            bits -= 8;
-        }
+    if (text.empty() || (text.size() % 4U) != 0U) return false;
+
+    const auto firstPadding = text.find('=');
+    const auto payloadLength = firstPadding == std::string::npos ? text.size() : firstPadding;
+    const auto paddingLength = text.size() - payloadLength;
+    if (paddingLength > 2U) return false;
+    for (std::size_t index = payloadLength; index < text.size(); ++index) {
+        if (text[index] != '=') return false;
+    }
+    if (paddingLength == 1U && (payloadLength % 4U) != 3U) return false;
+    if (paddingLength == 2U && (payloadLength % 4U) != 2U) return false;
+    if (paddingLength == 0U && (payloadLength % 4U) != 0U) return false;
+
+    for (std::size_t block = 0; block < text.size(); block += 4U) {
+        const bool finalBlock = block + 4U == text.size();
+        const unsigned char first = static_cast<unsigned char>(text[block]);
+        const unsigned char second = static_cast<unsigned char>(text[block + 1U]);
+        const unsigned char third = static_cast<unsigned char>(text[block + 2U]);
+        const unsigned char fourth = static_cast<unsigned char>(text[block + 3U]);
+        if (values[first] < 0 || values[second] < 0) return false;
+        if (third == '=' && (!finalBlock || fourth != '=')) return false;
+        if (fourth == '=' && !finalBlock) return false;
+        if (third != '=' && values[third] < 0) return false;
+        if (fourth != '=' && values[fourth] < 0) return false;
+
+        const unsigned int value =
+            (static_cast<unsigned int>(values[first]) << 18U) |
+            (static_cast<unsigned int>(values[second]) << 12U) |
+            (third == '=' ? 0U : static_cast<unsigned int>(values[third]) << 6U) |
+            (fourth == '=' ? 0U : static_cast<unsigned int>(values[fourth]));
+        output.push_back(static_cast<char>((value >> 16U) & 0xffU));
+        if (third != '=') output.push_back(static_cast<char>((value >> 8U) & 0xffU));
+        if (fourth != '=') output.push_back(static_cast<char>(value & 0xffU));
     }
     return true;
+}
+
+std::string quotedRealm(const std::string& realm)
+{
+    std::string output;
+    output.reserve(realm.size() + 2U);
+    output.push_back('"');
+    for (const auto character : realm) {
+        if (character == '"' || character == '\\') output.push_back('\\');
+        output.push_back(character);
+    }
+    output.push_back('"');
+    return output;
 }
 
 } // namespace
@@ -72,7 +100,7 @@ BasicAuthenticator::authenticate(
         ::jxx::NEW<::jxx::lang::String>("Authorization"));
 
     const std::string challenge =
-        "Basic realm=\"" + realm_->utf8() + "\"";
+        "Basic realm=" + quotedRealm(realm_->utf8());
 
     if (authorization == nullptr) {
         exchange->getResponseHeaders()->set(
