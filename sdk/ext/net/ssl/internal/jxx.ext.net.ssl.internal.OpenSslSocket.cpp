@@ -26,6 +26,7 @@
 #include "net/internal/jxx.net.internal.NetPlatform.h"
 
 #include <algorithm>
+#include <thread>
 #include <string>
 #include <vector>
 #include <openssl/bio.h>
@@ -314,8 +315,20 @@ void OpenSslSocket::startHandshake() {
         std::lock_guard<std::mutex> listenerLock(listenerMutex_);
         listeners = listeners_;
     }
-    for (const auto& listener : listeners) {
-        if (listener != nullptr) listener->handshakeCompleted(event);
+    if (!listeners.empty()) {
+        std::thread notificationThread(
+            [listeners, event]() {
+                for (const auto& listener : listeners) {
+                    if (listener == nullptr) continue;
+                    try {
+                        listener->handshakeCompleted(event);
+                    } catch (...) {
+                        // Listener failures must not invalidate a completed
+                        // TLS handshake or suppress remaining notifications.
+                    }
+                }
+            });
+        notificationThread.detach();
     }
 }
 
