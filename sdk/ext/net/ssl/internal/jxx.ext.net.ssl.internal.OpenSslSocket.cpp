@@ -4,6 +4,7 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocket.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocketNative.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslManagerBridge.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslProtocolPolicy.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSession.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSessionContext.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslServerSessionCache.h"
@@ -135,7 +136,10 @@ void OpenSslSocket::startHandshake() {
         throw ::jxx::lang::IllegalStateException("SSL socket is not connected");
     native_->context = SSL_CTX_new(client_ ? TLS_client_method() : TLS_server_method());
     if (native_->context == nullptr) throw ::jxx::io::IOException("SSL_CTX_new failed");
-    int minv = TLS1_2_VERSION, maxv = TLS1_3_VERSION;
+    const auto configuredRange = protocolRange(
+        config_ == nullptr ? nullptr : config_->protocol);
+    int minv = configuredRange.first;
+    int maxv = configuredRange.second;
     if (!enabledProtocols_.empty()) {
         bool v12 = false, v13 = false;
         for (const auto& p : enabledProtocols_) {

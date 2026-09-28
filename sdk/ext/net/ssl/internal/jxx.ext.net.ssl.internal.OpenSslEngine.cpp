@@ -8,6 +8,7 @@
 #include <openssl/ssl.h>
 
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslProtocolPolicy.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslCipherSuites.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslManagerBridge.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSession.h"
@@ -78,8 +79,10 @@ void OpenSslEngine::ensureInitialized() {
     if (context_ == nullptr)
         throw ::jxx::ext::net::ssl::SSLProtocolException(
             "SSL_CTX_new failed");
-    if (SSL_CTX_set_min_proto_version(context_, TLS1_2_VERSION) != 1 ||
-        SSL_CTX_set_max_proto_version(context_, TLS1_3_VERSION) != 1)
+    const auto configuredRange = protocolRange(
+        config_ == nullptr ? nullptr : config_->protocol);
+    if (SSL_CTX_set_min_proto_version(context_, configuredRange.first) != 1 ||
+        SSL_CTX_set_max_proto_version(context_, configuredRange.second) != 1)
         throw ::jxx::ext::net::ssl::SSLProtocolException(
             "could not configure TLS protocol range");
 
@@ -477,7 +480,8 @@ std::vector<std::string> OpenSslEngine::toVector(
 
 ::jxx::Ptr<OpenSslEngine::StringArray>
 OpenSslEngine::getSupportedProtocols() const {
-    return toArray({"TLSv1.2", "TLSv1.3"});
+    return contextProtocols(
+        config_ == nullptr ? nullptr : config_->protocol);
 }
 
 ::jxx::Ptr<OpenSslEngine::StringArray>
