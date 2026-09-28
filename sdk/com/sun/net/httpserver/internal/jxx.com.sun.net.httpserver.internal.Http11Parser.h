@@ -15,6 +15,10 @@ struct ParsedRequest {
     std::vector<std::pair<std::string, std::string>> headers;
     std::vector<std::pair<std::string, std::string>> trailers;
     std::vector<unsigned char> body;
+    std::size_t headerBytes = 0;
+    std::size_t contentLength = 0;
+    bool contentLengthPresent = false;
+    bool chunked = false;
     bool keepAlive = false;
 };
 
@@ -28,6 +32,13 @@ public:
     };
 
     Result parse(
+        const unsigned char* data,
+        std::size_t size,
+        ParsedRequest& output,
+        std::size_t& consumed,
+        std::string& error) const;
+
+    Result parseHead(
         const unsigned char* data,
         std::size_t size,
         ParsedRequest& output,

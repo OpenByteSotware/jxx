@@ -343,4 +343,32 @@ Http11Parser::Result Http11Parser::parse(
     return Result::Complete;
 }
 
+
+Http11Parser::Result Http11Parser::parseHead(
+    const unsigned char* data,
+    std::size_t size,
+    ParsedRequest& output,
+    std::size_t& consumed,
+    std::string& error) const
+{
+    consumed = 0;
+    const std::string source(reinterpret_cast<const char*>(data), size);
+    const auto headersEnd = source.find("\r\n\r\n");
+    if (headersEnd == std::string::npos) {
+        output = ParsedRequest{};
+        return Result::NeedMore;
+    }
+
+    const auto result = parse(data, size, output, consumed, error);
+    if (result == Result::Error) return result;
+
+    // parse() has completed all request-line, header, Host, framing, and
+    // persistence validation before it waits for body bytes.
+    output.headerBytes = headersEnd + 4U;
+    output.body.clear();
+    output.trailers.clear();
+    consumed = output.headerBytes;
+    return Result::Complete;
+}
+
 } // namespace jxx::com::sun::net::httpserver::internal
