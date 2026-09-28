@@ -10,6 +10,10 @@
 #include "net/jxx.net.InetSocketAddress.h"
 #include "net/jxx.net.Socket.h"
 #include "net/jxx.net.URI.h"
+#include <chrono>
+#include <ctime>
+#include <iomanip>
+#include <sstream>
 namespace {
 std::string reasonPhrase_(::jxx::lang::jint code)
 {
@@ -56,6 +60,22 @@ std::string reasonPhrase_(::jxx::lang::jint code)
     case 505: return "HTTP Version Not Supported";
     default: return "";
     }
+}
+
+std::string currentHttpDate_()
+{
+    const auto now = std::chrono::system_clock::now();
+    const auto current = std::chrono::system_clock::to_time_t(now);
+    std::tm utc{};
+#if defined(_WIN32)
+    if (gmtime_s(&utc, &current) != 0) return {};
+#else
+    if (gmtime_r(&current, &utc) == nullptr) return {};
+#endif
+    std::ostringstream output;
+    output.imbue(std::locale::classic());
+    output << std::put_time(&utc, "%a, %d %b %Y %H:%M:%S GMT");
+    return output.str();
 }
 
 bool containsConnectionToken_(const ::jxx::Ptr<::jxx::lang::String>& value,const std::string& requested)
@@ -168,6 +188,11 @@ namespace jxx::com::sun::net::httpserver::internal
 			requestKeepAlive = containsConnectionToken_(requestConnection, "keep-alive") && !containsConnectionToken_(requestConnection, "close");
 		}
 		responseHeaders_->remove(::jxx::NEW<::jxx::lang::String>("connection"));
+		auto dateKey = ::jxx::NEW<::jxx::lang::String>("date");
+		if (responseHeaders_->getFirst(dateKey) == nullptr) {
+			const auto dateValue = currentHttpDate_();
+			if (!dateValue.empty()) responseHeaders_->set(dateKey, ::jxx::NEW<::jxx::lang::String>(dateValue.c_str()));
+		}
 
 		const std::string responseProtocol = http10 ? "HTTP/1.0" : "HTTP/1.1";
 		std::string message = responseProtocol + " " + std::to_string(code) + " " + reasonPhrase_(code) + "\r\n";
