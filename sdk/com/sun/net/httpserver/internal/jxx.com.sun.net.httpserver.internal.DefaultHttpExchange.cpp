@@ -1,6 +1,6 @@
 #include <exception>
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpExchange.h"
-#include "io/jxx.io.ByteArrayInputStream.h"
+#include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.RequestBodyInputStream.h"
 #include "io/jxx.io.InputStream.h"
 #include "io/jxx.io.OutputStream.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.ResponseBodyOutputStream.h"
@@ -102,7 +102,7 @@ bool containsConnectionToken_(const ::jxx::Ptr<::jxx::lang::String>& value,const
 
 namespace jxx::com::sun::net::httpserver::internal
 {
-	DefaultHttpExchange::DefaultHttpExchange(const ::jxx::Ptr<::jxx::net::Socket>& s, const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>& c, const ::jxx::Ptr<::jxx::lang::String>& m, const ::jxx::Ptr<::jxx::net::URI>& u, const ::jxx::Ptr<::jxx::lang::String>& p, const ::jxx::Ptr<::jxx::com::sun::net::httpserver::Headers>& h, const ::jxx::lang::ByteArray& b) :Super(), socket_(s), context_(c), method_(m), protocol_(p), uri_(u), requestHeaders_(h), responseHeaders_(::jxx::NEW<::jxx::com::sun::net::httpserver::Headers>()), input_(::jxx::NEW<::jxx::io::ByteArrayInputStream>(b)), attributes_(::jxx::NEW<::jxx::util::HashMap<::jxx::lang::String, ::jxx::lang::Object>>())
+	DefaultHttpExchange::DefaultHttpExchange(const ::jxx::Ptr<::jxx::net::Socket>& s, const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>& c, const ::jxx::Ptr<::jxx::lang::String>& m, const ::jxx::Ptr<::jxx::net::URI>& u, const ::jxx::Ptr<::jxx::lang::String>& p, const ::jxx::Ptr<::jxx::com::sun::net::httpserver::Headers>& h, const ::jxx::lang::ByteArray& b) :Super(), socket_(s), context_(c), method_(m), protocol_(p), uri_(u), requestHeaders_(h), responseHeaders_(::jxx::NEW<::jxx::com::sun::net::httpserver::Headers>()), input_(::jxx::NEW<RequestBodyInputStream>(b)), attributes_(::jxx::NEW<::jxx::util::HashMap<::jxx::lang::String, ::jxx::lang::Object>>())
 	{
 		if (!s || !c || !m || !u || !p || !h)throw ::jxx::lang::NullPointerException();
 	}
@@ -140,6 +140,8 @@ namespace jxx::com::sun::net::httpserver::internal
 			reusable_ = false;
 			firstFailure = std::current_exception();
 		}
+		auto requestBody = ::jxx::CAST<RequestBodyInputStream>(input_);
+		if (requestBody != nullptr && !requestBody->isFullyConsumedInternal()) reusable_ = false;
 		try {
 			if (input_ != nullptr) input_->close();
 		}
