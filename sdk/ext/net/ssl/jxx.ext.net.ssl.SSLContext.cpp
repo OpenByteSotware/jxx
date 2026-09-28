@@ -34,6 +34,7 @@ void validateProtocol(
 
     if (value != "TLS" &&
         value != "TLSv1" &&
+        value != "TLSv1.1" &&
         value != "TLSv1.2" &&
         value != "TLSv1.3")
     {
