@@ -133,19 +133,20 @@ OpenSslSocketFactory::createSocket(
                 1U>>(bufferSize);
 
         for (;;) {
+            const auto available = consumed->available();
+            if (available <= 0) break;
+
+            const auto requested =
+                available < buffer->length
+                    ? available
+                    : buffer->length;
             const auto count = consumed->read(
                 buffer,
                 0,
-                buffer->length);
+                requested);
 
             if (count < 0) break;
-            if (count == 0) {
-                const auto single = consumed->read();
-                if (single < 0) break;
-                alreadyConsumed.push_back(
-                    static_cast<unsigned char>(single));
-                continue;
-            }
+            if (count == 0) break;
 
             alreadyConsumed.reserve(
                 alreadyConsumed.size() +
