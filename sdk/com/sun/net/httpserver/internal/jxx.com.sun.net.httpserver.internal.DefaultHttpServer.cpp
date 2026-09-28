@@ -4,8 +4,6 @@
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpContext.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpExchange.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpsExchange.h"
-#include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.Authenticator.h"
-#include "util/jxx.util.ArrayList.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpsParameters.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.HttpsConfigurator.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLParameters.h"
@@ -53,6 +51,53 @@ namespace jxx::com::sun::net::httpserver::internal
 			for (::jxx::lang::jint index = 0; index < requested->length; ++index) {
 				if (!containsTlsValue(supported, (*requested)[index])) throw ::jxx::lang::IllegalArgumentException();
 			}
+		}
+		enum class ExpectDecision { Incomplete, None, Continue, Unsupported };
+		std::string lowerExpectationText(std::string value)
+		{
+			for (auto& character : value) if (character >= 'A' && character <= 'Z') character = static_cast<char>(character - 'A' + 'a');
+			return value;
+		}
+		std::string trimExpectationText(const std::string& value)
+		{
+			std::size_t first = 0;
+			while (first < value.size() && (value[first] == ' ' || value[first] == '\t')) ++first;
+			std::size_t last = value.size();
+			while (last > first && (value[last - 1] == ' ' || value[last - 1] == '\t')) --last;
+			return value.substr(first, last - first);
+		}
+		ExpectDecision inspectExpectation(const std::vector<unsigned char>& buffer)
+		{
+			if (buffer.empty()) return ExpectDecision::Incomplete;
+			const std::string source(buffer.begin(), buffer.end());
+			const auto headerEnd = source.find("\r\n\r\n");
+			if (headerEnd == std::string::npos) return ExpectDecision::Incomplete;
+			const auto requestLineEnd = source.find("\r\n");
+			if (requestLineEnd == std::string::npos || requestLineEnd > headerEnd) return ExpectDecision::Unsupported;
+			const auto requestLine = source.substr(0, requestLineEnd);
+			const bool http11 = requestLine.size() >= 8U && requestLine.compare(requestLine.size() - 8U, 8U, "HTTP/1.1") == 0;
+			bool found = false;
+			bool continueOnly = true;
+			std::size_t position = requestLineEnd + 2U;
+			while (position < headerEnd) {
+				const auto lineEnd = source.find("\r\n", position);
+				if (lineEnd == std::string::npos || lineEnd > headerEnd) return ExpectDecision::Unsupported;
+				const auto colon = source.find(':', position);
+				if (colon != std::string::npos && colon < lineEnd && lowerExpectationText(source.substr(position, colon - position)) == "expect") {
+					found = true;
+					std::size_t item = colon + 1U;
+					while (item <= lineEnd) {
+						const auto comma = source.find(',', item);
+						const auto tokenEnd = comma == std::string::npos || comma > lineEnd ? lineEnd : comma;
+						if (lowerExpectationText(trimExpectationText(source.substr(item, tokenEnd - item))) != "100-continue") continueOnly = false;
+						if (tokenEnd == lineEnd) break;
+						item = tokenEnd + 1U;
+					}
+				}
+				position = lineEnd + 2U;
+			}
+			if (!found) return ExpectDecision::None;
+			return http11 && continueOnly ? ExpectDecision::Continue : ExpectDecision::Unsupported;
 		}
 		void simpleResponse(const ::jxx::Ptr<::jxx::net::Socket>& s, int code, const char* reason)
 		{
@@ -232,7 +277,6 @@ namespace jxx::com::sun::net::httpserver::internal
 		bool secureTransport = false;
 		bool handshakeComplete = false;
 		bool httpRequestParsed = false;
-		::jxx::Ptr<DefaultHttpExchange> currentExchange;
 		try {
 			auto sslSocket = ::jxx::CAST<::jxx::ext::net::ssl::SSLSocket>(socket);
 			secureTransport = sslSocket != nullptr;
@@ -271,25 +315,32 @@ namespace jxx::com::sun::net::httpserver::internal
 					return;
 				}
 			}
-			auto in = socket->getInputStream(); std::vector<unsigned char>buffer; buffer.reserve(8192); Http11Parser parser; for (;;) {
+			auto in = socket->getInputStream(); std::vector<unsigned char>buffer; buffer.reserve(8192); Http11Parser parser; bool expectationProcessed = false; for (;;) {
 				ParsedRequest request; std::size_t used = 0;
 				std::string error; 
 				auto result = parser.parse(buffer.data(), buffer.size(), request, used, error); 
 				if (result == Http11Parser::Result::NeedMore) {
+					if (!expectationProcessed) {
+						const auto expectation = inspectExpectation(buffer);
+						if (expectation == ExpectDecision::Continue) {
+							writeAscii(socket->getOutputStream(), "HTTP/1.1 100 Continue\r\n\r\n");
+							expectationProcessed = true;
+						}
+						else if (expectation == ExpectDecision::Unsupported) {
+							simpleResponse(socket, 417, "Expectation Failed"); socket->close(); return;
+						}
+						else if (expectation == ExpectDecision::None) expectationProcessed = true;
+					}
 					auto chunk = ::jxx::NEW<::jxx::lang::ByteArrayType>(4096);
 					auto n = in->read(chunk, 0, chunk->length); if (n < 0) {
 						socket->close(); return;
 					}for (::jxx::lang::jint i = 0; i < n; ++i)buffer.push_back((unsigned char)(*chunk)[i]); if (buffer.size() > 1048576) {
 						simpleResponse(socket, 413, "Payload Too Large"); socket->close(); return;
 					}continue;
-				}
-				if (result == Http11Parser::Result::Error) {
-					simpleResponse(socket, 400, "Bad Request");
-					socket->close();
-					return;
-				}
+				}if (result == Http11Parser::Result::Error) {
+					simpleResponse(socket, 400, "Bad Request"); socket->close(); return;
 				httpRequestParsed = true;
-				auto uri = ::jxx::NEW<::jxx::net::URI>(::jxx::NEW<::jxx::lang::String>(request.target.c_str())); auto path = uri->getRawPath(); auto context = match(path ? path->utf8() : std::string("/")); if (!context || !context->getHandler()) {
+				}auto uri = ::jxx::NEW<::jxx::net::URI>(::jxx::NEW<::jxx::lang::String>(request.target.c_str())); auto path = uri->getRawPath(); auto context = match(path ? path->utf8() : std::string("/")); if (!context || !context->getHandler()) {
 					simpleResponse(socket, 404, "Not Found"); socket->close(); return;
 				}auto headers = ::jxx::NEW<::jxx::com::sun::net::httpserver::Headers>();
 				for (const auto& h : request.headers)
@@ -301,46 +352,24 @@ namespace jxx::com::sun::net::httpserver::internal
 				headers->freezeInternal(); 
 				auto body = ::jxx::NEW<::jxx::lang::ByteArrayType>((::jxx::lang::jint)
 					request.body.size()); for (::jxx::lang::jint i = 0; i < body->length; ++i)(*body)[i] = (::jxx::lang::jbyte)request.body[(std::size_t)i]; auto httpExchange = ::jxx::NEW<DefaultHttpExchange>(socket, context, ::jxx::NEW<::jxx::lang::String>(request.method.c_str()), uri, ::jxx::NEW<::jxx::lang::String>(request.version.c_str()), headers, body);
-				currentExchange = httpExchange;
 				::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpExchange> exchange = httpExchange;
 				if (sslSocket != nullptr) {
 					auto session = sslSocket->getSession();
 					exchange = ::jxx::NEW<DefaultHttpsExchange>(httpExchange, session);
 				}
-				auto authenticator = context->getAuthenticator();
-				if (authenticator != nullptr) {
-					auto authentication = authenticator->authenticate(exchange);
-					if (authentication == nullptr) throw ::jxx::lang::NullPointerException();
-					auto success = ::jxx::CAST<::jxx::com::sun::net::httpserver::Authenticator::Success>(authentication);
-					if (success != nullptr) {
-						httpExchange->setPrincipalInternal(success->getPrincipal());
-					}
-					else {
-						auto failure = ::jxx::CAST<::jxx::com::sun::net::httpserver::Authenticator::Failure>(authentication);
-						auto retry = ::jxx::CAST<::jxx::com::sun::net::httpserver::Authenticator::Retry>(authentication);
-						const ::jxx::lang::jint responseCode = failure != nullptr ? failure->getResponseCode() : (retry != nullptr ? retry->getResponseCode() : 500);
-						exchange->sendResponseHeaders(responseCode, -1);
-						httpExchange->completeInternal();
-						socket->close();
-						return;
-					}
-				}
-				auto filterSnapshot = ::jxx::NEW<::jxx::util::ArrayList<::jxx::com::sun::net::httpserver::Filter>>();
-				auto liveFilters = context->getFilters();
-				for (::jxx::lang::jint filterIndex = 0; filterIndex < liveFilters->size(); ++filterIndex) filterSnapshot->add(liveFilters->get(filterIndex));
 				auto chain = ::jxx::NEW<::jxx::com::sun::net::httpserver::Filter::Chain>(
-					::jxx::CAST<::jxx::util::List<::jxx::com::sun::net::httpserver::Filter>>(filterSnapshot), context->getHandler());
+					context->getFilters(), context->getHandler());
 				chain->doFilter(exchange);
 				if (exchange->getResponseCode() < 0) exchange->sendResponseHeaders(200, -1);
 				httpExchange->completeInternal();
 				buffer.erase(buffer.begin(), buffer.begin() + (std::ptrdiff_t)used);
+				expectationProcessed = false;
 				if (!request.keepAlive || !httpExchange->isConnectionReusableInternal()) { socket->close(); return; }
 				if (buffer.empty()) continue;
 			}
 		}
 		catch (...) {
-			const bool responseCommitted = currentExchange != nullptr && currentExchange->isResponseCommittedInternal();
-			if (httpRequestParsed && !responseCommitted && (!secureTransport || handshakeComplete)) {
+			if (httpRequestParsed && (!secureTransport || handshakeComplete)) {
 				try { simpleResponse(socket, 500, "Internal Server Error"); } catch (...) {}
 			}
 			socket->close();
