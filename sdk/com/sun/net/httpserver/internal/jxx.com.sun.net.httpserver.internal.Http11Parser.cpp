@@ -228,6 +228,15 @@ Http11Parser::Result Http11Parser::parse(
     output.method = source.substr(0, firstSpace);
     output.target = source.substr(firstSpace + 1, secondSpace - firstSpace - 1);
     output.version = source.substr(secondSpace + 1, requestLineEnd - secondSpace - 1);
+    if (output.method.empty() || !std::all_of(output.method.begin(), output.method.end(),
+            [](unsigned char character) { return isTokenCharacter(character); })) {
+        error = "invalid request method";
+        return Result::Error;
+    }
+    if (output.target.empty()) {
+        error = "empty request target";
+        return Result::Error;
+    }
     if (output.version != "HTTP/1.0" && output.version != "HTTP/1.1") {
         error = "unsupported HTTP version";
         return Result::Error;
@@ -244,6 +253,27 @@ Http11Parser::Result Http11Parser::parse(
         }
         output.headers.push_back(std::move(header));
         position = lineEnd + 2;
+    }
+
+    std::size_t hostCount = 0;
+    bool hostValueValid = true;
+    for (const auto& header : output.headers) {
+        if (lower(header.first) != "host") continue;
+        ++hostCount;
+        const auto hostValue = trim(header.second);
+        if (hostValue.empty() || std::any_of(hostValue.begin(), hostValue.end(), [](unsigned char character) {
+                return character <= 0x20U || character == 0x7fU;
+            })) {
+            hostValueValid = false;
+        }
+    }
+    if (output.version == "HTTP/1.1" && hostCount != 1U) {
+        error = hostCount == 0U ? "missing host header" : "multiple host headers";
+        return Result::Error;
+    }
+    if (hostCount > 0U && !hostValueValid) {
+        error = "invalid host header";
+        return Result::Error;
     }
 
     std::size_t contentLength = 0;
