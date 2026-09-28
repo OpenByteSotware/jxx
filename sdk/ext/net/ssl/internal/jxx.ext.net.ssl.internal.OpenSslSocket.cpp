@@ -1,6 +1,5 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslCipherSuites.h"
-#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslAlgorithmConstraints.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.LayeredSocketBio.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocket.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocketNative.h"
@@ -45,16 +44,6 @@ std::vector<std::string> toVector(const ::jxx::Ptr<OpenSslSocket::StringArray>& 
         r.push_back((*v)[i]->utf8());
     }
     return r;
-}
-std::vector<std::string> arrayToVector(
-    const ::jxx::Ptr<OpenSslSocket::StringArray>& values) {
-    std::vector<std::string> result;
-    if (values == nullptr) return result;
-    result.reserve(static_cast<std::size_t>(values->length));
-    for (::jxx::lang::jint index = 0; index < values->length; ++index)
-        if ((*values)[index] != nullptr)
-            result.push_back((*values)[index]->utf8());
-    return result;
 }
 ::jxx::Ptr<OpenSslSocket::StringArray> toArray(const std::vector<std::string>& v) {
     auto r = ::jxx::NEW<OpenSslSocket::StringArray>(static_cast<::jxx::lang::jint>(v.size()));
@@ -151,51 +140,28 @@ void OpenSslSocket::startHandshake() {
         config_ == nullptr ? nullptr : config_->protocol);
     int minv = configuredRange.first;
     int maxv = configuredRange.second;
-    const std::vector<std::string> requestedProtocols =
-        enabledProtocols_.empty()
-            ? std::vector<std::string>{"TLSv1.2", "TLSv1.3"}
-            : enabledProtocols_;
-    const auto permittedProtocols = filterAlgorithms(
-        algorithmConstraints_,
-        ::jxx::security::CryptoPrimitive::KEY_AGREEMENT(),
-        requestedProtocols);
-    bool v12 = false;
-    bool v13 = false;
-    for (const auto& protocol : permittedProtocols) {
-        if (protocol == "TLSv1.2") v12 = true;
-        else if (protocol == "TLSv1.3") v13 = true;
-        else throw ::jxx::lang::IllegalArgumentException();
+    if (!enabledProtocols_.empty()) {
+        bool v12 = false, v13 = false;
+        for (const auto& p : enabledProtocols_) {
+            if (p == "TLSv1.2") v12 = true;
+            else if (p == "TLSv1.3") v13 = true;
+            else throw ::jxx::lang::IllegalArgumentException();
+        }
+        minv = v12 ? TLS1_2_VERSION : TLS1_3_VERSION;
+        maxv = v13 ? TLS1_3_VERSION : TLS1_2_VERSION;
     }
-    if (!v12 && !v13)
-        throw ::jxx::lang::IllegalArgumentException(
-            "algorithm constraints reject all enabled protocols");
-    minv = v12 ? TLS1_2_VERSION : TLS1_3_VERSION;
-    maxv = v13 ? TLS1_3_VERSION : TLS1_2_VERSION;
     if (SSL_CTX_set_min_proto_version(native_->context, minv) != 1 ||
         SSL_CTX_set_max_proto_version(native_->context, maxv) != 1)
         throw ::jxx::io::IOException("Could not apply enabled TLS protocols");
-    const auto requestedCipherSuites = enabledCipherSuites_.empty()
-        ? arrayToVector(client_
-            ? clientDefaultCipherSuites()
-            : serverDefaultCipherSuites())
-        : enabledCipherSuites_;
-    const auto permittedCipherSuites = filterAlgorithms(
-        algorithmConstraints_,
-        ::jxx::security::CryptoPrimitive::BLOCK_CIPHER(),
-        requestedCipherSuites);
-    if (permittedCipherSuites.empty())
-        throw ::jxx::lang::IllegalArgumentException(
-            "algorithm constraints reject all enabled cipher suites");
-    std::vector<std::string> modern;
-    std::vector<std::string> legacy;
-    for (const auto& cipher : permittedCipherSuites)
-        (cipher.rfind("TLS_", 0) == 0 ? modern : legacy).push_back(cipher);
-    if (!legacy.empty() &&
-        SSL_CTX_set_cipher_list(native_->context, join(legacy).c_str()) != 1)
-        throw ::jxx::lang::IllegalArgumentException();
-    if (!modern.empty() &&
-        SSL_CTX_set_ciphersuites(native_->context, join(modern).c_str()) != 1)
-        throw ::jxx::lang::IllegalArgumentException();
+    if (!enabledCipherSuites_.empty()) {
+        std::vector<std::string> modern, legacy;
+        for (const auto& c : enabledCipherSuites_)
+            (c.rfind("TLS_", 0) == 0 ? modern : legacy).push_back(c);
+        if (!legacy.empty() && SSL_CTX_set_cipher_list(native_->context, join(legacy).c_str()) != 1)
+            throw ::jxx::lang::IllegalArgumentException();
+        if (!modern.empty() && SSL_CTX_set_ciphersuites(native_->context, join(modern).c_str()) != 1)
+            throw ::jxx::lang::IllegalArgumentException();
+    }
     if (config_ != nullptr && config_->secureRandom != nullptr) {
         auto seed = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(64);
         config_->secureRandom->nextBytes(seed);
@@ -214,7 +180,7 @@ void OpenSslSocket::startHandshake() {
         SSL_CTX_set_session_cache_mode(native_->context, SSL_SESS_CACHE_OFF);
         SSL_CTX_set_options(native_->context, SSL_OP_NO_TICKET);
     }
-    native_->managerBridge = std::make_unique<OpenSslManagerBridge>(config_);
+    native_->managerBridge = std::make_unique<OpenSslManagerBridge>(config_, algorithmConstraints_);
     SSL_CTX_set_cert_verify_callback(native_->context, openSslVerifyCallback, native_->managerBridge.get());
     SSL_CTX_set_client_cert_cb(native_->context, openSslClientCertificateCallback);
     SSL* ssl = SSL_new(native_->context);
@@ -334,15 +300,7 @@ void OpenSslSocket::startHandshake() {
         if (len <= 0 || i2d_X509(local, &cur) != len) throw ::jxx::io::IOException("Could not encode local certificate");
         (*locals)[0] = ::jxx::CAST<::jxx::security::cert::Certificate>(::jxx::NEW<OpenSslX509Certificate>(enc));
     }
-    const auto negotiatedCipher =
-        ::jxx::NEW<::jxx::lang::String>(SSL_get_cipher_name(ssl));
-    if (!permitsAlgorithm(
-            algorithmConstraints_,
-            ::jxx::security::CryptoPrimitive::BLOCK_CIPHER(),
-            negotiatedCipher))
-        throw ::jxx::ext::net::ssl::SSLHandshakeException(
-            "negotiated cipher rejected by algorithm constraints");
-    session_ = ::jxx::NEW<OpenSslSession>(negotiatedCipher,
+    session_ = ::jxx::NEW<OpenSslSession>(::jxx::NEW<::jxx::lang::String>(SSL_get_cipher_name(ssl)),
         ::jxx::NEW<::jxx::lang::String>(SSL_get_version(ssl)), host_, port_, peers, locals, sid, sc);
     if (sc != nullptr) sc->registerSession(session_);
     auto self = ::jxx::CAST<::jxx::ext::net::ssl::SSLSocket>(thisPtr());

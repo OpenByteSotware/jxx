@@ -5,6 +5,8 @@
 #include <openssl/ssl.h>
 #include <openssl/x509_vfy.h>
 
+#include "security/jxx.security.AlgorithmConstraints.h"
+
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
 
 namespace jxx::ext::net::ssl {
@@ -17,7 +19,9 @@ namespace jxx::ext::net::ssl::internal {
 class OpenSslManagerBridge final {
 public:
     explicit OpenSslManagerBridge(
-        const std::shared_ptr<OpenSslContextConfig>& config);
+        const std::shared_ptr<OpenSslContextConfig>& config,
+        const ::jxx::Ptr<::jxx::security::AlgorithmConstraints>&
+            algorithmConstraints = nullptr);
 
     void setSocket(
         const ::jxx::Ptr<
@@ -44,6 +48,9 @@ public:
 private:
     std::shared_ptr<OpenSslContextConfig>
     config_;
+
+    ::jxx::Ptr<::jxx::security::AlgorithmConstraints>
+    algorithmConstraints_;
 
     ::jxx::Ptr<
         ::jxx::ext::net::ssl::SSLSocket>

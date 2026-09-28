@@ -97,8 +97,7 @@ private:
     std::unique_ptr<OpenSslManagerBridge> managerBridge_;
     ::jxx::Ptr<SSLSession> session_;
     ::jxx::Ptr<::jxx::lang::String> endpointIdentificationAlgorithm_;
-    ::jxx::Ptr<::jxx::security::AlgorithmConstraints>
-    algorithmConstraints_;
+    ::jxx::Ptr<::jxx::security::AlgorithmConstraints> algorithmConstraints_;
     ::jxx::Ptr<::jxx::lang::String> explicitSniHost_;
     std::vector<std::string> enabledCipherSuites_;
     std::vector<std::string> enabledProtocols_;

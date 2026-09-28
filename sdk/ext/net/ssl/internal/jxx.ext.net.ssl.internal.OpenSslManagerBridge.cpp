@@ -4,6 +4,8 @@
 #include <openssl/x509.h>
 
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslX509Certificate.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslPublicKey.h"
+#include "util/jxx.util.HashSet.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLEngine.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLSocket.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.X509ExtendedKeyManager.h"
@@ -23,6 +25,29 @@ namespace {
         ::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(length);
     unsigned char* cursor = reinterpret_cast<unsigned char*>(&(*result)[0]);
     if (i2d_X509(certificate, &cursor) != length) return nullptr;
+    return result;
+}
+
+::jxx::lang::ByteArray encodePublicKey(EVP_PKEY* key) {
+    const int length = i2d_PUBKEY(key, nullptr);
+    if (length <= 0) return nullptr;
+    const auto result = ::jxx::NEW<
+        ::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(length);
+    unsigned char* cursor = reinterpret_cast<unsigned char*>(&(*result)[0]);
+    return i2d_PUBKEY(key, &cursor) == length ? result : nullptr;
+}
+
+::jxx::Ptr<::jxx::lang::String> publicKeyAlgorithm(EVP_PKEY* key) {
+    const int id = EVP_PKEY_base_id(key);
+    const char* name = OBJ_nid2sn(id);
+    return ::jxx::NEW<::jxx::lang::String>(name == nullptr ? "UNKNOWN" : name);
+}
+
+::jxx::Ptr<::jxx::util::HashSet<::jxx::security::CryptoPrimitive>>
+primitiveSet(const ::jxx::Ptr<::jxx::security::CryptoPrimitive>& primitive) {
+    const auto result = ::jxx::NEW<
+        ::jxx::util::HashSet<::jxx::security::CryptoPrimitive>>();
+    result->add(primitive);
     return result;
 }
 
@@ -110,8 +135,11 @@ findExtendedKeyManager(
 } // namespace
 
 OpenSslManagerBridge::OpenSslManagerBridge(
-    const std::shared_ptr<OpenSslContextConfig>& config)
-    : config_(config) {
+    const std::shared_ptr<OpenSslContextConfig>& config,
+    const ::jxx::Ptr<::jxx::security::AlgorithmConstraints>&
+        algorithmConstraints)
+    : config_(config)
+    , algorithmConstraints_(algorithmConstraints) {
 }
 
 void OpenSslManagerBridge::setSocket(
@@ -139,6 +167,43 @@ int OpenSslManagerBridge::verifyPeer(X509_STORE_CTX* storeContext) noexcept {
         STACK_OF(X509)* chain = X509_STORE_CTX_get0_chain(storeContext);
         const int count = chain == nullptr ? 0 : sk_X509_num(chain);
         if (count <= 0) return 0;
+
+        if (algorithmConstraints_ != nullptr) {
+            const auto signaturePrimitives = primitiveSet(
+                ::jxx::security::CryptoPrimitive::SIGNATURE());
+            const auto keyPrimitives = primitiveSet(
+                ::jxx::security::CryptoPrimitive::PUBLIC_KEY_ENCRYPTION());
+            for (int index = 0; index < count; ++index) {
+                X509* certificate = sk_X509_value(chain, index);
+                const int signatureNid = X509_get_signature_nid(certificate);
+                const char* signatureName = OBJ_nid2sn(signatureNid);
+                const auto signatureAlgorithm =
+                    ::jxx::NEW<::jxx::lang::String>(
+                        signatureName == nullptr ? "UNKNOWN" : signatureName);
+                if (!algorithmConstraints_->permits(
+                        signaturePrimitives,
+                        signatureAlgorithm,
+                        nullptr))
+                    return 0;
+
+                EVP_PKEY* nativeKey = X509_get_pubkey(certificate);
+                if (nativeKey == nullptr) return 0;
+                const auto encodedKey = encodePublicKey(nativeKey);
+                const auto keyAlgorithm = publicKeyAlgorithm(nativeKey);
+                EVP_PKEY_free(nativeKey);
+                if (encodedKey == nullptr) return 0;
+                const auto key = ::jxx::CAST<::jxx::security::Key>(
+                    ::jxx::NEW<OpenSslPublicKey>(keyAlgorithm, encodedKey));
+                if (!algorithmConstraints_->permits(keyPrimitives, key) ||
+                    !algorithmConstraints_->permits(
+                        signaturePrimitives,
+                        signatureAlgorithm,
+                        key,
+                        nullptr))
+                    return 0;
+            }
+        }
+
         const auto converted = ::jxx::NEW<
             ::jxx::ext::net::ssl::X509TrustManager::CertificateArray>(count);
         for (int index = 0; index < count; ++index) {
