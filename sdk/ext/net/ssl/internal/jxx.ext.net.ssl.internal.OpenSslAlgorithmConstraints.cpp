@@ -15,4 +15,20 @@ namespace jxx::ext::net::ssl::internal {
     return constraints->permits(primitives, algorithm, nullptr);
 }
 
+std::vector<std::string> filterAlgorithms(
+    const ::jxx::Ptr<::jxx::security::AlgorithmConstraints>& constraints,
+    const ::jxx::Ptr<::jxx::security::CryptoPrimitive>& primitive,
+    const std::vector<std::string>& algorithms) {
+    std::vector<std::string> permitted;
+    permitted.reserve(algorithms.size());
+    for (const auto& algorithm : algorithms) {
+        if (permitsAlgorithm(
+                constraints,
+                primitive,
+                ::jxx::NEW<::jxx::lang::String>(algorithm)))
+            permitted.push_back(algorithm);
+    }
+    return permitted;
+}
+
 } // namespace jxx::ext::net::ssl::internal

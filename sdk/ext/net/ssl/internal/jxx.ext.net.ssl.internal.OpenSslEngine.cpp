@@ -10,6 +10,7 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslAlgorithmConstraints.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslCipherSuites.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslCipherSuites.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslManagerBridge.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSession.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSessionContext.h"
@@ -79,33 +80,61 @@ void OpenSslEngine::ensureInitialized() {
     if (context_ == nullptr)
         throw ::jxx::ext::net::ssl::SSLProtocolException(
             "SSL_CTX_new failed");
-    if (SSL_CTX_set_min_proto_version(context_, TLS1_2_VERSION) != 1 ||
-        SSL_CTX_set_max_proto_version(context_, TLS1_3_VERSION) != 1)
+    const std::vector<std::string> requestedProtocols =
+        enabledProtocols_.empty()
+            ? std::vector<std::string>{"TLSv1.2", "TLSv1.3"}
+            : enabledProtocols_;
+    const auto permittedProtocols = filterAlgorithms(
+        algorithmConstraints_,
+        ::jxx::security::CryptoPrimitive::KEY_AGREEMENT(),
+        requestedProtocols);
+    bool permit12 = false;
+    bool permit13 = false;
+    for (const auto& protocol : permittedProtocols) {
+        if (protocol == "TLSv1.2") permit12 = true;
+        else if (protocol == "TLSv1.3") permit13 = true;
+        else throw ::jxx::lang::IllegalArgumentException();
+    }
+    if (!permit12 && !permit13)
+        throw ::jxx::lang::IllegalArgumentException(
+            "algorithm constraints reject all enabled protocols");
+    const int minimum = permit12 ? TLS1_2_VERSION : TLS1_3_VERSION;
+    const int maximum = permit13 ? TLS1_3_VERSION : TLS1_2_VERSION;
+    if (SSL_CTX_set_min_proto_version(context_, minimum) != 1 ||
+        SSL_CTX_set_max_proto_version(context_, maximum) != 1)
         throw ::jxx::ext::net::ssl::SSLProtocolException(
             "could not configure TLS protocol range");
 
-    if (!enabledCipherSuites_.empty()) {
-        std::vector<std::string> tls13;
-        std::vector<std::string> legacy;
-        for (const auto& suite : enabledCipherSuites_) {
-            if (!permitsAlgorithm(
-                    algorithmConstraints_,
-                    ::jxx::security::CryptoPrimitive::BLOCK_CIPHER(),
-                    ::jxx::NEW<::jxx::lang::String>(suite)))
-                continue;
-            (suite.rfind("TLS_", 0) == 0 ? tls13 : legacy).push_back(suite);
-        }
-        if (legacy.empty() && tls13.empty())
-            throw ::jxx::lang::IllegalArgumentException(
-                "algorithm constraints reject all enabled cipher suites");
-        if (!legacy.empty() &&
-            SSL_CTX_set_cipher_list(context_, join(legacy).c_str()) != 1)
-            throw ::jxx::lang::IllegalArgumentException();
-        if (!tls13.empty() &&
-            SSL_CTX_set_ciphersuites(context_, join(tls13).c_str()) != 1)
-            throw ::jxx::lang::IllegalArgumentException();
+    std::vector<std::string> requestedCipherSuites;
+    const auto defaults = clientMode_
+        ? clientDefaultCipherSuites()
+        : serverDefaultCipherSuites();
+    if (enabledCipherSuites_.empty()) {
+        requestedCipherSuites.reserve(
+            static_cast<std::size_t>(defaults->length));
+        for (::jxx::lang::jint index = 0; index < defaults->length; ++index)
+            if ((*defaults)[index] != nullptr)
+                requestedCipherSuites.push_back((*defaults)[index]->utf8());
+    } else {
+        requestedCipherSuites = enabledCipherSuites_;
     }
-
+    const auto permittedCipherSuites = filterAlgorithms(
+        algorithmConstraints_,
+        ::jxx::security::CryptoPrimitive::BLOCK_CIPHER(),
+        requestedCipherSuites);
+    if (permittedCipherSuites.empty())
+        throw ::jxx::lang::IllegalArgumentException(
+            "algorithm constraints reject all enabled cipher suites");
+    std::vector<std::string> tls13;
+    std::vector<std::string> legacy;
+    for (const auto& cipher : permittedCipherSuites)
+        (cipher.rfind("TLS_", 0) == 0 ? tls13 : legacy).push_back(cipher);
+    if (!legacy.empty() &&
+        SSL_CTX_set_cipher_list(context_, join(legacy).c_str()) != 1)
+        throw ::jxx::lang::IllegalArgumentException();
+    if (!tls13.empty() &&
+        SSL_CTX_set_ciphersuites(context_, join(tls13).c_str()) != 1)
+        throw ::jxx::lang::IllegalArgumentException();
     if (!clientMode_ && config_ != nullptr && config_->serverSessionContext != nullptr)
         configureServerSessionCache(
             context_, config_->serverSessionContext.get());
