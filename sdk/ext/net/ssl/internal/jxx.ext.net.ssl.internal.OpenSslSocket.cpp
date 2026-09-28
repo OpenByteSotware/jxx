@@ -104,37 +104,6 @@ OpenSslSocket::OpenSslSocket(const ::jxx::Ptr<::jxx::net::Socket>& transport,
 
 OpenSslSocket::~OpenSslSocket() = default;
 
-void OpenSslSocket::connect(
-    const ::jxx::Ptr<::jxx::net::SocketAddress>& endpoint) {
-    connect(endpoint, 0);
-}
-
-void OpenSslSocket::connect(
-    const ::jxx::Ptr<::jxx::net::SocketAddress>& endpoint,
-    ::jxx::lang::jint timeout) {
-    std::lock_guard<std::recursive_mutex> tlsLock(tlsMutex_);
-    if (endpoint == nullptr) throw ::jxx::lang::IllegalArgumentException();
-    if (timeout < 0) throw ::jxx::lang::IllegalArgumentException();
-    if (closed_) throw ::jxx::io::IOException("SSL socket is closed");
-    if (connected_) throw ::jxx::io::IOException("SSL socket is already connected");
-    const auto internetEndpoint =
-        ::jxx::CAST<::jxx::net::InetSocketAddress>(endpoint);
-    if (internetEndpoint == nullptr)
-        throw ::jxx::lang::IllegalArgumentException();
-    const auto host = internetEndpoint->getHostString();
-    if (host == nullptr) throw ::jxx::lang::IllegalArgumentException();
-    const auto transport = pendingTransport_ == nullptr
-        ? ::jxx::NEW<::jxx::net::Socket>()
-        : pendingTransport_;
-    transport->connect(endpoint, timeout);
-    transport->setSoTimeout(soTimeout_);
-    transport_ = transport;
-    pendingTransport_ = nullptr;
-    host_ = host;
-    port_ = internetEndpoint->getPort();
-    connected_ = true;
-}
-
 void OpenSslSocket::startHandshake() {
     std::lock_guard<std::recursive_mutex> tlsLock(tlsMutex_);
     if (closed_)
