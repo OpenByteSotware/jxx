@@ -72,19 +72,37 @@ namespace jxx::com::sun::net::httpserver::internal
 	}
 	::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>DefaultHttpServer::createContext(const ::jxx::Ptr<::jxx::lang::String>& p, const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpHandler>& h)
 	{
-		auto c = ::jxx::NEW<DefaultHttpContext>(::jxx::CAST<::jxx::com::sun::net::httpserver::HttpServer>(this->thisPtr()), p, h); std::lock_guard<std::mutex>lock(mutex_); for (auto& e : contexts_)if (e->getPath()->equals(p))throw ::jxx::lang::IllegalArgumentException(); contexts_.push_back(c); return c;
+		if (!p) throw ::jxx::lang::NullPointerException();
+		const auto path = p->utf8();
+		if (path.empty() || path.front() != '/') throw ::jxx::lang::IllegalArgumentException();
+		std::lock_guard<std::mutex> lock(mutex_);
+		for (const auto& existing : contexts_) if (existing->getPath()->equals(p)) throw ::jxx::lang::IllegalArgumentException();
+		auto owner = publicOwner_ ? publicOwner_ : ::jxx::CAST<::jxx::com::sun::net::httpserver::HttpServer>(this->thisPtr());
+		auto context = ::jxx::NEW<DefaultHttpContext>(owner, p, h);
+		contexts_.push_back(context);
+		return context;
 	}
 	::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>DefaultHttpServer::createContext(const ::jxx::Ptr<::jxx::lang::String>& p)
 	{
 		return createContext(p, nullptr);
-	} void DefaultHttpServer::removeContext(const ::jxx::Ptr<::jxx::lang::String>& p)
+	}
+	void DefaultHttpServer::removeContext(const ::jxx::Ptr<::jxx::lang::String>& p)
 	{
-		std::lock_guard<std::mutex>lock(mutex_); for (auto i = contexts_.begin(); i != contexts_.end(); ++i)if ((*i)->getPath()->equals(p)) {
-			contexts_.erase(i); return;
-		}throw ::jxx::lang::IllegalArgumentException();
-	} void DefaultHttpServer::removeContext(const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>& c)
+		if (!p) throw ::jxx::lang::NullPointerException();
+		std::lock_guard<std::mutex> lock(mutex_);
+		for (auto iterator = contexts_.begin(); iterator != contexts_.end(); ++iterator) {
+			if ((*iterator)->getPath()->equals(p)) { contexts_.erase(iterator); return; }
+		}
+		throw ::jxx::lang::IllegalArgumentException();
+	}
+	void DefaultHttpServer::removeContext(const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>& c)
 	{
-		if (!c)throw ::jxx::lang::NullPointerException(); removeContext(c->getPath());
+		if (!c) throw ::jxx::lang::NullPointerException();
+		std::lock_guard<std::mutex> lock(mutex_);
+		for (auto iterator = contexts_.begin(); iterator != contexts_.end(); ++iterator) {
+			if (iterator->get() == c.get()) { contexts_.erase(iterator); return; }
+		}
+		throw ::jxx::lang::IllegalArgumentException();
 	} ::jxx::Ptr<::jxx::net::InetSocketAddress>DefaultHttpServer::getAddress()
 	{
 		return address_;
