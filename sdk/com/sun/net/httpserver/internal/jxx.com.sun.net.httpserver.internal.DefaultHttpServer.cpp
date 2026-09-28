@@ -1,4 +1,5 @@
 #include <chrono>
+#include <memory>
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpServer.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpContext.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpExchange.h"
@@ -20,6 +21,7 @@
 #include "net/jxx.net.URI.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.buildin_Array.h"
+#include "util/jxx.util.concurrent.RejectedExecutionException.h"
 namespace jxx::com::sun::net::httpserver::internal
 {
 	namespace
@@ -47,7 +49,38 @@ namespace jxx::com::sun::net::httpserver::internal
 	DefaultHttpServer::DefaultHttpServer(const ::jxx::Ptr<::jxx::net::InetSocketAddress>& a, ::jxx::lang::jint b) :DefaultHttpServer()
 	{
 		bind(a, b);
-	} DefaultHttpServer::~DefaultHttpServer()
+	}
+	void DefaultHttpServer::setPublicOwnerInternal(const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpServer>& owner)
+	{
+		if (!owner) throw ::jxx::lang::NullPointerException();
+		if (running_ || !contexts_.empty()) throw ::jxx::lang::IllegalStateException();
+		publicOwner_ = owner;
+	}
+	void DefaultHttpServer::installListenerInternal(const ::jxx::Ptr<::jxx::net::ServerSocket>& listener,const ::jxx::Ptr<::jxx::net::InetSocketAddress>& address,const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpsConfigurator>& configurator)
+	{
+		if (!listener || !address || !configurator) throw ::jxx::lang::NullPointerException();
+		if (running_ || stopped_) throw ::jxx::lang::IllegalStateException();
+		serverSocket_ = listener;
+		address_ = address;
+		httpsConfigurator_ = configurator;
+	}
+	void DefaultHttpServer::registerConnection_(const ::jxx::Ptr<::jxx::net::Socket>& socket)
+	{
+		std::lock_guard<std::mutex> lock(activeMutex_);
+		activeConnections_[socket.get()] = socket;
+	}
+	void DefaultHttpServer::unregisterConnection_(const ::jxx::Ptr<::jxx::net::Socket>& socket)
+	{
+		{ std::lock_guard<std::mutex> lock(activeMutex_); activeConnections_.erase(socket.get()); }
+		activeCondition_.notify_all();
+	}
+	void DefaultHttpServer::closeActiveConnections_()
+	{
+		std::vector<::jxx::Ptr<::jxx::net::Socket>> snapshot;
+		{ std::lock_guard<std::mutex> lock(activeMutex_); for (const auto& entry : activeConnections_) snapshot.push_back(entry.second); }
+		for (const auto& socket : snapshot) { try { if (socket) socket->close(); } catch (...) {} }
+	}
+ DefaultHttpServer::~DefaultHttpServer()
 	{
 		stop(0);
 	}
@@ -57,52 +90,47 @@ namespace jxx::com::sun::net::httpserver::internal
 	}
 	void DefaultHttpServer::start()
 	{
-		if (!address_)throw ::jxx::lang::IllegalStateException(); bool expected = false; if (!running_.compare_exchange_strong(expected, true))throw ::jxx::lang::IllegalStateException(); acceptThread_ = std::thread(&DefaultHttpServer::acceptLoop, this);
+		if (!address_ || stopped_) throw ::jxx::lang::IllegalStateException();
+		bool expected = false;
+		if (!running_.compare_exchange_strong(expected, true)) throw ::jxx::lang::IllegalStateException();
+		taskLifetime_ = ::jxx::CAST<DefaultHttpServer>(this->thisPtr());
+		acceptThread_ = std::thread(&DefaultHttpServer::acceptLoop, this);
 	}
 	void DefaultHttpServer::stop(::jxx::lang::jint delay)
 	{
-		if (delay < 0)throw ::jxx::lang::IllegalArgumentException(); if (!running_.exchange(false))return; serverSocket_->close(); if (acceptThread_.joinable())acceptThread_.join(); if (delay > 0)std::this_thread::sleep_for(std::chrono::seconds(delay)); for (auto& t : workers_)if (t.joinable())t.join(); workers_.clear();
+		if (delay < 0) throw ::jxx::lang::IllegalArgumentException();
+		stopped_ = true;
+		const bool wasRunning = running_.exchange(false);
+		if (serverSocket_) serverSocket_->close();
+		if (wasRunning && acceptThread_.joinable()) acceptThread_.join();
+		const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(delay);
+		{ std::unique_lock<std::mutex> lock(activeMutex_); if (delay > 0) activeCondition_.wait_until(lock, deadline, [this] { return activeConnections_.empty(); }); }
+		closeActiveConnections_();
+		{ std::lock_guard<std::mutex> lock(workersMutex_); for (auto& worker : workers_) if (worker.joinable()) worker.join(); workers_.clear(); }
+		taskLifetime_.reset();
 	}
 	void DefaultHttpServer::setExecutor(const ::jxx::Ptr<::jxx::util::concurrent::Executor>& e)
 	{
-		if (running_)throw ::jxx::lang::IllegalStateException(); executor_ = e;
+		if (running_ || stopped_) throw ::jxx::lang::IllegalStateException(); executor_ = e;
 	} ::jxx::Ptr<::jxx::util::concurrent::Executor>DefaultHttpServer::getExecutor()
 	{
 		return executor_;
 	}
 	::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>DefaultHttpServer::createContext(const ::jxx::Ptr<::jxx::lang::String>& p, const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpHandler>& h)
 	{
-		if (!p) throw ::jxx::lang::NullPointerException();
-		const auto path = p->utf8();
-		if (path.empty() || path.front() != '/') throw ::jxx::lang::IllegalArgumentException();
-		std::lock_guard<std::mutex> lock(mutex_);
-		for (const auto& existing : contexts_) if (existing->getPath()->equals(p)) throw ::jxx::lang::IllegalArgumentException();
-		auto owner = publicOwner_ ? publicOwner_ : ::jxx::CAST<::jxx::com::sun::net::httpserver::HttpServer>(this->thisPtr());
-		auto context = ::jxx::NEW<DefaultHttpContext>(owner, p, h);
-		contexts_.push_back(context);
-		return context;
+		auto c = ::jxx::NEW<DefaultHttpContext>(::jxx::CAST<::jxx::com::sun::net::httpserver::HttpServer>(this->thisPtr()), p, h); std::lock_guard<std::mutex>lock(mutex_); for (auto& e : contexts_)if (e->getPath()->equals(p))throw ::jxx::lang::IllegalArgumentException(); contexts_.push_back(c); return c;
 	}
 	::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>DefaultHttpServer::createContext(const ::jxx::Ptr<::jxx::lang::String>& p)
 	{
 		return createContext(p, nullptr);
-	}
-	void DefaultHttpServer::removeContext(const ::jxx::Ptr<::jxx::lang::String>& p)
+	} void DefaultHttpServer::removeContext(const ::jxx::Ptr<::jxx::lang::String>& p)
 	{
-		if (!p) throw ::jxx::lang::NullPointerException();
-		std::lock_guard<std::mutex> lock(mutex_);
-		for (auto iterator = contexts_.begin(); iterator != contexts_.end(); ++iterator) {
-			if ((*iterator)->getPath()->equals(p)) { contexts_.erase(iterator); return; }
-		}
-		throw ::jxx::lang::IllegalArgumentException();
-	}
-	void DefaultHttpServer::removeContext(const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>& c)
+		std::lock_guard<std::mutex>lock(mutex_); for (auto i = contexts_.begin(); i != contexts_.end(); ++i)if ((*i)->getPath()->equals(p)) {
+			contexts_.erase(i); return;
+		}throw ::jxx::lang::IllegalArgumentException();
+	} void DefaultHttpServer::removeContext(const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>& c)
 	{
-		if (!c) throw ::jxx::lang::NullPointerException();
-		std::lock_guard<std::mutex> lock(mutex_);
-		for (auto iterator = contexts_.begin(); iterator != contexts_.end(); ++iterator) {
-			if (iterator->get() == c.get()) { contexts_.erase(iterator); return; }
-		}
-		throw ::jxx::lang::IllegalArgumentException();
+		if (!c)throw ::jxx::lang::NullPointerException(); removeContext(c->getPath());
 	} ::jxx::Ptr<::jxx::net::InetSocketAddress>DefaultHttpServer::getAddress()
 	{
 		return address_;
@@ -112,28 +140,31 @@ namespace jxx::com::sun::net::httpserver::internal
 		while (running_) {
 			try {
 				auto socket = serverSocket_->accept();
-				if (socket == nullptr) continue;
-				if (executor_ != nullptr) {
-					auto task = ::jxx::NEW<ServerConnectionTask>(
-						[this, socket] { serve(socket); });
-					executor_->execute(
-						::jxx::CAST<::jxx::lang::Runnable>(task));
+				if (!socket) continue;
+				registerConnection_(socket);
+				if (executor_) {
+					try {
+						auto owner = taskLifetime_;
+						auto task = ::jxx::NEW<ServerConnectionTask>([owner, socket] { if (owner) owner->serve(socket); });
+						executor_->execute(::jxx::CAST<::jxx::lang::Runnable>(task));
+					}
+					catch (const ::jxx::util::concurrent::RejectedExecutionException&) {
+						unregisterConnection_(socket);
+						socket->close();
+					}
 				}
 				else {
-					workers_.emplace_back(
-						&DefaultHttpServer::serve,
-						this,
-						socket);
+					std::lock_guard<std::mutex> lock(workersMutex_);
+					workers_.emplace_back(&DefaultHttpServer::serve, this, socket);
 				}
 			}
-			catch (...) {
-				if (!running_) break;
-			}
+			catch (...) { if (!running_) break; }
 		}
 	}
 	void DefaultHttpServer::serve(const ::jxx::Ptr<::jxx::net::Socket>& socket)
 	{
 		if (!socket) return;
+		auto connectionRegistration = std::shared_ptr<void>(socket.get(), [this, socket](void*) { unregisterConnection_(socket); });
 		bool secureTransport = false;
 		bool handshakeComplete = false;
 		bool httpRequestParsed = false;
