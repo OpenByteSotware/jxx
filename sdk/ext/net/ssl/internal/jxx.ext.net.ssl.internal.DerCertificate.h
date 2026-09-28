@@ -23,6 +23,8 @@ public:
         const ::jxx::lang::ByteArray& encoded);
 
     ::jxx::lang::ByteArray getEncoded() const override;
+    ::jxx::Ptr<::jxx::security::PublicKey>
+    getPublicKey() const override;
 
     void writeObject(
         const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) override;

@@ -2,6 +2,7 @@
 
 #include <openssl/x509.h>
 
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslPublicKey.h"
 #include "io/jxx.io.ObjectInputStream.h"
 #include "io/jxx.io.ObjectOutputStream.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
@@ -54,6 +55,40 @@ DerCertificate::DerCertificate(
 
 ::jxx::lang::ByteArray DerCertificate::getEncoded() const {
     return copyBytes(encoded_);
+}
+
+::jxx::Ptr<::jxx::security::PublicKey>
+DerCertificate::getPublicKey() const {
+    const unsigned char* cursor =
+        reinterpret_cast<const unsigned char*>(&(*encoded_)[0]);
+    X509* certificate = d2i_X509(nullptr, &cursor, encoded_->length);
+    EVP_PKEY* key = certificate == nullptr
+        ? nullptr : X509_get_pubkey(certificate);
+    if (certificate != nullptr) X509_free(certificate);
+    if (key == nullptr)
+        throw ::jxx::lang::IllegalStateException(
+            "X.509 certificate has no public key");
+    const int length = i2d_PUBKEY(key, nullptr);
+    const char* algorithm = OBJ_nid2sn(EVP_PKEY_base_id(key));
+    if (length <= 0) {
+        EVP_PKEY_free(key);
+        throw ::jxx::lang::IllegalStateException(
+            "unable to encode X.509 public key");
+    }
+    const auto encoded = ::jxx::NEW<
+        ::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(length);
+    unsigned char* output =
+        reinterpret_cast<unsigned char*>(&(*encoded)[0]);
+    if (i2d_PUBKEY(key, &output) != length) {
+        EVP_PKEY_free(key);
+        throw ::jxx::lang::IllegalStateException(
+            "unable to encode X.509 public key");
+    }
+    EVP_PKEY_free(key);
+    return ::jxx::NEW<OpenSslPublicKey>(
+        ::jxx::NEW<::jxx::lang::String>(
+            algorithm == nullptr ? "UNKNOWN" : algorithm),
+        encoded);
 }
 
 void DerCertificate::writeObject(
