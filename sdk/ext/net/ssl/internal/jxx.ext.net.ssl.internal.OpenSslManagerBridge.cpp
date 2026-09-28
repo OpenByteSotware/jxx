@@ -51,6 +51,22 @@ primitiveSet(const ::jxx::Ptr<::jxx::security::CryptoPrimitive>& primitive) {
     return result;
 }
 
+::jxx::lang::jbool permitsCertificateSignature(
+    const ::jxx::Ptr<::jxx::security::AlgorithmConstraints>& constraints,
+    X509* certificate) {
+    if (constraints == nullptr) return true;
+    if (certificate == nullptr) return false;
+    const auto primitives = primitiveSet(
+        ::jxx::security::CryptoPrimitive::SIGNATURE());
+    const int nid = X509_get_signature_nid(certificate);
+    const char* name = OBJ_nid2sn(nid);
+    return constraints->permits(
+        primitives,
+        ::jxx::NEW<::jxx::lang::String>(
+            name == nullptr ? "UNKNOWN" : name),
+        nullptr);
+}
+
 ::jxx::lang::jbool permitsLocalIdentity(
     const ::jxx::Ptr<::jxx::security::AlgorithmConstraints>& constraints,
     X509* certificate,
@@ -327,7 +343,9 @@ int OpenSslManagerBridge::selectServerIdentity(SSL* ssl) noexcept {
             const auto bytes = (*chain)[index]->getEncoded();
             const unsigned char* cursor = reinterpret_cast<const unsigned char*>(&(*bytes)[0]);
             X509* extra = d2i_X509(nullptr, &cursor, bytes->length);
-            if (extra == nullptr || SSL_add1_chain_cert(ssl, extra) != 1) {
+            if (extra == nullptr ||
+                !permitsCertificateSignature(algorithmConstraints_, extra) ||
+                SSL_add1_chain_cert(ssl, extra) != 1) {
                 if (extra != nullptr) X509_free(extra);
                 return 0;
             }
@@ -383,7 +401,9 @@ int OpenSslManagerBridge::selectClientCertificate(
             const unsigned char* cursor =
                 reinterpret_cast<const unsigned char*>(&(*bytes)[0]);
             X509* extra = d2i_X509(nullptr, &cursor, bytes->length);
-            if (extra == nullptr || SSL_add1_chain_cert(ssl, extra) != 1) {
+            if (extra == nullptr ||
+                !permitsCertificateSignature(algorithmConstraints_, extra) ||
+                SSL_add1_chain_cert(ssl, extra) != 1) {
                 if (extra != nullptr) X509_free(extra);
                 X509_free(leaf);
                 EVP_PKEY_free(decodedKey);
