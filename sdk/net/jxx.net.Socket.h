@@ -90,8 +90,8 @@ public:
         void sendUrgentData(jxx::lang::jint data);
         void setOOBInline(jxx::lang::jbool on);
         jxx::lang::jbool getOOBInline() const;
-        void setSoTimeout(jxx::lang::jint timeout);
-        jxx::lang::jint getSoTimeout() const noexcept;
+        virtual void setSoTimeout(jxx::lang::jint timeout);
+        virtual jxx::lang::jint getSoTimeout() const noexcept;
         void setSendBufferSize(jxx::lang::jint size);
         jxx::lang::jint getSendBufferSize() const;
         void setReceiveBufferSize(jxx::lang::jint size);
@@ -107,9 +107,9 @@ public:
         virtual void shutdownOutput();
         virtual void close();
 
-        jxx::lang::jbool isConnected() const noexcept;
+        virtual jxx::lang::jbool isConnected() const noexcept;
         jxx::lang::jbool isBound() const noexcept;
-        jxx::lang::jbool isClosed() const noexcept;
+        virtual jxx::lang::jbool isClosed() const noexcept;
         jxx::lang::jbool isInputShutdown() const noexcept;
         jxx::lang::jbool isOutputShutdown() const noexcept;
 

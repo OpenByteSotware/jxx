@@ -63,6 +63,10 @@ public:
     ::jxx::Ptr<::jxx::io::InputStream> getInputStream() override;
     ::jxx::Ptr<::jxx::io::OutputStream> getOutputStream() override;
     void close() override;
+    void setSoTimeout(::jxx::lang::jint timeout) override;
+    ::jxx::lang::jint getSoTimeout() const noexcept override;
+    ::jxx::lang::jbool isConnected() const noexcept override;
+    ::jxx::lang::jbool isClosed() const noexcept override;
 
     ::jxx::Ptr<StringArray> getSupportedCipherSuites() const override;
     ::jxx::Ptr<StringArray> getEnabledCipherSuites() const override;
@@ -118,6 +122,8 @@ private:
     mutable std::mutex listenerMutex_;
     mutable std::recursive_mutex tlsMutex_;
     ::jxx::lang::jbool closed_ = false;
+    ::jxx::lang::jbool connected_ = false;
+    ::jxx::lang::jint soTimeout_ = 0;
     std::vector<std::string> enabledCipherSuites_;
     std::vector<std::string> enabledProtocols_;
     ::jxx::lang::jbool client_ = true;

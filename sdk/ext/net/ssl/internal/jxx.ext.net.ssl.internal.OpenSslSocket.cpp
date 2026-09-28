@@ -23,6 +23,7 @@
 #include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "security/jxx.security.SecureRandom.h"
 #include "net/jxx.net.Socket.h"
+#include "net/jxx.net.InetSocketAddress.h"
 #include "net/internal/jxx.net.internal.NetPlatform.h"
 
 #include <algorithm>
@@ -85,6 +86,9 @@ OpenSslSocket::OpenSslSocket(const ::jxx::Ptr<::jxx::lang::String>& h,
     ::jxx::lang::jint p, const std::shared_ptr<OpenSslContextConfig>& config)
     : config_(config), native_(new OpenSslSocketNative()), host_(h), port_(p) {
     if (h == nullptr) throw ::jxx::lang::NullPointerException();
+    if (p < 0 || p > 65535) throw ::jxx::lang::IllegalArgumentException();
+    transport_ = ::jxx::NEW<::jxx::net::Socket>(h, p);
+    connected_ = true;
 }
 
 OpenSslSocket::OpenSslSocket(const ::jxx::Ptr<::jxx::net::Socket>& transport,
@@ -94,9 +98,42 @@ OpenSslSocket::OpenSslSocket(const ::jxx::Ptr<::jxx::net::Socket>& transport,
     : config_(config), native_(new OpenSslSocketNative()), host_(host), port_(port),
       transport_(transport), autoClose_(autoClose), consumed_(consumed) {
     if (transport_ == nullptr || host_ == nullptr) throw ::jxx::lang::IllegalArgumentException();
+    connected_ = transport_->isConnected();
+    soTimeout_ = transport_->getSoTimeout();
 }
 
 OpenSslSocket::~OpenSslSocket() = default;
+
+void OpenSslSocket::connect(
+    const ::jxx::Ptr<::jxx::net::SocketAddress>& endpoint) {
+    connect(endpoint, 0);
+}
+
+void OpenSslSocket::connect(
+    const ::jxx::Ptr<::jxx::net::SocketAddress>& endpoint,
+    ::jxx::lang::jint timeout) {
+    std::lock_guard<std::recursive_mutex> tlsLock(tlsMutex_);
+    if (endpoint == nullptr) throw ::jxx::lang::IllegalArgumentException();
+    if (timeout < 0) throw ::jxx::lang::IllegalArgumentException();
+    if (closed_) throw ::jxx::io::IOException("SSL socket is closed");
+    if (connected_) throw ::jxx::io::IOException("SSL socket is already connected");
+    const auto internetEndpoint =
+        ::jxx::CAST<::jxx::net::InetSocketAddress>(endpoint);
+    if (internetEndpoint == nullptr)
+        throw ::jxx::lang::IllegalArgumentException();
+    const auto host = internetEndpoint->getHostString();
+    if (host == nullptr) throw ::jxx::lang::IllegalArgumentException();
+    const auto transport = pendingTransport_ == nullptr
+        ? ::jxx::NEW<::jxx::net::Socket>()
+        : pendingTransport_;
+    transport->connect(endpoint, timeout);
+    transport->setSoTimeout(soTimeout_);
+    transport_ = transport;
+    pendingTransport_ = nullptr;
+    host_ = host;
+    port_ = internetEndpoint->getPort();
+    connected_ = true;
+}
 
 void OpenSslSocket::startHandshake() {
     std::lock_guard<std::recursive_mutex> tlsLock(tlsMutex_);
@@ -133,8 +170,7 @@ void OpenSslSocket::startHandshake() {
                 ::jxx::lang::jbyte,
                 1U>>(0),
         handshakeContext);
-    if (transport_ == nullptr &&
-        (host_ == nullptr || host_->utf8().empty() || port_ <= 0))
+    if (!connected_ || transport_ == nullptr)
         throw ::jxx::lang::IllegalStateException("SSL socket is not connected");
     bool handshakeSucceeded = false;
     const std::shared_ptr<void> failedHandshakeGuard(
@@ -350,6 +386,27 @@ void OpenSslSocket::startHandshake() {
 
 ::jxx::Ptr<::jxx::io::InputStream> OpenSslSocket::getInputStream(){startHandshake();return ::jxx::NEW<OpenSslInputStream>(this);}
 ::jxx::Ptr<::jxx::io::OutputStream> OpenSslSocket::getOutputStream(){startHandshake();return ::jxx::NEW<OpenSslOutputStream>(this);}
+void OpenSslSocket::setSoTimeout(::jxx::lang::jint timeout) {
+    if (timeout < 0) throw ::jxx::lang::IllegalArgumentException();
+    std::lock_guard<std::recursive_mutex> tlsLock(tlsMutex_);
+    if (closed_) throw ::jxx::io::IOException("SSL socket is closed");
+    soTimeout_ = timeout;
+    if (transport_ != nullptr) transport_->setSoTimeout(timeout);
+    if (pendingTransport_ != nullptr) pendingTransport_->setSoTimeout(timeout);
+}
+
+::jxx::lang::jint OpenSslSocket::getSoTimeout() const noexcept {
+    return soTimeout_;
+}
+
+::jxx::lang::jbool OpenSslSocket::isConnected() const noexcept {
+    return connected_;
+}
+
+::jxx::lang::jbool OpenSslSocket::isClosed() const noexcept {
+    return closed_;
+}
+
 void OpenSslSocket::close() {
     std::lock_guard<std::recursive_mutex> tlsLock(tlsMutex_);
     if (closed_) return;
