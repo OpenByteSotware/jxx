@@ -94,6 +94,7 @@ void HandshakeCompletedEvent::readObject(
     if (socket == nullptr || session == nullptr)
         throw ::jxx::lang::IllegalStateException(
             "invalid serialized handshake-completed event");
+    setSource(::jxx::CAST<::jxx::lang::Object>(socket));
     session_ = session;
 }
 

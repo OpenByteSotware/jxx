@@ -28,6 +28,8 @@ public:
     ::jxx::Ptr<::jxx::lang::String> toString() const override;
 
 protected:
+    void setSource(
+        const ::jxx::Ptr<::jxx::lang::Object>& source);
     ::jxx::Ptr<::jxx::lang::Object> cloneImpl() const override;
 
 private:

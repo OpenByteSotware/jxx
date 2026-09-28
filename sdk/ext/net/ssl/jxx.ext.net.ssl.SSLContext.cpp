@@ -122,12 +122,17 @@ SSLContext::SSLContext(
 }
 
 ::jxx::Ptr<SSLContext> SSLContext::getDefault() {
-    std::lock_guard<std::mutex> lock(defaultContextMutex);
-    if (defaultContext == nullptr) {
-        defaultContext = getInstance(
-            ::jxx::NEW<::jxx::lang::String>("TLS"));
-        defaultContext->init(nullptr, nullptr, nullptr);
+    {
+        std::lock_guard<std::mutex> lock(defaultContextMutex);
+        if (defaultContext != nullptr) return defaultContext;
     }
+
+    const auto candidate = getInstance(
+        ::jxx::NEW<::jxx::lang::String>("TLS"));
+    candidate->init(nullptr, nullptr, nullptr);
+
+    std::lock_guard<std::mutex> lock(defaultContextMutex);
+    if (defaultContext == nullptr) defaultContext = candidate;
     return defaultContext;
 }
 

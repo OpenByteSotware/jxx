@@ -22,6 +22,12 @@ EventObject::getSource() const {
     return source_;
 }
 
+void EventObject::setSource(
+    const ::jxx::Ptr<::jxx::lang::Object>& source) {
+    if (source == nullptr) throw ::jxx::lang::NullPointerException();
+    source_ = source;
+}
+
 ::jxx::Ptr<::jxx::lang::String>
 EventObject::toString() const {
     std::ostringstream output;
