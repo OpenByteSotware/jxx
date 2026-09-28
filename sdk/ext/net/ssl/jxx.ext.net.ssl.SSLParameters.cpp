@@ -122,4 +122,15 @@ void SSLParameters::setUseCipherSuitesOrder(
     useCipherSuitesOrder_ = value;
 }
 
+::jxx::Ptr<::jxx::security::AlgorithmConstraints>
+SSLParameters::getAlgorithmConstraints() const {
+    return algorithmConstraints_;
+}
+
+void SSLParameters::setAlgorithmConstraints(
+    const ::jxx::Ptr<
+        ::jxx::security::AlgorithmConstraints>& constraints) {
+    algorithmConstraints_ = constraints;
+}
+
 } // namespace jxx::ext::net::ssl

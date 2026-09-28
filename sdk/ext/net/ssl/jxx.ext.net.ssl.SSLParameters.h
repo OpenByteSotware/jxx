@@ -6,6 +6,8 @@
 #include "lang/jxx.lang.buildin_array.h"
 #include "util/jxx.util.List.h"
 
+namespace jxx::security { class AlgorithmConstraints; }
+
 namespace jxx::ext::net::ssl {
 
 class SNIMatcher;
@@ -53,6 +55,12 @@ public:
     void setSNIMatchers(
         const ::jxx::Ptr<::jxx::util::List<SNIMatcher>>& matchers);
 
+    ::jxx::Ptr<::jxx::security::AlgorithmConstraints>
+    getAlgorithmConstraints() const;
+    void setAlgorithmConstraints(
+        const ::jxx::Ptr<
+            ::jxx::security::AlgorithmConstraints>& constraints);
+
     ::jxx::lang::jbool getUseCipherSuitesOrder() const;
     void setUseCipherSuitesOrder(
         ::jxx::lang::jbool value);
@@ -68,6 +76,8 @@ private:
     ::jxx::Ptr<::jxx::lang::String> endpointIdentificationAlgorithm_;
     ::jxx::Ptr<::jxx::util::List<SNIServerName>> serverNames_;
     ::jxx::Ptr<::jxx::util::List<SNIMatcher>> sniMatchers_;
+    ::jxx::Ptr<::jxx::security::AlgorithmConstraints>
+    algorithmConstraints_;
     ::jxx::lang::jbool useCipherSuitesOrder_ = false;
 };
 

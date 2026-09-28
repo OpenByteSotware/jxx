@@ -4,7 +4,7 @@
 #include <mutex>
 #include <string>
 #include <vector>
-
+#include "security/jxx.security.AlgorithmConstraints.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLSocket.h"
 
 namespace jxx::ext::net::ssl {
@@ -104,6 +104,8 @@ private:
     ::jxx::Ptr<::jxx::lang::String> host_;
     ::jxx::Ptr<::jxx::lang::String> sniHost_;
     ::jxx::Ptr<::jxx::lang::String> endpointIdentificationAlgorithm_;
+    ::jxx::Ptr<::jxx::security::AlgorithmConstraints>
+    algorithmConstraints_;
     ::jxx::Ptr<::jxx::net::Socket> pendingTransport_;
     ::jxx::lang::jint port_ = 0;
     ::jxx::Ptr<::jxx::net::Socket> transport_;

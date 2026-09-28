@@ -13,6 +13,8 @@ OpenSslSocket::getSSLParameters() const {
     const auto parameters = SSLSocket::getSSLParameters();
     parameters->setEndpointIdentificationAlgorithm(
         endpointIdentificationAlgorithm_);
+    parameters->setAlgorithmConstraints(
+        algorithmConstraints_);
     parameters->setUseCipherSuitesOrder(
         useCipherSuitesOrder_);
 
@@ -39,6 +41,8 @@ void OpenSslSocket::setSSLParameters(
 
     endpointIdentificationAlgorithm_ =
         parameters->getEndpointIdentificationAlgorithm();
+    algorithmConstraints_ =
+        parameters->getAlgorithmConstraints();
     useCipherSuitesOrder_ =
         parameters->getUseCipherSuitesOrder();
     if (endpointIdentificationAlgorithm_ != nullptr &&

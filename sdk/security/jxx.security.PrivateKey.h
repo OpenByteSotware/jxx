@@ -1,9 +1,9 @@
 #pragma once
-#include "lang/jxx.lang.ClassInfo.h"
+#include "security/jxx.security.Key.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_array.h"
 namespace jxx::security {
-class PrivateKey : public ::jxx::lang::InterfaceBase<PrivateKey> {
+class PrivateKey : public ::jxx::lang::InterfaceBase<PrivateKey, Key> {
 public:
     ~PrivateKey() override = default;
     virtual ::jxx::Ptr<::jxx::lang::String> getAlgorithm() const = 0;
