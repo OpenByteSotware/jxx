@@ -4,6 +4,8 @@
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpContext.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpExchange.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpsExchange.h"
+#include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.Authenticator.h"
+#include "util/jxx.util.ArrayList.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpsParameters.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.HttpsConfigurator.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLParameters.h"
@@ -98,6 +100,14 @@ namespace jxx::com::sun::net::httpserver::internal
 			}
 			if (!found) return ExpectDecision::None;
 			return http11 && continueOnly ? ExpectDecision::Continue : ExpectDecision::Unsupported;
+		}
+		struct ParserFailureResponse final { int code; const char* reason; };
+		ParserFailureResponse parserFailureResponse(const std::string& error)
+		{
+			if (error == "request body too large") return {413, "Payload Too Large"};
+			if (error == "request line too large" || error == "empty request target") return {414, "URI Too Long"};
+			if (error == "unsupported HTTP version") return {505, "HTTP Version Not Supported"};
+			return {400, "Bad Request"};
 		}
 		void simpleResponse(const ::jxx::Ptr<::jxx::net::Socket>& s, int code, const char* reason)
 		{
@@ -277,6 +287,7 @@ namespace jxx::com::sun::net::httpserver::internal
 		bool secureTransport = false;
 		bool handshakeComplete = false;
 		bool httpRequestParsed = false;
+		::jxx::Ptr<DefaultHttpExchange> currentExchange;
 		try {
 			auto sslSocket = ::jxx::CAST<::jxx::ext::net::ssl::SSLSocket>(socket);
 			secureTransport = sslSocket != nullptr;
@@ -337,10 +348,15 @@ namespace jxx::com::sun::net::httpserver::internal
 					}for (::jxx::lang::jint i = 0; i < n; ++i)buffer.push_back((unsigned char)(*chunk)[i]); if (buffer.size() > 1048576) {
 						simpleResponse(socket, 413, "Payload Too Large"); socket->close(); return;
 					}continue;
-				}if (result == Http11Parser::Result::Error) {
-					simpleResponse(socket, 400, "Bad Request"); socket->close(); return;
+				}
+				if (result == Http11Parser::Result::Error) {
+					const auto failure = parserFailureResponse(error);
+					simpleResponse(socket, failure.code, failure.reason);
+					socket->close();
+					return;
+				}
 				httpRequestParsed = true;
-				}auto uri = ::jxx::NEW<::jxx::net::URI>(::jxx::NEW<::jxx::lang::String>(request.target.c_str())); auto path = uri->getRawPath(); auto context = match(path ? path->utf8() : std::string("/")); if (!context || !context->getHandler()) {
+				auto uri = ::jxx::NEW<::jxx::net::URI>(::jxx::NEW<::jxx::lang::String>(request.target.c_str())); auto path = uri->getRawPath(); auto context = match(path ? path->utf8() : std::string("/")); if (!context || !context->getHandler()) {
 					simpleResponse(socket, 404, "Not Found"); socket->close(); return;
 				}auto headers = ::jxx::NEW<::jxx::com::sun::net::httpserver::Headers>();
 				for (const auto& h : request.headers)
@@ -352,13 +368,33 @@ namespace jxx::com::sun::net::httpserver::internal
 				headers->freezeInternal(); 
 				auto body = ::jxx::NEW<::jxx::lang::ByteArrayType>((::jxx::lang::jint)
 					request.body.size()); for (::jxx::lang::jint i = 0; i < body->length; ++i)(*body)[i] = (::jxx::lang::jbyte)request.body[(std::size_t)i]; auto httpExchange = ::jxx::NEW<DefaultHttpExchange>(socket, context, ::jxx::NEW<::jxx::lang::String>(request.method.c_str()), uri, ::jxx::NEW<::jxx::lang::String>(request.version.c_str()), headers, body);
+				currentExchange = httpExchange;
 				::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpExchange> exchange = httpExchange;
 				if (sslSocket != nullptr) {
 					auto session = sslSocket->getSession();
 					exchange = ::jxx::NEW<DefaultHttpsExchange>(httpExchange, session);
 				}
+				auto authenticator = context->getAuthenticator();
+				if (authenticator != nullptr) {
+					auto result = authenticator->authenticate(exchange);
+					if (result == nullptr) throw ::jxx::lang::NullPointerException();
+					auto success = ::jxx::CAST<::jxx::com::sun::net::httpserver::Authenticator::Success>(result);
+					if (success != nullptr) httpExchange->setPrincipalInternal(success->getPrincipal());
+					else {
+						auto failure = ::jxx::CAST<::jxx::com::sun::net::httpserver::Authenticator::Failure>(result);
+						auto retry = ::jxx::CAST<::jxx::com::sun::net::httpserver::Authenticator::Retry>(result);
+						const ::jxx::lang::jint code = failure != nullptr ? failure->getResponseCode() : (retry != nullptr ? retry->getResponseCode() : 500);
+						exchange->sendResponseHeaders(code, -1);
+						httpExchange->completeInternal();
+						socket->close();
+						return;
+					}
+				}
+				auto snapshot = ::jxx::NEW<::jxx::util::ArrayList<::jxx::com::sun::net::httpserver::Filter>>();
+				auto filters = context->getFilters();
+				for (::jxx::lang::jint index = 0; index < filters->size(); ++index) snapshot->add(filters->get(index));
 				auto chain = ::jxx::NEW<::jxx::com::sun::net::httpserver::Filter::Chain>(
-					context->getFilters(), context->getHandler());
+					::jxx::CAST<::jxx::util::List<::jxx::com::sun::net::httpserver::Filter>>(snapshot), context->getHandler());
 				chain->doFilter(exchange);
 				if (exchange->getResponseCode() < 0) exchange->sendResponseHeaders(200, -1);
 				httpExchange->completeInternal();
@@ -369,7 +405,8 @@ namespace jxx::com::sun::net::httpserver::internal
 			}
 		}
 		catch (...) {
-			if (httpRequestParsed && (!secureTransport || handshakeComplete)) {
+			const bool committed = currentExchange != nullptr && currentExchange->isResponseCommittedInternal();
+			if (httpRequestParsed && !committed && (!secureTransport || handshakeComplete)) {
 				try { simpleResponse(socket, 500, "Internal Server Error"); } catch (...) {}
 			}
 			socket->close();
