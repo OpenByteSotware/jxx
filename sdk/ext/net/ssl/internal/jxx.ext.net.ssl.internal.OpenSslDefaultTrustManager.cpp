@@ -2,7 +2,9 @@
 
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
+#include <vector>
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLHandshakeException.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslX509Certificate.h"
 #include "security/cert/jxx.security.cert.X509Certificate.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 
@@ -37,5 +39,42 @@ void OpenSslDefaultTrustManager::verify(const ::jxx::Ptr<CertificateArray>& chai
 }
 void OpenSslDefaultTrustManager::checkClientTrusted(const ::jxx::Ptr<CertificateArray>& c,const ::jxx::Ptr<::jxx::lang::String>& a){verify(c,a);}
 void OpenSslDefaultTrustManager::checkServerTrusted(const ::jxx::Ptr<CertificateArray>& c,const ::jxx::Ptr<::jxx::lang::String>& a){verify(c,a);}
-::jxx::Ptr<OpenSslDefaultTrustManager::CertificateArray> OpenSslDefaultTrustManager::getAcceptedIssuers(){return ::jxx::NEW<CertificateArray>(0);}
+::jxx::Ptr<OpenSslDefaultTrustManager::CertificateArray>
+OpenSslDefaultTrustManager::getAcceptedIssuers() {
+    X509_STORE* store = X509_STORE_new();
+    if (store == nullptr || X509_STORE_set_default_paths(store) != 1) {
+        if (store != nullptr) X509_STORE_free(store);
+        return ::jxx::NEW<CertificateArray>(0);
+    }
+
+    STACK_OF(X509_OBJECT)* objects = X509_STORE_get0_objects(store);
+    const int objectCount = objects == nullptr ? 0 : sk_X509_OBJECT_num(objects);
+    std::vector<::jxx::Ptr<::jxx::security::cert::X509Certificate>> issuers;
+    issuers.reserve(static_cast<std::size_t>(objectCount));
+
+    for (int index = 0; index < objectCount; ++index) {
+        X509_OBJECT* object = sk_X509_OBJECT_value(objects, index);
+        X509* certificate = object == nullptr
+            ? nullptr
+            : X509_OBJECT_get0_X509(object);
+        if (certificate == nullptr) continue;
+
+        const int length = i2d_X509(certificate, nullptr);
+        if (length <= 0) continue;
+        const auto encoded = ::jxx::NEW<
+            ::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(length);
+        unsigned char* cursor =
+            reinterpret_cast<unsigned char*>(&(*encoded)[0]);
+        if (i2d_X509(certificate, &cursor) != length) continue;
+        issuers.push_back(::jxx::NEW<
+            ::jxx::ext::net::ssl::internal::OpenSslX509Certificate>(encoded));
+    }
+
+    X509_STORE_free(store);
+    const auto result = ::jxx::NEW<CertificateArray>(
+        static_cast<::jxx::lang::jint>(issuers.size()));
+    for (std::size_t index = 0; index < issuers.size(); ++index)
+        (*result)[static_cast<::jxx::lang::jint>(index)] = issuers[index];
+    return result;
+}
 } // namespace jxx::ext::net::ssl::internal
