@@ -136,6 +136,21 @@ void OpenSslSocket::startHandshake() {
     if (transport_ == nullptr &&
         (host_ == nullptr || host_->utf8().empty() || port_ <= 0))
         throw ::jxx::lang::IllegalStateException("SSL socket is not connected");
+    bool handshakeSucceeded = false;
+    const std::shared_ptr<void> failedHandshakeGuard(
+        nullptr,
+        [this, &handshakeSucceeded](void*) noexcept {
+            if (handshakeSucceeded) return;
+            try {
+                close();
+            } catch (...) {
+                closed_ = true;
+                session_ = nullptr;
+                handshakeSession_ = nullptr;
+                handshakeInProgress_ = false;
+            }
+        });
+
     native_->context = SSL_CTX_new(client_ ? TLS_client_method() : TLS_server_method());
     if (native_->context == nullptr) throw ::jxx::io::IOException("SSL_CTX_new failed");
     const auto configuredRange = protocolRange(
@@ -307,6 +322,7 @@ void OpenSslSocket::startHandshake() {
         localSupportedSignatureAlgorithms(ssl),
         peerSupportedSignatureAlgorithms(ssl));
     if (sc != nullptr) sc->registerSession(session_);
+    handshakeSucceeded = true;
     auto self = ::jxx::CAST<::jxx::ext::net::ssl::SSLSocket>(thisPtr());
     if (self == nullptr) throw ::jxx::lang::IllegalStateException("OpenSslSocket has no JXX-managed self reference");
     auto event = ::jxx::NEW<HandshakeCompletedEvent>(self, session_);
