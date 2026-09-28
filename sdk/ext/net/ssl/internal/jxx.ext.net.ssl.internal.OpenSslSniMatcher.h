@@ -6,4 +6,6 @@ namespace jxx::ext::net::ssl::internal {
 using SniMatcherList = ::jxx::util::List<::jxx::ext::net::ssl::SNIMatcher>;
 int openSslServerNameMatcherCallback(SSL* ssl,int* alert,void* argument) noexcept;
 void configureServerNameMatchers(SSL_CTX* context,const ::jxx::Ptr<SniMatcherList>& matchers);
+::jxx::Ptr<::jxx::util::List<::jxx::ext::net::ssl::SNIServerName>>
+requestedServerNames(SSL* ssl);
 } // namespace jxx::ext::net::ssl::internal

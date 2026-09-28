@@ -279,7 +279,8 @@ void OpenSslEngine::completeSession() {
         getPeerHost(), getPeerPort(), peerCertificates,
         localCertificates, sessionId, context,
         localSupportedSignatureAlgorithms(ssl_),
-        peerSupportedSignatureAlgorithms(ssl_));
+        peerSupportedSignatureAlgorithms(ssl_),
+        requestedServerNames(ssl_));
     if (context != nullptr) context->registerSession(session_);
 }
 

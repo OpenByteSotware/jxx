@@ -1,6 +1,7 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSniMatcher.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SNIHostName.h"
 #include "lang/jxx.lang.String.h"
+#include "util/jxx.util.ArrayList.h"
 namespace jxx::ext::net::ssl::internal {
 int openSslServerNameMatcherCallback(SSL* ssl,int* alert,void* argument) noexcept {
     try {
@@ -31,4 +32,19 @@ void configureServerNameMatchers(SSL_CTX* context,const ::jxx::Ptr<SniMatcherLis
     SSL_CTX_set_tlsext_servername_callback(context,openSslServerNameMatcherCallback);
     SSL_CTX_set_tlsext_servername_arg(context,matchers.get());
 }
+::jxx::Ptr<::jxx::util::List<::jxx::ext::net::ssl::SNIServerName>>
+requestedServerNames(SSL* ssl) {
+    const auto result = ::jxx::NEW<
+        ::jxx::util::ArrayList<::jxx::ext::net::ssl::SNIServerName>>();
+    if (ssl == nullptr) return result;
+    const char* requested = SSL_get_servername(
+        ssl,
+        TLSEXT_NAMETYPE_host_name);
+    if (requested != nullptr && *requested != '\0')
+        result->add(::jxx::NEW<::jxx::ext::net::ssl::SNIHostName>(
+            ::jxx::NEW<::jxx::lang::String>(requested)));
+    return ::jxx::CAST<
+        ::jxx::util::List<::jxx::ext::net::ssl::SNIServerName>>(result);
+}
+
 } // namespace jxx::ext::net::ssl::internal

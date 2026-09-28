@@ -252,8 +252,18 @@ void OpenSslSocket::startHandshake() {
     }
     if (client_) {
         SSL_set_connect_state(ssl);
-        SSL_set_tlsext_host_name(ssl, host_->utf8().c_str());
-        SSL_set1_host(ssl, host_->utf8().c_str());
+        const auto tlsHost = sniHost_ != nullptr ? sniHost_ : host_;
+        if (tlsHost != nullptr && !tlsHost->utf8().empty() &&
+            SSL_set_tlsext_host_name(ssl, tlsHost->utf8().c_str()) != 1)
+            throw ::jxx::ext::net::ssl::SSLProtocolException(
+                "could not configure SNI host");
+        if (endpointIdentificationAlgorithm_ != nullptr &&
+            endpointIdentificationAlgorithm_->utf8() == "HTTPS") {
+            if (host_ == nullptr || host_->utf8().empty() ||
+                SSL_set1_host(ssl, host_->utf8().c_str()) != 1)
+                throw ::jxx::ext::net::ssl::SSLProtocolException(
+                    "could not configure HTTPS endpoint identification");
+        }
     } else {
         SSL_set_accept_state(ssl);
         if (native_->managerBridge->selectServerIdentity(ssl) != 1)
@@ -329,7 +339,8 @@ void OpenSslSocket::startHandshake() {
     session_ = ::jxx::NEW<OpenSslSession>(::jxx::NEW<::jxx::lang::String>(SSL_get_cipher_name(ssl)),
         ::jxx::NEW<::jxx::lang::String>(SSL_get_version(ssl)), host_, port_, peers, locals, sid, sc,
         localSupportedSignatureAlgorithms(ssl),
-        peerSupportedSignatureAlgorithms(ssl));
+        peerSupportedSignatureAlgorithms(ssl),
+        requestedServerNames(ssl));
     if (sc != nullptr) sc->registerSession(session_);
     handshakeSucceeded = true;
     auto self = ::jxx::CAST<::jxx::ext::net::ssl::SSLSocket>(thisPtr());

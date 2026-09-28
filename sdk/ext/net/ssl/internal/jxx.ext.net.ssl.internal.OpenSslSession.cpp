@@ -39,33 +39,6 @@ namespace {
             std::chrono::system_clock::now().time_since_epoch()).count());
 }
 
-OpenSslSession::OpenSslSession(
-    const ::jxx::Ptr<::jxx::lang::String>& cipher,
-    const ::jxx::Ptr<::jxx::lang::String>& protocol,
-    const ::jxx::Ptr<::jxx::lang::String>& host,
-    ::jxx::lang::jint port,
-    const ::jxx::Ptr<CertificateArray>& peerCertificates,
-    const ::jxx::Ptr<CertificateArray>& localCertificates,
-    const ::jxx::lang::ByteArray& id,
-    const ::jxx::Ptr<::jxx::ext::net::ssl::SSLSessionContext>& context,
-    const ::jxx::Ptr<StringArray>& localSignatureAlgorithms,
-    const ::jxx::Ptr<StringArray>& peerSignatureAlgorithms)
-    : cipher_(cipher)
-    , protocol_(protocol)
-    , host_(host)
-    , port_(port)
-    , peerCertificates_(peerCertificates)
-    , localCertificates_(localCertificates)
-    , id_(id == nullptr
-          ? ::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(0)
-          : id)
-    , context_(context)
-    , localSignatureAlgorithms_(localSignatureAlgorithms)
-    , peerSignatureAlgorithms_(peerSignatureAlgorithms)
-    , creationTime_(nowMillis())
-    , lastAccessedTime_(creationTime_) {
-}
-
 void OpenSslSession::touch() const { lastAccessedTime_ = nowMillis(); }
 ::jxx::lang::jint OpenSslSession::getApplicationBufferSize() const { touch(); return 16384; }
 ::jxx::Ptr<::jxx::lang::String> OpenSslSession::getCipherSuite() const { touch(); return cipher_; }
@@ -114,8 +87,15 @@ OpenSslSession::getPeerSupportedSignatureAlgorithms() const {
 }
 ::jxx::Ptr<::jxx::util::List<::jxx::ext::net::ssl::SNIServerName>>
 OpenSslSession::getRequestedServerNames() const {
-    return ::jxx::CAST<::jxx::util::List<::jxx::ext::net::ssl::SNIServerName>>(
-        ::jxx::NEW<::jxx::util::ArrayList<::jxx::ext::net::ssl::SNIServerName>>());
+    const auto result = ::jxx::NEW<
+        ::jxx::util::ArrayList<::jxx::ext::net::ssl::SNIServerName>>();
+    if (requestedServerNames_ != nullptr)
+        for (::jxx::lang::jint index = 0;
+             index < requestedServerNames_->size();
+             ++index)
+            result->add(requestedServerNames_->get(index));
+    return ::jxx::CAST<
+        ::jxx::util::List<::jxx::ext::net::ssl::SNIServerName>>(result);
 }
 ::jxx::Ptr<::jxx::ext::net::ssl::SSLSessionContext> OpenSslSession::getSessionContext() const { return context_; }
 ::jxx::Ptr<::jxx::lang::Object> OpenSslSession::getValue(const ::jxx::Ptr<::jxx::lang::String>& name) const {if(name==nullptr)throw ::jxx::lang::IllegalArgumentException();std::lock_guard<std::mutex> l(mutex_);auto i=values_.find(name->utf8());return i==values_.end()?nullptr:i->second;}
