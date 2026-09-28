@@ -16,6 +16,27 @@
 #include "lang/jxx.lang.NullPointerException.h"
 
 namespace jxx::ext::net::ssl::internal {
+namespace {
+
+void validatePort(::jxx::lang::jint port) {
+    if (port < 0 || port > 65535)
+        throw ::jxx::lang::IllegalArgumentException();
+}
+
+void validateHost(
+    const ::jxx::Ptr<::jxx::lang::String>& host) {
+    if (host == nullptr)
+        throw ::jxx::lang::NullPointerException();
+}
+
+void validateAddress(
+    const ::jxx::Ptr<::jxx::net::InetAddress>& address) {
+    if (address == nullptr)
+        throw ::jxx::lang::NullPointerException();
+}
+
+} // namespace
+
 OpenSslSocketFactory::OpenSslSocketFactory(const std::shared_ptr<OpenSslContextConfig>& config):config_(config){}
 
 ::jxx::Ptr<OpenSslSocketFactory::StringArray>
@@ -37,6 +58,8 @@ OpenSslSocketFactory::createSocket() {
 OpenSslSocketFactory::createSocket(
     const ::jxx::Ptr<::jxx::lang::String>& host,
     ::jxx::lang::jint port) {
+    validateHost(host);
+    validatePort(port);
     return ::jxx::NEW<OpenSslSocket>(host, port, config_);
 }
 
@@ -46,6 +69,9 @@ OpenSslSocketFactory::createSocket(
     ::jxx::lang::jint port,
     const ::jxx::Ptr<::jxx::net::InetAddress>& local,
     ::jxx::lang::jint localPort) {
+    validateHost(host);
+    validatePort(port);
+    validatePort(localPort);
     const auto socket = ::jxx::NEW<OpenSslSocket>(config_);
     socket->bind(::jxx::NEW<::jxx::net::InetSocketAddress>(local, localPort));
     socket->connect(::jxx::NEW<::jxx::net::InetSocketAddress>(host, port));
@@ -56,6 +82,8 @@ OpenSslSocketFactory::createSocket(
 OpenSslSocketFactory::createSocket(
     const ::jxx::Ptr<::jxx::net::InetAddress>& host,
     ::jxx::lang::jint port) {
+    validateAddress(host);
+    validatePort(port);
     return createSocket(host->getHostAddress(), port);
 }
 
@@ -65,6 +93,9 @@ OpenSslSocketFactory::createSocket(
     ::jxx::lang::jint port,
     const ::jxx::Ptr<::jxx::net::InetAddress>& local,
     ::jxx::lang::jint localPort) {
+    validateAddress(host);
+    validatePort(port);
+    validatePort(localPort);
     const auto socket = ::jxx::NEW<OpenSslSocket>(config_);
     socket->bind(::jxx::NEW<::jxx::net::InetSocketAddress>(local, localPort));
     socket->connect(::jxx::NEW<::jxx::net::InetSocketAddress>(host, port));
