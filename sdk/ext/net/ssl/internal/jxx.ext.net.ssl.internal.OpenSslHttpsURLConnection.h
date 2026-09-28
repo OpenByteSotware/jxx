@@ -64,6 +64,7 @@ public:
 
 private:
     void capturePeerCertificate(SSL* ssl);
+    void captureLocalCertificate(SSL* ssl);
     void executeRequest();
     void releaseNativeResources() noexcept;
 
@@ -72,6 +73,7 @@ private:
     std::string host_;
     ::jxx::Ptr<::jxx::lang::String> cipherSuite_;
     ::jxx::Ptr<CertificateArray> serverCertificates_;
+    ::jxx::Ptr<CertificateArray> localCertificates_;
     ::jxx::lang::ByteArray responseBody_;
 };
 

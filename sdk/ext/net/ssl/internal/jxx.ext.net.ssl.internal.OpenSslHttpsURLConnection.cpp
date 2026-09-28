@@ -1,4 +1,5 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslHttpsURLConnection.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslX509Certificate.h"
 
 #include <algorithm>
 #include <cctype>
@@ -154,6 +155,7 @@ void OpenSslHttpsURLConnection::connect() {
         cipherSuite_ = ::jxx::NEW<::jxx::lang::String>(
             SSL_get_cipher_name(ssl));
         capturePeerCertificate(ssl);
+        captureLocalCertificate(ssl);
         connected_ = true;
     } catch (...) {
         releaseNativeResources();
@@ -207,7 +209,7 @@ OpenSslHttpsURLConnection::getCipherSuite() const {
 
 ::jxx::Ptr<OpenSslHttpsURLConnection::CertificateArray>
 OpenSslHttpsURLConnection::getLocalCertificates() const {
-    return nullptr;
+    return localCertificates_;
 }
 
 ::jxx::Ptr<OpenSslHttpsURLConnection::CertificateArray>
@@ -248,6 +250,20 @@ void OpenSslHttpsURLConnection::capturePeerCertificate(SSL* ssl) {
     serverCertificates_ = ::jxx::NEW<CertificateArray>(1);
     (*serverCertificates_)[0] =
         ::jxx::NEW<DerCertificate>(bytes);
+}
+
+void OpenSslHttpsURLConnection::captureLocalCertificate(SSL* ssl) {
+    X509* certificate = ssl == nullptr ? nullptr : SSL_get_certificate(ssl);
+    if (certificate == nullptr) { localCertificates_ = nullptr; return; }
+    const int length = i2d_X509(certificate, nullptr);
+    if (length <= 0) throw ::jxx::io::IOException("could not encode local certificate");
+    const auto encoded = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(length);
+    unsigned char* cursor = reinterpret_cast<unsigned char*>(&(*encoded)[0]);
+    if (i2d_X509(certificate, &cursor) != length)
+        throw ::jxx::io::IOException("could not encode local certificate");
+    localCertificates_ = ::jxx::NEW<CertificateArray>(1);
+    (*localCertificates_)[0] = ::jxx::CAST<::jxx::security::cert::Certificate>(
+        ::jxx::NEW<OpenSslX509Certificate>(encoded));
 }
 
 void OpenSslHttpsURLConnection::executeRequest() {
