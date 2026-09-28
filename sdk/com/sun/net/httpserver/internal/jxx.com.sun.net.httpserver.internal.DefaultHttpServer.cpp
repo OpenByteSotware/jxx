@@ -29,7 +29,7 @@
 #include "net/jxx.net.URISyntaxException.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_Array.h"
+#include "lang/jxx.lang.buildin_array.h"
 #include "util/jxx.util.concurrent.RejectedExecutionException.h"
 namespace jxx::com::sun::net::httpserver::internal
 {
