@@ -11,6 +11,7 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslCipherSuites.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslManagerBridge.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSession.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSignatureAlgorithms.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSessionContext.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslServerSessionCache.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLHandshakeException.h"
@@ -270,7 +271,9 @@ void OpenSslEngine::completeSession() {
         ::jxx::NEW<::jxx::lang::String>(SSL_get_cipher_name(ssl_)),
         ::jxx::NEW<::jxx::lang::String>(SSL_get_version(ssl_)),
         getPeerHost(), getPeerPort(), peerCertificates,
-        localCertificates, sessionId, context);
+        localCertificates, sessionId, context,
+        localSupportedSignatureAlgorithms(ssl_),
+        peerSupportedSignatureAlgorithms(ssl_));
     if (context != nullptr) context->registerSession(session_);
 }
 

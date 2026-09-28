@@ -30,8 +30,8 @@ public:
         const ::jxx::Ptr<CertificateArray>& localCertificates = nullptr,
         const ::jxx::lang::ByteArray& id = nullptr,
         const ::jxx::Ptr<::jxx::ext::net::ssl::SSLSessionContext>& context = nullptr,
-        const ::jxx::Ptr<::jxx::util::List<
-            ::jxx::ext::net::ssl::SNIServerName>>& requestedServerNames = nullptr);
+        const ::jxx::Ptr<StringArray>& localSignatureAlgorithms = nullptr,
+        const ::jxx::Ptr<StringArray>& peerSignatureAlgorithms = nullptr);
 
     ::jxx::lang::jint getApplicationBufferSize() const override;
     ::jxx::Ptr<::jxx::lang::String> getCipherSuite() const override;
@@ -75,8 +75,8 @@ private:
     ::jxx::Ptr<CertificateArray> localCertificates_;
     ::jxx::lang::ByteArray id_;
     ::jxx::Ptr<::jxx::ext::net::ssl::SSLSessionContext> context_;
-    ::jxx::Ptr<::jxx::util::List<
-        ::jxx::ext::net::ssl::SNIServerName>> requestedServerNames_;
+    ::jxx::Ptr<StringArray> localSignatureAlgorithms_;
+    ::jxx::Ptr<StringArray> peerSignatureAlgorithms_;
     ::jxx::lang::jlong creationTime_;
     mutable ::jxx::lang::jlong lastAccessedTime_;
     ::jxx::lang::jbool valid_ = true;

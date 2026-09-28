@@ -48,8 +48,8 @@ OpenSslSession::OpenSslSession(
     const ::jxx::Ptr<CertificateArray>& localCertificates,
     const ::jxx::lang::ByteArray& id,
     const ::jxx::Ptr<::jxx::ext::net::ssl::SSLSessionContext>& context,
-    const ::jxx::Ptr<::jxx::util::List<
-        ::jxx::ext::net::ssl::SNIServerName>>& requestedServerNames)
+    const ::jxx::Ptr<StringArray>& localSignatureAlgorithms,
+    const ::jxx::Ptr<StringArray>& peerSignatureAlgorithms)
     : cipher_(cipher)
     , protocol_(protocol)
     , host_(host)
@@ -60,7 +60,8 @@ OpenSslSession::OpenSslSession(
           ? ::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(0)
           : id)
     , context_(context)
-    , requestedServerNames_(requestedServerNames)
+    , localSignatureAlgorithms_(localSignatureAlgorithms)
+    , peerSignatureAlgorithms_(peerSignatureAlgorithms)
     , creationTime_(nowMillis())
     , lastAccessedTime_(creationTime_) {
 }
@@ -93,27 +94,28 @@ OpenSslSession::getPeerPrincipal() const {
 ::jxx::Ptr<::jxx::lang::String> OpenSslSession::getProtocol() const { touch(); return protocol_; }
 ::jxx::Ptr<OpenSslSession::StringArray>
 OpenSslSession::getLocalSupportedSignatureAlgorithms() const {
-    const auto result = ::jxx::NEW<StringArray>(4);
-    (*result)[0] = ::jxx::NEW<::jxx::lang::String>("SHA256withRSA");
-    (*result)[1] = ::jxx::NEW<::jxx::lang::String>("SHA384withRSA");
-    (*result)[2] = ::jxx::NEW<::jxx::lang::String>("SHA256withECDSA");
-    (*result)[3] = ::jxx::NEW<::jxx::lang::String>("SHA384withECDSA");
+    const auto source = localSignatureAlgorithms_;
+    const auto result = ::jxx::NEW<StringArray>(
+        source == nullptr ? 0 : source->length);
+    if (source != nullptr)
+        for (::jxx::lang::jint index = 0; index < source->length; ++index)
+            (*result)[index] = (*source)[index];
     return result;
 }
 ::jxx::Ptr<OpenSslSession::StringArray>
 OpenSslSession::getPeerSupportedSignatureAlgorithms() const {
-    return ::jxx::NEW<StringArray>(0);
+    const auto source = peerSignatureAlgorithms_;
+    const auto result = ::jxx::NEW<StringArray>(
+        source == nullptr ? 0 : source->length);
+    if (source != nullptr)
+        for (::jxx::lang::jint index = 0; index < source->length; ++index)
+            (*result)[index] = (*source)[index];
+    return result;
 }
 ::jxx::Ptr<::jxx::util::List<::jxx::ext::net::ssl::SNIServerName>>
 OpenSslSession::getRequestedServerNames() const {
-    const auto result =
-        ::jxx::NEW<::jxx::util::ArrayList<
-            ::jxx::ext::net::ssl::SNIServerName>>();
-    if (requestedServerNames_ != nullptr) {
-        const auto iterator = requestedServerNames_->iterator();
-        while (iterator->hasNext()) result->add(iterator->next());
-    }
-    return result;
+    return ::jxx::CAST<::jxx::util::List<::jxx::ext::net::ssl::SNIServerName>>(
+        ::jxx::NEW<::jxx::util::ArrayList<::jxx::ext::net::ssl::SNIServerName>>());
 }
 ::jxx::Ptr<::jxx::ext::net::ssl::SSLSessionContext> OpenSslSession::getSessionContext() const { return context_; }
 ::jxx::Ptr<::jxx::lang::Object> OpenSslSession::getValue(const ::jxx::Ptr<::jxx::lang::String>& name) const {if(name==nullptr)throw ::jxx::lang::IllegalArgumentException();std::lock_guard<std::mutex> l(mutex_);auto i=values_.find(name->utf8());return i==values_.end()?nullptr:i->second;}
