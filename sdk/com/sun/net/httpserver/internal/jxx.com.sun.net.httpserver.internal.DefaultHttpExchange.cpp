@@ -66,6 +66,7 @@ namespace jxx::com::sun::net::httpserver::internal
 		completed_ = true;
 	}
 	::jxx::lang::jbool DefaultHttpExchange::isCompletedInternal() const noexcept { return completed_; }
+	::jxx::lang::jbool DefaultHttpExchange::isResponseCommittedInternal() const noexcept { return responseCode_ >= 0; }
 	::jxx::lang::jbool DefaultHttpExchange::isConnectionReusableInternal() const noexcept { return completed_ && reusable_ && !responseClose_; }
 	::jxx::lang::jbool DefaultHttpExchange::responseRequestsCloseInternal() const noexcept { return responseClose_; }::jxx::Ptr<::jxx::io::InputStream>DefaultHttpExchange::getRequestBody()
 	{
