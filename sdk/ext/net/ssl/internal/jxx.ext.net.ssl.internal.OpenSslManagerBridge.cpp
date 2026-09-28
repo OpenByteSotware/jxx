@@ -51,6 +51,40 @@ primitiveSet(const ::jxx::Ptr<::jxx::security::CryptoPrimitive>& primitive) {
     return result;
 }
 
+::jxx::lang::jbool permitsLocalIdentity(
+    const ::jxx::Ptr<::jxx::security::AlgorithmConstraints>& constraints,
+    X509* certificate,
+    const ::jxx::Ptr<::jxx::security::PrivateKey>& privateKey) {
+    if (constraints == nullptr) return true;
+    if (certificate == nullptr || privateKey == nullptr) return false;
+
+    const auto signaturePrimitives = primitiveSet(
+        ::jxx::security::CryptoPrimitive::SIGNATURE());
+    const auto keyAgreementPrimitives = primitiveSet(
+        ::jxx::security::CryptoPrimitive::KEY_AGREEMENT());
+
+    const int signatureNid = X509_get_signature_nid(certificate);
+    const char* signatureName = OBJ_nid2sn(signatureNid);
+    const auto signatureAlgorithm = ::jxx::NEW<::jxx::lang::String>(
+        signatureName == nullptr ? "UNKNOWN" : signatureName);
+
+    if (!constraints->permits(
+            signaturePrimitives,
+            signatureAlgorithm,
+            nullptr))
+        return false;
+
+    const auto key = ::jxx::CAST<::jxx::security::Key>(privateKey);
+    if (key == nullptr || !constraints->permits(keyAgreementPrimitives, key))
+        return false;
+
+    return constraints->permits(
+        signaturePrimitives,
+        signatureAlgorithm,
+        key,
+        nullptr);
+}
+
 ::jxx::Ptr<::jxx::ext::net::ssl::X509TrustManager> findTrustManager(
     const std::shared_ptr<OpenSslContextConfig>& config) {
     if (config == nullptr || config->trustManagers == nullptr) return nullptr;
@@ -279,6 +313,7 @@ int OpenSslManagerBridge::selectServerIdentity(SSL* ssl) noexcept {
         const unsigned char* keyCursor = reinterpret_cast<const unsigned char*>(&(*keyBytes)[0]);
         EVP_PKEY* decodedKey = d2i_AutoPrivateKey(nullptr, &keyCursor, keyBytes->length);
         if (leaf == nullptr || decodedKey == nullptr ||
+            !permitsLocalIdentity(algorithmConstraints_, leaf, key) ||
             SSL_use_certificate(ssl, leaf) != 1 ||
             SSL_use_PrivateKey(ssl, decodedKey) != 1 ||
             SSL_check_private_key(ssl) != 1) {
@@ -336,7 +371,8 @@ int OpenSslManagerBridge::selectClientCertificate(
         const unsigned char* keyCursor =
             reinterpret_cast<const unsigned char*>(&(*keyBytes)[0]);
         EVP_PKEY* decodedKey = d2i_AutoPrivateKey(nullptr, &keyCursor, keyBytes->length);
-        if (leaf == nullptr || decodedKey == nullptr) {
+        if (leaf == nullptr || decodedKey == nullptr ||
+            !permitsLocalIdentity(algorithmConstraints_, leaf, key)) {
             if (leaf != nullptr) X509_free(leaf);
             if (decodedKey != nullptr) EVP_PKEY_free(decodedKey);
             return 0;
