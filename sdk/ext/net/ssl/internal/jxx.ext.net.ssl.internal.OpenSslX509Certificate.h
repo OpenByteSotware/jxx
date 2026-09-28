@@ -42,6 +42,8 @@ public:
     ::jxx::lang::BooleanArray getSubjectUniqueID() const override;
     ::jxx::lang::BooleanArray getKeyUsage() const override;
     ::jxx::lang::jint getBasicConstraints() const override;
+    ::jxx::Ptr<::jxx::util::List<::jxx::lang::String>>
+    getExtendedKeyUsage() const override;
     ::jxx::Ptr<::jxx::util::Set<::jxx::lang::String>>
     getCriticalExtensionOIDs() const override;
     ::jxx::Ptr<::jxx::util::Set<::jxx::lang::String>>
@@ -49,6 +51,14 @@ public:
     ::jxx::lang::ByteArray getExtensionValue(
         const ::jxx::Ptr<::jxx::lang::String>& oid) const override;
     ::jxx::lang::jbool hasUnsupportedCriticalExtension() const override;
+
+    ::jxx::Ptr<
+        ::jxx::ext::security::auth::x500::X500Principal>
+    getIssuerX500Principal() const override;
+
+    ::jxx::Ptr<
+        ::jxx::ext::security::auth::x500::X500Principal>
+    getSubjectX500Principal() const override;
 
     ::jxx::Ptr<::jxx::security::Principal>
     getIssuerDN() const override;

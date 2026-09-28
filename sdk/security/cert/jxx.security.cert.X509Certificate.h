@@ -1,11 +1,13 @@
 #pragma once
 #include "lang/jxx.lang.ClassInfo.h"
+#include "ext/security/auth/x500/jxx.ext.security.auth.x500.X500Principal.h"
 #include "security/cert/jxx.security.cert.Certificate.h"
 #include "security/jxx.security.Principal.h"
 #include "math/jxx.math.BigInteger.h"
 #include "security/jxx.security.PublicKey.h"
 #include "util/jxx.util.Date.h"
 #include "util/jxx.util.Set.h"
+#include "util/jxx.util.List.h"
 
 namespace jxx::security::cert {
 
@@ -45,6 +47,8 @@ public:
     virtual ::jxx::lang::BooleanArray getSubjectUniqueID() const = 0;
     virtual ::jxx::lang::BooleanArray getKeyUsage() const = 0;
     virtual ::jxx::lang::jint getBasicConstraints() const = 0;
+    virtual ::jxx::Ptr<::jxx::util::List<::jxx::lang::String>>
+    getExtendedKeyUsage() const = 0;
     virtual ::jxx::Ptr<::jxx::util::Set<::jxx::lang::String>>
     getCriticalExtensionOIDs() const = 0;
     virtual ::jxx::Ptr<::jxx::util::Set<::jxx::lang::String>>
@@ -52,6 +56,14 @@ public:
     virtual ::jxx::lang::ByteArray getExtensionValue(
         const ::jxx::Ptr<::jxx::lang::String>& oid) const = 0;
     virtual ::jxx::lang::jbool hasUnsupportedCriticalExtension() const = 0;
+
+    virtual ::jxx::Ptr<
+        ::jxx::ext::security::auth::x500::X500Principal>
+    getIssuerX500Principal() const = 0;
+
+    virtual ::jxx::Ptr<
+        ::jxx::ext::security::auth::x500::X500Principal>
+    getSubjectX500Principal() const = 0;
 
     virtual ::jxx::Ptr<::jxx::security::Principal>
     getIssuerDN() const = 0;
