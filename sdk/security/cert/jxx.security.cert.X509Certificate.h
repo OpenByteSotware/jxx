@@ -5,6 +5,7 @@
 #include "math/jxx.math.BigInteger.h"
 #include "security/jxx.security.PublicKey.h"
 #include "util/jxx.util.Date.h"
+#include "util/jxx.util.Set.h"
 
 namespace jxx::security::cert {
 
@@ -40,6 +41,17 @@ public:
     virtual ::jxx::lang::ByteArray getSigAlgParams() const = 0;
     virtual ::jxx::Ptr<::jxx::security::PublicKey>
     getPublicKey() const = 0;
+    virtual ::jxx::lang::BooleanArray getIssuerUniqueID() const = 0;
+    virtual ::jxx::lang::BooleanArray getSubjectUniqueID() const = 0;
+    virtual ::jxx::lang::BooleanArray getKeyUsage() const = 0;
+    virtual ::jxx::lang::jint getBasicConstraints() const = 0;
+    virtual ::jxx::Ptr<::jxx::util::Set<::jxx::lang::String>>
+    getCriticalExtensionOIDs() const = 0;
+    virtual ::jxx::Ptr<::jxx::util::Set<::jxx::lang::String>>
+    getNonCriticalExtensionOIDs() const = 0;
+    virtual ::jxx::lang::ByteArray getExtensionValue(
+        const ::jxx::Ptr<::jxx::lang::String>& oid) const = 0;
+    virtual ::jxx::lang::jbool hasUnsupportedCriticalExtension() const = 0;
 
     virtual ::jxx::Ptr<::jxx::security::Principal>
     getIssuerDN() const = 0;

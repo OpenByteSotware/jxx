@@ -5,6 +5,7 @@
 #include <openssl/evp.h>
 #include <openssl/objects.h>
 #include <openssl/x509.h>
+#include <openssl/x509v3.h>
 
 #include <ctime>
 #include <string>
@@ -12,6 +13,7 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslPublicKey.h"
 #include "math/jxx.math.BigInteger.h"
 #include "util/jxx.util.Date.h"
+#include "util/jxx.util.HashSet.h"
 #include "io/jxx.io.IOException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
@@ -240,6 +242,133 @@ OpenSslX509Certificate::getPublicKey() const {
         ::jxx::NEW<::jxx::lang::String>(
             algorithm == nullptr ? "UNKNOWN" : algorithm),
         encoded);
+}
+
+namespace {
+
+::jxx::lang::BooleanArray uniqueId(
+    const ::jxx::lang::ByteArray& encoded,
+    bool issuer) {
+    X509* certificate = decodeCertificate(encoded);
+    const ASN1_BIT_STRING* value = nullptr;
+    const int resultCode = issuer
+        ? X509_get0_uids(certificate, &value, nullptr)
+        : X509_get0_uids(certificate, nullptr, &value);
+    if (resultCode != 1 || value == nullptr) {
+        X509_free(certificate);
+        return nullptr;
+    }
+    const int bitCount = value->length * 8 -
+        ((value->flags & 0x7) == 0 ? 0 : (value->flags & 0x7));
+    const auto result = ::jxx::NEW<::jxx::lang::BooleanArrayType>(bitCount);
+    for (int bit = 0; bit < bitCount; ++bit)
+        (*result)[bit] = ASN1_BIT_STRING_get_bit(value, bit) != 0;
+    X509_free(certificate);
+    return result;
+}
+
+} // namespace
+
+::jxx::lang::BooleanArray
+OpenSslX509Certificate::getIssuerUniqueID() const {
+    return uniqueId(encoded_, true);
+}
+
+::jxx::lang::BooleanArray
+OpenSslX509Certificate::getSubjectUniqueID() const {
+    return uniqueId(encoded_, false);
+}
+
+::jxx::lang::BooleanArray OpenSslX509Certificate::getKeyUsage() const {
+    X509* certificate = decodeCertificate(encoded_);
+    ASN1_BIT_STRING* usage = static_cast<ASN1_BIT_STRING*>(
+        X509_get_ext_d2i(certificate, NID_key_usage, nullptr, nullptr));
+    X509_free(certificate);
+    if (usage == nullptr) return nullptr;
+    const auto result = ::jxx::NEW<::jxx::lang::BooleanArrayType>(9);
+    for (::jxx::lang::jint bit = 0; bit < 9; ++bit)
+        (*result)[bit] = ASN1_BIT_STRING_get_bit(usage, bit) != 0;
+    ASN1_BIT_STRING_free(usage);
+    return result;
+}
+
+::jxx::lang::jint OpenSslX509Certificate::getBasicConstraints() const {
+    X509* certificate = decodeCertificate(encoded_);
+    BASIC_CONSTRAINTS* constraints = static_cast<BASIC_CONSTRAINTS*>(
+        X509_get_ext_d2i(certificate, NID_basic_constraints, nullptr, nullptr));
+    X509_free(certificate);
+    if (constraints == nullptr) return -1;
+    ::jxx::lang::jint result = -1;
+    if (constraints->ca) {
+        result = constraints->pathlen == nullptr
+            ? 2147483647
+            : static_cast<::jxx::lang::jint>(
+                ASN1_INTEGER_get(constraints->pathlen));
+    }
+    BASIC_CONSTRAINTS_free(constraints);
+    return result;
+}
+
+namespace {
+
+::jxx::Ptr<::jxx::util::Set<::jxx::lang::String>> extensionOids(
+    const ::jxx::lang::ByteArray& encoded,
+    bool critical) {
+    X509* certificate = decodeCertificate(encoded);
+    const int count = X509_get_ext_count(certificate);
+    const auto result = ::jxx::NEW<::jxx::util::HashSet<::jxx::lang::String>>();
+    for (int index = 0; index < count; ++index) {
+        X509_EXTENSION* extension = X509_get_ext(certificate, index);
+        if ((X509_EXTENSION_get_critical(extension) != 0) != critical) continue;
+        char buffer[128]{};
+        if (OBJ_obj2txt(buffer, sizeof(buffer),
+                X509_EXTENSION_get_object(extension), 1) > 0)
+            result->add(::jxx::NEW<::jxx::lang::String>(buffer));
+    }
+    X509_free(certificate);
+    return result->isEmpty() ? nullptr : result;
+}
+
+} // namespace
+
+::jxx::Ptr<::jxx::util::Set<::jxx::lang::String>>
+OpenSslX509Certificate::getCriticalExtensionOIDs() const {
+    return extensionOids(encoded_, true);
+}
+
+::jxx::Ptr<::jxx::util::Set<::jxx::lang::String>>
+OpenSslX509Certificate::getNonCriticalExtensionOIDs() const {
+    return extensionOids(encoded_, false);
+}
+
+::jxx::lang::ByteArray OpenSslX509Certificate::getExtensionValue(
+    const ::jxx::Ptr<::jxx::lang::String>& oid) const {
+    if (oid == nullptr) throw ::jxx::lang::NullPointerException();
+    X509* certificate = decodeCertificate(encoded_);
+    ASN1_OBJECT* object = OBJ_txt2obj(oid->utf8().c_str(), 1);
+    if (object == nullptr) { X509_free(certificate); return nullptr; }
+    const int index = X509_get_ext_by_OBJ(certificate, object, -1);
+    ASN1_OBJECT_free(object);
+    if (index < 0) { X509_free(certificate); return nullptr; }
+    X509_EXTENSION* extension = X509_get_ext(certificate, index);
+    const ASN1_OCTET_STRING* value = X509_EXTENSION_get_data(extension);
+    const int length = i2d_ASN1_OCTET_STRING(
+        const_cast<ASN1_OCTET_STRING*>(value), nullptr);
+    if (length <= 0) { X509_free(certificate); return nullptr; }
+    const auto result = ::jxx::NEW<
+        ::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(length);
+    unsigned char* cursor = reinterpret_cast<unsigned char*>(&(*result)[0]);
+    i2d_ASN1_OCTET_STRING(const_cast<ASN1_OCTET_STRING*>(value), &cursor);
+    X509_free(certificate);
+    return result;
+}
+
+::jxx::lang::jbool
+OpenSslX509Certificate::hasUnsupportedCriticalExtension() const {
+    X509* certificate = decodeCertificate(encoded_);
+    const bool unsupported = X509_get_extension_flags(certificate) & EXFLAG_CRITICAL;
+    X509_free(certificate);
+    return unsupported;
 }
 
 ::jxx::Ptr<::jxx::security::Principal>

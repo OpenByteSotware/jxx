@@ -38,6 +38,17 @@ public:
     ::jxx::lang::ByteArray getSigAlgParams() const override;
     ::jxx::Ptr<::jxx::security::PublicKey>
     getPublicKey() const override;
+    ::jxx::lang::BooleanArray getIssuerUniqueID() const override;
+    ::jxx::lang::BooleanArray getSubjectUniqueID() const override;
+    ::jxx::lang::BooleanArray getKeyUsage() const override;
+    ::jxx::lang::jint getBasicConstraints() const override;
+    ::jxx::Ptr<::jxx::util::Set<::jxx::lang::String>>
+    getCriticalExtensionOIDs() const override;
+    ::jxx::Ptr<::jxx::util::Set<::jxx::lang::String>>
+    getNonCriticalExtensionOIDs() const override;
+    ::jxx::lang::ByteArray getExtensionValue(
+        const ::jxx::Ptr<::jxx::lang::String>& oid) const override;
+    ::jxx::lang::jbool hasUnsupportedCriticalExtension() const override;
 
     ::jxx::Ptr<::jxx::security::Principal>
     getIssuerDN() const override;
