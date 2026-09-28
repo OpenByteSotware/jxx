@@ -5,6 +5,7 @@
 #include "util/jxx.util.Iterator.h"
 #include "util/jxx.util.MapEntry.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.ReadOnlyViews.h"
+#include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.ReadOnlyList.h"
 
 #include <string>
 
@@ -156,8 +157,10 @@ void Headers::set(
     if (normalized == nullptr) {
         return nullptr;
     }
-    return JxxSuper::get(
+    auto value = JxxSuper::get(
         ::jxx::CAST<::jxx::lang::Object>(normalized));
+    if (!frozen_ || value == nullptr) return value;
+    return ::jxx::CAST<ValueList>(::jxx::NEW<::jxx::com::sun::net::httpserver::internal::ReadOnlyList<::jxx::lang::String>>(value));
 }
 
 ::jxx::Ptr<Headers::ValueList> Headers::put(
