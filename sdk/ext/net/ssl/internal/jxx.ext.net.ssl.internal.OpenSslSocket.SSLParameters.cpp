@@ -17,6 +17,7 @@ OpenSslSocket::getSSLParameters() const {
         algorithmConstraints_);
     parameters->setUseCipherSuitesOrder(
         useCipherSuitesOrder_);
+    parameters->setSNIMatchers(sniMatchers_);
 
     if (sniHost_ != nullptr) {
         const auto names = ::jxx::NEW<
@@ -45,6 +46,7 @@ void OpenSslSocket::setSSLParameters(
         parameters->getAlgorithmConstraints();
     useCipherSuitesOrder_ =
         parameters->getUseCipherSuitesOrder();
+    sniMatchers_ = parameters->getSNIMatchers();
     if (endpointIdentificationAlgorithm_ != nullptr &&
         !endpointIdentificationAlgorithm_->utf8().empty() &&
         endpointIdentificationAlgorithm_->utf8() != "HTTPS")

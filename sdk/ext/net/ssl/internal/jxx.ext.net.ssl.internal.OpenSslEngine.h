@@ -5,11 +5,13 @@
 #include <vector>
 #include "security/jxx.security.AlgorithmConstraints.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLEngine.h"
+#include "util/jxx.util.List.h"
 
 struct ssl_ctx_st;
 struct ssl_st;
 struct bio_st;
 
+namespace jxx::ext::net::ssl { class SNIMatcher; }
 namespace jxx::ext::net::ssl::internal {
 
 class OpenSslContextConfig;
@@ -98,6 +100,8 @@ private:
     ::jxx::Ptr<SSLSession> session_;
     ::jxx::Ptr<::jxx::lang::String> endpointIdentificationAlgorithm_;
     ::jxx::Ptr<::jxx::security::AlgorithmConstraints> algorithmConstraints_;
+    ::jxx::Ptr<::jxx::util::List<::jxx::ext::net::ssl::SNIMatcher>>
+        sniMatchers_;
     ::jxx::Ptr<::jxx::lang::String> explicitSniHost_;
     std::vector<std::string> enabledCipherSuites_;
     std::vector<std::string> enabledProtocols_;

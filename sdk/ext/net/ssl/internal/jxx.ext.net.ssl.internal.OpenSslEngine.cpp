@@ -10,6 +10,7 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslCipherSuites.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslManagerBridge.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSniMatcher.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslProtocolPolicy.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSession.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSignatureAlgorithms.h"
@@ -112,6 +113,7 @@ void OpenSslEngine::ensureInitialized() {
     SSL_CTX_set_cert_verify_callback(
         context_, openSslVerifyCallback, managerBridge_.get());
     SSL_CTX_set_client_cert_cb(context_, openSslClientCertificateCallback);
+    if (!clientMode_) configureServerNameMatchers(context_, sniMatchers_);
     SSL_CTX_set_default_verify_paths(context_);
 
     if (!clientMode_ && useCipherSuitesOrder_)
@@ -535,6 +537,7 @@ OpenSslEngine::getHandshakeStatus() const {
         algorithmConstraints_);
     parameters->setUseCipherSuitesOrder(
         useCipherSuitesOrder_);
+    parameters->setSNIMatchers(sniMatchers_);
     if (explicitSniHost_ != nullptr) {
         const auto names = ::jxx::NEW<
             ::jxx::util::ArrayList<::jxx::ext::net::ssl::SNIServerName>>();
@@ -555,6 +558,7 @@ void OpenSslEngine::setSSLParameters(
         parameters->getAlgorithmConstraints();
     useCipherSuitesOrder_ =
         parameters->getUseCipherSuitesOrder();
+    sniMatchers_ = parameters->getSNIMatchers();
     if (endpointIdentificationAlgorithm_ != nullptr &&
         !endpointIdentificationAlgorithm_->utf8().empty() &&
         endpointIdentificationAlgorithm_->utf8() != "HTTPS")

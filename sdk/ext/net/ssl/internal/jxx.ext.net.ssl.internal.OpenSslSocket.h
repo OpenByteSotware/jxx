@@ -6,11 +6,13 @@
 #include <vector>
 #include "security/jxx.security.AlgorithmConstraints.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLSocket.h"
+#include "util/jxx.util.List.h"
 
 namespace jxx::ext::net::ssl {
 class HandshakeCompletedListener;
 class SSLParameters;
 class SSLSession;
+class SNIMatcher;
 }
 namespace jxx::net {
 class Socket;
@@ -110,6 +112,8 @@ private:
     ::jxx::Ptr<::jxx::lang::String> endpointIdentificationAlgorithm_;
     ::jxx::Ptr<::jxx::security::AlgorithmConstraints>
     algorithmConstraints_;
+    ::jxx::Ptr<::jxx::util::List<::jxx::ext::net::ssl::SNIMatcher>>
+    sniMatchers_;
     ::jxx::Ptr<::jxx::net::Socket> pendingTransport_;
     ::jxx::lang::jint port_ = 0;
     ::jxx::Ptr<::jxx::net::Socket> transport_;

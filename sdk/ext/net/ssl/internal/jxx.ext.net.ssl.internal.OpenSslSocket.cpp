@@ -4,6 +4,7 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocket.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocketNative.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslManagerBridge.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSniMatcher.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslProtocolPolicy.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSession.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSignatureAlgorithms.h"
@@ -203,6 +204,7 @@ void OpenSslSocket::startHandshake() {
     native_->managerBridge = std::make_unique<OpenSslManagerBridge>(config_, algorithmConstraints_);
     SSL_CTX_set_cert_verify_callback(native_->context, openSslVerifyCallback, native_->managerBridge.get());
     SSL_CTX_set_client_cert_cb(native_->context, openSslClientCertificateCallback);
+    if (!client_) configureServerNameMatchers(native_->context, sniMatchers_);
     SSL* ssl = SSL_new(native_->context);
     if (ssl == nullptr)
         throw ::jxx::io::IOException("SSL_new failed");
