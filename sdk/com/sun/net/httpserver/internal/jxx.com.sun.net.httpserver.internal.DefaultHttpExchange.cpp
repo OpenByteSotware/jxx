@@ -102,9 +102,9 @@ namespace jxx::com::sun::net::httpserver::internal
 		bool requestKeepAlive = false;
 		auto requestConnection = requestHeaders_->getFirst(::jxx::NEW<::jxx::lang::String>("connection"));
 		if (requestConnection != nullptr) {
-			auto requestConnectionText = requestConnection->utf8();
-			for (auto& character : requestConnectionText) if (character >= 'A' && character <= 'Z') character = static_cast<char>(character - 'A' + 'a');
-			requestKeepAlive = requestConnectionText.find("keep-alive") != std::string::npos;
+			auto text = requestConnection->utf8();
+			for (auto& character : text) if (character >= 'A' && character <= 'Z') character = static_cast<char>(character - 'A' + 'a');
+			requestKeepAlive = text.find("keep-alive") != std::string::npos && text.find("close") == std::string::npos;
 		}
 		responseHeaders_->remove(::jxx::NEW<::jxx::lang::String>("connection"));
 
