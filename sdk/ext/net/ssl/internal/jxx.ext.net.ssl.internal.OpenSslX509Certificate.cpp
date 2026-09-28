@@ -124,6 +124,23 @@ OpenSslX509Certificate::getNotAfter() const {
     return ::jxx::NEW<::jxx::util::Date>(millis);
 }
 
+::jxx::lang::ByteArray OpenSslX509Certificate::getTBSCertificate() const {
+    X509* certificate = decodeCertificate(encoded_);
+    const int length = i2d_re_X509_tbs(certificate, nullptr);
+    if (length <= 0) {
+        X509_free(certificate);
+        throw ::jxx::io::IOException("Unable to encode TBSCertificate");
+    }
+    const auto result = ::jxx::NEW<
+        ::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(length);
+    unsigned char* cursor = reinterpret_cast<unsigned char*>(&(*result)[0]);
+    const int written = i2d_re_X509_tbs(certificate, &cursor);
+    X509_free(certificate);
+    if (written != length)
+        throw ::jxx::io::IOException("Unable to encode TBSCertificate");
+    return result;
+}
+
 ::jxx::lang::ByteArray OpenSslX509Certificate::getSignature() const {
     X509* certificate = decodeCertificate(encoded_);
     const ASN1_BIT_STRING* signature = nullptr;

@@ -31,6 +31,7 @@ public:
     getSerialNumber() const override;
     ::jxx::Ptr<::jxx::util::Date> getNotBefore() const override;
     ::jxx::Ptr<::jxx::util::Date> getNotAfter() const override;
+    ::jxx::lang::ByteArray getTBSCertificate() const override;
     ::jxx::lang::ByteArray getSignature() const override;
     ::jxx::Ptr<::jxx::lang::String> getSigAlgName() const override;
     ::jxx::Ptr<::jxx::lang::String> getSigAlgOID() const override;

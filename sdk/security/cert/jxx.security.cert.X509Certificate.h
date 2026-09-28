@@ -33,6 +33,7 @@ public:
     getSerialNumber() const = 0;
     virtual ::jxx::Ptr<::jxx::util::Date> getNotBefore() const = 0;
     virtual ::jxx::Ptr<::jxx::util::Date> getNotAfter() const = 0;
+    virtual ::jxx::lang::ByteArray getTBSCertificate() const = 0;
     virtual ::jxx::lang::ByteArray getSignature() const = 0;
     virtual ::jxx::Ptr<::jxx::lang::String> getSigAlgName() const = 0;
     virtual ::jxx::Ptr<::jxx::lang::String> getSigAlgOID() const = 0;
