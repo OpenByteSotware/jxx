@@ -12,6 +12,7 @@ public:
     void setSSLParameters(const ::jxx::Ptr<::jxx::ext::net::ssl::SSLParameters>& parameters) override;
     ::jxx::Ptr<::jxx::ext::net::ssl::SSLParameters> getAppliedSSLParameters() const;
 private:
+    static ::jxx::Ptr<::jxx::ext::net::ssl::SSLParameters> copyParameters_(const ::jxx::Ptr<::jxx::ext::net::ssl::SSLParameters>& parameters);
     ::jxx::Ptr<::jxx::net::InetSocketAddress> clientAddress_;
     ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpsConfigurator> configurator_;
     ::jxx::Ptr<::jxx::ext::net::ssl::SSLParameters> parameters_;

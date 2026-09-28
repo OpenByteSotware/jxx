@@ -4,14 +4,14 @@
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpContext.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpExchange.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpsExchange.h"
+#include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpsParameters.h"
+#include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.HttpsConfigurator.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SSLParameters.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLSocket.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLException.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.Http11Parser.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.ServerConnectionTask.h"
 #include "util/jxx.util.concurrent.Executor.h"
-#include "util/jxx.util.concurrent.ExecutorService.h"
-#include "util/jxx.util.concurrent.Executors.h"
-#include "util/jxx.util.ArrayList.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.Headers.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.HttpHandler.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.Filter.h"
@@ -33,14 +33,6 @@ namespace jxx::com::sun::net::httpserver::internal
 		{
 			auto a = ::jxx::NEW<::jxx::lang::ByteArrayType>((::jxx::lang::jint)s.size()); 
 			for (::jxx::lang::jint i = 0; i < a->length; ++i)(*a)[i] = (::jxx::lang::jbyte)s[(std::size_t)i]; out->write(a, 0, a->length); out->flush();
-		}
-		struct ParserErrorResponse final { int code; const char* reason; };
-		ParserErrorResponse mapParserError(const std::string& error)
-		{
-			if (error == "request body too large") return {413, "Payload Too Large"};
-			if (error == "request line too large" || error == "empty request target") return {414, "URI Too Long"};
-			if (error == "unsupported HTTP version") return {505, "HTTP Version Not Supported"};
-			return {400, "Bad Request"};
 		}
 		void simpleResponse(const ::jxx::Ptr<::jxx::net::Socket>& s, int code, const char* reason)
 		{
@@ -106,11 +98,6 @@ namespace jxx::com::sun::net::httpserver::internal
 		bool expected = false;
 		if (!running_.compare_exchange_strong(expected, true)) throw ::jxx::lang::IllegalStateException();
 		taskLifetime_ = ::jxx::CAST<DefaultHttpServer>(this->thisPtr());
-		if (executor_ == nullptr && defaultExecutor_ == nullptr) {
-			auto threadCount = static_cast<::jxx::lang::jint>(std::thread::hardware_concurrency());
-			if (threadCount <= 0) threadCount = 4;
-			defaultExecutor_ = ::jxx::util::concurrent::Executors::newFixedThreadPool(threadCount);
-		}
 		try {
 			acceptThread_ = std::thread(&DefaultHttpServer::acceptLoop, this);
 		}
@@ -147,10 +134,6 @@ namespace jxx::com::sun::net::httpserver::internal
 			if (delay > 0) activeCondition_.wait_until(lock, deadline, [this] { return activeConnections_.empty(); });
 		}
 		closeActiveConnections_();
-		if (defaultExecutor_ != nullptr) {
-			defaultExecutor_->shutdownNow();
-			defaultExecutor_.reset();
-		}
 
 		{
 			std::lock_guard<std::mutex> lock(workersMutex_);
@@ -203,17 +186,20 @@ namespace jxx::com::sun::net::httpserver::internal
 				auto socket = serverSocket_->accept();
 				if (!socket) continue;
 				registerConnection_(socket);
-				auto dispatchExecutor = executor_ != nullptr
-					? executor_
-					: ::jxx::CAST<::jxx::util::concurrent::Executor>(defaultExecutor_);
-				try {
-					auto owner = taskLifetime_;
-					auto task = ::jxx::NEW<ServerConnectionTask>([owner, socket] { if (owner) owner->serve(socket); });
-					dispatchExecutor->execute(::jxx::CAST<::jxx::lang::Runnable>(task));
+				if (executor_) {
+					try {
+						auto owner = taskLifetime_;
+						auto task = ::jxx::NEW<ServerConnectionTask>([owner, socket] { if (owner) owner->serve(socket); });
+						executor_->execute(::jxx::CAST<::jxx::lang::Runnable>(task));
+					}
+					catch (const ::jxx::util::concurrent::RejectedExecutionException&) {
+						unregisterConnection_(socket);
+						socket->close();
+					}
 				}
-				catch (const ::jxx::util::concurrent::RejectedExecutionException&) {
-					unregisterConnection_(socket);
-					socket->close();
+				else {
+					std::lock_guard<std::mutex> lock(workersMutex_);
+					workers_.emplace_back(&DefaultHttpServer::serve, this, socket);
 				}
 			}
 			catch (...) { if (!running_) break; }
@@ -231,6 +217,22 @@ namespace jxx::com::sun::net::httpserver::internal
 			secureTransport = sslSocket != nullptr;
 			if (sslSocket != nullptr) {
 				try {
+					if (httpsConfigurator_ == nullptr) throw ::jxx::lang::IllegalStateException();
+					auto clientAddress = ::jxx::CAST<::jxx::net::InetSocketAddress>(socket->getRemoteSocketAddress());
+					auto httpsParameters = ::jxx::NEW<DefaultHttpsParameters>(clientAddress, httpsConfigurator_);
+					httpsConfigurator_->configure(httpsParameters);
+					auto aggregate = httpsParameters->getAppliedSSLParameters();
+					if (aggregate != nullptr) {
+						sslSocket->setSSLParameters(aggregate);
+					}
+					else {
+						auto suites = httpsParameters->getCipherSuites();
+						if (suites != nullptr) sslSocket->setEnabledCipherSuites(suites);
+						auto protocols = httpsParameters->getProtocols();
+						if (protocols != nullptr) sslSocket->setEnabledProtocols(protocols);
+						if (httpsParameters->getNeedClientAuth()) sslSocket->setNeedClientAuth(true);
+						else if (httpsParameters->getWantClientAuth()) sslSocket->setWantClientAuth(true);
+					}
 					sslSocket->startHandshake();
 					handshakeComplete = true;
 				}
@@ -250,15 +252,10 @@ namespace jxx::com::sun::net::httpserver::internal
 					}for (::jxx::lang::jint i = 0; i < n; ++i)buffer.push_back((unsigned char)(*chunk)[i]); if (buffer.size() > 1048576) {
 						simpleResponse(socket, 413, "Payload Too Large"); socket->close(); return;
 					}continue;
-				}
-				if (result == Http11Parser::Result::Error) {
-					const auto response = mapParserError(error);
-					simpleResponse(socket, response.code, response.reason);
-					socket->close();
-					return;
-				}
+				}if (result == Http11Parser::Result::Error) {
+					simpleResponse(socket, 400, "Bad Request"); socket->close(); return;
 				httpRequestParsed = true;
-				auto uri = ::jxx::NEW<::jxx::net::URI>(::jxx::NEW<::jxx::lang::String>(request.target.c_str())); auto path = uri->getRawPath(); auto context = match(path ? path->utf8() : std::string("/")); if (!context || !context->getHandler()) {
+				}auto uri = ::jxx::NEW<::jxx::net::URI>(::jxx::NEW<::jxx::lang::String>(request.target.c_str())); auto path = uri->getRawPath(); auto context = match(path ? path->utf8() : std::string("/")); if (!context || !context->getHandler()) {
 					simpleResponse(socket, 404, "Not Found"); socket->close(); return;
 				}auto headers = ::jxx::NEW<::jxx::com::sun::net::httpserver::Headers>();
 				for (const auto& h : request.headers)
@@ -275,13 +272,8 @@ namespace jxx::com::sun::net::httpserver::internal
 					auto session = sslSocket->getSession();
 					exchange = ::jxx::NEW<DefaultHttpsExchange>(httpExchange, session);
 				}
-				auto filterSnapshot = ::jxx::NEW<::jxx::util::ArrayList<::jxx::com::sun::net::httpserver::Filter>>();
-				auto liveFilters = context->getFilters();
-				for (::jxx::lang::jint filterIndex = 0; filterIndex < liveFilters->size(); ++filterIndex) {
-					filterSnapshot->add(liveFilters->get(filterIndex));
-				}
 				auto chain = ::jxx::NEW<::jxx::com::sun::net::httpserver::Filter::Chain>(
-					::jxx::CAST<::jxx::util::List<::jxx::com::sun::net::httpserver::Filter>>(filterSnapshot), context->getHandler());
+					context->getFilters(), context->getHandler());
 				chain->doFilter(exchange);
 				if (exchange->getResponseCode() < 0) exchange->sendResponseHeaders(200, -1);
 				httpExchange->completeInternal();

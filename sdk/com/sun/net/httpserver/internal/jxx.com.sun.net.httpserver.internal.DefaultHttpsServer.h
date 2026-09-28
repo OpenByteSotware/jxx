@@ -13,5 +13,5 @@ public:
     void removeContext(const ::jxx::Ptr<::jxx::lang::String>& path) override; void removeContext(const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>& context) override; ::jxx::Ptr<::jxx::net::InetSocketAddress> getAddress() override;
 private:
     void ensurePublicOwner_();
-    ::jxx::Ptr<DefaultHttpServer> delegate_; ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpsConfigurator> configurator_; ::jxx::Ptr<::jxx::net::InetSocketAddress> address_; ::jxx::lang::jint backlog_=50; ::jxx::lang::jbool started_=false; ::jxx::lang::jbool ownerInstalled_=false;
+    ::jxx::Ptr<DefaultHttpServer> delegate_; ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpsConfigurator> configurator_; ::jxx::Ptr<::jxx::net::InetSocketAddress> address_; ::jxx::lang::jint backlog_=50; ::jxx::lang::jbool started_=false; ::jxx::lang::jbool stopped_=false; ::jxx::lang::jbool ownerInstalled_=false;
 }; }

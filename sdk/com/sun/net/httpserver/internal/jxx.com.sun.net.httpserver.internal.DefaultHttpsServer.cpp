@@ -28,7 +28,7 @@ void DefaultHttpsServer::ensurePublicOwner_()
 void DefaultHttpsServer::setHttpsConfigurator(const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpsConfigurator>& config)
 {
     if (!config) throw ::jxx::lang::NullPointerException();
-    if (started_) throw ::jxx::lang::IllegalStateException();
+    if (started_ || stopped_) throw ::jxx::lang::IllegalStateException();
     configurator_ = config;
 }
 ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpsConfigurator> DefaultHttpsServer::getHttpsConfigurator(){ return configurator_; }
@@ -36,22 +36,38 @@ void DefaultHttpsServer::setHttpsConfigurator(const ::jxx::Ptr<::jxx::com::sun::
 void DefaultHttpsServer::bind(const ::jxx::Ptr<::jxx::net::InetSocketAddress>& address, ::jxx::lang::jint backlog)
 {
     if (!address) throw ::jxx::lang::NullPointerException();
-    if (started_ || address_) throw ::jxx::lang::IllegalStateException();
+    if (started_ || stopped_ || address_) throw ::jxx::lang::IllegalStateException();
     address_ = address;
     backlog_ = backlog <= 0 ? 50 : backlog;
 }
 
 void DefaultHttpsServer::start()
 {
-    if (started_ || !configurator_ || !address_) throw ::jxx::lang::IllegalStateException();
+    if (started_ || stopped_ || configurator_ == nullptr || address_ == nullptr) throw ::jxx::lang::IllegalStateException();
     ensurePublicOwner_();
-    auto listener = configurator_->getSSLContext()->getServerSocketFactory()->createServerSocket(address_->getPort(), backlog_, address_->getAddress());
+    auto context = configurator_->getSSLContext();
+    if (context == nullptr) throw ::jxx::lang::IllegalStateException();
+    auto factory = context->getServerSocketFactory();
+    if (factory == nullptr) throw ::jxx::lang::IllegalStateException();
+    auto listener = factory->createServerSocket(address_->getPort(), backlog_, address_->getAddress());
+    if (listener == nullptr) throw ::jxx::lang::IllegalStateException();
     delegate_->installListenerInternal(listener, address_, configurator_);
-    started_ = true;
-    delegate_->start();
+    try {
+        delegate_->start();
+        started_ = true;
+    }
+    catch (...) {
+        try { listener->close(); } catch (...) {}
+        throw;
+    }
 }
-void DefaultHttpsServer::stop(::jxx::lang::jint delay){ delegate_->stop(delay); }
-void DefaultHttpsServer::setExecutor(const ::jxx::Ptr<::jxx::util::concurrent::Executor>& executor){ if(started_)throw ::jxx::lang::IllegalStateException(); delegate_->setExecutor(executor); }
+void DefaultHttpsServer::stop(::jxx::lang::jint delay)
+{
+    if (delay < 0) throw ::jxx::lang::IllegalArgumentException();
+    stopped_ = true;
+    delegate_->stop(delay);
+}
+void DefaultHttpsServer::setExecutor(const ::jxx::Ptr<::jxx::util::concurrent::Executor>& executor){ if(started_ || stopped_)throw ::jxx::lang::IllegalStateException(); delegate_->setExecutor(executor); }
 ::jxx::Ptr<::jxx::util::concurrent::Executor> DefaultHttpsServer::getExecutor(){ return delegate_->getExecutor(); }
 
 ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext> DefaultHttpsServer::createContext(const ::jxx::Ptr<::jxx::lang::String>& path,const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpHandler>& handler)
