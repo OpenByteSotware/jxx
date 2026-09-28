@@ -293,6 +293,10 @@ void OpenSslSocket::startHandshake() {
             throw;
         }
     }
+    if (!create_ && SSL_session_reused(ssl) != 1)
+        throw ::jxx::ext::net::ssl::SSLHandshakeException(
+            "session creation is disabled");
+
     SSL_SESSION* ns = SSL_get_session(ssl);
     if (client_ && ns != nullptr && config_ != nullptr &&
         config_->clientSessionContext != nullptr)
