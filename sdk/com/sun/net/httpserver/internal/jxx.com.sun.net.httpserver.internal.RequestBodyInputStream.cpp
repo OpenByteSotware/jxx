@@ -1,21 +1,29 @@
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.RequestBodyInputStream.h"
 
+#include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.BufferedRequestBodySource.h"
+#include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.RequestBodySource.h"
 #include "lang/jxx.lang.Exceptions.h"
-
-#include <algorithm>
 
 namespace jxx::com::sun::net::httpserver::internal {
 
 RequestBodyInputStream::RequestBodyInputStream(const ::jxx::lang::ByteArray& body)
-    : Super(), body_(body)
+    : RequestBodyInputStream(
+          ::jxx::CAST<RequestBodySource>(
+              ::jxx::NEW<BufferedRequestBodySource>(body, 0, body == nullptr ? 0 : body->length)))
 {
-    if (body_ == nullptr) throw ::jxx::lang::NullPointerException();
+}
+
+RequestBodyInputStream::RequestBodyInputStream(const ::jxx::Ptr<RequestBodySource>& source)
+    : Super(), source_(source)
+{
+    if (source_ == nullptr) throw ::jxx::lang::NullPointerException();
 }
 
 ::jxx::lang::jint RequestBodyInputStream::read()
 {
-    if (closed_ || position_ >= body_->length) return -1;
-    return static_cast<unsigned char>((*body_)[position_++]);
+    auto one = ::jxx::NEW<::jxx::lang::ByteArrayType>(1);
+    const auto count = source_->read(one, 0, 1);
+    return count < 0 ? -1 : static_cast<unsigned char>((*one)[0]);
 }
 
 ::jxx::lang::jint RequestBodyInputStream::read(
@@ -23,35 +31,22 @@ RequestBodyInputStream::RequestBodyInputStream(const ::jxx::lang::ByteArray& bod
     ::jxx::lang::jint offset,
     ::jxx::lang::jint length)
 {
-    if (buffer == nullptr) throw ::jxx::lang::NullPointerException();
-    if (offset < 0 || length < 0 || offset > buffer->length - length)
-        throw ::jxx::lang::IndexOutOfBoundsException();
-    if (length == 0) return 0;
-    if (closed_ || position_ >= body_->length) return -1;
-    const auto count = std::min(length, body_->length - position_);
-    for (::jxx::lang::jint index = 0; index < count; ++index)
-        (*buffer)[offset + index] = (*body_)[position_ + index];
-    position_ += count;
-    return count;
+    return source_->read(buffer, offset, length);
 }
 
 ::jxx::lang::jlong RequestBodyInputStream::skip(::jxx::lang::jlong count)
 {
-    if (closed_ || count <= 0) return 0;
-    const auto remaining = static_cast<::jxx::lang::jlong>(body_->length - position_);
-    const auto skipped = std::min(count, remaining);
-    position_ += static_cast<::jxx::lang::jint>(skipped);
-    return skipped;
+    return source_->skip(count);
 }
 
 ::jxx::lang::jint RequestBodyInputStream::available()
 {
-    return closed_ ? 0 : body_->length - position_;
+    return source_->available();
 }
 
 void RequestBodyInputStream::close()
 {
-    closed_ = true;
+    source_->close();
 }
 
 ::jxx::lang::jbool RequestBodyInputStream::markSupported() const
@@ -61,12 +56,12 @@ void RequestBodyInputStream::close()
 
 ::jxx::lang::jbool RequestBodyInputStream::isFullyConsumedInternal() const noexcept
 {
-    return position_ >= body_->length;
+    return source_->isFullyConsumedInternal();
 }
 
 ::jxx::lang::jbool RequestBodyInputStream::wasClosedInternal() const noexcept
 {
-    return closed_;
+    return source_->wasClosedInternal();
 }
 
 } // namespace jxx::com::sun::net::httpserver::internal

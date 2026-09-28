@@ -5,6 +5,8 @@
 
 namespace jxx::com::sun::net::httpserver::internal {
 
+class RequestBodySource;
+
 class RequestBodyInputStream final
     : public ::jxx::lang::ClassBase<RequestBodyInputStream, ::jxx::io::InputStream> {
 public:
@@ -12,6 +14,7 @@ public:
     using Super = ::jxx::lang::ClassBase<RequestBodyInputStream, JxxSuper>;
 
     explicit RequestBodyInputStream(const ::jxx::lang::ByteArray& body);
+    explicit RequestBodyInputStream(const ::jxx::Ptr<RequestBodySource>& source);
 
     ::jxx::lang::jint read() override;
     ::jxx::lang::jint read(const ::jxx::lang::ByteArray& buffer,
@@ -25,9 +28,7 @@ public:
     ::jxx::lang::jbool wasClosedInternal() const noexcept;
 
 private:
-    ::jxx::lang::ByteArray body_;
-    ::jxx::lang::jint position_ = 0;
-    ::jxx::lang::jbool closed_ = false;
+    ::jxx::Ptr<RequestBodySource> source_;
 };
 
 } // namespace jxx::com::sun::net::httpserver::internal
