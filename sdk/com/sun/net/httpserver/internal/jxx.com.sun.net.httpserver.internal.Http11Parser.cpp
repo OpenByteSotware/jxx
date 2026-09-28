@@ -36,15 +36,18 @@ bool parseHeaderLine(
     const std::string& source,
     std::size_t begin,
     std::size_t end,
+    std::size_t maxNameBytes,
+    std::size_t maxValueBytes,
     std::pair<std::string, std::string>& output)
 {
     const auto colon = source.find(':', begin);
     if (colon == std::string::npos || colon >= end || colon == begin) {
         return false;
     }
+    if (colon - begin > maxNameBytes || end - colon - 1 > maxValueBytes) return false;
     output.first = source.substr(begin, colon - begin);
     output.second = trim(source.substr(colon + 1, end - colon - 1));
-    return true;
+    return output.second.size() <= maxValueBytes;
 }
 
 bool hasChunkedTransferEncoding(
@@ -78,7 +81,8 @@ Http11Parser::Result decodeChunked(
     std::size_t bodyStart,
     ParsedRequest& output,
     std::size_t& consumed,
-    std::string& error)
+    std::string& error,
+    const HttpServerLimits& limits)
 {
     std::size_t position = bodyStart;
     output.body.clear();
@@ -117,7 +121,7 @@ Http11Parser::Result decodeChunked(
                     return Http11Parser::Result::Complete;
                 }
                 std::pair<std::string, std::string> trailer;
-                if (!parseHeaderLine(source, position, trailerEnd, trailer)) {
+                if (!parseHeaderLine(source, position, trailerEnd, limits.maxHeaderNameBytes, limits.maxHeaderValueBytes, trailer)) {
                     error = "invalid trailer";
                     return Http11Parser::Result::Error;
                 }
@@ -212,7 +216,7 @@ Http11Parser::Result Http11Parser::parse(
         const auto lineEnd = source.find("\r\n", position);
         std::pair<std::string, std::string> header;
         if (lineEnd == std::string::npos || lineEnd > headersEnd ||
-            !parseHeaderLine(source, position, lineEnd, header)) {
+            !parseHeaderLine(source, position, lineEnd, limits_.maxHeaderNameBytes, limits_.maxHeaderValueBytes, header)) {
             error = "bad header";
             return Result::Error;
         }
@@ -238,7 +242,7 @@ Http11Parser::Result Http11Parser::parse(
     const auto bodyStart = headersEnd + 4;
     if (chunked) {
         const auto result = decodeChunked(
-            source, bodyStart, output, consumed, error);
+            source, bodyStart, output, consumed, error, limits_);
         if (result != Result::Complete) return result;
     }
     else {

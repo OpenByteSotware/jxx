@@ -4,6 +4,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.HttpServerLimits.h"
 
 namespace jxx::com::sun::net::httpserver::internal {
 
@@ -19,6 +20,7 @@ struct ParsedRequest {
 
 class Http11Parser final {
 public:
+    explicit Http11Parser(const HttpServerLimits& limits=HttpServerLimits()) noexcept:limits_(limits){}
     enum class Result {
         NeedMore,
         Complete,
@@ -33,6 +35,7 @@ public:
         std::string& error) const;
 
 private:
+    HttpServerLimits limits_;
     static bool parseContentLength(
         const std::vector<std::pair<std::string, std::string>>& headers,
         std::size_t& value,
