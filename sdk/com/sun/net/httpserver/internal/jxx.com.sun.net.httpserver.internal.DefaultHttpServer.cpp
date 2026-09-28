@@ -19,6 +19,7 @@
 #include "net/jxx.net.URI.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.buildin_Array.h"
+#include "util/jxx.util.concurrent.RejectedExecutionException.h"
 namespace jxx::com::sun::net::httpserver::internal
 {
 	namespace
@@ -95,10 +96,15 @@ namespace jxx::com::sun::net::httpserver::internal
 				auto socket = serverSocket_->accept();
 				if (socket == nullptr) continue;
 				if (executor_ != nullptr) {
-					auto task = ::jxx::NEW<ServerConnectionTask>(
-						[this, socket] { serve(socket); });
-					executor_->execute(
-						::jxx::CAST<::jxx::lang::Runnable>(task));
+					try {
+						auto task = ::jxx::NEW<ServerConnectionTask>(
+							[this, socket] { serve(socket); });
+						executor_->execute(
+							::jxx::CAST<::jxx::lang::Runnable>(task));
+					}
+					catch (const ::jxx::util::concurrent::RejectedExecutionException&) {
+						socket->close();
+					}
 				}
 				else {
 					workers_.emplace_back(
