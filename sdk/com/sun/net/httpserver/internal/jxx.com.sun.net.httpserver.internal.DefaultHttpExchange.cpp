@@ -66,7 +66,8 @@ namespace jxx::com::sun::net::httpserver::internal
 		completed_ = true;
 	}
 	::jxx::lang::jbool DefaultHttpExchange::isCompletedInternal() const noexcept { return completed_; }
-	::jxx::lang::jbool DefaultHttpExchange::isConnectionReusableInternal() const noexcept { return completed_ && reusable_; }::jxx::Ptr<::jxx::io::InputStream>DefaultHttpExchange::getRequestBody()
+	::jxx::lang::jbool DefaultHttpExchange::isConnectionReusableInternal() const noexcept { return completed_ && reusable_ && !responseClose_; }
+	::jxx::lang::jbool DefaultHttpExchange::responseRequestsCloseInternal() const noexcept { return responseClose_; }::jxx::Ptr<::jxx::io::InputStream>DefaultHttpExchange::getRequestBody()
 	{
 		return input_;
 	}::jxx::Ptr<::jxx::io::OutputStream>DefaultHttpExchange::getResponseBody()
@@ -80,17 +81,28 @@ namespace jxx::com::sun::net::httpserver::internal
 		responseCode_ = code;
 		const bool statusForbidsBody = (code >= 100 && code < 200) || code == 204 || code == 304;
 		const bool headRequest = method_ != nullptr && method_->utf8() == "HEAD";
+		const bool http10 = protocol_ != nullptr && protocol_->utf8() == "HTTP/1.0";
 		ResponseBodyMode mode;
 		::jxx::lang::jlong fixedLength = 0;
 		if (statusForbidsBody || headRequest || length < 0) mode = ResponseBodyMode::NoBody;
-		else if (length == 0) mode = ResponseBodyMode::Chunked;
+		else if (length == 0 && !http10) mode = ResponseBodyMode::Chunked;
+		else if (length == 0) { mode = ResponseBodyMode::NoBody; responseClose_ = true; }
 		else { mode = ResponseBodyMode::FixedLength; fixedLength = length; }
 
 		// Server-controlled framing always wins over application headers.
 		responseHeaders_->remove(::jxx::NEW<::jxx::lang::String>("content-length"));
 		responseHeaders_->remove(::jxx::NEW<::jxx::lang::String>("transfer-encoding"));
+		auto connectionValue = responseHeaders_->getFirst(::jxx::NEW<::jxx::lang::String>("connection"));
+		if (connectionValue != nullptr) {
+			auto text = connectionValue->utf8();
+			for (auto& character : text) if (character >= 'A' && character <= 'Z') character = static_cast<char>(character - 'A' + 'a');
+			if (text == "close") responseClose_ = true;
+		}
+		if (http10 && mode != ResponseBodyMode::FixedLength) responseClose_ = true;
+		responseHeaders_->remove(::jxx::NEW<::jxx::lang::String>("connection"));
 
-		std::string message = "HTTP/1.1 " + std::to_string(code) + " " + reasonPhrase_(code) + "\r\n";
+		const std::string responseProtocol = http10 ? "HTTP/1.0" : "HTTP/1.1";
+		std::string message = responseProtocol + " " + std::to_string(code) + " " + reasonPhrase_(code) + "\r\n";
 		auto entries = responseHeaders_->entrySet()->iterator();
 		while (entries->hasNext()) {
 			auto entry = entries->next();
@@ -107,6 +119,7 @@ namespace jxx::com::sun::net::httpserver::internal
 		}
 		if (mode == ResponseBodyMode::FixedLength) message += "Content-Length: " + std::to_string(fixedLength) + "\r\n";
 		else if (mode == ResponseBodyMode::Chunked) message += "Transfer-Encoding: chunked\r\n";
+		if (responseClose_) message += "Connection: close\r\n";
 		message += "\r\n";
 		rawOutput_ = socket_->getOutputStream();
 		auto bytes = ::jxx::NEW<::jxx::lang::ByteArrayType>(static_cast<::jxx::lang::jint>(message.size()));
