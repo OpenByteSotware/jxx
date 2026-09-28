@@ -14,15 +14,72 @@ namespace {
 std::string reasonPhrase_(::jxx::lang::jint code)
 {
     switch (code) {
-    case 200: return "OK"; case 201: return "Created"; case 202: return "Accepted";
-    case 204: return "No Content"; case 301: return "Moved Permanently"; case 302: return "Found";
-    case 304: return "Not Modified"; case 400: return "Bad Request"; case 401: return "Unauthorized";
-    case 403: return "Forbidden"; case 404: return "Not Found"; case 405: return "Method Not Allowed";
-    case 413: return "Payload Too Large"; case 500: return "Internal Server Error";
-    case 501: return "Not Implemented"; case 503: return "Service Unavailable"; default: return "";
+    case 100: return "Continue";
+    case 101: return "Switching Protocols";
+    case 200: return "OK";
+    case 201: return "Created";
+    case 202: return "Accepted";
+    case 203: return "Non-Authoritative Information";
+    case 204: return "No Content";
+    case 205: return "Reset Content";
+    case 206: return "Partial Content";
+    case 300: return "Multiple Choices";
+    case 301: return "Moved Permanently";
+    case 302: return "Found";
+    case 303: return "See Other";
+    case 304: return "Not Modified";
+    case 305: return "Use Proxy";
+    case 307: return "Temporary Redirect";
+    case 400: return "Bad Request";
+    case 401: return "Unauthorized";
+    case 402: return "Payment Required";
+    case 403: return "Forbidden";
+    case 404: return "Not Found";
+    case 405: return "Method Not Allowed";
+    case 406: return "Not Acceptable";
+    case 407: return "Proxy Authentication Required";
+    case 408: return "Request Timeout";
+    case 409: return "Conflict";
+    case 410: return "Gone";
+    case 411: return "Length Required";
+    case 412: return "Precondition Failed";
+    case 413: return "Payload Too Large";
+    case 414: return "URI Too Long";
+    case 415: return "Unsupported Media Type";
+    case 416: return "Requested Range Not Satisfiable";
+    case 417: return "Expectation Failed";
+    case 500: return "Internal Server Error";
+    case 501: return "Not Implemented";
+    case 502: return "Bad Gateway";
+    case 503: return "Service Unavailable";
+    case 504: return "Gateway Timeout";
+    case 505: return "HTTP Version Not Supported";
+    default: return "";
     }
 }
+
+bool containsConnectionToken_(const ::jxx::Ptr<::jxx::lang::String>& value,const std::string& requested)
+{
+    if (value == nullptr) return false;
+    auto text = value->utf8();
+    std::size_t position = 0;
+    while (position <= text.size()) {
+        const auto comma = text.find(',', position);
+        const auto end = comma == std::string::npos ? text.size() : comma;
+        auto first = position;
+        while (first < end && (text[first] == ' ' || text[first] == '\t')) ++first;
+        auto last = end;
+        while (last > first && (text[last - 1] == ' ' || text[last - 1] == '\t')) --last;
+        std::string token = text.substr(first, last - first);
+        for (auto& character : token) if (character >= 'A' && character <= 'Z') character = static_cast<char>(character - 'A' + 'a');
+        if (token == requested) return true;
+        if (comma == std::string::npos) break;
+        position = comma + 1;
+    }
+    return false;
 }
+}
+
 namespace jxx::com::sun::net::httpserver::internal
 {
 	DefaultHttpExchange::DefaultHttpExchange(const ::jxx::Ptr<::jxx::net::Socket>& s, const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>& c, const ::jxx::Ptr<::jxx::lang::String>& m, const ::jxx::Ptr<::jxx::net::URI>& u, const ::jxx::Ptr<::jxx::lang::String>& p, const ::jxx::Ptr<::jxx::com::sun::net::httpserver::Headers>& h, const ::jxx::lang::ByteArray& b) :Super(), socket_(s), context_(c), method_(m), protocol_(p), uri_(u), requestHeaders_(h), responseHeaders_(::jxx::NEW<::jxx::com::sun::net::httpserver::Headers>()), input_(::jxx::NEW<::jxx::io::ByteArrayInputStream>(b)), attributes_(::jxx::NEW<::jxx::util::HashMap<::jxx::lang::String, ::jxx::lang::Object>>())
@@ -87,6 +144,7 @@ namespace jxx::com::sun::net::httpserver::internal
 	void DefaultHttpExchange::sendResponseHeaders(::jxx::lang::jint code, ::jxx::lang::jlong length)
 	{
 		if (responseCode_ != -1) throw ::jxx::lang::IllegalStateException();
+		if (code < 100 || code > 999) throw ::jxx::lang::IllegalArgumentException();
 		responseCode_ = code;
 		const bool statusForbidsBody = (code >= 100 && code < 200) || code == 204 || code == 304;
 		const bool headRequest = method_ != nullptr && method_->utf8() == "HEAD";
@@ -102,18 +160,12 @@ namespace jxx::com::sun::net::httpserver::internal
 		responseHeaders_->remove(::jxx::NEW<::jxx::lang::String>("content-length"));
 		responseHeaders_->remove(::jxx::NEW<::jxx::lang::String>("transfer-encoding"));
 		auto connectionValue = responseHeaders_->getFirst(::jxx::NEW<::jxx::lang::String>("connection"));
-		if (connectionValue != nullptr) {
-			auto text = connectionValue->utf8();
-			for (auto& character : text) if (character >= 'A' && character <= 'Z') character = static_cast<char>(character - 'A' + 'a');
-			if (text == "close") responseClose_ = true;
-		}
+		if (containsConnectionToken_(connectionValue, "close")) responseClose_ = true;
 		if (http10 && mode != ResponseBodyMode::FixedLength) responseClose_ = true;
 		bool requestKeepAlive = false;
 		auto requestConnection = requestHeaders_->getFirst(::jxx::NEW<::jxx::lang::String>("connection"));
 		if (requestConnection != nullptr) {
-			auto text = requestConnection->utf8();
-			for (auto& character : text) if (character >= 'A' && character <= 'Z') character = static_cast<char>(character - 'A' + 'a');
-			requestKeepAlive = text.find("keep-alive") != std::string::npos && text.find("close") == std::string::npos;
+			requestKeepAlive = containsConnectionToken_(requestConnection, "keep-alive") && !containsConnectionToken_(requestConnection, "close");
 		}
 		responseHeaders_->remove(::jxx::NEW<::jxx::lang::String>("connection"));
 
