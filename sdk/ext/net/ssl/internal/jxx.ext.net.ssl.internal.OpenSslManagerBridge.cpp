@@ -356,8 +356,6 @@ int OpenSslManagerBridge::selectServerIdentity(SSL* ssl) noexcept {
             if (decodedKey != nullptr) EVP_PKEY_free(decodedKey);
             return 0;
         }
-        X509_free(leaf);
-        EVP_PKEY_free(decodedKey);
         X509* previousCertificate = leaf;
         for (::jxx::lang::jint index = 1; index < chain->length; ++index) {
             const auto bytes = (*chain)[index]->getEncoded();
@@ -368,11 +366,15 @@ int OpenSslManagerBridge::selectServerIdentity(SSL* ssl) noexcept {
                 !permitsCertificateSignature(algorithmConstraints_, extra) ||
                 SSL_add1_chain_cert(ssl, extra) != 1) {
                 if (extra != nullptr) X509_free(extra);
+                X509_free(previousCertificate);
+                EVP_PKEY_free(decodedKey);
                 return 0;
             }
+            X509_free(previousCertificate);
             previousCertificate = extra;
-            X509_free(extra);
         }
+        X509_free(previousCertificate);
+        EVP_PKEY_free(decodedKey);
         return 1;
     } catch (...) {
         return 0;
@@ -430,13 +432,18 @@ int OpenSslManagerBridge::selectClientCertificate(
                 !permitsCertificateSignature(algorithmConstraints_, extra) ||
                 SSL_add1_chain_cert(ssl, extra) != 1) {
                 if (extra != nullptr) X509_free(extra);
+                if (previousCertificate != leaf)
+                    X509_free(previousCertificate);
                 X509_free(leaf);
                 EVP_PKEY_free(decodedKey);
                 return 0;
             }
+            if (previousCertificate != leaf)
+                X509_free(previousCertificate);
             previousCertificate = extra;
-            X509_free(extra);
         }
+        if (previousCertificate != leaf)
+            X509_free(previousCertificate);
         *certificate = leaf;
         *privateKey = decodedKey;
         return 1;
