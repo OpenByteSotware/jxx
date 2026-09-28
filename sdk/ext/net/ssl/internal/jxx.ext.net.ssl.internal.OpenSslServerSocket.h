@@ -5,6 +5,9 @@
 #include <vector>
 
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLServerSocket.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SNIMatcher.h"
+#include "security/jxx.security.AlgorithmConstraints.h"
+#include "util/jxx.util.List.h"
 
 namespace jxx::ext::net::ssl::internal {
 
@@ -39,6 +42,10 @@ public:
     ::jxx::lang::jbool getUseClientMode() const override;
     void setEnableSessionCreation(::jxx::lang::jbool enabled) override;
     ::jxx::lang::jbool getEnableSessionCreation() const override;
+    ::jxx::Ptr<::jxx::ext::net::ssl::SSLParameters>
+    getSSLParameters() const override;
+    void setSSLParameters(
+        const ::jxx::Ptr<::jxx::ext::net::ssl::SSLParameters>& parameters) override;
 
 private:
     std::shared_ptr<OpenSslContextConfig> config_;
@@ -48,6 +55,11 @@ private:
     ::jxx::lang::jbool wantClientAuth_ = false;
     ::jxx::lang::jbool useClientMode_ = false;
     ::jxx::lang::jbool enableSessionCreation_ = true;
+    ::jxx::Ptr<::jxx::security::AlgorithmConstraints>
+    algorithmConstraints_;
+    ::jxx::Ptr<::jxx::util::List<::jxx::ext::net::ssl::SNIMatcher>>
+    sniMatchers_;
+    ::jxx::lang::jbool useCipherSuitesOrder_ = false;
 };
 
 } // namespace jxx::ext::net::ssl::internal

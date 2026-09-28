@@ -6,6 +6,8 @@
 
 namespace jxx::ext::net::ssl {
 
+class SSLParameters;
+
 class SSLServerSocket
     : public ::jxx::lang::ClassBase<
           SSLServerSocket,
@@ -39,6 +41,10 @@ public:
     virtual ::jxx::lang::jbool getUseClientMode() const = 0;
     virtual void setEnableSessionCreation(::jxx::lang::jbool enabled) = 0;
     virtual ::jxx::lang::jbool getEnableSessionCreation() const = 0;
+
+    virtual ::jxx::Ptr<SSLParameters> getSSLParameters() const;
+    virtual void setSSLParameters(
+        const ::jxx::Ptr<SSLParameters>& parameters);
 };
 
 } // namespace jxx::ext::net::ssl
