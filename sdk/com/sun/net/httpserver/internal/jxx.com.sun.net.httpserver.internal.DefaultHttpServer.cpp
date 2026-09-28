@@ -4,6 +4,7 @@
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpExchange.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpsExchange.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLSocket.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SSLException.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.Http11Parser.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.ServerConnectionTask.h"
 #include "util/jxx.util.concurrent.Executor.h"
@@ -19,7 +20,6 @@
 #include "net/jxx.net.URI.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.buildin_Array.h"
-#include "util/jxx.util.concurrent.RejectedExecutionException.h"
 namespace jxx::com::sun::net::httpserver::internal
 {
 	namespace
@@ -96,15 +96,10 @@ namespace jxx::com::sun::net::httpserver::internal
 				auto socket = serverSocket_->accept();
 				if (socket == nullptr) continue;
 				if (executor_ != nullptr) {
-					try {
-						auto task = ::jxx::NEW<ServerConnectionTask>(
-							[this, socket] { serve(socket); });
-						executor_->execute(
-							::jxx::CAST<::jxx::lang::Runnable>(task));
-					}
-					catch (const ::jxx::util::concurrent::RejectedExecutionException&) {
-						socket->close();
-					}
+					auto task = ::jxx::NEW<ServerConnectionTask>(
+						[this, socket] { serve(socket); });
+					executor_->execute(
+						::jxx::CAST<::jxx::lang::Runnable>(task));
 				}
 				else {
 					workers_.emplace_back(
@@ -120,7 +115,23 @@ namespace jxx::com::sun::net::httpserver::internal
 	}
 	void DefaultHttpServer::serve(const ::jxx::Ptr<::jxx::net::Socket>& socket)
 	{
-		if (!socket)return; try {
+		if (!socket) return;
+		bool secureTransport = false;
+		bool handshakeComplete = false;
+		bool httpRequestParsed = false;
+		try {
+			auto sslSocket = ::jxx::CAST<::jxx::ext::net::ssl::SSLSocket>(socket);
+			secureTransport = sslSocket != nullptr;
+			if (sslSocket != nullptr) {
+				try {
+					sslSocket->startHandshake();
+					handshakeComplete = true;
+				}
+				catch (const ::jxx::ext::net::ssl::SSLException&) {
+					socket->close();
+					return;
+				}
+			}
 			auto in = socket->getInputStream(); std::vector<unsigned char>buffer; buffer.reserve(8192); Http11Parser parser; for (;;) {
 				ParsedRequest request; std::size_t used = 0;
 				std::string error; 
@@ -134,6 +145,7 @@ namespace jxx::com::sun::net::httpserver::internal
 					}continue;
 				}if (result == Http11Parser::Result::Error) {
 					simpleResponse(socket, 400, "Bad Request"); socket->close(); return;
+				httpRequestParsed = true;
 				}auto uri = ::jxx::NEW<::jxx::net::URI>(::jxx::NEW<::jxx::lang::String>(request.target.c_str())); auto path = uri->getRawPath(); auto context = match(path ? path->utf8() : std::string("/")); if (!context || !context->getHandler()) {
 					simpleResponse(socket, 404, "Not Found"); socket->close(); return;
 				}auto headers = ::jxx::NEW<::jxx::com::sun::net::httpserver::Headers>();
@@ -147,9 +159,7 @@ namespace jxx::com::sun::net::httpserver::internal
 				auto body = ::jxx::NEW<::jxx::lang::ByteArrayType>((::jxx::lang::jint)
 					request.body.size()); for (::jxx::lang::jint i = 0; i < body->length; ++i)(*body)[i] = (::jxx::lang::jbyte)request.body[(std::size_t)i]; auto httpExchange = ::jxx::NEW<DefaultHttpExchange>(socket, context, ::jxx::NEW<::jxx::lang::String>(request.method.c_str()), uri, ::jxx::NEW<::jxx::lang::String>(request.version.c_str()), headers, body);
 				::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpExchange> exchange = httpExchange;
-				auto sslSocket = ::jxx::CAST<::jxx::ext::net::ssl::SSLSocket>(socket);
 				if (sslSocket != nullptr) {
-					sslSocket->startHandshake();
 					auto session = sslSocket->getSession();
 					exchange = ::jxx::NEW<DefaultHttpsExchange>(httpExchange, session);
 				}
@@ -164,7 +174,10 @@ namespace jxx::com::sun::net::httpserver::internal
 			}
 		}
 		catch (...) {
-			simpleResponse(socket, 500, "Internal Server Error"); socket->close();
+			if (httpRequestParsed && (!secureTransport || handshakeComplete)) {
+				try { simpleResponse(socket, 500, "Internal Server Error"); } catch (...) {}
+			}
+			socket->close();
 		}
 	}
 	::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>DefaultHttpServer::match(const std::string& p)
