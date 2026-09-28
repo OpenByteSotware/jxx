@@ -1,5 +1,6 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslCipherSuites.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslAlgorithmConstraints.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.LayeredSocketBio.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocket.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocketNative.h"
@@ -155,8 +156,17 @@ void OpenSslSocket::startHandshake() {
         throw ::jxx::io::IOException("Could not apply enabled TLS protocols");
     if (!enabledCipherSuites_.empty()) {
         std::vector<std::string> modern, legacy;
-        for (const auto& c : enabledCipherSuites_)
+        for (const auto& c : enabledCipherSuites_) {
+            if (!permitsAlgorithm(
+                    algorithmConstraints_,
+                    ::jxx::security::CryptoPrimitive::BLOCK_CIPHER(),
+                    ::jxx::NEW<::jxx::lang::String>(c)))
+                continue;
             (c.rfind("TLS_", 0) == 0 ? modern : legacy).push_back(c);
+        }
+        if (legacy.empty() && modern.empty())
+            throw ::jxx::lang::IllegalArgumentException(
+                "algorithm constraints reject all enabled cipher suites");
         if (!legacy.empty() && SSL_CTX_set_cipher_list(native_->context, join(legacy).c_str()) != 1)
             throw ::jxx::lang::IllegalArgumentException();
         if (!modern.empty() && SSL_CTX_set_ciphersuites(native_->context, join(modern).c_str()) != 1)
@@ -300,7 +310,15 @@ void OpenSslSocket::startHandshake() {
         if (len <= 0 || i2d_X509(local, &cur) != len) throw ::jxx::io::IOException("Could not encode local certificate");
         (*locals)[0] = ::jxx::CAST<::jxx::security::cert::Certificate>(::jxx::NEW<OpenSslX509Certificate>(enc));
     }
-    session_ = ::jxx::NEW<OpenSslSession>(::jxx::NEW<::jxx::lang::String>(SSL_get_cipher_name(ssl)),
+    const auto negotiatedCipher =
+        ::jxx::NEW<::jxx::lang::String>(SSL_get_cipher_name(ssl));
+    if (!permitsAlgorithm(
+            algorithmConstraints_,
+            ::jxx::security::CryptoPrimitive::BLOCK_CIPHER(),
+            negotiatedCipher))
+        throw ::jxx::ext::net::ssl::SSLHandshakeException(
+            "negotiated cipher rejected by algorithm constraints");
+    session_ = ::jxx::NEW<OpenSslSession>(negotiatedCipher,
         ::jxx::NEW<::jxx::lang::String>(SSL_get_version(ssl)), host_, port_, peers, locals, sid, sc);
     if (sc != nullptr) sc->registerSession(session_);
     auto self = ::jxx::CAST<::jxx::ext::net::ssl::SSLSocket>(thisPtr());

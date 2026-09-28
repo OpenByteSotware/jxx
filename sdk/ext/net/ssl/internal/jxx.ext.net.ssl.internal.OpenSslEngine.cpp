@@ -8,6 +8,7 @@
 #include <openssl/ssl.h>
 
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslAlgorithmConstraints.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslCipherSuites.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslManagerBridge.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSession.h"
@@ -86,8 +87,17 @@ void OpenSslEngine::ensureInitialized() {
     if (!enabledCipherSuites_.empty()) {
         std::vector<std::string> tls13;
         std::vector<std::string> legacy;
-        for (const auto& suite : enabledCipherSuites_)
+        for (const auto& suite : enabledCipherSuites_) {
+            if (!permitsAlgorithm(
+                    algorithmConstraints_,
+                    ::jxx::security::CryptoPrimitive::BLOCK_CIPHER(),
+                    ::jxx::NEW<::jxx::lang::String>(suite)))
+                continue;
             (suite.rfind("TLS_", 0) == 0 ? tls13 : legacy).push_back(suite);
+        }
+        if (legacy.empty() && tls13.empty())
+            throw ::jxx::lang::IllegalArgumentException(
+                "algorithm constraints reject all enabled cipher suites");
         if (!legacy.empty() &&
             SSL_CTX_set_cipher_list(context_, join(legacy).c_str()) != 1)
             throw ::jxx::lang::IllegalArgumentException();
@@ -266,8 +276,16 @@ void OpenSslEngine::completeSession() {
     const auto context = clientMode_
         ? config_->clientSessionContext
         : config_->serverSessionContext;
+    const auto negotiatedCipher =
+        ::jxx::NEW<::jxx::lang::String>(SSL_get_cipher_name(ssl_));
+    if (!permitsAlgorithm(
+            algorithmConstraints_,
+            ::jxx::security::CryptoPrimitive::BLOCK_CIPHER(),
+            negotiatedCipher))
+        throw ::jxx::ext::net::ssl::SSLHandshakeException(
+            "negotiated cipher rejected by algorithm constraints");
     session_ = ::jxx::NEW<OpenSslSession>(
-        ::jxx::NEW<::jxx::lang::String>(SSL_get_cipher_name(ssl_)),
+        negotiatedCipher,
         ::jxx::NEW<::jxx::lang::String>(SSL_get_version(ssl_)),
         getPeerHost(), getPeerPort(), peerCertificates,
         localCertificates, sessionId, context);
