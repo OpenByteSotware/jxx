@@ -3,6 +3,7 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocket.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslCipherSuites.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslProtocolPolicy.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLParameters.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "io/jxx.io.IOException.h"
@@ -18,7 +19,7 @@ OpenSslServerSocket::OpenSslServerSocket(
     const ::jxx::Ptr<::jxx::net::InetAddress>& address,
     const std::shared_ptr<OpenSslContextConfig>& config)
     : Super(port, backlog, address), config_(config),
-      enabledProtocols_({"TLSv1.2", "TLSv1.3"}) {
+      enabledProtocols_(contextProtocolNames(config == nullptr ? nullptr : config->protocol)) {
     const auto suites = getSupportedCipherSuites();
     for (::jxx::lang::jint index = 0; index < suites->length; ++index)
         enabledCipherSuites_.push_back((*suites)[index]->utf8());
@@ -41,7 +42,7 @@ OpenSslServerSocket::accept() {
 ::jxx::Ptr<OpenSslServerSocket::StringArray> OpenSslServerSocket::getEnabledCipherSuites()const{return toArray(enabledCipherSuites_);}void OpenSslServerSocket::setEnabledCipherSuites(const ::jxx::Ptr<StringArray>&v){enabledCipherSuites_=toVector(v);}::jxx::Ptr<OpenSslServerSocket::StringArray>
 OpenSslServerSocket::getSupportedCipherSuites() const {
     return serverSupportedCipherSuites();
-}::jxx::Ptr<OpenSslServerSocket::StringArray> OpenSslServerSocket::getEnabledProtocols()const{return toArray(enabledProtocols_);}void OpenSslServerSocket::setEnabledProtocols(const ::jxx::Ptr<StringArray>&v){enabledProtocols_=toVector(v);}::jxx::Ptr<OpenSslServerSocket::StringArray> OpenSslServerSocket::getSupportedProtocols()const{return toArray({"TLSv1.2","TLSv1.3"});}
+}::jxx::Ptr<OpenSslServerSocket::StringArray> OpenSslServerSocket::getEnabledProtocols()const{return toArray(enabledProtocols_);}void OpenSslServerSocket::setEnabledProtocols(const ::jxx::Ptr<StringArray>&v){const auto values=toVector(v);(void)enabledProtocolRange(values);enabledProtocols_=values;}::jxx::Ptr<OpenSslServerSocket::StringArray> OpenSslServerSocket::getSupportedProtocols()const{return toArray(supportedProtocolNames());}
 void OpenSslServerSocket::setNeedClientAuth(::jxx::lang::jbool v){needClientAuth_=v;if(v)wantClientAuth_=false;}::jxx::lang::jbool OpenSslServerSocket::getNeedClientAuth()const{return needClientAuth_;}void OpenSslServerSocket::setWantClientAuth(::jxx::lang::jbool v){wantClientAuth_=v;if(v)needClientAuth_=false;}::jxx::lang::jbool OpenSslServerSocket::getWantClientAuth()const{return wantClientAuth_;}void OpenSslServerSocket::setUseClientMode(::jxx::lang::jbool v){useClientMode_=v;}::jxx::lang::jbool OpenSslServerSocket::getUseClientMode()const{return useClientMode_;}void OpenSslServerSocket::setEnableSessionCreation(::jxx::lang::jbool v){enableSessionCreation_=v;}::jxx::lang::jbool OpenSslServerSocket::getEnableSessionCreation()const{return enableSessionCreation_;}
 ::jxx::Ptr<::jxx::ext::net::ssl::SSLParameters>
 OpenSslServerSocket::getSSLParameters() const {

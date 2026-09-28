@@ -2,7 +2,48 @@
 
 #include <openssl/ssl.h>
 
+#include <algorithm>
+
+#include "lang/jxx.lang.IllegalArgumentException.h"
+
 namespace jxx::ext::net::ssl::internal {
+
+int protocolVersion(const std::string& protocol) {
+    if (protocol == "TLSv1") return TLS1_VERSION;
+    if (protocol == "TLSv1.1") return TLS1_1_VERSION;
+    if (protocol == "TLSv1.2") return TLS1_2_VERSION;
+    if (protocol == "TLSv1.3") return TLS1_3_VERSION;
+    throw ::jxx::lang::IllegalArgumentException("unsupported TLS protocol");
+}
+
+std::vector<std::string> supportedProtocolNames() {
+    return {"TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"};
+}
+
+std::vector<std::string> contextProtocolNames(
+    const ::jxx::Ptr<::jxx::lang::String>& protocol) {
+    const auto values = contextProtocols(protocol);
+    std::vector<std::string> result;
+    result.reserve(static_cast<std::size_t>(values->length));
+    for (::jxx::lang::jint index = 0; index < values->length; ++index)
+        result.push_back((*values)[index]->utf8());
+    return result;
+}
+
+std::pair<int, int> enabledProtocolRange(
+    const std::vector<std::string>& protocols) {
+    if (protocols.empty())
+        throw ::jxx::lang::IllegalArgumentException("enabled protocols are empty");
+    int minimum = protocolVersion(protocols.front());
+    int maximum = minimum;
+    for (const auto& protocol : protocols) {
+        const int version = protocolVersion(protocol);
+        minimum = std::min(minimum, version);
+        maximum = std::max(maximum, version);
+    }
+    return {minimum, maximum};
+}
+
 
 std::pair<int, int> protocolRange(
     const ::jxx::Ptr<::jxx::lang::String>& protocol) {

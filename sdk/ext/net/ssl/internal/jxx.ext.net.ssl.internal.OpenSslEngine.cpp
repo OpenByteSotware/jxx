@@ -10,6 +10,7 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslCipherSuites.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslManagerBridge.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslProtocolPolicy.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSession.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSignatureAlgorithms.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSessionContext.h"
@@ -58,6 +59,8 @@ OpenSslEngine::OpenSslEngine(
     , config_(config) {
     if (peerPort < -1 || peerPort > 65535)
         throw ::jxx::lang::IllegalArgumentException();
+    enabledProtocols_ = contextProtocolNames(
+        config_ == nullptr ? nullptr : config_->protocol);
 }
 
 OpenSslEngine::~OpenSslEngine() {
@@ -79,8 +82,9 @@ void OpenSslEngine::ensureInitialized() {
     if (context_ == nullptr)
         throw ::jxx::ext::net::ssl::SSLProtocolException(
             "SSL_CTX_new failed");
-    if (SSL_CTX_set_min_proto_version(context_, TLS1_2_VERSION) != 1 ||
-        SSL_CTX_set_max_proto_version(context_, TLS1_3_VERSION) != 1)
+    const auto range = enabledProtocolRange(enabledProtocols_);
+    if (SSL_CTX_set_min_proto_version(context_, range.first) != 1 ||
+        SSL_CTX_set_max_proto_version(context_, range.second) != 1)
         throw ::jxx::ext::net::ssl::SSLProtocolException(
             "could not configure TLS protocol range");
 
@@ -480,7 +484,7 @@ std::vector<std::string> OpenSslEngine::toVector(
 
 ::jxx::Ptr<OpenSslEngine::StringArray>
 OpenSslEngine::getSupportedProtocols() const {
-    return toArray({"TLSv1.2", "TLSv1.3"});
+    return toArray(supportedProtocolNames());
 }
 
 ::jxx::Ptr<OpenSslEngine::StringArray>
@@ -493,7 +497,9 @@ OpenSslEngine::getEnabledProtocols() const {
 void OpenSslEngine::setEnabledProtocols(
     const ::jxx::Ptr<StringArray>& protocols) {
     if (handshakeStarted_) throw ::jxx::lang::IllegalStateException();
-    enabledProtocols_ = toVector(protocols);
+    const auto values = toVector(protocols);
+    (void)enabledProtocolRange(values);
+    enabledProtocols_ = values;
 }
 
 ::jxx::Ptr<OpenSslEngine::StringArray>

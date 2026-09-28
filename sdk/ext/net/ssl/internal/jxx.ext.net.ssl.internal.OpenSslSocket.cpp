@@ -80,11 +80,13 @@ std::string join(const std::vector<std::string>& v) {
 
 OpenSslSocket::OpenSslSocket(const std::shared_ptr<OpenSslContextConfig>& config)
     : config_(config), native_(new OpenSslSocketNative()),
-      host_(::jxx::NEW<::jxx::lang::String>("")) {}
+      host_(::jxx::NEW<::jxx::lang::String>("")),
+      enabledProtocols_(contextProtocolNames(config == nullptr ? nullptr : config->protocol)) {}
 
 OpenSslSocket::OpenSslSocket(const ::jxx::Ptr<::jxx::lang::String>& h,
     ::jxx::lang::jint p, const std::shared_ptr<OpenSslContextConfig>& config)
-    : config_(config), native_(new OpenSslSocketNative()), host_(h), port_(p) {
+    : config_(config), native_(new OpenSslSocketNative()), host_(h), port_(p),
+      enabledProtocols_(contextProtocolNames(config == nullptr ? nullptr : config->protocol)) {
     if (h == nullptr) throw ::jxx::lang::NullPointerException();
     if (p < 0 || p > 65535) throw ::jxx::lang::IllegalArgumentException();
     transport_ = ::jxx::NEW<::jxx::net::Socket>(h, p);
@@ -96,7 +98,8 @@ OpenSslSocket::OpenSslSocket(const ::jxx::Ptr<::jxx::net::Socket>& transport,
     ::jxx::lang::jbool autoClose, const std::vector<unsigned char>& consumed,
     const std::shared_ptr<OpenSslContextConfig>& config)
     : config_(config), native_(new OpenSslSocketNative()), host_(host), port_(port),
-      transport_(transport), autoClose_(autoClose), consumed_(consumed) {
+      transport_(transport), autoClose_(autoClose), consumed_(consumed),
+      enabledProtocols_(contextProtocolNames(config == nullptr ? nullptr : config->protocol)) {
     if (transport_ == nullptr || host_ == nullptr) throw ::jxx::lang::IllegalArgumentException();
     connected_ = transport_->isConnected();
     soTimeout_ = transport_->getSoTimeout();
@@ -163,14 +166,9 @@ void OpenSslSocket::startHandshake() {
     int minv = configuredRange.first;
     int maxv = configuredRange.second;
     if (!enabledProtocols_.empty()) {
-        bool v12 = false, v13 = false;
-        for (const auto& p : enabledProtocols_) {
-            if (p == "TLSv1.2") v12 = true;
-            else if (p == "TLSv1.3") v13 = true;
-            else throw ::jxx::lang::IllegalArgumentException();
-        }
-        minv = v12 ? TLS1_2_VERSION : TLS1_3_VERSION;
-        maxv = v13 ? TLS1_3_VERSION : TLS1_2_VERSION;
+        const auto enabledRange = enabledProtocolRange(enabledProtocols_);
+        minv = enabledRange.first;
+        maxv = enabledRange.second;
     }
     if (SSL_CTX_set_min_proto_version(native_->context, minv) != 1 ||
         SSL_CTX_set_max_proto_version(native_->context, maxv) != 1)
@@ -441,9 +439,9 @@ int OpenSslSocket::tlsWrite(const unsigned char* data, int length) {
     }
     return written;
 }
-::jxx::Ptr<OpenSslSocket::StringArray> OpenSslSocket::getSupportedProtocols()const{return toArray({"TLSv1.2","TLSv1.3"});}
+::jxx::Ptr<OpenSslSocket::StringArray> OpenSslSocket::getSupportedProtocols()const{return toArray(supportedProtocolNames());}
 ::jxx::Ptr<OpenSslSocket::StringArray> OpenSslSocket::getEnabledProtocols()const{return enabledProtocols_.empty()?getSupportedProtocols():toArray(enabledProtocols_);}
-void OpenSslSocket::setEnabledProtocols(const ::jxx::Ptr<StringArray>&v){if(session_!=nullptr)throw ::jxx::lang::IllegalStateException();enabledProtocols_=toVector(v);}
+void OpenSslSocket::setEnabledProtocols(const ::jxx::Ptr<StringArray>&v){if(session_!=nullptr)throw ::jxx::lang::IllegalStateException();const auto values=toVector(v);(void)enabledProtocolRange(values);enabledProtocols_=values;}
 ::jxx::Ptr<OpenSslSocket::StringArray>
 OpenSslSocket::getSupportedCipherSuites() const {
     return client_
