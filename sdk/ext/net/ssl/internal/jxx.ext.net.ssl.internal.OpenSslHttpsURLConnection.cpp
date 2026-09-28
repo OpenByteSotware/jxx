@@ -172,7 +172,7 @@ OpenSslHttpsURLConnection::getInputStream() {
 }
 
 ::jxx::lang::jint
-OpenSslHttpsURLConnection::getResponseCode() const {
+OpenSslHttpsURLConnection::getResponseCode() {
     auto* self = const_cast<OpenSslHttpsURLConnection*>(this);
     if (self->responseBody_ == nullptr) {
         self->executeRequest();
@@ -181,7 +181,7 @@ OpenSslHttpsURLConnection::getResponseCode() const {
 }
 
 ::jxx::Ptr<::jxx::lang::String>
-OpenSslHttpsURLConnection::getResponseMessage() const {
+OpenSslHttpsURLConnection::getResponseMessage() {
     auto* self = const_cast<OpenSslHttpsURLConnection*>(this);
     if (self->responseBody_ == nullptr) {
         self->executeRequest();

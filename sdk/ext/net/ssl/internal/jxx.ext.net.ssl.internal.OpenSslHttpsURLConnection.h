@@ -43,10 +43,10 @@ public:
     getInputStream() override;
 
     ::jxx::lang::jint
-    getResponseCode() const override;
+    getResponseCode() override;
 
     ::jxx::Ptr<::jxx::lang::String>
-    getResponseMessage() const override;
+    getResponseMessage() override;
 
     void disconnect() override;
 
