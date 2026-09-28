@@ -16,7 +16,10 @@
 #include "io/jxx.io.IOException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.UnsupportedOperationException.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "lang/jxx.lang.IllegalStateException.h"
+#include "lang/jxx.lang.NullPointerException.h"
 #include "math/jxx.math.BigInteger.h"
 #include "util/jxx.util.ArrayList.h"
 #include "util/jxx.util.Date.h"
@@ -446,10 +449,26 @@ OpenSslX509Certificate::getNonCriticalExtensionOIDs() const {
 ::jxx::lang::jbool
 OpenSslX509Certificate::hasUnsupportedCriticalExtension() const {
     X509* certificate = decodeCertificate(encoded_);
-    const bool result =
-        (X509_get_extension_flags(certificate) & EXFLAG_CRITICAL) != 0;
+    bool unsupported = false;
+    const int extensionCount = X509_get_ext_count(certificate);
+    for (int index = 0; index < extensionCount; ++index) {
+        X509_EXTENSION* extension = X509_get_ext(certificate, index);
+        if (extension == nullptr || X509_EXTENSION_get_critical(extension) != 1)
+            continue;
+        ASN1_OBJECT* object = X509_EXTENSION_get_object(extension);
+        const int nid = object == nullptr ? NID_undef : OBJ_obj2nid(object);
+        if (nid == NID_undef) {
+            unsupported = true;
+            break;
+        }
+        const unsigned long flags = X509_supported_extension(extension);
+        if (flags == 0UL) {
+            unsupported = true;
+            break;
+        }
+    }
     X509_free(certificate);
-    return result;
+    return unsupported;
 }
 
 ::jxx::Ptr<::jxx::security::Principal>
@@ -479,17 +498,30 @@ OpenSslX509Certificate::getSubjectX500Principal() const {
 }
 
 void OpenSslX509Certificate::writeObject(
-    const ::jxx::Ptr<::jxx::io::ObjectOutputStream>&) {
-    throw ::jxx::lang::UnsupportedOperationException();
+    const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) {
+    if (output == nullptr) throw ::jxx::lang::NullPointerException();
+    output->writeInt(encoded_->length);
+    output->write(encoded_);
 }
 
 void OpenSslX509Certificate::readObject(
-    const ::jxx::Ptr<::jxx::io::ObjectInputStream>&) {
-    throw ::jxx::lang::UnsupportedOperationException();
+    const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) {
+    if (input == nullptr) throw ::jxx::lang::NullPointerException();
+    const auto length = input->readInt();
+    if (length <= 0)
+        throw ::jxx::lang::IllegalStateException(
+            "invalid serialized X.509 certificate length");
+    const auto encoded = ::jxx::NEW<
+        ::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(length);
+    input->readFully(encoded);
+    X509* certificate = decodeCertificate(encoded);
+    X509_free(certificate);
+    encoded_ = encoded;
 }
 
 void OpenSslX509Certificate::readObjectNoData() {
-    throw ::jxx::lang::UnsupportedOperationException();
+    throw ::jxx::lang::IllegalStateException(
+        "X.509 certificate requires serialized data");
 }
 
 } // namespace jxx::ext::net::ssl::internal
