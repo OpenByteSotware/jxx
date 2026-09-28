@@ -1,13 +1,13 @@
 #pragma once
 
-#include "security/jxx.security.Key.h"
+#include "security/jxx.security.PublicKey.h"
 
 namespace jxx::ext::net::ssl::internal {
 
 class OpenSslPublicKey final
     : public ::jxx::lang::InterfaceBase<
           OpenSslPublicKey,
-          ::jxx::security::Key> {
+          ::jxx::security::PublicKey> {
 public:
     OpenSslPublicKey(
         const ::jxx::Ptr<::jxx::lang::String>& algorithm,

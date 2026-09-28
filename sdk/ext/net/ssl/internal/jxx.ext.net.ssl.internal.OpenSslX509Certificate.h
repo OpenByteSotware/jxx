@@ -26,6 +26,17 @@ public:
 
     ::jxx::lang::ByteArray getEncoded() const override;
     void checkValidity() const override;
+    ::jxx::lang::jint getVersion() const override;
+    ::jxx::Ptr<::jxx::math::BigInteger>
+    getSerialNumber() const override;
+    ::jxx::Ptr<::jxx::util::Date> getNotBefore() const override;
+    ::jxx::Ptr<::jxx::util::Date> getNotAfter() const override;
+    ::jxx::lang::ByteArray getSignature() const override;
+    ::jxx::Ptr<::jxx::lang::String> getSigAlgName() const override;
+    ::jxx::Ptr<::jxx::lang::String> getSigAlgOID() const override;
+    ::jxx::lang::ByteArray getSigAlgParams() const override;
+    ::jxx::Ptr<::jxx::security::PublicKey>
+    getPublicKey() const override;
 
     ::jxx::Ptr<::jxx::security::Principal>
     getIssuerDN() const override;
