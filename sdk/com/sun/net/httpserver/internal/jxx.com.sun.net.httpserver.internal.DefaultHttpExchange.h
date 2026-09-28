@@ -4,10 +4,12 @@
 #include "util/jxx.util.HashMap.h"
 namespace jxx::net { class Socket; }
 namespace jxx::com::sun::net::httpserver::internal {
+class RequestBodySource;
 class DefaultHttpExchange final : public ::jxx::lang::ClassBase<DefaultHttpExchange,::jxx::com::sun::net::httpserver::HttpExchange> {
 public:
  using JxxSuper=::jxx::com::sun::net::httpserver::HttpExchange; using Super=::jxx::lang::ClassBase<DefaultHttpExchange,JxxSuper>;
  DefaultHttpExchange(const ::jxx::Ptr<::jxx::net::Socket>&socket,const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>&context,const ::jxx::Ptr<::jxx::lang::String>&method,const ::jxx::Ptr<::jxx::net::URI>&uri,const ::jxx::Ptr<::jxx::lang::String>&protocol,const ::jxx::Ptr<::jxx::com::sun::net::httpserver::Headers>&requestHeaders,const ::jxx::lang::ByteArray&body);
+ DefaultHttpExchange(const ::jxx::Ptr<::jxx::net::Socket>&socket,const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>&context,const ::jxx::Ptr<::jxx::lang::String>&method,const ::jxx::Ptr<::jxx::net::URI>&uri,const ::jxx::Ptr<::jxx::lang::String>&protocol,const ::jxx::Ptr<::jxx::com::sun::net::httpserver::Headers>&requestHeaders,const ::jxx::Ptr<RequestBodySource>&bodySource);
  ::jxx::Ptr<::jxx::com::sun::net::httpserver::Headers>getRequestHeaders()override;::jxx::Ptr<::jxx::com::sun::net::httpserver::Headers>getResponseHeaders()override;::jxx::Ptr<::jxx::net::URI>getRequestURI()override;::jxx::Ptr<::jxx::lang::String>getRequestMethod()override;::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>getHttpContext()override;
  void close()override; void completeInternal(); ::jxx::lang::jbool isCompletedInternal() const noexcept; ::jxx::lang::jbool isResponseCommittedInternal() const noexcept; ::jxx::lang::jbool isConnectionReusableInternal() const noexcept; ::jxx::lang::jbool responseRequestsCloseInternal() const noexcept;::jxx::Ptr<::jxx::io::InputStream>getRequestBody()override;::jxx::Ptr<::jxx::io::OutputStream>getResponseBody()override;void sendResponseHeaders(::jxx::lang::jint code,::jxx::lang::jlong length)override;
  ::jxx::Ptr<::jxx::net::InetSocketAddress>getRemoteAddress()override;::jxx::lang::jint getResponseCode()override;::jxx::Ptr<::jxx::net::InetSocketAddress>getLocalAddress()override;::jxx::Ptr<::jxx::lang::String>getProtocol()override;

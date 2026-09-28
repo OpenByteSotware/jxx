@@ -106,6 +106,10 @@ namespace jxx::com::sun::net::httpserver::internal
 	{
 		if (!s || !c || !m || !u || !p || !h)throw ::jxx::lang::NullPointerException();
 	}
+	DefaultHttpExchange::DefaultHttpExchange(const ::jxx::Ptr<::jxx::net::Socket>& s, const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>& c, const ::jxx::Ptr<::jxx::lang::String>& m, const ::jxx::Ptr<::jxx::net::URI>& u, const ::jxx::Ptr<::jxx::lang::String>& p, const ::jxx::Ptr<::jxx::com::sun::net::httpserver::Headers>& h, const ::jxx::Ptr<RequestBodySource>& bodySource) :Super(), socket_(s), context_(c), method_(m), protocol_(p), uri_(u), requestHeaders_(h), responseHeaders_(::jxx::NEW<::jxx::com::sun::net::httpserver::Headers>()), input_(::jxx::NEW<RequestBodyInputStream>(bodySource)), attributes_(::jxx::NEW<::jxx::util::HashMap<::jxx::lang::String, ::jxx::lang::Object>>())
+	{
+		if (!s || !c || !m || !u || !p || !h || !bodySource)throw ::jxx::lang::NullPointerException();
+	}
 	::jxx::Ptr<::jxx::com::sun::net::httpserver::Headers>DefaultHttpExchange::getRequestHeaders()
 	{
 		return requestHeaders_;
@@ -140,6 +144,7 @@ namespace jxx::com::sun::net::httpserver::internal
 			reusable_ = false;
 			firstFailure = std::current_exception();
 		}
+		
 		auto requestBody = ::jxx::CAST<RequestBodyInputStream>(input_);
 		if (requestBody != nullptr && !requestBody->isFullyConsumedInternal()) reusable_ = false;
 		try {
