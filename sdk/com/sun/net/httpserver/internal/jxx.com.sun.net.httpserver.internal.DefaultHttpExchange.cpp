@@ -86,7 +86,7 @@ namespace jxx::com::sun::net::httpserver::internal
 		::jxx::lang::jlong fixedLength = 0;
 		if (statusForbidsBody || headRequest || length < 0) mode = ResponseBodyMode::NoBody;
 		else if (length == 0 && !http10) mode = ResponseBodyMode::Chunked;
-		else if (length == 0) { mode = ResponseBodyMode::NoBody; responseClose_ = true; }
+		else if (length == 0) { mode = ResponseBodyMode::FixedLength; fixedLength = 0; }
 		else { mode = ResponseBodyMode::FixedLength; fixedLength = length; }
 
 		// Server-controlled framing always wins over application headers.
@@ -99,6 +99,13 @@ namespace jxx::com::sun::net::httpserver::internal
 			if (text == "close") responseClose_ = true;
 		}
 		if (http10 && mode != ResponseBodyMode::FixedLength) responseClose_ = true;
+		bool requestKeepAlive = false;
+		auto requestConnection = requestHeaders_->getFirst(::jxx::NEW<::jxx::lang::String>("connection"));
+		if (requestConnection != nullptr) {
+			auto requestConnectionText = requestConnection->utf8();
+			for (auto& character : requestConnectionText) if (character >= 'A' && character <= 'Z') character = static_cast<char>(character - 'A' + 'a');
+			requestKeepAlive = requestConnectionText.find("keep-alive") != std::string::npos;
+		}
 		responseHeaders_->remove(::jxx::NEW<::jxx::lang::String>("connection"));
 
 		const std::string responseProtocol = http10 ? "HTTP/1.0" : "HTTP/1.1";
@@ -120,6 +127,7 @@ namespace jxx::com::sun::net::httpserver::internal
 		if (mode == ResponseBodyMode::FixedLength) message += "Content-Length: " + std::to_string(fixedLength) + "\r\n";
 		else if (mode == ResponseBodyMode::Chunked) message += "Transfer-Encoding: chunked\r\n";
 		if (responseClose_) message += "Connection: close\r\n";
+		else if (http10 && requestKeepAlive && mode == ResponseBodyMode::FixedLength) message += "Connection: keep-alive\r\n";
 		message += "\r\n";
 		rawOutput_ = socket_->getOutputStream();
 		auto bytes = ::jxx::NEW<::jxx::lang::ByteArrayType>(static_cast<::jxx::lang::jint>(message.size()));

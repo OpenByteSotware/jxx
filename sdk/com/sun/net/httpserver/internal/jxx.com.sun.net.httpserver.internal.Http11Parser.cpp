@@ -50,60 +50,30 @@ bool parseHeaderLine(
     return output.second.size() <= maxValueBytes;
 }
 
-bool isTokenCharacter(unsigned char character)
-{
-    if (std::isalnum(character) != 0) return true;
-    switch (character) {
-    case '!': case '#': case '$': case '%': case '&': case '\'':
-    case '*': case '+': case '-': case '.': case '^': case '_':
-    case '`': case '|': case '~':
-        return true;
-    default:
-        return false;
-    }
-}
-
-bool parseTransferEncoding(
+bool hasChunkedTransferEncoding(
     const std::vector<std::pair<std::string, std::string>>& headers,
-    bool& chunked,
-    std::string& error)
+    bool& unsupported)
 {
-    chunked = false;
-    std::vector<std::string> codings;
+    unsupported = false;
+    bool chunked = false;
     for (const auto& header : headers) {
         if (lower(header.first) != "transfer-encoding") continue;
-        const std::string value = lower(header.second);
+        std::string value = lower(header.second);
         std::size_t position = 0;
-        for (;;) {
+        while (position <= value.size()) {
             const auto comma = value.find(',', position);
             const auto token = trim(value.substr(
                 position,
-                comma == std::string::npos ? std::string::npos : comma - position));
-            if (token.empty()) { error = "empty transfer coding"; return false; }
-            if (!std::all_of(token.begin(), token.end(), [](unsigned char c) { return isTokenCharacter(c); })) {
-                error = "invalid transfer coding";
-                return false;
-            }
-            codings.push_back(token);
+                comma == std::string::npos
+                    ? std::string::npos
+                    : comma - position));
+            if (token == "chunked") chunked = true;
+            else if (!token.empty() && token != "identity") unsupported = true;
             if (comma == std::string::npos) break;
             position = comma + 1;
         }
     }
-    if (codings.empty()) return true;
-    std::size_t chunkedCount = 0;
-    for (std::size_t i = 0; i < codings.size(); ++i) {
-        if (codings[i] == "chunked") {
-            ++chunkedCount;
-            if (i + 1U != codings.size()) { error = "chunked must be final"; return false; }
-        }
-        else {
-            error = "unsupported transfer coding";
-            return false;
-        }
-    }
-    if (chunkedCount != 1U) { error = "invalid chunked transfer coding"; return false; }
-    chunked = true;
-    return true;
+    return chunked;
 }
 
 Http11Parser::Result decodeChunked(
@@ -261,16 +231,11 @@ Http11Parser::Result Http11Parser::parse(
         return Result::Error;
     }
 
-    bool chunked = false;
-    if (!parseTransferEncoding(output.headers, chunked, error)) {
-        return Result::Error;
-    }
-    if (chunked && output.version == "HTTP/1.0") {
-        error = "chunked transfer coding requires HTTP/1.1";
-        return Result::Error;
-    }
-    if (chunked && contentLengthPresent) {
-        error = "conflicting transfer framing";
+    bool unsupportedTransferEncoding = false;
+    const bool chunked = hasChunkedTransferEncoding(
+        output.headers, unsupportedTransferEncoding);
+    if (unsupportedTransferEncoding || (chunked && contentLengthPresent)) {
+        error = "invalid transfer framing";
         return Result::Error;
     }
 
@@ -292,8 +257,17 @@ Http11Parser::Result Http11Parser::parse(
     for (const auto& header : output.headers) {
         if (lower(header.first) != "connection") continue;
         const auto value = lower(header.second);
-        if (value == "close") output.keepAlive = false;
-        if (value == "keep-alive") output.keepAlive = true;
+        std::size_t position = 0;
+        for (;;) {
+            const auto comma = value.find(',', position);
+            const auto token = trim(value.substr(
+                position,
+                comma == std::string::npos ? std::string::npos : comma - position));
+            if (token == "close") output.keepAlive = false;
+            else if (token == "keep-alive" && output.version == "HTTP/1.0") output.keepAlive = true;
+            if (comma == std::string::npos) break;
+            position = comma + 1;
+        }
     }
     return Result::Complete;
 }
