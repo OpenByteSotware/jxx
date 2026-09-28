@@ -17,7 +17,6 @@
 #error "JXX HTTPS requires OpenSSL 1.1.1 or newer for TLS 1.3"
 #endif
 
-#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.DerCertificate.h"
 #include "io/jxx.io.ByteArrayInputStream.h"
 #include "io/jxx.io.IOException.h"
 #include "lang/jxx.lang.IllegalStateException.h"
@@ -249,7 +248,8 @@ void OpenSslHttpsURLConnection::capturePeerCertificate(SSL* ssl) {
 
     serverCertificates_ = ::jxx::NEW<CertificateArray>(1);
     (*serverCertificates_)[0] =
-        ::jxx::NEW<DerCertificate>(bytes);
+        ::jxx::CAST<::jxx::security::cert::Certificate>(
+            ::jxx::NEW<OpenSslX509Certificate>(bytes));
 }
 
 void OpenSslHttpsURLConnection::captureLocalCertificate(SSL* ssl) {
