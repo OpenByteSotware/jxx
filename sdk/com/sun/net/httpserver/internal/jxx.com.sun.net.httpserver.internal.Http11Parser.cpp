@@ -237,6 +237,20 @@ Http11Parser::Result Http11Parser::parse(
         error = "empty request target";
         return Result::Error;
     }
+    if (std::any_of(output.target.begin(), output.target.end(), [](unsigned char character) {
+            return character <= 0x20U || character == 0x7fU;
+        })) {
+        error = "invalid request target";
+        return Result::Error;
+    }
+    if (output.target.find('#') != std::string::npos) {
+        error = "request target contains fragment";
+        return Result::Error;
+    }
+    if (output.target == "*" && output.method != "OPTIONS") {
+        error = "asterisk target requires OPTIONS";
+        return Result::Error;
+    }
     if (output.version != "HTTP/1.0" && output.version != "HTTP/1.1") {
         error = "unsupported HTTP version";
         return Result::Error;

@@ -26,6 +26,7 @@
 #include "net/jxx.net.Socket.h"
 #include "net/jxx.net.ServerSocket.h"
 #include "net/jxx.net.URI.h"
+#include "net/jxx.net.URISyntaxException.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_Array.h"
@@ -111,15 +112,11 @@ namespace jxx::com::sun::net::httpserver::internal
 			if (error == "unsupported HTTP version") return {505, "HTTP Version Not Supported"};
 			return {400, "Bad Request"};
 		}
-		std::string responseProtocol(const std::string& requestedProtocol)
-		{
-			return requestedProtocol == "HTTP/1.0" ? "HTTP/1.0" : "HTTP/1.1";
-		}
-		void simpleResponse(const ::jxx::Ptr<::jxx::net::Socket>& socket, int code, const char* reason, const std::string& requestedProtocol = "HTTP/1.1")
+		void simpleResponse(const ::jxx::Ptr<::jxx::net::Socket>& s, int code, const char* reason)
 		{
 			try {
-				const auto body = std::string(reason) + "\n";
-				writeAscii(socket->getOutputStream(), responseProtocol(requestedProtocol) + " " + std::to_string(code) + " " +
+				auto body = std::string(reason) + "\n"; 
+				writeAscii(s->getOutputStream(), "HTTP/1.1 " + std::to_string(code) + " " +
 					reason + "\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: " +
 					std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body);
 			}
@@ -300,7 +297,6 @@ namespace jxx::com::sun::net::httpserver::internal
 		bool handshakeComplete = false;
 		bool httpRequestParsed = false;
 		::jxx::Ptr<DefaultHttpExchange> currentExchange;
-		std::string currentProtocol = "HTTP/1.1";
 		try {
 			auto sslSocket = ::jxx::CAST<::jxx::ext::net::ssl::SSLSocket>(socket);
 			secureTransport = sslSocket != nullptr;
@@ -364,14 +360,24 @@ namespace jxx::com::sun::net::httpserver::internal
 				}
 				if (result == Http11Parser::Result::Error) {
 					const auto failure = parserFailureResponse(error);
-					simpleResponse(socket, failure.code, failure.reason, request.version);
+					simpleResponse(socket, failure.code, failure.reason);
 					socket->close();
 					return;
 				}
 				httpRequestParsed = true;
-				currentProtocol = responseProtocol(request.version);
-				auto uri = ::jxx::NEW<::jxx::net::URI>(::jxx::NEW<::jxx::lang::String>(request.target.c_str())); auto path = uri->getRawPath(); auto context = match(path ? path->utf8() : std::string("/")); if (!context || !context->getHandler()) {
-					simpleResponse(socket, 404, "Not Found", request.version); socket->close(); return;
+				::jxx::Ptr<::jxx::net::URI> uri;
+				try {
+					uri = ::jxx::NEW<::jxx::net::URI>(::jxx::NEW<::jxx::lang::String>(request.target.c_str()));
+				}
+				catch (const ::jxx::net::URISyntaxException&) {
+					simpleResponse(socket, 400, "Bad Request");
+					socket->close();
+					return;
+				}
+				auto path = uri->getRawPath();
+				auto context = match(path ? path->utf8() : std::string("/"));
+				if (!context || !context->getHandler()) {
+					simpleResponse(socket, 404, "Not Found"); socket->close(); return;
 				}auto headers = ::jxx::NEW<::jxx::com::sun::net::httpserver::Headers>();
 				for (const auto& h : request.headers)
 					headers->add(::jxx::NEW<::jxx::lang::String>(h.first.c_str()),
@@ -425,7 +431,7 @@ namespace jxx::com::sun::net::httpserver::internal
 		catch (...) {
 			const bool responseCommitted = currentExchange != nullptr && currentExchange->isResponseCommittedInternal();
 			if (httpRequestParsed && !responseCommitted && (!secureTransport || handshakeComplete)) {
-				try { simpleResponse(socket, 500, "Internal Server Error", currentProtocol); } catch (...) {}
+				try { simpleResponse(socket, 500, "Internal Server Error"); } catch (...) {}
 			}
 			socket->close();
 		}
