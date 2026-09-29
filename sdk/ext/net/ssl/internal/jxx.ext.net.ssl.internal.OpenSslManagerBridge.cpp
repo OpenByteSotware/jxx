@@ -1,4 +1,5 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslManagerBridge.h"
+#include <memory>
 
 #include <openssl/evp.h>
 #include <openssl/x509.h>
@@ -238,9 +239,15 @@ int OpenSslManagerBridge::verifyPeer(X509_STORE_CTX* storeContext) noexcept {
         STACK_OF(X509)* presented = sk_X509_new_null();
         if (presented == nullptr) return 0;
 
+        const std::shared_ptr<void> presentedGuard(
+            presented,
+            [](void* value) noexcept {
+                sk_X509_free(
+                    static_cast<STACK_OF(X509)*>(value));
+            });
+
         X509* leaf = X509_STORE_CTX_get0_cert(storeContext);
         if (leaf == nullptr || sk_X509_push(presented, leaf) != 1) {
-            sk_X509_free(presented);
             return 0;
         }
 
@@ -253,7 +260,6 @@ int OpenSslManagerBridge::verifyPeer(X509_STORE_CTX* storeContext) noexcept {
             if (certificate != nullptr && certificate != leaf &&
                 sk_X509_push(presented, certificate) != 1)
             {
-                sk_X509_free(presented);
                 return 0;
             }
         }
@@ -337,7 +343,6 @@ int OpenSslManagerBridge::verifyPeer(X509_STORE_CTX* storeContext) noexcept {
             manager->checkServerTrusted(
                 converted, authType);
         }
-        sk_X509_free(presented);
         X509_STORE_CTX_set_error(storeContext, X509_V_OK);
         return 1;
     } catch (...) {
@@ -357,32 +362,18 @@ int OpenSslManagerBridge::selectServerIdentity(SSL* ssl) noexcept {
             findExtendedKeyManager(config_);
         const auto socket =
             ::jxx::CAST<::jxx::net::Socket>(socket_);
-
         ::jxx::Ptr<::jxx::lang::String> alias;
-        const char* const keyTypes[] = {
-            "EC",
-            "RSA"
-        };
-
+        const char* const keyTypes[] = {"EC", "RSA"};
         for (const char* keyTypeName : keyTypes) {
             const auto keyType =
-                ::jxx::NEW<::jxx::lang::String>(
-                    keyTypeName);
-            alias =
-                extended != nullptr && engine_ != nullptr
-                    ? extended->chooseEngineServerAlias(
-                          keyType,
-                          nullptr,
-                          engine_)
-                    : manager->chooseServerAlias(
-                          keyType,
-                          nullptr,
-                          socket);
-            if (alias != nullptr) {
-                break;
-            }
+                ::jxx::NEW<::jxx::lang::String>(keyTypeName);
+            alias = extended != nullptr && engine_ != nullptr
+                ? extended->chooseEngineServerAlias(
+                      keyType, nullptr, engine_)
+                : manager->chooseServerAlias(
+                      keyType, nullptr, socket);
+            if (alias != nullptr) break;
         }
-
         if (alias == nullptr) return 0;
         const auto chain = manager->getCertificateChain(alias);
         const auto key = manager->getPrivateKey(alias);
