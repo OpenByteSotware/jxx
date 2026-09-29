@@ -279,12 +279,12 @@ void KeyStore::setKeyEntry(
 
 
 KeyStore::SecretKeyEntry::SecretKeyEntry(
-    const ::jxx::Ptr<::jxx::security::SecretKey>& secretKey)
+    const ::jxx::Ptr<::jxx::ext::crypto::SecretKey>& secretKey)
     : secretKey_(secretKey) {
     if (secretKey == nullptr) throw ::jxx::lang::NullPointerException();
 }
 
-::jxx::Ptr<::jxx::security::SecretKey>
+::jxx::Ptr<::jxx::ext::crypto::SecretKey>
 KeyStore::SecretKeyEntry::getSecretKey() const {
     return secretKey_;
 }

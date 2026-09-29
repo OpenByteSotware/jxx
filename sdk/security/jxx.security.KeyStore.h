@@ -6,7 +6,7 @@
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_array.h"
 #include "security/jxx.security.PrivateKey.h"
-#include "security/jxx.security.SecretKey.h"
+#include "ext/crypto/jxx.ext.crypto.SecretKey.h"
 
 namespace jxx::io { class InputStream; }
 namespace jxx::security::cert { class Certificate; class X509Certificate; }
@@ -74,10 +74,10 @@ public:
               Entry> {
     public:
         explicit SecretKeyEntry(
-            const ::jxx::Ptr<::jxx::security::SecretKey>& secretKey);
-        ::jxx::Ptr<::jxx::security::SecretKey> getSecretKey() const;
+            const ::jxx::Ptr<::jxx::ext::crypto::SecretKey>& secretKey);
+        ::jxx::Ptr<::jxx::ext::crypto::SecretKey> getSecretKey() const;
     private:
-        ::jxx::Ptr<::jxx::security::SecretKey> secretKey_;
+        ::jxx::Ptr<::jxx::ext::crypto::SecretKey> secretKey_;
     };
 
     class TrustedCertificateEntry final
