@@ -1,14 +1,16 @@
 #include "net/jxx.net.SocketOption.h"
 
+#include <utility>
+
 #include "lang/jxx.lang.NullPointerException.h"
 
 namespace jxx::net {
 
 BasicSocketOption::BasicSocketOption(
     const ::jxx::Ptr<::jxx::lang::String>& name,
-    const ::jxx::Ptr<::jxx::lang::ClassAny>& type)
-    : name_(name), type_(type) {
-    if (name_ == nullptr || type_ == nullptr)
+    TypeResolver typeResolver)
+    : name_(name), typeResolver_(std::move(typeResolver)) {
+    if (name_ == nullptr || !typeResolver_)
         throw ::jxx::lang::NullPointerException();
 }
 
@@ -17,7 +19,10 @@ BasicSocketOption::BasicSocketOption(
 }
 
 ::jxx::Ptr<::jxx::lang::ClassAny> BasicSocketOption::type() const {
-    return type_;
+    const auto resolved = typeResolver_();
+    if (resolved == nullptr)
+        throw ::jxx::lang::NullPointerException();
+    return resolved;
 }
 
 ::jxx::Ptr<::jxx::lang::String> BasicSocketOption::toString() const {

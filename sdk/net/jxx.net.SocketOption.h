@@ -4,6 +4,7 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
+#include <functional>
 
 namespace jxx::net {
 
@@ -23,9 +24,12 @@ class BasicSocketOption final
           ::jxx::lang::Object,
           SocketOption<::jxx::lang::Object>> {
 public:
+    using TypeResolver =
+        std::function<::jxx::Ptr<::jxx::lang::ClassAny>()>;
+
     BasicSocketOption(
         const ::jxx::Ptr<::jxx::lang::String>& name,
-        const ::jxx::Ptr<::jxx::lang::ClassAny>& type);
+        TypeResolver typeResolver);
 
     ::jxx::Ptr<::jxx::lang::String> name() const override;
     ::jxx::Ptr<::jxx::lang::ClassAny> type() const override;
@@ -33,7 +37,7 @@ public:
 
 private:
     ::jxx::Ptr<::jxx::lang::String> name_;
-    ::jxx::Ptr<::jxx::lang::ClassAny> type_;
+    TypeResolver typeResolver_;
 };
 
 } // namespace jxx::net
