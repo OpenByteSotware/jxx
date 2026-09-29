@@ -94,25 +94,17 @@ public:
         ::jxx::Ptr<::jxx::security::cert::Certificate> certificate_;
     };
 
-    class Builder final
-        : public ::jxx::lang::ClassBase<
-              Builder,
-              ::jxx::lang::Object> {
+    class Builder final : public ::jxx::lang::ClassBase<Builder, ::jxx::lang::Object> {
     public:
         static ::jxx::Ptr<Builder> newInstance(
             const ::jxx::Ptr<KeyStore>& keyStore,
             const ::jxx::Ptr<ProtectionParameter>& protectionParameter);
-
         ::jxx::Ptr<KeyStore> getKeyStore() const;
-
         ::jxx::Ptr<ProtectionParameter> getProtectionParameter(
             const ::jxx::Ptr<::jxx::lang::String>& alias) const;
-
     private:
-        Builder(
-            const ::jxx::Ptr<KeyStore>& keyStore,
-            const ::jxx::Ptr<ProtectionParameter>& protectionParameter);
-
+        Builder(const ::jxx::Ptr<KeyStore>& keyStore,
+                const ::jxx::Ptr<ProtectionParameter>& protectionParameter);
         ::jxx::Ptr<KeyStore> keyStore_;
         ::jxx::Ptr<ProtectionParameter> protectionParameter_;
     };

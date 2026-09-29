@@ -290,36 +290,20 @@ KeyStore::SecretKeyEntry::getSecretKey() const {
 }
 
 
-KeyStore::Builder::Builder(
-    const ::jxx::Ptr<KeyStore>& keyStore,
-    const ::jxx::Ptr<ProtectionParameter>& protectionParameter)
-    : keyStore_(keyStore),
-      protectionParameter_(protectionParameter) {
+KeyStore::Builder::Builder(const ::jxx::Ptr<KeyStore>& store,
+    const ::jxx::Ptr<ProtectionParameter>& protection)
+    : keyStore_(store), protectionParameter_(protection) {}
+::jxx::Ptr<KeyStore::Builder> KeyStore::Builder::newInstance(
+    const ::jxx::Ptr<KeyStore>& store,
+    const ::jxx::Ptr<ProtectionParameter>& protection) {
+    if (store == nullptr || protection == nullptr) throw ::jxx::lang::NullPointerException();
+    store->ensureLoaded();
+    return ::jxx::Ptr<Builder>(new Builder(store, protection));
 }
-
-::jxx::Ptr<KeyStore::Builder>
-KeyStore::Builder::newInstance(
-    const ::jxx::Ptr<KeyStore>& keyStore,
-    const ::jxx::Ptr<ProtectionParameter>& protectionParameter) {
-    if (keyStore == nullptr || protectionParameter == nullptr) {
-        throw ::jxx::lang::NullPointerException();
-    }
-    keyStore->ensureLoaded();
-    return ::jxx::Ptr<Builder>(
-        new Builder(keyStore, protectionParameter));
-}
-
-::jxx::Ptr<KeyStore>
-KeyStore::Builder::getKeyStore() const {
-    return keyStore_;
-}
-
-::jxx::Ptr<KeyStore::ProtectionParameter>
-KeyStore::Builder::getProtectionParameter(
+::jxx::Ptr<KeyStore> KeyStore::Builder::getKeyStore() const { return keyStore_; }
+::jxx::Ptr<KeyStore::ProtectionParameter> KeyStore::Builder::getProtectionParameter(
     const ::jxx::Ptr<::jxx::lang::String>& alias) const {
-    if (alias == nullptr) {
-        throw ::jxx::lang::NullPointerException();
-    }
+    if (alias == nullptr) throw ::jxx::lang::NullPointerException();
     return protectionParameter_;
 }
 

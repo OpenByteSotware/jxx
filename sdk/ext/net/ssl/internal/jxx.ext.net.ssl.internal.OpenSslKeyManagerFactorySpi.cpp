@@ -1,4 +1,6 @@
+#include <vector>
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslKeyManagerFactorySpi.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslCompositeKeyManager.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.KeyStoreBuilderParameters.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslDefaultKeyManager.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslKeyStoreKeyManager.h"
@@ -27,18 +29,19 @@ namespace jxx::ext::net::ssl::internal
 					"unsupported manager parameters");
 			}
 			const auto builders = builderParameters->getParameters();
-			const auto builder = (*builders)[0];
-			const auto keyStore = builder->getKeyStore();
-			const auto protection = builder->getProtectionParameter(
-				::jxx::NEW<::jxx::lang::String>("key"));
-			const auto passwordProtection =
-				::jxx::CAST<::jxx::security::KeyStore::PasswordProtection>(protection);
+			std::vector<OpenSslCompositeKeyManager::Manager> managers;
+			for (::jxx::lang::jint index = 0; index < builders->length; ++index) {
+				const auto builder = (*builders)[index];
+				const auto keyStore = builder->getKeyStore();
+				const auto protection = builder->getProtectionParameter(
+					::jxx::NEW<::jxx::lang::String>("key"));
+				const auto passwordProtection =
+					::jxx::CAST<::jxx::security::KeyStore::PasswordProtection>(protection);
+				managers.push_back(::jxx::NEW<OpenSslKeyStoreKeyManager>(
+					keyStore, passwordProtection == nullptr ? nullptr : passwordProtection->getPassword()));
+			}
 			manager_ = ::jxx::CAST<::jxx::ext::net::ssl::KeyManager>(
-				::jxx::NEW<OpenSslKeyStoreKeyManager>(
-					keyStore,
-					passwordProtection == nullptr
-						? nullptr
-						: passwordProtection->getPassword()));
+				::jxx::NEW<OpenSslCompositeKeyManager>(managers));
 		}
 		initialized_ = true;
 	}

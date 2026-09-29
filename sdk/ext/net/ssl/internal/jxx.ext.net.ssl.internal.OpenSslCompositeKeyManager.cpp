@@ -1,0 +1,12 @@
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslCompositeKeyManager.h"
+namespace jxx::ext::net::ssl::internal {
+OpenSslCompositeKeyManager::OpenSslCompositeKeyManager(const std::vector<Manager>&m):managers_(m){}
+::jxx::Ptr<::jxx::lang::String> OpenSslCompositeKeyManager::chooseClientAlias(const ::jxx::Ptr<StringArray>&t,const ::jxx::Ptr<PrincipalArray>&i,const ::jxx::Ptr<::jxx::net::Socket>&s){for(const auto&m:managers_){const auto a=m->chooseClientAlias(t,i,s);if(a!=nullptr)return a;}return nullptr;}
+::jxx::Ptr<::jxx::lang::String> OpenSslCompositeKeyManager::chooseServerAlias(const ::jxx::Ptr<::jxx::lang::String>&t,const ::jxx::Ptr<PrincipalArray>&i,const ::jxx::Ptr<::jxx::net::Socket>&s){for(const auto&m:managers_){const auto a=m->chooseServerAlias(t,i,s);if(a!=nullptr)return a;}return nullptr;}
+::jxx::Ptr<OpenSslCompositeKeyManager::CertificateArray> OpenSslCompositeKeyManager::getCertificateChain(const ::jxx::Ptr<::jxx::lang::String>&a){for(const auto&m:managers_){const auto c=m->getCertificateChain(a);if(c!=nullptr)return c;}return nullptr;}
+::jxx::Ptr<::jxx::security::PrivateKey> OpenSslCompositeKeyManager::getPrivateKey(const ::jxx::Ptr<::jxx::lang::String>&a){for(const auto&m:managers_){const auto k=m->getPrivateKey(a);if(k!=nullptr)return k;}return nullptr;}
+::jxx::Ptr<OpenSslCompositeKeyManager::StringArray> OpenSslCompositeKeyManager::getClientAliases(const ::jxx::Ptr<::jxx::lang::String>&t,const ::jxx::Ptr<PrincipalArray>&i){for(const auto&m:managers_){const auto a=m->getClientAliases(t,i);if(a!=nullptr&&a->length>0)return a;}return nullptr;}
+::jxx::Ptr<OpenSslCompositeKeyManager::StringArray> OpenSslCompositeKeyManager::getServerAliases(const ::jxx::Ptr<::jxx::lang::String>&t,const ::jxx::Ptr<PrincipalArray>&i){for(const auto&m:managers_){const auto a=m->getServerAliases(t,i);if(a!=nullptr&&a->length>0)return a;}return nullptr;}
+::jxx::Ptr<::jxx::lang::String> OpenSslCompositeKeyManager::chooseEngineClientAlias(const ::jxx::Ptr<StringArray>&t,const ::jxx::Ptr<PrincipalArray>&i,const ::jxx::Ptr<::jxx::ext::net::ssl::SSLEngine>&e){for(const auto&m:managers_){const auto a=m->chooseEngineClientAlias(t,i,e);if(a!=nullptr)return a;}return nullptr;}
+::jxx::Ptr<::jxx::lang::String> OpenSslCompositeKeyManager::chooseEngineServerAlias(const ::jxx::Ptr<::jxx::lang::String>&t,const ::jxx::Ptr<PrincipalArray>&i,const ::jxx::Ptr<::jxx::ext::net::ssl::SSLEngine>&e){for(const auto&m:managers_){const auto a=m->chooseEngineServerAlias(t,i,e);if(a!=nullptr)return a;}return nullptr;}
+}
