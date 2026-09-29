@@ -370,16 +370,34 @@ void OpenSslEngine::completeSession() {
         throw ::jxx::lang::NullPointerException();
     ensureInitialized();
     if (!handshakeStarted_) beginHandshake();
-    const auto initialPosition = source->position();
+
+    const bool applicationDataExpected =
+        SSL_is_init_finished(ssl_) != 0;
+    const auto requiredApplicationCapacity =
+        session_ == nullptr
+            ? static_cast<::jxx::lang::jint>(16384)
+            : session_->getApplicationBufferSize();
+
+    if (applicationDataExpected &&
+        source->remaining() > 0 &&
+        destination->remaining() <
+            requiredApplicationCapacity)
+    {
+        return result(
+            SSLEngineResult::Status::BUFFER_OVERFLOW,
+            handshakeStatus_,
+            0,
+            0);
+    }
+
     const auto consumed = feedNetwork(source);
     if (!SSL_is_init_finished(ssl_)) driveHandshake();
 
     ::jxx::lang::jint produced = 0;
     if (SSL_is_init_finished(ssl_)) {
         if (destination->remaining() == 0) {
-            source->position(initialPosition);
             return result(SSLEngineResult::Status::BUFFER_OVERFLOW,
-                          handshakeStatus_, 0, 0);
+                          handshakeStatus_, consumed, 0);
         }
         std::vector<unsigned char> plain(
             static_cast<std::size_t>(destination->remaining()));
