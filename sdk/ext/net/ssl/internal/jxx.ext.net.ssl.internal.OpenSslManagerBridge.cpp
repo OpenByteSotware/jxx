@@ -1,4 +1,5 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslManagerBridge.h"
+#include "ext/security/auth/x500/jxx.ext.security.auth.x500.X500Principal.h"
 #include <memory>
 
 #include <openssl/evp.h>
@@ -431,12 +432,53 @@ int OpenSslManagerBridge::selectClientCertificate(
         (*types)[1] = ::jxx::NEW<::jxx::lang::String>("EC");
         const auto extended =
             findExtendedKeyManager(config_);
+
+        ::jxx::Ptr<
+            ::jxx::ext::net::ssl::X509KeyManager::
+                PrincipalArray> issuers;
+        const STACK_OF(X509_NAME)* issuerNames =
+            ssl == nullptr
+                ? nullptr
+                : SSL_get0_peer_CA_list(ssl);
+        const int issuerCount =
+            issuerNames == nullptr
+                ? 0
+                : sk_X509_NAME_num(issuerNames);
+        if (issuerCount > 0) {
+            issuers = ::jxx::NEW<
+                ::jxx::ext::net::ssl::X509KeyManager::
+                    PrincipalArray>(issuerCount);
+            for (int index = 0; index < issuerCount; ++index) {
+                const X509_NAME* issuerName =
+                    sk_X509_NAME_value(
+                        issuerNames,
+                        index);
+                char* encodedName =
+                    issuerName == nullptr
+                        ? nullptr
+                        : X509_NAME_oneline(
+                              issuerName,
+                              nullptr,
+                              0);
+                if (encodedName != nullptr) {
+                    (*issuers)[index] =
+                        ::jxx::NEW<
+                            ::jxx::ext::security::auth::x500::
+                                X500Principal>(
+                                    ::jxx::NEW<
+                                        ::jxx::lang::String>(
+                                            encodedName));
+                    OPENSSL_free(encodedName);
+                }
+            }
+        }
+
         const auto alias =
             extended != nullptr && engine_ != nullptr
                 ? extended->chooseEngineClientAlias(
-                      types, nullptr, engine_)
+                      types, issuers, engine_)
                 : manager->chooseClientAlias(
-                      types, nullptr,
+                      types, issuers,
                       ::jxx::CAST<::jxx::net::Socket>(socket_));
         if (alias == nullptr) return 0;
         const auto chain = manager->getCertificateChain(alias);
