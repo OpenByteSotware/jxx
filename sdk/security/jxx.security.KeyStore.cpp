@@ -1,5 +1,6 @@
 #include "security/jxx.security.KeyStore.h"
 
+#include <chrono>
 #include <string>
 #include <vector>
 
@@ -98,6 +99,7 @@ void KeyStore::load(const ::jxx::Ptr<::jxx::io::InputStream>& stream,
     }
     if (key != nullptr) EVP_PKEY_free(key); if (leaf != nullptr) X509_free(leaf);
     if (extras != nullptr) sk_X509_pop_free(extras, X509_free);
+    creationTime_ = static_cast<::jxx::lang::jlong>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     loaded_ = true;
 }
 
@@ -305,6 +307,24 @@ KeyStore::Builder::Builder(const ::jxx::Ptr<KeyStore>& store,
     const ::jxx::Ptr<::jxx::lang::String>& alias) const {
     if (alias == nullptr) throw ::jxx::lang::NullPointerException();
     return protectionParameter_;
+}
+
+
+::jxx::Ptr<::jxx::util::Date> KeyStore::getCreationDate(
+    const ::jxx::Ptr<::jxx::lang::String>& alias) const {
+    ensureLoaded();
+    if (alias == nullptr) throw ::jxx::lang::NullPointerException();
+    return containsAlias(alias) ? ::jxx::NEW<::jxx::util::Date>(creationTime_) : nullptr;
+}
+
+::jxx::Ptr<::jxx::lang::String> KeyStore::getCertificateAlias(
+    const ::jxx::Ptr<::jxx::security::cert::Certificate>& certificate) const {
+    ensureLoaded();
+    if (certificate == nullptr) throw ::jxx::lang::NullPointerException();
+    for (std::size_t index=0; index<certificates_.size(); ++index)
+        if (certificates_[index]!=nullptr && certificates_[index]->equals(certificate))
+            return certificateAliases_[index];
+    return nullptr;
 }
 
 } // namespace jxx::security

@@ -6,6 +6,7 @@
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_array.h"
 #include "security/jxx.security.PrivateKey.h"
+#include "util/jxx.util.Date.h"
 #include "ext/crypto/jxx.ext.crypto.SecretKey.h"
 
 namespace jxx::io { class InputStream; }
@@ -133,6 +134,10 @@ public:
         const ::jxx::Ptr<::jxx::lang::String>& alias) const;
     ::jxx::Ptr<::jxx::security::cert::Certificate> getCertificate(
         const ::jxx::Ptr<::jxx::lang::String>& alias) const;
+    ::jxx::Ptr<::jxx::util::Date> getCreationDate(
+        const ::jxx::Ptr<::jxx::lang::String>& alias) const;
+    ::jxx::Ptr<::jxx::lang::String> getCertificateAlias(
+        const ::jxx::Ptr<::jxx::security::cert::Certificate>& certificate) const;
 
     ::jxx::Ptr<Entry> getEntry(
         const ::jxx::Ptr<::jxx::lang::String>& alias,
@@ -164,6 +169,7 @@ private:
     ::jxx::Ptr<CertificateArray> chain_;
     std::vector<::jxx::Ptr<::jxx::lang::String>> certificateAliases_;
     std::vector<::jxx::Ptr<::jxx::security::cert::X509Certificate>> certificates_;
+    ::jxx::lang::jlong creationTime_ = 0;
     ::jxx::lang::jbool loaded_ = false;
 };
 
