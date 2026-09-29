@@ -4,6 +4,7 @@
 
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextSpi.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslPropertyKeyManager.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslPropertyTrustManager.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLContextSpi.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLPermission.h"
 #include "lang/jxx.lang.SecurityManager.h"
@@ -133,7 +134,7 @@ SSLContext::SSLContext(
         ::jxx::NEW<::jxx::lang::String>("TLS"));
     candidate->init(
         internal::loadDefaultPropertyKeyManagers(),
-        nullptr,
+        internal::loadDefaultPropertyTrustManagers(),
         nullptr);
 
     std::lock_guard<std::mutex> lock(defaultContextMutex);
