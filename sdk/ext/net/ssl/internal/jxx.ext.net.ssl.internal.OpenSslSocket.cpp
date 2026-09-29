@@ -60,10 +60,18 @@ std::string join(const std::vector<std::string>& v) {
     for (const auto& s : v) { if (!r.empty()) r.push_back(':'); r += s; }
     return r;
 }
-[[noreturn]] void throwTlsFailure(SSL* ssl, int operation, const char* message) {
-    const int error = ssl == nullptr ? SSL_ERROR_SSL : SSL_get_error(ssl, operation);
+[[noreturn]] void throwTlsFailure(
+    SSL* ssl,
+    int operation,
+    const char* message,
+    bool handshake = false) {
+    const int error = ssl == nullptr
+        ? SSL_ERROR_SSL
+        : SSL_get_error(ssl, operation);
     switch (error) {
     case SSL_ERROR_SSL:
+        if (handshake)
+            throw ::jxx::ext::net::ssl::SSLHandshakeException(message);
         throw ::jxx::ext::net::ssl::SSLProtocolException(message);
     case SSL_ERROR_SYSCALL:
         throw ::jxx::ext::net::ssl::SSLException(message);
@@ -174,6 +182,28 @@ void OpenSslSocket::startHandshake() {
     if (SSL_CTX_set_min_proto_version(native_->context, minv) != 1 ||
         SSL_CTX_set_max_proto_version(native_->context, maxv) != 1)
         throw ::jxx::io::IOException("Could not apply enabled TLS protocols");
+    if (!enabledProtocols_.empty()) {
+        const auto containsProtocol = [this](const char* value) {
+            return std::find(
+                enabledProtocols_.begin(),
+                enabledProtocols_.end(),
+                std::string(value)) != enabledProtocols_.end();
+        };
+        unsigned long disabled = 0UL;
+#ifdef SSL_OP_NO_TLSv1
+        if (!containsProtocol("TLSv1")) disabled |= SSL_OP_NO_TLSv1;
+#endif
+#ifdef SSL_OP_NO_TLSv1_1
+        if (!containsProtocol("TLSv1.1")) disabled |= SSL_OP_NO_TLSv1_1;
+#endif
+#ifdef SSL_OP_NO_TLSv1_2
+        if (!containsProtocol("TLSv1.2")) disabled |= SSL_OP_NO_TLSv1_2;
+#endif
+#ifdef SSL_OP_NO_TLSv1_3
+        if (!containsProtocol("TLSv1.3")) disabled |= SSL_OP_NO_TLSv1_3;
+#endif
+        if (disabled != 0UL) SSL_CTX_set_options(native_->context, disabled);
+    }
     if (!enabledCipherSuites_.empty()) {
         std::vector<std::string> modern, legacy;
         for (const auto& c : enabledCipherSuites_)
@@ -297,7 +327,8 @@ void OpenSslSocket::startHandshake() {
             throwTlsFailure(
                 failedSsl,
                 handshakeResult,
-                "TLS handshake failed");
+                "TLS handshake failed",
+                true);
         } catch (const ::jxx::ext::net::ssl::SSLException&) {
             close();
             throw;
