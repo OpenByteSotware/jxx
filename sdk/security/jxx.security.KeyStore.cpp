@@ -289,4 +289,38 @@ KeyStore::SecretKeyEntry::getSecretKey() const {
     return secretKey_;
 }
 
+
+KeyStore::Builder::Builder(
+    const ::jxx::Ptr<KeyStore>& keyStore,
+    const ::jxx::Ptr<ProtectionParameter>& protectionParameter)
+    : keyStore_(keyStore),
+      protectionParameter_(protectionParameter) {
+}
+
+::jxx::Ptr<KeyStore::Builder>
+KeyStore::Builder::newInstance(
+    const ::jxx::Ptr<KeyStore>& keyStore,
+    const ::jxx::Ptr<ProtectionParameter>& protectionParameter) {
+    if (keyStore == nullptr || protectionParameter == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+    keyStore->ensureLoaded();
+    return ::jxx::Ptr<Builder>(
+        new Builder(keyStore, protectionParameter));
+}
+
+::jxx::Ptr<KeyStore>
+KeyStore::Builder::getKeyStore() const {
+    return keyStore_;
+}
+
+::jxx::Ptr<KeyStore::ProtectionParameter>
+KeyStore::Builder::getProtectionParameter(
+    const ::jxx::Ptr<::jxx::lang::String>& alias) const {
+    if (alias == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+    return protectionParameter_;
+}
+
 } // namespace jxx::security
