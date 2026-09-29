@@ -1,3 +1,4 @@
+#include "lang/jxx.lang.String.h"
 #include "com/google/gson/internal/jxx.com.google.gson.internal.StringWriter.h"
 namespace com::google::gson::internal
 {

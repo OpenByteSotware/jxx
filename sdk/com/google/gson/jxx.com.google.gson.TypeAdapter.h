@@ -2,10 +2,14 @@
 
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
-#include "com/google/gson/stream/jxx.com.google.gson.stream.JsonReader.h"
-#include "com/google/gson/stream/jxx.com.google.gson.stream.JsonWriter.h"
 #include "io/jxx.io.Reader.h"
 #include "io/jxx.io.Writer.h"
+
+namespace com::google::gson::stream
+{
+	class JsonReader;
+	class JsonWriter;
+}
 
 namespace com::google::gson {
 class JsonElement;

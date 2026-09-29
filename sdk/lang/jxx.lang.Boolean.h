@@ -32,8 +32,8 @@ public:
 
     static ::jxx::Ptr<ClassAny> Class();
 
-    static ::jxx::Ptr<Boolean> TRUE;
-    static ::jxx::Ptr<Boolean> FALSE;
+    static ::jxx::Ptr<Boolean> TRUE_;
+    static ::jxx::Ptr<Boolean> FALSE_;
     static const ::jxx::Ptr<ClassAny> TYPE;
 
     explicit Boolean(::jxx::lang::jbool value);

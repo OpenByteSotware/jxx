@@ -1,11 +1,8 @@
-#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSignatureAlgorithms.h"
-
 #include <string>
 #include <vector>
-
 #include <openssl/objects.h>
-
 #include "lang/jxx.lang.String.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSignatureAlgorithms.h"
 
 namespace jxx::ext::net::ssl::internal {
 namespace {

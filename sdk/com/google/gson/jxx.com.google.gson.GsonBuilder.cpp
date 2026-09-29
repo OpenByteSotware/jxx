@@ -1,3 +1,4 @@
+#include "lang/jxx.lang.String.h"
 #include "com/google/gson/jxx.com.google.gson.GsonBuilder.h"
 #include "com/google/gson/jxx.com.google.gson.Gson.h"
 #include "lang/jxx.lang.NullPointerException.h"

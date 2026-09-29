@@ -1,3 +1,4 @@
+#include "lang/jxx.lang.String.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.X509Principal.h"
 #include "lang/jxx.lang.NullPointerException.h"
 namespace jxx::ext::net::ssl::internal {

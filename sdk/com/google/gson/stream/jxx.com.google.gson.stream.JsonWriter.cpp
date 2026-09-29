@@ -1,8 +1,8 @@
-#include "com/google/gson/stream/jxx.com.google.gson.stream.JsonWriter.h"
 
 #include <cmath>
 #include <iomanip>
 #include <sstream>
+#include "com/google/gson/stream/jxx.com.google.gson.stream.JsonWriter.h"
 
 #include "lang/jxx.lang.IllegalStateException.h"
 #include "lang/jxx.lang.NullPointerException.h"

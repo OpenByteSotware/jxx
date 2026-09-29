@@ -1,10 +1,10 @@
-#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocket.h"
 
 #include "ext/net/ssl/jxx.ext.net.ssl.SNIHostName.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLParameters.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.IllegalStateException.h"
 #include "util/jxx.util.ArrayList.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocket.h"
 
 namespace jxx::ext::net::ssl::internal {
 

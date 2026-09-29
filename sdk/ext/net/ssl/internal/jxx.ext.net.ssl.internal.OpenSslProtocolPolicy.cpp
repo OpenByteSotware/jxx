@@ -1,8 +1,8 @@
-#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslProtocolPolicy.h"
-
+#include <algorithm>
 #include <openssl/ssl.h>
 
-#include <algorithm>
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslProtocolPolicy.h"
+
 
 #include "lang/jxx.lang.IllegalArgumentException.h"
 

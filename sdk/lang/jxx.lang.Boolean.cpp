@@ -19,9 +19,9 @@ namespace {
 
 } // namespace
 
-::jxx::Ptr<Boolean> Boolean::TRUE =
+::jxx::Ptr<Boolean> Boolean::TRUE_ =
     ::jxx::NEW<Boolean>(true);
-::jxx::Ptr<Boolean> Boolean::FALSE =
+::jxx::Ptr<Boolean> Boolean::FALSE_ =
     ::jxx::NEW<Boolean>(false);
 const ::jxx::Ptr<ClassAny> Boolean::TYPE =
     registerBooleanPrimitive();
@@ -40,7 +40,7 @@ Boolean::Boolean(const ::jxx::Ptr<String>& value)
 }
 
 ::jxx::Ptr<Boolean> Boolean::valueOf(::jxx::lang::jbool value) {
-    return value ? TRUE : FALSE;
+    return value ? TRUE_ : FALSE_;
 }
 
 ::jxx::Ptr<Boolean> Boolean::valueOf(

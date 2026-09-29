@@ -1,5 +1,3 @@
-#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.LayeredSocketBio.h"
-
 #include <algorithm>
 #include <cerrno>
 #include <climits>
@@ -10,6 +8,9 @@
 #else
 #include <sys/socket.h>
 #endif
+
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.LayeredSocketBio.h"
+
 
 namespace jxx::ext::net::ssl::internal {
 namespace {

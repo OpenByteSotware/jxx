@@ -1,11 +1,11 @@
+#include <array>
+#include <string>
+
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.BasicAuthenticator.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.Headers.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.HttpExchange.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.HttpPrincipal.h"
 #include "lang/jxx.lang.Exceptions.h"
-
-#include <array>
-#include <string>
 
 namespace jxx::com::sun::net::httpserver {
 namespace {

@@ -1,3 +1,7 @@
+#include <chrono>
+#include <ctime>
+#include <iomanip>
+#include <sstream>
 #include <exception>
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpExchange.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.RequestBodyInputStream.h"
@@ -10,10 +14,6 @@
 #include "net/jxx.net.InetSocketAddress.h"
 #include "net/jxx.net.Socket.h"
 #include "net/jxx.net.URI.h"
-#include <chrono>
-#include <ctime>
-#include <iomanip>
-#include <sstream>
 namespace {
 std::string reasonPhrase_(::jxx::lang::jint code)
 {

@@ -1,6 +1,6 @@
+#include <openssl/x509.h>
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSession.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.X509Principal.h"
-#include <openssl/x509.h>
 #include "util/jxx.util.ArrayList.h"
 
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLPeerUnverifiedException.h"

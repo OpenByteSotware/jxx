@@ -1,4 +1,3 @@
-#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslX509Certificate.h"
 
 #include <ctime>
 #include <string>
@@ -19,11 +18,11 @@
 #include "io/jxx.io.ObjectInputStream.h"
 #include "io/jxx.io.ObjectOutputStream.h"
 #include "lang/jxx.lang.IllegalStateException.h"
-#include "lang/jxx.lang.NullPointerException.h"
 #include "math/jxx.math.BigInteger.h"
 #include "util/jxx.util.ArrayList.h"
 #include "util/jxx.util.Date.h"
 #include "util/jxx.util.HashSet.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslX509Certificate.h"
 
 namespace jxx::ext::net::ssl::internal {
 namespace {

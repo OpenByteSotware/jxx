@@ -1,3 +1,4 @@
+#include <mutex>
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.DefaultHostnameVerifier.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.HttpsURLConnection.h"
 #include "lang/jxx.lang.IllegalStateException.h"
@@ -6,7 +7,6 @@
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "security/cert/jxx.security.cert.X509Certificate.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLPeerUnverifiedException.h"
-#include <mutex>
 namespace jxx::ext::net::ssl { namespace {
 std::mutex& defaultsMutex(){static std::mutex m;return m;}
 ::jxx::Ptr<HostnameVerifier>& defaultVerifier(){static ::jxx::Ptr<HostnameVerifier> v=::jxx::NEW<::jxx::ext::net::ssl::internal::DefaultHostnameVerifier>();return v;}

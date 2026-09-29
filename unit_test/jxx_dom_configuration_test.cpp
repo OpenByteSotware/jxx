@@ -20,11 +20,11 @@ TEST(XmlDomConfigurationStage, ExposesAndUpdatesRequiredBooleanParameters) {
     const auto comments = ::jxx::NEW<::jxx::lang::String>("COMMENTS");
     EXPECT_TRUE(configuration->canSetParameter(
         comments,
-        ::jxx::CAST<::jxx::lang::Object>(::jxx::lang::Boolean::FALSE)));
+        ::jxx::CAST<::jxx::lang::Object>(::jxx::lang::Boolean::FALSE_)));
 
     configuration->setParameter(
         comments,
-        ::jxx::CAST<::jxx::lang::Object>(::jxx::lang::Boolean::FALSE));
+        ::jxx::CAST<::jxx::lang::Object>(::jxx::lang::Boolean::FALSE_));
 
     EXPECT_FALSE(
         ::jxx::CAST<::jxx::lang::Boolean>(
@@ -45,7 +45,7 @@ TEST(XmlDomConfigurationStage, RejectsUnsupportedAndUnknownValues) {
 
     EXPECT_FALSE(configuration->canSetParameter(
         ::jxx::NEW<::jxx::lang::String>("validate"),
-        ::jxx::CAST<::jxx::lang::Object>(::jxx::lang::Boolean::TRUE)));
+        ::jxx::CAST<::jxx::lang::Object>(::jxx::lang::Boolean::TRUE_)));
 
     EXPECT_THROW(
         configuration->getParameter(

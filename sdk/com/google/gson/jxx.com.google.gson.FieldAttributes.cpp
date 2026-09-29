@@ -1,3 +1,4 @@
+#include "lang/jxx.lang.String.h"
 #include "com/google/gson/jxx.com.google.gson.FieldAttributes.h"
 #include "lang/jxx.lang.NullPointerException.h"
 namespace com::google::gson {

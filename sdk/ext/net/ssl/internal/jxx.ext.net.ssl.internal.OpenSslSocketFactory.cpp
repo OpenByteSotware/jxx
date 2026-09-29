@@ -1,9 +1,8 @@
-#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocketFactory.h"
 
-#include <openssl/ssl.h>
 
 #include <string>
 #include <vector>
+#include <openssl/ssl.h>
 
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocket.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
@@ -14,6 +13,7 @@
 #include "io/jxx.io.InputStream.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocketFactory.h"
 
 namespace jxx::ext::net::ssl::internal {
 namespace {

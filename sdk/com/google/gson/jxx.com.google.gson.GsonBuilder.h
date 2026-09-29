@@ -13,7 +13,10 @@
 #include "com/google/gson/jxx.com.google.gson.ToNumberPolicy.h"
 #include "com/google/gson/jxx.com.google.gson.JsonSerializer.h"
 #include "com/google/gson/jxx.com.google.gson.JsonDeserializer.h"
-#include "lang/jxx.lang.String.h"
+
+namespace jxx::lang {
+    class String;
+}
 
 namespace com::google::gson {
 

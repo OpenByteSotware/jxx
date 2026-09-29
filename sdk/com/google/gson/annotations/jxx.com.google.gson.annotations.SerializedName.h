@@ -1,8 +1,13 @@
 #pragma once
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
-#include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_array.h"
+
+namespace jxx::lang
+{
+	class String;
+}
+
 namespace com::google::gson::annotations {
 class SerializedName final
     : public ::jxx::lang::ClassBase<SerializedName, ::jxx::lang::Object> {

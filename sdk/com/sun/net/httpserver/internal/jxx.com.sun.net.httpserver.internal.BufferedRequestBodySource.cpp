@@ -1,8 +1,8 @@
+#include <algorithm>
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.BufferedRequestBodySource.h"
 
 #include "lang/jxx.lang.Exceptions.h"
 
-#include <algorithm>
 
 namespace jxx::com::sun::net::httpserver::internal {
 

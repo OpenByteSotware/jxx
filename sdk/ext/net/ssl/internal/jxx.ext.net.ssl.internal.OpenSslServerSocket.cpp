@@ -1,3 +1,4 @@
+#include <openssl/ssl.h>
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslServerSocket.h"
 
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
@@ -7,7 +8,6 @@
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLParameters.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "io/jxx.io.IOException.h"
-#include <openssl/ssl.h>
 
 namespace jxx::ext::net::ssl::internal {
 namespace {

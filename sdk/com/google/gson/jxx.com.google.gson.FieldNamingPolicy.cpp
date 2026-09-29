@@ -1,4 +1,5 @@
 #include <cctype>
+#include "lang/jxx.lang.String.h"
 #include "com/google/gson/jxx.com.google.gson.FieldNamingPolicy.h"
 namespace com::google::gson { namespace {
 class PolicyStrategy final : public ::jxx::lang::Object, public FieldNamingStrategy {

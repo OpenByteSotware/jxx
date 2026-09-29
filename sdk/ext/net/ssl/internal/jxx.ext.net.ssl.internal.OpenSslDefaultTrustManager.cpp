@@ -1,8 +1,8 @@
-#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslDefaultTrustManager.h"
-
+#include <vector>
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
-#include <vector>
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslDefaultTrustManager.h"
+
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLHandshakeException.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslX509Certificate.h"
 #include "security/cert/jxx.security.cert.X509Certificate.h"

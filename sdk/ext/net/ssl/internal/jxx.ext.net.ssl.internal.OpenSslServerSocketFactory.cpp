@@ -1,6 +1,5 @@
-#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslServerSocketFactory.h"
-
 #include <openssl/ssl.h>
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslServerSocketFactory.h"
 
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslServerSocket.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslCipherSuites.h"

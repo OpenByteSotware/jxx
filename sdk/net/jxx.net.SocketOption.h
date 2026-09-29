@@ -1,34 +1,39 @@
 #pragma once
 
-#include "lang/jxx_types.h"
+#include "lang/jxx.lang.Class.h"
+#include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 
-namespace jxx::net
-{
-    template<typename T>
-    class SocketOption : public jxx::lang::Object
-    {
-    public:
-        ~SocketOption() override = default;
+namespace jxx::net {
 
-    public:
-        virtual jxx::Ptr<jxx::lang::String> name() const = 0;
-        virtual jxx::Ptr<jxx::lang::Class> type() const = 0;
-    };
+template<typename T>
+class SocketOption
+    : public ::jxx::lang::InterfaceBase<SocketOption<T>> {
+public:
+    ~SocketOption() override = default;
 
-    class BasicSocketOption final : public SocketOption<jxx::lang::Object>
-    {
-    public:
-        explicit BasicSocketOption(const jxx::Ptr<jxx::lang::String>& name);
-        ~BasicSocketOption() override = default;
+    virtual ::jxx::Ptr<::jxx::lang::String> name() const = 0;
+    virtual ::jxx::Ptr<::jxx::lang::ClassAny> type() const = 0;
+};
 
-    public:
-        jxx::Ptr<jxx::lang::String> name() const override;
-        jxx::Ptr<jxx::lang::Class> type() const override;
-        jxx::Ptr<jxx::lang::String> toString() const override;
+class BasicSocketOption final
+    : public ::jxx::lang::ClassBase<
+          BasicSocketOption,
+          ::jxx::lang::Object,
+          SocketOption<::jxx::lang::Object>> {
+public:
+    BasicSocketOption(
+        const ::jxx::Ptr<::jxx::lang::String>& name,
+        const ::jxx::Ptr<::jxx::lang::ClassAny>& type);
 
-    private:
-        jxx::Ptr<jxx::lang::String> name_;
-    };
-}
+    ::jxx::Ptr<::jxx::lang::String> name() const override;
+    ::jxx::Ptr<::jxx::lang::ClassAny> type() const override;
+    ::jxx::Ptr<::jxx::lang::String> toString() const override;
+
+private:
+    ::jxx::Ptr<::jxx::lang::String> name_;
+    ::jxx::Ptr<::jxx::lang::ClassAny> type_;
+};
+
+} // namespace jxx::net

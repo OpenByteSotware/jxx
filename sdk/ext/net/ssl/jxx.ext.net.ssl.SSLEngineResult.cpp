@@ -1,7 +1,5 @@
-#include "ext/net/ssl/jxx.ext.net.ssl.SSLEngineResult.h"
-
 #include <string>
-
+#include "ext/net/ssl/jxx.ext.net.ssl.SSLEngineResult.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 
 namespace jxx::ext::net::ssl {

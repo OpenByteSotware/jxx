@@ -1,7 +1,12 @@
 #pragma once
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
-#include "lang/jxx.lang.String.h"
+
+
+namespace jxx::lang
+{
+	class String;
+}
 namespace com::google::gson {
 class FieldNamingStrategy
     : public ::jxx::lang::InterfaceBase<FieldNamingStrategy> {

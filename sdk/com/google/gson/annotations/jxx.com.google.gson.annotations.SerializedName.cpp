@@ -1,3 +1,4 @@
+#include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "com/google/gson/annotations/jxx.com.google.gson.annotations.SerializedName.h"
 namespace com::google::gson::annotations

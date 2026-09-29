@@ -2,7 +2,11 @@
 #include "lang/jxx.lang.Class.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
-#include "lang/jxx.lang.String.h"
+
+namespace jxx::lang
+{
+    class String;
+}
 namespace com::google::gson {
 class FieldAttributes final
     : public ::jxx::lang::ClassBase<FieldAttributes, ::jxx::lang::Object> {

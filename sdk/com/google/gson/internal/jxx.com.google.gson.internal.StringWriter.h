@@ -2,7 +2,12 @@
 #include <string>
 #include "lang/jxx.lang.ClassInfo.h"
 #include "io/jxx.io.Writer.h"
-#include "lang/jxx.lang.String.h"
+
+namespace jxx::lang
+{
+	class String;
+}
+
 namespace com::google::gson::internal {
 class StringWriter final : public ::jxx::lang::ClassBase<StringWriter, ::jxx::io::Writer> {
 public:

@@ -1,6 +1,16 @@
-#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
+#include <algorithm>
+#include <thread>
+#include <string>
+#include <vector>
 #include <chrono>
 #include <thread>
+#include <openssl/bio.h>
+#include <openssl/err.h>
+#include <openssl/rand.h>
+#include <openssl/ssl.h>
+#include <openssl/x509.h>
+
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslCipherSuites.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.LayeredSocketBio.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocket.h"
@@ -29,16 +39,6 @@
 #include "net/jxx.net.Socket.h"
 #include "net/jxx.net.InetSocketAddress.h"
 #include "net/internal/jxx.net.internal.NetPlatform.h"
-
-#include <algorithm>
-#include <thread>
-#include <string>
-#include <vector>
-#include <openssl/bio.h>
-#include <openssl/err.h>
-#include <openssl/rand.h>
-#include <openssl/ssl.h>
-#include <openssl/x509.h>
 
 namespace jxx::ext::net::ssl::internal {
 namespace {

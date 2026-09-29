@@ -3,18 +3,25 @@
 #include "lang/jxx_types.h"
 #include "net/jxx.net.SocketOption.h"
 
-namespace jxx::net
-{
-    class StandardSocketOptions final
-    {
-    public:
-        static jxx::Ptr<SocketOption<jxx::lang::Object>> SO_BROADCAST;
-        static jxx::Ptr<SocketOption<jxx::lang::Object>> SO_KEEPALIVE;
-        static jxx::Ptr<SocketOption<jxx::lang::Object>> SO_SNDBUF;
-        static jxx::Ptr<SocketOption<jxx::lang::Object>> SO_RCVBUF;
-        static jxx::Ptr<SocketOption<jxx::lang::Object>> SO_REUSEADDR;
-        static jxx::Ptr<SocketOption<jxx::lang::Object>> SO_LINGER;
-        static jxx::Ptr<SocketOption<jxx::lang::Object>> IP_TOS;
-        static jxx::Ptr<SocketOption<jxx::lang::Object>> TCP_NODELAY;
-    };
-}
+namespace jxx::net {
+
+class StandardSocketOptions final {
+public:
+    using Option = SocketOption<::jxx::lang::Object>;
+
+    static ::jxx::Ptr<Option> SO_BROADCAST_;
+    static ::jxx::Ptr<Option> SO_KEEPALIVE_;
+    static ::jxx::Ptr<Option> SO_SNDBUF_;
+    static ::jxx::Ptr<Option> SO_RCVBUF_;
+    static ::jxx::Ptr<Option> SO_REUSEADDR_;
+    static ::jxx::Ptr<Option> SO_LINGER_;
+    static ::jxx::Ptr<Option> IP_TOS_;
+    static ::jxx::Ptr<Option> IP_MULTICAST_IF_;
+    static ::jxx::Ptr<Option> IP_MULTICAST_TTL_;
+    static ::jxx::Ptr<Option> IP_MULTICAST_LOOP_;
+    static ::jxx::Ptr<Option> TCP_NODELAY_;
+
+    StandardSocketOptions() = delete;
+};
+
+} // namespace jxx::net

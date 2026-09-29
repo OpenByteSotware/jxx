@@ -1,9 +1,8 @@
-#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslHttpsURLConnection.h"
-
 #include <algorithm>
 #include <cctype>
 #include <sstream>
 #include <string>
+
 
 #include "ext/net/ssl/jxx.ext.net.ssl.HostnameVerifier.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLParameters.h"
@@ -21,6 +20,7 @@
 #include "net/jxx.net.ProtocolException.h"
 #include "net/jxx.net.URL.h"
 #include "security/cert/jxx.security.cert.Certificate.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslHttpsURLConnection.h"
 
 namespace jxx::ext::net::ssl::internal {
 namespace {

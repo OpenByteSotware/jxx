@@ -1,3 +1,4 @@
+#include <string>
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.Headers.h"
 
 #include "lang/jxx.lang.Exceptions.h"
@@ -7,7 +8,6 @@
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.ReadOnlyViews.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.ReadOnlyList.h"
 
-#include <string>
 
 namespace jxx::com::sun::net::httpserver {
 

@@ -1,5 +1,3 @@
-#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslPropertyTrustManager.h"
-
 #include <fstream>
 #include <iterator>
 #include <string>
@@ -9,7 +7,7 @@
 #include <openssl/pkcs12.h>
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
-
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslPropertyTrustManager.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslX509Certificate.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLHandshakeException.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"

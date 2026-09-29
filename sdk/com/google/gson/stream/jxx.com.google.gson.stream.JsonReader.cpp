@@ -1,8 +1,8 @@
-#include "com/google/gson/stream/jxx.com.google.gson.stream.JsonReader.h"
-
 #include <cctype>
 #include <cstdlib>
 #include <limits>
+#include "com/google/gson/stream/jxx.com.google.gson.stream.JsonReader.h"
+
 
 #include "com/google/gson/stream/jxx.com.google.gson.stream.MalformedJsonException.h"
 #include "lang/jxx.lang.IllegalStateException.h"

@@ -1,6 +1,5 @@
-#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.DerCertificate.h"
-
 #include <openssl/x509.h>
+
 
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslPublicKey.h"
 #include "io/jxx.io.ObjectInputStream.h"
@@ -9,6 +8,7 @@
 #include "lang/jxx.lang.IllegalStateException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.DerCertificate.h"
 
 namespace jxx::ext::net::ssl::internal {
 namespace {

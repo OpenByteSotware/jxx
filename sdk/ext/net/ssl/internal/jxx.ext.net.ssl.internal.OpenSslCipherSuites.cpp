@@ -1,6 +1,6 @@
+#include <openssl/ssl.h>
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslCipherSuites.h"
 
-#include <openssl/ssl.h>
 
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLException.h"
 
