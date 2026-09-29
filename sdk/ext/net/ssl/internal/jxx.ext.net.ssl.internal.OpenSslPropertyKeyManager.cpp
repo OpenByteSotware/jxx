@@ -210,7 +210,13 @@ loadDefaultPropertyKeyManagers() {
     std::vector<unsigned char> keyBytes(static_cast<std::size_t>(keyLength));
     unsigned char* keyOutput = keyBytes.data();
     i2d_PrivateKey(nativeKey, &keyOutput);
-    const char* algorithmName = OBJ_nid2sn(EVP_PKEY_base_id(nativeKey));
+    const int keyId = EVP_PKEY_base_id(nativeKey);
+    const char* algorithmName =
+        keyId == EVP_PKEY_RSA
+            ? "RSA"
+            : keyId == EVP_PKEY_EC
+                ? "EC"
+                : OBJ_nid2sn(keyId);
     const auto key = ::jxx::NEW<PropertyPrivateKey>(
         ::jxx::NEW<::jxx::lang::String>(
             algorithmName == nullptr ? "UNKNOWN" : algorithmName),

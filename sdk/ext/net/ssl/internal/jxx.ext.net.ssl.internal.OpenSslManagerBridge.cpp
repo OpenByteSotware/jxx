@@ -353,17 +353,36 @@ int OpenSslManagerBridge::selectServerIdentity(SSL* ssl) noexcept {
     try {
         const auto manager = findKeyManager(config_);
         if (manager == nullptr) return 0;
-        const auto keyType =
-            ::jxx::NEW<::jxx::lang::String>("RSA");
         const auto extended =
             findExtendedKeyManager(config_);
-        const auto alias =
-            extended != nullptr && engine_ != nullptr
-                ? extended->chooseEngineServerAlias(
-                      keyType, nullptr, engine_)
-                : manager->chooseServerAlias(
-                      keyType, nullptr,
-                      ::jxx::CAST<::jxx::net::Socket>(socket_));
+        const auto socket =
+            ::jxx::CAST<::jxx::net::Socket>(socket_);
+
+        ::jxx::Ptr<::jxx::lang::String> alias;
+        const char* const keyTypes[] = {
+            "EC",
+            "RSA"
+        };
+
+        for (const char* keyTypeName : keyTypes) {
+            const auto keyType =
+                ::jxx::NEW<::jxx::lang::String>(
+                    keyTypeName);
+            alias =
+                extended != nullptr && engine_ != nullptr
+                    ? extended->chooseEngineServerAlias(
+                          keyType,
+                          nullptr,
+                          engine_)
+                    : manager->chooseServerAlias(
+                          keyType,
+                          nullptr,
+                          socket);
+            if (alias != nullptr) {
+                break;
+            }
+        }
+
         if (alias == nullptr) return 0;
         const auto chain = manager->getCertificateChain(alias);
         const auto key = manager->getPrivateKey(alias);
