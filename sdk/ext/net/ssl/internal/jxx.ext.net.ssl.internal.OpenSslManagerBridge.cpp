@@ -228,13 +228,38 @@ void OpenSslManagerBridge::setEngine(
 
 int OpenSslManagerBridge::verifyPeer(X509_STORE_CTX* storeContext) noexcept {
     try {
-        if (X509_verify_cert(storeContext) != 1) return 0;
-        const auto manager = findTrustManager(config_);
-        if (manager == nullptr) return 1;
+        if (storeContext == nullptr) return 0;
 
-        STACK_OF(X509)* chain = X509_STORE_CTX_get0_chain(storeContext);
-        const int count = chain == nullptr ? 0 : sk_X509_num(chain);
-        if (count <= 0) return 0;
+        const auto manager = findTrustManager(config_);
+        if (manager == nullptr) {
+            return X509_verify_cert(storeContext) == 1 ? 1 : 0;
+        }
+
+        STACK_OF(X509)* presented = sk_X509_new_null();
+        if (presented == nullptr) return 0;
+
+        X509* leaf = X509_STORE_CTX_get0_cert(storeContext);
+        if (leaf == nullptr || sk_X509_push(presented, leaf) != 1) {
+            sk_X509_free(presented);
+            return 0;
+        }
+
+        STACK_OF(X509)* untrusted =
+            X509_STORE_CTX_get0_untrusted(storeContext);
+        const int untrustedCount =
+            untrusted == nullptr ? 0 : sk_X509_num(untrusted);
+        for (int index = 0; index < untrustedCount; ++index) {
+            X509* certificate = sk_X509_value(untrusted, index);
+            if (certificate != nullptr && certificate != leaf &&
+                sk_X509_push(presented, certificate) != 1)
+            {
+                sk_X509_free(presented);
+                return 0;
+            }
+        }
+
+        STACK_OF(X509)* chain = presented;
+        const int count = sk_X509_num(chain);
 
         if (algorithmConstraints_ != nullptr) {
             const auto signaturePrimitives = primitiveSet(
@@ -312,10 +337,13 @@ int OpenSslManagerBridge::verifyPeer(X509_STORE_CTX* storeContext) noexcept {
             manager->checkServerTrusted(
                 converted, authType);
         }
+        sk_X509_free(presented);
         X509_STORE_CTX_set_error(storeContext, X509_V_OK);
         return 1;
     } catch (...) {
-        X509_STORE_CTX_set_error(storeContext, X509_V_ERR_APPLICATION_VERIFICATION);
+        X509_STORE_CTX_set_error(
+            storeContext,
+            X509_V_ERR_APPLICATION_VERIFICATION);
         return 0;
     }
 }
