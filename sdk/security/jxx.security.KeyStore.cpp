@@ -327,4 +327,24 @@ KeyStore::Builder::Builder(const ::jxx::Ptr<KeyStore>& store,
     return nullptr;
 }
 
+
+::jxx::lang::jbool KeyStore::entryInstanceOf(
+    const ::jxx::Ptr<::jxx::lang::String>& alias,
+    const ::jxx::Ptr<::jxx::lang::ClassAny>& entryClass) const {
+    ensureLoaded();
+    if (alias == nullptr || entryClass == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+
+    const auto entry = getEntry(alias, nullptr);
+    if (entry == nullptr) {
+        return false;
+    }
+
+    const auto object =
+        ::jxx::CAST<::jxx::lang::Object>(entry);
+    return object != nullptr &&
+        object->instanceOf(entryClass);
+}
+
 } // namespace jxx::security

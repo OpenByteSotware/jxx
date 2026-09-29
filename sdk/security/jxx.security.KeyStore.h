@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.Class.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_array.h"
 #include "security/jxx.security.PrivateKey.h"
@@ -125,6 +126,9 @@ public:
         const ::jxx::Ptr<::jxx::lang::String>& alias) const;
     ::jxx::lang::jbool containsAlias(
         const ::jxx::Ptr<::jxx::lang::String>& alias) const;
+    ::jxx::lang::jbool entryInstanceOf(
+        const ::jxx::Ptr<::jxx::lang::String>& alias,
+        const ::jxx::Ptr<::jxx::lang::ClassAny>& entryClass) const;
     ::jxx::lang::jint size() const noexcept;
     ::jxx::Ptr<StringArray> aliases() const;
     ::jxx::Ptr<::jxx::security::PrivateKey> getKey(
