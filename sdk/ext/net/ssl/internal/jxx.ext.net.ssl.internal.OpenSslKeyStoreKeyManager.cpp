@@ -1,0 +1,13 @@
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslKeyStoreKeyManager.h"
+#include "security/cert/jxx.security.cert.X509Certificate.h"
+namespace jxx::ext::net::ssl::internal {
+OpenSslKeyStoreKeyManager::OpenSslKeyStoreKeyManager(const ::jxx::Ptr<::jxx::security::KeyStore>&s,const ::jxx::Ptr<::jxx::security::KeyStore::CharArray>&p):store_(s),password_(p){}
+::jxx::Ptr<::jxx::lang::String> OpenSslKeyStoreKeyManager::chooseServerAlias(const ::jxx::Ptr<::jxx::lang::String>&t,const ::jxx::Ptr<PrincipalArray>&,const ::jxx::Ptr<::jxx::net::Socket>&){const auto a=store_->aliases();for(::jxx::lang::jint i=0;i<a->length;++i){const auto k=store_->getKey((*a)[i],password_);if(k!=nullptr&&t!=nullptr&&k->getAlgorithm()->utf8()==t->utf8())return(*a)[i];}return nullptr;}
+::jxx::Ptr<::jxx::lang::String> OpenSslKeyStoreKeyManager::chooseClientAlias(const ::jxx::Ptr<StringArray>&ts,const ::jxx::Ptr<PrincipalArray>&p,const ::jxx::Ptr<::jxx::net::Socket>&s){if(ts==nullptr)return nullptr;for(::jxx::lang::jint i=0;i<ts->length;++i){const auto a=chooseServerAlias((*ts)[i],p,s);if(a!=nullptr)return a;}return nullptr;}
+::jxx::Ptr<OpenSslKeyStoreKeyManager::CertificateArray> OpenSslKeyStoreKeyManager::getCertificateChain(const ::jxx::Ptr<::jxx::lang::String>&a){const auto c=store_->getCertificateChain(a);if(c==nullptr)return nullptr;const auto r=::jxx::NEW<CertificateArray>(c->length);for(::jxx::lang::jint i=0;i<c->length;++i)(*r)[i]=::jxx::CAST<::jxx::security::cert::X509Certificate>((*c)[i]);return r;}
+::jxx::Ptr<OpenSslKeyStoreKeyManager::StringArray> OpenSslKeyStoreKeyManager::getServerAliases(const ::jxx::Ptr<::jxx::lang::String>&t,const ::jxx::Ptr<PrincipalArray>&p){const auto a=chooseServerAlias(t,p,nullptr);if(a==nullptr)return nullptr;const auto r=::jxx::NEW<StringArray>(1);(*r)[0]=a;return r;}
+::jxx::Ptr<OpenSslKeyStoreKeyManager::StringArray> OpenSslKeyStoreKeyManager::getClientAliases(const ::jxx::Ptr<::jxx::lang::String>&t,const ::jxx::Ptr<PrincipalArray>&p){return getServerAliases(t,p);}
+::jxx::Ptr<::jxx::security::PrivateKey> OpenSslKeyStoreKeyManager::getPrivateKey(const ::jxx::Ptr<::jxx::lang::String>&a){return store_->getKey(a,password_);}
+::jxx::Ptr<::jxx::lang::String> OpenSslKeyStoreKeyManager::chooseEngineClientAlias(const ::jxx::Ptr<StringArray>&t,const ::jxx::Ptr<PrincipalArray>&p,const ::jxx::Ptr<::jxx::ext::net::ssl::SSLEngine>&){return chooseClientAlias(t,p,nullptr);}
+::jxx::Ptr<::jxx::lang::String> OpenSslKeyStoreKeyManager::chooseEngineServerAlias(const ::jxx::Ptr<::jxx::lang::String>&t,const ::jxx::Ptr<PrincipalArray>&p,const ::jxx::Ptr<::jxx::ext::net::ssl::SSLEngine>&){return chooseServerAlias(t,p,nullptr);}
+}
