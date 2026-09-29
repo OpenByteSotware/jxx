@@ -1,9 +1,11 @@
 #include "net/internal/jxx.net.internal.NativeSocketState.h"
 
 #include <stdexcept>
+#include <cerrno>
 
 #include "io/jxx.io.IOHelper.h"
 #include "net/jxx.net.SocketException.h"
+#include "net/jxx.net.SocketTimeoutException.h"
 
 #if defined(_WIN32)
     #include <winsock2.h>
@@ -58,8 +60,21 @@ namespace jxx::net::internal
                                0);
         if (rc == 0)
             return -1;
-        if (rc < 0)
+        if (rc < 0) {
+        #if defined(_WIN32)
+            const int error = WSAGetLastError();
+            if (error == WSAETIMEDOUT || error == WSAEWOULDBLOCK)
+                throw ::jxx::net::SocketTimeoutException(
+                    "socket read timed out");
+        #else
+            const int error = errno;
+            if (error == EAGAIN || error == EWOULDBLOCK ||
+                error == ETIMEDOUT)
+                throw ::jxx::net::SocketTimeoutException(
+                    "socket read timed out");
+        #endif
             throwIOE_("socket recv failed");
+        }
         return static_cast<jxx::lang::jint>(rc);
     }
 
