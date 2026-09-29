@@ -5,6 +5,8 @@
 #include "lang/jxx.lang.Cast.h"
 #include "lang/jxx.lang.Cloneable.h"
 #include "lang/jxx.lang.CloneNotSupportedException.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.IllegalMonitorStateException.h"
 #include "lang/jxx.lang.Object.h"
 
 
@@ -19,9 +21,10 @@ namespace jxx::lang {
     Object::Object(const Object& /*other*/)
         : std::enable_shared_from_this<Object>()
         , thisPtr_()
-        , mtx_()
-        , cv_()
-        , mutex_()
+        , monitorMutex_()
+        , monitorCondition_()
+        , monitorOwner_()
+        , monitorDepth_(0U)
     {
     }
 
@@ -35,9 +38,18 @@ namespace jxx::lang {
     }
 
     jxx::Ptr<jxx::lang::ClassAny> Object::getClass() const {
-        // Exact JXX semantics: runtime class of the *dynamic* object.
-        // Requires RTTI enabled (typeid on polymorphic type).
-        return ClassAny::forType(std::type_index(typeid(*this)));
+        // Exact runtime class of the dynamic object.
+        // ClassInfo-backed classes register themselves through their Class()
+        // path; Object itself is registered by the bootstrap descriptor.
+        try {
+            return ClassAny::forType(std::type_index(typeid(*this)));
+        }
+        catch (const IllegalStateException&) {
+            if (typeid(*this) == typeid(Object)) {
+                return class_info_detail::ensureObjectRegistered();
+            }
+            throw;
+        }
     }
 
     ::jxx::lang::jbool Object::instanceOf(
@@ -99,11 +111,18 @@ namespace jxx::lang {
         return this->getClassName_();
     }
 
-    // JXX-style: "Class@hexHash"
-    jxx::Ptr<jxx::lang::String>  Object::toString() const {
-        std::ostringstream oss;
-        oss << getClassName_() << "@0x" << std::hex << hashCode();
-        return jxx::NEW<jxx::lang::String>(oss.str());
+    jxx::Ptr<jxx::lang::String> Object::toString() const {
+        const auto runtimeClass = getClass();
+        const auto className = runtimeClass == nullptr
+            ? getClassName_()
+            : runtimeClass->getName();
+
+        std::ostringstream output;
+        output << className->utf8()
+               << '@'
+               << std::hex
+               << static_cast<std::uint32_t>(hashCode());
+        return jxx::NEW<jxx::lang::String>(output.str());
     }
 
     // Identity check (reference equality)
@@ -111,19 +130,89 @@ namespace jxx::lang {
         return this == other.get();
     }
 
+    void Object::verifyMonitorOwner_() const {
+        if (monitorDepth_ == 0U ||
+            monitorOwner_ != std::this_thread::get_id()) {
+            throw IllegalMonitorStateException();
+        }
+    }
+
+    bool Object::waitFor_(const std::chrono::nanoseconds& duration) {
+        verifyMonitorOwner_();
+
+        const std::size_t savedDepth = monitorDepth_;
+        monitorDepth_ = 0U;
+        monitorOwner_ = std::thread::id{};
+
+        // synchronized() owns the recursive mutex once per entry. Retain one
+        // adopted level for condition_variable_any and temporarily release any
+        // additional reentrant levels while waiting.
+        for (std::size_t depth = 1U; depth < savedDepth; ++depth) {
+            monitorMutex_.unlock();
+        }
+
+        std::unique_lock<std::recursive_mutex> lock(
+            monitorMutex_,
+            std::adopt_lock);
+
+        bool notified = true;
+        if (duration == std::chrono::nanoseconds::zero()) {
+            monitorCondition_.wait(lock);
+        }
+        else {
+            notified = monitorCondition_.wait_for(lock, duration) !=
+                std::cv_status::timeout;
+        }
+
+        for (std::size_t depth = 1U; depth < savedDepth; ++depth) {
+            monitorMutex_.lock();
+        }
+
+        monitorOwner_ = std::this_thread::get_id();
+        monitorDepth_ = savedDepth;
+        (void)lock.release();
+        return notified;
+    }
+
     void Object::wait() {
-        std::unique_lock<std::mutex> lk(mtx_);
-        cv_.wait(lk);
+        (void)waitFor_(std::chrono::nanoseconds::zero());
+    }
+
+    void Object::wait(::jxx::lang::jlong timeoutMillis) {
+        wait(timeoutMillis, 0);
+    }
+
+    void Object::wait(
+        ::jxx::lang::jlong timeoutMillis,
+        ::jxx::lang::jint nanos) {
+
+        if (timeoutMillis < 0 || nanos < 0 || nanos > 999999) {
+            throw IllegalArgumentException();
+        }
+
+        if (timeoutMillis == 0 && nanos == 0) {
+            wait();
+            return;
+        }
+
+        // The Java 8 specification rounds any positive nanosecond remainder
+        // up to one additional millisecond.
+        const auto roundedMillis =
+            nanos > 0 && timeoutMillis <
+                std::numeric_limits<::jxx::lang::jlong>::max()
+                ? timeoutMillis + 1
+                : timeoutMillis;
+        (void)waitFor_(std::chrono::milliseconds(roundedMillis));
     }
 
     void Object::notify() {
-        std::lock_guard<std::mutex> lg(mtx_);
-        cv_.notify_one();
+        verifyMonitorOwner_();
+        monitorCondition_.notify_one();
     }
 
     void Object::notifyAll() {
-        std::lock_guard<std::mutex> lg(mtx_);
-        cv_.notify_all();
+        verifyMonitorOwner_();
+        monitorCondition_.notify_all();
     }
 
     jxx::Ptr<jxx::lang::Object> Object::cloneImpl() const {

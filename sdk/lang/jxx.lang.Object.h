@@ -10,6 +10,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <limits>
 #include <mutex>
 #include <numeric>
 #include <sstream>
@@ -17,6 +18,7 @@
 #include <string>
 #include <type_traits>
 #include <typeinfo>
+#include <thread>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -95,14 +97,22 @@ namespace jxx::lang
         virtual jxx::Ptr<jxx::lang::String> toString() const;
         virtual bool same(const jxx::Ptr<Object>& other) const;
 
+        /**
+         * Compatibility helper for native callers. The calling thread must
+         * own this object's monitor through synchronized().
+         */
         template <typename Rep, typename Period>
         bool wait_for(const std::chrono::duration<Rep, Period>& duration)
         {
-            std::unique_lock<std::mutex> lock(mtx_);
-            return cv_.wait_for(lock, duration) == std::cv_status::no_timeout;
+            return waitFor_(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(duration));
         }
 
         void wait();
+        void wait(::jxx::lang::jlong timeoutMillis);
+        void wait(
+            ::jxx::lang::jlong timeoutMillis,
+            ::jxx::lang::jint nanos);
         void notify();
         void notifyAll();
 
@@ -111,7 +121,24 @@ namespace jxx::lang
         template <typename F>
         auto synchronized(F&& function) const -> decltype(function())
         {
-            std::lock_guard<std::recursive_mutex> guard(mutex_);
+            std::unique_lock<std::recursive_mutex> lock(monitorMutex_);
+            const auto current = std::this_thread::get_id();
+
+            if (monitorDepth_ == 0U) {
+                monitorOwner_ = current;
+            }
+            ++monitorDepth_;
+
+            struct MonitorExit final {
+                const Object* object;
+                ~MonitorExit() noexcept {
+                    --object->monitorDepth_;
+                    if (object->monitorDepth_ == 0U) {
+                        object->monitorOwner_ = std::thread::id{};
+                    }
+                }
+            } monitorExit{this};
+
             return function();
         }
 
@@ -136,12 +163,16 @@ namespace jxx::lang
             return std::dynamic_pointer_cast<const T>(thisPtr());
         }
 
-        mutable std::mutex mtx_;
-        std::condition_variable cv_;
-
         void releaseSelf();
         jxx::Ptr<jxx::lang::String> getClassName_() const;
-        mutable std::recursive_mutex mutex_;
+
+        bool waitFor_(const std::chrono::nanoseconds& duration);
+        void verifyMonitorOwner_() const;
+
+        mutable std::recursive_mutex monitorMutex_;
+        mutable std::condition_variable_any monitorCondition_;
+        mutable std::thread::id monitorOwner_{};
+        mutable std::size_t monitorDepth_ = 0U;
 
     private:
         friend struct ::jxx::detail::ObjectAccess;
