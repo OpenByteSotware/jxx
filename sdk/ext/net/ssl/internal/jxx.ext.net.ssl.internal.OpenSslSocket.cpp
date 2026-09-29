@@ -1,7 +1,10 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextConfig.h"
+#include <chrono>
+#include <thread>
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslCipherSuites.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.LayeredSocketBio.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocket.h"
+#include "net/jxx.net.SocketTimeoutException.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocketNative.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslManagerBridge.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSniMatcher.h"
@@ -453,12 +456,14 @@ void OpenSslSocket::close() {
     outputStream_ = nullptr;
     handshakeSession_ = nullptr;
     handshakeInProgress_ = false;
+    connected_ = false;
     closed_ = true;
     if (autoClose_ && transport_ != nullptr) transport_->close();
 }
 int OpenSslSocket::tlsRead(unsigned char* data, int length) {
     std::lock_guard<std::recursive_mutex> tlsLock(tlsMutex_);
     startHandshake();
+    const auto started = std::chrono::steady_clock::now();
     for (;;) {
         const int result = BIO_read(native_->connection, data, length);
         if (result > 0) return result;
@@ -467,10 +472,20 @@ int OpenSslSocket::tlsRead(unsigned char* data, int length) {
         const int error = ssl == nullptr
             ? SSL_ERROR_SSL
             : SSL_get_error(ssl, result);
-        if (error == SSL_ERROR_ZERO_RETURN) return -1;
-        if (error == SSL_ERROR_WANT_READ ||
-            error == SSL_ERROR_WANT_WRITE)
+        if (error == SSL_ERROR_ZERO_RETURN) {
+            connected_ = false;
+            return -1;
+        }
+        if (error == SSL_ERROR_WANT_READ || error == SSL_ERROR_WANT_WRITE) {
+            if (soTimeout_ > 0) {
+                const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now() - started).count();
+                if (elapsed >= soTimeout_)
+                    throw ::jxx::net::SocketTimeoutException("TLS read timed out");
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
             continue;
+        }
         throwTlsFailure(ssl, result, "TLS read failed");
     }
 }
