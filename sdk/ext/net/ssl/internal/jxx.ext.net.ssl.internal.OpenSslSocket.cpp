@@ -399,8 +399,23 @@ void OpenSslSocket::startHandshake() {
     }
 }
 
-::jxx::Ptr<::jxx::io::InputStream> OpenSslSocket::getInputStream(){startHandshake();return ::jxx::NEW<OpenSslInputStream>(this);}
-::jxx::Ptr<::jxx::io::OutputStream> OpenSslSocket::getOutputStream(){startHandshake();return ::jxx::NEW<OpenSslOutputStream>(this);}
+::jxx::Ptr<::jxx::io::InputStream>
+OpenSslSocket::getInputStream() {
+    std::lock_guard<std::recursive_mutex> tlsLock(tlsMutex_);
+    startHandshake();
+    if (inputStream_ == nullptr)
+        inputStream_ = ::jxx::NEW<OpenSslInputStream>(this);
+    return inputStream_;
+}
+
+::jxx::Ptr<::jxx::io::OutputStream>
+OpenSslSocket::getOutputStream() {
+    std::lock_guard<std::recursive_mutex> tlsLock(tlsMutex_);
+    startHandshake();
+    if (outputStream_ == nullptr)
+        outputStream_ = ::jxx::NEW<OpenSslOutputStream>(this);
+    return outputStream_;
+}
 void OpenSslSocket::setSoTimeout(::jxx::lang::jint timeout) {
     if (timeout < 0) throw ::jxx::lang::IllegalArgumentException();
     std::lock_guard<std::recursive_mutex> tlsLock(tlsMutex_);
@@ -434,6 +449,8 @@ void OpenSslSocket::close() {
     }
     native_.reset(new OpenSslSocketNative());
     session_ = nullptr;
+    inputStream_ = nullptr;
+    outputStream_ = nullptr;
     handshakeSession_ = nullptr;
     handshakeInProgress_ = false;
     closed_ = true;

@@ -120,6 +120,8 @@ private:
     ::jxx::lang::jbool autoClose_ = false;
     std::vector<unsigned char> consumed_;
     ::jxx::Ptr<SSLSession> session_;
+    ::jxx::Ptr<::jxx::io::InputStream> inputStream_;
+    ::jxx::Ptr<::jxx::io::OutputStream> outputStream_;
     ::jxx::Ptr<SSLSession> handshakeSession_;
     ::jxx::lang::jbool handshakeInProgress_ = false;
     std::vector<::jxx::Ptr<HandshakeCompletedListener>> listeners_;

@@ -1,3 +1,53 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslStreams.h"
+
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSocket.h"
-namespace jxx::ext::net::ssl::internal {OpenSslInputStream::OpenSslInputStream(OpenSslSocket*s):socket_(s){}::jxx::lang::jint OpenSslInputStream::read(){unsigned char b;return socket_->tlsRead(&b,1)==1?b:-1;}::jxx::lang::jint OpenSslInputStream::read(const ::jxx::lang::ByteArray&b,::jxx::lang::jint o,::jxx::lang::jint n){return socket_->tlsRead(reinterpret_cast<unsigned char*>(&(*b)[o]),n);}OpenSslOutputStream::OpenSslOutputStream(OpenSslSocket*s):socket_(s){}void OpenSslOutputStream::write(::jxx::lang::jint b){unsigned char x=static_cast<unsigned char>(b);socket_->tlsWrite(&x,1);}void OpenSslOutputStream::write(const ::jxx::lang::ByteArray&b,::jxx::lang::jint o,::jxx::lang::jint n){socket_->tlsWrite(reinterpret_cast<const unsigned char*>(&(*b)[o]),n);}}
+#include "io/jxx.io.IOHelper.h"
+#include "lang/jxx.lang.NullPointerException.h"
+
+namespace jxx::ext::net::ssl::internal {
+
+OpenSslInputStream::OpenSslInputStream(OpenSslSocket* socket)
+    : socket_(socket) {
+    if (socket_ == nullptr) throw ::jxx::lang::NullPointerException();
+}
+
+::jxx::lang::jint OpenSslInputStream::read() {
+    unsigned char value = 0U;
+    return socket_->tlsRead(&value, 1) == 1
+        ? static_cast<::jxx::lang::jint>(value)
+        : -1;
+}
+
+::jxx::lang::jint OpenSslInputStream::read(
+    const ::jxx::lang::ByteArray& buffer,
+    ::jxx::lang::jint offset,
+    ::jxx::lang::jint length) {
+    ::jxx::io::IOHelper::checkBounds(buffer, offset, length);
+    if (length == 0) return 0;
+    return socket_->tlsRead(
+        reinterpret_cast<unsigned char*>(&(*buffer)[offset]),
+        length);
+}
+
+OpenSslOutputStream::OpenSslOutputStream(OpenSslSocket* socket)
+    : socket_(socket) {
+    if (socket_ == nullptr) throw ::jxx::lang::NullPointerException();
+}
+
+void OpenSslOutputStream::write(::jxx::lang::jint value) {
+    const unsigned char byte = static_cast<unsigned char>(value);
+    socket_->tlsWrite(&byte, 1);
+}
+
+void OpenSslOutputStream::write(
+    const ::jxx::lang::ByteArray& buffer,
+    ::jxx::lang::jint offset,
+    ::jxx::lang::jint length) {
+    ::jxx::io::IOHelper::checkBounds(buffer, offset, length);
+    if (length == 0) return;
+    socket_->tlsWrite(
+        reinterpret_cast<const unsigned char*>(&(*buffer)[offset]),
+        length);
+}
+
+} // namespace jxx::ext::net::ssl::internal
