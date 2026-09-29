@@ -4,7 +4,6 @@
 
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextSpi.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslPropertyKeyManager.h"
-#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslPropertyTrustManager.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLContextSpi.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLPermission.h"
 #include "lang/jxx.lang.SecurityManager.h"
@@ -34,7 +33,8 @@ void validateProtocol(
             "SSLContext protocol is empty");
     }
 
-    if (value != "TLS" &&
+    if (value != "Default" &&
+        value != "TLS" &&
         value != "TLSv1" &&
         value != "TLSv1.1" &&
         value != "TLSv1.2" &&
@@ -99,6 +99,11 @@ SSLContext::SSLContext(
 ::jxx::Ptr<SSLContext> SSLContext::getInstance(
     const ::jxx::Ptr<::jxx::lang::String>& protocol) {
     validateProtocol(protocol);
+
+    if (protocol->utf8() == "Default") {
+        return getDefault();
+    }
+
     const auto provider = openSslProvider();
     return ::jxx::NEW<SSLContext>(
         ::jxx::NEW<internal::OpenSslContextSpi>(protocol),
@@ -134,7 +139,7 @@ SSLContext::SSLContext(
         ::jxx::NEW<::jxx::lang::String>("TLS"));
     candidate->init(
         internal::loadDefaultPropertyKeyManagers(),
-        internal::loadDefaultPropertyTrustManagers(),
+        nullptr,
         nullptr);
 
     std::lock_guard<std::mutex> lock(defaultContextMutex);
