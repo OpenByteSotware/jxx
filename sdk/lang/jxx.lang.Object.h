@@ -81,6 +81,16 @@ namespace jxx::lang
         virtual jbool equals(const jxx::Ptr<Object>& other) const;
         virtual jxx::lang::jint hashCode() const;
         jxx::Ptr<jxx::lang::ClassAny> getClass() const;
+
+        /**
+         * Runtime type test backed by the registered ClassInfo graph.
+         *
+         * This follows instanceof semantics: a null target does not match,
+         * and superclass plus implemented-interface relationships are honored.
+         */
+        ::jxx::lang::jbool instanceOf(
+            const jxx::Ptr<jxx::lang::ClassAny>& target) const noexcept;
+
         virtual jxx::Ptr<jxx::lang::String> getClassName() const;
         virtual jxx::Ptr<jxx::lang::String> toString() const;
         virtual bool same(const jxx::Ptr<Object>& other) const;
@@ -306,11 +316,48 @@ namespace jxx
 #define CAST_PTR(Type, ptr) std::dynamic_pointer_cast<const Type>(ptr)
 #endif
 
+    /**
+     * Runtime type test using JXX ClassInfo metadata rather than relying on a
+     * direct C++ cast. This preserves superclass and interface assignability.
+     */
     template <class To, class From>
-    inline bool instanceof(const jxx::Ptr<From>& object) noexcept
+    inline ::jxx::lang::jbool instanceOf(
+        const jxx::Ptr<From>& object) noexcept
     {
         if (object == nullptr) return false;
-        return static_cast<bool>(std::dynamic_pointer_cast<To>(object));
+
+        static_assert(
+            std::is_polymorphic_v<From>,
+            "jxx::instanceOf requires a polymorphic source type.");
+
+        const auto base =
+            std::dynamic_pointer_cast<jxx::lang::Object>(object);
+        if (base == nullptr) return false;
+
+        if constexpr (std::is_same_v<
+                          std::remove_cv_t<To>,
+                          jxx::lang::Object>) {
+            return true;
+        }
+        else {
+            static_assert(
+                jxx::lang::class_info_detail::HasClassInfoV<
+                    std::remove_cv_t<To>>,
+                "jxx::instanceOf target must expose JxxClassInfoMarker.");
+
+            using TargetType = std::remove_cv_t<To>;
+            using TargetClassInfo =
+                typename TargetType::JxxClassInfoMarker;
+            return base->instanceOf(TargetClassInfo::Class());
+        }
+    }
+
+    // Compatibility spelling retained for existing JXX source.
+    template <class To, class From>
+    inline ::jxx::lang::jbool instanceof(
+        const jxx::Ptr<From>& object) noexcept
+    {
+        return jxx::instanceOf<To>(object);
     }
 
     template <class To, class From>

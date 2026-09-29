@@ -40,6 +40,21 @@ namespace jxx::lang {
         return ClassAny::forType(std::type_index(typeid(*this)));
     }
 
+    ::jxx::lang::jbool Object::instanceOf(
+        const jxx::Ptr<jxx::lang::ClassAny>& target) const noexcept
+    {
+        if (target == nullptr) return false;
+
+        try {
+            const auto source = getClass();
+            return source != nullptr && target->isAssignableFrom(source);
+        }
+        catch (...) {
+            // Type tests must not propagate registration/lookup failures.
+            return false;
+        }
+    }
+
     // Virtual clone method
     jxx::Ptr<jxx::lang::Object> Object::clone() const {
         // Check if this object is Cloneable
