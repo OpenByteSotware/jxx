@@ -3,6 +3,7 @@
 #include <mutex>
 
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslContextSpi.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslPropertyKeyManager.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLContextSpi.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLPermission.h"
 #include "lang/jxx.lang.SecurityManager.h"
@@ -130,7 +131,10 @@ SSLContext::SSLContext(
 
     const auto candidate = getInstance(
         ::jxx::NEW<::jxx::lang::String>("TLS"));
-    candidate->init(nullptr, nullptr, nullptr);
+    candidate->init(
+        internal::loadDefaultPropertyKeyManagers(),
+        nullptr,
+        nullptr);
 
     std::lock_guard<std::mutex> lock(defaultContextMutex);
     if (defaultContext == nullptr) defaultContext = candidate;
