@@ -3,21 +3,20 @@
 #include <string>
 
 #include "ext/net/ssl/jxx.ext.net.ssl.HttpsURLConnection.h"
-#include "lang/jxx.lang.buildin_array.h"
-
-// OpenSSL native types are forward declared to keep OpenSSL headers out of
-// the JXX class header while preserving a complete class declaration here.
-typedef struct ssl_ctx_st SSL_CTX;
-typedef struct bio_st BIO;
-typedef struct ssl_st SSL;
 
 namespace jxx::io {
 class InputStream;
+class OutputStream;
 }
 
 namespace jxx::net {
 class URL;
 class URLConnection;
+}
+
+namespace jxx::ext::net::ssl {
+class SSLSession;
+class SSLSocket;
 }
 
 namespace jxx::ext::net::ssl::internal {
@@ -28,8 +27,9 @@ class OpenSslHttpsURLConnection final
           ::jxx::ext::net::ssl::HttpsURLConnection> {
 public:
     using JxxSuper = ::jxx::ext::net::ssl::HttpsURLConnection;
-    using Super =
-        ::jxx::lang::ClassBase<OpenSslHttpsURLConnection, JxxSuper>;
+    using Super = ::jxx::lang::ClassBase<
+        OpenSslHttpsURLConnection,
+        JxxSuper>;
     using CertificateArray = JxxSuper::CertificateArray;
 
     explicit OpenSslHttpsURLConnection(
@@ -63,14 +63,15 @@ public:
     getServerCertificates() const override;
 
 private:
-    void capturePeerCertificate(SSL* ssl);
-    void captureLocalCertificate(SSL* ssl);
+    void captureSessionCertificates();
     void executeRequest();
-    void releaseNativeResources() noexcept;
+    void releaseSocket() noexcept;
 
-    SSL_CTX* context_ = nullptr;
-    BIO* connection_ = nullptr;
     std::string host_;
+    ::jxx::Ptr<::jxx::ext::net::ssl::SSLSocket> socket_;
+    ::jxx::Ptr<::jxx::ext::net::ssl::SSLSession> session_;
+    ::jxx::Ptr<::jxx::io::InputStream> input_;
+    ::jxx::Ptr<::jxx::io::OutputStream> output_;
     ::jxx::Ptr<::jxx::lang::String> cipherSuite_;
     ::jxx::Ptr<CertificateArray> serverCertificates_;
     ::jxx::Ptr<CertificateArray> localCertificates_;

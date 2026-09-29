@@ -1,43 +1,29 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslHttpsURLConnection.h"
-#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslX509Certificate.h"
 
 #include <algorithm>
 #include <cctype>
 #include <sstream>
 #include <string>
-#include <vector>
 
-#include <openssl/bio.h>
-#include <openssl/err.h>
-#include <openssl/ssl.h>
-#include <openssl/x509.h>
-#include <openssl/x509_vfy.h>
-
-#if OPENSSL_VERSION_NUMBER < 0x10101000L
-#error "JXX HTTPS requires OpenSSL 1.1.1 or newer for TLS 1.3"
-#endif
-
+#include "ext/net/ssl/jxx.ext.net.ssl.HostnameVerifier.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SSLParameters.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SSLPeerUnverifiedException.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SSLSession.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SSLSocket.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SSLSocketFactory.h"
 #include "io/jxx.io.ByteArrayInputStream.h"
 #include "io/jxx.io.IOException.h"
+#include "io/jxx.io.InputStream.h"
+#include "io/jxx.io.OutputStream.h"
 #include "lang/jxx.lang.IllegalStateException.h"
-#include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
+#include "net/jxx.net.InetSocketAddress.h"
 #include "net/jxx.net.ProtocolException.h"
 #include "net/jxx.net.URL.h"
+#include "security/cert/jxx.security.cert.Certificate.h"
 
 namespace jxx::ext::net::ssl::internal {
 namespace {
-
-std::string sslError(const char* prefix) {
-    const unsigned long code = ERR_get_error();
-    if (code == 0UL) {
-        return prefix;
-    }
-
-    char buffer[256]{};
-    ERR_error_string_n(code, buffer, sizeof(buffer));
-    return std::string(prefix) + ": " + buffer;
-}
 
 std::string lower(std::string value) {
     std::transform(
@@ -58,212 +44,64 @@ OpenSslHttpsURLConnection::OpenSslHttpsURLConnection(
 }
 
 OpenSslHttpsURLConnection::~OpenSslHttpsURLConnection() {
-    releaseNativeResources();
+    releaseSocket();
 }
 
-void OpenSslHttpsURLConnection::releaseNativeResources() noexcept {
-    if (connection_ != nullptr) {
-        BIO_free_all(connection_);
-        connection_ = nullptr;
+void OpenSslHttpsURLConnection::releaseSocket() noexcept {
+    if (socket_ != nullptr) {
+        try { socket_->close(); } catch (...) { }
     }
-    if (context_ != nullptr) {
-        SSL_CTX_free(context_);
-        context_ = nullptr;
-    }
+    input_ = nullptr;
+    output_ = nullptr;
+    session_ = nullptr;
+    socket_ = nullptr;
 }
 
 void OpenSslHttpsURLConnection::connect() {
-    if (connected_) {
-        return;
-    }
-
+    if (connected_) return;
     const auto url = getURL();
-    if (url == nullptr || url->getHost() == nullptr) {
+    if (url == nullptr || url->getHost() == nullptr)
         throw ::jxx::lang::IllegalStateException();
-    }
-
     host_ = url->getHost()->utf8();
-    const ::jxx::lang::jint port =
-        url->getPort() < 0 ? 443 : url->getPort();
-    const std::string endpoint =
-        host_ + ":" + std::to_string(port);
-
-    OPENSSL_init_ssl(
-        OPENSSL_INIT_LOAD_SSL_STRINGS |
-            OPENSSL_INIT_LOAD_CRYPTO_STRINGS,
-        nullptr);
-
-    context_ = SSL_CTX_new(TLS_client_method());
-    if (context_ == nullptr) {
-        throw ::jxx::io::IOException(
-            sslError("SSL_CTX_new failed"));
-    }
-
+    const auto host = ::jxx::NEW<::jxx::lang::String>(host_);
+    const ::jxx::lang::jint port = url->getPort() < 0 ? 443 : url->getPort();
     try {
-        if (SSL_CTX_set_min_proto_version(
-                context_, TLS1_2_VERSION) != 1) {
-            throw ::jxx::io::IOException(
-                sslError("could not set TLS 1.2 minimum"));
-        }
-        if (SSL_CTX_set_max_proto_version(
-                context_, TLS1_3_VERSION) != 1) {
-            throw ::jxx::io::IOException(
-                sslError("could not set TLS 1.3 maximum"));
-        }
-
-        SSL_CTX_set_verify(context_, SSL_VERIFY_PEER, nullptr);
-        if (SSL_CTX_set_default_verify_paths(context_) != 1) {
-            throw ::jxx::io::IOException(
-                sslError("could not load default trust paths"));
-        }
-
-        connection_ = BIO_new_ssl_connect(context_);
-        if (connection_ == nullptr) {
-            throw ::jxx::io::IOException(
-                sslError("BIO_new_ssl_connect failed"));
-        }
-
-        BIO_set_conn_hostname(connection_, endpoint.c_str());
-
-        SSL* ssl = nullptr;
-        BIO_get_ssl(connection_, &ssl);
-        if (ssl == nullptr) {
-            throw ::jxx::io::IOException(
-                "TLS session was not created");
-        }
-
-        if (SSL_set_tlsext_host_name(ssl, host_.c_str()) != 1) {
-            throw ::jxx::io::IOException(
-                sslError("could not set TLS SNI host"));
-        }
-        if (SSL_set1_host(ssl, host_.c_str()) != 1) {
-            throw ::jxx::io::IOException(
-                sslError("could not set TLS verification host"));
-        }
-
-        if (BIO_do_connect(connection_) <= 0 ||
-            BIO_do_handshake(connection_) <= 0) {
-            throw ::jxx::io::IOException(
-                sslError("TLS connection failed"));
-        }
-        if (SSL_get_verify_result(ssl) != X509_V_OK) {
-            throw ::jxx::io::IOException(
-                "TLS certificate verification failed");
-        }
-
-        cipherSuite_ = ::jxx::NEW<::jxx::lang::String>(
-            SSL_get_cipher_name(ssl));
-        capturePeerCertificate(ssl);
-        captureLocalCertificate(ssl);
+        const auto factory = getSSLSocketFactory();
+        if (factory == nullptr)
+            throw ::jxx::lang::IllegalStateException("HTTPS SSLSocketFactory is not configured");
+        socket_ = ::jxx::CAST<::jxx::ext::net::ssl::SSLSocket>(factory->createSocket());
+        if (socket_ == nullptr)
+            throw ::jxx::io::IOException("configured SSLSocketFactory did not create an SSLSocket");
+        const auto parameters = socket_->getSSLParameters();
+        parameters->setEndpointIdentificationAlgorithm(
+            ::jxx::NEW<::jxx::lang::String>("HTTPS"));
+        socket_->setSSLParameters(parameters);
+        socket_->connect(
+            ::jxx::NEW<::jxx::net::InetSocketAddress>(host, port),
+            getConnectTimeout());
+        socket_->setSoTimeout(getReadTimeout());
+        socket_->startHandshake();
+        session_ = socket_->getSession();
+        if (session_ == nullptr)
+            throw ::jxx::io::IOException("HTTPS handshake did not produce an SSLSession");
+        const auto verifier = getHostnameVerifier();
+        if (verifier != nullptr && !verifier->verify(host, session_))
+            throw ::jxx::ext::net::ssl::SSLPeerUnverifiedException(
+                "HTTPS hostname verifier rejected peer");
+        cipherSuite_ = session_->getCipherSuite();
+        captureSessionCertificates();
+        input_ = socket_->getInputStream();
+        output_ = socket_->getOutputStream();
         connected_ = true;
     } catch (...) {
-        releaseNativeResources();
+        releaseSocket();
         throw;
     }
 }
 
-::jxx::Ptr<::jxx::io::InputStream>
-OpenSslHttpsURLConnection::getInputStream() {
-    connect();
-    if (responseBody_ == nullptr) {
-        executeRequest();
-    }
-    return ::jxx::NEW<::jxx::io::ByteArrayInputStream>(
-        responseBody_);
-}
-
-::jxx::lang::jint
-OpenSslHttpsURLConnection::getResponseCode() {
-    auto* self = const_cast<OpenSslHttpsURLConnection*>(this);
-    if (self->responseBody_ == nullptr) {
-        self->executeRequest();
-    }
-    return responseCode_;
-}
-
-::jxx::Ptr<::jxx::lang::String>
-OpenSslHttpsURLConnection::getResponseMessage() {
-    auto* self = const_cast<OpenSslHttpsURLConnection*>(this);
-    if (self->responseBody_ == nullptr) {
-        self->executeRequest();
-    }
-    return responseMessage_;
-}
-
-void OpenSslHttpsURLConnection::disconnect() {
-    releaseNativeResources();
-    connected_ = false;
-}
-
-::jxx::lang::jbool
-OpenSslHttpsURLConnection::usingProxy() const {
-    return false;
-}
-
-::jxx::Ptr<::jxx::lang::String>
-OpenSslHttpsURLConnection::getCipherSuite() const {
-    const_cast<OpenSslHttpsURLConnection*>(this)->connect();
-    return cipherSuite_;
-}
-
-::jxx::Ptr<OpenSslHttpsURLConnection::CertificateArray>
-OpenSslHttpsURLConnection::getLocalCertificates() const {
-    return localCertificates_;
-}
-
-::jxx::Ptr<OpenSslHttpsURLConnection::CertificateArray>
-OpenSslHttpsURLConnection::getServerCertificates() const {
-    const_cast<OpenSslHttpsURLConnection*>(this)->connect();
-    return serverCertificates_;
-}
-
-void OpenSslHttpsURLConnection::capturePeerCertificate(SSL* ssl) {
-    // OpenSSL 1.1.1w returns an incremented certificate reference.
-    // The reference is released below with X509_free().
-    X509* certificate = SSL_get_peer_certificate(ssl);
-    if (certificate == nullptr) {
-        return;
-    }
-
-    const int length = i2d_X509(certificate, nullptr);
-    if (length <= 0) {
-        X509_free(certificate);
-        return;
-    }
-
-    std::vector<unsigned char> der(
-        static_cast<std::size_t>(length));
-    unsigned char* cursor = der.data();
-    i2d_X509(certificate, &cursor);
-    X509_free(certificate);
-
-    const auto bytes =
-        ::jxx::NEW<
-            ::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(
-                length);
-    for (int index = 0; index < length; ++index) {
-        (*bytes)[index] = static_cast<::jxx::lang::jbyte>(
-            der[static_cast<std::size_t>(index)]);
-    }
-
-    serverCertificates_ = ::jxx::NEW<CertificateArray>(1);
-    (*serverCertificates_)[0] =
-        ::jxx::CAST<::jxx::security::cert::Certificate>(
-            ::jxx::NEW<OpenSslX509Certificate>(bytes));
-}
-
-void OpenSslHttpsURLConnection::captureLocalCertificate(SSL* ssl) {
-    X509* certificate = ssl == nullptr ? nullptr : SSL_get_certificate(ssl);
-    if (certificate == nullptr) { localCertificates_ = nullptr; return; }
-    const int length = i2d_X509(certificate, nullptr);
-    if (length <= 0) throw ::jxx::io::IOException("could not encode local certificate");
-    const auto encoded = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(length);
-    unsigned char* cursor = reinterpret_cast<unsigned char*>(&(*encoded)[0]);
-    if (i2d_X509(certificate, &cursor) != length)
-        throw ::jxx::io::IOException("could not encode local certificate");
-    localCertificates_ = ::jxx::NEW<CertificateArray>(1);
-    (*localCertificates_)[0] = ::jxx::CAST<::jxx::security::cert::Certificate>(
-        ::jxx::NEW<OpenSslX509Certificate>(encoded));
+void OpenSslHttpsURLConnection::captureSessionCertificates() {
+    serverCertificates_ = session_->getPeerCertificates();
+    localCertificates_ = session_->getLocalCertificates();
 }
 
 void OpenSslHttpsURLConnection::executeRequest() {
@@ -298,31 +136,24 @@ void OpenSslHttpsURLConnection::executeRequest() {
     }
     request += "\r\n";
 
-    if (BIO_write(
-            connection_,
-            request.data(),
-            static_cast<int>(request.size())) <= 0) {
-        throw ::jxx::io::IOException(
-            sslError("HTTPS write failed"));
-    }
+    const auto requestBytes = ::jxx::NEW<
+        ::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(
+            static_cast<::jxx::lang::jint>(request.size()));
+    for (std::size_t index = 0; index < request.size(); ++index)
+        (*requestBytes)[static_cast<::jxx::lang::jint>(index)] =
+            static_cast<::jxx::lang::jbyte>(request[index]);
+    output_->write(requestBytes);
+    output_->flush();
 
     std::string response;
-    char buffer[8192];
+    const auto buffer = ::jxx::NEW<
+        ::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(4096);
     for (;;) {
-        const int count = BIO_read(
-            connection_, buffer, sizeof(buffer));
-        if (count > 0) {
-            response.append(
-                buffer, static_cast<std::size_t>(count));
-            continue;
-        }
-        if (count == 0) {
-            break;
-        }
-        if (!BIO_should_retry(connection_)) {
-            throw ::jxx::io::IOException(
-                sslError("HTTPS read failed"));
-        }
+        const auto count = input_->read(buffer, 0, buffer->length);
+        if (count < 0) break;
+        if (count == 0) continue;
+        for (::jxx::lang::jint index = 0; index < count; ++index)
+            response.push_back(static_cast<char>((*buffer)[index]));
     }
 
     const auto split = response.find("\r\n\r\n");
