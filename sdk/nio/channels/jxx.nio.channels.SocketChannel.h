@@ -10,7 +10,7 @@
 #include "nio/channels/jxx.nio.channels.ScatteringByteChannel.h"
 #include "nio/channels/jxx.nio.channels.GatheringByteChannel.h"
 #include "nio/channels/jxx.nio.channels.NetworkChannel.h"
-#include "nio/channels/jxx.nio.channels.AbstractSelectableChannel.h"
+#include "nio/channels/spi/jxx.nio.channels.spi.AbstractSelectableChannel.h"
 #include "net/jxx.net.Socket.h"
 
 namespace jxx::nio::channels {
@@ -19,7 +19,7 @@ class Selector; class SelectionKey;
 class SocketChannel final
     : public ::jxx::lang::ClassBase<
           SocketChannel,
-          AbstractSelectableChannel,
+          ::jxx::nio::channels::spi::AbstractSelectableChannel,
           ByteChannel,
           ScatteringByteChannel,
           GatheringByteChannel,
@@ -29,9 +29,6 @@ public:
     static ::jxx::Ptr<SocketChannel> open(
         const ::jxx::Ptr<::jxx::net::SocketAddress>& remote);
 
-    ::jxx::Ptr<SocketChannel> configureBlocking(
-        ::jxx::lang::jbool block);
-    ::jxx::lang::jbool isBlocking() const noexcept;
 
     ::jxx::lang::jbool connect(
         const ::jxx::Ptr<::jxx::net::SocketAddress>& remote);
@@ -46,16 +43,6 @@ public:
     ::jxx::Ptr<SocketChannel> shutdownInput();
     ::jxx::Ptr<SocketChannel> shutdownOutput();
     ::jxx::lang::jint validOps() const noexcept;
-    ::jxx::Ptr<SelectionKey> register_(
-        const ::jxx::Ptr<Selector>& selector,
-        ::jxx::lang::jint operations) override;
-    ::jxx::Ptr<SelectionKey> register_(
-        const ::jxx::Ptr<Selector>& selector,
-        ::jxx::lang::jint operations,
-        const ::jxx::Ptr<::jxx::lang::Object>& attachment) override;
-    ::jxx::lang::jbool isRegistered() const override;
-    ::jxx::Ptr<SelectionKey> keyFor(
-        const ::jxx::Ptr<Selector>& selector) const;
 
     using BufferArray = ScatteringByteChannel::BufferArray;
     using Option = NetworkChannel::Option;
@@ -72,8 +59,6 @@ public:
     ::jxx::lang::jint write(
         const ::jxx::Ptr<::jxx::nio::ByteBuffer> source) override;
 
-    ::jxx::lang::jbool isOpen() const override;
-    void close() override;
 
 public:
     SocketChannel();
@@ -81,7 +66,8 @@ public:
     ~SocketChannel() override;
 
 private:
-    void implCloseChannel() override;
+    void implCloseSelectableChannel() override;
+    void implConfigureBlocking(::jxx::lang::jbool block) override;
     void ensureSocket();
 
     mutable std::mutex mutex_;

@@ -20,6 +20,7 @@
 #include "nio/channels/jxx.nio.channels.SelectableChannel.h"
 #include "nio/channels/jxx.nio.channels.ServerSocketChannel.h"
 #include "nio/channels/jxx.nio.channels.SocketChannel.h"
+#include "nio/channels/spi/jxx.nio.channels.spi.SelectorProvider.h"
 #include "util/jxx.util.HashSet.h"
 namespace jxx::nio::channels {
 namespace {
@@ -34,6 +35,7 @@ void nonblocking(::jxx::net::internal::NativeSocket s){
 Selector::Selector(){selected_=::jxx::NEW<::jxx::util::HashSet<SelectionKey>>();initializeWakeup_();}
 Selector::~Selector(){try{close();}catch(...){}}
 ::jxx::Ptr<Selector> Selector::open(){return ::jxx::NEW<Selector>();}
+::jxx::Ptr<spi::SelectorProvider> Selector::provider()const{return spi::SelectorProvider::provider();}
 void Selector::initializeWakeup_(){::jxx::net::internal::ensureNetworkInitialized();
 #if defined(_WIN32)
  auto listener=::socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);if(listener==INVALID_SOCKET)throw ::jxx::io::IOException("selector wakeup listener failed");sockaddr_in a{};a.sin_family=AF_INET;a.sin_addr.s_addr=htonl(INADDR_LOOPBACK);a.sin_port=0;if(::bind(listener,reinterpret_cast<sockaddr*>(&a),sizeof(a))!=0||::listen(listener,1)!=0){::closesocket(listener);throw ::jxx::io::IOException("selector wakeup bind failed");}int n=sizeof(a);::getsockname(listener,reinterpret_cast<sockaddr*>(&a),&n);wakeWrite_=::socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);if(wakeWrite_==INVALID_SOCKET||::connect(wakeWrite_,reinterpret_cast<sockaddr*>(&a),sizeof(a))!=0){::closesocket(listener);if(wakeWrite_!=INVALID_SOCKET)::closesocket(wakeWrite_);throw ::jxx::io::IOException("selector wakeup connect failed");}wakeRead_=::accept(listener,nullptr,nullptr);::closesocket(listener);if(wakeRead_==INVALID_SOCKET)throw ::jxx::io::IOException("selector wakeup accept failed");

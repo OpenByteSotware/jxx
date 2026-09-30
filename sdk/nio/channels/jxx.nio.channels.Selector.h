@@ -7,11 +7,12 @@
 #include "lang/jxx.lang.Object.h"
 #include "net/internal/jxx.net.internal.NetPlatform.h"
 #include "util/jxx.util.Set.h"
-namespace jxx::nio::channels { class SelectionKey;
+namespace jxx::nio::channels { class SelectionKey; namespace spi { class SelectorProvider; }
 class Selector final : public ::jxx::lang::ClassBase<Selector,::jxx::lang::Object> {
 public:
  Selector(); ~Selector() override;
  static ::jxx::Ptr<Selector> open();
+ ::jxx::Ptr<spi::SelectorProvider> provider() const;
  ::jxx::lang::jbool isOpen() const noexcept; void close();
  ::jxx::Ptr<::jxx::util::Set<SelectionKey>> keys();
  ::jxx::Ptr<::jxx::util::Set<SelectionKey>> selectedKeys();

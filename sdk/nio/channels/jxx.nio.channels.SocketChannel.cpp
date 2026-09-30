@@ -219,24 +219,15 @@ namespace jxx::nio::channels
 		}
 	}
 
-	::jxx::Ptr<SocketChannel> SocketChannel::configureBlocking(
-		::jxx::lang::jbool block)
+	void SocketChannel::implConfigureBlocking(::jxx::lang::jbool block)
 	{
 		std::lock_guard<std::mutex> lock(mutex_);
-		if (!open_) throw ::jxx::nio::channels::ClosedChannelException();
-		if (pending_)
-			throw ::jxx::lang::IllegalStateException(
-				"cannot change blocking mode while connection is pending");
-		if (state_->socket != ::jxx::net::internal::kInvalidSocket)
-			setBlocking(state_->socket, block);
+		ensureSocket();
+		setBlocking(state_->socket, block);
 		blocking_ = block;
-		return ::jxx::CAST<SocketChannel>(thisPtr());
 	}
 
-	::jxx::lang::jbool SocketChannel::isBlocking() const noexcept
-	{
-		return blocking_;
-	}
+
 
 	::jxx::lang::jbool SocketChannel::connect(
 		const ::jxx::Ptr<::jxx::net::SocketAddress>& remoteAddress)
@@ -324,10 +315,7 @@ namespace jxx::nio::channels
 	{
 		return connected_ && state_ != nullptr && !state_->closed;
 	}
-	::jxx::lang::jbool SocketChannel::isOpen() const
-	{
-		return open_ && state_ != nullptr && !state_->closed;
-	}
+
 
 	::jxx::lang::jint SocketChannel::read(
 		const ::jxx::Ptr<::jxx::nio::ByteBuffer> destination)
@@ -421,7 +409,7 @@ namespace jxx::nio::channels
 		throw ::jxx::io::IOException("socket channel write failed");
 	}
 
-	void SocketChannel::close()
+	void SocketChannel::implCloseSelectableChannel()
 	{
 		std::lock_guard<std::mutex> lock(mutex_);
 		if (state_ == nullptr || state_->closed) {
@@ -633,34 +621,11 @@ SHUT_WR
 		return ::jxx::CAST<::jxx::util::Set<Option>>(result);
 	}
 
-::jxx::Ptr<SelectionKey> SocketChannel::register_(
-    const ::jxx::Ptr<Selector>& selector,
-    ::jxx::lang::jint operations) {
-    return register_(selector, operations, nullptr);
-}
-::jxx::Ptr<SelectionKey> SocketChannel::register_(
-    const ::jxx::Ptr<Selector>& selector,
-    ::jxx::lang::jint ops,
-    const ::jxx::Ptr<::jxx::lang::Object>& attachment) {
-    if (selector == nullptr) throw ::jxx::lang::NullPointerException();
-    if (blocking_) throw ::jxx::nio::channels::IllegalBlockingModeException();
-    const auto key = selector->registerChannel(
-        ::jxx::CAST<::jxx::lang::Object>(thisPtr()), ops, attachment);
-    setRegistered_(key != nullptr);
-    return key;
-}
-::jxx::lang::jbool SocketChannel::isRegistered() const {
-    return AbstractSelectableChannel::isRegistered();
-}
-::jxx::Ptr<SelectionKey> SocketChannel::keyFor(
-    const ::jxx::Ptr<Selector>& selector) const {
-    return selector == nullptr ? nullptr : selector->keyFor(
-        ::jxx::CAST<::jxx::lang::Object>(
-            const_cast<SocketChannel*>(this)->thisPtr()));
-}
 
-void SocketChannel::implCloseChannel() {
-    close();
-}
+
+
+
+
+
 
 } // namespace jxx::nio::channels
