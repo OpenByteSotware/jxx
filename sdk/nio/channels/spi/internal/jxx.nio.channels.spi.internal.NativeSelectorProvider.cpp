@@ -1,6 +1,7 @@
 #include "nio/channels/spi/internal/jxx.nio.channels.spi.internal.NativeSelectorProvider.h"
 
 #include "nio/channels/jxx.nio.channels.Selector.h"
+#include "nio/channels/spi/internal/jxx.nio.channels.spi.internal.NativeSelector.h"
 #include "net/internal/jxx.net.internal.NativeSocketState.h"
 #include "nio/channels/jxx.nio.channels.ServerSocketChannel.h"
 #include "nio/channels/jxx.nio.channels.SocketChannel.h"
@@ -21,7 +22,7 @@ NativeSelectorProvider::openServerSocketChannel() {
 
 ::jxx::Ptr<::jxx::nio::channels::Selector>
 NativeSelectorProvider::openSelector() {
-    return ::jxx::NEW<::jxx::nio::channels::Selector>();
+    return ::jxx::CAST<::jxx::nio::channels::Selector>(::jxx::NEW<::jxx::nio::channels::spi::internal::NativeSelector>(::jxx::CAST<::jxx::nio::channels::spi::SelectorProvider>(thisPtr())));
 }
 
 } // namespace jxx::nio::channels::spi::internal

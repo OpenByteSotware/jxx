@@ -2,6 +2,7 @@
 #include <mutex>
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
+namespace jxx::nio::channels::spi::internal { class NativeSelector; }
 namespace jxx::nio::channels { class Selector; class SelectableChannel;
 class SelectionKey : public ::jxx::lang::ClassBase<SelectionKey,::jxx::lang::Object> {
 public:
@@ -30,6 +31,7 @@ protected:
  SelectionKey()=default;
 private:
  friend class Selector;
+ friend class ::jxx::nio::channels::spi::internal::NativeSelector;
  virtual void setReadyOps_(::jxx::lang::jint ops)=0;
  mutable std::mutex attachmentMutex_;
  ::jxx::Ptr<::jxx::lang::Object> attachment_;
