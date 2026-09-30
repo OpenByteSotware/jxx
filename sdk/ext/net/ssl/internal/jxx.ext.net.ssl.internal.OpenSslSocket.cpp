@@ -521,8 +521,10 @@ int OpenSslSocket::tlsWrite(const unsigned char* data, int length) {
             ? SSL_ERROR_SSL
             : SSL_get_error(ssl, result);
         if (error == SSL_ERROR_WANT_READ ||
-            error == SSL_ERROR_WANT_WRITE)
+            error == SSL_ERROR_WANT_WRITE) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
             continue;
+        }
         throwTlsFailure(ssl, result, "TLS write failed");
     }
     return written;
