@@ -8,6 +8,7 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.Runnable.h"
+#include "lang/jxx.lang.Thread.h"
 #include "util/jxx.util.concurrent.CancellationException.h"
 #include "util/jxx.util.concurrent.Callable.h"
 #include "util/jxx.util.concurrent.ExecutionException.h"
@@ -46,7 +47,12 @@ public:
     }
 
     void run() override {
-        { std::lock_guard<std::mutex> l(mutex_); if(cancelled_||done_||running_) return; running_=true; }
+        {
+            std::lock_guard<std::mutex> l(mutex_);
+            if (cancelled_ || done_ || running_) return;
+            running_ = true;
+            runner_ = ::jxx::lang::Thread::currentThread();
+        }
         try {
             if (callable_ != nullptr) result_ = callable_->call();
             else command_->run();
@@ -56,9 +62,19 @@ public:
         catch(...) { finishRun_(::jxx::NEW<::jxx::lang::RuntimeException>()); }
     }
 
-    ::jxx::lang::jbool cancel(::jxx::lang::jbool) override {
-        std::lock_guard<std::mutex> l(mutex_); if(done_) return false;
-        cancelled_=true; done_=true; condition_.notify_all(); return true;
+    ::jxx::lang::jbool cancel(
+        ::jxx::lang::jbool mayInterruptIfRunning) override {
+        ::jxx::Ptr<::jxx::lang::Thread> runner;
+        {
+            std::lock_guard<std::mutex> l(mutex_);
+            if (done_) return false;
+            cancelled_ = true;
+            done_ = true;
+            if (mayInterruptIfRunning && running_) runner = runner_.lock();
+            condition_.notify_all();
+        }
+        if (runner != nullptr) runner->interrupt();
+        return true;
     }
     ::jxx::lang::jbool isCancelled() override { std::lock_guard<std::mutex> l(mutex_); return cancelled_; }
     ::jxx::lang::jbool isDone() override { std::lock_guard<std::mutex> l(mutex_); return done_; }
@@ -83,7 +99,9 @@ public:
 private:
     using clock=std::chrono::steady_clock;
     void finishRun_(const ::jxx::Ptr<::jxx::lang::Throwable>& failure) {
-        std::lock_guard<std::mutex> l(mutex_); running_=false;
+        std::lock_guard<std::mutex> l(mutex_);
+        running_ = false;
+        runner_.reset();
         if(cancelled_) return;
         if(failure){failure_=failure;done_=true;condition_.notify_all();return;}
         if(periodNanos_==0){done_=true;condition_.notify_all();return;}
@@ -98,6 +116,7 @@ private:
     clock::time_point trigger_; ::jxx::lang::jlong periodNanos_; ::jxx::lang::jlong sequence_;
     mutable std::mutex mutex_; std::condition_variable condition_;
     ::jxx::lang::jbool running_=false,done_=false,cancelled_=false;
+    std::weak_ptr<::jxx::lang::Thread> runner_;
     ::jxx::Ptr<::jxx::lang::Throwable> failure_;
 };
 

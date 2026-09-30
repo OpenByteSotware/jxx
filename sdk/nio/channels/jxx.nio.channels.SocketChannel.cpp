@@ -34,6 +34,7 @@
 #include "nio/channels/jxx.nio.channels.UnsupportedAddressTypeException.h"
 #include "nio/channels/jxx.nio.channels.UnresolvedAddressException.h"
 #include "nio/channels/jxx.nio.channels.ClosedChannelException.h"
+#include "nio/channels/jxx.nio.channels.AsynchronousCloseException.h"
 
 namespace jxx::nio::channels
 {
@@ -274,27 +275,39 @@ namespace jxx::nio::channels
 		const ::jxx::Ptr<::jxx::nio::ByteBuffer> destination)
 	{
 		if (destination == nullptr) throw ::jxx::lang::NullPointerException();
-		std::lock_guard<std::mutex> lock(mutex_);
-		if (!open_) throw ::jxx::nio::channels::ClosedChannelException();
-		if (!connected_) throw ::jxx::nio::channels::NotYetConnectedException();
-		if (inputShutdown_ || state_->inputShutdown) return -1;
+		::jxx::net::internal::NativeSocket native;
+		::jxx::lang::jbool blocking;
+		{
+			std::lock_guard<std::mutex> lock(mutex_);
+			if (!open_) throw ::jxx::nio::channels::ClosedChannelException();
+			if (!connected_) throw ::jxx::nio::channels::NotYetConnectedException();
+			if (inputShutdown_ || state_->inputShutdown) return -1;
+			native = state_->socket;
+			blocking = blocking_;
+		}
 		const auto remaining = destination->remaining();
 		if (remaining == 0) return 0;
 		std::vector<unsigned char> bytes(static_cast<std::size_t>(remaining));
 #if defined(_WIN32)
-		const int count = ::recv(state_->socket, reinterpret_cast<char*>(bytes.data()), remaining, 0);
+		const int count = ::recv(native, reinterpret_cast<char*>(bytes.data()), remaining, 0);
 #else
-		const int count = static_cast<int>(::recv(state_->socket, bytes.data(), remaining, 0));
+		const int count = static_cast<int>(::recv(native, bytes.data(), remaining, 0));
 #endif
 		if (count > 0) {
-			for (int index = 0; index < count; ++index)
-				destination->put(static_cast<::jxx::lang::jbyte>(bytes[index]));
+			for (int index = 0; index < count; ++index) destination->put(static_cast<::jxx::lang::jbyte>(bytes[index]));
 			return count;
 		}
 		if (count == 0) {
-			connected_ = false; return -1;
+			std::lock_guard<std::mutex> lock(mutex_);
+			connected_ = false;
+			return -1;
 		}
-		if (!blocking_ && wouldBlock(lastSocketError())) return 0;
+		const int error = lastSocketError();
+		if (!blocking && wouldBlock(error)) return 0;
+		{
+			std::lock_guard<std::mutex> lock(mutex_);
+			if (!open_) throw ::jxx::nio::channels::AsynchronousCloseException();
+		}
 		throw ::jxx::io::IOException("socket channel read failed");
 	}
 
@@ -302,27 +315,33 @@ namespace jxx::nio::channels
 		const ::jxx::Ptr<::jxx::nio::ByteBuffer> source)
 	{
 		if (source == nullptr) throw ::jxx::lang::NullPointerException();
-		std::lock_guard<std::mutex> lock(mutex_);
-		if (!open_) throw ::jxx::nio::channels::ClosedChannelException();
-		if (!connected_) throw ::jxx::nio::channels::NotYetConnectedException();
-		if (outputShutdown_ || state_->outputShutdown)
-			throw ::jxx::nio::channels::ClosedChannelException();
+		::jxx::net::internal::NativeSocket native;
+		::jxx::lang::jbool blocking;
+		{
+			std::lock_guard<std::mutex> lock(mutex_);
+			if (!open_) throw ::jxx::nio::channels::ClosedChannelException();
+			if (!connected_) throw ::jxx::nio::channels::NotYetConnectedException();
+			if (outputShutdown_ || state_->outputShutdown) throw ::jxx::nio::channels::ClosedChannelException();
+			native = state_->socket;
+			blocking = blocking_;
+		}
 		const auto remaining = source->remaining();
 		if (remaining == 0) return 0;
 		const auto position = source->position();
 		std::vector<unsigned char> bytes(static_cast<std::size_t>(remaining));
-		for (::jxx::lang::jint index = 0; index < remaining; ++index)
-			bytes[static_cast<std::size_t>(index)] =
-			static_cast<unsigned char>(source->get(position + index));
+		for (::jxx::lang::jint index = 0; index < remaining; ++index) bytes[static_cast<std::size_t>(index)] = static_cast<unsigned char>(source->get(position + index));
 #if defined(_WIN32)
-		const int count = ::send(state_->socket, reinterpret_cast<const char*>(bytes.data()), remaining, 0);
+		const int count = ::send(native, reinterpret_cast<const char*>(bytes.data()), remaining, 0);
 #else
-		const int count = static_cast<int>(::send(state_->socket, bytes.data(), remaining, 0));
+		const int count = static_cast<int>(::send(native, bytes.data(), remaining, 0));
 #endif
-		if (count > 0) {
-			source->position(position + count); return count;
+		if (count > 0) { source->position(position + count); return count; }
+		const int error = lastSocketError();
+		if (!blocking && wouldBlock(error)) return 0;
+		{
+			std::lock_guard<std::mutex> lock(mutex_);
+			if (!open_) throw ::jxx::nio::channels::AsynchronousCloseException();
 		}
-		if (!blocking_ && wouldBlock(lastSocketError())) return 0;
 		throw ::jxx::io::IOException("socket channel write failed");
 	}
 
@@ -359,17 +378,65 @@ namespace jxx::nio::channels
 	}
 	::jxx::Ptr<SocketChannel::NetworkChannel> SocketChannel::bind(const ::jxx::Ptr<::jxx::net::SocketAddress>& local)
 	{
-		std::lock_guard<std::mutex>lock(mutex_); if (bound_)throw ::jxx::lang::IllegalStateException("channel is already bound"); ensureSocket(); sockaddr_in address{}; address.sin_family = AF_INET; address.sin_addr.s_addr = htonl(INADDR_ANY); address.sin_port = 0; if (local != nullptr) {
-			const auto value = ::jxx::CAST<::jxx::net::InetSocketAddress>(local); if (value == nullptr)throw ::jxx::lang::IllegalArgumentException(); address.sin_port = htons(static_cast<unsigned short>(value->getPort()));
-		}if (::bind(state_->socket, reinterpret_cast<sockaddr*>(&address), sizeof(address)) != 0)throw ::jxx::io::IOException("socket channel bind failed"); bound_ = true; return ::jxx::CAST<NetworkChannel>(thisPtr());
+		std::lock_guard<std::mutex> lock(mutex_);
+		if (!open_) throw ::jxx::nio::channels::ClosedChannelException();
+		if (bound_) throw ::jxx::nio::channels::AlreadyBoundException();
+		int family = AF_INET;
+		::jxx::Ptr<::jxx::net::InetSocketAddress> value;
+		if (local != nullptr) {
+			value = ::jxx::CAST<::jxx::net::InetSocketAddress>(local);
+			if (value == nullptr) throw ::jxx::nio::channels::UnsupportedAddressTypeException();
+			if (value->isUnresolved()) throw ::jxx::nio::channels::UnresolvedAddressException();
+			const auto inet = value->getAddress();
+			if (inet != nullptr && inet->getAddress() != nullptr && inet->getAddress()->length == 16) family = AF_INET6;
+		}
+		if (state_->socket == ::jxx::net::internal::kInvalidSocket) {
+			state_->socket = ::socket(family, SOCK_STREAM, IPPROTO_TCP);
+			if (state_->socket == ::jxx::net::internal::kInvalidSocket) throw ::jxx::io::IOException("could not create socket channel");
+			setBlocking(state_->socket, blocking_);
+		}
+		sockaddr_storage storage{};
+		socklen_t length = 0;
+		if (family == AF_INET6) {
+			auto* address = reinterpret_cast<sockaddr_in6*>(&storage);
+			address->sin6_family = AF_INET6; address->sin6_addr = in6addr_any;
+			address->sin6_port = htons(static_cast<unsigned short>(value == nullptr ? 0 : value->getPort()));
+			if (value != nullptr && value->getAddress() != nullptr) {
+				const auto bytes = value->getAddress()->getAddress();
+				std::memcpy(&address->sin6_addr, bytes->data(), 16U);
+			}
+			length = sizeof(sockaddr_in6);
+		} else {
+			auto* address = reinterpret_cast<sockaddr_in*>(&storage);
+			address->sin_family = AF_INET; address->sin_addr.s_addr = htonl(INADDR_ANY);
+			address->sin_port = htons(static_cast<unsigned short>(value == nullptr ? 0 : value->getPort()));
+			if (value != nullptr && value->getAddress() != nullptr) {
+				const auto bytes = value->getAddress()->getAddress();
+				std::memcpy(&address->sin_addr, bytes->data(), 4U);
+			}
+			length = sizeof(sockaddr_in);
+		}
+		if (::bind(state_->socket, reinterpret_cast<sockaddr*>(&storage), length) != 0) throw ::jxx::io::IOException("socket channel bind failed");
+		bound_ = true;
+		return ::jxx::CAST<NetworkChannel>(thisPtr());
 	}
-	::jxx::Ptr<::jxx::net::SocketAddress> SocketChannel::getLocalAddress()const
+	::jxx::Ptr<::jxx::net::SocketAddress> SocketChannel::getLocalAddress() const
 	{
-		if (!open_)throw ::jxx::nio::channels::ClosedChannelException(); sockaddr_in address{}; socklen_t length = sizeof(address); if (state_->socket == ::jxx::net::internal::kInvalidSocket || getsockname(state_->socket, reinterpret_cast<sockaddr*>(&address), &length) != 0)return nullptr; return ::jxx::NEW<::jxx::net::InetSocketAddress>(ntohs(address.sin_port));
+		std::lock_guard<std::mutex> lock(mutex_);
+		if (!open_) throw ::jxx::nio::channels::ClosedChannelException();
+		if (state_->socket == ::jxx::net::internal::kInvalidSocket) return nullptr;
+		sockaddr_storage storage{}; socklen_t length = sizeof(storage);
+		if (::getsockname(state_->socket, reinterpret_cast<sockaddr*>(&storage), &length) != 0) return nullptr;
+		return ::jxx::NEW<::jxx::net::InetSocketAddress>(addressFromNative(storage), portFromNative(storage));
 	}
-	::jxx::Ptr<::jxx::net::SocketAddress> SocketChannel::getRemoteAddress()const
+	::jxx::Ptr<::jxx::net::SocketAddress> SocketChannel::getRemoteAddress() const
 	{
-		if (!open_)throw ::jxx::nio::channels::ClosedChannelException(); if (!connected_)return nullptr; sockaddr_in address{}; socklen_t length = sizeof(address); if (getpeername(state_->socket, reinterpret_cast<sockaddr*>(&address), &length) != 0)return nullptr; return ::jxx::NEW<::jxx::net::InetSocketAddress>(ntohs(address.sin_port));
+		std::lock_guard<std::mutex> lock(mutex_);
+		if (!open_) throw ::jxx::nio::channels::ClosedChannelException();
+		if (!connected_) return nullptr;
+		sockaddr_storage storage{}; socklen_t length = sizeof(storage);
+		if (::getpeername(state_->socket, reinterpret_cast<sockaddr*>(&storage), &length) != 0) return nullptr;
+		return ::jxx::NEW<::jxx::net::InetSocketAddress>(addressFromNative(storage), portFromNative(storage));
 	}
 	::jxx::Ptr<::jxx::net::Socket> SocketChannel::socket()
 	{
