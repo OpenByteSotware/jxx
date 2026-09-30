@@ -11,6 +11,8 @@
 #include "io/jxx.io.FileInputStream.h"
 #include "io/jxx.io.FileOutputStream.h"
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
+#include "lang/jxx.lang.ArrayCopyThrow.h"
+#include "lang/jxx.lang.buildin_array.h"
 
 namespace jxx::io { class Console; }
 namespace jxx::util { template <typename K, typename V> class Map; }
@@ -66,6 +68,44 @@ struct System {
         const jxx::Ptr<jxx::lang::String>& value);
     static jxx::Ptr<jxx::lang::String> clearProperty(
         const jxx::Ptr<jxx::lang::String>& key);
+
+    template <typename T>
+    static void arraycopy(
+        const ::jxx::Ptr<::jxx::lang::JxxArray<T, 1U>>& source,
+        ::jxx::lang::jint sourcePosition,
+        const ::jxx::Ptr<::jxx::lang::JxxArray<T, 1U>>& destination,
+        ::jxx::lang::jint destinationPosition,
+        ::jxx::lang::jint length) {
+
+        if (source == nullptr || destination == nullptr) {
+            ::jxx::throwArrayCopyNullPointer();
+        }
+        if (sourcePosition < 0 || destinationPosition < 0 || length < 0 ||
+            sourcePosition > source->length - length ||
+            destinationPosition > destination->length - length) {
+            ::jxx::throwArrayCopyIndexOutOfBounds();
+        }
+        if (length == 0 ||
+            (source.get() == destination.get() &&
+             sourcePosition == destinationPosition)) {
+            return;
+        }
+
+        if (source.get() == destination.get() &&
+            destinationPosition > sourcePosition &&
+            destinationPosition < sourcePosition + length) {
+            for (::jxx::lang::jint index = length; index > 0; --index) {
+                (*destination)[destinationPosition + index - 1] =
+                    (*source)[sourcePosition + index - 1];
+            }
+            return;
+        }
+
+        for (::jxx::lang::jint index = 0; index < length; ++index) {
+            (*destination)[destinationPosition + index] =
+                (*source)[sourcePosition + index];
+        }
+    }
 
     template<typename T>
     static void arraycopy(const std::vector<T>& src, jxx::lang::jint srcPos,
