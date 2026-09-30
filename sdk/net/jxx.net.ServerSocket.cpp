@@ -259,9 +259,17 @@ namespace jxx::net
         std::lock_guard<std::mutex> lock(state_->m);
         if (!state_->closed)
         {
-            internal::closeNativeSocket(state_->socket);
+            const auto native = state_->socket;
             state_->socket = internal::kInvalidSocket;
             state_->closed = true;
+            if (native != internal::kInvalidSocket) {
+#if defined(_WIN32)
+                ::shutdown(native, SD_BOTH);
+#else
+                ::shutdown(native, SHUT_RDWR);
+#endif
+                internal::closeNativeSocket(native);
+            }
         }
     }
 

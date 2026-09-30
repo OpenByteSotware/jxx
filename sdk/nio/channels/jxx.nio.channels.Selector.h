@@ -1,5 +1,6 @@
 #pragma once
 #include <atomic>
+#include <condition_variable>
 #include <mutex>
 #include <vector>
 #include "lang/jxx.lang.ClassInfo.h"
@@ -27,4 +28,5 @@ private:
  ::jxx::Ptr<::jxx::util::Set<SelectionKey>> selected_; std::atomic<bool> open_{true},wakeupPending_{false};
  ::jxx::net::internal::NativeSocket wakeRead_=::jxx::net::internal::kInvalidSocket;
  ::jxx::net::internal::NativeSocket wakeWrite_=::jxx::net::internal::kInvalidSocket;
+ std::condition_variable selectionCondition_; std::size_t activeSelections_=0;
 }; }

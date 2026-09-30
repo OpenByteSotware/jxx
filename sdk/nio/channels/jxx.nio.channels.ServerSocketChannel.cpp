@@ -16,6 +16,8 @@
 #include "net/jxx.net.StandardSocketOptions.h"
 #include "net/jxx.net.Socket.h"
 #include "nio/channels/jxx.nio.channels.ClosedChannelException.h"
+#include "nio/channels/jxx.nio.channels.AsynchronousCloseException.h"
+#include "net/jxx.net.SocketException.h"
 #include "nio/channels/jxx.nio.channels.SelectionKey.h"
 #include "nio/channels/jxx.nio.channels.Selector.h"
 #include "nio/channels/jxx.nio.channels.SocketChannel.h"
@@ -36,7 +38,7 @@ int f=::fcntl(state_->socket,F_GETFL,0);if(f<0||::fcntl(state_->socket,F_SETFL,b
 ::jxx::Ptr<NetworkChannel> ServerSocketChannel::bind(const ::jxx::Ptr<::jxx::net::SocketAddress>&a){return bind(a,0);}
 ::jxx::Ptr<NetworkChannel> ServerSocketChannel::bind(const ::jxx::Ptr<::jxx::net::SocketAddress>&a,::jxx::lang::jint b){socket_->bind(a,b);setBlocking_(blocking_);return ::jxx::CAST<NetworkChannel>(thisPtr());}
 ::jxx::Ptr<::jxx::net::ServerSocket> ServerSocketChannel::socket(){return socket_;}
-::jxx::Ptr<SocketChannel> ServerSocketChannel::accept(){auto s=socket_->accept();if(!s)return nullptr;auto c=::jxx::NEW<SocketChannel>(s);s->sharedNativeSocketState()->channel=c;return c;}
+::jxx::Ptr<SocketChannel> ServerSocketChannel::accept(){if(!isOpen())throw ClosedChannelException();try{auto s=socket_->accept();if(!s)return nullptr;auto c=::jxx::NEW<SocketChannel>(s);s->sharedNativeSocketState()->channel=c;return c;}catch(const ::jxx::net::SocketException&){if(!isOpen())throw AsynchronousCloseException();throw;}}
 ::jxx::lang::jint ServerSocketChannel::validOps()const noexcept{return SelectionKey::OP_ACCEPT_;}
 ::jxx::Ptr<SelectionKey> ServerSocketChannel::registerChannel(const ::jxx::Ptr<Selector>&s,::jxx::lang::jint o,const ::jxx::Ptr<::jxx::lang::Object>&a){if(!s)throw ::jxx::lang::NullPointerException();if(blocking_)throw ::jxx::lang::IllegalStateException();return s->registerChannel(::jxx::CAST<::jxx::lang::Object>(thisPtr()),o,a);}
 ::jxx::Ptr<SelectionKey> ServerSocketChannel::keyFor(const ::jxx::Ptr<Selector>&s)const{return s?s->keyFor(::jxx::CAST<::jxx::lang::Object>(const_cast<ServerSocketChannel*>(this)->thisPtr())):nullptr;}
