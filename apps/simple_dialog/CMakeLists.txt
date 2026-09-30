@@ -7,49 +7,50 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Expected repository layout:
-# <toplevel>/
+# <jxx_root>/
 #   sdk/
 #   sdkgui/
 #   3rdparty/wxWidgets/
 #   apps/simple_dialog/
-
+#
+# Resolve all dependencies directly relative to this CMakeLists.txt.
+# No environment variable, top-level root variable, or cached path is used.
 get_filename_component(
-    JXX_TOP_LEVEL_DIR
-    "${CMAKE_CURRENT_LIST_DIR}/../.."
+    JXX_SDK_DIR
+    "${CMAKE_CURRENT_LIST_DIR}/../../sdk"
     ABSOLUTE
 )
 
-set(JXX_SDK_DIR
-    "${JXX_TOP_LEVEL_DIR}/sdk"
-    CACHE PATH "Path to the core JXX SDK"
+get_filename_component(
+    JXX_GUI_SDK_DIR
+    "${CMAKE_CURRENT_LIST_DIR}/../../sdkgui"
+    ABSOLUTE
 )
 
-set(JXX_GUI_SDK_DIR
-    "${JXX_TOP_LEVEL_DIR}/sdkgui"
-    CACHE PATH "Path to the JXX GUI SDK"
+get_filename_component(
+    JXX_WXWIDGETS_DIR
+    "${CMAKE_CURRENT_LIST_DIR}/../../3rdparty/wxWidgets"
+    ABSOLUTE
 )
 
-set(JXX_WXWIDGETS_DIR
-    "${JXX_TOP_LEVEL_DIR}/3rdparty/wxWidgets"
-    CACHE PATH "Path to the bundled wxWidgets source tree"
-)
-
-if(NOT EXISTS "${JXX_SDK_DIR}")
+if(NOT EXISTS "${JXX_SDK_DIR}/CMakeLists.txt")
     message(FATAL_ERROR
-        "JXX core SDK directory was not found: ${JXX_SDK_DIR}"
+        "The core JXX SDK source tree was not found.\n"
+        "Expected: ${JXX_SDK_DIR}/CMakeLists.txt"
     )
 endif()
 
-if(NOT EXISTS "${JXX_GUI_SDK_DIR}")
+if(NOT EXISTS "${JXX_GUI_SDK_DIR}/CMakeLists.txt")
     message(FATAL_ERROR
-        "JXX GUI SDK directory was not found: ${JXX_GUI_SDK_DIR}"
+        "The JXX GUI SDK source tree was not found.\n"
+        "Expected: ${JXX_GUI_SDK_DIR}/CMakeLists.txt"
     )
 endif()
 
 if(NOT EXISTS "${JXX_WXWIDGETS_DIR}/CMakeLists.txt")
     message(FATAL_ERROR
-        "wxWidgets source CMakeLists.txt was not found: "
-        "${JXX_WXWIDGETS_DIR}/CMakeLists.txt"
+        "The bundled wxWidgets source tree was not found.\n"
+        "Expected: ${JXX_WXWIDGETS_DIR}/CMakeLists.txt"
     )
 endif()
 
@@ -83,7 +84,7 @@ set(wxBUILD_DEBUG_LEVEL 0 CACHE STRING
 if(NOT TARGET wx::base OR NOT TARGET wx::core)
     add_subdirectory(
         "${JXX_WXWIDGETS_DIR}"
-        "${CMAKE_BINARY_DIR}/3rdparty/wxWidgets"
+        "${CMAKE_CURRENT_BINARY_DIR}/wxWidgets"
         EXCLUDE_FROM_ALL
     )
 endif()
@@ -100,21 +101,26 @@ if(NOT TARGET wx::core)
     )
 endif()
 
-add_executable(jxx_frame_dialog_example
+add_executable(
+    jxx_frame_dialog_example
     jxx_frame_dialog_example.cpp
 )
 
-target_compile_features(jxx_frame_dialog_example
-    PRIVATE cxx_std_17
+target_compile_features(
+    jxx_frame_dialog_example
+    PRIVATE
+        cxx_std_17
 )
 
-target_compile_definitions(jxx_frame_dialog_example
+target_compile_definitions(
+    jxx_frame_dialog_example
     PRIVATE
         wxDEBUG_LEVEL=0
 )
 
 if(MSVC)
-    target_compile_definitions(jxx_frame_dialog_example
+    target_compile_definitions(
+        jxx_frame_dialog_example
         PRIVATE
             WIN32_LEAN_AND_MEAN
             NOMINMAX
@@ -123,7 +129,8 @@ endif()
 
 # Keep GUI headers before core headers because the current source trees contain
 # overlapping package headers and the GUI versions must take precedence here.
-target_include_directories(jxx_frame_dialog_example
+target_include_directories(
+    jxx_frame_dialog_example
     PRIVATE
         "${JXX_GUI_SDK_DIR}"
         "${JXX_SDK_DIR}"
@@ -140,19 +147,24 @@ target_include_directories(jxx_frame_dialog_example
         "${JXX_SDK_DIR}/ext"
 )
 
-target_link_libraries(jxx_frame_dialog_example
+target_link_libraries(
+    jxx_frame_dialog_example
     PRIVATE
         jxx_gui
         jxxsdk
         unicode::unicode
-		fmt::fmt
+        fmt::fmt
         wx::core
         wx::base
 )
 
-set_target_properties(jxx_frame_dialog_example PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+set_target_properties(
+    jxx_frame_dialog_example
+    PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 
-message(STATUS "Simple dialog repository root: ${JXX_TOP_LEVEL_DIR}")
+message(STATUS "Simple dialog source: ${CMAKE_CURRENT_LIST_DIR}")
+message(STATUS "Simple dialog core SDK: ${JXX_SDK_DIR}")
+message(STATUS "Simple dialog GUI SDK: ${JXX_GUI_SDK_DIR}")
 message(STATUS "Simple dialog wxWidgets source: ${JXX_WXWIDGETS_DIR}")
