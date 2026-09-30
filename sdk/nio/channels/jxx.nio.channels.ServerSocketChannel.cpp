@@ -3,6 +3,7 @@
 #include <winsock2.h>
 #else
 #include <fcntl.h>
+#include <sys/socket.h>
 #endif
 #include "io/jxx.io.IOException.h"
 #include "lang/jxx.lang.Boolean.h"
@@ -10,6 +11,7 @@
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.IllegalStateException.h"
 #include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.Thread.h"
 #include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "net/internal/jxx.net.internal.NativeSocketState.h"
 #include "net/jxx.net.ServerSocket.h"
@@ -17,12 +19,58 @@
 #include "net/jxx.net.Socket.h"
 #include "nio/channels/jxx.nio.channels.ClosedChannelException.h"
 #include "nio/channels/jxx.nio.channels.AsynchronousCloseException.h"
+#include "nio/channels/jxx.nio.channels.ClosedByInterruptException.h"
 #include "net/jxx.net.SocketException.h"
 #include "nio/channels/jxx.nio.channels.SelectionKey.h"
 #include "nio/channels/jxx.nio.channels.Selector.h"
 #include "nio/channels/jxx.nio.channels.SocketChannel.h"
 #include "util/jxx.util.HashSet.h"
 namespace jxx::nio::channels {
+namespace {
+void interruptAccept(
+    const std::weak_ptr<::jxx::net::internal::NativeSocketState>& weakState) noexcept {
+    const auto state = weakState.lock();
+    if (state == nullptr) return;
+    ::jxx::net::internal::NativeSocket native =
+        ::jxx::net::internal::kInvalidSocket;
+    {
+        std::lock_guard<std::mutex> lock(state->m);
+        if (state->socket == ::jxx::net::internal::kInvalidSocket) return;
+        native = state->socket;
+        state->socket = ::jxx::net::internal::kInvalidSocket;
+        state->closed = true;
+    }
+#if defined(_WIN32)
+    ::shutdown(native, SD_BOTH);
+#else
+    ::shutdown(native, SHUT_RDWR);
+#endif
+    ::jxx::net::internal::closeNativeSocket(native);
+}
+class AcceptInterruptRegistration final {
+public:
+    explicit AcceptInterruptRegistration(
+        const std::shared_ptr<::jxx::net::internal::NativeSocketState>& state)
+        : thread_(::jxx::lang::Thread::currentThread()) {
+        if (thread_ == nullptr) return;
+        const std::weak_ptr<::jxx::net::internal::NativeSocketState> weakState(state);
+        if (thread_->isInterrupted()) {
+            interruptAccept(weakState);
+            throw ClosedByInterruptException();
+        }
+        thread_->setParkWakeup_([weakState] { interruptAccept(weakState); });
+    }
+    ~AcceptInterruptRegistration() {
+        if (thread_ != nullptr) thread_->clearParkWakeup_();
+    }
+    ::jxx::lang::jbool interrupted() const {
+        return thread_ != nullptr && thread_->isInterrupted();
+    }
+private:
+    ::jxx::Ptr<::jxx::lang::Thread> thread_;
+};
+} // namespace
+
 ::jxx::Ptr<ServerSocketChannel> ServerSocketChannel::open(){auto c=::jxx::NEW<ServerSocketChannel>();c->state_->serverChannel=c;return c;}
 ServerSocketChannel::ServerSocketChannel():state_(::jxx::NEW<::jxx::net::internal::NativeSocketState>()),socket_(::jxx::NEW<::jxx::net::ServerSocket>(state_)){}
 ServerSocketChannel::~ServerSocketChannel(){try{close();}catch(...){}}
@@ -38,7 +86,25 @@ int f=::fcntl(state_->socket,F_GETFL,0);if(f<0||::fcntl(state_->socket,F_SETFL,b
 ::jxx::Ptr<NetworkChannel> ServerSocketChannel::bind(const ::jxx::Ptr<::jxx::net::SocketAddress>&a){return bind(a,0);}
 ::jxx::Ptr<NetworkChannel> ServerSocketChannel::bind(const ::jxx::Ptr<::jxx::net::SocketAddress>&a,::jxx::lang::jint b){socket_->bind(a,b);setBlocking_(blocking_);return ::jxx::CAST<NetworkChannel>(thisPtr());}
 ::jxx::Ptr<::jxx::net::ServerSocket> ServerSocketChannel::socket(){return socket_;}
-::jxx::Ptr<SocketChannel> ServerSocketChannel::accept(){if(!isOpen())throw ClosedChannelException();try{auto s=socket_->accept();if(!s)return nullptr;auto c=::jxx::NEW<SocketChannel>(s);s->sharedNativeSocketState()->channel=c;return c;}catch(const ::jxx::net::SocketException&){if(!isOpen())throw AsynchronousCloseException();throw;}}
+::jxx::Ptr<SocketChannel> ServerSocketChannel::accept(){
+    if(!isOpen())throw ClosedChannelException();
+    AcceptInterruptRegistration interruptRegistration(state_);
+    try {
+        auto s=socket_->accept();
+        if(interruptRegistration.interrupted())throw ClosedByInterruptException();
+        if(!isOpen())throw AsynchronousCloseException();
+        if(!s)return nullptr;
+        auto c=::jxx::NEW<SocketChannel>(s);
+        s->sharedNativeSocketState()->channel=c;
+        return c;
+    } catch(const ClosedByInterruptException&) {
+        throw;
+    } catch(const ::jxx::net::SocketException&) {
+        if(interruptRegistration.interrupted())throw ClosedByInterruptException();
+        if(!isOpen())throw AsynchronousCloseException();
+        throw;
+    }
+}
 ::jxx::lang::jint ServerSocketChannel::validOps()const noexcept{return SelectionKey::OP_ACCEPT_;}
 ::jxx::Ptr<SelectionKey> ServerSocketChannel::registerChannel(const ::jxx::Ptr<Selector>&s,::jxx::lang::jint o,const ::jxx::Ptr<::jxx::lang::Object>&a){if(!s)throw ::jxx::lang::NullPointerException();if(blocking_)throw ::jxx::lang::IllegalStateException();return s->registerChannel(::jxx::CAST<::jxx::lang::Object>(thisPtr()),o,a);}
 ::jxx::Ptr<SelectionKey> ServerSocketChannel::keyFor(const ::jxx::Ptr<Selector>&s)const{return s?s->keyFor(::jxx::CAST<::jxx::lang::Object>(const_cast<ServerSocketChannel*>(this)->thisPtr())):nullptr;}
