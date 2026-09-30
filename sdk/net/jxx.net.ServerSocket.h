@@ -39,8 +39,7 @@ public:
         ServerSocket(jxx::lang::jint port,
                      jxx::lang::jint backlog,
                      jxx::Ptr<InetAddress> bindAddr);
-        explicit ServerSocket(
-            const std::shared_ptr<internal::NativeSocketState>& state);
+        explicit ServerSocket(const std::shared_ptr<internal::NativeSocketState>& state);
         ~ServerSocket() override;
 
     public:
@@ -69,6 +68,7 @@ public:
                                        jxx::lang::jint bandwidth);
 
         jxx::Ptr<jxx::lang::String> toString() const override;
+        internal::NativeSocket nativeSocketHandle() const noexcept;
 
     private:
         void ensureCreated_();

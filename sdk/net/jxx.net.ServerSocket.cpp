@@ -37,14 +37,6 @@ namespace
         throw jxx::net::SocketException(msg);
     }
 
-    bool wouldBlock_(int error) noexcept {
-#if defined(_WIN32)
-        return error == WSAEWOULDBLOCK;
-#else
-        return error == EAGAIN || error == EWOULDBLOCK;
-#endif
-    }
-
     inline bool isIpv6_(const jxx::Ptr<jxx::net::InetAddress> addr)
     {
         return std::dynamic_pointer_cast<jxx::net::Inet6Address>(addr) != nullptr;
@@ -112,11 +104,8 @@ namespace jxx::net
     {
     }
 
-    ServerSocket::ServerSocket(
-        const std::shared_ptr<internal::NativeSocketState>& state)
-        : state_(state == nullptr
-            ? jxx::NEW<internal::NativeSocketState>() : state) {
-    }
+    ServerSocket::ServerSocket(const std::shared_ptr<internal::NativeSocketState>& state)
+        : state_(state == nullptr ? jxx::NEW<internal::NativeSocketState>() : state) {}
 
     ServerSocket::ServerSocket(jxx::lang::jint port)
         : ServerSocket(port, 50, nullptr)
@@ -240,13 +229,14 @@ namespace jxx::net
         socklen_t len = sizeof(remote);
         const auto s = ::accept(state_->socket, reinterpret_cast<sockaddr*>(&remote), &len);
         if (s == internal::kInvalidSocket) {
-            const int error =
 #if defined(_WIN32)
-                ::WSAGetLastError();
+            const int error = ::WSAGetLastError();
+            const bool again = error == WSAEWOULDBLOCK;
 #else
-                errno;
+            const int error = errno;
+            const bool again = error == EAGAIN || error == EWOULDBLOCK;
 #endif
-            if (wouldBlock_(error) && !state_->serverChannel.expired()) return nullptr;
+            if (again && !state_->serverChannel.expired()) return nullptr;
             throwSE_("accept failed");
         }
 
@@ -275,9 +265,7 @@ namespace jxx::net
         }
     }
 
-    jxx::Ptr<jxx::nio::channels::ServerSocketChannel> ServerSocket::getChannel() const {
-        return state_ == nullptr ? nullptr : state_->serverChannel.lock();
-    }
+    jxx::Ptr<jxx::nio::channels::ServerSocketChannel> ServerSocket::getChannel() const { return state_ ? state_->serverChannel.lock() : nullptr; }
     jxx::lang::jbool ServerSocket::isBound() const noexcept { return bound_; }
     jxx::lang::jbool ServerSocket::isClosed() const noexcept { return !state_ || state_->closed; }
 
@@ -356,5 +344,8 @@ namespace jxx::net
         return jxx::NEW<jxx::lang::String>(
             std::string("ServerSocket[addr=") + (localAddr_ ? localAddr_->getHostAddress()->utf8() : std::string()) +
             ",localport=" + std::to_string(localPort_) + "]");
+    }
+    internal::NativeSocket ServerSocket::nativeSocketHandle() const noexcept {
+        return state_ == nullptr ? internal::kInvalidSocket : state_->socket;
     }
 }

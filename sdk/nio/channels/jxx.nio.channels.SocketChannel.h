@@ -13,6 +13,7 @@
 #include "net/jxx.net.Socket.h"
 
 namespace jxx::nio::channels {
+class Selector; class SelectionKey;
 
 class SocketChannel final
     : public ::jxx::lang::ClassBase<
@@ -44,6 +45,12 @@ public:
     ::jxx::Ptr<SocketChannel> shutdownInput();
     ::jxx::Ptr<SocketChannel> shutdownOutput();
     ::jxx::lang::jint validOps() const noexcept;
+    ::jxx::Ptr<SelectionKey> registerChannel(
+        const ::jxx::Ptr<Selector>& selector,
+        ::jxx::lang::jint ops,
+        const ::jxx::Ptr<::jxx::lang::Object>& attachment = nullptr);
+    ::jxx::Ptr<SelectionKey> keyFor(
+        const ::jxx::Ptr<Selector>& selector) const;
 
     using BufferArray = ScatteringByteChannel::BufferArray;
     using Option = NetworkChannel::Option;

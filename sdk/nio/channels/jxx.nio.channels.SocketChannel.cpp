@@ -25,6 +25,8 @@
 #include "lang/jxx.lang.Integer.h"
 #include "lang/jxx.lang.Boolean.h"
 #include "nio/channels/jxx.nio.channels.SocketChannel.h"
+#include "nio/channels/jxx.nio.channels.Selector.h"
+#include "nio/channels/jxx.nio.channels.SelectionKey.h"
 #include "net/internal/jxx.net.internal.NativeSocketState.h"
 #include "nio/channels/jxx.nio.channels.AlreadyConnectedException.h"
 #include "nio/channels/jxx.nio.channels.ConnectionPendingException.h"
@@ -144,9 +146,7 @@ namespace jxx::nio::channels
 	}
 
 	SocketChannel::SocketChannel(const ::jxx::Ptr<::jxx::net::Socket>& socket)
-		: state_(socket == nullptr ? std::make_shared<::jxx::net::internal::NativeSocketState>() : socket->sharedNativeSocketState()),
-		  socketView_(socket), connected_(socket != nullptr && socket->isConnected()),
-		  bound_(socket != nullptr && socket->isBound()) {
+		: state_(socket == nullptr ? std::make_shared<::jxx::net::internal::NativeSocketState>() : socket->sharedNativeSocketState()), socketView_(socket), connected_(socket != nullptr && socket->isConnected()), bound_(socket != nullptr && socket->isBound()) {
 		if (socket == nullptr) throw ::jxx::lang::NullPointerException();
 	}
 
@@ -564,5 +564,22 @@ SHUT_WR
 		result->add(::jxx::net::StandardSocketOptions::TCP_NODELAY_); 
 		return ::jxx::CAST<::jxx::util::Set<Option>>(result);
 	}
+
+::jxx::Ptr<SelectionKey> SocketChannel::registerChannel(
+    const ::jxx::Ptr<Selector>& selector,
+    ::jxx::lang::jint ops,
+    const ::jxx::Ptr<::jxx::lang::Object>& attachment) {
+    if (selector == nullptr) throw ::jxx::lang::NullPointerException();
+    if (blocking_) throw ::jxx::lang::IllegalStateException(
+        "blocking channel cannot be registered");
+    return selector->registerChannel(
+        ::jxx::CAST<::jxx::lang::Object>(thisPtr()), ops, attachment);
+}
+::jxx::Ptr<SelectionKey> SocketChannel::keyFor(
+    const ::jxx::Ptr<Selector>& selector) const {
+    return selector == nullptr ? nullptr : selector->keyFor(
+        ::jxx::CAST<::jxx::lang::Object>(
+            const_cast<SocketChannel*>(this)->thisPtr()));
+}
 
 } // namespace jxx::nio::channels
