@@ -61,6 +61,13 @@ public:
             jxx::lang::jint remotePort,
             const jxx::Ptr<InetAddress>& localAddr,
             jxx::lang::jint localPort);
+        Socket(
+            const std::shared_ptr<internal::NativeSocketState>& state,
+            const jxx::Ptr<InetAddress>& remoteAddr,
+            jxx::lang::jint remotePort,
+            const jxx::Ptr<InetAddress>& localAddr,
+            jxx::lang::jint localPort,
+            const jxx::Ptr<jxx::nio::channels::SocketChannel>& channel);
         ~Socket() override;
 
     public:

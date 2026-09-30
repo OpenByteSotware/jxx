@@ -20,6 +20,7 @@
 #include <stdexcept>
 #include "net/jxx.net.Socket.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.NullPointerException.h"
 #include "net/jxx.net.ConnectException.h"
 #include "net/jxx.net.SocketTimeoutException.h"
 #include "net/internal/jxx.net.internal.NativeSocketState.h"
@@ -162,6 +163,26 @@ namespace jxx::net
         state_->socket = handle;
     }
 
+    Socket::Socket(
+        const std::shared_ptr<internal::NativeSocketState>& state,
+        const jxx::Ptr<InetAddress>& remoteAddr,
+        jxx::lang::jint remotePort,
+        const jxx::Ptr<InetAddress>& localAddr,
+        jxx::lang::jint localPort,
+        const jxx::Ptr<jxx::nio::channels::SocketChannel>& channel)
+        : state_(state),
+          remoteAddr_(remoteAddr),
+          remotePort_(remotePort),
+          localAddr_(localAddr),
+          localPort_(localPort),
+          connected_(state != nullptr && !state->closed),
+          bound_(state != nullptr && state->socket != internal::kInvalidSocket)
+    {
+        if (state_ == nullptr)
+            throw ::jxx::lang::NullPointerException();
+        state_->channel = channel;
+    }
+
     Socket::~Socket()
     {
         try { close(); } catch (...) {}
@@ -287,7 +308,10 @@ namespace jxx::net
         return bound_ ? jxx::NEW<InetSocketAddress>(localAddr_, localPort_) : nullptr;
     }
 
-    jxx::Ptr<jxx::nio::channels::SocketChannel> Socket::getChannel() const { return nullptr; }
+    jxx::Ptr<jxx::nio::channels::SocketChannel> Socket::getChannel() const
+    {
+        return state_ == nullptr ? nullptr : state_->channel.lock();
+    }
 
     jxx::Ptr<jxx::io::InputStream> Socket::getInputStream()
     {
@@ -507,7 +531,11 @@ namespace jxx::net
         }
     }
 
-    jxx::lang::jbool Socket::isConnected() const noexcept { return connected_; }
+    jxx::lang::jbool Socket::isConnected() const noexcept
+    {
+        return connected_ && state_ != nullptr && !state_->closed &&
+            state_->socket != internal::kInvalidSocket;
+    }
     jxx::lang::jbool Socket::isBound() const noexcept { return bound_; }
     jxx::lang::jbool Socket::isClosed() const noexcept { return !state_ || state_->closed; }
     jxx::lang::jbool Socket::isInputShutdown() const noexcept { return state_ && state_->inputShutdown; }

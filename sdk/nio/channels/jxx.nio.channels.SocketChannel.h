@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <mutex>
 
 #include "lang/jxx.lang.Object.h"
@@ -64,13 +65,14 @@ public:
 
 public:
     SocketChannel();
+    ~SocketChannel() override;
 
 private:
     void ensureSocket();
 
     mutable std::mutex mutex_;
-    ::jxx::net::internal::NativeSocket socket_ =
-        ::jxx::net::internal::kInvalidSocket;
+    std::shared_ptr<::jxx::net::internal::NativeSocketState> state_;
+    ::jxx::Ptr<::jxx::net::Socket> socketView_;
     ::jxx::lang::jbool blocking_ = true;
     ::jxx::lang::jbool open_ = true;
     ::jxx::lang::jbool connected_ = false;

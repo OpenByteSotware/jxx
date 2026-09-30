@@ -8,6 +8,11 @@
 #include "io/jxx.io.OutputStream.h"
 #include "net/internal/jxx.net.internal.NetPlatform.h"
 
+namespace jxx::nio::channels
+{
+    class SocketChannel;
+}
+
 namespace jxx::net::internal
 {
     struct NativeSocketState
@@ -16,6 +21,7 @@ namespace jxx::net::internal
         jxx::lang::jbool closed = false;
         jxx::lang::jbool inputShutdown = false;
         jxx::lang::jbool outputShutdown = false;
+        std::weak_ptr<::jxx::nio::channels::SocketChannel> channel;
         std::mutex m;
     };
 
