@@ -3,10 +3,10 @@
 #include <condition_variable>
 #include <deque>
 #include <mutex>
-#include <thread>
 #include <vector>
 
 #include "lang/jxx.lang.Runnable.h"
+#include "lang/jxx.lang.Thread.h"
 #include "lang/jxx_types.h"
 #include "util/jxx.util.concurrent.AbstractExecutorService.h"
 #include "util/jxx.util.concurrent.RejectedExecutionHandler.h"
@@ -44,12 +44,32 @@ public:
         const ::jxx::Ptr<RejectedExecutionHandler>& handler);
     ::jxx::Ptr<RejectedExecutionHandler> getRejectedExecutionHandler();
 
+protected:
+    void joinWorkers_();
+
 private:
+    class WorkerRunnable final
+        : public ::jxx::lang::ClassBase<
+              WorkerRunnable,
+              ::jxx::lang::Object,
+              ::jxx::lang::Runnable> {
+    public:
+        explicit WorkerRunnable(ThreadPoolExecutor* owner)
+            : owner_(owner) {}
+
+        void run() override {
+            owner_->workerLoop_();
+        }
+
+    private:
+        ThreadPoolExecutor* owner_;
+    };
+
     mutable std::mutex mutex_;
     std::condition_variable workAvailable_;
     std::condition_variable terminated_;
     std::deque<::jxx::Ptr<::jxx::lang::Runnable>> queue_;
-    std::vector<std::thread> workers_;
+    std::vector<::jxx::Ptr<::jxx::lang::Thread>> workers_;
     ::jxx::lang::jbool shutdown_ = false;
     ::jxx::lang::jbool stopNow_ = false;
     ::jxx::lang::jint activeCount_ = 0;

@@ -2,6 +2,9 @@
 
 #include <algorithm>
 #include <limits>
+#include <string>
+
+#include "lang/jxx.lang.String.h"
 
 #include "lang/jxx.lang.Exceptions.h"
 #include "util/jxx.util.ArrayList.h"
@@ -26,8 +29,12 @@ ThreadPoolExecutor::ThreadPoolExecutor(
 
 ThreadPoolExecutor::~ThreadPoolExecutor() {
     shutdown();
-    for (auto& worker : workers_) {
-        if (worker.joinable()) worker.join();
+    joinWorkers_();
+}
+
+void ThreadPoolExecutor::joinWorkers_() {
+    for (const auto& worker : workers_) {
+        if (worker != nullptr && worker->isAlive()) worker->join();
     }
 }
 
@@ -39,7 +46,14 @@ ThreadPoolExecutor::~ThreadPoolExecutor() {
 void ThreadPoolExecutor::startWorkerLocked_() {
     ++liveWorkerCount_;
     largestPoolSize_ = std::max(largestPoolSize_, liveWorkerCount_);
-    workers_.emplace_back([this] { workerLoop_(); });
+    const auto runnable = ::jxx::NEW<WorkerRunnable>(this);
+    const auto workerNumber = static_cast<::jxx::lang::jlong>(workers_.size() + 1U);
+    const auto worker = ::jxx::NEW<::jxx::lang::Thread>(
+        ::jxx::CAST<::jxx::lang::Runnable>(runnable),
+        ::jxx::NEW<::jxx::lang::String>(
+            "pool-worker-" + std::to_string(workerNumber)));
+    workers_.push_back(worker);
+    worker->start();
 }
 
 void ThreadPoolExecutor::execute(
@@ -134,6 +148,9 @@ ThreadPoolExecutor::shutdownNow() {
         }
     }
     workAvailable_.notify_all();
+    for (const auto& worker : workers_) {
+        if (worker != nullptr && worker->isAlive()) worker->interrupt();
+    }
     return ::jxx::CAST<::jxx::util::List<::jxx::lang::Runnable>>(result);
 }
 

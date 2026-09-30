@@ -1,4 +1,5 @@
 #include "util/jxx.util.concurrent.ScheduledThreadPoolExecutor.h"
+
 #include "lang/jxx.lang.Class.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "util/jxx.util.concurrent.RejectedExecutionException.h"
@@ -6,23 +7,76 @@
 namespace jxx::util::concurrent {
 ::jxx::Ptr<::jxx::lang::ClassAny> ScheduledThreadPoolExecutor::Class(){return JxxClassInfoMarker::Class();}
 ScheduledThreadPoolExecutor::ScheduledThreadPoolExecutor(::jxx::lang::jint core):Super(core,core,0,TimeUnit::NANOSECONDS()){dispatcher_=std::thread([this]{dispatch_();});}
-ScheduledThreadPoolExecutor::~ScheduledThreadPoolExecutor(){shutdown();if(dispatcher_.joinable())dispatcher_.join();}
+ScheduledThreadPoolExecutor::~ScheduledThreadPoolExecutor() {
+    shutdown();
+    if (dispatcher_.joinable()) dispatcher_.join();
+    joinWorkers_();
+}
 ::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> ScheduledThreadPoolExecutor::schedule(const ::jxx::Ptr<::jxx::lang::Runnable>&c,::jxx::lang::jlong d,const ::jxx::Ptr<TimeUnit>&u){if(!u)throw ::jxx::lang::NullPointerException();return schedule_(c,std::max<::jxx::lang::jlong>(0,u->toNanos(d)),0);}
 ::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> ScheduledThreadPoolExecutor::scheduleAtFixedRate(const ::jxx::Ptr<::jxx::lang::Runnable>&c,::jxx::lang::jlong d,::jxx::lang::jlong p,const ::jxx::Ptr<TimeUnit>&u){if(!u)throw ::jxx::lang::NullPointerException();if(p<=0)throw ::jxx::lang::IllegalArgumentException();return schedule_(c,std::max<::jxx::lang::jlong>(0,u->toNanos(d)),u->toNanos(p));}
 ::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> ScheduledThreadPoolExecutor::scheduleWithFixedDelay(const ::jxx::Ptr<::jxx::lang::Runnable>&c,::jxx::lang::jlong d,::jxx::lang::jlong p,const ::jxx::Ptr<TimeUnit>&u){if(!u)throw ::jxx::lang::NullPointerException();if(p<=0)throw ::jxx::lang::IllegalArgumentException();return schedule_(c,std::max<::jxx::lang::jlong>(0,u->toNanos(d)),-u->toNanos(p));}
 ::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> ScheduledThreadPoolExecutor::schedule_(const ::jxx::Ptr<::jxx::lang::Runnable>&c,::jxx::lang::jlong d,::jxx::lang::jlong p){if(!c)throw ::jxx::lang::NullPointerException();if(isShutdown())throw RejectedExecutionException();auto task=::jxx::NEW<Task>(c,nullptr,d,p);{std::lock_guard<std::mutex>l(scheduleMutex_);scheduled_.push(task);}scheduleChanged_.notify_all();return ::jxx::CAST<ScheduledFuture<::jxx::lang::Object>>(task);}
 void ScheduledThreadPoolExecutor::execute(const ::jxx::Ptr<::jxx::lang::Runnable>&c){(void)schedule(c,0,TimeUnit::NANOSECONDS());}
-void ScheduledThreadPoolExecutor::dispatch_(){for(;;){::jxx::Ptr<Task>task;{std::unique_lock<std::mutex>l(scheduleMutex_);for(;;){if(stopping_&&scheduled_.empty())return;if(scheduled_.empty()){scheduleChanged_.wait(l);continue;}task=scheduled_.top();auto delay=task->getDelay(TimeUnit::NANOSECONDS());if(delay>0){scheduleChanged_.wait_for(l,std::chrono::nanoseconds(delay));continue;}scheduled_.pop();break;}}if(task->isCancelled())continue;
-ThreadPoolExecutor::execute(::jxx::CAST<::jxx::lang::Runnable>(task));
-if(task->isPeriodic()&&!task->isCancelled()&&!task->isDone()){
-    const auto keep=!shutdownRequested_.load(std::memory_order_acquire)||continuePeriodicAfterShutdown_;
-    if(keep){std::lock_guard<std::mutex>l(scheduleMutex_);scheduled_.push(task);scheduleChanged_.notify_all();}
-    else task->cancel(false);
+void ScheduledThreadPoolExecutor::dispatch_() {
+    for (;;) {
+        ::jxx::Ptr<Task> task;
+        {
+            std::unique_lock<std::mutex> lock(scheduleMutex_);
+            for (;;) {
+                if (stopping_ && scheduled_.empty()) return;
+                if (scheduled_.empty()) {
+                    scheduleChanged_.wait(lock);
+                    continue;
+                }
+                task = scheduled_.top();
+                const auto delay = task->getDelay(TimeUnit::NANOSECONDS());
+                if (delay > 0) {
+                    scheduleChanged_.wait_for(
+                        lock, std::chrono::nanoseconds(delay));
+                    continue;
+                }
+                scheduled_.pop();
+                break;
+            }
+        }
+        if (task->isCancelled()) {
+            afterExecute_(task);
+            continue;
+        }
+        const auto runner = ::jxx::NEW<ScheduledTaskRunner>(this, task);
+        ThreadPoolExecutor::execute(
+            ::jxx::CAST<::jxx::lang::Runnable>(runner));
+    }
 }
-if(shutdownRequested_.load(std::memory_order_acquire)){
-    std::lock_guard<std::mutex>l(scheduleMutex_);
-    if(scheduled_.empty()){stopping_=true;ThreadPoolExecutor::shutdown();scheduleChanged_.notify_all();}
-}}}
+
+void ScheduledThreadPoolExecutor::afterExecute_(
+    const ::jxx::Ptr<Task>& task) {
+    ::jxx::lang::jbool stopBase = false;
+    if (task != nullptr && task->isPeriodic() &&
+        !task->isCancelled() && !task->isDone()) {
+        const auto keep =
+            !shutdownRequested_.load(std::memory_order_acquire) ||
+            continuePeriodicAfterShutdown_;
+        if (keep) {
+            std::lock_guard<std::mutex> lock(scheduleMutex_);
+            if (!stopping_) scheduled_.push(task);
+            else (void)task->cancel(false);
+        } else {
+            (void)task->cancel(false);
+        }
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(scheduleMutex_);
+        if (shutdownRequested_.load(std::memory_order_acquire) &&
+            scheduled_.empty()) {
+            stopping_ = true;
+            stopBase = true;
+        }
+    }
+    scheduleChanged_.notify_all();
+    if (stopBase) ThreadPoolExecutor::shutdown();
+}
 void ScheduledThreadPoolExecutor::shutdown(){
     shutdownRequested_.store(true,std::memory_order_release);
     {
