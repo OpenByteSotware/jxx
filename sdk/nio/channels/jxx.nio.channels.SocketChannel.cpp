@@ -66,34 +66,42 @@ namespace jxx::nio::channels
 		}
 
 		void wakeBlockedSocket(
-			::jxx::net::internal::NativeSocket socket) noexcept {
-			if (socket == ::jxx::net::internal::kInvalidSocket) return;
+			const std::weak_ptr<::jxx::net::internal::NativeSocketState>& weakState) noexcept {
+			const auto state = weakState.lock();
+			if (state == nullptr) return;
+			::jxx::net::internal::NativeSocket socket = ::jxx::net::internal::kInvalidSocket;
+			{
+				std::lock_guard<std::mutex> lock(state->m);
+				if (state->socket == ::jxx::net::internal::kInvalidSocket) return;
+				socket = state->socket;
+				state->socket = ::jxx::net::internal::kInvalidSocket;
+				state->closed = true;
+				state->inputShutdown = true;
+				state->outputShutdown = true;
+			}
 #if defined(_WIN32)
 			::shutdown(socket, SD_BOTH);
 #else
 			::shutdown(socket, SHUT_RDWR);
 #endif
+			::jxx::net::internal::closeNativeSocket(socket);
 		}
 
 		class InterruptRegistration final {
 		public:
 			explicit InterruptRegistration(
-				::jxx::net::internal::NativeSocket socket)
+				const std::shared_ptr<::jxx::net::internal::NativeSocketState>& state)
 				: thread_(::jxx::lang::Thread::currentThread()) {
 				if (thread_ == nullptr) return;
+				const std::weak_ptr<::jxx::net::internal::NativeSocketState> weakState(state);
 				if (thread_->isInterrupted()) {
+					wakeBlockedSocket(weakState);
 					throw ::jxx::nio::channels::ClosedByInterruptException();
 				}
-				thread_->setParkWakeup_([socket] {
-					wakeBlockedSocket(socket);
-				});
+				thread_->setParkWakeup_([weakState] { wakeBlockedSocket(weakState); });
 			}
-			~InterruptRegistration() {
-				if (thread_ != nullptr) thread_->clearParkWakeup_();
-			}
-			::jxx::lang::jbool interrupted() const {
-				return thread_ != nullptr && thread_->isInterrupted();
-			}
+			~InterruptRegistration() { if (thread_ != nullptr) thread_->clearParkWakeup_(); }
+			::jxx::lang::jbool interrupted() const { return thread_ != nullptr && thread_->isInterrupted(); }
 		private:
 			::jxx::Ptr<::jxx::lang::Thread> thread_;
 		};
@@ -233,51 +241,49 @@ namespace jxx::nio::channels
 		const ::jxx::Ptr<::jxx::net::SocketAddress>& remoteAddress)
 	{
 		if (remoteAddress == nullptr) throw ::jxx::lang::NullPointerException();
-		std::lock_guard<std::mutex> lock(mutex_);
-		if (!open_) throw ::jxx::nio::channels::ClosedChannelException();
-		if (connected_) throw ::jxx::nio::channels::AlreadyConnectedException();
-		if (pending_) throw ::jxx::nio::channels::ConnectionPendingException();
 		const auto remote = ::jxx::CAST<::jxx::net::InetSocketAddress>(remoteAddress);
-		if (remote == nullptr)
-			throw ::jxx::nio::channels::UnsupportedAddressTypeException();
+		if (remote == nullptr) throw ::jxx::nio::channels::UnsupportedAddressTypeException();
+		::jxx::lang::jbool blocking;
+		{
+			std::lock_guard<std::mutex> lock(mutex_);
+			if (!open_) throw ::jxx::nio::channels::ClosedChannelException();
+			if (connected_) throw ::jxx::nio::channels::AlreadyConnectedException();
+			if (pending_) throw ::jxx::nio::channels::ConnectionPendingException();
+			blocking = blocking_;
+		}
 		addrinfo* addresses = resolve(remote);
-		const std::shared_ptr<void> addressGuard(addresses, [](void* value)
-	 {
-			 freeaddrinfo(static_cast<addrinfo*>(value));
+		const std::shared_ptr<void> addressGuard(addresses, [](void* value) {
+			freeaddrinfo(static_cast<addrinfo*>(value));
 		});
-
 		for (addrinfo* current = addresses; current != nullptr; current = current->ai_next) {
-			if (state_->socket != ::jxx::net::internal::kInvalidSocket)
-				::jxx::net::internal::closeNativeSocket(state_->socket);
-			state_->socket = ::socket(
-				current->ai_family,
-				current->ai_socktype,
-				current->ai_protocol);
-			state_->closed = false;
-			state_->inputShutdown = false;
-			state_->outputShutdown = false;
-			if (state_->socket == ::jxx::net::internal::kInvalidSocket) continue;
-			setBlocking(state_->socket, blocking_);
-			InterruptRegistration interruptRegistration(state_->socket);
-			const int result = ::connect(state_->socket, current->ai_addr,
+			const auto native = ::socket(current->ai_family, current->ai_socktype, current->ai_protocol);
+			if (native == ::jxx::net::internal::kInvalidSocket) continue;
+			{
+				std::lock_guard<std::mutex> stateLock(state_->m);
+				if (state_->socket != ::jxx::net::internal::kInvalidSocket)
+					::jxx::net::internal::closeNativeSocket(state_->socket);
+				state_->socket = native;
+				state_->closed = false;
+				state_->inputShutdown = false;
+				state_->outputShutdown = false;
+			}
+			setBlocking(native, blocking);
+			InterruptRegistration interruptRegistration(state_);
+			const int result = ::connect(native, current->ai_addr,
 				static_cast<socklen_t>(current->ai_addrlen));
 			if (interruptRegistration.interrupted()) {
-				::jxx::net::internal::closeNativeSocket(state_->socket);
-				state_->socket = ::jxx::net::internal::kInvalidSocket;
-				state_->closed = true;
-				open_ = false;
+				std::lock_guard<std::mutex> lock(mutex_); open_ = false; pending_ = false;
 				throw ::jxx::nio::channels::ClosedByInterruptException();
 			}
-			if (result == 0) {
-				connected_ = true; pending_ = false; return true;
-			}
-			const int error = lastSocketError();
-			if (!blocking_ && wouldBlock(error)) {
-				pending_ = true; return false;
+			{
+				std::lock_guard<std::mutex> lock(mutex_);
+				if (!open_ || state_->closed) throw ::jxx::nio::channels::AsynchronousCloseException();
+				if (result == 0) { connected_ = true; bound_ = true; pending_ = false; return true; }
+				const int error = lastSocketError();
+				if (!blocking && wouldBlock(error)) { pending_ = true; return false; }
 			}
 		}
-		::jxx::net::internal::closeNativeSocket(state_->socket);
-		state_->socket = ::jxx::net::internal::kInvalidSocket;
+		close();
 		throw ::jxx::io::IOException("socket channel connect failed");
 	}
 
@@ -339,7 +345,7 @@ namespace jxx::nio::channels
 		const auto remaining = destination->remaining();
 		if (remaining == 0) return 0;
 		std::vector<unsigned char> bytes(static_cast<std::size_t>(remaining));
-		InterruptRegistration interruptRegistration(native);
+		InterruptRegistration interruptRegistration(state_);
 #if defined(_WIN32)
 		const int count = ::recv(native, reinterpret_cast<char*>(bytes.data()), remaining, 0);
 #else
@@ -348,6 +354,10 @@ namespace jxx::nio::channels
 		if (interruptRegistration.interrupted()) {
 			close();
 			throw ::jxx::nio::channels::ClosedByInterruptException();
+		}
+		{
+			std::lock_guard<std::mutex> lock(mutex_);
+			if (!open_) throw ::jxx::nio::channels::AsynchronousCloseException();
 		}
 		if (count > 0) {
 			for (int index = 0; index < count; ++index) destination->put(static_cast<::jxx::lang::jbyte>(bytes[index]));
@@ -386,7 +396,7 @@ namespace jxx::nio::channels
 		const auto position = source->position();
 		std::vector<unsigned char> bytes(static_cast<std::size_t>(remaining));
 		for (::jxx::lang::jint index = 0; index < remaining; ++index) bytes[static_cast<std::size_t>(index)] = static_cast<unsigned char>(source->get(position + index));
-		InterruptRegistration interruptRegistration(native);
+		InterruptRegistration interruptRegistration(state_);
 #if defined(_WIN32)
 		const int count = ::send(native, reinterpret_cast<const char*>(bytes.data()), remaining, 0);
 #else
@@ -395,6 +405,10 @@ namespace jxx::nio::channels
 		if (interruptRegistration.interrupted()) {
 			close();
 			throw ::jxx::nio::channels::ClosedByInterruptException();
+		}
+		{
+			std::lock_guard<std::mutex> lock(mutex_);
+			if (!open_) throw ::jxx::nio::channels::AsynchronousCloseException();
 		}
 		if (count > 0) { source->position(position + count); return count; }
 		const int error = lastSocketError();
