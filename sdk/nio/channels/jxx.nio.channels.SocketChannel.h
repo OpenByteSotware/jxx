@@ -10,6 +10,7 @@
 #include "nio/channels/jxx.nio.channels.ScatteringByteChannel.h"
 #include "nio/channels/jxx.nio.channels.GatheringByteChannel.h"
 #include "nio/channels/jxx.nio.channels.NetworkChannel.h"
+#include "nio/channels/jxx.nio.channels.AbstractSelectableChannel.h"
 #include "net/jxx.net.Socket.h"
 
 namespace jxx::nio::channels {
@@ -18,7 +19,7 @@ class Selector; class SelectionKey;
 class SocketChannel final
     : public ::jxx::lang::ClassBase<
           SocketChannel,
-          ::jxx::lang::Object,
+          AbstractSelectableChannel,
           ByteChannel,
           ScatteringByteChannel,
           GatheringByteChannel,
@@ -47,11 +48,12 @@ public:
     ::jxx::lang::jint validOps() const noexcept;
     ::jxx::Ptr<SelectionKey> register_(
         const ::jxx::Ptr<Selector>& selector,
-        ::jxx::lang::jint operations);
+        ::jxx::lang::jint operations) override;
     ::jxx::Ptr<SelectionKey> register_(
         const ::jxx::Ptr<Selector>& selector,
         ::jxx::lang::jint operations,
-        const ::jxx::Ptr<::jxx::lang::Object>& attachment);
+        const ::jxx::Ptr<::jxx::lang::Object>& attachment) override;
+    ::jxx::lang::jbool isRegistered() const override;
     ::jxx::Ptr<SelectionKey> keyFor(
         const ::jxx::Ptr<Selector>& selector) const;
 
@@ -79,6 +81,7 @@ public:
     ~SocketChannel() override;
 
 private:
+    void implCloseChannel() override;
     void ensureSocket();
 
     mutable std::mutex mutex_;

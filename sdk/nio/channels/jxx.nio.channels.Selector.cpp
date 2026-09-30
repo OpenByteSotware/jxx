@@ -17,6 +17,7 @@
 #include "net/jxx.net.Socket.h"
 #include "nio/channels/jxx.nio.channels.ClosedSelectorException.h"
 #include "nio/channels/jxx.nio.channels.SelectionKey.h"
+#include "nio/channels/jxx.nio.channels.SelectableChannel.h"
 #include "nio/channels/jxx.nio.channels.ServerSocketChannel.h"
 #include "nio/channels/jxx.nio.channels.SocketChannel.h"
 #include "util/jxx.util.HashSet.h"
@@ -57,7 +58,7 @@ void Selector::cancelKey(const ::jxx::Ptr<SelectionKey>&k){{std::lock_guard<std:
 ::jxx::Ptr<::jxx::util::Set<SelectionKey>> Selector::selectedKeys(){if(!isOpen())throw ClosedSelectorException();return selected_;}
 ::jxx::lang::jbool Selector::validOps_(const ::jxx::Ptr<::jxx::lang::Object>&c,::jxx::lang::jint o)const{auto sc=::jxx::CAST<SocketChannel>(c);if(sc)return (o&~sc->validOps())==0;auto ss=::jxx::CAST<ServerSocketChannel>(c);if(ss)return (o&~SelectionKey::OP_ACCEPT_)==0;return false;}
 ::jxx::Ptr<SelectionKey> Selector::keyFor(const ::jxx::Ptr<::jxx::lang::Object>&c)const{std::lock_guard<std::mutex>l(mutex_);for(auto&k:keys_)if(k&&k->isValid()&&k->channel().get()==c.get())return k;return nullptr;}
-::jxx::Ptr<SelectionKey> Selector::registerChannel(const ::jxx::Ptr<::jxx::lang::Object>&c,::jxx::lang::jint o,const ::jxx::Ptr<::jxx::lang::Object>&a){if(!isOpen())throw ClosedSelectorException();if(!c)throw ::jxx::lang::NullPointerException();if(!validOps_(c,o))throw ::jxx::lang::IllegalArgumentException();auto old=keyFor(c);if(old){old->interestOps(o);old->attach(a);return old;}auto k=::jxx::NEW<SelectionKey>(c,::jxx::CAST<Selector>(thisPtr()),o,a);{std::lock_guard<std::mutex>l(mutex_);keys_.push_back(k);}wakeup();return k;}
+::jxx::Ptr<SelectionKey> Selector::registerChannel(const ::jxx::Ptr<::jxx::lang::Object>&c,::jxx::lang::jint o,const ::jxx::Ptr<::jxx::lang::Object>&a){if(!isOpen())throw ClosedSelectorException();if(!c)throw ::jxx::lang::NullPointerException();if(!validOps_(c,o))throw ::jxx::lang::IllegalArgumentException();auto old=keyFor(c);if(old){old->interestOps(o);old->attach(a);return old;}auto selectable = ::jxx::CAST<SelectableChannel>(c);if(selectable==nullptr)throw ::jxx::lang::IllegalArgumentException();auto k=::jxx::NEW<SelectionKey>(selectable,::jxx::CAST<Selector>(thisPtr()),o,a);{std::lock_guard<std::mutex>l(mutex_);keys_.push_back(k);}wakeup();return k;}
 ::jxx::lang::jint Selector::select(){return select_(-1);}
 ::jxx::lang::jint Selector::select(::jxx::lang::jlong t){if(t<0)throw ::jxx::lang::IllegalArgumentException();return select_(t);}
 ::jxx::lang::jint Selector::selectNow(){return select_(0);}
