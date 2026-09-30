@@ -14,7 +14,8 @@ namespace jxx::com::sun::net::httpserver::internal
 		attributes_(::jxx::NEW<::jxx::util::HashMap<::jxx::lang::String, ::jxx::lang::Object>>()), 
 		filters_(::jxx::NEW<::jxx::util::ArrayList<::jxx::com::sun::net::httpserver::Filter>>())
 	{
-		if (!s || !p || p->utf8().empty() || p->utf8()[0] != '/')throw ::jxx::lang::IllegalArgumentException();
+		if (!s || !p) throw ::jxx::lang::NullPointerException();
+		if (p->utf8().empty() || p->utf8()[0] != '/') throw ::jxx::lang::IllegalArgumentException();
 	}
 	::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpHandler> DefaultHttpContext::getHandler()
 	{

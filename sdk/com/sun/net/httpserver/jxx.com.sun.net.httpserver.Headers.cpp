@@ -12,7 +12,7 @@
 namespace jxx::com::sun::net::httpserver {
 
 Headers::Headers()
-    : JxxSuper()
+    : Super(), values_(::jxx::NEW<StorageType>())
 {
 }
 
@@ -31,6 +31,28 @@ void Headers::ensureMutable_() const
     if (frozen_) {
         throw ::jxx::lang::UnsupportedOperationException();
     }
+}
+
+::jxx::lang::jint Headers::size()
+{
+    return values_->size();
+}
+
+::jxx::lang::jbool Headers::containsValue(
+    const ::jxx::Ptr<::jxx::lang::Object>& value)
+{
+    return values_->containsValue(value);
+}
+
+::jxx::lang::jbool Headers::equals(
+    const ::jxx::Ptr<::jxx::lang::Object>& other) const
+{
+    return values_->equals(other);
+}
+
+::jxx::lang::jint Headers::hashCode() const
+{
+    return values_->hashCode();
 }
 
 ::jxx::Ptr<::jxx::lang::String> Headers::normalizeKey_(
@@ -108,13 +130,13 @@ void Headers::add(
     ensureMutable_();
     validateValue_(value);
     auto normalized = normalizeKey_(key);
-    auto values = JxxSuper::get(
+    auto values = values_->get(
         ::jxx::CAST<::jxx::lang::Object>(normalized));
 
     if (values == nullptr) {
         values = ::jxx::NEW<
             ::jxx::util::ArrayList<::jxx::lang::String>>();
-        JxxSuper::put(normalized, values);
+        values_->put(normalized, values);
     }
 
     values->add(value);
@@ -129,7 +151,7 @@ void Headers::set(
     auto values = ::jxx::NEW<
         ::jxx::util::ArrayList<::jxx::lang::String>>();
     values->add(value);
-    JxxSuper::put(normalizeKey_(key), values);
+    values_->put(normalizeKey_(key), values);
 }
 
 ::jxx::Ptr<::jxx::lang::String> Headers::getFirst(
@@ -146,7 +168,7 @@ void Headers::set(
     const ::jxx::Ptr<::jxx::lang::Object>& key)
 {
     auto normalized = normalizeObjectKey_(key);
-    return normalized != nullptr && JxxSuper::containsKey(
+    return normalized != nullptr && values_->containsKey(
         ::jxx::CAST<::jxx::lang::Object>(normalized));
 }
 
@@ -157,7 +179,7 @@ void Headers::set(
     if (normalized == nullptr) {
         return nullptr;
     }
-    auto value = JxxSuper::get(
+    auto value = values_->get(
         ::jxx::CAST<::jxx::lang::Object>(normalized));
     if (!frozen_ || value == nullptr) return value;
     return ::jxx::CAST<ValueList>(::jxx::NEW<::jxx::com::sun::net::httpserver::internal::ReadOnlyList<::jxx::lang::String>>(value));
@@ -169,7 +191,7 @@ void Headers::set(
 {
     ensureMutable_();
     validateList_(value);
-    return JxxSuper::put(normalizeKey_(key), value);
+    return values_->put(normalizeKey_(key), value);
 }
 
 ::jxx::Ptr<Headers::ValueList> Headers::remove(
@@ -180,13 +202,13 @@ void Headers::set(
     if (normalized == nullptr) {
         return nullptr;
     }
-    return JxxSuper::remove(
+    return values_->remove(
         ::jxx::CAST<::jxx::lang::Object>(normalized));
 }
 
 ::jxx::Ptr<::jxx::util::Set<::jxx::util::MapEntry<::jxx::lang::String, Headers::ValueList>>> Headers::entrySet()
 {
-    auto delegate = JxxSuper::entrySet();
+    auto delegate = values_->entrySet();
     if (!frozen_) return delegate;
     return ::jxx::CAST<::jxx::util::Set<::jxx::util::MapEntry<::jxx::lang::String, ValueList>>>(
         ::jxx::NEW<::jxx::com::sun::net::httpserver::internal::ReadOnlyEntrySet<::jxx::lang::String, ValueList>>(delegate));
@@ -194,7 +216,7 @@ void Headers::set(
 
 ::jxx::Ptr<::jxx::util::Set<::jxx::lang::String>> Headers::keySet()
 {
-    auto delegate = JxxSuper::keySet();
+    auto delegate = values_->keySet();
     if (!frozen_) return delegate;
     return ::jxx::CAST<::jxx::util::Set<::jxx::lang::String>>(
         ::jxx::NEW<::jxx::com::sun::net::httpserver::internal::ReadOnlySet<::jxx::lang::String>>(delegate));
@@ -202,7 +224,7 @@ void Headers::set(
 
 ::jxx::Ptr<::jxx::util::Collection<Headers::ValueList>> Headers::values()
 {
-    auto delegate = JxxSuper::values();
+    auto delegate = values_->values();
     if (!frozen_) return delegate;
     return ::jxx::CAST<::jxx::util::Collection<ValueList>>(
         ::jxx::NEW<::jxx::com::sun::net::httpserver::internal::ReadOnlyCollection<ValueList>>(delegate));
@@ -211,7 +233,7 @@ void Headers::set(
 void Headers::clear()
 {
     ensureMutable_();
-    JxxSuper::clear();
+    values_->clear();
 }
 
 void Headers::putAll(

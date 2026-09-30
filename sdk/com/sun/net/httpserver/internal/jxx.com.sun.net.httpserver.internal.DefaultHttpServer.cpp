@@ -167,7 +167,10 @@ namespace jxx::com::sun::net::httpserver::internal
 	}
 	void DefaultHttpServer::bind(const ::jxx::Ptr<::jxx::net::InetSocketAddress>& a, ::jxx::lang::jint b)
 	{
-		if (!a)throw ::jxx::lang::NullPointerException(); if (address_)throw ::jxx::lang::IllegalStateException(); serverSocket_->bind(a, b); address_ = a;
+		if (!a) throw ::jxx::lang::NullPointerException();
+		if (address_) throw ::jxx::lang::IllegalStateException();
+		serverSocket_->bind(a, b);
+		address_ = ::jxx::CAST<::jxx::net::InetSocketAddress>(serverSocket_->getLocalSocketAddress());
 	}
 	void DefaultHttpServer::start()
 	{
@@ -256,6 +259,7 @@ namespace jxx::com::sun::net::httpserver::internal
 		return createContext(p, nullptr);
 	} void DefaultHttpServer::removeContext(const ::jxx::Ptr<::jxx::lang::String>& p)
 	{
+		if (!p) throw ::jxx::lang::NullPointerException();
 		std::lock_guard<std::mutex>lock(mutex_); for (auto i = contexts_.begin(); i != contexts_.end(); ++i)if ((*i)->getPath()->equals(p)) {
 			contexts_.erase(i); return;
 		}throw ::jxx::lang::IllegalArgumentException();

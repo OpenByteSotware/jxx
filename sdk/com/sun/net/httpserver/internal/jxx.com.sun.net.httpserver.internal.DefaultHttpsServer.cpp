@@ -51,6 +51,7 @@ void DefaultHttpsServer::start()
     if (factory == nullptr) throw ::jxx::lang::IllegalStateException();
     auto listener = factory->createServerSocket(address_->getPort(), backlog_, address_->getAddress());
     if (listener == nullptr) throw ::jxx::lang::IllegalStateException();
+    address_ = ::jxx::CAST<::jxx::net::InetSocketAddress>(listener->getLocalSocketAddress());
     delegate_->installListenerInternal(listener, address_, configurator_);
     try {
         delegate_->start();
