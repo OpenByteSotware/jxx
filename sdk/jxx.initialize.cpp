@@ -7,6 +7,7 @@
 #include "io/jxx.io.ClassInitialization.h"
 #include "lang/jxx.lang.ClassInitialization.h"
 #include "lang/jxx.lang.initialize.h"
+#include "lang/jxx.lang.System.h"
 #include "math/jxx.math.ClassInitialization.h"
 #include "net/jxx.net.ClassInitialization.h"
 #include "nio/jxx.nio.ClassInitialization.h"
@@ -20,6 +21,7 @@ namespace jxx {
 void initialize() {
     static std::once_flag flag;
     std::call_once(flag, [] {
+        ::jxx::lang::System::init();
         ::jxx::lang::initialize();
         ::jxx::lang::initializeClasses();
         ::jxx::io::initializeClasses();

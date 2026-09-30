@@ -60,14 +60,27 @@ std::shared_ptr<InputStream> System::in;
 std::shared_ptr<PrintStream> System::out;
 std::shared_ptr<PrintStream> System::err;
 
-static struct __SystemBootstrap { __SystemBootstrap(){ System::init(); } } __sys_bootstrap;
+void System::init() {
+    static std::once_flag initializationFlag;
 
-void System::init(){
-    System::in  = jxx::NEW<FileInputStream>(FileDescriptor::in);
-    auto outOs  = jxx::NEW<FileOutputStream>(FileDescriptor::out);
-    auto errOs  = jxx::NEW<FileOutputStream>(FileDescriptor::err);
-    System::out = jxx::NEW<PrintStream>(outOs, true);
-    System::err = jxx::NEW<PrintStream>(errOs, true);
+    std::call_once(initializationFlag, [] {
+        if (FileDescriptor::in == nullptr ||
+            FileDescriptor::out == nullptr ||
+            FileDescriptor::err == nullptr) {
+            throw IllegalStateException(
+                "standard file descriptors are not initialized");
+        }
+
+        System::in = jxx::NEW<FileInputStream>(FileDescriptor::in);
+
+        const auto outStream =
+            jxx::NEW<FileOutputStream>(FileDescriptor::out);
+        const auto errorStream =
+            jxx::NEW<FileOutputStream>(FileDescriptor::err);
+
+        System::out = jxx::NEW<PrintStream>(outStream, true);
+        System::err = jxx::NEW<PrintStream>(errorStream, true);
+    });
 }
 
 namespace {

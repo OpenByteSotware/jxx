@@ -6,6 +6,7 @@ int main(
     int argc,
     char** argv)
 {
+    std::cerr << "ENTERED all_tests main" << std::endl;
     std::fprintf(
         stderr,
         "[all_tests] entered main\n");
