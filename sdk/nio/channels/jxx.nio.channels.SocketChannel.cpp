@@ -39,6 +39,7 @@
 #include "nio/channels/jxx.nio.channels.UnresolvedAddressException.h"
 #include "nio/channels/jxx.nio.channels.ClosedChannelException.h"
 #include "nio/channels/jxx.nio.channels.AsynchronousCloseException.h"
+#include "nio/channels/jxx.nio.channels.IllegalBlockingModeException.h"
 
 namespace jxx::nio::channels
 {
@@ -603,7 +604,19 @@ SHUT_WR
 	}
 	::jxx::Ptr<SocketChannel::NetworkChannel> SocketChannel::setOption(const ::jxx::Ptr<Option>& name, const ::jxx::Ptr<::jxx::lang::Object>& value)
 	{
-		if (name == nullptr || value == nullptr)throw ::jxx::lang::NullPointerException(); ensureSocket(); const auto text = name->name()->utf8(); int level = SOL_SOCKET, option = 0, integer = 0; if (text == "SO_KEEPALIVE")option = SO_KEEPALIVE; else if (text == "SO_REUSEADDR")option = SO_REUSEADDR; else if (text == "SO_SNDBUF")option = SO_SNDBUF; else if (text == "SO_RCVBUF")option = SO_RCVBUF; else if (text == "TCP_NODELAY") {
+		if (name == nullptr || value == nullptr)throw ::jxx::lang::NullPointerException(); ensureSocket(); const auto text = name->name()->utf8(); int level = SOL_SOCKET, option = 0, integer = 0; if (text == "SO_KEEPALIVE")option = SO_KEEPALIVE; else if (text == "SO_REUSEADDR")option = SO_REUSEADDR; else if (text == "SO_SNDBUF")option = SO_SNDBUF; else if (text == "SO_RCVBUF")option = SO_RCVBUF; else if (text == "SO_LINGER") {
+            const auto number = ::jxx::CAST<::jxx::lang::Integer>(value);
+            if (number == nullptr) throw ::jxx::lang::IllegalArgumentException();
+            const int seconds = number->intValue();
+            linger lingerValue{};
+            lingerValue.l_onoff = seconds < 0 ? 0 : 1;
+            lingerValue.l_linger = seconds < 0 ? 0 : seconds;
+            if (setsockopt(state_->socket, SOL_SOCKET, SO_LINGER,
+                reinterpret_cast<const char*>(&lingerValue),
+                sizeof(lingerValue)) != 0)
+                throw ::jxx::io::IOException("setOption failed");
+            return ::jxx::CAST<NetworkChannel>(thisPtr());
+        } else if (text == "TCP_NODELAY") {
 			level = IPPROTO_TCP; option = TCP_NODELAY;
 		}
 		else throw ::jxx::lang::UnsupportedOperationException(); const auto boolean = ::jxx::CAST<::jxx::lang::Boolean>(value); const auto number = ::jxx::CAST<::jxx::lang::Integer>(value); integer = boolean != nullptr ? (boolean->booleanValue() ? 1 : 0) : (number != nullptr ? number->intValue() : 0); if (setsockopt(state_->socket, level, option, reinterpret_cast<const char*>(&integer), sizeof(integer)) != 0)throw ::jxx::io::IOException("setOption failed"); return ::jxx::CAST<NetworkChannel>(thisPtr());
@@ -616,6 +629,16 @@ SHUT_WR
 		else if (text == "SO_RCVBUF") {
 			option = SO_RCVBUF; flag = false;
 		}
+        else if (text == "SO_LINGER") {
+            linger lingerValue{};
+            socklen_t lingerLength = sizeof(lingerValue);
+            if (getsockopt(state_->socket, SOL_SOCKET, SO_LINGER,
+                reinterpret_cast<char*>(&lingerValue), &lingerLength) != 0)
+                throw ::jxx::io::IOException("getOption failed");
+            return ::jxx::CAST<::jxx::lang::Object>(
+                ::jxx::lang::Integer::valueOf(
+                    lingerValue.l_onoff ? lingerValue.l_linger : -1));
+        }
 		else if (text == "TCP_NODELAY") {
 			level = IPPROTO_TCP; option = TCP_NODELAY;
 		}
@@ -628,19 +651,26 @@ SHUT_WR
 		result->add(::jxx::net::StandardSocketOptions::SO_REUSEADDR_);
 		result->add(::jxx::net::StandardSocketOptions::SO_SNDBUF_);
 		result->add(::jxx::net::StandardSocketOptions::SO_RCVBUF_);
+        result->add(::jxx::net::StandardSocketOptions::SO_LINGER_);
 		result->add(::jxx::net::StandardSocketOptions::TCP_NODELAY_); 
 		return ::jxx::CAST<::jxx::util::Set<Option>>(result);
 	}
 
-::jxx::Ptr<SelectionKey> SocketChannel::registerChannel(
+::jxx::Ptr<SelectionKey> SocketChannel::register_(
     const ::jxx::Ptr<Selector>& selector,
-    ::jxx::lang::jint ops,
+    ::jxx::lang::jint operations) {
+    return register_(selector, operations, nullptr);
+}
+::jxx::Ptr<SelectionKey> SocketChannel::register_(
+    const ::jxx::Ptr<Selector>& selector,
+    ::jxx::lang::jint operations,
     const ::jxx::Ptr<::jxx::lang::Object>& attachment) {
     if (selector == nullptr) throw ::jxx::lang::NullPointerException();
-    if (blocking_) throw ::jxx::lang::IllegalStateException(
-        "blocking channel cannot be registered");
+    if (blocking_) throw ::jxx::nio::channels::IllegalBlockingModeException();
     return selector->registerChannel(
-        ::jxx::CAST<::jxx::lang::Object>(thisPtr()), ops, attachment);
+        ::jxx::CAST<::jxx::lang::Object>(thisPtr()),
+        operations,
+        attachment);
 }
 ::jxx::Ptr<SelectionKey> SocketChannel::keyFor(
     const ::jxx::Ptr<Selector>& selector) const {

@@ -45,10 +45,13 @@ public:
     ::jxx::Ptr<SocketChannel> shutdownInput();
     ::jxx::Ptr<SocketChannel> shutdownOutput();
     ::jxx::lang::jint validOps() const noexcept;
-    ::jxx::Ptr<SelectionKey> registerChannel(
+    ::jxx::Ptr<SelectionKey> register_(
         const ::jxx::Ptr<Selector>& selector,
-        ::jxx::lang::jint ops,
-        const ::jxx::Ptr<::jxx::lang::Object>& attachment = nullptr);
+        ::jxx::lang::jint operations);
+    ::jxx::Ptr<SelectionKey> register_(
+        const ::jxx::Ptr<Selector>& selector,
+        ::jxx::lang::jint operations,
+        const ::jxx::Ptr<::jxx::lang::Object>& attachment);
     ::jxx::Ptr<SelectionKey> keyFor(
         const ::jxx::Ptr<Selector>& selector) const;
 

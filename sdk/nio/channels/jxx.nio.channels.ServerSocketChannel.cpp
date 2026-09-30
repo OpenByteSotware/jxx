@@ -18,6 +18,8 @@
 #include "net/jxx.net.StandardSocketOptions.h"
 #include "net/jxx.net.Socket.h"
 #include "nio/channels/jxx.nio.channels.ClosedChannelException.h"
+#include "nio/channels/jxx.nio.channels.IllegalBlockingModeException.h"
+#include "nio/channels/jxx.nio.channels.NotYetBoundException.h"
 #include "nio/channels/jxx.nio.channels.AsynchronousCloseException.h"
 #include "nio/channels/jxx.nio.channels.ClosedByInterruptException.h"
 #include "net/jxx.net.SocketException.h"
@@ -88,6 +90,7 @@ int f=::fcntl(state_->socket,F_GETFL,0);if(f<0||::fcntl(state_->socket,F_SETFL,b
 ::jxx::Ptr<::jxx::net::ServerSocket> ServerSocketChannel::socket(){return socket_;}
 ::jxx::Ptr<SocketChannel> ServerSocketChannel::accept(){
     if(!isOpen())throw ClosedChannelException();
+    if(socket_ == nullptr || !socket_->isBound())throw NotYetBoundException();
     AcceptInterruptRegistration interruptRegistration(state_);
     try {
         auto s=socket_->accept();
@@ -106,7 +109,7 @@ int f=::fcntl(state_->socket,F_GETFL,0);if(f<0||::fcntl(state_->socket,F_SETFL,b
     }
 }
 ::jxx::lang::jint ServerSocketChannel::validOps()const noexcept{return SelectionKey::OP_ACCEPT_;}
-::jxx::Ptr<SelectionKey> ServerSocketChannel::registerChannel(const ::jxx::Ptr<Selector>&s,::jxx::lang::jint o,const ::jxx::Ptr<::jxx::lang::Object>&a){if(!s)throw ::jxx::lang::NullPointerException();if(blocking_)throw ::jxx::lang::IllegalStateException();return s->registerChannel(::jxx::CAST<::jxx::lang::Object>(thisPtr()),o,a);}
+::jxx::Ptr<SelectionKey> ServerSocketChannel::register_(const ::jxx::Ptr<Selector>&s,::jxx::lang::jint o){return register_(s,o,nullptr);}::jxx::Ptr<SelectionKey> ServerSocketChannel::register_(const ::jxx::Ptr<Selector>&s,::jxx::lang::jint o,const ::jxx::Ptr<::jxx::lang::Object>&a){if(!s)throw ::jxx::lang::NullPointerException();if(blocking_)throw IllegalBlockingModeException();return s->registerChannel(::jxx::CAST<::jxx::lang::Object>(thisPtr()),o,a);}
 ::jxx::Ptr<SelectionKey> ServerSocketChannel::keyFor(const ::jxx::Ptr<Selector>&s)const{return s?s->keyFor(::jxx::CAST<::jxx::lang::Object>(const_cast<ServerSocketChannel*>(this)->thisPtr())):nullptr;}
 ::jxx::Ptr<::jxx::net::SocketAddress> ServerSocketChannel::getLocalAddress()const{return socket_->getLocalSocketAddress();}
 ::jxx::Ptr<NetworkChannel> ServerSocketChannel::setOption(const ::jxx::Ptr<Option>&n,const ::jxx::Ptr<::jxx::lang::Object>&v){if(!n||!v)throw ::jxx::lang::NullPointerException();auto t=n->name()->utf8();if(t=="SO_REUSEADDR"){auto x=::jxx::CAST<::jxx::lang::Boolean>(v);if(!x)throw ::jxx::lang::IllegalArgumentException();socket_->setReuseAddress(x->booleanValue());}else if(t=="SO_RCVBUF"){auto x=::jxx::CAST<::jxx::lang::Integer>(v);if(!x)throw ::jxx::lang::IllegalArgumentException();socket_->setReceiveBufferSize(x->intValue());}else throw ::jxx::lang::UnsupportedOperationException();return ::jxx::CAST<NetworkChannel>(thisPtr());}
