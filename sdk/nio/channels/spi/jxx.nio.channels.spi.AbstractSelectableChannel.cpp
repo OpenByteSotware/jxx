@@ -20,4 +20,11 @@ void AbstractSelectableChannel::purgeCancelled_()const{keys_.erase(std::remove_i
 ::jxx::lang::jbool AbstractSelectableChannel::isBlocking()const noexcept{try{std::lock_guard<std::mutex>l(mutex_);return blocking_;}catch(...){return true;}}
 ::jxx::Ptr<::jxx::lang::Object> AbstractSelectableChannel::blockingLock(){return blockingLock_;}
 void AbstractSelectableChannel::implCloseChannel(){std::vector<::jxx::Ptr<::jxx::nio::channels::SelectionKey>>keys;{std::lock_guard<std::mutex>l(mutex_);keys=keys_;keys_.clear();}for(const auto&k:keys)if(k!=nullptr)k->cancel();implCloseSelectableChannel();}
+void AbstractSelectableChannel::removeKey_(
+    const ::jxx::Ptr<::jxx::nio::channels::SelectionKey>& key) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    keys_.erase(
+        std::remove(keys_.begin(), keys_.end(), key),
+        keys_.end());
+}
 }

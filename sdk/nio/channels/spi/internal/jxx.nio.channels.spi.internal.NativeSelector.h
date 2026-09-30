@@ -11,7 +11,9 @@
 namespace jxx::nio::channels::spi::internal {
 class NativeSelector final : public ::jxx::nio::channels::spi::AbstractSelector {
 public:
- NativeSelector(const ::jxx::Ptr<::jxx::nio::channels::spi::SelectorProvider>& provider); ~NativeSelector() override;
+ NativeSelector(); ~NativeSelector() override;
+ void setProviderForConstruction_(
+     const ::jxx::Ptr<::jxx::nio::channels::spi::SelectorProvider>& provider);
  ::jxx::lang::jbool isOpen() const noexcept; void close();
  ::jxx::Ptr<::jxx::util::Set<::jxx::nio::channels::SelectionKey>> keys();
  ::jxx::Ptr<::jxx::util::Set<::jxx::nio::channels::SelectionKey>> selectedKeys();
@@ -20,11 +22,12 @@ public:
  ::jxx::Ptr<::jxx::nio::channels::SelectionKey> registerChannel(const ::jxx::Ptr<::jxx::lang::Object>& channel,::jxx::lang::jint ops,const ::jxx::Ptr<::jxx::lang::Object>& attachment);
  ::jxx::Ptr<::jxx::nio::channels::SelectionKey> keyFor(const ::jxx::Ptr<::jxx::lang::Object>& channel) const;
  ::jxx::lang::jbool validOps_(const ::jxx::Ptr<::jxx::lang::Object>& channel,::jxx::lang::jint ops) const;
- void cancelKey(const ::jxx::Ptr<::jxx::nio::channels::SelectionKey>& key);
+ void cancelKey(
+     const ::jxx::Ptr<::jxx::nio::channels::SelectionKey>& key) override;
 private:
  void initializeWakeup_(); void signalWakeup_() noexcept; void drainWakeup_() noexcept; void processCancelled_();
  ::jxx::lang::jint select_(::jxx::lang::jlong timeout);
- mutable std::mutex mutex_; std::vector<::jxx::Ptr<::jxx::nio::channels::SelectionKey>> keys_,cancelled_;
+ mutable std::mutex mutex_; std::vector<::jxx::Ptr<::jxx::nio::channels::SelectionKey>> keys_;
  ::jxx::Ptr<::jxx::util::Set<::jxx::nio::channels::SelectionKey>> selected_; std::atomic<bool> open_{true},wakeupPending_{false};
  ::jxx::net::internal::NativeSocket wakeRead_=::jxx::net::internal::kInvalidSocket;
  ::jxx::net::internal::NativeSocket wakeWrite_=::jxx::net::internal::kInvalidSocket;

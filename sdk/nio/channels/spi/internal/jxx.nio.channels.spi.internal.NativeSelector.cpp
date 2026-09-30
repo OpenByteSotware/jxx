@@ -33,8 +33,11 @@ void nonblocking(::jxx::net::internal::NativeSocket s){
 #endif
 }
 }
-NativeSelector::NativeSelector(const ::jxx::Ptr<::jxx::nio::channels::spi::SelectorProvider>& provider)
-    : ::jxx::nio::channels::spi::AbstractSelector(provider){selected_=::jxx::NEW<::jxx::util::HashSet<::jxx::nio::channels::SelectionKey>>();initializeWakeup_();}
+NativeSelector::NativeSelector(){selected_=::jxx::NEW<::jxx::util::HashSet<::jxx::nio::channels::SelectionKey>>();initializeWakeup_();}
+void NativeSelector::setProviderForConstruction_(
+    const ::jxx::Ptr<::jxx::nio::channels::spi::SelectorProvider>& provider) {
+    setProvider_(provider);
+}
 NativeSelector::~NativeSelector(){try{close();}catch(...){}}
 void NativeSelector::initializeWakeup_(){::jxx::net::internal::ensureNetworkInitialized();
 #if defined(_WIN32)
@@ -53,9 +56,29 @@ void NativeSelector::signalWakeup_()noexcept{if(wakeWrite_==::jxx::net::internal
 #endif
 }
 void NativeSelector::drainWakeup_()noexcept{char b[64];while(wakeRead_!=::jxx::net::internal::kInvalidSocket){int n=::recv(wakeRead_,b,sizeof(b),0);if(n<=0)break;}wakeupPending_=false;}
-void NativeSelector::close(){bool expected=true;if(!open_.compare_exchange_strong(expected,false))return;signalWakeup_();std::vector<::jxx::Ptr<::jxx::nio::channels::SelectionKey>> keys;{std::unique_lock<std::mutex>l(mutex_);selectionCondition_.wait(l,[this]{return activeSelections_==0;});keys=keys_;keys_.clear();cancelled_.clear();if(selected_)selected_->clear();}for(auto&k:keys)if(k)k->cancel();::jxx::net::internal::closeNativeSocket(wakeRead_);::jxx::net::internal::closeNativeSocket(wakeWrite_);wakeRead_=wakeWrite_=::jxx::net::internal::kInvalidSocket;}
-void NativeSelector::processCancelled_(){std::lock_guard<std::mutex>l(mutex_);for(auto&k:cancelled_){selected_->remove(::jxx::CAST<::jxx::lang::Object>(k));keys_.erase(std::remove(keys_.begin(),keys_.end(),k),keys_.end());}cancelled_.clear();}
-void NativeSelector::cancelKey(const ::jxx::Ptr<::jxx::nio::channels::SelectionKey>&k){{std::lock_guard<std::mutex>l(mutex_);if(std::find(cancelled_.begin(),cancelled_.end(),k)==cancelled_.end())cancelled_.push_back(k);}wakeup();}
+void NativeSelector::close(){bool expected=true;if(!open_.compare_exchange_strong(expected,false))return;signalWakeup_();std::vector<::jxx::Ptr<::jxx::nio::channels::SelectionKey>> keys;{std::unique_lock<std::mutex>l(mutex_);selectionCondition_.wait(l,[this]{return activeSelections_==0;});keys=keys_;keys_.clear();if(selected_)selected_->clear();}for(auto&k:keys)if(k){k->cancel();const auto abstractKey=::jxx::CAST<::jxx::nio::channels::spi::AbstractSelectionKey>(k);if(abstractKey!=nullptr)deregister(abstractKey);}takeCancelled_();::jxx::net::internal::closeNativeSocket(wakeRead_);::jxx::net::internal::closeNativeSocket(wakeWrite_);wakeRead_=wakeWrite_=::jxx::net::internal::kInvalidSocket;}
+void NativeSelector::cancelKey(
+    const ::jxx::Ptr<::jxx::nio::channels::SelectionKey>& key) {
+    const auto abstractKey =
+        ::jxx::CAST<::jxx::nio::channels::spi::AbstractSelectionKey>(key);
+    if (abstractKey != nullptr) {
+        cancel_(abstractKey);
+        wakeup();
+    }
+}
+void NativeSelector::processCancelled_(){
+    const auto cancelled=takeCancelled_();
+    if(cancelled.empty())return;
+    {
+        std::lock_guard<std::mutex>l(mutex_);
+        for(const auto&abstractKey:cancelled){
+            const auto key=::jxx::CAST<::jxx::nio::channels::SelectionKey>(abstractKey);
+            selected_->remove(::jxx::CAST<::jxx::lang::Object>(key));
+            keys_.erase(std::remove(keys_.begin(),keys_.end(),key),keys_.end());
+        }
+    }
+    for(const auto&abstractKey:cancelled)deregister(abstractKey);
+}
 ::jxx::Ptr<::jxx::util::Set<::jxx::nio::channels::SelectionKey>> NativeSelector::keys(){if(!isOpen())throw ::jxx::nio::channels::ClosedSelectorException();processCancelled_();auto r=::jxx::NEW<::jxx::util::HashSet<::jxx::nio::channels::SelectionKey>>();std::lock_guard<std::mutex>l(mutex_);for(auto&k:keys_)if(k&&k->isValid())r->add(k);return ::jxx::CAST<::jxx::util::Set<::jxx::nio::channels::SelectionKey>>(r);}
 ::jxx::Ptr<::jxx::util::Set<::jxx::nio::channels::SelectionKey>> NativeSelector::selectedKeys(){if(!isOpen())throw ::jxx::nio::channels::ClosedSelectorException();return selected_;}
 ::jxx::lang::jbool NativeSelector::validOps_(const ::jxx::Ptr<::jxx::lang::Object>&c,::jxx::lang::jint o)const{auto sc=::jxx::CAST<::jxx::nio::channels::SocketChannel>(c);if(sc)return (o&~sc->validOps())==0;auto ss=::jxx::CAST<::jxx::nio::channels::ServerSocketChannel>(c);if(ss)return (o&~::jxx::nio::channels::SelectionKey::OP_ACCEPT_)==0;return false;}

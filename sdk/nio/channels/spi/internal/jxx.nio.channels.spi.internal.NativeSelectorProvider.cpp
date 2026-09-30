@@ -22,7 +22,12 @@ NativeSelectorProvider::openServerSocketChannel() {
 
 ::jxx::Ptr<::jxx::nio::channels::Selector>
 NativeSelectorProvider::openSelector() {
-    return ::jxx::CAST<::jxx::nio::channels::Selector>(::jxx::NEW<::jxx::nio::channels::spi::internal::NativeSelector>(::jxx::CAST<::jxx::nio::channels::spi::SelectorProvider>(thisPtr())));
+    auto selector = ::jxx::NEW<
+        ::jxx::nio::channels::spi::internal::NativeSelector>();
+    selector->setProviderForConstruction_(
+        ::jxx::CAST<::jxx::nio::channels::spi::SelectorProvider>(
+            thisPtr()));
+    return ::jxx::CAST<::jxx::nio::channels::Selector>(selector);
 }
 
 } // namespace jxx::nio::channels::spi::internal

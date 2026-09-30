@@ -3,6 +3,7 @@
 #include <vector>
 #include "nio/channels/jxx.nio.channels.SelectableChannel.h"
 namespace jxx::nio::channels::spi {
+class AbstractSelector;
 class AbstractSelectableChannel
  : public ::jxx::lang::ClassBase<AbstractSelectableChannel,::jxx::nio::channels::SelectableChannel> {
 public:
@@ -23,7 +24,10 @@ protected:
  void implCloseChannel()final;
  virtual void implCloseSelectableChannel()=0;
  virtual void implConfigureBlocking(::jxx::lang::jbool)=0;
+ void removeKey_(
+     const ::jxx::Ptr<::jxx::nio::channels::SelectionKey>& key);
 private:
+ friend class AbstractSelector;
  void purgeCancelled_()const;
  ::jxx::Ptr<SelectorProvider> provider_;
  ::jxx::Ptr<::jxx::lang::Object> blockingLock_;
