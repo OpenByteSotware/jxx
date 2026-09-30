@@ -65,6 +65,7 @@ public:
 
 public:
     SocketChannel();
+    explicit SocketChannel(const ::jxx::Ptr<::jxx::net::Socket>& socket);
     ~SocketChannel() override;
 
 private:

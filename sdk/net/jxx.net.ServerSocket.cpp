@@ -8,6 +8,7 @@
     #include <sys/socket.h>
 #endif
 
+#include <cerrno>
 #include <cstring>
 #include <stdexcept>
 
@@ -23,6 +24,7 @@
 #include "net/jxx.net.Socket.h"
 #include "net/jxx.net.SocketException.h"
 #include "net/jxx.net.SocketTimeoutException.h"
+#include "nio/channels/jxx.nio.channels.ServerSocketChannel.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "net/jxx.net.SocketImplFactory.h"
 
@@ -33,6 +35,14 @@ namespace
     [[noreturn]] void throwSE_(const char* msg)
     {
         throw jxx::net::SocketException(msg);
+    }
+
+    bool wouldBlock_(int error) noexcept {
+#if defined(_WIN32)
+        return error == WSAEWOULDBLOCK;
+#else
+        return error == EAGAIN || error == EWOULDBLOCK;
+#endif
     }
 
     inline bool isIpv6_(const jxx::Ptr<jxx::net::InetAddress> addr)
@@ -100,6 +110,12 @@ namespace jxx::net
     ServerSocket::ServerSocket()
         : state_(jxx::NEW<internal::NativeSocketState>())
     {
+    }
+
+    ServerSocket::ServerSocket(
+        const std::shared_ptr<internal::NativeSocketState>& state)
+        : state_(state == nullptr
+            ? jxx::NEW<internal::NativeSocketState>() : state) {
     }
 
     ServerSocket::ServerSocket(jxx::lang::jint port)
@@ -223,8 +239,16 @@ namespace jxx::net
         sockaddr_storage remote{};
         socklen_t len = sizeof(remote);
         const auto s = ::accept(state_->socket, reinterpret_cast<sockaddr*>(&remote), &len);
-        if (s == internal::kInvalidSocket)
+        if (s == internal::kInvalidSocket) {
+            const int error =
+#if defined(_WIN32)
+                ::WSAGetLastError();
+#else
+                errno;
+#endif
+            if (wouldBlock_(error) && !state_->serverChannel.expired()) return nullptr;
             throwSE_("accept failed");
+        }
 
         sockaddr_storage local{};
         socklen_t llen = sizeof(local);
@@ -251,7 +275,9 @@ namespace jxx::net
         }
     }
 
-    jxx::Ptr<jxx::nio::channels::ServerSocketChannel> ServerSocket::getChannel() const { return nullptr; }
+    jxx::Ptr<jxx::nio::channels::ServerSocketChannel> ServerSocket::getChannel() const {
+        return state_ == nullptr ? nullptr : state_->serverChannel.lock();
+    }
     jxx::lang::jbool ServerSocket::isBound() const noexcept { return bound_; }
     jxx::lang::jbool ServerSocket::isClosed() const noexcept { return !state_ || state_->closed; }
 

@@ -11,6 +11,7 @@
 namespace jxx::nio::channels
 {
     class SocketChannel;
+    class ServerSocketChannel;
 }
 
 namespace jxx::net::internal
@@ -22,6 +23,7 @@ namespace jxx::net::internal
         jxx::lang::jbool inputShutdown = false;
         jxx::lang::jbool outputShutdown = false;
         std::weak_ptr<::jxx::nio::channels::SocketChannel> channel;
+        std::weak_ptr<::jxx::nio::channels::ServerSocketChannel> serverChannel;
         std::mutex m;
     };
 

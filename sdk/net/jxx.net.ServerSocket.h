@@ -39,6 +39,8 @@ public:
         ServerSocket(jxx::lang::jint port,
                      jxx::lang::jint backlog,
                      jxx::Ptr<InetAddress> bindAddr);
+        explicit ServerSocket(
+            const std::shared_ptr<internal::NativeSocketState>& state);
         ~ServerSocket() override;
 
     public:

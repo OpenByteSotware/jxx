@@ -551,6 +551,9 @@ namespace jxx::net
             ",port=" + std::to_string(remotePort_) +
             ",localport=" + std::to_string(localPort_) + "]");
     }
+    std::shared_ptr<internal::NativeSocketState>
+    Socket::sharedNativeSocketState() const noexcept { return state_; }
+
     internal::NativeSocket Socket::nativeSocketHandle() const noexcept
     {
         return state_ ? state_->socket : internal::kInvalidSocket;

@@ -129,6 +129,7 @@ public:
     public:
         // Internal transport bridge used by secure socket providers.
         internal::NativeSocket nativeSocketHandle() const noexcept;
+        std::shared_ptr<internal::NativeSocketState> sharedNativeSocketState() const noexcept;
 
     private:
         friend class ServerSocket;

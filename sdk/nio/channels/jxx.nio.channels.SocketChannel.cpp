@@ -143,6 +143,14 @@ namespace jxx::nio::channels
 		::jxx::net::internal::ensureNetworkInitialized();
 	}
 
+	SocketChannel::SocketChannel(const ::jxx::Ptr<::jxx::net::Socket>& socket)
+		: state_(socket == nullptr ? std::make_shared<::jxx::net::internal::NativeSocketState>() : socket->sharedNativeSocketState()),
+		  socketView_(socket), connected_(socket != nullptr && socket->isConnected()),
+		  bound_(socket != nullptr && socket->isBound()) {
+		if (socket == nullptr) throw ::jxx::lang::NullPointerException();
+	}
+
+
 	::jxx::Ptr<SocketChannel> SocketChannel::open()
 	{
 		return ::jxx::NEW<SocketChannel>();
