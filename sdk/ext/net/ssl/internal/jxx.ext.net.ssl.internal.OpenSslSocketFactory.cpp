@@ -169,7 +169,7 @@ OpenSslSocketFactory::createSocket(
     const auto layered = ::jxx::NEW<OpenSslSocket>(
         socket, host, socket->getPort(), autoClose,
         alreadyConsumed, config_);
-    layered->setUseClientMode(false);
+    layered->setUseClientMode(true);
     return layered;
 }
 

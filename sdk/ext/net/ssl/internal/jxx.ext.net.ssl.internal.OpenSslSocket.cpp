@@ -27,6 +27,8 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslX509Certificate.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.HandshakeCompletedEvent.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.HandshakeCompletedListener.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.HandshakeNotificationTask.h"
+#include "lang/jxx.lang.Thread.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLException.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLHandshakeException.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLProtocolException.h"
@@ -309,6 +311,7 @@ void OpenSslSocket::startHandshake() {
             throw ::jxx::ext::net::ssl::SSLException("TLS transport connect failed");
         }
     }
+    const auto handshakeStarted = std::chrono::steady_clock::now();
     for (;;) {
         const int handshakeResult =
             BIO_do_handshake(native_->connection);
@@ -323,6 +326,18 @@ void OpenSslSocket::startHandshake() {
         if (error == SSL_ERROR_WANT_READ ||
             error == SSL_ERROR_WANT_WRITE)
         {
+            if (soTimeout_ > 0) {
+                const auto elapsed =
+                    std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::steady_clock::now() -
+                        handshakeStarted).count();
+                if (elapsed >= soTimeout_) {
+                    close();
+                    throw ::jxx::net::SocketTimeoutException(
+                        "TLS handshake timed out");
+                }
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
             continue;
         }
 
@@ -386,19 +401,16 @@ void OpenSslSocket::startHandshake() {
         listeners = listeners_;
     }
     if (!listeners.empty()) {
-        std::thread notificationThread(
-            [listeners, event]() {
-                for (const auto& listener : listeners) {
-                    if (listener == nullptr) continue;
-                    try {
-                        listener->handshakeCompleted(event);
-                    } catch (...) {
-                        // Listener failures must not invalidate a completed
-                        // TLS handshake or suppress remaining notifications.
-                    }
-                }
-            });
-        notificationThread.detach();
+        const auto notificationTask =
+            ::jxx::NEW<HandshakeNotificationTask>(listeners, event);
+        const auto notificationThread =
+            ::jxx::NEW<::jxx::lang::Thread>(
+                ::jxx::CAST<::jxx::lang::Runnable>(notificationTask),
+                ::jxx::NEW<::jxx::lang::String>(
+                    "HandshakeCompletedNotify-" +
+                    host_->utf8() + ":" + std::to_string(port_)));
+        notificationThread->setDaemon(true);
+        notificationThread->start();
     }
 }
 
