@@ -34,7 +34,7 @@ void nonblocking(::jxx::net::internal::NativeSocket s){
 }
 Selector::Selector(){selected_=::jxx::NEW<::jxx::util::HashSet<SelectionKey>>();initializeWakeup_();}
 Selector::~Selector(){try{close();}catch(...){}}
-::jxx::Ptr<Selector> Selector::open(){return ::jxx::NEW<Selector>();}
+::jxx::Ptr<Selector> Selector::open(){return spi::SelectorProvider::provider()->openSelector();}
 ::jxx::Ptr<spi::SelectorProvider> Selector::provider()const{return spi::SelectorProvider::provider();}
 void Selector::initializeWakeup_(){::jxx::net::internal::ensureNetworkInitialized();
 #if defined(_WIN32)

@@ -4,6 +4,7 @@
 #include "lang/jxx.lang.Object.h"
 
 namespace jxx::nio::channels {
+class Channel;
 class Selector;
 class ServerSocketChannel;
 class SocketChannel;
@@ -21,6 +22,8 @@ public:
     ~SelectorProvider() override = default;
 
     static ::jxx::Ptr<SelectorProvider> provider();
+    virtual ::jxx::Ptr<::jxx::nio::channels::Channel>
+    inheritedChannel();
 
     virtual ::jxx::Ptr<::jxx::nio::channels::SocketChannel>
     openSocketChannel() = 0;

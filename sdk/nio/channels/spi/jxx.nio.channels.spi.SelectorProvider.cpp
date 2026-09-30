@@ -6,6 +6,11 @@
 
 namespace jxx::nio::channels::spi {
 
+::jxx::Ptr<::jxx::nio::channels::Channel>
+SelectorProvider::inheritedChannel() {
+    return nullptr;
+}
+
 ::jxx::Ptr<SelectorProvider> SelectorProvider::provider() {
     static std::once_flag flag;
     static ::jxx::Ptr<SelectorProvider> instance;

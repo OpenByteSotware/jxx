@@ -27,6 +27,7 @@
 #include "nio/channels/jxx.nio.channels.ClosedByInterruptException.h"
 #include "lang/jxx.lang.Boolean.h"
 #include "nio/channels/jxx.nio.channels.SocketChannel.h"
+#include "nio/channels/spi/jxx.nio.channels.spi.SelectorProvider.h"
 #include "nio/channels/jxx.nio.channels.Selector.h"
 #include "nio/channels/jxx.nio.channels.SelectionKey.h"
 #include "net/internal/jxx.net.internal.NativeSocketState.h"
@@ -197,7 +198,8 @@ namespace jxx::nio::channels
 
 	::jxx::Ptr<SocketChannel> SocketChannel::open()
 	{
-		return ::jxx::NEW<SocketChannel>();
+		return ::jxx::nio::channels::spi::SelectorProvider::provider()
+			->openSocketChannel();
 	}
 
 	::jxx::Ptr<SocketChannel> SocketChannel::open(

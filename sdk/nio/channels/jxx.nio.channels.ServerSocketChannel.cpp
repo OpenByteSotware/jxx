@@ -1,4 +1,5 @@
 #include "nio/channels/jxx.nio.channels.ServerSocketChannel.h"
+#include "nio/channels/spi/jxx.nio.channels.spi.SelectorProvider.h"
 #if defined(_WIN32)
 #include <winsock2.h>
 #else
@@ -73,7 +74,7 @@ private:
 };
 } // namespace
 
-::jxx::Ptr<ServerSocketChannel> ServerSocketChannel::open(){auto c=::jxx::NEW<ServerSocketChannel>();c->state_->serverChannel=c;return c;}
+::jxx::Ptr<ServerSocketChannel> ServerSocketChannel::open(){return ::jxx::nio::channels::spi::SelectorProvider::provider()->openServerSocketChannel();}
 ServerSocketChannel::ServerSocketChannel():state_(::jxx::NEW<::jxx::net::internal::NativeSocketState>()),socket_(::jxx::NEW<::jxx::net::ServerSocket>(state_)){}
 ServerSocketChannel::~ServerSocketChannel(){try{close();}catch(...){}}
 void ServerSocketChannel::setBlocking_(::jxx::lang::jbool b){if(state_->socket==::jxx::net::internal::kInvalidSocket)return;
