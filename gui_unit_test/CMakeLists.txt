@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(
-    guiunittests
-    LANGUAGES CXX
-)
+project(guiunittests LANGUAGES CXX)
 
 enable_testing()
 
@@ -15,17 +12,12 @@ include(FetchContent)
 
 FetchContent_Declare(
     googletest
-    URL
-        https://github.com/google/googletest/archive/52eb8108c5bdec04579160ae17225d66034bd723.zip
+    URL https://github.com/google/googletest/archive/52eb8108c5bdec04579160ae17225d66034bd723.zip
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 
 if(WIN32 AND MSVC)
-    set(
-        gtest_force_shared_crt
-        ON
-        CACHE BOOL ""
-        FORCE
-    )
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 endif()
 
 FetchContent_MakeAvailable(googletest)
@@ -42,17 +34,8 @@ add_executable(
     ${TEST_SOURCES}
 )
 
-target_compile_features(
-    gui_all_tests
-    PRIVATE
-        cxx_std_17
-)
-
-target_compile_definitions(
-    gui_all_tests
-    PRIVATE
-        _HAS_STD_BYTE=0
-)
+target_compile_features(gui_all_tests PRIVATE cxx_std_17)
+target_compile_definitions(gui_all_tests PRIVATE _HAS_STD_BYTE=0)
 
 if(WIN32 AND MSVC)
     target_compile_definitions(
@@ -61,28 +44,53 @@ if(WIN32 AND MSVC)
             WIN32_LEAN_AND_MEAN
             NOMINMAX
     )
+    target_compile_options(gui_all_tests PRIVATE /MP)
+endif()
 
-    target_compile_options(
-        gui_all_tests
-        PRIVATE
-            /MP
+# Resolve every source dependency directly relative to this file.
+# Expected layout:
+#   <jxx_root>/gui_unit_test/CMakeLists.txt
+#   <jxx_root>/sdk
+#   <jxx_root>/sdkgui
+#   <jxx_root>/3rdparty/wxWidgets
+get_filename_component(
+    JXX_SDK_DIR
+    "${CMAKE_CURRENT_LIST_DIR}/../sdk"
+    ABSOLUTE
+)
+get_filename_component(
+    JXX_GUI_SDK_DIR
+    "${CMAKE_CURRENT_LIST_DIR}/../sdkgui"
+    ABSOLUTE
+)
+get_filename_component(
+    JXX_WXWIDGETS_DIR
+    "${CMAKE_CURRENT_LIST_DIR}/../3rdparty/wxWidgets"
+    ABSOLUTE
+)
+
+if(NOT EXISTS "${JXX_SDK_DIR}/CMakeLists.txt")
+    message(FATAL_ERROR
+        "The core JXX SDK source tree was not found.\n"
+        "Expected: ${JXX_SDK_DIR}/CMakeLists.txt"
     )
 endif()
 
-set(JXX_SDK_DIR
-    "${JXX_TOP_LEVEL_DIR}/sdk"
-    CACHE PATH "Path to the core JXX SDK"
-)
+if(NOT EXISTS "${JXX_GUI_SDK_DIR}/CMakeLists.txt")
+    message(FATAL_ERROR
+        "The JXX GUI SDK source tree was not found.\n"
+        "Expected: ${JXX_GUI_SDK_DIR}/CMakeLists.txt"
+    )
+endif()
 
-set(JXX_GUI_SDK_DIR
-    "${JXX_TOP_LEVEL_DIR}/sdkgui"
-    CACHE PATH "Path to the JXX GUI SDK"
-)
-
-set(JXX_WXWIDGETS_DIR
-    "${JXX_TOP_LEVEL_DIR}/3rdparty/wxWidgets"
-    CACHE PATH "Path to the bundled wxWidgets source tree"
-)
+if(NOT EXISTS "${JXX_WXWIDGETS_DIR}/CMakeLists.txt")
+    message(FATAL_ERROR
+        "The bundled wxWidgets source tree was not found.\n"
+        "Expected: ${JXX_WXWIDGETS_DIR}/CMakeLists.txt\n"
+        "Initialize or copy wxWidgets into "
+        "<jxx_root>/3rdparty/wxWidgets."
+    )
+endif()
 
 target_include_directories(
     gui_all_tests
@@ -102,8 +110,6 @@ target_include_directories(
         "${JXX_SDK_DIR}/ext"
 )
 
-# Match the wxWidgets configuration known to build successfully for this tree.
-# These values must be set before add_subdirectory(wxWidgets).
 set(wxUSE_STC OFF CACHE BOOL
     "Disable wxWidgets styled text control" FORCE)
 set(wxUSE_STL ON CACHE BOOL
@@ -124,41 +130,34 @@ set(wxBUILD_DEMOS OFF CACHE BOOL
     "Disable wxWidgets demos" FORCE)
 set(wxUSE_GUI ON CACHE BOOL
     "Build wxWidgets GUI libraries" FORCE)
-
-# Keep application and wxWidgets assertion configuration consistent.
 set(wxBUILD_DEBUG_LEVEL 0 CACHE STRING
     "Disable wxWidgets assertion support" FORCE)
 
 if(NOT TARGET wx::base OR NOT TARGET wx::core)
     add_subdirectory(
         "${JXX_WXWIDGETS_DIR}"
-        "${CMAKE_BINARY_DIR}/3rdparty/wxWidgets"
+        "${CMAKE_CURRENT_BINARY_DIR}/wxWidgets"
         EXCLUDE_FROM_ALL
     )
 endif()
-
 
 target_link_libraries(
     gui_all_tests
     PRIVATE
         jxxsdk
-		jxx_gui
+        jxx_gui
         GTest::gtest
         GTest::gmock
         fmt::fmt
         Microsoft.GSL::GSL
         unicode::unicode
         pugixml::pugixml
-		wx::core
+        wx::core
         wx::base
 )
 
 if(UNIX AND NOT APPLE)
-    target_link_libraries(
-        gui_all_tests
-        PRIVATE
-            dl
-    )
+    target_link_libraries(gui_all_tests PRIVATE dl)
 endif()
 
 include(GoogleTest)
@@ -168,9 +167,3 @@ gtest_discover_tests(
     DISCOVERY_MODE POST_BUILD
     DISCOVERY_TIMEOUT 60
 )
-
-
-
-
-
-
