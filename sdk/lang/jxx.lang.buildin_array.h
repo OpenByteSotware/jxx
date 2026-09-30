@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "lang/jxx.lang.ArrayExceptionSupport.h"
 #include "lang/jxx.lang.ByteType.h"
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.Object.h"
@@ -46,7 +47,7 @@ namespace jxx::lang {
 
             if constexpr (std::is_signed_v<Raw>) {
                 if (value < 0) {
-                    //throw jxx::lang::NegativeArraySizeException();
+                    array_detail::throwNegativeArraySize();
                 }
             }
 
@@ -56,7 +57,7 @@ namespace jxx::lang {
             if (static_cast<std::uintmax_t>(unsignedValue) >
                 static_cast<std::uintmax_t>(
                     std::numeric_limits<jxx::lang::jint>::max())) {
-               // throw jxx::lang::NegativeArraySizeException();
+                array_detail::throwNegativeArraySize();
             }
 
             return static_cast<jxx::lang::jint>(unsignedValue);
@@ -66,13 +67,6 @@ namespace jxx::lang {
             return static_cast<std::size_t>(value);
         }
 
-        [[noreturn]] inline void throwIndex(jxx::lang::jint /*index*/) {
-            ///throw jxx::lang::ArrayIndexOutOfBoundsException();
-        }
-
-        [[noreturn]] inline void throwNullRow() {
-            //throw jxx::lang::NullPointerException();
-        }
 
     } // namespace array_detail
 
@@ -109,7 +103,7 @@ namespace jxx::lang {
 
         void checkIndex_(jxx::lang::jint index) const {
             if (index < 0 || index >= length) {
-                //array_detail::throwIndex(index);
+                array_detail::throwIndex(index);
             }
         }
 
