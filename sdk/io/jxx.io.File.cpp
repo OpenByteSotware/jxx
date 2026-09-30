@@ -120,6 +120,21 @@ namespace jxx::io
 	{
 		return ::jxx::NEW<File>(getCanonicalPath());
 	}
+	File::FileArray File::listFiles()const
+	{
+		std::error_code error;
+		const auto directory=native(path_);
+		if(!fs::is_directory(directory,error)||error)return nullptr;
+		std::vector<::jxx::Ptr<File>> files;
+		for(fs::directory_iterator it(directory,error),end;!error&&it!=end;it.increment(error))
+		{
+			files.push_back(::jxx::NEW<File>(::jxx::NEW<::jxx::lang::String>(it->path().u8string())));
+		}
+		if(error)return nullptr;
+		auto result=::jxx::NEW<FileArrayType>(static_cast<::jxx::lang::jint>(files.size()));
+		for(::jxx::lang::jint i=0;i<result->length;++i)(*result)[i]=files[static_cast<std::size_t>(i)];
+		return result;
+	}
 	::jxx::lang::jbool File::canRead()const
 	{
 		std::ifstream f(native(path_), std::ios::binary); return f.good();
