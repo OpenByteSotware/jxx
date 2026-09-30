@@ -23,6 +23,8 @@
 #include "util/jxx.util.HashSet.h"
 #include "net/jxx.net.StandardSocketOptions.h"
 #include "lang/jxx.lang.Integer.h"
+#include "lang/jxx.lang.Thread.h"
+#include "nio/channels/jxx.nio.channels.ClosedByInterruptException.h"
 #include "lang/jxx.lang.Boolean.h"
 #include "nio/channels/jxx.nio.channels.SocketChannel.h"
 #include "nio/channels/jxx.nio.channels.Selector.h"
@@ -62,6 +64,39 @@ namespace jxx::nio::channels
 				error == EINPROGRESS || error == EALREADY;
 #endif
 		}
+
+		void wakeBlockedSocket(
+			::jxx::net::internal::NativeSocket socket) noexcept {
+			if (socket == ::jxx::net::internal::kInvalidSocket) return;
+#if defined(_WIN32)
+			::shutdown(socket, SD_BOTH);
+#else
+			::shutdown(socket, SHUT_RDWR);
+#endif
+		}
+
+		class InterruptRegistration final {
+		public:
+			explicit InterruptRegistration(
+				::jxx::net::internal::NativeSocket socket)
+				: thread_(::jxx::lang::Thread::currentThread()) {
+				if (thread_ == nullptr) return;
+				if (thread_->isInterrupted()) {
+					throw ::jxx::nio::channels::ClosedByInterruptException();
+				}
+				thread_->setParkWakeup_([socket] {
+					wakeBlockedSocket(socket);
+				});
+			}
+			~InterruptRegistration() {
+				if (thread_ != nullptr) thread_->clearParkWakeup_();
+			}
+			::jxx::lang::jbool interrupted() const {
+				return thread_ != nullptr && thread_->isInterrupted();
+			}
+		private:
+			::jxx::Ptr<::jxx::lang::Thread> thread_;
+		};
 
 		void setBlocking(::jxx::net::internal::NativeSocket socket, bool blocking)
 		{
@@ -223,8 +258,16 @@ namespace jxx::nio::channels
 			state_->outputShutdown = false;
 			if (state_->socket == ::jxx::net::internal::kInvalidSocket) continue;
 			setBlocking(state_->socket, blocking_);
+			InterruptRegistration interruptRegistration(state_->socket);
 			const int result = ::connect(state_->socket, current->ai_addr,
 				static_cast<socklen_t>(current->ai_addrlen));
+			if (interruptRegistration.interrupted()) {
+				::jxx::net::internal::closeNativeSocket(state_->socket);
+				state_->socket = ::jxx::net::internal::kInvalidSocket;
+				state_->closed = true;
+				open_ = false;
+				throw ::jxx::nio::channels::ClosedByInterruptException();
+			}
 			if (result == 0) {
 				connected_ = true; pending_ = false; return true;
 			}
@@ -296,11 +339,16 @@ namespace jxx::nio::channels
 		const auto remaining = destination->remaining();
 		if (remaining == 0) return 0;
 		std::vector<unsigned char> bytes(static_cast<std::size_t>(remaining));
+		InterruptRegistration interruptRegistration(native);
 #if defined(_WIN32)
 		const int count = ::recv(native, reinterpret_cast<char*>(bytes.data()), remaining, 0);
 #else
 		const int count = static_cast<int>(::recv(native, bytes.data(), remaining, 0));
 #endif
+		if (interruptRegistration.interrupted()) {
+			close();
+			throw ::jxx::nio::channels::ClosedByInterruptException();
+		}
 		if (count > 0) {
 			for (int index = 0; index < count; ++index) destination->put(static_cast<::jxx::lang::jbyte>(bytes[index]));
 			return count;
@@ -338,11 +386,16 @@ namespace jxx::nio::channels
 		const auto position = source->position();
 		std::vector<unsigned char> bytes(static_cast<std::size_t>(remaining));
 		for (::jxx::lang::jint index = 0; index < remaining; ++index) bytes[static_cast<std::size_t>(index)] = static_cast<unsigned char>(source->get(position + index));
+		InterruptRegistration interruptRegistration(native);
 #if defined(_WIN32)
 		const int count = ::send(native, reinterpret_cast<const char*>(bytes.data()), remaining, 0);
 #else
 		const int count = static_cast<int>(::send(native, bytes.data(), remaining, 0));
 #endif
+		if (interruptRegistration.interrupted()) {
+			close();
+			throw ::jxx::nio::channels::ClosedByInterruptException();
+		}
 		if (count > 0) { source->position(position + count); return count; }
 		const int error = lastSocketError();
 		if (!blocking && wouldBlock(error)) return 0;

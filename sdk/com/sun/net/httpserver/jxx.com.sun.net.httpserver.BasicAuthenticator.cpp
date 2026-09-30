@@ -75,9 +75,9 @@ std::string quotedRealm(const std::string& realm)
 
 BasicAuthenticator::BasicAuthenticator(
     const ::jxx::Ptr<::jxx::lang::String>& realm)
-    : Super(), realm_(realm)
+    : Super(), realm(realm)
 {
-    if (realm_ == nullptr) {
+    if (realm == nullptr || realm->isEmpty()) {
         throw ::jxx::lang::NullPointerException();
     }
 }
@@ -85,7 +85,7 @@ BasicAuthenticator::BasicAuthenticator(
 ::jxx::Ptr<::jxx::lang::String>
 BasicAuthenticator::getRealm() const
 {
-    return realm_;
+    return realm;
 }
 
 ::jxx::Ptr<Authenticator::Result>
@@ -100,7 +100,7 @@ BasicAuthenticator::authenticate(
         ::jxx::NEW<::jxx::lang::String>("Authorization"));
 
     const std::string challenge =
-        "Basic realm=" + quotedRealm(realm_->utf8());
+        "Basic realm=" + quotedRealm(realm->utf8());
 
     if (authorization == nullptr) {
         exchange->getResponseHeaders()->set(
@@ -140,7 +140,7 @@ BasicAuthenticator::authenticate(
     }
 
     return ::jxx::NEW<Authenticator::Success>(
-        ::jxx::NEW<HttpPrincipal>(username, realm_));
+        ::jxx::NEW<HttpPrincipal>(username, realm));
 }
 
 } // namespace jxx::com::sun::net::httpserver

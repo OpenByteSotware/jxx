@@ -6,6 +6,10 @@
 #include "util/jxx.util.List.h"
 #include "util/jxx.util.Map.h"
 
+namespace jxx::com::sun::net::httpserver::internal {
+class DefaultHttpServer;
+}
+
 namespace jxx::com::sun::net::httpserver {
 
 class Headers final
@@ -20,9 +24,6 @@ public:
     using Super = ::jxx::lang::ClassBase<Headers, JxxSuper>;
 
     Headers();
-
-    void freezeInternal();
-    ::jxx::lang::jbool isFrozenInternal() const noexcept;
 
     void add(
         const ::jxx::Ptr<::jxx::lang::String>& key,
@@ -59,6 +60,11 @@ public:
             ::jxx::util::Map<::jxx::lang::String, ValueList>>& source) override;
 
 private:
+    friend class ::jxx::com::sun::net::httpserver::internal::DefaultHttpServer;
+
+    void freezeInternal();
+    ::jxx::lang::jbool isFrozenInternal() const noexcept;
+
     void ensureMutable_() const;
 
     static ::jxx::Ptr<::jxx::lang::String> normalizeKey_(
