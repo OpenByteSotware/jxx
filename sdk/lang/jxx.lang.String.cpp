@@ -709,7 +709,7 @@ namespace jxx::lang {
     jxx::Ptr<String> String::valueOf(jlong l) { return jxx::NEW<String>(std::to_string((long long)l).c_str()); }
     jxx::Ptr<String> String::valueOf(jfloat f) { std::ostringstream oss; oss.imbue(std::locale::classic()); oss << f; return jxx::NEW<String>(oss.str().c_str()); }
     jxx::Ptr<String> String::valueOf(jdouble d) { std::ostringstream oss; oss.imbue(std::locale::classic()); oss << d; return jxx::NEW<String>(oss.str().c_str()); }
-    jxx::Ptr<String> String::valueOf(const jxx::Ptr<Object>& obj) { return jxx::CAST<String, Object>(obj) ? obj->toString() : jxx::NEW<String>("null"); }
+    jxx::Ptr<String> String::valueOf(const jxx::Ptr<Object>& obj) { return obj ? obj->toString() : jxx::NEW<String>("null"); }
     jxx::Ptr<String> String::valueOf(CharArray data) { return jxx::NEW<String>(data); }
     jxx::Ptr<String> String::valueOf(CharArray data, jint offset, jint count) { return jxx::NEW<String>(data, offset, count); }
     jxx::Ptr<String> String::copyValueOf(CharArray data) { return jxx::NEW<String>(data); }
