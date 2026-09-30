@@ -27,6 +27,15 @@
 
 namespace
 {
+    inline bool isNumericAddress_(const std::string& value)
+    {
+        if (value.empty()) return false;
+        in_addr ipv4{};
+        if (::inet_pton(AF_INET, value.c_str(), &ipv4) == 1) return true;
+        in6_addr ipv6{};
+        return ::inet_pton(AF_INET6, value.c_str(), &ipv6) == 1;
+    }
+
     inline jxx::lang::ByteArray toByteArray_(const std::vector<jxx::lang::jbyte>& bytes)
     {
         auto out = jxx::NEW<jxx::lang::ByteArrayType>(static_cast<jxx::lang::jint>(bytes.size()));
@@ -121,6 +130,9 @@ namespace jxx::net
         internal::ensureNetworkInitialized();
 
         const std::string name = host ? host->utf8() : std::string();
+        const auto resultHost = isNumericAddress_(name)
+            ? ::jxx::Ptr<::jxx::lang::String>()
+            : host;
         addrinfo hints{};
         hints.ai_family = AF_UNSPEC;
         hints.ai_socktype = SOCK_STREAM;
@@ -144,14 +156,14 @@ namespace jxx::net
                 auto* sa = reinterpret_cast<sockaddr_in*>(p->ai_addr);
                 std::vector<jxx::lang::jbyte> bytes(4);
                 std::memcpy(bytes.data(), &sa->sin_addr, 4);
-                addrs.push_back(createInet_(host, bytes, AF_INET));
+                addrs.push_back(createInet_(resultHost, bytes, AF_INET));
             }
             else if (p->ai_family == AF_INET6)
             {
                 auto* sa = reinterpret_cast<sockaddr_in6*>(p->ai_addr);
                 std::vector<jxx::lang::jbyte> bytes(16);
                 std::memcpy(bytes.data(), &sa->sin6_addr, 16);
-                addrs.push_back(createInet_(host, bytes, AF_INET6));
+                addrs.push_back(createInet_(resultHost, bytes, AF_INET6));
             }
         }
         ::freeaddrinfo(result);
@@ -226,9 +238,11 @@ namespace jxx::net
 
     jxx::Ptr<jxx::lang::String> InetAddress::toString() const
     {
-        const auto hn = getHostName();
         const auto ha = getHostAddress();
-        return jxx::NEW<jxx::lang::String>((hn ? hn->utf8() : std::string()) + "/" + (ha ? ha->utf8() : std::string()));
+        return jxx::NEW<jxx::lang::String>(
+            (hostName_ ? hostName_->utf8() : std::string()) +
+            "/" +
+            (ha ? ha->utf8() : std::string()));
     }
 
     jxx::lang::jbool InetAddress::equals(const jxx::Ptr<jxx::lang::Object>& other) const
