@@ -83,18 +83,8 @@ void OpenSslEngine::ensureInitialized() {
             "SSL_CTX_new failed");
     applyEnabledProtocols(context_, enabledProtocols_);
 
-    if (!enabledCipherSuites_.empty()) {
-        std::vector<std::string> tls13;
-        std::vector<std::string> legacy;
-        for (const auto& suite : enabledCipherSuites_)
-            (suite.rfind("TLS_", 0) == 0 ? tls13 : legacy).push_back(suite);
-        if (!legacy.empty() &&
-            SSL_CTX_set_cipher_list(context_, join(legacy).c_str()) != 1)
-            throw ::jxx::lang::IllegalArgumentException();
-        if (!tls13.empty() &&
-            SSL_CTX_set_ciphersuites(context_, join(tls13).c_str()) != 1)
-            throw ::jxx::lang::IllegalArgumentException();
-    }
+    if (!enabledCipherSuites_.empty())
+        applyEnabledCipherSuites(context_, enabledCipherSuites_);
 
     if (!clientMode_ && config_ != nullptr && config_->serverSessionContext != nullptr)
         configureServerSessionCache(
@@ -600,7 +590,9 @@ OpenSslEngine::getEnabledCipherSuites() const {
 void OpenSslEngine::setEnabledCipherSuites(
     const ::jxx::Ptr<StringArray>& suites) {
     if (handshakeStarted_) throw ::jxx::lang::IllegalStateException();
-    enabledCipherSuites_ = toVector(suites);
+    const auto values = toVector(suites);
+    validateEnabledCipherSuites(values);
+    enabledCipherSuites_ = values;
 }
 
 SSLEngineResult::HandshakeStatus

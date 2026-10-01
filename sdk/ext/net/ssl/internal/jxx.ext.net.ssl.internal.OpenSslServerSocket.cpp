@@ -39,7 +39,12 @@ OpenSslServerSocket::accept() {
     socket->setSSLParameters(getSSLParameters());
     return socket;
 }
-::jxx::Ptr<OpenSslServerSocket::StringArray> OpenSslServerSocket::getEnabledCipherSuites()const{return toArray(enabledCipherSuites_);}void OpenSslServerSocket::setEnabledCipherSuites(const ::jxx::Ptr<StringArray>&v){enabledCipherSuites_=toVector(v);}::jxx::Ptr<OpenSslServerSocket::StringArray>
+::jxx::Ptr<OpenSslServerSocket::StringArray> OpenSslServerSocket::getEnabledCipherSuites()const{return toArray(enabledCipherSuites_);}void OpenSslServerSocket::setEnabledCipherSuites(
+    const ::jxx::Ptr<StringArray>& values) {
+    const auto suites = toVector(values);
+    validateEnabledCipherSuites(suites);
+    enabledCipherSuites_ = suites;
+}::jxx::Ptr<OpenSslServerSocket::StringArray>
 OpenSslServerSocket::getSupportedCipherSuites() const {
     return serverSupportedCipherSuites();
 }::jxx::Ptr<OpenSslServerSocket::StringArray> OpenSslServerSocket::getEnabledProtocols()const{return toArray(enabledProtocols_);}void OpenSslServerSocket::setEnabledProtocols(const ::jxx::Ptr<StringArray>&v){const auto values=toVector(v);(void)enabledProtocolRange(values);enabledProtocols_=values;}::jxx::Ptr<OpenSslServerSocket::StringArray> OpenSslServerSocket::getSupportedProtocols()const{return toArray(supportedProtocolNames());}

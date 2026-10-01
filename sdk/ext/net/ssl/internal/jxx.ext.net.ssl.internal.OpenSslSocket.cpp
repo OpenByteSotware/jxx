@@ -209,15 +209,12 @@ void OpenSslSocket::startHandshake() {
 #endif
         if (disabled != 0UL) SSL_CTX_set_options(native_->context, disabled);
     }
-    if (!enabledCipherSuites_.empty()) {
-        std::vector<std::string> modern, legacy;
-        for (const auto& c : enabledCipherSuites_)
-            (c.rfind("TLS_", 0) == 0 ? modern : legacy).push_back(c);
-        if (!legacy.empty() && SSL_CTX_set_cipher_list(native_->context, join(legacy).c_str()) != 1)
-            throw ::jxx::lang::IllegalArgumentException();
-        if (!modern.empty() && SSL_CTX_set_ciphersuites(native_->context, join(modern).c_str()) != 1)
-            throw ::jxx::lang::IllegalArgumentException();
-    }
+    if (!enabledCipherSuites_.empty())
+        applyEnabledCipherSuites(native_->context, enabledCipherSuites_);
+    if (!client_ && useCipherSuitesOrder_)
+        SSL_CTX_set_options(
+            native_->context,
+            SSL_OP_CIPHER_SERVER_PREFERENCE);
     if (config_ != nullptr && config_->secureRandom != nullptr) {
         auto seed = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(64);
         config_->secureRandom->nextBytes(seed);
@@ -545,7 +542,14 @@ OpenSslSocket::getSupportedCipherSuites() const {
         : serverSupportedCipherSuites();
 }
 ::jxx::Ptr<OpenSslSocket::StringArray> OpenSslSocket::getEnabledCipherSuites()const{return enabledCipherSuites_.empty()?getSupportedCipherSuites():toArray(enabledCipherSuites_);}
-void OpenSslSocket::setEnabledCipherSuites(const ::jxx::Ptr<StringArray>&v){if(session_!=nullptr)throw ::jxx::lang::IllegalStateException();enabledCipherSuites_=toVector(v);}
+void OpenSslSocket::setEnabledCipherSuites(
+    const ::jxx::Ptr<StringArray>& values) {
+    if (session_ != nullptr || handshakeInProgress_)
+        throw ::jxx::lang::IllegalStateException();
+    const auto suites = toVector(values);
+    validateEnabledCipherSuites(suites);
+    enabledCipherSuites_ = suites;
+}
 ::jxx::Ptr<OpenSslSocket::SSLSession> OpenSslSocket::getSession(){startHandshake();return session_;}
 ::jxx::Ptr<OpenSslSocket::SSLSession>
 OpenSslSocket::getHandshakeSession() const {
