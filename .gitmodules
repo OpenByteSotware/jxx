@@ -14,3 +14,6 @@
 [submodule "libzlib"]
 	path = 3rdparty/zlib
 	url = https://github.com/OpenByteSotware/zlib
+[submodule "libwxwidgets"]
+	path = 3rdparty/wxWidgets
+	url = https://github.com/OpenByteSotware/wxWidgets
