@@ -164,7 +164,12 @@ namespace jxx::net
         if (isBound()) {
             throw SocketException("server socket is already bound");
         }
-        const auto isa = std::dynamic_pointer_cast<InetSocketAddress>(endpoint);
+        auto bindEndpoint = endpoint;
+        if (bindEndpoint == nullptr) {
+            bindEndpoint = jxx::NEW<InetSocketAddress>(
+                jxx::Ptr<InetAddress>(), 0);
+        }
+        const auto isa = std::dynamic_pointer_cast<InetSocketAddress>(bindEndpoint);
         if (isa == nullptr) {
             throw ::jxx::lang::IllegalArgumentException("unsupported socket address");
         }

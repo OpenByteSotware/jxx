@@ -276,7 +276,12 @@ namespace jxx::net
         if (isBound()) {
             throw SocketException("socket is already bound");
         }
-        const auto isa = std::dynamic_pointer_cast<InetSocketAddress>(bindpoint);
+        auto endpoint = bindpoint;
+        if (endpoint == nullptr) {
+            endpoint = jxx::NEW<InetSocketAddress>(
+                jxx::Ptr<InetAddress>(), 0);
+        }
+        const auto isa = std::dynamic_pointer_cast<InetSocketAddress>(endpoint);
         if (isa == nullptr) {
             throw ::jxx::lang::IllegalArgumentException("unsupported socket address");
         }
@@ -479,10 +484,11 @@ namespace jxx::net
             throw SocketException("socket input is already shutdown");
         }
     #if defined(_WIN32)
-        ::shutdown(state_->socket, SD_RECEIVE);
+        const int result = ::shutdown(state_->socket, SD_RECEIVE);
     #else
-        ::shutdown(state_->socket, SHUT_RD);
+        const int result = ::shutdown(state_->socket, SHUT_RD);
     #endif
+        if (result != 0) throw SocketException("socket input shutdown failed");
         state_->inputShutdown = true;
     }
 
@@ -498,10 +504,11 @@ namespace jxx::net
             throw SocketException("socket output is already shutdown");
         }
     #if defined(_WIN32)
-        ::shutdown(state_->socket, SD_SEND);
+        const int result = ::shutdown(state_->socket, SD_SEND);
     #else
-        ::shutdown(state_->socket, SHUT_WR);
+        const int result = ::shutdown(state_->socket, SHUT_WR);
     #endif
+        if (result != 0) throw SocketException("socket output shutdown failed");
         state_->outputShutdown = true;
     }
 
@@ -533,8 +540,9 @@ namespace jxx::net
 
     jxx::lang::jbool Socket::isConnected() const noexcept
     {
-        return connected_ && state_ != nullptr && !state_->closed &&
-            state_->socket != internal::kInvalidSocket;
+        // This reports whether a connection was ever established. Closing a
+        // connected socket does not clear its historical connected state.
+        return connected_;
     }
     jxx::lang::jbool Socket::isBound() const noexcept { return bound_; }
     jxx::lang::jbool Socket::isClosed() const noexcept { return !state_ || state_->closed; }
