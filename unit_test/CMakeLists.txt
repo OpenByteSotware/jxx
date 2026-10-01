@@ -224,6 +224,7 @@ target_link_libraries(
         Microsoft.GSL::GSL
         unicode::unicode
         pugixml::pugixml
+		zlibstatic
 )
 
 include(GoogleTest)
