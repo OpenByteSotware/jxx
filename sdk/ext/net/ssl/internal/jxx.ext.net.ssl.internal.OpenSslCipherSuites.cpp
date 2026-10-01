@@ -4,6 +4,7 @@
 
 #include <openssl/ssl.h>
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslCipherSuites.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslCompatibility.h"
 
 
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLException.h"
@@ -20,7 +21,7 @@ void configureProtocolRange(SSL_CTX* context) {
             TLS1_2_VERSION) != 1 ||
         SSL_CTX_set_max_proto_version(
             context,
-            TLS1_3_VERSION) != 1)
+            highestSupportedTlsVersion()) != 1)
     {
         throw ::jxx::ext::net::ssl::SSLException(
             "Unable to configure TLS protocol range");
@@ -87,6 +88,7 @@ supportedCipherSuites(ContextMethod method) {
 
     SSL* ssl = nullptr;
     STACK_OF(SSL_CIPHER)* ciphers = nullptr;
+    bool ciphersOwned = false;
 
     try {
         configureProtocolRange(context);
@@ -96,16 +98,16 @@ supportedCipherSuites(ContextMethod method) {
                 "Unable to create TLS state");
         }
 
-        ciphers = SSL_get1_supported_ciphers(ssl);
+        ciphers = supportedCipherStack(ssl, ciphersOwned);
         const auto result = toArray(ciphers);
 
-        sk_SSL_CIPHER_free(ciphers);
+        if (ciphersOwned) sk_SSL_CIPHER_free(ciphers);
         SSL_free(ssl);
         SSL_CTX_free(context);
         return result;
     }
     catch (...) {
-        if (ciphers != nullptr) {
+        if (ciphersOwned && ciphers != nullptr) {
             sk_SSL_CIPHER_free(ciphers);
         }
         if (ssl != nullptr) {
@@ -157,7 +159,7 @@ void applyEnabledCipherSuites(
         throw ::jxx::lang::IllegalArgumentException(
             "unsupported pre-TLS-1.3 cipher suite");
     if (!tls13.empty() &&
-        SSL_CTX_set_ciphersuites(context, join(tls13).c_str()) != 1)
+        !setTls13CipherSuites(context, join(tls13)))
         throw ::jxx::lang::IllegalArgumentException(
             "unsupported TLS 1.3 cipher suite");
 }

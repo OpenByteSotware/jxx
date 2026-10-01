@@ -11,3 +11,6 @@
 [submodule "libopenssl"]
 	path = 3rdparty/openssl
 	url = https://github.com/OpenByteSotware/openssl
+[submodule "libzlib"]
+	path = 3rdparty/zlib
+	url = https://github.com/OpenByteSotware/zlib

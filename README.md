@@ -139,6 +139,8 @@ git submodule add --name libfmt https://github.com/OpenByteSotware/fmt 3rdparty/
 git submodule add --name libwxwidgets https://github.com/OpenByteSotware/wxWidgets 3rdparty/wxWidgets
 git submodule add --name libpugixml https://github.com/OpenByteSotware/pugixml 3rdparty/pugixml
 git submodule add --name libopenssl https://github.com/OpenByteSotware/openssl 3rdparty/openssl
+git submodule add --name libzlib https://github.com/OpenByteSotware/zlib 3rdparty/zlib
+
 
 
 

@@ -2,6 +2,7 @@
 #include <openssl/ssl.h>
 
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslProtocolPolicy.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslCompatibility.h"
 
 
 #include "lang/jxx.lang.IllegalArgumentException.h"
@@ -12,12 +13,22 @@ int protocolVersion(const std::string& protocol) {
     if (protocol == "TLSv1") return TLS1_VERSION;
     if (protocol == "TLSv1.1") return TLS1_1_VERSION;
     if (protocol == "TLSv1.2") return TLS1_2_VERSION;
-    if (protocol == "TLSv1.3") return TLS1_3_VERSION;
+    if (protocol == "TLSv1.3") {
+#if defined(TLS1_3_VERSION) && OPENSSL_VERSION_NUMBER >= 0x10101000L && !defined(LIBRESSL_VERSION_NUMBER)
+        return TLS1_3_VERSION;
+#else
+        throw ::jxx::lang::IllegalArgumentException(
+            "TLSv1.3 is not supported by this OpenSSL build");
+#endif
+    }
     throw ::jxx::lang::IllegalArgumentException("unsupported TLS protocol");
 }
 
 std::vector<std::string> supportedProtocolNames() {
-    return {"TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"};
+    std::vector<std::string> result{
+        "TLSv1", "TLSv1.1", "TLSv1.2"};
+    if (hasTls13Api()) result.push_back("TLSv1.3");
+    return result;
 }
 
 std::vector<std::string> contextProtocolNames(
@@ -90,9 +101,9 @@ std::pair<int, int> protocolRange(
     if (value == "TLSv1.2")
         return {TLS1_2_VERSION, TLS1_2_VERSION};
     if (value == "TLSv1.3")
-        return {TLS1_3_VERSION, TLS1_3_VERSION};
+        return {highestSupportedTlsVersion(), highestSupportedTlsVersion()};
 
-    return {TLS1_2_VERSION, TLS1_3_VERSION};
+    return {TLS1_2_VERSION, highestSupportedTlsVersion()};
 }
 
 ::jxx::Ptr<ProtocolArray> contextProtocols(
@@ -104,8 +115,10 @@ std::pair<int, int> protocolRange(
         range.second >= TLS1_1_VERSION;
     const bool has12 = range.first <= TLS1_2_VERSION &&
         range.second >= TLS1_2_VERSION;
-    const bool has13 = range.first <= TLS1_3_VERSION &&
-        range.second >= TLS1_3_VERSION;
+    const bool has13 = hasTls13Api() &&
+        range.first <= highestSupportedTlsVersion() &&
+        range.second >= highestSupportedTlsVersion() &&
+        highestSupportedTlsVersion() != TLS1_2_VERSION;
     const auto result = ::jxx::NEW<ProtocolArray>(
         static_cast<::jxx::lang::jint>(has10 + has11 + has12 + has13));
     ::jxx::lang::jint index = 0;

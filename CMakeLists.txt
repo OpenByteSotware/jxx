@@ -15,5 +15,6 @@ add_subdirectory(3rdparty/gsl)
 add_subdirectory(3rdparty/fmt)
 add_subdirectory(3rdparty/libunicode)
 add_subdirectory(3rdparty/pugixml)
+add_subdirectory(3rdparty/zlib)
 
 # wxwidgets has to build on its own not inside this one, see readme for how to build

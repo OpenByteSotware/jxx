@@ -113,13 +113,11 @@ private:
     ::jxx::lang::jbool enableSessionCreation_ = true;
     ::jxx::lang::jbool useCipherSuitesOrder_ = false;
     ::jxx::lang::jbool initialized_ = false;
-    ::jxx::lang::jbool handshakeStarted_ = false;
+    ::jxx::lang::jbool initialHandshakeStarted_ = false;
+    ::jxx::lang::jbool handshakeActive_ = false;
     ::jxx::lang::jbool handshakeFinishedReported_ = false;
     ::jxx::lang::jbool inboundDone_ = false;
     ::jxx::lang::jbool outboundDone_ = false;
-    ::jxx::lang::jbool peerCloseNotifyReceived_ = false;
-    ::jxx::lang::jbool outboundCloseRequested_ = false;
-    ::jxx::lang::jbool outboundCloseNotifyGenerated_ = false;
 };
 
 } // namespace jxx::ext::net::ssl::internal

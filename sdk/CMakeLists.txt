@@ -4,6 +4,9 @@ project(jxxsdk LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(ZLIB_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(ZLIB_BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(ZLIB_BUILD_SHARED OFF CACHE BOOL "" FORCE)
 
 file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
@@ -13,6 +16,7 @@ file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
 
 add_library(jxxsdk ${SRC_FILES})
 set_target_properties(jxxsdk PROPERTIES LINKER_LANGUAGE CXX)
+
 
 target_include_directories(jxxsdk
     PRIVATE
@@ -48,8 +52,8 @@ target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty
 target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/fmt/include)
 target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/libunicode/src)
 target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/pugixml/src)
-target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/openssl/include
-)
+target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/openssl/include)
+target_include_directories(jxxsdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/zlib)
 
 target_compile_features(jxxsdk PRIVATE cxx_std_17)
 target_compile_options(jxxsdk PRIVATE /utf-8)
