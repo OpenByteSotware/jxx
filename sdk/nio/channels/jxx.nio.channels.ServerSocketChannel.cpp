@@ -86,8 +86,20 @@ int f=::fcntl(state_->socket,F_GETFL,0);if(f<0||::fcntl(state_->socket,F_SETFL,b
 }
 
 
-::jxx::Ptr<NetworkChannel> ServerSocketChannel::bind(const ::jxx::Ptr<::jxx::net::SocketAddress>&a){return bind(a,0);}
-::jxx::Ptr<NetworkChannel> ServerSocketChannel::bind(const ::jxx::Ptr<::jxx::net::SocketAddress>&a,::jxx::lang::jint b){socket_->bind(a,b);setBlocking_(blocking_);return ::jxx::CAST<NetworkChannel>(thisPtr());}
+::jxx::Ptr<NetworkChannel> ServerSocketChannel::bind(
+    const ::jxx::Ptr<::jxx::net::SocketAddress>& address) {
+    return bind(address, 0);
+}
+
+::jxx::Ptr<NetworkChannel> ServerSocketChannel::bind(
+    const ::jxx::Ptr<::jxx::net::SocketAddress>& address,
+    ::jxx::lang::jint backlog) {
+    if (!isOpen()) throw ::jxx::nio::channels::ClosedChannelException();
+    socket_->bind(address, backlog);
+    applyPendingOptions_();
+    setBlocking_(blocking_);
+    return ::jxx::CAST<NetworkChannel>(thisPtr());
+}
 ::jxx::Ptr<::jxx::net::ServerSocket> ServerSocketChannel::socket(){return socket_;}
 ::jxx::Ptr<SocketChannel> ServerSocketChannel::accept(){
     if(!isOpen())throw ClosedChannelException();
@@ -112,9 +124,71 @@ int f=::fcntl(state_->socket,F_GETFL,0);if(f<0||::fcntl(state_->socket,F_SETFL,b
 
 
 ::jxx::Ptr<::jxx::net::SocketAddress> ServerSocketChannel::getLocalAddress()const{return socket_->getLocalSocketAddress();}
-::jxx::Ptr<NetworkChannel> ServerSocketChannel::setOption(const ::jxx::Ptr<Option>&n,const ::jxx::Ptr<::jxx::lang::Object>&v){if(!n||!v)throw ::jxx::lang::NullPointerException();auto t=n->name()->utf8();if(t=="SO_REUSEADDR"){auto x=::jxx::CAST<::jxx::lang::Boolean>(v);if(!x)throw ::jxx::lang::IllegalArgumentException();socket_->setReuseAddress(x->booleanValue());}else if(t=="SO_RCVBUF"){auto x=::jxx::CAST<::jxx::lang::Integer>(v);if(!x)throw ::jxx::lang::IllegalArgumentException();socket_->setReceiveBufferSize(x->intValue());}else throw ::jxx::lang::UnsupportedOperationException();return ::jxx::CAST<NetworkChannel>(thisPtr());}
-::jxx::Ptr<::jxx::lang::Object> ServerSocketChannel::getOption(const ::jxx::Ptr<Option>&n)const{if(!n)throw ::jxx::lang::NullPointerException();auto t=n->name()->utf8();if(t=="SO_REUSEADDR")return ::jxx::CAST<::jxx::lang::Object>(::jxx::lang::Boolean::valueOf(socket_->getReuseAddress()));if(t=="SO_RCVBUF")return ::jxx::CAST<::jxx::lang::Object>(::jxx::lang::Integer::valueOf(socket_->getReceiveBufferSize()));throw ::jxx::lang::UnsupportedOperationException();}
-::jxx::Ptr<::jxx::util::Set<ServerSocketChannel::Option>> ServerSocketChannel::supportedOptions()const{auto r=::jxx::NEW<::jxx::util::HashSet<Option>>();r->add(::jxx::net::StandardSocketOptions::SO_RCVBUF_);r->add(::jxx::net::StandardSocketOptions::SO_REUSEADDR_);return ::jxx::CAST<::jxx::util::Set<Option>>(r);}
+void ServerSocketChannel::applyPendingOptions_() {
+    if (reuseAddressSet_) socket_->setReuseAddress(reuseAddress_);
+    if (receiveBufferSizeSet_)
+        socket_->setReceiveBufferSize(receiveBufferSize_);
+}
+
+::jxx::Ptr<NetworkChannel> ServerSocketChannel::setOption(
+    const ::jxx::Ptr<Option>& name,
+    const ::jxx::Ptr<::jxx::lang::Object>& value) {
+    if (name == nullptr || value == nullptr)
+        throw ::jxx::lang::NullPointerException();
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!isOpen()) throw ::jxx::nio::channels::ClosedChannelException();
+    const auto text = name->name()->utf8();
+    if (text == "SO_REUSEADDR") {
+        const auto boolean = ::jxx::CAST<::jxx::lang::Boolean>(value);
+        if (boolean == nullptr) throw ::jxx::lang::IllegalArgumentException();
+        reuseAddress_ = boolean->booleanValue();
+        reuseAddressSet_ = true;
+        if (state_->socket != ::jxx::net::internal::kInvalidSocket)
+            socket_->setReuseAddress(reuseAddress_);
+    } else if (text == "SO_RCVBUF") {
+        const auto integer = ::jxx::CAST<::jxx::lang::Integer>(value);
+        if (integer == nullptr || integer->intValue() <= 0)
+            throw ::jxx::lang::IllegalArgumentException();
+        receiveBufferSize_ = integer->intValue();
+        receiveBufferSizeSet_ = true;
+        if (state_->socket != ::jxx::net::internal::kInvalidSocket)
+            socket_->setReceiveBufferSize(receiveBufferSize_);
+    } else {
+        throw ::jxx::lang::UnsupportedOperationException();
+    }
+    return ::jxx::CAST<NetworkChannel>(thisPtr());
+}
+
+::jxx::Ptr<::jxx::lang::Object> ServerSocketChannel::getOption(
+    const ::jxx::Ptr<Option>& name) const {
+    if (name == nullptr) throw ::jxx::lang::NullPointerException();
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!isOpen()) throw ::jxx::nio::channels::ClosedChannelException();
+    const auto text = name->name()->utf8();
+    if (text == "SO_REUSEADDR") {
+        const auto value = state_->socket == ::jxx::net::internal::kInvalidSocket
+            ? reuseAddress_
+            : socket_->getReuseAddress();
+        return ::jxx::CAST<::jxx::lang::Object>(
+            ::jxx::lang::Boolean::valueOf(value));
+    }
+    if (text == "SO_RCVBUF") {
+        const auto value = state_->socket == ::jxx::net::internal::kInvalidSocket
+            ? receiveBufferSize_
+            : socket_->getReceiveBufferSize();
+        return ::jxx::CAST<::jxx::lang::Object>(
+            ::jxx::lang::Integer::valueOf(value));
+    }
+    throw ::jxx::lang::UnsupportedOperationException();
+}
+
+::jxx::Ptr<::jxx::util::Set<ServerSocketChannel::Option>>
+ServerSocketChannel::supportedOptions() const {
+    const auto result = ::jxx::NEW<::jxx::util::HashSet<Option>>();
+    result->add(::jxx::net::StandardSocketOptions::SO_RCVBUF_);
+    result->add(::jxx::net::StandardSocketOptions::SO_REUSEADDR_);
+    return ::jxx::CAST<::jxx::util::Set<Option>>(result);
+}
 
 
 
