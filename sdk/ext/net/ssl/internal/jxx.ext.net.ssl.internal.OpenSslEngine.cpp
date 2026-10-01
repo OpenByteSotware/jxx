@@ -304,6 +304,31 @@ void OpenSslEngine::completeSession() {
     if (source == nullptr || destination == nullptr)
         throw ::jxx::lang::NullPointerException();
     ensureInitialized();
+    if (outboundCloseRequested_) {
+        if (!outboundCloseNotifyGenerated_) {
+            const int shutdownResult = SSL_shutdown(ssl_);
+            if (shutdownResult < 0) {
+                const int error = SSL_get_error(ssl_, shutdownResult);
+                if (error != SSL_ERROR_WANT_READ && error != SSL_ERROR_WANT_WRITE)
+                    throw ::jxx::ext::net::ssl::SSLProtocolException(
+                        "could not generate TLS close_notify");
+            }
+            outboundCloseNotifyGenerated_ = true;
+        }
+        const auto pendingCloseBytes = static_cast<::jxx::lang::jint>(
+            BIO_ctrl_pending(outboundBio_));
+        if (pendingCloseBytes > destination->remaining())
+            return result(SSLEngineResult::Status::BUFFER_OVERFLOW,
+                          SSLEngineResult::HandshakeStatus::NEED_WRAP, 0, 0);
+        const auto producedCloseBytes = drainNetwork(destination);
+        outboundDone_ = BIO_ctrl_pending(outboundBio_) == 0;
+        handshakeStatus_ = outboundDone_
+            ? SSLEngineResult::HandshakeStatus::NOT_HANDSHAKING
+            : SSLEngineResult::HandshakeStatus::NEED_WRAP;
+        return result(SSLEngineResult::Status::CLOSED,
+                      handshakeStatus_, 0,
+                      producedCloseBytes < 0 ? 0 : producedCloseBytes);
+    }
     if (!handshakeStarted_) beginHandshake();
 
     const auto pending = static_cast<::jxx::lang::jint>(
@@ -393,8 +418,10 @@ void OpenSslEngine::completeSession() {
             produced = read;
         } else {
             const int error = SSL_get_error(ssl_, read);
-            if (error == SSL_ERROR_ZERO_RETURN) inboundDone_ = true;
-            else if (error != SSL_ERROR_WANT_READ)
+            if (error == SSL_ERROR_ZERO_RETURN) {
+                peerCloseNotifyReceived_ = true;
+                inboundDone_ = true;
+            } else if (error != SSL_ERROR_WANT_READ)
                 throw ::jxx::ext::net::ssl::SSLProtocolException(
                     "OpenSSL unwrap failed");
         }
@@ -487,18 +514,21 @@ void OpenSslEngine::completeSession() {
 
 void OpenSslEngine::closeOutbound() {
     ensureInitialized();
-    if (outboundDone_) return;
-    SSL_shutdown(ssl_);
-    outboundDone_ = true;
-    handshakeStatus_ = BIO_ctrl_pending(outboundBio_) > 0
-        ? SSLEngineResult::HandshakeStatus::NEED_WRAP
-        : SSLEngineResult::HandshakeStatus::NOT_HANDSHAKING;
+    if (outboundCloseRequested_) return;
+    outboundCloseRequested_ = true;
+    outboundDone_ = false;
+    handshakeStatus_ = SSLEngineResult::HandshakeStatus::NEED_WRAP;
 }
 
 void OpenSslEngine::closeInbound() {
-    if (!inboundDone_ && initialized_ && SSL_get_shutdown(ssl_) == 0)
+    if (inboundDone_) return;
+    if (initialized_ && !peerCloseNotifyReceived_ &&
+        (SSL_get_shutdown(ssl_) & SSL_RECEIVED_SHUTDOWN) == 0) {
+        inboundDone_ = true;
         throw ::jxx::ext::net::ssl::SSLProtocolException(
             "inbound closed before peer close_notify");
+    }
+    peerCloseNotifyReceived_ = true;
     inboundDone_ = true;
 }
 
@@ -671,7 +701,7 @@ void OpenSslEngine::setEnableSessionCreation(::jxx::lang::jbool enabled) {
 }
 
 ::jxx::lang::jbool OpenSslEngine::isOutboundDone() const {
-    return outboundDone_ &&
+    return outboundCloseRequested_ && outboundDone_ &&
         (outboundBio_ == nullptr || BIO_ctrl_pending(outboundBio_) == 0);
 }
 

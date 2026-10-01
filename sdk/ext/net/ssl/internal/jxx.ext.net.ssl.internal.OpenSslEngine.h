@@ -117,6 +117,9 @@ private:
     ::jxx::lang::jbool handshakeFinishedReported_ = false;
     ::jxx::lang::jbool inboundDone_ = false;
     ::jxx::lang::jbool outboundDone_ = false;
+    ::jxx::lang::jbool peerCloseNotifyReceived_ = false;
+    ::jxx::lang::jbool outboundCloseRequested_ = false;
+    ::jxx::lang::jbool outboundCloseNotifyGenerated_ = false;
 };
 
 } // namespace jxx::ext::net::ssl::internal
