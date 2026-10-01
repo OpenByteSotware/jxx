@@ -7,6 +7,8 @@
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_array.h"
 
+struct ssl_ctx_st;
+
 namespace jxx::ext::net::ssl::internal {
 
 using ProtocolArray = ::jxx::lang::JxxArray<
@@ -20,6 +22,9 @@ std::pair<int, int> enabledProtocolRange(
 std::vector<std::string> contextProtocolNames(
     const ::jxx::Ptr<::jxx::lang::String>& protocol);
 std::vector<std::string> supportedProtocolNames();
+void applyEnabledProtocols(
+    ssl_ctx_st* context,
+    const std::vector<std::string>& protocols);
 
 ::jxx::Ptr<ProtocolArray> contextProtocols(
     const ::jxx::Ptr<::jxx::lang::String>& protocol);

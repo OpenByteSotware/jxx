@@ -45,6 +45,38 @@ std::pair<int, int> enabledProtocolRange(
 }
 
 
+void applyEnabledProtocols(
+    ssl_ctx_st* context,
+    const std::vector<std::string>& protocols) {
+    if (context == nullptr)
+        throw ::jxx::lang::IllegalArgumentException("TLS context is null");
+
+    const auto range = enabledProtocolRange(protocols);
+    if (SSL_CTX_set_min_proto_version(context, range.first) != 1 ||
+        SSL_CTX_set_max_proto_version(context, range.second) != 1)
+        throw ::jxx::lang::IllegalArgumentException(
+            "could not configure enabled TLS protocols");
+
+    const auto contains = [&protocols](const char* value) {
+        return std::find(protocols.begin(), protocols.end(),
+                         std::string(value)) != protocols.end();
+    };
+    unsigned long disabled = 0UL;
+#ifdef SSL_OP_NO_TLSv1
+    if (!contains("TLSv1")) disabled |= SSL_OP_NO_TLSv1;
+#endif
+#ifdef SSL_OP_NO_TLSv1_1
+    if (!contains("TLSv1.1")) disabled |= SSL_OP_NO_TLSv1_1;
+#endif
+#ifdef SSL_OP_NO_TLSv1_2
+    if (!contains("TLSv1.2")) disabled |= SSL_OP_NO_TLSv1_2;
+#endif
+#ifdef SSL_OP_NO_TLSv1_3
+    if (!contains("TLSv1.3")) disabled |= SSL_OP_NO_TLSv1_3;
+#endif
+    if (disabled != 0UL) SSL_CTX_set_options(context, disabled);
+}
+
 std::pair<int, int> protocolRange(
     const ::jxx::Ptr<::jxx::lang::String>& protocol) {
     const auto value = protocol == nullptr

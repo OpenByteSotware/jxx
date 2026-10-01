@@ -81,11 +81,7 @@ void OpenSslEngine::ensureInitialized() {
     if (context_ == nullptr)
         throw ::jxx::ext::net::ssl::SSLProtocolException(
             "SSL_CTX_new failed");
-    const auto range = enabledProtocolRange(enabledProtocols_);
-    if (SSL_CTX_set_min_proto_version(context_, range.first) != 1 ||
-        SSL_CTX_set_max_proto_version(context_, range.second) != 1)
-        throw ::jxx::ext::net::ssl::SSLProtocolException(
-            "could not configure TLS protocol range");
+    applyEnabledProtocols(context_, enabledProtocols_);
 
     if (!enabledCipherSuites_.empty()) {
         std::vector<std::string> tls13;
@@ -285,17 +281,41 @@ void OpenSslEngine::completeSession() {
 ::jxx::lang::jint OpenSslEngine::feedNetwork(
     const ::jxx::Ptr<::jxx::nio::ByteBuffer>& source) {
     if (source == nullptr) throw ::jxx::lang::NullPointerException();
-    const auto count = source->remaining();
-    if (count == 0) return 0;
-    std::vector<unsigned char> data(static_cast<std::size_t>(count));
-    for (::jxx::lang::jint index = 0; index < count; ++index)
+
+    // SSLEngine must leave an incomplete TLS record in the caller's buffer.
+    // Determine the complete-record prefix without changing source.position().
+    const auto available = source->remaining();
+    const auto start = source->position();
+    ::jxx::lang::jint accepted = 0;
+    while (available - accepted >= 5) {
+        const auto high = static_cast<unsigned char>(
+            source->get(start + accepted + 3));
+        const auto low = static_cast<unsigned char>(
+            source->get(start + accepted + 4));
+        const auto payloadLength = static_cast<::jxx::lang::jint>(
+            (static_cast<unsigned int>(high) << 8U) |
+            static_cast<unsigned int>(low));
+        const auto recordLength = static_cast<::jxx::lang::jint>(5) +
+            payloadLength;
+        if (recordLength > available - accepted) break;
+        accepted += recordLength;
+    }
+    if (accepted == 0) return 0;
+
+    std::vector<unsigned char> data(static_cast<std::size_t>(accepted));
+    for (::jxx::lang::jint index = 0; index < accepted; ++index)
         data[static_cast<std::size_t>(index)] =
-            static_cast<unsigned char>(source->get());
-    const int written = BIO_write(inboundBio_, data.data(), count);
-    if (written < 0)
+            static_cast<unsigned char>(source->get(start + index));
+
+    const int written = BIO_write(inboundBio_, data.data(), accepted);
+    if (written <= 0)
         throw ::jxx::ext::net::ssl::SSLProtocolException(
             "could not feed encrypted input");
-    return written;
+
+    // Commit only bytes accepted by the BIO. Memory BIOs normally accept the
+    // complete prefix, but honoring a short write keeps accounting exact.
+    for (int index = 0; index < written; ++index) source->get();
+    return static_cast<::jxx::lang::jint>(written);
 }
 
 ::jxx::lang::jint OpenSslEngine::drainNetwork(
@@ -429,16 +449,38 @@ void OpenSslEngine::completeSession() {
     ::jxx::lang::jint offset,
     ::jxx::lang::jint length,
     const ::jxx::Ptr<::jxx::nio::ByteBuffer>& destination) {
-    if (sources == nullptr || offset < 0 || length < 0 ||
-        offset > sources->length - length)
+    if (sources == nullptr) throw ::jxx::lang::NullPointerException();
+    if (destination == nullptr) throw ::jxx::lang::NullPointerException();
+    if (offset < 0 || length < 0 || offset > sources->length - length)
         throw ::jxx::lang::IllegalArgumentException();
+
+    ::jxx::lang::jint total = 0;
     for (::jxx::lang::jint index = offset; index < offset + length; ++index) {
         const auto source = (*sources)[index];
         if (source == nullptr) throw ::jxx::lang::NullPointerException();
-        if (source->remaining() > 0) return wrap(source, destination);
+        total += source->remaining();
     }
-    const auto empty = ::jxx::nio::ByteBuffer::allocate(0);
-    return wrap(empty, destination);
+
+    const auto gathered = ::jxx::nio::ByteBuffer::allocate(total);
+    for (::jxx::lang::jint index = offset; index < offset + length; ++index) {
+        const auto source = (*sources)[index];
+        const auto position = source->position();
+        for (::jxx::lang::jint cursor = 0; cursor < source->remaining(); ++cursor)
+            gathered->put(source->get(position + cursor));
+    }
+    gathered->flip();
+
+    const auto wrapped = wrap(gathered, destination);
+    auto remainingConsumed = wrapped->bytesConsumed();
+    for (::jxx::lang::jint index = offset;
+         index < offset + length && remainingConsumed > 0;
+         ++index) {
+        const auto source = (*sources)[index];
+        const auto amount = std::min(source->remaining(), remainingConsumed);
+        source->position(source->position() + amount);
+        remainingConsumed -= amount;
+    }
+    return wrapped;
 }
 
 ::jxx::Ptr<SSLEngineResult> OpenSslEngine::unwrap(
@@ -446,16 +488,36 @@ void OpenSslEngine::completeSession() {
     const ::jxx::Ptr<ByteBufferArray>& destinations,
     ::jxx::lang::jint offset,
     ::jxx::lang::jint length) {
-    if (destinations == nullptr || offset < 0 || length < 0 ||
-        offset > destinations->length - length)
+    if (source == nullptr || destinations == nullptr)
+        throw ::jxx::lang::NullPointerException();
+    if (offset < 0 || length < 0 || offset > destinations->length - length)
         throw ::jxx::lang::IllegalArgumentException();
+
+    ::jxx::lang::jint total = 0;
     for (::jxx::lang::jint index = offset; index < offset + length; ++index) {
         const auto destination = (*destinations)[index];
         if (destination == nullptr) throw ::jxx::lang::NullPointerException();
-        if (destination->remaining() > 0) return unwrap(source, destination);
+        if (destination->isReadOnly())
+            throw ::jxx::lang::IllegalArgumentException(
+                "destination buffer is read-only");
+        total += destination->remaining();
     }
-    return result(SSLEngineResult::Status::BUFFER_OVERFLOW,
-                  handshakeStatus_, 0, 0);
+
+    const auto scattered = ::jxx::nio::ByteBuffer::allocate(total);
+    const auto unwrapped = unwrap(source, scattered);
+    scattered->flip();
+    auto remainingProduced = unwrapped->bytesProduced();
+    for (::jxx::lang::jint index = offset;
+         index < offset + length && remainingProduced > 0;
+         ++index) {
+        const auto destination = (*destinations)[index];
+        const auto amount = std::min(
+            destination->remaining(), remainingProduced);
+        for (::jxx::lang::jint cursor = 0; cursor < amount; ++cursor)
+            destination->put(scattered->get());
+        remainingProduced -= amount;
+    }
+    return unwrapped;
 }
 
 void OpenSslEngine::closeOutbound() {
