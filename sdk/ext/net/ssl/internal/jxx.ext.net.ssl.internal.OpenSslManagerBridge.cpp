@@ -190,17 +190,77 @@ findExtendedKeyManager(
 
 ::jxx::Ptr<::jxx::lang::String> authenticationType(SSL* ssl) {
     const SSL_CIPHER* cipher =
-        ssl == nullptr
-            ? nullptr
-            : SSL_get_current_cipher(ssl);
-    if (cipher == nullptr) {
-        return ::jxx::NEW<::jxx::lang::String>(
-            "UNKNOWN");
+        ssl == nullptr ? nullptr : SSL_get_current_cipher(ssl);
+    if (cipher == nullptr)
+        return ::jxx::NEW<::jxx::lang::String>("UNKNOWN");
+
+    const int authentication = SSL_CIPHER_get_auth_nid(cipher);
+    const int keyExchange = SSL_CIPHER_get_kx_nid(cipher);
+    std::string authenticationName;
+    switch (authentication) {
+#ifdef NID_auth_rsa
+    case NID_auth_rsa:
+        authenticationName = "RSA";
+        break;
+#endif
+#ifdef NID_auth_ecdsa
+    case NID_auth_ecdsa:
+        authenticationName = "ECDSA";
+        break;
+#endif
+#ifdef NID_auth_dss
+    case NID_auth_dss:
+        authenticationName = "DSS";
+        break;
+#endif
+#ifdef NID_auth_psk
+    case NID_auth_psk:
+        authenticationName = "PSK";
+        break;
+#endif
+    default: {
+        const char* name = OBJ_nid2sn(authentication);
+        authenticationName = name == nullptr ? "UNKNOWN" : name;
+        break;
     }
-    const int nid = SSL_CIPHER_get_auth_nid(cipher);
-    const char* name = OBJ_nid2sn(nid);
-    return ::jxx::NEW<::jxx::lang::String>(
-        name == nullptr ? "UNKNOWN" : name);
+    }
+
+    std::string keyExchangeName;
+    switch (keyExchange) {
+#ifdef NID_kx_rsa
+    case NID_kx_rsa:
+        keyExchangeName = "RSA";
+        break;
+#endif
+#ifdef NID_kx_dhe
+    case NID_kx_dhe:
+        keyExchangeName = "DHE";
+        break;
+#endif
+#ifdef NID_kx_ecdhe
+    case NID_kx_ecdhe:
+        keyExchangeName = "ECDHE";
+        break;
+#endif
+#ifdef NID_kx_psk
+    case NID_kx_psk:
+        keyExchangeName = "PSK";
+        break;
+#endif
+#ifdef NID_kx_any
+    case NID_kx_any:
+        keyExchangeName.clear();
+        break;
+#endif
+    default:
+        break;
+    }
+
+    const auto value =
+        keyExchangeName.empty() || keyExchangeName == authenticationName
+            ? authenticationName
+            : keyExchangeName + "_" + authenticationName;
+    return ::jxx::NEW<::jxx::lang::String>(value);
 }
 
 } // namespace
@@ -235,6 +295,15 @@ int OpenSslManagerBridge::verifyPeer(X509_STORE_CTX* storeContext) noexcept {
 
         const auto manager = findTrustManager(config_);
         if (manager == nullptr) {
+            // A null trust-manager array requests provider defaults. An
+            // explicitly supplied array with no X509TrustManager must not
+            // silently fall back to the platform trust store.
+            if (config_ != nullptr && config_->trustManagers != nullptr) {
+                X509_STORE_CTX_set_error(
+                    storeContext,
+                    X509_V_ERR_APPLICATION_VERIFICATION);
+                return 0;
+            }
             return X509_verify_cert(storeContext) == 1 ? 1 : 0;
         }
 
@@ -315,6 +384,13 @@ int OpenSslManagerBridge::verifyPeer(X509_STORE_CTX* storeContext) noexcept {
         SSL* ssl = static_cast<SSL*>(X509_STORE_CTX_get_ex_data(
             storeContext, SSL_get_ex_data_X509_STORE_CTX_idx()));
         const auto authType = authenticationType(ssl);
+        if (count <= 0 || authType == nullptr ||
+            authType->utf8().empty() || authType->utf8() == "UNKNOWN") {
+            X509_STORE_CTX_set_error(
+                storeContext,
+                X509_V_ERR_APPLICATION_VERIFICATION);
+            return 0;
+        }
         const bool serverMode =
             ssl != nullptr && SSL_is_server(ssl);
         const auto extended =
