@@ -6,6 +6,34 @@ namespace jxx::ext::net::ssl {
 
 SSLSocket::SSLSocket() = default;
 
+SSLSocket::SSLSocket(
+    const ::jxx::Ptr<::jxx::lang::String>& host,
+    ::jxx::lang::jint port)
+    : Super(host, port) {
+}
+
+SSLSocket::SSLSocket(
+    const ::jxx::Ptr<::jxx::net::InetAddress>& address,
+    ::jxx::lang::jint port)
+    : Super(address, port) {
+}
+
+SSLSocket::SSLSocket(
+    const ::jxx::Ptr<::jxx::lang::String>& host,
+    ::jxx::lang::jint port,
+    const ::jxx::Ptr<::jxx::net::InetAddress>& clientAddress,
+    ::jxx::lang::jint clientPort)
+    : Super(host, port, clientAddress, clientPort) {
+}
+
+SSLSocket::SSLSocket(
+    const ::jxx::Ptr<::jxx::net::InetAddress>& address,
+    ::jxx::lang::jint port,
+    const ::jxx::Ptr<::jxx::net::InetAddress>& clientAddress,
+    ::jxx::lang::jint clientPort)
+    : Super(address, port, clientAddress, clientPort) {
+}
+
 ::jxx::Ptr<SSLParameters> SSLSocket::getSSLParameters() const {
     const auto parameters = ::jxx::NEW<SSLParameters>(
         getEnabledCipherSuites(), getEnabledProtocols());

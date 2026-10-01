@@ -5,6 +5,8 @@
 
 namespace jxx::ext::net::ssl {
 
+SSLServerSocket::SSLServerSocket() = default;
+
 SSLServerSocket::SSLServerSocket(::jxx::lang::jint port)
     : Super(port) {
 }

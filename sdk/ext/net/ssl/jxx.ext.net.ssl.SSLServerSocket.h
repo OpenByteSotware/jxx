@@ -19,12 +19,6 @@ public:
     using StringArray = ::jxx::lang::JxxArray<
         ::jxx::Ptr<::jxx::lang::String>, 1U>;
 
-    explicit SSLServerSocket(::jxx::lang::jint port);
-    SSLServerSocket(::jxx::lang::jint port, ::jxx::lang::jint backlog);
-    SSLServerSocket(
-        ::jxx::lang::jint port,
-        ::jxx::lang::jint backlog,
-        const ::jxx::Ptr<::jxx::net::InetAddress>& address);
     ~SSLServerSocket() override = default;
 
     virtual ::jxx::Ptr<StringArray> getEnabledCipherSuites() const = 0;
@@ -45,6 +39,17 @@ public:
     virtual ::jxx::Ptr<SSLParameters> getSSLParameters() const;
     virtual void setSSLParameters(
         const ::jxx::Ptr<SSLParameters>& parameters);
+protected:
+    SSLServerSocket();
+    explicit SSLServerSocket(::jxx::lang::jint port);
+    SSLServerSocket(
+        ::jxx::lang::jint port,
+        ::jxx::lang::jint backlog);
+    SSLServerSocket(
+        ::jxx::lang::jint port,
+        ::jxx::lang::jint backlog,
+        const ::jxx::Ptr<::jxx::net::InetAddress>& address);
+
 };
 
 } // namespace jxx::ext::net::ssl

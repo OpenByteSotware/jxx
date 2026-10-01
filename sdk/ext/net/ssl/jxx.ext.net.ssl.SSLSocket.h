@@ -19,7 +19,6 @@ public:
     using StringArray = ::jxx::lang::JxxArray<
         ::jxx::Ptr<::jxx::lang::String>, 1U>;
 
-    SSLSocket();
     ~SSLSocket() override = default;
 
     virtual ::jxx::Ptr<StringArray> getSupportedCipherSuites() const = 0;
@@ -43,6 +42,25 @@ public:
     virtual ::jxx::lang::jbool getEnableSessionCreation() const = 0;
     virtual ::jxx::Ptr<SSLParameters> getSSLParameters() const;
     virtual void setSSLParameters(const ::jxx::Ptr<SSLParameters>& parameters);
+protected:
+    SSLSocket();
+    SSLSocket(
+        const ::jxx::Ptr<::jxx::lang::String>& host,
+        ::jxx::lang::jint port);
+    SSLSocket(
+        const ::jxx::Ptr<::jxx::net::InetAddress>& address,
+        ::jxx::lang::jint port);
+    SSLSocket(
+        const ::jxx::Ptr<::jxx::lang::String>& host,
+        ::jxx::lang::jint port,
+        const ::jxx::Ptr<::jxx::net::InetAddress>& clientAddress,
+        ::jxx::lang::jint clientPort);
+    SSLSocket(
+        const ::jxx::Ptr<::jxx::net::InetAddress>& address,
+        ::jxx::lang::jint port,
+        const ::jxx::Ptr<::jxx::net::InetAddress>& clientAddress,
+        ::jxx::lang::jint clientPort);
+
 };
 
 } // namespace jxx::ext::net::ssl
