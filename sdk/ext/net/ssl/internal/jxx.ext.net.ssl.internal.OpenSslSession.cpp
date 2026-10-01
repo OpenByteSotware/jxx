@@ -13,6 +13,16 @@
 namespace jxx::ext::net::ssl::internal {
 
 namespace {
+::jxx::Ptr<OpenSslSession::CertificateArray> copyCertificates(
+    const ::jxx::Ptr<OpenSslSession::CertificateArray>& source) {
+    if (source == nullptr) return nullptr;
+    const auto result = ::jxx::NEW<OpenSslSession::CertificateArray>(
+        source->length);
+    for (::jxx::lang::jint index = 0; index < source->length; ++index)
+        (*result)[index] = (*source)[index];
+    return result;
+}
+
 ::jxx::Ptr<::jxx::security::Principal> certificatePrincipal(
     const ::jxx::Ptr<OpenSslSession::CertificateArray>& certificates) {
     if (certificates == nullptr || certificates->length == 0 ||
@@ -46,14 +56,25 @@ void OpenSslSession::touch() const { lastAccessedTime_ = nowMillis(); }
 ::jxx::lang::jlong OpenSslSession::getCreationTime() const { return creationTime_; }
 ::jxx::lang::ByteArray OpenSslSession::getId() const { touch(); const auto r=::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::jbyte,1U>>(id_->length);for(::jxx::lang::jint i=0;i<id_->length;++i)(*r)[i]=(*id_)[i];return r; }
 ::jxx::lang::jlong OpenSslSession::getLastAccessedTime() const { return lastAccessedTime_; }
-::jxx::Ptr<OpenSslSession::CertificateArray> OpenSslSession::getLocalCertificates() const { touch(); return localCertificates_; }
+::jxx::Ptr<OpenSslSession::CertificateArray>
+OpenSslSession::getLocalCertificates() const {
+    touch();
+    return copyCertificates(localCertificates_);
+}
 ::jxx::Ptr<::jxx::security::Principal>
 OpenSslSession::getLocalPrincipal() const {
     touch();
     return certificatePrincipal(localCertificates_);
 }
 ::jxx::lang::jint OpenSslSession::getPacketBufferSize() const { touch(); return 16709; }
-::jxx::Ptr<OpenSslSession::CertificateArray> OpenSslSession::getPeerCertificates() const { touch(); if(peerCertificates_==nullptr)throw ::jxx::ext::net::ssl::SSLPeerUnverifiedException("peer not authenticated");return peerCertificates_; }
+::jxx::Ptr<OpenSslSession::CertificateArray>
+OpenSslSession::getPeerCertificates() const {
+    touch();
+    if (peerCertificates_ == nullptr)
+        throw ::jxx::ext::net::ssl::SSLPeerUnverifiedException(
+            "peer not authenticated");
+    return copyCertificates(peerCertificates_);
+}
 ::jxx::Ptr<OpenSslSession::LegacyCertificateArray>
 OpenSslSession::getPeerCertificateChain() const {
     const auto certificates = getPeerCertificates();
@@ -119,10 +140,89 @@ OpenSslSession::getRequestedServerNames() const {
 }
 ::jxx::Ptr<::jxx::ext::net::ssl::SSLSessionContext> OpenSslSession::getSessionContext() const { return context_; }
 ::jxx::Ptr<::jxx::lang::Object> OpenSslSession::getValue(const ::jxx::Ptr<::jxx::lang::String>& name) const {if(name==nullptr)throw ::jxx::lang::IllegalArgumentException();std::lock_guard<std::mutex> l(mutex_);auto i=values_.find(name->utf8());return i==values_.end()?nullptr:i->second;}
-::jxx::Ptr<OpenSslSession::StringArray> OpenSslSession::getValueNames() const {std::lock_guard<std::mutex> l(mutex_);auto r=::jxx::NEW<StringArray>(static_cast<::jxx::lang::jint>(values_.size()));::jxx::lang::jint i=0;for(const auto&v:values_)(*r)[i++]=::jxx::NEW<::jxx::lang::String>(v.first);return r;}
-void OpenSslSession::invalidate() { std::lock_guard<std::mutex> l(mutex_); valid_=false; values_.clear(); }
-::jxx::lang::jbool OpenSslSession::isValid() const { return valid_; }
-void OpenSslSession::putValue(const ::jxx::Ptr<::jxx::lang::String>&name,const ::jxx::Ptr<::jxx::lang::Object>&value){if(name==nullptr||value==nullptr)throw ::jxx::lang::IllegalArgumentException();::jxx::Ptr<::jxx::lang::Object>old;{std::lock_guard<std::mutex>lock(mutex_);auto f=values_.find(name->utf8());if(f!=values_.end())old=f->second;values_[name->utf8()]=value;}auto e=::jxx::NEW<::jxx::ext::net::ssl::SSLSessionBindingEvent>(::jxx::CAST<::jxx::ext::net::ssl::SSLSession>(thisPtr()),name);auto nl=::jxx::CAST<::jxx::ext::net::ssl::SSLSessionBindingListener>(value);if(nl!=nullptr)nl->valueBound(e);auto ol=::jxx::CAST<::jxx::ext::net::ssl::SSLSessionBindingListener>(old);if(ol!=nullptr)ol->valueUnbound(e);}
-void OpenSslSession::removeValue(const ::jxx::Ptr<::jxx::lang::String>&name){if(name==nullptr)throw ::jxx::lang::IllegalArgumentException();::jxx::Ptr<::jxx::lang::Object>removed;{std::lock_guard<std::mutex>lock(mutex_);auto f=values_.find(name->utf8());if(f==values_.end())return;removed=f->second;values_.erase(f);}auto l=::jxx::CAST<::jxx::ext::net::ssl::SSLSessionBindingListener>(removed);if(l!=nullptr)l->valueUnbound(::jxx::NEW<::jxx::ext::net::ssl::SSLSessionBindingEvent>(::jxx::CAST<::jxx::ext::net::ssl::SSLSession>(thisPtr()),name));}
+::jxx::Ptr<OpenSslSession::StringArray>
+OpenSslSession::getValueNames() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    const auto result = ::jxx::NEW<StringArray>(
+        static_cast<::jxx::lang::jint>(values_.size()));
+    ::jxx::lang::jint index = 0;
+    for (const auto& value : values_)
+        (*result)[index++] = ::jxx::NEW<::jxx::lang::String>(value.first);
+    return result;
+}
+
+void OpenSslSession::invalidate() {
+    std::vector<std::pair<std::string, ::jxx::Ptr<::jxx::lang::Object>>>
+        removed;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!valid_) return;
+        valid_ = false;
+        removed.reserve(values_.size());
+        for (const auto& value : values_) removed.push_back(value);
+        values_.clear();
+    }
+    const auto session = ::jxx::CAST<::jxx::ext::net::ssl::SSLSession>(
+        thisPtr());
+    for (const auto& value : removed) {
+        const auto listener = ::jxx::CAST<
+            ::jxx::ext::net::ssl::SSLSessionBindingListener>(value.second);
+        if (listener != nullptr)
+            listener->valueUnbound(
+                ::jxx::NEW<::jxx::ext::net::ssl::SSLSessionBindingEvent>(
+                    session,
+                    ::jxx::NEW<::jxx::lang::String>(value.first)));
+    }
+}
+
+::jxx::lang::jbool OpenSslSession::isValid() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return valid_;
+}
+
+void OpenSslSession::putValue(
+    const ::jxx::Ptr<::jxx::lang::String>& name,
+    const ::jxx::Ptr<::jxx::lang::Object>& value) {
+    if (name == nullptr || value == nullptr)
+        throw ::jxx::lang::IllegalArgumentException();
+    ::jxx::Ptr<::jxx::lang::Object> old;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        const auto found = values_.find(name->utf8());
+        if (found != values_.end()) old = found->second;
+        values_[name->utf8()] = value;
+    }
+    const auto event =
+        ::jxx::NEW<::jxx::ext::net::ssl::SSLSessionBindingEvent>(
+            ::jxx::CAST<::jxx::ext::net::ssl::SSLSession>(thisPtr()),
+            name);
+    const auto oldListener = ::jxx::CAST<
+        ::jxx::ext::net::ssl::SSLSessionBindingListener>(old);
+    if (oldListener != nullptr) oldListener->valueUnbound(event);
+    const auto newListener = ::jxx::CAST<
+        ::jxx::ext::net::ssl::SSLSessionBindingListener>(value);
+    if (newListener != nullptr) newListener->valueBound(event);
+}
+
+void OpenSslSession::removeValue(
+    const ::jxx::Ptr<::jxx::lang::String>& name) {
+    if (name == nullptr) throw ::jxx::lang::IllegalArgumentException();
+    ::jxx::Ptr<::jxx::lang::Object> removed;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        const auto found = values_.find(name->utf8());
+        if (found == values_.end()) return;
+        removed = found->second;
+        values_.erase(found);
+    }
+    const auto listener = ::jxx::CAST<
+        ::jxx::ext::net::ssl::SSLSessionBindingListener>(removed);
+    if (listener != nullptr)
+        listener->valueUnbound(
+            ::jxx::NEW<::jxx::ext::net::ssl::SSLSessionBindingEvent>(
+                ::jxx::CAST<::jxx::ext::net::ssl::SSLSession>(thisPtr()),
+                name));
+}
+
 
 } // namespace jxx::ext::net::ssl::internal
