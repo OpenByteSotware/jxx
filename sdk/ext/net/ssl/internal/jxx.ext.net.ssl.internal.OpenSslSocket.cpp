@@ -19,6 +19,7 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslManagerBridge.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSniMatcher.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslProtocolPolicy.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslPeerIdentity.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSession.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSignatureAlgorithms.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSessionContext.h"
@@ -291,10 +292,7 @@ void OpenSslSocket::startHandshake() {
                 "could not configure SNI host");
         if (endpointIdentificationAlgorithm_ != nullptr &&
             endpointIdentificationAlgorithm_->utf8() == "HTTPS") {
-            if (host_ == nullptr || host_->utf8().empty() ||
-                SSL_set1_host(ssl, host_->utf8().c_str()) != 1)
-                throw ::jxx::ext::net::ssl::SSLProtocolException(
-                    "could not configure HTTPS endpoint identification");
+            configureHttpsEndpointIdentification(ssl, host_);
         }
     } else {
         SSL_set_accept_state(ssl);
@@ -362,18 +360,8 @@ void OpenSslSocket::startHandshake() {
     auto sid = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(static_cast<::jxx::lang::jint>(idn));
     for (unsigned int i = 0; i < idn; ++i) (*sid)[static_cast<::jxx::lang::jint>(i)] = static_cast<::jxx::lang::jbyte>(id[i]);
     auto sc = client_ ? config_->clientSessionContext : config_->serverSessionContext;
-    using CA = OpenSslSession::CertificateArray; ::jxx::Ptr<CA> peers, locals;
-    STACK_OF(X509)* chain = SSL_get_peer_cert_chain(ssl);
-    if (chain != nullptr) {
-        int n = sk_X509_num(chain); peers = ::jxx::NEW<CA>(n);
-        for (int i = 0; i < n; ++i) {
-            X509* cert = sk_X509_value(chain, i); int len = i2d_X509(cert, nullptr);
-            auto enc = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(len);
-            unsigned char* cur = reinterpret_cast<unsigned char*>(&(*enc)[0]);
-            if (len <= 0 || i2d_X509(cert, &cur) != len) throw ::jxx::io::IOException("Could not encode peer certificate");
-            (*peers)[i] = ::jxx::CAST<::jxx::security::cert::Certificate>(::jxx::NEW<OpenSslX509Certificate>(enc));
-        }
-    }
+    using CA = OpenSslSession::CertificateArray; ::jxx::Ptr<CA> locals;
+    const auto peers = peerCertificateChain(ssl);
     X509* local = SSL_get_certificate(ssl);
     if (local != nullptr) {
         int len = i2d_X509(local, nullptr); locals = ::jxx::NEW<CA>(1);

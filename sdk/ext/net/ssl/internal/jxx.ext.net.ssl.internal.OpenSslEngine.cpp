@@ -10,6 +10,7 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslManagerBridge.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSniMatcher.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslProtocolPolicy.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslPeerIdentity.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSession.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSignatureAlgorithms.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSessionContext.h"
@@ -132,18 +133,12 @@ void OpenSslEngine::ensureInitialized() {
                         "could not apply cached TLS session");
             }
         }
-        const auto peerHost = explicitSniHost_ != nullptr
-            ? explicitSniHost_ : getPeerHost();
-        if (peerHost != nullptr && !peerHost->utf8().empty()) {
-            if (SSL_set_tlsext_host_name(ssl_, peerHost->utf8().c_str()) != 1)
-                throw ::jxx::ext::net::ssl::SSLProtocolException(
-                    "could not configure SNI host");
-            if (endpointIdentificationAlgorithm_ != nullptr &&
-                endpointIdentificationAlgorithm_->utf8() == "HTTPS" &&
-                SSL_set1_host(ssl_, peerHost->utf8().c_str()) != 1)
-                throw ::jxx::ext::net::ssl::SSLProtocolException(
-                    "could not configure HTTPS endpoint identification");
-        }
+        const auto peerHost = getPeerHost();
+        const auto sniHost = explicitSniHost_ != nullptr ? explicitSniHost_ : peerHost;
+        if (sniHost != nullptr && !sniHost->utf8().empty() && SSL_set_tlsext_host_name(ssl_, sniHost->utf8().c_str()) != 1)
+            throw ::jxx::ext::net::ssl::SSLProtocolException("could not configure SNI host");
+        if (endpointIdentificationAlgorithm_ != nullptr && endpointIdentificationAlgorithm_->utf8() == "HTTPS")
+            configureHttpsEndpointIdentification(ssl_, peerHost);
     } else {
         SSL_set_accept_state(ssl_);
         int verifyMode = SSL_VERIFY_NONE;
@@ -218,27 +213,7 @@ void OpenSslEngine::completeSession() {
         (*sessionId)[static_cast<::jxx::lang::jint>(index)] =
             static_cast<::jxx::lang::jbyte>(id[index]);
     using CertificateArray = OpenSslSession::CertificateArray;
-    ::jxx::Ptr<CertificateArray> peerCertificates;
-    STACK_OF(X509)* chain = SSL_get_peer_cert_chain(ssl_);
-    if (chain != nullptr) {
-        const int count = sk_X509_num(chain);
-        peerCertificates = ::jxx::NEW<CertificateArray>(count);
-        for (int index = 0; index < count; ++index) {
-            X509* certificate = sk_X509_value(chain, index);
-            const int length = i2d_X509(certificate, nullptr);
-            if (length <= 0) throw ::jxx::ext::net::ssl::SSLProtocolException(
-                "could not encode peer certificate");
-            const auto encoded = ::jxx::NEW<
-                ::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(length);
-            unsigned char* cursor = reinterpret_cast<unsigned char*>(&(*encoded)[0]);
-            if (i2d_X509(certificate, &cursor) != length)
-                throw ::jxx::ext::net::ssl::SSLProtocolException(
-                    "could not encode peer certificate");
-            (*peerCertificates)[index] = ::jxx::CAST<
-                ::jxx::security::cert::Certificate>(
-                    ::jxx::NEW<OpenSslX509Certificate>(encoded));
-        }
-    }
+    const auto peerCertificates = peerCertificateChain(ssl_);
     ::jxx::Ptr<CertificateArray> localCertificates;
     X509* local = SSL_get_certificate(ssl_);
     if (local != nullptr) {
