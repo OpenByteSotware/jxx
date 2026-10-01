@@ -7,6 +7,8 @@
 #include "security/cert/jxx.security.cert.Certificate.h"
 #include "security/jxx.security.Principal.h"
 
+namespace jxx::ext::security::cert { class X509Certificate; }
+
 namespace jxx::ext::net::ssl {
 
 class SSLSessionContext;
@@ -17,6 +19,8 @@ public:
         ::jxx::Ptr<::jxx::security::cert::Certificate>, 1U>;
     using StringArray = ::jxx::lang::JxxArray<
         ::jxx::Ptr<::jxx::lang::String>, 1U>;
+    using LegacyCertificateArray = ::jxx::lang::JxxArray<
+        ::jxx::Ptr<::jxx::ext::security::cert::X509Certificate>, 1U>;
 
     ~SSLSession() override = default;
 
@@ -29,6 +33,8 @@ public:
     virtual ::jxx::Ptr<::jxx::security::Principal> getLocalPrincipal() const = 0;
     virtual ::jxx::lang::jint getPacketBufferSize() const = 0;
     virtual ::jxx::Ptr<CertificateArray> getPeerCertificates() const = 0;
+    virtual ::jxx::Ptr<LegacyCertificateArray>
+    getPeerCertificateChain() const = 0;
     virtual ::jxx::Ptr<::jxx::lang::String> getPeerHost() const = 0;
     virtual ::jxx::lang::jint getPeerPort() const = 0;
     virtual ::jxx::Ptr<::jxx::security::Principal> getPeerPrincipal() const = 0;

@@ -1,5 +1,6 @@
 #include <openssl/x509.h>
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslSession.h"
+#include "ext/security/cert/internal/jxx.ext.security.cert.internal.DerX509Certificate.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.X509Principal.h"
 #include "util/jxx.util.ArrayList.h"
 
@@ -53,6 +54,25 @@ OpenSslSession::getLocalPrincipal() const {
 }
 ::jxx::lang::jint OpenSslSession::getPacketBufferSize() const { touch(); return 16709; }
 ::jxx::Ptr<OpenSslSession::CertificateArray> OpenSslSession::getPeerCertificates() const { touch(); if(peerCertificates_==nullptr)throw ::jxx::ext::net::ssl::SSLPeerUnverifiedException("peer not authenticated");return peerCertificates_; }
+::jxx::Ptr<OpenSslSession::LegacyCertificateArray>
+OpenSslSession::getPeerCertificateChain() const {
+    const auto certificates = getPeerCertificates();
+    const auto result = ::jxx::NEW<LegacyCertificateArray>(
+        certificates->length);
+    for (::jxx::lang::jint index = 0;
+         index < certificates->length;
+         ++index) {
+        if ((*certificates)[index] == nullptr)
+            throw ::jxx::ext::net::ssl::SSLPeerUnverifiedException(
+                "peer certificate chain contains a null certificate");
+        (*result)[index] = ::jxx::CAST<
+            ::jxx::ext::security::cert::X509Certificate>(
+                ::jxx::NEW<
+                    ::jxx::ext::security::cert::internal::DerX509Certificate>(
+                        (*certificates)[index]->getEncoded()));
+    }
+    return result;
+}
 ::jxx::Ptr<::jxx::lang::String> OpenSslSession::getPeerHost() const { touch(); return host_; }
 ::jxx::lang::jint OpenSslSession::getPeerPort() const { touch(); return port_; }
 ::jxx::Ptr<::jxx::security::Principal>

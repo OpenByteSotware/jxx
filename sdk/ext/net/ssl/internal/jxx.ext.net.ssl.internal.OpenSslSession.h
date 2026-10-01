@@ -20,6 +20,7 @@ public:
     using Super = ::jxx::lang::ClassBase<OpenSslSession, JxxSuper>;
     using CertificateArray = SSLSession::CertificateArray;
     using StringArray = SSLSession::StringArray;
+    using LegacyCertificateArray = SSLSession::LegacyCertificateArray;
 
     OpenSslSession(
         const ::jxx::Ptr<::jxx::lang::String>& cipher,
@@ -61,6 +62,8 @@ public:
     ::jxx::Ptr<::jxx::security::Principal> getLocalPrincipal() const override;
     ::jxx::lang::jint getPacketBufferSize() const override;
     ::jxx::Ptr<CertificateArray> getPeerCertificates() const override;
+    ::jxx::Ptr<LegacyCertificateArray>
+    getPeerCertificateChain() const override;
     ::jxx::Ptr<::jxx::lang::String> getPeerHost() const override;
     ::jxx::lang::jint getPeerPort() const override;
     ::jxx::Ptr<::jxx::security::Principal> getPeerPrincipal() const override;
