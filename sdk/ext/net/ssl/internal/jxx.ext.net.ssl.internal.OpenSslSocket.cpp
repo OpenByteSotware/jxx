@@ -417,7 +417,10 @@ void OpenSslSocket::startHandshake() {
 ::jxx::Ptr<::jxx::io::InputStream>
 OpenSslSocket::getInputStream() {
     std::lock_guard<std::recursive_mutex> tlsLock(tlsMutex_);
-    startHandshake();
+    if (closed_)
+        throw ::jxx::io::IOException("SSL socket is closed");
+    if (!connected_)
+        throw ::jxx::io::IOException("SSL socket is not connected");
     if (inputStream_ == nullptr)
         inputStream_ = ::jxx::NEW<OpenSslInputStream>(this);
     return inputStream_;
@@ -426,7 +429,10 @@ OpenSslSocket::getInputStream() {
 ::jxx::Ptr<::jxx::io::OutputStream>
 OpenSslSocket::getOutputStream() {
     std::lock_guard<std::recursive_mutex> tlsLock(tlsMutex_);
-    startHandshake();
+    if (closed_)
+        throw ::jxx::io::IOException("SSL socket is closed");
+    if (!connected_)
+        throw ::jxx::io::IOException("SSL socket is not connected");
     if (outputStream_ == nullptr)
         outputStream_ = ::jxx::NEW<OpenSslOutputStream>(this);
     return outputStream_;

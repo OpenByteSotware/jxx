@@ -29,6 +29,10 @@ OpenSslInputStream::OpenSslInputStream(OpenSslSocket* socket)
         length);
 }
 
+void OpenSslInputStream::close() {
+    socket_->close();
+}
+
 OpenSslOutputStream::OpenSslOutputStream(OpenSslSocket* socket)
     : socket_(socket) {
     if (socket_ == nullptr) throw ::jxx::lang::NullPointerException();
@@ -48,6 +52,10 @@ void OpenSslOutputStream::write(
     socket_->tlsWrite(
         reinterpret_cast<const unsigned char*>(&(*buffer)[offset]),
         length);
+}
+
+void OpenSslOutputStream::close() {
+    socket_->close();
 }
 
 } // namespace jxx::ext::net::ssl::internal

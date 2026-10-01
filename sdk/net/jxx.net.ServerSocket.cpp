@@ -10,6 +10,7 @@
 
 #include <cerrno>
 #include <cstring>
+#include <mutex>
 #include <stdexcept>
 
 #include "net/jxx.net.ServerSocket.h"
@@ -31,6 +32,7 @@
 namespace
 {
     jxx::Ptr<jxx::net::SocketImplFactory> g_serverFactory;
+    std::mutex g_serverFactoryMutex;
 
     [[noreturn]] void throwSE_(const char* msg)
     {
@@ -131,9 +133,16 @@ namespace jxx::net
         try { close(); } catch (...) {}
     }
 
-    void ServerSocket::setSocketFactory(const jxx::Ptr<SocketImplFactory>& fac)
+    void ServerSocket::setSocketFactory(
+        const jxx::Ptr<SocketImplFactory>& factory)
     {
-        g_serverFactory = std::move(fac);
+        if (factory == nullptr)
+            throw ::jxx::lang::NullPointerException();
+        std::lock_guard<std::mutex> lock(g_serverFactoryMutex);
+        if (g_serverFactory != nullptr)
+            throw SocketException(
+                "server socket implementation factory already set");
+        g_serverFactory = factory;
     }
 
     void ServerSocket::ensureCreated_()

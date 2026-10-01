@@ -17,6 +17,7 @@
 #endif
 
 #include <cstring>
+#include <mutex>
 #include <stdexcept>
 #include "net/jxx.net.Socket.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
@@ -37,6 +38,7 @@
 namespace
 {
     jxx::Ptr<jxx::net::SocketImplFactory> g_factory;
+    std::mutex g_factoryMutex;
 
     [[noreturn]] void throwSE_(const char* msg)
     {
@@ -188,9 +190,15 @@ namespace jxx::net
         try { close(); } catch (...) {}
     }
 
-    void Socket::setSocketImplFactory(const jxx::Ptr<SocketImplFactory>& fac)
+    void Socket::setSocketImplFactory(
+        const jxx::Ptr<SocketImplFactory>& factory)
     {
-        g_factory = std::move(fac);
+        if (factory == nullptr)
+            throw ::jxx::lang::NullPointerException();
+        std::lock_guard<std::mutex> lock(g_factoryMutex);
+        if (g_factory != nullptr)
+            throw SocketException("socket implementation factory already set");
+        g_factory = factory;
     }
 
     void Socket::ensureCreated_(jxx::lang::jbool /*stream*/)
