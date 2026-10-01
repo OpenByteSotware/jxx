@@ -218,16 +218,43 @@ namespace jxx::nio::channels
 			if (state_->socket == ::jxx::net::internal::kInvalidSocket)
 				throw ::jxx::io::IOException("could not create socket channel");
 			setBlocking(state_->socket, blocking_);
+			applyPendingOptions(state_->socket);
+		}
+	}
+
+	void SocketChannel::applyPendingOptions(
+		::jxx::net::internal::NativeSocket socket) const
+	{
+		auto setInteger = [socket](int level, int option, int value) {
+			if (::setsockopt(socket, level, option,
+				reinterpret_cast<const char*>(&value), sizeof(value)) != 0)
+				throw ::jxx::io::IOException("setOption failed");
+		};
+		if (keepAliveSet_) setInteger(SOL_SOCKET, SO_KEEPALIVE, keepAlive_ ? 1 : 0);
+		if (reuseAddressSet_) setInteger(SOL_SOCKET, SO_REUSEADDR, reuseAddress_ ? 1 : 0);
+		if (tcpNoDelaySet_) setInteger(IPPROTO_TCP, TCP_NODELAY, tcpNoDelay_ ? 1 : 0);
+		if (sendBufferSizeSet_) setInteger(SOL_SOCKET, SO_SNDBUF, sendBufferSize_);
+		if (receiveBufferSizeSet_) setInteger(SOL_SOCKET, SO_RCVBUF, receiveBufferSize_);
+		if (trafficClassSet_) setInteger(IPPROTO_IP, IP_TOS, trafficClass_);
+		if (lingerSet_) {
+			linger value{};
+			value.l_onoff = linger_ >= 0 ? 1 : 0;
+			value.l_linger = linger_ >= 0 ? linger_ : 0;
+			if (::setsockopt(socket, SOL_SOCKET, SO_LINGER,
+				reinterpret_cast<const char*>(&value), sizeof(value)) != 0)
+				throw ::jxx::io::IOException("setOption failed");
 		}
 	}
 
 	void SocketChannel::implConfigureBlocking(::jxx::lang::jbool block)
 	{
 		std::lock_guard<std::mutex> lock(mutex_);
-		ensureSocket();
-		setBlocking(state_->socket, block);
+		if (!open_) throw ::jxx::nio::channels::ClosedChannelException();
+		if (state_->socket != ::jxx::net::internal::kInvalidSocket)
+			setBlocking(state_->socket, block);
 		blocking_ = block;
 	}
+
 
 
 
@@ -262,6 +289,7 @@ namespace jxx::nio::channels
 				state_->outputShutdown = false;
 			}
 			setBlocking(native, blocking);
+			applyPendingOptions(native);
 			InterruptRegistration interruptRegistration(state_);
 			const int result = ::connect(native, current->ai_addr,
 				static_cast<socklen_t>(current->ai_addrlen));
@@ -460,6 +488,7 @@ namespace jxx::nio::channels
 			state_->socket = ::socket(family, SOCK_STREAM, IPPROTO_TCP);
 			if (state_->socket == ::jxx::net::internal::kInvalidSocket) throw ::jxx::io::IOException("could not create socket channel");
 			setBlocking(state_->socket, blocking_);
+			applyPendingOptions(state_->socket);
 		}
 		sockaddr_storage storage{};
 		socklen_t length = 0;
@@ -592,34 +621,104 @@ SHUT_WR
 			if ((*buffers)[i] == nullptr)throw ::jxx::lang::NullPointerException(); const auto count = write((*buffers)[i]); total += count; if (count == 0 || (*buffers)[i]->hasRemaining())break;
 		}return total;
 	}
-	::jxx::Ptr<SocketChannel::NetworkChannel> SocketChannel::setOption(const ::jxx::Ptr<Option>& name, const ::jxx::Ptr<::jxx::lang::Object>& value)
+	::jxx::Ptr<SocketChannel::NetworkChannel> SocketChannel::setOption(
+		const ::jxx::Ptr<Option>& name,
+		const ::jxx::Ptr<::jxx::lang::Object>& value)
 	{
-		if (name == nullptr || value == nullptr)throw ::jxx::lang::NullPointerException(); ensureSocket(); const auto text = name->name()->utf8(); int level = SOL_SOCKET, option = 0, integer = 0; if (text == "SO_KEEPALIVE")option = SO_KEEPALIVE; else if (text == "SO_REUSEADDR")option = SO_REUSEADDR; else if (text == "SO_SNDBUF")option = SO_SNDBUF; else if (text == "SO_RCVBUF")option = SO_RCVBUF; else if (text == "TCP_NODELAY") {
-			level = IPPROTO_TCP; option = TCP_NODELAY;
+		if (name == nullptr || value == nullptr)
+			throw ::jxx::lang::NullPointerException();
+		std::lock_guard<std::mutex> lock(mutex_);
+		if (!open_) throw ::jxx::nio::channels::ClosedChannelException();
+		const auto text = name->name()->utf8();
+		if (text == "SO_KEEPALIVE" || text == "SO_REUSEADDR" ||
+			text == "TCP_NODELAY") {
+			const auto boolean = ::jxx::CAST<::jxx::lang::Boolean>(value);
+			if (boolean == nullptr) throw ::jxx::lang::IllegalArgumentException();
+			const auto flag = boolean->booleanValue();
+			if (text == "SO_KEEPALIVE") { keepAlive_ = flag; keepAliveSet_ = true; }
+			else if (text == "SO_REUSEADDR") { reuseAddress_ = flag; reuseAddressSet_ = true; }
+			else { tcpNoDelay_ = flag; tcpNoDelaySet_ = true; }
+		} else if (text == "SO_SNDBUF" || text == "SO_RCVBUF" ||
+			text == "SO_LINGER" || text == "IP_TOS") {
+			const auto number = ::jxx::CAST<::jxx::lang::Integer>(value);
+			if (number == nullptr) throw ::jxx::lang::IllegalArgumentException();
+			const auto integer = number->intValue();
+			if ((text == "SO_SNDBUF" || text == "SO_RCVBUF") && integer <= 0)
+				throw ::jxx::lang::IllegalArgumentException();
+			if (text == "SO_LINGER" && integer < -1)
+				throw ::jxx::lang::IllegalArgumentException();
+			if (text == "IP_TOS" && (integer < 0 || integer > 255))
+				throw ::jxx::lang::IllegalArgumentException();
+			if (text == "SO_SNDBUF") { sendBufferSize_ = integer; sendBufferSizeSet_ = true; }
+			else if (text == "SO_RCVBUF") { receiveBufferSize_ = integer; receiveBufferSizeSet_ = true; }
+			else if (text == "SO_LINGER") { linger_ = integer > 65535 ? 65535 : integer; lingerSet_ = true; }
+			else { trafficClass_ = integer; trafficClassSet_ = true; }
+		} else {
+			throw ::jxx::lang::UnsupportedOperationException();
 		}
-		else throw ::jxx::lang::UnsupportedOperationException(); const auto boolean = ::jxx::CAST<::jxx::lang::Boolean>(value); const auto number = ::jxx::CAST<::jxx::lang::Integer>(value); integer = boolean != nullptr ? (boolean->booleanValue() ? 1 : 0) : (number != nullptr ? number->intValue() : 0); if (setsockopt(state_->socket, level, option, reinterpret_cast<const char*>(&integer), sizeof(integer)) != 0)throw ::jxx::io::IOException("setOption failed"); return ::jxx::CAST<NetworkChannel>(thisPtr());
+		if (state_->socket != ::jxx::net::internal::kInvalidSocket)
+			applyPendingOptions(state_->socket);
+		return ::jxx::CAST<NetworkChannel>(thisPtr());
 	}
-	::jxx::Ptr<::jxx::lang::Object> SocketChannel::getOption(const ::jxx::Ptr<Option>& name)const
+
+	::jxx::Ptr<::jxx::lang::Object> SocketChannel::getOption(
+		const ::jxx::Ptr<Option>& name) const
 	{
-		if (name == nullptr)throw ::jxx::lang::NullPointerException(); if (state_->socket == ::jxx::net::internal::kInvalidSocket)throw ::jxx::io::IOException("channel socket is not created"); const auto text = name->name()->utf8(); int level = SOL_SOCKET, option = 0, value = 0; socklen_t length = sizeof(value); bool flag = true; if (text == "SO_KEEPALIVE")option = SO_KEEPALIVE; else if (text == "SO_REUSEADDR")option = SO_REUSEADDR; else if (text == "SO_SNDBUF") {
-			option = SO_SNDBUF; flag = false;
+		if (name == nullptr) throw ::jxx::lang::NullPointerException();
+		std::lock_guard<std::mutex> lock(mutex_);
+		if (!open_) throw ::jxx::nio::channels::ClosedChannelException();
+		const auto text = name->name()->utf8();
+		if (text != "SO_KEEPALIVE" && text != "SO_REUSEADDR" &&
+			text != "SO_SNDBUF" && text != "SO_RCVBUF" &&
+			text != "SO_LINGER" && text != "IP_TOS" &&
+			text != "TCP_NODELAY")
+			throw ::jxx::lang::UnsupportedOperationException();
+		if (state_->socket == ::jxx::net::internal::kInvalidSocket) {
+			if (text == "SO_KEEPALIVE") return ::jxx::CAST<::jxx::lang::Object>(::jxx::lang::Boolean::valueOf(keepAlive_));
+			if (text == "SO_REUSEADDR") return ::jxx::CAST<::jxx::lang::Object>(::jxx::lang::Boolean::valueOf(reuseAddress_));
+			if (text == "TCP_NODELAY") return ::jxx::CAST<::jxx::lang::Object>(::jxx::lang::Boolean::valueOf(tcpNoDelay_));
+			if (text == "SO_SNDBUF") return ::jxx::CAST<::jxx::lang::Object>(::jxx::lang::Integer::valueOf(sendBufferSize_));
+			if (text == "SO_RCVBUF") return ::jxx::CAST<::jxx::lang::Object>(::jxx::lang::Integer::valueOf(receiveBufferSize_));
+			if (text == "SO_LINGER") return ::jxx::CAST<::jxx::lang::Object>(::jxx::lang::Integer::valueOf(linger_));
+			return ::jxx::CAST<::jxx::lang::Object>(::jxx::lang::Integer::valueOf(trafficClass_));
 		}
-		else if (text == "SO_RCVBUF") {
-			option = SO_RCVBUF; flag = false;
+		int level = SOL_SOCKET;
+		int option = 0;
+		bool boolean = false;
+		if (text == "SO_KEEPALIVE") { option = SO_KEEPALIVE; boolean = true; }
+		else if (text == "SO_REUSEADDR") { option = SO_REUSEADDR; boolean = true; }
+		else if (text == "SO_SNDBUF") option = SO_SNDBUF;
+		else if (text == "SO_RCVBUF") option = SO_RCVBUF;
+		else if (text == "TCP_NODELAY") { level = IPPROTO_TCP; option = TCP_NODELAY; boolean = true; }
+		else if (text == "IP_TOS") { level = IPPROTO_IP; option = IP_TOS; }
+		if (text == "SO_LINGER") {
+			linger value{}; socklen_t length = sizeof(value);
+			if (::getsockopt(state_->socket, SOL_SOCKET, SO_LINGER,
+				reinterpret_cast<char*>(&value), &length) != 0)
+				throw ::jxx::io::IOException("getOption failed");
+			return ::jxx::CAST<::jxx::lang::Object>(::jxx::lang::Integer::valueOf(
+				value.l_onoff == 0 ? -1 : value.l_linger));
 		}
-		else if (text == "TCP_NODELAY") {
-			level = IPPROTO_TCP; option = TCP_NODELAY;
-		}
-		else throw ::jxx::lang::UnsupportedOperationException(); if (getsockopt(state_->socket, level, option, reinterpret_cast<char*>(&value), &length) != 0)throw ::jxx::io::IOException("getOption failed"); return flag ? ::jxx::CAST<::jxx::lang::Object>(::jxx::lang::Boolean::valueOf(value != 0)): ::jxx::CAST<::jxx::lang::Object>(::jxx::lang::Integer::valueOf(value));
+		int value = 0; socklen_t length = sizeof(value);
+		if (::getsockopt(state_->socket, level, option,
+			reinterpret_cast<char*>(&value), &length) != 0)
+			throw ::jxx::io::IOException("getOption failed");
+		return boolean
+			? ::jxx::CAST<::jxx::lang::Object>(::jxx::lang::Boolean::valueOf(value != 0))
+			: ::jxx::CAST<::jxx::lang::Object>(::jxx::lang::Integer::valueOf(value));
 	}
-	::jxx::Ptr<::jxx::util::Set<SocketChannel::Option>> SocketChannel::supportedOptions()const
+
+	::jxx::Ptr<::jxx::util::Set<SocketChannel::Option>>
+	SocketChannel::supportedOptions() const
 	{
 		const auto result = ::jxx::NEW<::jxx::util::HashSet<Option>>();
-		result->add(::jxx::net::StandardSocketOptions::SO_KEEPALIVE_); 
+		result->add(::jxx::net::StandardSocketOptions::SO_KEEPALIVE_);
 		result->add(::jxx::net::StandardSocketOptions::SO_REUSEADDR_);
 		result->add(::jxx::net::StandardSocketOptions::SO_SNDBUF_);
 		result->add(::jxx::net::StandardSocketOptions::SO_RCVBUF_);
-		result->add(::jxx::net::StandardSocketOptions::TCP_NODELAY_); 
+		result->add(::jxx::net::StandardSocketOptions::SO_LINGER_);
+		result->add(::jxx::net::StandardSocketOptions::IP_TOS_);
+		result->add(::jxx::net::StandardSocketOptions::TCP_NODELAY_);
 		return ::jxx::CAST<::jxx::util::Set<Option>>(result);
 	}
 

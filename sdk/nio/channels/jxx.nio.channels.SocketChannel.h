@@ -69,6 +69,7 @@ private:
     void implCloseSelectableChannel() override;
     void implConfigureBlocking(::jxx::lang::jbool block) override;
     void ensureSocket();
+    void applyPendingOptions(::jxx::net::internal::NativeSocket socket) const;
 
     mutable std::mutex mutex_;
     std::shared_ptr<::jxx::net::internal::NativeSocketState> state_;
@@ -80,6 +81,20 @@ private:
     ::jxx::lang::jbool bound_ = false;
     ::jxx::lang::jbool inputShutdown_ = false;
     ::jxx::lang::jbool outputShutdown_ = false;
+    ::jxx::lang::jbool keepAlive_ = false;
+    ::jxx::lang::jbool reuseAddress_ = false;
+    ::jxx::lang::jbool tcpNoDelay_ = false;
+    ::jxx::lang::jint sendBufferSize_ = 0;
+    ::jxx::lang::jint receiveBufferSize_ = 0;
+    ::jxx::lang::jint linger_ = -1;
+    ::jxx::lang::jint trafficClass_ = 0;
+    ::jxx::lang::jbool keepAliveSet_ = false;
+    ::jxx::lang::jbool reuseAddressSet_ = false;
+    ::jxx::lang::jbool tcpNoDelaySet_ = false;
+    ::jxx::lang::jbool sendBufferSizeSet_ = false;
+    ::jxx::lang::jbool receiveBufferSizeSet_ = false;
+    ::jxx::lang::jbool lingerSet_ = false;
+    ::jxx::lang::jbool trafficClassSet_ = false;
 };
 
 } // namespace jxx::nio::channels
