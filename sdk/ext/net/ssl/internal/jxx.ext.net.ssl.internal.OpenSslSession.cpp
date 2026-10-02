@@ -3,6 +3,7 @@
 #include "ext/security/cert/internal/jxx.ext.security.cert.internal.DerX509Certificate.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.X509Principal.h"
 #include "util/jxx.util.ArrayList.h"
+#include "util/jxx.util.UnmodifiableArrayList.h"
 
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLPeerUnverifiedException.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLSessionBindingEvent.h"
@@ -136,7 +137,11 @@ OpenSslSession::getRequestedServerNames() const {
              ++index)
             result->add(requestedServerNames_->get(index));
     return ::jxx::CAST<
-        ::jxx::util::List<::jxx::ext::net::ssl::SNIServerName>>(result);
+        ::jxx::util::List<::jxx::ext::net::ssl::SNIServerName>>(
+            ::jxx::NEW<::jxx::util::UnmodifiableArrayList<
+                ::jxx::ext::net::ssl::SNIServerName>>(
+                    ::jxx::CAST<::jxx::util::List<
+                        ::jxx::ext::net::ssl::SNIServerName>>(result)));
 }
 ::jxx::Ptr<::jxx::ext::net::ssl::SSLSessionContext> OpenSslSession::getSessionContext() const { return context_; }
 ::jxx::Ptr<::jxx::lang::Object> OpenSslSession::getValue(const ::jxx::Ptr<::jxx::lang::String>& name) const {if(name==nullptr)throw ::jxx::lang::IllegalArgumentException();std::lock_guard<std::mutex> l(mutex_);auto i=values_.find(name->utf8());return i==values_.end()?nullptr:i->second;}
