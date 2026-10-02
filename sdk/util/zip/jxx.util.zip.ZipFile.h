@@ -4,9 +4,9 @@
 #include "io/jxx.io.Closeable.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
+#include "util/jxx.util.Enumeration.h"
 namespace jxx::io { class File; class InputStream; }
 namespace jxx::lang { class String; }
-namespace jxx::util { template<typename E> class Enumeration; }
 namespace jxx::util::zip { class ZipEntry;
 class ZipFile final : public ::jxx::lang::ClassBase<ZipFile,::jxx::lang::Object,::jxx::io::Closeable> {
 public:
