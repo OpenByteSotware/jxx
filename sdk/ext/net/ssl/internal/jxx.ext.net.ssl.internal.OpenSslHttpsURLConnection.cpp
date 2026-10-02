@@ -85,7 +85,10 @@ void OpenSslHttpsURLConnection::connect() {
         if (session_ == nullptr)
             throw ::jxx::io::IOException("HTTPS handshake did not produce an SSLSession");
         const auto verifier = getHostnameVerifier();
-        if (verifier != nullptr && !verifier->verify(host, session_))
+        if (verifier == nullptr)
+            throw ::jxx::lang::IllegalStateException(
+                "HTTPS HostnameVerifier is not configured");
+        if (!verifier->verify(host, session_))
             throw ::jxx::ext::net::ssl::SSLPeerUnverifiedException(
                 "HTTPS hostname verifier rejected peer");
         cipherSuite_ = session_->getCipherSuite();
