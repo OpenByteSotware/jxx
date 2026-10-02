@@ -14,6 +14,10 @@
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLHandshakeException.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.IllegalStateException.h"
+#include "io/jxx.io.FileNotFoundException.h"
+#include "io/jxx.io.IOException.h"
+#include "security/jxx.security.KeyStoreException.h"
+#include "security/jxx.security.NoSuchProviderException.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.System.h"
 #include "security/cert/jxx.security.cert.X509Certificate.h"
@@ -47,13 +51,13 @@ std::vector<::jxx::lang::ByteArray> readTrustCertificates(
     const std::string& type) {
     std::ifstream stream(path, std::ios::binary);
     if (!stream)
-        throw ::jxx::lang::IllegalStateException(
+        throw ::jxx::io::FileNotFoundException(
             "cannot open javax.net.ssl.trustStore");
     const std::vector<unsigned char> bytes{
         std::istreambuf_iterator<char>(stream),
         std::istreambuf_iterator<char>()};
     if (bytes.empty())
-        throw ::jxx::lang::IllegalStateException(
+        throw ::jxx::io::IOException(
             "javax.net.ssl.trustStore is empty");
 
     std::vector<::jxx::lang::ByteArray> certificates;
@@ -116,7 +120,7 @@ std::vector<::jxx::lang::ByteArray> readTrustCertificates(
     }
 
     if (certificates.empty())
-        throw ::jxx::lang::IllegalStateException(
+        throw ::jxx::io::IOException(
             "javax.net.ssl.trustStore contains no X.509 certificates");
     return certificates;
 }
@@ -254,7 +258,7 @@ loadDefaultPropertyTrustManagers() {
     if (type != "PKCS12" && type != "PKCS#12" &&
         type != "PEM" && type != "X509" && type != "X.509" &&
         type != "DER")
-        throw ::jxx::lang::IllegalStateException(
+        throw ::jxx::security::KeyStoreException(
             "unsupported javax.net.ssl.trustStoreType");
 
     const auto providerValue = ::jxx::lang::System::getProperty(
@@ -265,7 +269,7 @@ loadDefaultPropertyTrustManagers() {
             [](unsigned char value) { return static_cast<char>(std::toupper(value)); });
         if (provider != "JXX" && provider != "OPENSSL" &&
             provider != "SUN" && provider != "SUNJSSE")
-            throw ::jxx::lang::IllegalStateException(
+            throw ::jxx::security::NoSuchProviderException(
                 "unsupported javax.net.ssl.trustStoreProvider");
     }
 

@@ -12,6 +12,11 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslX509Certificate.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.X509ExtendedKeyManager.h"
 #include "lang/jxx.lang.IllegalStateException.h"
+#include "io/jxx.io.FileNotFoundException.h"
+#include "io/jxx.io.IOException.h"
+#include "security/jxx.security.KeyStoreException.h"
+#include "security/jxx.security.NoSuchProviderException.h"
+#include "security/jxx.security.UnrecoverableKeyException.h"
 #include "security/jxx.security.KeyStore.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.System.h"
@@ -167,7 +172,7 @@ loadDefaultPropertyKeyManagers() {
     std::transform(type.begin(), type.end(), type.begin(),
         [](unsigned char value) { return static_cast<char>(std::toupper(value)); });
     if (type != "PKCS12" && type != "PKCS#12")
-        throw ::jxx::lang::IllegalStateException(
+        throw ::jxx::security::KeyStoreException(
             "unsupported javax.net.ssl.keyStoreType");
 
     const auto providerValue = ::jxx::lang::System::getProperty(
@@ -178,7 +183,7 @@ loadDefaultPropertyKeyManagers() {
             [](unsigned char value) { return static_cast<char>(std::toupper(value)); });
         if (provider != "JXX" && provider != "OPENSSL" &&
             provider != "SUN" && provider != "SUNJSSE")
-            throw ::jxx::lang::IllegalStateException(
+            throw ::jxx::security::NoSuchProviderException(
                 "unsupported javax.net.ssl.keyStoreProvider");
     }
 
@@ -189,13 +194,13 @@ loadDefaultPropertyKeyManagers() {
 
     std::ifstream stream(path->utf8(), std::ios::binary);
     if (!stream)
-        throw ::jxx::lang::IllegalStateException(
+        throw ::jxx::io::FileNotFoundException(
             "cannot open javax.net.ssl.keyStore");
     const std::vector<unsigned char> bytes{
         std::istreambuf_iterator<char>(stream),
         std::istreambuf_iterator<char>()};
     if (bytes.empty())
-        throw ::jxx::lang::IllegalStateException(
+        throw ::jxx::io::IOException(
             "javax.net.ssl.keyStore is empty");
 
     const unsigned char* cursor = bytes.data();
@@ -203,7 +208,7 @@ loadDefaultPropertyKeyManagers() {
         static_cast<long>(bytes.size()));
     if (container == nullptr || cursor != bytes.data() + bytes.size()) {
         if (container != nullptr) PKCS12_free(container);
-        throw ::jxx::lang::IllegalStateException(
+        throw ::jxx::io::IOException(
             "invalid PKCS12 javax.net.ssl.keyStore");
     }
 
@@ -217,7 +222,7 @@ loadDefaultPropertyKeyManagers() {
         if (nativeKey != nullptr) EVP_PKEY_free(nativeKey);
         if (leaf != nullptr) X509_free(leaf);
         if (extras != nullptr) sk_X509_pop_free(extras, X509_free);
-        throw ::jxx::lang::IllegalStateException(
+        throw ::jxx::security::UnrecoverableKeyException(
             "cannot unlock javax.net.ssl.keyStore");
     }
 
@@ -227,7 +232,7 @@ loadDefaultPropertyKeyManagers() {
         EVP_PKEY_free(nativeKey);
         X509_free(leaf);
         if (extras != nullptr) sk_X509_pop_free(extras, X509_free);
-        throw ::jxx::lang::IllegalStateException(
+        throw ::jxx::security::KeyStoreException(
             "cannot encode PKCS12 identity");
     }
 
