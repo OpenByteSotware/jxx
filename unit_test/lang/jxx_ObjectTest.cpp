@@ -4,6 +4,7 @@
 
 class DummyObject : public jxx::lang::Object {
 public:
+	virtual ~DummyObject() = default;
     jxx::Ptr<DummyObject> self() { return getThis<DummyObject>(); }
 };
 
