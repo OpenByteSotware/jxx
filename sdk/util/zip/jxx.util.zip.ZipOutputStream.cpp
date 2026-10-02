@@ -1,6 +1,8 @@
 #include "util/zip/jxx.util.zip.ZipOutputStream.h"
 
 #include <algorithm>
+#include <chrono>
+#include <ctime>
 #include <limits>
 
 #include <zlib.h>
@@ -60,6 +62,37 @@ void requireZip32(std::size_t value, const char* message) {
     }
 }
 
+std::pair<std::uint16_t, std::uint16_t> dosDateTime(::jxx::lang::jlong millis) {
+    const std::time_t seconds = static_cast<std::time_t>(millis / 1000);
+    std::tm local{};
+#ifdef _WIN32
+    localtime_s(&local, &seconds);
+#else
+    localtime_r(&seconds, &local);
+#endif
+    int year = local.tm_year + 1900;
+    if (year < 1980) {
+        year = 1980;
+        local.tm_mon = 0;
+        local.tm_mday = 1;
+        local.tm_hour = 0;
+        local.tm_min = 0;
+        local.tm_sec = 0;
+    } else if (year > 2107) {
+        year = 2107;
+        local.tm_mon = 11;
+        local.tm_mday = 31;
+        local.tm_hour = 23;
+        local.tm_min = 59;
+        local.tm_sec = 58;
+    }
+    const auto time = static_cast<std::uint16_t>(
+        (local.tm_hour << 11) | (local.tm_min << 5) | (local.tm_sec / 2));
+    const auto date = static_cast<std::uint16_t>(
+        ((year - 1980) << 9) | ((local.tm_mon + 1) << 5) | local.tm_mday);
+    return {time, date};
+}
+
 } // namespace
 
 namespace jxx::util::zip {
@@ -105,6 +138,10 @@ void ZipOutputStream::putNextEntry(const ::jxx::Ptr<ZipEntry>& entry) {
         }
     }
     current_ = ::jxx::NEW<ZipEntry>(entry);
+    if (current_->time_ < 0) {
+        current_->time_ = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+    }
     if (current_->method_ == -1) {
         current_->method_ = method_;
     }
@@ -228,12 +265,13 @@ void ZipOutputStream::finish() {
         const auto extra = record.entry->extra_;
         const auto extraLength = extra == nullptr ? 0U : static_cast<std::uint16_t>(extra->length);
         record.offset = position_;
+        const auto dos = dosDateTime(record.entry->time_);
         emit32_(0x04034b50U);
         emit16_(20);
         emit16_(0x0800U);
         emit16_(static_cast<std::uint16_t>(record.entry->method_));
-        emit16_(0);
-        emit16_(0);
+        emit16_(dos.first);
+        emit16_(dos.second);
         emit32_(record.crc);
         emit32_(static_cast<std::uint32_t>(record.data.size()));
         emit32_(static_cast<std::uint32_t>(record.entry->size_));
@@ -254,13 +292,14 @@ void ZipOutputStream::finish() {
         const auto comment = record.entry->comment_ == nullptr ? std::string() : record.entry->comment_->utf8();
         const auto extra = record.entry->extra_;
         const auto extraLength = extra == nullptr ? 0U : static_cast<std::uint16_t>(extra->length);
+        const auto dos = dosDateTime(record.entry->time_);
         emit32_(0x02014b50U);
         emit16_(20);
         emit16_(20);
         emit16_(0x0800U);
         emit16_(static_cast<std::uint16_t>(record.entry->method_));
-        emit16_(0);
-        emit16_(0);
+        emit16_(dos.first);
+        emit16_(dos.second);
         emit32_(record.crc);
         emit32_(static_cast<std::uint32_t>(record.data.size()));
         emit32_(static_cast<std::uint32_t>(record.entry->size_));

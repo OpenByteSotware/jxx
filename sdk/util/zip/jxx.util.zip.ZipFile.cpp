@@ -1,6 +1,9 @@
 #include "util/zip/jxx.util.zip.ZipFile.h"
 
 #include <algorithm>
+#include <chrono>
+#include <ctime>
+#include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <limits>
@@ -16,6 +19,24 @@
 #include "util/zip/jxx.util.zip.ZipException.h"
 
 namespace {
+
+::jxx::lang::jlong dosToMillis(std::uint16_t date, std::uint16_t time) {
+    if (date == 0U) {
+        return -1;
+    }
+    std::tm local{};
+    local.tm_year = static_cast<int>(((date >> 9U) & 0x7fU) + 1980U) - 1900;
+    local.tm_mon = static_cast<int>((date >> 5U) & 0x0fU) - 1;
+    local.tm_mday = static_cast<int>(date & 0x1fU);
+    local.tm_hour = static_cast<int>((time >> 11U) & 0x1fU);
+    local.tm_min = static_cast<int>((time >> 5U) & 0x3fU);
+    local.tm_sec = static_cast<int>((time & 0x1fU) * 2U);
+    local.tm_isdst = -1;
+    const auto seconds = std::mktime(&local);
+    return seconds == static_cast<std::time_t>(-1)
+        ? -1
+        : static_cast<::jxx::lang::jlong>(seconds) * 1000;
+}
 
 std::uint32_t crc32Of(const std::vector<std::uint8_t>& data) {
     uLong crc = ::crc32(0L, Z_NULL, 0);
@@ -108,7 +129,7 @@ void ZipFile::open_(const ::jxx::Ptr<::jxx::lang::String>& name) {
         throw ::jxx::lang::NullPointerException();
     }
     name_ = name;
-    std::ifstream input(name->utf8(), std::ios::binary);
+    std::ifstream input(std::filesystem::u8path(name->utf8()), std::ios::binary);
     if (!input) {
         throw ZipException("unable to open ZIP file");
     }
@@ -163,6 +184,8 @@ void ZipFile::open_(const ::jxx::Ptr<::jxx::lang::String>& name) {
         }
         const auto flags = u16_(position + 8U);
         const auto method = u16_(position + 10U);
+        const auto modifiedTime = u16_(position + 12U);
+        const auto modifiedDate = u16_(position + 14U);
         const auto crc = u32_(position + 16U);
         const auto compressedSize = u32_(position + 20U);
         const auto size = u32_(position + 24U);
@@ -185,6 +208,7 @@ void ZipFile::open_(const ::jxx::Ptr<::jxx::lang::String>& name) {
             reinterpret_cast<const char*>(bytes_.data() + position + 46U), nameLength);
         auto entry = ::jxx::NEW<ZipEntry>(::jxx::NEW<::jxx::lang::String>(entryName));
         entry->method_ = method;
+        entry->time_ = dosToMillis(modifiedDate, modifiedTime);
         entry->crc_ = crc;
         entry->compressedSize_ = compressedSize;
         entry->size_ = size;
@@ -204,8 +228,21 @@ void ZipFile::open_(const ::jxx::Ptr<::jxx::lang::String>& name) {
         if (localOffset + 30U > bytes_.size() || u32_(localOffset) != 0x04034b50U) {
             throw ZipException("invalid local ZIP header");
         }
+        const auto localFlags = u16_(localOffset + 6U);
+        const auto localMethod = u16_(localOffset + 8U);
         const auto localNameLength = u16_(localOffset + 26U);
         const auto localExtraLength = u16_(localOffset + 28U);
+        if ((localFlags & 0x0001U) != 0U || localMethod != method) {
+            throw ZipException("inconsistent local ZIP header");
+        }
+        if (localOffset + 30U + localNameLength + localExtraLength > bytes_.size()) {
+            throw ZipException("truncated local ZIP header");
+        }
+        const std::string localName(
+            reinterpret_cast<const char*>(bytes_.data() + localOffset + 30U), localNameLength);
+        if (localName != entryName) {
+            throw ZipException("inconsistent local ZIP entry name");
+        }
         entry->dataOffset_ = static_cast<::jxx::lang::jlong>(localOffset + 30U + localNameLength + localExtraLength);
         if (static_cast<std::uint64_t>(entry->dataOffset_) + compressedSize > bytes_.size()) {
             throw ZipException("truncated ZIP entry data");
