@@ -117,7 +117,12 @@ SSLContext::SSLContext(
     const ::jxx::Ptr<::jxx::lang::String>& provider) {
     validateProtocol(protocol);
     validateProviderName(provider);
-    return getInstance(protocol);
+    if (protocol->utf8() == "Default") return getDefault();
+    const auto selectedProvider = openSslProvider();
+    return ::jxx::NEW<SSLContext>(
+        ::jxx::NEW<internal::OpenSslContextSpi>(protocol),
+        selectedProvider,
+        protocol);
 }
 
 ::jxx::Ptr<SSLContext> SSLContext::getInstance(
