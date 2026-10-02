@@ -168,9 +168,9 @@ private:
     void ensureLoaded() const;
 
     ::jxx::Ptr<::jxx::lang::String> type_;
-    ::jxx::Ptr<::jxx::lang::String> keyAlias_;
-    ::jxx::Ptr<::jxx::security::PrivateKey> privateKey_;
-    ::jxx::Ptr<CertificateArray> chain_;
+    std::vector<::jxx::Ptr<::jxx::lang::String>> keyAliases_;
+    std::vector<::jxx::Ptr<::jxx::security::PrivateKey>> privateKeys_;
+    std::vector<::jxx::Ptr<CertificateArray>> chains_;
     std::vector<::jxx::Ptr<::jxx::lang::String>> certificateAliases_;
     std::vector<::jxx::Ptr<::jxx::security::cert::X509Certificate>> certificates_;
     ::jxx::lang::jlong creationTime_ = 0;

@@ -74,7 +74,7 @@ void KeyStore::load(const ::jxx::Ptr<::jxx::io::InputStream>& stream,
     PKCS12_free(container);
     if (parsed != 1) throw ::jxx::lang::IllegalArgumentException("cannot unlock PKCS12 KeyStore");
 
-    certificateAliases_.clear(); certificates_.clear(); chain_ = nullptr; privateKey_ = nullptr;
+    certificateAliases_.clear(); certificates_.clear(); keyAliases_.clear(); privateKeys_.clear(); chains_.clear();
     if (leaf != nullptr) {
         const int length = i2d_X509(leaf, nullptr); std::vector<unsigned char> der(length);
         unsigned char* out = der.data(); i2d_X509(leaf, &out);
@@ -92,10 +92,11 @@ void KeyStore::load(const ::jxx::Ptr<::jxx::io::InputStream>& stream,
         const int length = i2d_PrivateKey(key, nullptr); std::vector<unsigned char> der(length);
         unsigned char* out = der.data(); i2d_PrivateKey(key, &out);
         const int id = EVP_PKEY_base_id(key);
-        privateKey_ = ::jxx::NEW<::jxx::security::internal::EncodedPrivateKey>(::jxx::NEW<::jxx::lang::String>(id == EVP_PKEY_EC ? "EC" : id == EVP_PKEY_RSA ? "RSA" : "UNKNOWN"), bytesOf(der.data(), length));
-        keyAlias_ = ::jxx::NEW<::jxx::lang::String>("key");
-        chain_ = ::jxx::NEW<CertificateArray>(static_cast<::jxx::lang::jint>(certificates_.size()));
-        for (std::size_t i = 0; i < certificates_.size(); ++i) (*chain_)[static_cast<::jxx::lang::jint>(i)] = certificates_[i];
+        keyAliases_.push_back(::jxx::NEW<::jxx::lang::String>("key"));
+        privateKeys_.push_back(::jxx::NEW<::jxx::security::internal::EncodedPrivateKey>(::jxx::NEW<::jxx::lang::String>(id == EVP_PKEY_EC ? "EC" : id == EVP_PKEY_RSA ? "RSA" : "UNKNOWN"), bytesOf(der.data(), length)));
+        const auto chain = ::jxx::NEW<CertificateArray>(static_cast<::jxx::lang::jint>(certificates_.size()));
+        for (std::size_t i = 0; i < certificates_.size(); ++i) (*chain)[static_cast<::jxx::lang::jint>(i)] = certificates_[i];
+        chains_.push_back(chain);
     }
     if (key != nullptr) EVP_PKEY_free(key); if (leaf != nullptr) X509_free(leaf);
     if (extras != nullptr) sk_X509_pop_free(extras, X509_free);
@@ -104,15 +105,27 @@ void KeyStore::load(const ::jxx::Ptr<::jxx::io::InputStream>& stream,
 }
 
 ::jxx::Ptr<::jxx::lang::String> KeyStore::getType() const { return type_; }
-::jxx::lang::jbool KeyStore::isKeyEntry(const ::jxx::Ptr<::jxx::lang::String>& alias) const { return alias != nullptr && keyAlias_ != nullptr && alias->utf8() == keyAlias_->utf8(); }
-::jxx::lang::jbool KeyStore::isCertificateEntry(const ::jxx::Ptr<::jxx::lang::String>& alias) const { if (alias == nullptr) return false; for (std::size_t i=0;i<certificateAliases_.size();++i) if (alias->utf8()==certificateAliases_[i]->utf8() && !isKeyEntry(alias)) return true; return false; }
+::jxx::lang::jbool KeyStore::isKeyEntry(const ::jxx::Ptr<::jxx::lang::String>& alias) const { if(alias==nullptr)return false; for(const auto& candidate:keyAliases_)if(candidate!=nullptr&&candidate->utf8()==alias->utf8())return true; return false; }
+::jxx::lang::jbool KeyStore::isCertificateEntry(const ::jxx::Ptr<::jxx::lang::String>& alias) const { if (alias == nullptr || isKeyEntry(alias)) return false; for (const auto& candidate:certificateAliases_) if (candidate!=nullptr&&alias->utf8()==candidate->utf8()) return true; return false; }
 ::jxx::lang::jbool KeyStore::containsAlias(const ::jxx::Ptr<::jxx::lang::String>& alias) const { return isKeyEntry(alias) || isCertificateEntry(alias); }
-::jxx::lang::jint KeyStore::size() const noexcept { return static_cast<::jxx::lang::jint>(certificateAliases_.size()); }
-::jxx::Ptr<KeyStore::StringArray> KeyStore::aliases() const { const auto a=::jxx::NEW<StringArray>(size()); for(::jxx::lang::jint i=0;i<a->length;++i)(*a)[i]=certificateAliases_[i]; return a; }
-::jxx::Ptr<::jxx::security::PrivateKey> KeyStore::getKey(const ::jxx::Ptr<::jxx::lang::String>& alias,const ::jxx::Ptr<CharArray>&) const { return isKeyEntry(alias)?privateKey_:nullptr; }
-::jxx::Ptr<KeyStore::CertificateArray> KeyStore::getCertificateChain(const ::jxx::Ptr<::jxx::lang::String>& alias) const { if(!isKeyEntry(alias)||chain_==nullptr)return nullptr; const auto c=::jxx::NEW<CertificateArray>(chain_->length);for(::jxx::lang::jint i=0;i<c->length;++i)(*c)[i]=(*chain_)[i];return c; }
-::jxx::Ptr<::jxx::security::cert::Certificate> KeyStore::getCertificate(const ::jxx::Ptr<::jxx::lang::String>& alias) const { if(alias==nullptr)return nullptr;for(std::size_t i=0;i<certificateAliases_.size();++i)if(alias->utf8()==certificateAliases_[i]->utf8())return certificates_[i];return nullptr; }
-::jxx::Ptr<KeyStore::X509CertificateArray> KeyStore::trustedCertificates() const { const auto r=::jxx::NEW<X509CertificateArray>(static_cast<::jxx::lang::jint>(certificates_.size()));for(std::size_t i=0;i<certificates_.size();++i)(*r)[static_cast<::jxx::lang::jint>(i)]=certificates_[i];return r; }
+::jxx::lang::jint KeyStore::size() const noexcept { ::jxx::lang::jint count=static_cast<::jxx::lang::jint>(keyAliases_.size()); for(const auto& alias:certificateAliases_){::jxx::lang::jbool key=false;for(const auto& keyAlias:keyAliases_)if(alias!=nullptr&&keyAlias!=nullptr&&alias->utf8()==keyAlias->utf8()){key=true;break;}if(!key)++count;}return count; }
+::jxx::Ptr<KeyStore::StringArray> KeyStore::aliases() const { const auto a=::jxx::NEW<StringArray>(size()); ::jxx::lang::jint i=0; for(const auto& alias:keyAliases_)(*a)[i++]=alias; for(const auto& alias:certificateAliases_)if(!isKeyEntry(alias))(*a)[i++]=alias; if(i==a->length)return a; const auto result=::jxx::NEW<StringArray>(i);for(::jxx::lang::jint j=0;j<i;++j)(*result)[j]=(*a)[j];return result; }
+::jxx::Ptr<::jxx::security::PrivateKey> KeyStore::getKey(const ::jxx::Ptr<::jxx::lang::String>& alias,const ::jxx::Ptr<CharArray>&) const { if(alias==nullptr)return nullptr;for(std::size_t i=0;i<keyAliases_.size();++i)if(keyAliases_[i]->utf8()==alias->utf8())return privateKeys_[i];return nullptr; }
+::jxx::Ptr<KeyStore::CertificateArray> KeyStore::getCertificateChain(const ::jxx::Ptr<::jxx::lang::String>& alias) const { if(alias==nullptr)return nullptr;for(std::size_t n=0;n<keyAliases_.size();++n)if(keyAliases_[n]->utf8()==alias->utf8()){const auto& chain=chains_[n];const auto c=::jxx::NEW<CertificateArray>(chain->length);for(::jxx::lang::jint i=0;i<c->length;++i)(*c)[i]=(*chain)[i];return c;}return nullptr; }
+::jxx::Ptr<::jxx::security::cert::Certificate> KeyStore::getCertificate(const ::jxx::Ptr<::jxx::lang::String>& alias) const { const auto chain=getCertificateChain(alias);if(chain!=nullptr&&chain->length>0)return (*chain)[0];if(alias==nullptr)return nullptr;for(std::size_t i=0;i<certificateAliases_.size();++i)if(certificateAliases_[i]->utf8()==alias->utf8())return certificates_[i];return nullptr; }
+
+::jxx::Ptr<KeyStore::X509CertificateArray> KeyStore::trustedCertificates() const {
+    ensureLoaded();
+    const auto result = ::jxx::NEW<X509CertificateArray>(
+        static_cast<::jxx::lang::jint>(certificates_.size()));
+    for (std::size_t index = 0; index < certificates_.size(); ++index) {
+        (*result)[static_cast<::jxx::lang::jint>(index)] = certificates_[index];
+    }
+    return result;
+}
+
+
+
 
 
 KeyStore::PasswordProtection::PasswordProtection(
@@ -195,7 +208,7 @@ void KeyStore::ensureLoaded() const {
         if (protection != nullptr &&
             ::jxx::CAST<PasswordProtection>(protection) == nullptr)
             throw ::jxx::lang::IllegalArgumentException("unsupported protection parameter");
-        return ::jxx::NEW<PrivateKeyEntry>(privateKey_, getCertificateChain(alias));
+        return ::jxx::NEW<PrivateKeyEntry>(getKey(alias, nullptr), getCertificateChain(alias));
     }
     const auto certificate = getCertificate(alias);
     return certificate == nullptr
@@ -230,8 +243,13 @@ void KeyStore::setEntry(
 void KeyStore::deleteEntry(const ::jxx::Ptr<::jxx::lang::String>& alias) {
     ensureLoaded();
     if (alias == nullptr) throw ::jxx::lang::NullPointerException();
-    if (isKeyEntry(alias)) {
-        keyAlias_ = nullptr; privateKey_ = nullptr; chain_ = nullptr;
+    for (std::size_t index = 0; index < keyAliases_.size(); ++index) {
+        if (keyAliases_[index]->utf8() == alias->utf8()) {
+            keyAliases_.erase(keyAliases_.begin() + static_cast<std::ptrdiff_t>(index));
+            privateKeys_.erase(privateKeys_.begin() + static_cast<std::ptrdiff_t>(index));
+            chains_.erase(chains_.begin() + static_cast<std::ptrdiff_t>(index));
+            break;
+        }
     }
     for (std::size_t index = 0; index < certificateAliases_.size();) {
         if (certificateAliases_[index]->utf8() == alias->utf8()) {
@@ -268,11 +286,12 @@ void KeyStore::setKeyEntry(
         throw ::jxx::lang::NullPointerException();
     const auto entry = ::jxx::NEW<PrivateKeyEntry>(key, chain);
     deleteEntry(alias);
-    keyAlias_ = alias;
-    privateKey_ = entry->getPrivateKey();
-    chain_ = entry->getCertificateChain();
-    for (::jxx::lang::jint index = 0; index < chain_->length; ++index) {
-        const auto x509 = ::jxx::CAST<::jxx::security::cert::X509Certificate>((*chain_)[index]);
+    keyAliases_.push_back(alias);
+    privateKeys_.push_back(entry->getPrivateKey());
+    const auto entryChain = entry->getCertificateChain();
+    chains_.push_back(entryChain);
+    for (::jxx::lang::jint index = 0; index < entryChain->length; ++index) {
+        const auto x509 = ::jxx::CAST<::jxx::security::cert::X509Certificate>((*entryChain)[index]);
         if (x509 == nullptr) throw ::jxx::lang::IllegalArgumentException("certificate is not X.509");
         certificateAliases_.push_back(index == 0 ? alias : ::jxx::NEW<::jxx::lang::String>(alias->utf8() + "-cert-" + std::to_string(index)));
         certificates_.push_back(x509);
