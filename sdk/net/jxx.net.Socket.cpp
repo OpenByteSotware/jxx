@@ -112,6 +112,11 @@ namespace jxx::net
     {
     }
 
+    Socket::Socket(const jxx::Ptr<SocketImpl>& impl)
+        : state_(jxx::NEW<internal::NativeSocketState>()), impl_(impl) {
+        if (impl_ == nullptr) throw ::jxx::lang::NullPointerException();
+    }
+
     Socket::Socket(const jxx::Ptr<Proxy>& proxy)
         : Socket()
     {
@@ -203,10 +208,13 @@ namespace jxx::net
 
     void Socket::ensureCreated_(jxx::lang::jbool /*stream*/)
     {
-        if (!state_)
-            state_ = jxx::NEW<internal::NativeSocketState>();
-        if (state_->socket != internal::kInvalidSocket)
-            return;
+        if (!state_) state_ = jxx::NEW<internal::NativeSocketState>();
+        if (impl_ != nullptr || state_->socket != internal::kInvalidSocket) return;
+        {
+            std::lock_guard<std::mutex> lock(g_factoryMutex);
+            if (g_factory != nullptr) impl_ = g_factory->createSocketImpl();
+        }
+        if (impl_ != nullptr) { impl_->create(true); return; }
         internal::ensureNetworkInitialized();
 
         int family = AF_INET;
@@ -244,7 +252,9 @@ namespace jxx::net
             throw ::jxx::lang::IllegalArgumentException("unsupported socket address");
         }
         auto addr=isa->getAddress(); if(!addr&&isa->isUnresolved()) addr=InetAddress::getByName(isa->getHostString()); if(!addr) throw UnknownHostException("unable to resolve host");
-        remoteAddr_=addr; remotePort_=isa->getPort(); ensureCreated_(true); socklen_t len=0; auto ss=toSockaddr_(addr,isa->getPort(),len); int result=0;
+        remoteAddr_=addr; remotePort_=isa->getPort(); ensureCreated_(true);
+        if (impl_ != nullptr) { impl_->connect(endpoint, timeout); connected_=true; bound_=true; return; }
+        socklen_t len=0; auto ss=toSockaddr_(addr,isa->getPort(),len); int result=0;
         if(timeout==0) result=::connect(state_->socket,reinterpret_cast<sockaddr*>(&ss),len); else {
 #if defined(_WIN32)
             u_long mode=1; if(::ioctlsocket(state_->socket,FIONBIO,&mode)!=0) throw ConnectException("nonblocking connect failed");
@@ -298,6 +308,7 @@ namespace jxx::net
         if (!localAddr_)
             localAddr_ = InetAddress::getByAddress(jxx::NEW<jxx::lang::ByteArrayType>(4));
         ensureCreated_(true);
+        if (impl_ != nullptr) { impl_->bind(localAddr_, localPort_); bound_=true; return; }
 
         socklen_t len = 0;
         auto ss = toSockaddr_(localAddr_, localPort_, len);
@@ -328,6 +339,7 @@ namespace jxx::net
 
     jxx::Ptr<jxx::io::InputStream> Socket::getInputStream()
     {
+        if (impl_ != nullptr) return impl_->getInputStream();
         if (isClosed()) {
             throw SocketException("socket is closed");
         }
@@ -342,6 +354,7 @@ namespace jxx::net
 
     jxx::Ptr<jxx::io::OutputStream> Socket::getOutputStream()
     {
+        if (impl_ != nullptr) return impl_->getOutputStream();
         if (isClosed()) {
             throw SocketException("socket is closed");
         }
@@ -522,6 +535,7 @@ namespace jxx::net
 
     void Socket::close()
     {
+        if (impl_ != nullptr) { impl_->close(); impl_=nullptr; if(state_) state_->closed=true; return; }
         if (!state_)
             return;
         internal::NativeSocket socket = internal::kInvalidSocket;

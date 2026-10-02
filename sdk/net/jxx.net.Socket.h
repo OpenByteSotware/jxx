@@ -43,6 +43,7 @@ public:
 
     public:
         Socket();
+        explicit Socket(const jxx::Ptr<SocketImpl>& impl);
         explicit Socket(const jxx::Ptr<Proxy>& proxy);
         Socket(const jxx::Ptr<jxx::lang::String>& host,
                jxx::lang::jint port);

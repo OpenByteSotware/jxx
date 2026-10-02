@@ -14,6 +14,8 @@
 #include <stdexcept>
 
 #include "net/jxx.net.ServerSocket.h"
+#include "net/jxx.net.SocketImpl.h"
+#include "net/jxx.net.SocketImplFactory.h"
 
 #include "net/internal/jxx.net.internal.NativeSocketState.h"
 #include "net/internal/jxx.net.internal.NetPlatform.h"
@@ -147,10 +149,13 @@ namespace jxx::net
 
     void ServerSocket::ensureCreated_()
     {
-        if (!state_)
-            state_ = jxx::NEW<internal::NativeSocketState>();
-        if (state_->socket != internal::kInvalidSocket)
-            return;
+        if (!state_) state_ = jxx::NEW<internal::NativeSocketState>();
+        if (impl_ != nullptr || state_->socket != internal::kInvalidSocket) return;
+        {
+            std::lock_guard<std::mutex> lock(g_serverFactoryMutex);
+            if (g_serverFactory != nullptr) impl_ = g_serverFactory->createSocketImpl();
+        }
+        if (impl_ != nullptr) { impl_->create(true); return; }
         internal::ensureNetworkInitialized();
 
         const int family = (localAddr_ && isIpv6_(localAddr_)) ? AF_INET6 : AF_INET;
@@ -222,6 +227,16 @@ namespace jxx::net
     jxx::Ptr<Socket> ServerSocket::accept()
     {
         ensureCreated_();
+        if (impl_ != nullptr) {
+            jxx::Ptr<SocketImpl> accepted;
+            {
+                std::lock_guard<std::mutex> lock(g_serverFactoryMutex);
+                accepted = g_serverFactory == nullptr ? nullptr : g_serverFactory->createSocketImpl();
+            }
+            if (accepted == nullptr) throw SocketException("socket implementation factory returned null");
+            impl_->accept(accepted);
+            return jxx::NEW<Socket>(accepted);
+        }
         if (soTimeout_ > 0) {
             fd_set readable;
             FD_ZERO(&readable);
@@ -268,6 +283,7 @@ namespace jxx::net
 
     void ServerSocket::close()
     {
+        if (impl_ != nullptr) { impl_->close(); impl_=nullptr; if(state_) state_->closed=true; return; }
         if (!state_ || state_->closed)
             return;
         std::lock_guard<std::mutex> lock(state_->m);

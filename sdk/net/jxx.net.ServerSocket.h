@@ -7,6 +7,7 @@
 
 namespace jxx::net
 {
+    class SocketImpl;
     class InetAddress;
     class Socket;
     class SocketAddress;
@@ -26,6 +27,7 @@ namespace jxx::nio::channels
 
 namespace jxx::net
 {
+    class SocketImpl;
     class ServerSocket : public jxx::lang::ClassBase<ServerSocket, jxx::lang::Object> {
 public:
     using JxxSuper = jxx::lang::Object;
@@ -85,6 +87,7 @@ public:
 
     private:
         std::shared_ptr<internal::NativeSocketState> state_;
+        jxx::Ptr<SocketImpl> impl_;
         jxx::Ptr<InetAddress> localAddr_;
         jxx::lang::jint localPort_ = 0;
         jxx::lang::jbool bound_ = false;
