@@ -1,34 +1,34 @@
 #pragma once
 
-#include "lang/jxx.lang.Object.h"
+#include "ext/net/jxx.ext.net.ServerSocketFactory.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_array.h"
 
-namespace jxx::net { class InetAddress; class ServerSocket; }
 namespace jxx::ext::net::ssl {
 
 class SSLServerSocketFactory
     : public ::jxx::lang::ClassBase<
           SSLServerSocketFactory,
-          ::jxx::lang::Object> {
+          ::jxx::ext::net::ServerSocketFactory> {
 public:
+    using JxxSuper = ::jxx::ext::net::ServerSocketFactory;
+    using Super = ::jxx::lang::ClassBase<
+        SSLServerSocketFactory,
+        JxxSuper>;
     using StringArray = ::jxx::lang::JxxArray<
         ::jxx::Ptr<::jxx::lang::String>, 1U>;
+    using JxxSuper::createServerSocket;
 
     ~SSLServerSocketFactory() override = default;
-    static ::jxx::Ptr<SSLServerSocketFactory> getDefault();
-    virtual ::jxx::Ptr<StringArray> getDefaultCipherSuites() const = 0;
-    virtual ::jxx::Ptr<StringArray> getSupportedCipherSuites() const = 0;
-    virtual ::jxx::Ptr<::jxx::net::ServerSocket> createServerSocket() = 0;
-    virtual ::jxx::Ptr<::jxx::net::ServerSocket> createServerSocket(
-        ::jxx::lang::jint port) = 0;
-    virtual ::jxx::Ptr<::jxx::net::ServerSocket> createServerSocket(
-        ::jxx::lang::jint port,
-        ::jxx::lang::jint backlog) = 0;
-    virtual ::jxx::Ptr<::jxx::net::ServerSocket> createServerSocket(
-        ::jxx::lang::jint port,
-        ::jxx::lang::jint backlog,
-        const ::jxx::Ptr<::jxx::net::InetAddress>& address) = 0;
+
+    static ::jxx::Ptr<::jxx::ext::net::ServerSocketFactory>
+    getDefault();
+
+    virtual ::jxx::Ptr<StringArray>
+    getDefaultCipherSuites() const = 0;
+
+    virtual ::jxx::Ptr<StringArray>
+    getSupportedCipherSuites() const = 0;
 
 protected:
     SSLServerSocketFactory() = default;

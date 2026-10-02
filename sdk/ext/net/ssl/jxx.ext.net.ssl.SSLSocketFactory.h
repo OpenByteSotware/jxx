@@ -5,6 +5,7 @@ namespace jxx::io {class InputStream;}
 namespace jxx::ext::net::ssl {
 class SSLSocketFactory:public ::jxx::lang::ClassBase<SSLSocketFactory,::jxx::ext::net::SocketFactory>{public:
  using JxxSuper=::jxx::ext::net::SocketFactory;
+ using Super=::jxx::lang::ClassBase<SSLSocketFactory,JxxSuper>;
  using JxxSuper::createSocket;
  using StringArray=::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>,1U>;
  static ::jxx::Ptr<::jxx::ext::net::SocketFactory> getDefault();
