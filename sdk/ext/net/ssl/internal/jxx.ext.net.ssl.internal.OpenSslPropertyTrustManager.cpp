@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <cctype>
 #include <fstream>
 #include <iterator>
 #include <string>
@@ -15,6 +17,7 @@
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.System.h"
 #include "security/cert/jxx.security.cert.X509Certificate.h"
+#include "security/jxx.security.KeyStore.h"
 
 namespace jxx::ext::net::ssl::internal {
 namespace {
@@ -40,7 +43,8 @@ X509* decodeCertificate(const ::jxx::lang::ByteArray& encoded) {
 
 std::vector<::jxx::lang::ByteArray> readTrustCertificates(
     const std::string& path,
-    const std::string& password) {
+    const std::string& password,
+    const std::string& type) {
     std::ifstream stream(path, std::ios::binary);
     if (!stream)
         throw ::jxx::lang::IllegalStateException(
@@ -54,9 +58,14 @@ std::vector<::jxx::lang::ByteArray> readTrustCertificates(
 
     std::vector<::jxx::lang::ByteArray> certificates;
 
+    const bool pkcs12 = type == "PKCS12" || type == "PKCS#12";
+    const bool pem = type == "PEM" || type == "X509" || type == "X.509";
+    const bool der = type == "DER" || type == "X509" || type == "X.509";
+
     const unsigned char* cursor = bytes.data();
-    PKCS12* container = d2i_PKCS12(
-        nullptr, &cursor, static_cast<long>(bytes.size()));
+    PKCS12* container = pkcs12
+        ? d2i_PKCS12(nullptr, &cursor, static_cast<long>(bytes.size()))
+        : nullptr;
     if (container != nullptr && cursor == bytes.data() + bytes.size()) {
         EVP_PKEY* key = nullptr;
         X509* leaf = nullptr;
@@ -79,7 +88,7 @@ std::vector<::jxx::lang::ByteArray> readTrustCertificates(
         PKCS12_free(container);
     }
 
-    if (certificates.empty()) {
+    if (certificates.empty() && pem) {
         BIO* memory = BIO_new_mem_buf(
             bytes.data(), static_cast<int>(bytes.size()));
         if (memory != nullptr) {
@@ -95,7 +104,7 @@ std::vector<::jxx::lang::ByteArray> readTrustCertificates(
         }
     }
 
-    if (certificates.empty()) {
+    if (certificates.empty() && der) {
         cursor = bytes.data();
         X509* certificate = d2i_X509(
             nullptr, &cursor, static_cast<long>(bytes.size()));
@@ -188,13 +197,69 @@ OpenSslPropertyTrustManager::getAcceptedIssuers() {
 
 ::jxx::Ptr<::jxx::ext::net::ssl::SSLContext::TrustManagerArray>
 loadDefaultPropertyTrustManagers() {
-    const auto path = ::jxx::lang::System::getProperty(
+    const auto configuredPath = ::jxx::lang::System::getProperty(
         ::jxx::NEW<::jxx::lang::String>("javax.net.ssl.trustStore"));
-    if (path == nullptr || path->utf8().empty()) return nullptr;
+
+    std::string path = configuredPath == nullptr
+        ? std::string()
+        : configuredPath->utf8();
+    if (path.empty()) {
+        const auto homeValue = ::jxx::lang::System::getProperty(
+            ::jxx::NEW<::jxx::lang::String>("java.home"));
+        if (homeValue != nullptr && !homeValue->utf8().empty()) {
+            const std::string home = homeValue->utf8();
+#ifdef _WIN32
+            const char separator = '\\';
+#else
+            const char separator = '/';
+#endif
+            const std::vector<std::string> candidates{
+                home + separator + "lib" + separator + "security" + separator + "jssecacerts",
+                home + separator + "lib" + separator + "security" + separator + "cacerts",
+                home + separator + "jre" + separator + "lib" + separator + "security" + separator + "jssecacerts",
+                home + separator + "jre" + separator + "lib" + separator + "security" + separator + "cacerts"};
+            for (const auto& candidate : candidates) {
+                std::ifstream stream(candidate, std::ios::binary);
+                if (stream.good()) {
+                    path = candidate;
+                    break;
+                }
+            }
+        }
+    }
+    if (path.empty()) return nullptr;
+
+    const auto typeValue = ::jxx::lang::System::getProperty(
+        ::jxx::NEW<::jxx::lang::String>("javax.net.ssl.trustStoreType"));
+    std::string type = typeValue == nullptr || typeValue->utf8().empty()
+        ? ::jxx::security::KeyStore::getDefaultType()->utf8()
+        : typeValue->utf8();
+    std::transform(type.begin(), type.end(), type.begin(),
+        [](unsigned char value) { return static_cast<char>(std::toupper(value)); });
+    if (type != "PKCS12" && type != "PKCS#12" &&
+        type != "PEM" && type != "X509" && type != "X.509" &&
+        type != "DER")
+        throw ::jxx::lang::IllegalStateException(
+            "unsupported javax.net.ssl.trustStoreType");
+
+    const auto providerValue = ::jxx::lang::System::getProperty(
+        ::jxx::NEW<::jxx::lang::String>("javax.net.ssl.trustStoreProvider"));
+    if (providerValue != nullptr && !providerValue->utf8().empty()) {
+        std::string provider = providerValue->utf8();
+        std::transform(provider.begin(), provider.end(), provider.begin(),
+            [](unsigned char value) { return static_cast<char>(std::toupper(value)); });
+        if (provider != "JXX" && provider != "OPENSSL" &&
+            provider != "SUN" && provider != "SUNJSSE")
+            throw ::jxx::lang::IllegalStateException(
+                "unsupported javax.net.ssl.trustStoreProvider");
+    }
+
     const auto passwordValue = ::jxx::lang::System::getProperty(
         ::jxx::NEW<::jxx::lang::String>("javax.net.ssl.trustStorePassword"));
     const auto certificates = readTrustCertificates(
-        path->utf8(), passwordValue == nullptr ? std::string() : passwordValue->utf8());
+        path,
+        passwordValue == nullptr ? std::string() : passwordValue->utf8(),
+        type);
     const auto managers = ::jxx::NEW<
         ::jxx::ext::net::ssl::SSLContext::TrustManagerArray>(1);
     (*managers)[0] = ::jxx::NEW<OpenSslPropertyTrustManager>(certificates);

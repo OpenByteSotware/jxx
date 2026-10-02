@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <cctype>
 #include <fstream>
 #include <iterator>
 #include <string>
@@ -10,6 +12,7 @@
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslX509Certificate.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.X509ExtendedKeyManager.h"
 #include "lang/jxx.lang.IllegalStateException.h"
+#include "security/jxx.security.KeyStore.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.System.h"
 #include "security/jxx.security.PrivateKey.h"
@@ -155,6 +158,29 @@ loadDefaultPropertyKeyManagers() {
     const auto path = ::jxx::lang::System::getProperty(
         ::jxx::NEW<::jxx::lang::String>("javax.net.ssl.keyStore"));
     if (path == nullptr || path->utf8().empty()) return nullptr;
+
+    const auto typeValue = ::jxx::lang::System::getProperty(
+        ::jxx::NEW<::jxx::lang::String>("javax.net.ssl.keyStoreType"));
+    std::string type = typeValue == nullptr || typeValue->utf8().empty()
+        ? ::jxx::security::KeyStore::getDefaultType()->utf8()
+        : typeValue->utf8();
+    std::transform(type.begin(), type.end(), type.begin(),
+        [](unsigned char value) { return static_cast<char>(std::toupper(value)); });
+    if (type != "PKCS12" && type != "PKCS#12")
+        throw ::jxx::lang::IllegalStateException(
+            "unsupported javax.net.ssl.keyStoreType");
+
+    const auto providerValue = ::jxx::lang::System::getProperty(
+        ::jxx::NEW<::jxx::lang::String>("javax.net.ssl.keyStoreProvider"));
+    if (providerValue != nullptr && !providerValue->utf8().empty()) {
+        std::string provider = providerValue->utf8();
+        std::transform(provider.begin(), provider.end(), provider.begin(),
+            [](unsigned char value) { return static_cast<char>(std::toupper(value)); });
+        if (provider != "JXX" && provider != "OPENSSL" &&
+            provider != "SUN" && provider != "SUNJSSE")
+            throw ::jxx::lang::IllegalStateException(
+                "unsupported javax.net.ssl.keyStoreProvider");
+    }
 
     const auto passwordValue = ::jxx::lang::System::getProperty(
         ::jxx::NEW<::jxx::lang::String>("javax.net.ssl.keyStorePassword"));
