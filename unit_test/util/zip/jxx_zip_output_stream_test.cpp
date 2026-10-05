@@ -73,17 +73,29 @@ TEST(JxxZipOutputStreamTest, DefaultEntryIsDeflatedAndArchiveHasCentralDirectory
     }
     EXPECT_TRUE(foundCentralDirectory);
 }
+TEST(
+    JxxZipOutputStreamTest,
+    StoredEntryRequiresSizeCompressedSizeAndCrc)
+{
 
-TEST(JxxZipOutputStreamTest, StoredEntryRequiresSizeCompressedSizeAndCrc) {
-    auto sink = ::jxx::NEW<ByteArrayOutputStream>();
-    auto zip = ::jxx::NEW<ZipOutputStream>(::jxx::CAST<OutputStream>(sink));
-    auto entry = ::jxx::NEW<ZipEntry>(::jxx::NEW<String>("stored.bin"));
+    auto sink =
+        ::jxx::NEW<ByteArrayOutputStream>();
+
+    auto zip =
+        ::jxx::NEW<ZipOutputStream>(
+            ::jxx::CAST<OutputStream>(sink));
+
+    auto entry =
+        ::jxx::NEW<ZipEntry>(
+            ::jxx::NEW<String>("stored.bin"));
+
     entry->setMethod(ZipEntry::STORED);
 
-    zip->putNextEntry(entry);
-    zip->write(bytes({1, 2, 3}));
-    EXPECT_THROW(zip->closeEntry(), ZipException);
+    EXPECT_THROW(
+        zip->putNextEntry(entry),
+        ZipException);
 }
+
 
 TEST(JxxZipOutputStreamTest, StoredEntryWithRequiredMetadataIsWrittenStored) {
     const auto input = bytes({9, 8, 7, 6});
