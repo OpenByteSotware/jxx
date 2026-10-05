@@ -7,7 +7,7 @@
 #include "util/jxx.util.MapEntry.h"
 #include "util/jxx.util.Spliterator.h"
 
-namespace {
+namespace XML_Test {
 using S = ::jxx::lang::String;
 
 class CountingConsumer final

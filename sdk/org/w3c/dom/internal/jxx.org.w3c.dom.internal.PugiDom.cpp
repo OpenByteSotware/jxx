@@ -795,12 +795,66 @@ public:
     }
 
     ::jxx::Ptr<String> getTextContent() const override {
-        return ::jxx::NEW<String>(node_.text().get());
+        if (attributeNode_) {
+            return ::jxx::NEW<String>(attribute_.value());
+        }
+
+        const auto type = getNodeType();
+        if (type == Node::TEXT_NODE ||
+            type == Node::CDATA_SECTION_NODE ||
+            type == Node::COMMENT_NODE ||
+            type == Node::PROCESSING_INSTRUCTION_NODE) {
+            return ::jxx::NEW<String>(node_.value());
+        }
+
+        if (type == Node::DOCUMENT_NODE ||
+            type == Node::DOCUMENT_TYPE_NODE || type == 0) {
+            return nullptr;
+        }
+
+        std::string content;
+        const auto appendText = [&](const auto& self,
+                                    const pugi::xml_node& parent) -> void {
+            for (const auto& child : parent.children()) {
+                if (child.type() == pugi::node_pcdata ||
+                    child.type() == pugi::node_cdata) {
+                    content += child.value();
+                } else if (child.type() == pugi::node_element ||
+                           child.type() == pugi::node_document) {
+                    self(self, child);
+                }
+            }
+        };
+        appendText(appendText, node_);
+        return ::jxx::NEW<String>(content);
     }
 
     void setTextContent(
         const ::jxx::Ptr<String>& text) override {
-        node_.text().set(text ? text->utf8().c_str() : "");
+        const auto value = text == nullptr ? std::string() : text->utf8();
+        if (attributeNode_) {
+            attribute_.set_value(value.c_str());
+            return;
+        }
+
+        const auto type = getNodeType();
+        if (type == Node::TEXT_NODE ||
+            type == Node::CDATA_SECTION_NODE ||
+            type == Node::COMMENT_NODE ||
+            type == Node::PROCESSING_INSTRUCTION_NODE) {
+            node_.set_value(value.c_str());
+            return;
+        }
+        if (type == Node::DOCUMENT_NODE ||
+            type == Node::DOCUMENT_TYPE_NODE || type == 0) {
+            return;
+        }
+
+        node_.remove_children();
+        if (!value.empty()) {
+            auto child = node_.append_child(pugi::node_pcdata);
+            child.set_value(value.c_str());
+        }
     }
 
     ::jxx::Ptr<String> getBaseURI() const override {
