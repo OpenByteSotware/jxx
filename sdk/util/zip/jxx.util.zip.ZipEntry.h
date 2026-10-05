@@ -25,7 +25,7 @@ public:
  ::jxx::Ptr<::jxx::lang::Object> clone() const override;
  ::jxx::lang::jint hashCode()const override;
 private:
- friend class ZipFile; friend class ZipOutputStream;
+ friend class ZipFile; friend class ZipOutputStream; friend class ZipInputStream;
  ::jxx::Ptr<::jxx::lang::String> name_,comment_; ::jxx::lang::ByteArray extra_;
  ::jxx::lang::jlong size_=-1,compressedSize_=-1,crc_=-1,time_=-1;
  ::jxx::lang::jint method_=-1; ::jxx::lang::jlong localOffset_=0,dataOffset_=0;
