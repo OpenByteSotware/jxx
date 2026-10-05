@@ -59,11 +59,7 @@ public:
             finishRun_(nullptr);
         }
         catch (const ::jxx::lang::Throwable& failure) {
-            auto captured = failure.cloneThrowable();
-            if (captured == nullptr) {
-                captured = ::jxx::NEW<::jxx::lang::Throwable>(failure);
-            }
-            finishRun_(captured);
+            finishRun_(::jxx::NEW<::jxx::lang::Throwable>(failure));
         }
         catch (...) {
             finishRun_(::jxx::NEW<::jxx::lang::RuntimeException>());
