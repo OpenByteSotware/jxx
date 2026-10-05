@@ -26,6 +26,11 @@ void InflaterInputStream::ensureOpen_()const{if(closed_)throw ::jxx::io::IOExcep
  ensureOpen_();if(b==nullptr)throw ::jxx::lang::NullPointerException();if(off<0||length<0||off>b->length-length)throw ::jxx::lang::ArrayIndexOutOfBoundsException();if(length==0)return 0;if(eof_)return -1;
  while(true){try{const auto count=inf->inflate(b,off,length);if(count>0)return count;if(inf->finished()||inf->needsDictionary()){eof_=true;return -1;}if(inf->needsInput())fill();}catch(const DataFormatException& e){throw ZipException(e.what());}}
 }
+void InflaterInputStream::resetInflationState_() noexcept {
+    eof_ = false;
+    len = 0;
+}
+
 void InflaterInputStream::fill(){ensureOpen_();len=in_->read(buf,0,buf->length);if(len==-1)throw ::jxx::io::EOFException("Unexpected end of ZLIB input stream");inf->setInput(buf,0,len);}
 ::jxx::lang::jlong InflaterInputStream::skip(::jxx::lang::jlong count){ensureOpen_();if(count<0)throw ::jxx::lang::IllegalArgumentException();auto temp=::jxx::NEW<::jxx::lang::ByteArrayType>(512);::jxx::lang::jlong total=0;while(total<count){const auto request=static_cast<::jxx::lang::jint>(std::min<::jxx::lang::jlong>(count-total,temp->length));const auto n=read(temp,0,request);if(n==-1)break;total+=n;}return total;}
 ::jxx::lang::jint InflaterInputStream::available(){ensureOpen_();return eof_?0:1;}

@@ -15,7 +15,17 @@ ScheduledThreadPoolExecutor::~ScheduledThreadPoolExecutor() {
 ::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> ScheduledThreadPoolExecutor::schedule(const ::jxx::Ptr<::jxx::lang::Runnable>&c,::jxx::lang::jlong d,const ::jxx::Ptr<TimeUnit>&u){if(!u)throw ::jxx::lang::NullPointerException();return schedule_(c,std::max<::jxx::lang::jlong>(0,u->toNanos(d)),0);}
 ::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> ScheduledThreadPoolExecutor::scheduleAtFixedRate(const ::jxx::Ptr<::jxx::lang::Runnable>&c,::jxx::lang::jlong d,::jxx::lang::jlong p,const ::jxx::Ptr<TimeUnit>&u){if(!u)throw ::jxx::lang::NullPointerException();if(p<=0)throw ::jxx::lang::IllegalArgumentException();return schedule_(c,std::max<::jxx::lang::jlong>(0,u->toNanos(d)),u->toNanos(p));}
 ::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> ScheduledThreadPoolExecutor::scheduleWithFixedDelay(const ::jxx::Ptr<::jxx::lang::Runnable>&c,::jxx::lang::jlong d,::jxx::lang::jlong p,const ::jxx::Ptr<TimeUnit>&u){if(!u)throw ::jxx::lang::NullPointerException();if(p<=0)throw ::jxx::lang::IllegalArgumentException();return schedule_(c,std::max<::jxx::lang::jlong>(0,u->toNanos(d)),-u->toNanos(p));}
-::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> ScheduledThreadPoolExecutor::schedule_(const ::jxx::Ptr<::jxx::lang::Runnable>&c,::jxx::lang::jlong d,::jxx::lang::jlong p){if(!c)throw ::jxx::lang::NullPointerException();if(isShutdown())throw RejectedExecutionException();auto task=::jxx::NEW<Task>(c,nullptr,d,p);{std::lock_guard<std::mutex>l(scheduleMutex_);scheduled_.push(task);}scheduleChanged_.notify_all();return ::jxx::CAST<ScheduledFuture<::jxx::lang::Object>>(task);}
+::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> ScheduledThreadPoolExecutor::schedule_(const ::jxx::Ptr<::jxx::lang::Runnable>& command, ::jxx::lang::jlong delayNanos, ::jxx::lang::jlong periodNanos) {
+    if (command == nullptr) throw ::jxx::lang::NullPointerException();
+    const auto task = ::jxx::NEW<Task>(command, nullptr, delayNanos, periodNanos);
+    {
+        std::lock_guard<std::mutex> lock(scheduleMutex_);
+        if (shutdownRequested_.load(std::memory_order_acquire) || stopping_) throw RejectedExecutionException();
+        scheduled_.push(task);
+    }
+    scheduleChanged_.notify_all();
+    return ::jxx::CAST<ScheduledFuture<::jxx::lang::Object>>(task);
+}
 void ScheduledThreadPoolExecutor::execute(const ::jxx::Ptr<::jxx::lang::Runnable>&c){(void)schedule(c,0,TimeUnit::NANOSECONDS());}
 void ScheduledThreadPoolExecutor::dispatch_() {
     for (;;) {
@@ -54,16 +64,13 @@ void ScheduledThreadPoolExecutor::afterExecute_(
     ::jxx::lang::jbool stopBase = false;
     if (task != nullptr && task->isPeriodic() &&
         !task->isCancelled() && !task->isDone()) {
-        const auto keep =
-            !shutdownRequested_.load(std::memory_order_acquire) ||
-            continuePeriodicAfterShutdown_;
-        if (keep) {
+        ::jxx::lang::jbool keep = false;
+        {
             std::lock_guard<std::mutex> lock(scheduleMutex_);
-            if (!stopping_) scheduled_.push(task);
-            else (void)task->cancel(false);
-        } else {
-            (void)task->cancel(false);
+            keep = (!shutdownRequested_.load(std::memory_order_acquire) || continuePeriodicAfterShutdown_) && !stopping_;
+            if (keep) scheduled_.push(task);
         }
+        if (!keep) (void)task->cancel(false);
     }
 
     {
@@ -106,8 +113,36 @@ void ScheduledThreadPoolExecutor::shutdown(){
     return shutdownRequested_.load(std::memory_order_acquire)||ThreadPoolExecutor::isShutdown();
 }
 
-void ScheduledThreadPoolExecutor::setContinueExistingPeriodicTasksAfterShutdownPolicy(::jxx::lang::jbool value){std::lock_guard<std::mutex>l(scheduleMutex_);continuePeriodicAfterShutdown_=value;}
-::jxx::lang::jbool ScheduledThreadPoolExecutor::getContinueExistingPeriodicTasksAfterShutdownPolicy()const{std::lock_guard<std::mutex>l(scheduleMutex_);return continuePeriodicAfterShutdown_;}
-void ScheduledThreadPoolExecutor::setExecuteExistingDelayedTasksAfterShutdownPolicy(::jxx::lang::jbool value){std::lock_guard<std::mutex>l(scheduleMutex_);executeDelayedAfterShutdown_=value;}
-::jxx::lang::jbool ScheduledThreadPoolExecutor::getExecuteExistingDelayedTasksAfterShutdownPolicy()const{std::lock_guard<std::mutex>l(scheduleMutex_);return executeDelayedAfterShutdown_;}
+void ScheduledThreadPoolExecutor::setContinueExistingPeriodicTasksAfterShutdownPolicy(::jxx::lang::jbool value) {
+    ::jxx::lang::jbool stopBase = false;
+    {
+        std::lock_guard<std::mutex> lock(scheduleMutex_);
+        continuePeriodicAfterShutdown_ = value;
+        if (!value && shutdownRequested_.load(std::memory_order_acquire)) {
+            std::vector<::jxx::Ptr<Task>> retained;
+            while (!scheduled_.empty()) { const auto task=scheduled_.top(); scheduled_.pop(); if(task->isPeriodic()) (void)task->cancel(false); else retained.push_back(task); }
+            for (const auto& task: retained) scheduled_.push(task);
+            if (scheduled_.empty()) { stopping_=true; stopBase=true; }
+        }
+    }
+    scheduleChanged_.notify_all();
+    if (stopBase) ThreadPoolExecutor::shutdown();
+}
+::jxx::lang::jbool ScheduledThreadPoolExecutor::getContinueExistingPeriodicTasksAfterShutdownPolicy() const { std::lock_guard<std::mutex> lock(scheduleMutex_); return continuePeriodicAfterShutdown_; }
+void ScheduledThreadPoolExecutor::setExecuteExistingDelayedTasksAfterShutdownPolicy(::jxx::lang::jbool value) {
+    ::jxx::lang::jbool stopBase = false;
+    {
+        std::lock_guard<std::mutex> lock(scheduleMutex_);
+        executeDelayedAfterShutdown_ = value;
+        if (!value && shutdownRequested_.load(std::memory_order_acquire)) {
+            std::vector<::jxx::Ptr<Task>> retained;
+            while (!scheduled_.empty()) { const auto task=scheduled_.top(); scheduled_.pop(); if(!task->isPeriodic()) (void)task->cancel(false); else retained.push_back(task); }
+            for (const auto& task: retained) scheduled_.push(task);
+            if (scheduled_.empty()) { stopping_=true; stopBase=true; }
+        }
+    }
+    scheduleChanged_.notify_all();
+    if (stopBase) ThreadPoolExecutor::shutdown();
+}
+::jxx::lang::jbool ScheduledThreadPoolExecutor::getExecuteExistingDelayedTasksAfterShutdownPolicy() const { std::lock_guard<std::mutex> lock(scheduleMutex_); return executeDelayedAfterShutdown_; }
 } // namespace jxx::util::concurrent

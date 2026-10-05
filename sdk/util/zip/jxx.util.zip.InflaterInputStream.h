@@ -28,7 +28,8 @@ public:
     void reset() override;
 
 protected:
-    void fill();
+    virtual void fill();
+    void resetInflationState_() noexcept;
     ::jxx::Ptr<Inflater> inf;
     ::jxx::lang::ByteArray buf;
     ::jxx::lang::jint len = 0;

@@ -58,8 +58,16 @@ public:
             else command_->run();
             finishRun_(nullptr);
         }
-        catch(const ::jxx::lang::Throwable& e) { finishRun_(e.cloneThrowable()); }
-        catch(...) { finishRun_(::jxx::NEW<::jxx::lang::RuntimeException>()); }
+        catch (const ::jxx::lang::Throwable& failure) {
+            auto captured = failure.cloneThrowable();
+            if (captured == nullptr) {
+                captured = ::jxx::NEW<::jxx::lang::Throwable>(failure);
+            }
+            finishRun_(captured);
+        }
+        catch (...) {
+            finishRun_(::jxx::NEW<::jxx::lang::RuntimeException>());
+        }
     }
 
     ::jxx::lang::jbool cancel(
