@@ -28,7 +28,7 @@ namespace jxx::net
             (u_((*bytes_)[0]) == 172U && u_((*bytes_)[1]) >= 16U && u_((*bytes_)[1]) <= 31U) ||
             (u_((*bytes_)[0]) == 192U && u_((*bytes_)[1]) == 168U));
     }
-    jxx::lang::jbool Inet4Address::isMCGlobal() const { return isMulticastAddress() && !(isMCLinkLocal() || isMCSiteLocal() || isMCOrgLocal()); }
+    jxx::lang::jbool Inet4Address::isMCGlobal() const { const auto first = u_((*bytes_)[0]); return bytes_->length == 4 && first >= 224U && first <= 238U && !(first == 224U && u_((*bytes_)[1]) == 0U && u_((*bytes_)[2]) == 0U); }
     jxx::lang::jbool Inet4Address::isMCNodeLocal() const { return false; }
     jxx::lang::jbool Inet4Address::isMCLinkLocal() const { return bytes_->length == 4 && u_((*bytes_)[0]) == 224U && u_((*bytes_)[1]) == 0U && u_((*bytes_)[2]) == 0U; }
     jxx::lang::jbool Inet4Address::isMCSiteLocal() const { return bytes_->length == 4 && u_((*bytes_)[0]) == 239U && u_((*bytes_)[1]) == 255U; }
