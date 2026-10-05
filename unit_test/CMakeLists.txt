@@ -35,6 +35,10 @@ file(
     CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/jxx_*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/lang/jxx_*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/util/jxx_*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/util/concurrent/jxx_*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/org/w3c/jxx_*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/org/w3c/dom/jxx_*.cpp"
 )
 
 add_executable(

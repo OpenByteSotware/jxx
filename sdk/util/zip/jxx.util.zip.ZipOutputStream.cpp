@@ -8,6 +8,7 @@
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
+#include "nio/charset/jxx.nio.charset.Charset.h"
 #include "util/zip/jxx.util.zip.ZipEntry.h"
 #include "util/zip/jxx.util.zip.ZipException.h"
 namespace jxx::util::zip { namespace {
@@ -21,6 +22,7 @@ std::pair<std::uint16_t,std::uint16_t> dosTime(::jxx::lang::jlong ms){if(ms<0)ms
 void require32(std::uint64_t v){if(v>0xffffffffULL)throw ZipException("ZIP64 is not supported");}
 }
 ZipOutputStream::ZipOutputStream(const ::jxx::Ptr<::jxx::io::OutputStream>& o):Super(o,::jxx::NEW<Deflater>(Deflater::DEFAULT_COMPRESSION,true),512,false){}
+ZipOutputStream::ZipOutputStream(const ::jxx::Ptr<::jxx::io::OutputStream>&o,const ::jxx::Ptr<::jxx::nio::charset::Charset>&c):ZipOutputStream(o){if(!c)throw ::jxx::lang::NullPointerException();}
 ZipOutputStream::~ZipOutputStream(){if(def)def->end();}
 void ZipOutputStream::ensureZipOpen_()const{if(zipClosed_)throw ZipException("stream closed");}
 void ZipOutputStream::emit_(std::uint8_t v){out_->write(static_cast<::jxx::lang::jint>(v));++position_;}

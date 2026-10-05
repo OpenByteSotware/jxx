@@ -14,6 +14,8 @@
 #include "io/jxx.io.File.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
+#include "nio/charset/jxx.nio.charset.Charset.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
 #include "util/jxx.util.VectorEnumeration.h"
 #include "util/zip/jxx.util.zip.ZipEntry.h"
 #include "util/zip/jxx.util.zip.ZipException.h"
@@ -100,6 +102,10 @@ ZipFile::ZipFile(const ::jxx::Ptr<::jxx::io::File>& file) {
     }
     open_(file->getPath());
 }
+ZipFile::ZipFile(const ::jxx::Ptr<::jxx::lang::String>&n,const ::jxx::Ptr<::jxx::nio::charset::Charset>&cs):ZipFile(n){if(!cs)throw ::jxx::lang::NullPointerException();}
+ZipFile::ZipFile(const ::jxx::Ptr<::jxx::io::File>&f,const ::jxx::Ptr<::jxx::nio::charset::Charset>&cs):ZipFile(f){if(!cs)throw ::jxx::lang::NullPointerException();}
+ZipFile::ZipFile(const ::jxx::Ptr<::jxx::io::File>&f,::jxx::lang::jint mode):ZipFile(f){if((mode&OPEN_READ)==0||(mode&~(OPEN_READ|OPEN_DELETE))!=0)throw ::jxx::lang::IllegalArgumentException();}
+ZipFile::ZipFile(const ::jxx::Ptr<::jxx::io::File>&f,::jxx::lang::jint mode,const ::jxx::Ptr<::jxx::nio::charset::Charset>&cs):ZipFile(f,mode){if(!cs)throw ::jxx::lang::NullPointerException();}
 
 ZipFile::~ZipFile() {
     try {

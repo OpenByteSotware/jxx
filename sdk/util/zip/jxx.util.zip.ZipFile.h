@@ -7,12 +7,18 @@
 #include "util/jxx.util.Enumeration.h"
 namespace jxx::io { class File; class InputStream; }
 namespace jxx::lang { class String; }
+namespace jxx::nio::charset { class Charset; }
 namespace jxx::util::zip { class ZipEntry;
 class ZipFile final : public ::jxx::lang::ClassBase<ZipFile,::jxx::lang::Object,::jxx::io::Closeable> {
 public:
+ static constexpr ::jxx::lang::jint OPEN_READ=1; static constexpr ::jxx::lang::jint OPEN_DELETE=4;
  using JxxSuper=::jxx::lang::Object;
  explicit ZipFile(const ::jxx::Ptr<::jxx::lang::String>& name);
  explicit ZipFile(const ::jxx::Ptr<::jxx::io::File>& file);
+ ZipFile(const ::jxx::Ptr<::jxx::lang::String>& name,const ::jxx::Ptr<::jxx::nio::charset::Charset>& charset);
+ ZipFile(const ::jxx::Ptr<::jxx::io::File>& file,const ::jxx::Ptr<::jxx::nio::charset::Charset>& charset);
+ ZipFile(const ::jxx::Ptr<::jxx::io::File>& file,::jxx::lang::jint mode);
+ ZipFile(const ::jxx::Ptr<::jxx::io::File>& file,::jxx::lang::jint mode,const ::jxx::Ptr<::jxx::nio::charset::Charset>& charset);
  ~ZipFile()override;
  ::jxx::Ptr<ZipEntry> getEntry(const ::jxx::Ptr<::jxx::lang::String>& name)const;
  ::jxx::Ptr<::jxx::util::Enumeration<ZipEntry>> entries();

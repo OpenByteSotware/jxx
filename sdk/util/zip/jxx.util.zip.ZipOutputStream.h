@@ -4,12 +4,14 @@
 #include <vector>
 #include "util/zip/jxx.util.zip.DeflaterOutputStream.h"
 namespace jxx::lang { class String; }
+namespace jxx::nio::charset { class Charset; }
 namespace jxx::util::zip { class ZipEntry;
 class ZipOutputStream final : public ::jxx::lang::ClassBase<ZipOutputStream, DeflaterOutputStream> {
 public:
  using JxxSuper=DeflaterOutputStream; using Super=::jxx::lang::ClassBase<ZipOutputStream,JxxSuper>; using JxxClassInfoMarker=typename Super::JxxClassInfoMarker;
  static constexpr ::jxx::lang::jint STORED=0; static constexpr ::jxx::lang::jint DEFLATED=8;
- explicit ZipOutputStream(const ::jxx::Ptr<::jxx::io::OutputStream>& output); ~ZipOutputStream() override;
+ explicit ZipOutputStream(const ::jxx::Ptr<::jxx::io::OutputStream>& output);
+ ZipOutputStream(const ::jxx::Ptr<::jxx::io::OutputStream>& output,const ::jxx::Ptr<::jxx::nio::charset::Charset>& charset); ~ZipOutputStream() override;
  void putNextEntry(const ::jxx::Ptr<ZipEntry>& entry); void closeEntry();
  void write(::jxx::lang::jint value) override; void write(const ::jxx::lang::ByteArray& buffer) override; void write(const ::jxx::lang::ByteArray& buffer,::jxx::lang::jint offset,::jxx::lang::jint length) override;
  void finish(); void close() override; void setMethod(::jxx::lang::jint method); void setLevel(::jxx::lang::jint level); void setComment(const ::jxx::Ptr<::jxx::lang::String>& comment);

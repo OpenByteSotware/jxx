@@ -2,6 +2,7 @@
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
+#include "nio/file/attribute/jxx.nio.file.attribute.FileTime.h"
 namespace jxx::util::zip {
 ZipEntry::ZipEntry(const ::jxx::Ptr<::jxx::lang::String>&n):name_(n){if(n==nullptr)throw ::jxx::lang::NullPointerException();if(n->utf8().size()>65535)throw ::jxx::lang::IllegalArgumentException("entry name too long");}
 ZipEntry::ZipEntry(const ::jxx::Ptr<ZipEntry>&e){if(e==nullptr)throw ::jxx::lang::NullPointerException();*this=*e;}
@@ -12,6 +13,12 @@ ZipEntry::ZipEntry(const ::jxx::Ptr<ZipEntry>&e){if(e==nullptr)throw ::jxx::lang
 ::jxx::lang::jlong ZipEntry::getCrc()const noexcept{return crc_;} void ZipEntry::setCrc(::jxx::lang::jlong v){if(v<0||v>0xffffffffLL)throw ::jxx::lang::IllegalArgumentException();crc_=v;}
 ::jxx::lang::jint ZipEntry::getMethod()const noexcept{return method_;} void ZipEntry::setMethod(::jxx::lang::jint v){if(v!=STORED&&v!=DEFLATED)throw ::jxx::lang::IllegalArgumentException();method_=v;}
 ::jxx::lang::jlong ZipEntry::getTime()const noexcept{return time_;} void ZipEntry::setTime(::jxx::lang::jlong v)noexcept{time_=v;}
+::jxx::Ptr<::jxx::nio::file::attribute::FileTime> ZipEntry::getLastModifiedTime()const{return lastModifiedTime_?lastModifiedTime_:(time_>=0?::jxx::nio::file::attribute::FileTime::fromMillis(time_):nullptr);}
+void ZipEntry::setLastModifiedTime(const ::jxx::Ptr<::jxx::nio::file::attribute::FileTime>&v){if(!v)throw ::jxx::lang::NullPointerException();lastModifiedTime_=v;time_=v->toMillis();}
+::jxx::Ptr<::jxx::nio::file::attribute::FileTime> ZipEntry::getLastAccessTime()const{return lastAccessTime_;}
+void ZipEntry::setLastAccessTime(const ::jxx::Ptr<::jxx::nio::file::attribute::FileTime>&v){if(!v)throw ::jxx::lang::NullPointerException();lastAccessTime_=v;}
+::jxx::Ptr<::jxx::nio::file::attribute::FileTime> ZipEntry::getCreationTime()const{return creationTime_;}
+void ZipEntry::setCreationTime(const ::jxx::Ptr<::jxx::nio::file::attribute::FileTime>&v){if(!v)throw ::jxx::lang::NullPointerException();creationTime_=v;}
 ::jxx::Ptr<::jxx::lang::String> ZipEntry::getComment()const{return comment_;} void ZipEntry::setComment(const ::jxx::Ptr<::jxx::lang::String>&v){comment_=v;}
 ::jxx::lang::ByteArray ZipEntry::getExtra()const{return extra_;} void ZipEntry::setExtra(const ::jxx::lang::ByteArray&v){if(v&&v->length>65535)throw ::jxx::lang::IllegalArgumentException();extra_=v;}
 ::jxx::Ptr<::jxx::lang::String> ZipEntry::toString() const{return name_;}
