@@ -3,17 +3,17 @@
 namespace jxx::net
 {
     NoRouteToHostException::NoRouteToHostException()
-        : SocketException("NoRouteToHostException")
+        : Super("NoRouteToHostException")
     {
     }
 
     NoRouteToHostException::NoRouteToHostException(const char* message)
-        : SocketException(message ? message : "NoRouteToHostException")
+        : Super(message ? message : "NoRouteToHostException")
     {
     }
 
     NoRouteToHostException::NoRouteToHostException(const std::string& message)
-        : SocketException(message)
+        : Super(message)
     {
     }
 }

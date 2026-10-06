@@ -3,17 +3,17 @@
 namespace jxx::net
 {
     PortUnreachableException::PortUnreachableException()
-        : SocketException("PortUnreachableException")
+        : Super("PortUnreachableException")
     {
     }
 
     PortUnreachableException::PortUnreachableException(const char* message)
-        : SocketException(message ? message : "PortUnreachableException")
+        : Super(message ? message : "PortUnreachableException")
     {
     }
 
     PortUnreachableException::PortUnreachableException(const std::string& message)
-        : SocketException(message)
+        : Super(message)
     {
     }
 }

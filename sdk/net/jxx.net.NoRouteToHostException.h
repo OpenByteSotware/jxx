@@ -8,6 +8,9 @@ namespace jxx::net
 {
     class NoRouteToHostException : public ::jxx::lang::ClassBase<NoRouteToHostException, SocketException> {
     public:
+        using JxxSuper = SocketException;
+        using Super = ::jxx::lang::ClassBase<NoRouteToHostException, JxxSuper>;
+
         NoRouteToHostException();
         explicit NoRouteToHostException(const char* message);
         explicit NoRouteToHostException(const std::string& message);

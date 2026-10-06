@@ -17,6 +17,7 @@ namespace jxx::org::w3c::dom::events {
 class EventException : public ::jxx::lang::ClassBase<EventException, ::jxx::lang::RuntimeException> {
 public:
     using JxxSuper = ::jxx::lang::RuntimeException;
+    using Super = ::jxx::lang::ClassBase<EventException, JxxSuper>;
 
     static constexpr ::jxx::lang::jshort UNSPECIFIED_EVENT_TYPE_ERR = 0;
 
