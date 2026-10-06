@@ -48,6 +48,8 @@ struct Thread::NativeState {
 
 thread_local std::weak_ptr<Thread>
 Thread::currentThread_;
+thread_local jxx::Ptr<Thread>
+Thread::adoptedCurrentThread_;
 
 namespace {
 
@@ -101,7 +103,7 @@ Thread::Thread(const jxx::Ptr<ThreadGroup>& group, const jxx::Ptr<Runnable>& tar
     state_->target = target;
     state_->id = nextThreadId.fetch_add(1);
     state_->name = name == nullptr ? defaultThreadName(state_->id) : name;
-    auto current = currentThread();
+    auto current = currentThread_.lock();
     state_->group = group != nullptr ? group
         : (current != nullptr && current->state_->group != nullptr
             ? current->state_->group : ThreadGroup::systemThreadGroup());
@@ -321,7 +323,26 @@ void Thread::yield() {
 }
 
 jxx::Ptr<Thread> Thread::currentThread() {
-    return currentThread_.lock();
+    auto current = currentThread_.lock();
+    if (current != nullptr) {
+        return current;
+    }
+
+    if (adoptedCurrentThread_ == nullptr) {
+        adoptedCurrentThread_ = jxx::NEW<Thread>();
+        adoptedCurrentThread_->state_->started.store(
+            true,
+            std::memory_order_release);
+        adoptedCurrentThread_->state_->running.store(
+            true,
+            std::memory_order_release);
+        adoptedCurrentThread_->state_->finished.store(
+            false,
+            std::memory_order_release);
+    }
+
+    currentThread_ = adoptedCurrentThread_;
+    return adoptedCurrentThread_;
 }
 
 jlong Thread::getId() const {

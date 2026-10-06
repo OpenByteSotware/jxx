@@ -159,6 +159,8 @@ private:
 
     static thread_local std::weak_ptr<Thread>
         currentThread_;
+    static thread_local jxx::Ptr<Thread>
+        adoptedCurrentThread_;
 };
 
 } // namespace jxx::lang
