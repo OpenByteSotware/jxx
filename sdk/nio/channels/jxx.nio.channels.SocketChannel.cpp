@@ -197,6 +197,7 @@ namespace jxx::nio::channels
 	} // namespace
 
 	SocketChannel::SocketChannel()
+		: state_(std::make_shared<::jxx::net::internal::NativeSocketState>())
 	{
 		::jxx::net::internal::ensureNetworkInitialized();
 	}
@@ -261,7 +262,8 @@ namespace jxx::nio::channels
 	{
 		std::lock_guard<std::mutex> lock(mutex_);
 		if (!open_) throw ::jxx::nio::channels::ClosedChannelException();
-		if (state_->socket != ::jxx::net::internal::kInvalidSocket)
+		if (state_ != nullptr &&
+			state_->socket != ::jxx::net::internal::kInvalidSocket)
 			setBlocking(state_->socket, block);
 		blocking_ = block;
 	}
