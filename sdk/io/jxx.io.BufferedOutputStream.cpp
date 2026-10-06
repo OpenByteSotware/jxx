@@ -128,34 +128,43 @@ namespace jxx::io
 
 	void BufferedOutputStream::close()
 	{
-    synchronized([&] {
-		if (closed_) {
-			return;
-		}
+		synchronized([&] {
+			if (closed_) {
+				return;
+			}
 
-		try {
-			flushBuffer_();
-			out_->flush();
-		}
-		catch (...) {
+			const auto output = out_;
+
 			try {
-				out_->close();
+				flushBuffer_();
+				if (output != nullptr) {
+					output->flush();
+				}
 			}
 			catch (...) {
+				closed_ = true;
+				buffer_.reset();
+				out_.reset();
+
+				if (output != nullptr) {
+					try {
+						output->close();
+					}
+					catch (...) {
+					}
+				}
+
+				throw;
 			}
 
 			closed_ = true;
 			buffer_.reset();
 			out_.reset();
-			throw;
-		}
 
-		out_->close();
-		closed_ = true;
-		buffer_.reset();
-		out_.reset();
-	
-    });
-}
+			if (output != nullptr) {
+				output->close();
+			}
+		});
+	}
 
 } // namespace jxx::io
