@@ -1,12 +1,13 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.String.h"
 
 namespace jxx::net
 {
-    class IDN final
-    {
+    class IDN final : public ::jxx::lang::ClassBase<IDN, ::jxx::lang::Object> {
     public:
         static constexpr jxx::lang::jint ALLOW_UNASSIGNED = 0x01;
         static constexpr jxx::lang::jint USE_STD3_ASCII_RULES = 0x02;

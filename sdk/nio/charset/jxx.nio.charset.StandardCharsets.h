@@ -1,12 +1,13 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "lang/jxx_types.h"
 #include "nio/charset/jxx.nio.charset.Charset.h"
 
 namespace jxx::nio::charset
 {
-    class StandardCharsets final
-    {
+    class StandardCharsets final : public ::jxx::lang::ClassBase<StandardCharsets, ::jxx::lang::Object> {
     public:
         static jxx::Ptr<Charset> US_ASCII;
         static jxx::Ptr<Charset> ISO_8859_1;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "util/function/jxx.util.function.Function.h"
 
 namespace jxx {
@@ -7,7 +9,7 @@ namespace util {
 namespace function {
 
 template <typename T>
-class UnaryOperator : virtual public Function<T, T> {
+class UnaryOperator : public ::jxx::lang::InterfaceBase<UnaryOperator<T>, Function<T, T>> {
 public:
     virtual ~UnaryOperator() = default;
 

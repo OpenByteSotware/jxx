@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 
@@ -9,7 +11,7 @@ class Parser;
 
 namespace jxx::org::xml::sax::helpers {
 
-class ParserFactory final : public ::jxx::lang::Object {
+class ParserFactory final : public ::jxx::lang::ClassBase<ParserFactory, ::jxx::lang::Object> {
 public:
     using JxxSuper = ::jxx::lang::Object;
 

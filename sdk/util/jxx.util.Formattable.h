@@ -1,12 +1,14 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "lang/jxx_types.h"
 
 namespace jxx::util {
 class Formatter;
 
 /** Java 8: jxx.util.Formattable (interface) */
-class Formattable {
+class Formattable : public ::jxx::lang::InterfaceBase<Formattable> {
 public:
     virtual ~Formattable() = default;
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include <atomic>
 
 #include "lang/jxx.lang.NullPointerException.h"
@@ -59,7 +61,7 @@ private:
 
 } // namespace executors_detail
 
-class Executors final : public ::jxx::lang::Object {
+class Executors final : public ::jxx::lang::ClassBase<Executors, ::jxx::lang::Object> {
 private:
     Executors() = delete;
 

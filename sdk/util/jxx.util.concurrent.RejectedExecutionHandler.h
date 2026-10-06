@@ -1,10 +1,12 @@
 #pragma once
+
+#include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.Runnable.h"
 namespace jxx::util::concurrent {
 class ThreadPoolExecutor;
 /** Java 8 interface. */
-class RejectedExecutionHandler {
+class RejectedExecutionHandler : public ::jxx::lang::InterfaceBase<RejectedExecutionHandler> {
 public:
     virtual ~RejectedExecutionHandler() = default;
     virtual void rejectedExecution(

@@ -1,10 +1,12 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "lang/jxx_types.h"
 
 namespace jxx::lang {
 
-class StrictMath final {
+class StrictMath final : public ::jxx::lang::ClassBase<StrictMath, ::jxx::lang::Object> {
 public:
     static constexpr jdouble E = 2.7182818284590452354;
     static constexpr jdouble PI = 3.14159265358979323846;

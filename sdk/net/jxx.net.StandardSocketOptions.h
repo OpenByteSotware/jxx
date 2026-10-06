@@ -1,11 +1,13 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "lang/jxx_types.h"
 #include "net/jxx.net.SocketOption.h"
 
 namespace jxx::net {
 
-class StandardSocketOptions final {
+class StandardSocketOptions final : public ::jxx::lang::ClassBase<StandardSocketOptions, ::jxx::lang::Object> {
 public:
     using Option = SocketOption<::jxx::lang::Object>;
 

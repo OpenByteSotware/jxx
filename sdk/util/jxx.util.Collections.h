@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -30,7 +32,7 @@ namespace jxx::util {
      * Public APIs use JXX types only. STL containers are restricted to internal
      * temporary storage.
      */
-    class Collections final : public ::jxx::lang::Object {
+    class Collections final : public ::jxx::lang::ClassBase<Collections, ::jxx::lang::Object> {
     private:
         Collections() = delete;
 

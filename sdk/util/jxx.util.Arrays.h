@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include <algorithm>
 #include <cstdint>
 #include <sstream>
@@ -101,7 +103,7 @@ inline void checkRange(const ::jxx::Ptr<::jxx::lang::JxxArray<T, 1U>>& array,
 
 } // namespace arrays_detail
 
-class Arrays final {
+class Arrays final : public ::jxx::lang::ClassBase<Arrays, ::jxx::lang::Object> {
 public:
     Arrays() = delete;
 

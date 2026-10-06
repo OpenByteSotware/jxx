@@ -1,11 +1,12 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "net/jxx.net.SocketException.h"
 
 namespace jxx::net
 {
-    class NoRouteToHostException : public SocketException
-    {
+    class NoRouteToHostException : public ::jxx::lang::ClassBase<NoRouteToHostException, SocketException> {
     public:
         NoRouteToHostException();
         explicit NoRouteToHostException(const char* message);

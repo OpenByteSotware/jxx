@@ -1,5 +1,7 @@
 
 #pragma once
+
+#include "lang/jxx.lang.ClassInfo.h"
 #include <memory>
 #include <vector>
 #include <cstring>
@@ -22,7 +24,9 @@ namespace jxx { namespace util { class Properties; } namespace lang {
 class Object;
 class SecurityManager;
 class String;
-struct System {
+class System : public
+    ::jxx::lang::ClassBase<System, ::jxx::lang::Object> {
+public:
     static std::shared_ptr<jxx::io::InputStream> in;
     static std::shared_ptr<jxx::io::PrintStream> out;
     static std::shared_ptr<jxx::io::PrintStream> err;

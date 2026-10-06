@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "lang/jxx.lang.RuntimeException.h"
 #include "lang/jxx_types.h"
 
@@ -12,7 +14,7 @@
 
 namespace jxx::org::w3c::dom::events {
 
-class EventException : public ::jxx::lang::RuntimeException {
+class EventException : public ::jxx::lang::ClassBase<EventException, ::jxx::lang::RuntimeException> {
 public:
     using JxxSuper = ::jxx::lang::RuntimeException;
 
