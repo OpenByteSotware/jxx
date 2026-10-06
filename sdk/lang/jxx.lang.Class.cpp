@@ -353,6 +353,11 @@ namespace jxx::lang {
 
     jbool ClassAny::isInstance(const jxx::Ptr<Object>& obj) const {
         if (!obj) return false;
+
+        if (meta_.instancePredicate) {
+            return meta_.instancePredicate(obj);
+        }
+
         auto oc = obj->getClass();
         if (!oc) return false;
         return this->isAssignableFrom(oc);
