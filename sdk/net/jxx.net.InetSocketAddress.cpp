@@ -28,7 +28,8 @@ namespace jxx::net
         : InetSocketAddress(nullptr, std::move(hostname), port, false)
     {
         if (host_ == nullptr) {
-            throw jxx::lang::NullPointerException();
+            throw jxx::lang::IllegalArgumentException(
+                "hostname can't be null");
         }
         {
             try
