@@ -20,6 +20,7 @@ public:
     explicit AssertionError(jfloat detailMessage);
     explicit AssertionError(jint detailMessage);
     explicit AssertionError(jlong detailMessage);
+    explicit AssertionError(const ::jxx::Ptr<String>& detailMessage);
     explicit AssertionError(const ::jxx::Ptr<Object>& detailMessage);
     explicit AssertionError(const char* detailMessage);
     AssertionError(

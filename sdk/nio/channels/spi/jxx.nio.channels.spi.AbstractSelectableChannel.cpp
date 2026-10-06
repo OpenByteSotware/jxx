@@ -7,6 +7,7 @@
 #include "nio/channels/jxx.nio.channels.SelectionKey.h"
 #include "nio/channels/jxx.nio.channels.Selector.h"
 #include "nio/channels/spi/jxx.nio.channels.spi.SelectorProvider.h"
+#include "nio/channels/spi/jxx.nio.channels.spi.AbstractSelectionKey.h"
 namespace jxx::nio::channels::spi {
 ::jxx::Ptr<::jxx::lang::ClassAny> AbstractSelectableChannel::Class(){return JxxClassInfoMarker::Class();}
 AbstractSelectableChannel::AbstractSelectableChannel(const ::jxx::Ptr<SelectorProvider>&p):provider_(p),blockingLock_(::jxx::NEW<::jxx::lang::Object>()){}
@@ -19,7 +20,30 @@ void AbstractSelectableChannel::purgeCancelled_()const{keys_.erase(std::remove_i
 ::jxx::Ptr<::jxx::nio::channels::SelectableChannel> AbstractSelectableChannel::configureBlocking(::jxx::lang::jbool b){std::lock_guard<std::mutex>l(mutex_);purgeCancelled_();if(!isOpen())throw ::jxx::nio::channels::ClosedChannelException();if(b&&!keys_.empty())throw ::jxx::nio::channels::IllegalBlockingModeException();implConfigureBlocking(b);blocking_=b;return ::jxx::CAST<::jxx::nio::channels::SelectableChannel>(thisPtr());}
 ::jxx::lang::jbool AbstractSelectableChannel::isBlocking()const noexcept{try{std::lock_guard<std::mutex>l(mutex_);return blocking_;}catch(...){return true;}}
 ::jxx::Ptr<::jxx::lang::Object> AbstractSelectableChannel::blockingLock(){return blockingLock_;}
-void AbstractSelectableChannel::implCloseChannel(){std::vector<::jxx::Ptr<::jxx::nio::channels::SelectionKey>>keys;{std::lock_guard<std::mutex>l(mutex_);keys=keys_;keys_.clear();}for(const auto&k:keys)if(k!=nullptr)k->cancel();implCloseSelectableChannel();}
+void AbstractSelectableChannel::implCloseChannel() {
+    std::vector<::jxx::Ptr<::jxx::nio::channels::SelectionKey>> keys;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        keys = keys_;
+        keys_.clear();
+    }
+
+    for (const auto& key : keys) {
+        if (key == nullptr) {
+            continue;
+        }
+
+        const auto abstractKey =
+            ::jxx::CAST<AbstractSelectionKey>(key);
+        if (abstractKey != nullptr) {
+            abstractKey->cancelWithReference_(key);
+        } else {
+            key->cancel();
+        }
+    }
+
+    implCloseSelectableChannel();
+}
 void AbstractSelectableChannel::removeKey_(
     const ::jxx::Ptr<::jxx::nio::channels::SelectionKey>& key) {
     std::lock_guard<std::mutex> lock(mutex_);

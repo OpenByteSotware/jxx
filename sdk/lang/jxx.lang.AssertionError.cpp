@@ -46,6 +46,11 @@ AssertionError::AssertionError(jlong value)
 }
 
 AssertionError::AssertionError(
+    const ::jxx::Ptr<String>& value)
+    : JxxSuper(value) {
+}
+
+AssertionError::AssertionError(
     const ::jxx::Ptr<Object>& value)
     : JxxSuper(String::valueOf(value), throwableCause(value)) {
 }

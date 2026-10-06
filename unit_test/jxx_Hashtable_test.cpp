@@ -837,25 +837,27 @@ namespace {
             jxx::lang::UnsupportedOperationException);
     }
 
-    TEST(HashtableTest, KeySetIteratorIsSnapshotBased) {
-        auto table = jxx::NEW<StringHashtable>();
+    TEST(
+       HashtableTest,
+       KeySetIteratorIsFailFast)
+    {
+
+        const auto table =
+            ::jxx::NEW<StringHashtable>();
 
         table->put(S("one"), S("1"));
         table->put(S("two"), S("2"));
 
-        auto iterator =
+        const auto iterator =
             table->keySet()->iterator();
 
         table->put(S("three"), S("3"));
 
-        jint count = 0;
+        EXPECT_THROW(
+            iterator->next(),
+            ::jxx::util::ConcurrentModificationException);
 
-        while (iterator->hasNext()) {
-            iterator->next();
-            ++count;
-        }
-
-        EXPECT_EQ(count, 2);
+        EXPECT_EQ(3, table->size());
     }
 
     TEST(HashtableTest, KeySetIteratorRemoveIsUnsupported) {

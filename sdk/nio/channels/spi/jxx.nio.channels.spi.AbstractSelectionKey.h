@@ -14,5 +14,8 @@ protected:
  AbstractSelectionKey()=default;
  void invalidate_()noexcept;
 private:
+ friend class AbstractSelectableChannel;
+ void cancelWithReference_(
+     const ::jxx::Ptr<::jxx::nio::channels::SelectionKey>& key);
  std::atomic<::jxx::lang::jbool> valid_{true};
 }; }
