@@ -49,6 +49,7 @@ namespace jxx::io
 		if (!d) throw ::jxx::lang::NullPointerException();
 		handle_ = d->nativeHandle();
 		if (!handle_) throw FileNotFoundException();
+		owned_ = true;
 	} FileOutputStream::~FileOutputStream()
 	{
 		try { close(); } catch (...) {}

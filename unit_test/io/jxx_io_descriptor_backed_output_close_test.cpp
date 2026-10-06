@@ -4,6 +4,7 @@
 #include "io/jxx.io.FileOutputStream.h"
 #include "io/jxx.io.IOException.h"
 namespace {
+
 TEST(DescriptorBackedOutputCloseTest, CloseInvalidatesAndClosesDescriptorConnection) {
     const char* path="jxx_descriptor_output_close.tmp";
     std::remove(path);
