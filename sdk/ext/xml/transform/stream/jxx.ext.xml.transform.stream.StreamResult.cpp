@@ -12,5 +12,5 @@ void StreamResult::setWriter(const ::jxx::Ptr<::jxx::io::Writer>& writer){writer
 void StreamResult::setSystemId(const ::jxx::Ptr<::jxx::lang::String>& systemId){systemId_=systemId;}
 void StreamResult::setSystemId(const ::jxx::Ptr<::jxx::io::File>& file){systemId_=file==nullptr?nullptr:file->getAbsolutePath();}
 ::jxx::Ptr<::jxx::lang::String> StreamResult::getSystemId()const{return systemId_;}
-::jxx::Ptr<::jxx::lang::String> StreamResult::FEATURE(){static const auto v=::jxx::NEW<::jxx::lang::String>("http://javax.xml.transform.stream.StreamResult/feature");return v;}
+::jxx::Ptr<::jxx::lang::String> StreamResult::FEATURE(){static const auto v=::jxx::NEW<::jxx::lang::String>("http://jxx.ext.xml.transform.stream.StreamResult/feature");return v;}
 }

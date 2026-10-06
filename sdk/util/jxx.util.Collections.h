@@ -22,7 +22,7 @@
 namespace jxx::util {
 
     /**
-     * Core Java 8 java.util.Collections algorithms for JXX/C++17.
+     * Core Java 8 jxx.util.Collections algorithms for JXX/C++17.
      *
      * Collections is a non-instantiable, non-template utility class. Java generic
      * static methods are represented by C++ static function templates.

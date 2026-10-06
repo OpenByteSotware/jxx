@@ -32,7 +32,7 @@
 namespace jxx::util {
 
 /**
- * Java 8 java.util.Vector<E> for JXX/C++17.
+ * Java 8 jxx.util.Vector<E> for JXX/C++17.
  *
  * Java reference values are represented by jxx::Ptr<T>. Every public reference
  * parameter is passed as const jxx::Ptr<T>&. STL storage is private.

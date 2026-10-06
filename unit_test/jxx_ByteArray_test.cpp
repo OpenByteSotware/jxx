@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.ArrayIndexOutOfBoundsException.h"
 
 namespace {
 TEST(ByteArrayTest, AllocationLengthAndIndexingWork) {
@@ -12,10 +13,23 @@ TEST(ByteArrayTest, AllocationLengthAndIndexingWork) {
     EXPECT_EQ(static_cast<unsigned int>((*bytes)[1]) & 0xFFU, 0x34U);
 }
 
-TEST(ByteArrayTest, FillAndBoundsCheckWork) {
-    auto bytes = jxx::NEW<jxx::lang::ByteArrayType>(3);
-    bytes->fill(static_cast<jxx::lang::jbyte>(7));
-    EXPECT_EQ((*bytes)[2], static_cast<jxx::lang::jbyte>(7));
-    EXPECT_THROW(bytes->at(3), std::out_of_range);
+TEST(ByteArrayTest, FillAndBoundsCheckWork)
+{
+    const auto bytes =
+        ::jxx::NEW<::jxx::lang::ByteArrayType>(3);
+
+    bytes->fill(
+        static_cast<::jxx::lang::jbyte>(7));
+
+    EXPECT_EQ(
+        static_cast<::jxx::lang::jbyte>(7),
+        (*bytes)[2]);
+
+    EXPECT_THROW(bytes->at(3), ::jxx::lang::ArrayIndexOutOfBoundsException);
+
+    EXPECT_THROW(
+        bytes->at(-1),
+        ::jxx::lang::ArrayIndexOutOfBoundsException);
 }
+
 } // namespace

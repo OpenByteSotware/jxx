@@ -83,7 +83,7 @@ public:
         const ::jxx::Ptr<::jxx::security::PrivateKey>& key,
         const ::jxx::Ptr<::jxx::lang::String>& keyType)
         : chain_(chain), key_(key), keyType_(keyType),
-          alias_(::jxx::NEW<::jxx::lang::String>("javax.net.ssl.keyStore")) {
+          alias_(::jxx::NEW<::jxx::lang::String>("jxx.ext.net.ssl.keyStore")) {
     }
 
     ::jxx::Ptr<::jxx::lang::String> chooseClientAlias(
@@ -161,11 +161,11 @@ private:
 ::jxx::Ptr<::jxx::ext::net::ssl::SSLContext::KeyManagerArray>
 loadDefaultPropertyKeyManagers() {
     const auto path = ::jxx::lang::System::getProperty(
-        ::jxx::NEW<::jxx::lang::String>("javax.net.ssl.keyStore"));
+        ::jxx::NEW<::jxx::lang::String>("jxx.ext.net.ssl.keyStore"));
     if (path == nullptr || path->utf8().empty()) return nullptr;
 
     const auto typeValue = ::jxx::lang::System::getProperty(
-        ::jxx::NEW<::jxx::lang::String>("javax.net.ssl.keyStoreType"));
+        ::jxx::NEW<::jxx::lang::String>("jxx.ext.net.ssl.keyStoreType"));
     std::string type = typeValue == nullptr || typeValue->utf8().empty()
         ? ::jxx::security::KeyStore::getDefaultType()->utf8()
         : typeValue->utf8();
@@ -173,10 +173,10 @@ loadDefaultPropertyKeyManagers() {
         [](unsigned char value) { return static_cast<char>(std::toupper(value)); });
     if (type != "PKCS12" && type != "PKCS#12")
         throw ::jxx::security::KeyStoreException(
-            "unsupported javax.net.ssl.keyStoreType");
+            "unsupported jxx.ext.net.ssl.keyStoreType");
 
     const auto providerValue = ::jxx::lang::System::getProperty(
-        ::jxx::NEW<::jxx::lang::String>("javax.net.ssl.keyStoreProvider"));
+        ::jxx::NEW<::jxx::lang::String>("jxx.ext.net.ssl.keyStoreProvider"));
     if (providerValue != nullptr && !providerValue->utf8().empty()) {
         std::string provider = providerValue->utf8();
         std::transform(provider.begin(), provider.end(), provider.begin(),
@@ -184,24 +184,24 @@ loadDefaultPropertyKeyManagers() {
         if (provider != "JXX" && provider != "OPENSSL" &&
             provider != "SUN" && provider != "SUNJSSE")
             throw ::jxx::security::NoSuchProviderException(
-                "unsupported javax.net.ssl.keyStoreProvider");
+                "unsupported jxx.ext.net.ssl.keyStoreProvider");
     }
 
     const auto passwordValue = ::jxx::lang::System::getProperty(
-        ::jxx::NEW<::jxx::lang::String>("javax.net.ssl.keyStorePassword"));
+        ::jxx::NEW<::jxx::lang::String>("jxx.ext.net.ssl.keyStorePassword"));
     const std::string password = passwordValue == nullptr
         ? std::string() : passwordValue->utf8();
 
     std::ifstream stream(path->utf8(), std::ios::binary);
     if (!stream)
         throw ::jxx::io::FileNotFoundException(
-            "cannot open javax.net.ssl.keyStore");
+            "cannot open jxx.ext.net.ssl.keyStore");
     const std::vector<unsigned char> bytes{
         std::istreambuf_iterator<char>(stream),
         std::istreambuf_iterator<char>()};
     if (bytes.empty())
         throw ::jxx::io::IOException(
-            "javax.net.ssl.keyStore is empty");
+            "jxx.ext.net.ssl.keyStore is empty");
 
     const unsigned char* cursor = bytes.data();
     PKCS12* container = d2i_PKCS12(nullptr, &cursor,
@@ -209,7 +209,7 @@ loadDefaultPropertyKeyManagers() {
     if (container == nullptr || cursor != bytes.data() + bytes.size()) {
         if (container != nullptr) PKCS12_free(container);
         throw ::jxx::io::IOException(
-            "invalid PKCS12 javax.net.ssl.keyStore");
+            "invalid PKCS12 jxx.ext.net.ssl.keyStore");
     }
 
     EVP_PKEY* nativeKey = nullptr;
@@ -223,7 +223,7 @@ loadDefaultPropertyKeyManagers() {
         if (leaf != nullptr) X509_free(leaf);
         if (extras != nullptr) sk_X509_pop_free(extras, X509_free);
         throw ::jxx::security::UnrecoverableKeyException(
-            "cannot unlock javax.net.ssl.keyStore");
+            "cannot unlock jxx.ext.net.ssl.keyStore");
     }
 
     const int keyLength = i2d_PrivateKey(nativeKey, nullptr);

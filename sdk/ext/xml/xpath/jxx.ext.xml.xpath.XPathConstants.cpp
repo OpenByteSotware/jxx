@@ -10,5 +10,5 @@ namespace jxx::ext::xml::xpath { namespace {
 ::jxx::Ptr<::jxx::ext::xml::namespace_::QName> XPathConstants::BOOLEAN(){return q("BOOLEAN");}
 ::jxx::Ptr<::jxx::ext::xml::namespace_::QName> XPathConstants::NODESET(){return q("NODESET");}
 ::jxx::Ptr<::jxx::ext::xml::namespace_::QName> XPathConstants::NODE(){return q("NODE");}
-::jxx::Ptr<::jxx::lang::String> XPathConstants::DOM_OBJECT_MODEL(){return ::jxx::NEW<::jxx::lang::String>("http://java.sun.com/jaxp/xpath/dom");}
+::jxx::Ptr<::jxx::lang::String> XPathConstants::DOM_OBJECT_MODEL(){return ::jxx::NEW<::jxx::lang::String>("http://jxx.sun.com/jaxp/xpath/dom");}
 } // namespace jxx::ext::xml::xpath

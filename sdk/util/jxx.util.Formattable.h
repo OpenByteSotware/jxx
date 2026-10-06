@@ -5,7 +5,7 @@
 namespace jxx::util {
 class Formatter;
 
-/** Java 8: java.util.Formattable (interface) */
+/** Java 8: jxx.util.Formattable (interface) */
 class Formattable {
 public:
     virtual ~Formattable() = default;

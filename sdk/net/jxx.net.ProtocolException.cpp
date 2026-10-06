@@ -31,7 +31,7 @@ ProtocolException::cloneImpl() const {
 }
 
 const char* ProtocolException::typeName() const noexcept {
-    return "java.net.ProtocolException";
+    return "jxx.net.ProtocolException";
 }
 
 } // namespace jxx::net

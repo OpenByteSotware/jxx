@@ -220,7 +220,7 @@ namespace jxx::lang {
     // Java array assignability special cases:
     // Any array is assignable to Object, Cloneable, Serializable.
     static bool isArraySuperInterfaceName(const std::string& n) {
-        return (n == "java.lang.Object" || n == "java.lang.Cloneable" || n == "java.io.Serializable");
+        return (n == "jxx.lang.Object" || n == "jxx.lang.Cloneable" || n == "jxx.io.Serializable");
     }
 
     jbool ClassAny::isAssignableFromImpl_(const ClassAny& target, const ClassAny& source)
@@ -493,11 +493,11 @@ namespace jxx::lang {
         // Arrays are Objects and implement Cloneable + Serializable in Java.
         // If those classes exist and were registered, attach them.
         // (Safe: if not registered, ignore.)
-        try { m.superClass = forName(jxx::NEW<String>("java.lang.Object")); }
+        try { m.superClass = forName(jxx::NEW<String>("jxx.lang.Object")); }
         catch (...) { m.superClass = nullptr; }
-        try { m.interfaces.push_back(forName(jxx::NEW<String>("java.lang.Cloneable"))); }
+        try { m.interfaces.push_back(forName(jxx::NEW<String>("jxx.lang.Cloneable"))); }
         catch (...) {}
-        try { m.interfaces.push_back(forName(jxx::NEW<String>("java.io.Serializable"))); }
+        try { m.interfaces.push_back(forName(jxx::NEW<String>("jxx.io.Serializable"))); }
         catch (...) {}
 
         // No newInstance() for array Class in Java via Class.newInstance()

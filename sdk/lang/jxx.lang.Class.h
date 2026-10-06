@@ -20,7 +20,7 @@ namespace jxx::lang {
     class String;
 
     /**
-     * Java 8 parity: java.lang.Class<T>
+     * Java 8 parity: jxx.lang.Class<T>
      *
      * In JXX we provide type-erased ClassAny, and use it everywhere
      * a Java Class<?> would appear. (Your requirement)

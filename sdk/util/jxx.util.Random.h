@@ -12,7 +12,7 @@
 namespace jxx::util {
 
 /**
- * C++17/JXX implementation of java.util.Random (Java 8 core API).
+ * C++17/JXX implementation of jxx.util.Random (Java 8 core API).
  *
  * Uses Java's specified 48-bit linear-congruential generator.
  * Public Java reference types use ::jxx::Ptr<T>; STL is private only.

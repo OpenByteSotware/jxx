@@ -8,7 +8,7 @@
 namespace jxx::util {
 
 /**
- * Minimal java.util.stream.IntStream for String.chars()/codePoints().
+ * Minimal jxx.util.stream.IntStream for String.chars()/codePoints().
  * Not a full Stream implementation—just enough for parity plumbing:
  *   - toArray()
  *   - size()

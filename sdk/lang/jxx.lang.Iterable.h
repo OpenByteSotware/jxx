@@ -11,7 +11,7 @@
 namespace jxx::lang {
 
     /**
-     * Java 8 parity: java.lang.Iterable<T>
+     * Java 8 parity: jxx.lang.Iterable<T>
      *
      * Methods:
      *   Iterator<T> iterator();

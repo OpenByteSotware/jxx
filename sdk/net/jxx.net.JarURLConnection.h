@@ -22,7 +22,7 @@ public:
         jxx::Ptr<URL> getJarFileURL() const;
         jxx::Ptr<jxx::lang::String> getEntryName() const;
 
-        // Practical placeholders for later java.util.jar integration
+        // Practical placeholders for later jxx.util.jar integration
         jxx::Ptr<jxx::lang::Object> getJarFile() const;
         jxx::Ptr<jxx::lang::Object> getManifest() const;
         jxx::Ptr<jxx::lang::Object> getJarEntry() const;

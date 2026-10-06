@@ -5,5 +5,5 @@ TransformerException::TransformerException(const ::jxx::Ptr<::jxx::lang::String>
 TransformerException::TransformerException(const ::jxx::Ptr<::jxx::lang::Throwable>& cause) : Super(cause) {}
 TransformerException::TransformerException(const ::jxx::Ptr<::jxx::lang::String>& message, const ::jxx::Ptr<::jxx::lang::Throwable>& cause) : Super(message, cause) {}
 ::jxx::Ptr<::jxx::lang::Object> TransformerException::cloneImpl() const { return ::jxx::NEW<TransformerException>(*this); }
-const char* TransformerException::typeName() const noexcept { return "javax.xml.transform.TransformerException"; }
+const char* TransformerException::typeName() const noexcept { return "jxx.ext.xml.transform.TransformerException"; }
 }

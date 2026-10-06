@@ -19,7 +19,7 @@ namespace jxx::lang {
     // Forward declarations (avoid include cycles)
     class StringBuffer;
     class StringBuilder;
-    class Charset; // java.nio.charset.Charset (you have this)
+    class Charset; // jxx.nio.charset.Charset (you have this)
     class ClassAny;
 
 	template <typename T>
@@ -35,7 +35,7 @@ namespace jxx::util {
 namespace jxx::lang {
 
     /**
-     * Strict Java 8 parity: java.lang.String
+     * Strict Java 8 parity: jxx.lang.String
      *
      * Extends: Object
      * Implements: CharSequence, Comparable<String>, Serializable

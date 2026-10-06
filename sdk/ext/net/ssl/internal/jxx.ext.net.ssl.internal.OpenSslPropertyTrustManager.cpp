@@ -52,13 +52,13 @@ std::vector<::jxx::lang::ByteArray> readTrustCertificates(
     std::ifstream stream(path, std::ios::binary);
     if (!stream)
         throw ::jxx::io::FileNotFoundException(
-            "cannot open javax.net.ssl.trustStore");
+            "cannot open jxx.ext.net.ssl.trustStore");
     const std::vector<unsigned char> bytes{
         std::istreambuf_iterator<char>(stream),
         std::istreambuf_iterator<char>()};
     if (bytes.empty())
         throw ::jxx::io::IOException(
-            "javax.net.ssl.trustStore is empty");
+            "jxx.ext.net.ssl.trustStore is empty");
 
     std::vector<::jxx::lang::ByteArray> certificates;
 
@@ -121,7 +121,7 @@ std::vector<::jxx::lang::ByteArray> readTrustCertificates(
 
     if (certificates.empty())
         throw ::jxx::io::IOException(
-            "javax.net.ssl.trustStore contains no X.509 certificates");
+            "jxx.ext.net.ssl.trustStore contains no X.509 certificates");
     return certificates;
 }
 
@@ -186,7 +186,7 @@ void OpenSslPropertyTrustManager::verify(
 
     if (!ok)
         throw ::jxx::ext::net::ssl::SSLHandshakeException(
-            "certificate chain is not trusted by javax.net.ssl.trustStore");
+            "certificate chain is not trusted by jxx.ext.net.ssl.trustStore");
 }
 
 ::jxx::Ptr<OpenSslPropertyTrustManager::CertificateArray>
@@ -222,7 +222,7 @@ std::string discoverDefaultTrustStorePath(
 ::jxx::Ptr<::jxx::ext::net::ssl::SSLContext::TrustManagerArray>
 loadDefaultPropertyTrustManagers() {
     const auto configuredPath = ::jxx::lang::System::getProperty(
-        ::jxx::NEW<::jxx::lang::String>("javax.net.ssl.trustStore"));
+        ::jxx::NEW<::jxx::lang::String>("jxx.ext.net.ssl.trustStore"));
     const bool explicitlyConfigured = configuredPath != nullptr;
     std::string path = explicitlyConfigured
         ? configuredPath->utf8()
@@ -242,14 +242,14 @@ loadDefaultPropertyTrustManagers() {
         if (!configured.good()) return emptyManagers();
     } else {
         const auto homeValue = ::jxx::lang::System::getProperty(
-            ::jxx::NEW<::jxx::lang::String>("java.home"));
+            ::jxx::NEW<::jxx::lang::String>("jxx.home"));
         if (homeValue != nullptr)
             path = discoverDefaultTrustStorePath(homeValue->utf8());
         if (path.empty()) return nullptr;
     }
 
     const auto typeValue = ::jxx::lang::System::getProperty(
-        ::jxx::NEW<::jxx::lang::String>("javax.net.ssl.trustStoreType"));
+        ::jxx::NEW<::jxx::lang::String>("jxx.ext.net.ssl.trustStoreType"));
     std::string type = typeValue == nullptr || typeValue->utf8().empty()
         ? ::jxx::security::KeyStore::getDefaultType()->utf8()
         : typeValue->utf8();
@@ -259,10 +259,10 @@ loadDefaultPropertyTrustManagers() {
         type != "PEM" && type != "X509" && type != "X.509" &&
         type != "DER")
         throw ::jxx::security::KeyStoreException(
-            "unsupported javax.net.ssl.trustStoreType");
+            "unsupported jxx.ext.net.ssl.trustStoreType");
 
     const auto providerValue = ::jxx::lang::System::getProperty(
-        ::jxx::NEW<::jxx::lang::String>("javax.net.ssl.trustStoreProvider"));
+        ::jxx::NEW<::jxx::lang::String>("jxx.ext.net.ssl.trustStoreProvider"));
     if (providerValue != nullptr && !providerValue->utf8().empty()) {
         std::string provider = providerValue->utf8();
         std::transform(provider.begin(), provider.end(), provider.begin(),
@@ -270,11 +270,11 @@ loadDefaultPropertyTrustManagers() {
         if (provider != "JXX" && provider != "OPENSSL" &&
             provider != "SUN" && provider != "SUNJSSE")
             throw ::jxx::security::NoSuchProviderException(
-                "unsupported javax.net.ssl.trustStoreProvider");
+                "unsupported jxx.ext.net.ssl.trustStoreProvider");
     }
 
     const auto passwordValue = ::jxx::lang::System::getProperty(
-        ::jxx::NEW<::jxx::lang::String>("javax.net.ssl.trustStorePassword"));
+        ::jxx::NEW<::jxx::lang::String>("jxx.ext.net.ssl.trustStorePassword"));
     const auto certificates = readTrustCertificates(
         path,
         passwordValue == nullptr ? std::string() : passwordValue->utf8(),

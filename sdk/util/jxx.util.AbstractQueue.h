@@ -12,7 +12,7 @@ namespace jxx {
 namespace util {
 
 /**
- * JXX/C++17 implementation of java.util.AbstractQueue<E>.
+ * JXX/C++17 implementation of jxx.util.AbstractQueue<E>.
  *
  * Java 8 hierarchy:
  *
