@@ -60,4 +60,48 @@ namespace
 		c->close(); EXPECT_FALSE(ka->isValid()); EXPECT_FALSE(kb->isValid());
 		EXPECT_FALSE(c->isOpen()); a->close(); b->close();
 	}
+
+	TEST(HierarchyCoreParity, OpenAndDestroyWithoutExplicitClose)
+	{
+		auto channel =
+			::jxx::nio::channels::SocketChannel::open();
+
+		ASSERT_NE(nullptr, channel);
+	}
+
+	TEST(HierarchyCoreParity, OpenAndCloseOnly)
+	{
+		auto channel =
+			::jxx::nio::channels::SocketChannel::open();
+
+		ASSERT_NE(nullptr, channel);
+		EXPECT_NO_THROW(channel->close());
+		EXPECT_FALSE(channel->isOpen());
+	}
+
+	TEST(HierarchyCoreParity, HierarchyCastsWithoutClose)
+	{
+		auto channel =
+			::jxx::nio::channels::SocketChannel::open();
+
+		ASSERT_NE(
+			nullptr,
+			::jxx::CAST<
+				::jxx::nio::channels::SelectableChannel>(
+					channel));
+
+		ASSERT_NE(
+			nullptr,
+			::jxx::CAST<
+				::jxx::nio::channels::spi::
+					AbstractSelectableChannel>(
+						channel));
+
+		ASSERT_NE(
+			nullptr,
+			::jxx::CAST<
+				::jxx::nio::channels::spi::
+					AbstractInterruptibleChannel>(
+						channel));
+	}
 }
