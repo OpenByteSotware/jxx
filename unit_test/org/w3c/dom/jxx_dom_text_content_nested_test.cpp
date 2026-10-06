@@ -6,19 +6,19 @@
 #include "org/w3c/dom/jxx.org.w3c.dom.Document.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Element.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.Node.h"
+#include "org/w3c/dom/jxx.org.w3c.dom.CharacterData.h"
+#include "org/w3c/dom/jxx.org.w3c.dom.Text.h"
 #include "ext/xml/parsers/jxx.ext.xml.parsers.DocumentBuilder.h"
+#include "org/w3c/dom/jxx.org.w3c.dom.NodeList.h"
 
 namespace {
-
 ::jxx::Ptr<::jxx::lang::String> text(const char* value) {
     return ::jxx::NEW<::jxx::lang::String>(value);
 }
-
-} // namespace
+}
 
 TEST(JxxDomTextContentNestedTest, ConcatenatesNestedTextInDocumentOrder) {
-    const auto factory =
-        ::jxx::ext::xml::parsers::DocumentBuilderFactory::newInstance();
+    const auto factory = ::jxx::ext::xml::parsers::DocumentBuilderFactory::newInstance();
     ASSERT_NE(nullptr, factory);
     const auto builder = factory->newDocumentBuilder();
     ASSERT_NE(nullptr, builder);
@@ -30,10 +30,13 @@ TEST(JxxDomTextContentNestedTest, ConcatenatesNestedTextInDocumentOrder) {
     const auto nested = document->createElement(text("nested"));
     const auto second = document->createElement(text("second"));
 
-    first->appendChild(document->createTextNode(text("alpha")));
-    nested->appendChild(document->createTextNode(text("beta")));
+    first->appendChild(::jxx::CAST<::jxx::org::w3c::dom::Node>(
+        document->createTextNode(text("alpha"))));
+    nested->appendChild(::jxx::CAST<::jxx::org::w3c::dom::Node>(
+        document->createTextNode(text("beta"))));
     first->appendChild(::jxx::CAST<::jxx::org::w3c::dom::Node>(nested));
-    second->appendChild(document->createTextNode(text("gamma")));
+    second->appendChild(::jxx::CAST<::jxx::org::w3c::dom::Node>(
+        document->createTextNode(text("gamma"))));
 
     root->appendChild(::jxx::CAST<::jxx::org::w3c::dom::Node>(first));
     root->appendChild(::jxx::CAST<::jxx::org::w3c::dom::Node>(second));
@@ -46,17 +49,18 @@ TEST(JxxDomTextContentNestedTest, ConcatenatesNestedTextInDocumentOrder) {
 }
 
 TEST(JxxDomTextContentNestedTest, MutationReplacesAllChildrenWithOneTextNode) {
-    const auto factory =
-        ::jxx::ext::xml::parsers::DocumentBuilderFactory::newInstance();
-    const auto builder = factory->newDocumentBuilder();
-    const auto document = builder->newDocument();
-
+    const auto factory = ::jxx::ext::xml::parsers::DocumentBuilderFactory::newInstance();
+    const auto document = factory->newDocumentBuilder()->newDocument();
     const auto root = document->createElement(text("root"));
     const auto nested = document->createElement(text("nested"));
-    nested->appendChild(document->createTextNode(text("old-nested")));
-    root->appendChild(document->createTextNode(text("old-prefix")));
+
+    nested->appendChild(::jxx::CAST<::jxx::org::w3c::dom::Node>(
+        document->createTextNode(text("old-nested"))));
+    root->appendChild(::jxx::CAST<::jxx::org::w3c::dom::Node>(
+        document->createTextNode(text("old-prefix"))));
     root->appendChild(::jxx::CAST<::jxx::org::w3c::dom::Node>(nested));
-    root->appendChild(document->createTextNode(text("old-suffix")));
+    root->appendChild(::jxx::CAST<::jxx::org::w3c::dom::Node>(
+        document->createTextNode(text("old-suffix"))));
     document->appendChild(::jxx::CAST<::jxx::org::w3c::dom::Node>(root));
 
     root->setTextContent(text("replacement"));
@@ -73,14 +77,13 @@ TEST(JxxDomTextContentNestedTest, MutationReplacesAllChildrenWithOneTextNode) {
     EXPECT_EQ("replacement", child->getNodeValue()->utf8());
 }
 
-TEST(JxxDomTextContentNestedTest, EmptyMutationRemovesAllChildren) {
-    const auto factory =
-        ::jxx::ext::xml::parsers::DocumentBuilderFactory::newInstance();
-    const auto builder = factory->newDocumentBuilder();
-    const auto document = builder->newDocument();
-
+TEST(JxxDomTextContentNestedTest, NullMutationRemovesAllChildren) {
+    const auto factory = ::jxx::ext::xml::parsers::DocumentBuilderFactory::newInstance();
+    const auto document = factory->newDocumentBuilder()->newDocument();
     const auto root = document->createElement(text("root"));
-    root->appendChild(document->createTextNode(text("value")));
+
+    root->appendChild(::jxx::CAST<::jxx::org::w3c::dom::Node>(
+        document->createTextNode(text("value"))));
     root->appendChild(::jxx::CAST<::jxx::org::w3c::dom::Node>(
         document->createElement(text("nested"))));
     document->appendChild(::jxx::CAST<::jxx::org::w3c::dom::Node>(root));
