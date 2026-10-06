@@ -3,17 +3,17 @@
 namespace jxx::net
 {
     UnknownHostException::UnknownHostException()
-        : std::runtime_error("UnknownHostException")
+        : Super("UnknownHostException")
     {
     }
 
     UnknownHostException::UnknownHostException(const char* message)
-        : std::runtime_error(message ? message : "UnknownHostException")
+        : Super(message ? message : "UnknownHostException")
     {
     }
 
     UnknownHostException::UnknownHostException(const std::string& message)
-        : std::runtime_error(message)
+        : Super(message)
     {
     }
 }

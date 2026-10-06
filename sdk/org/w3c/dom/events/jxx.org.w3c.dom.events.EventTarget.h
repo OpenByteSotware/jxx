@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 
@@ -8,7 +10,7 @@ namespace jxx::org::w3c::dom::events {
 class Event;
 class EventListener;
 
-class EventTarget {
+class EventTarget : public ::jxx::lang::InterfaceBase<EventTarget> {
 public:
     virtual ~EventTarget() = default;
 

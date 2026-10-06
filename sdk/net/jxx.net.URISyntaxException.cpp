@@ -5,7 +5,7 @@ namespace jxx::net
     URISyntaxException::URISyntaxException(const jxx::Ptr<jxx::lang::String> input,
                                            jxx::Ptr<jxx::lang::String> reason,
                                            jxx::lang::jint index)
-        : std::runtime_error(reason ? reason->utf8() : std::string("URISyntaxException")),
+        : Super(reason ? reason->utf8() : std::string("URISyntaxException")),
           input_(std::move(input)),
           reason_(std::move(reason)),
           index_(index)

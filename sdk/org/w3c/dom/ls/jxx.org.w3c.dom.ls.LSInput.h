@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "io/jxx.io.InputStream.h"
 #include "io/jxx.io.Reader.h"
 #include "lang/jxx.lang.String.h"
@@ -7,7 +9,7 @@
 
 namespace jxx::org::w3c::dom::ls {
 
-class LSInput {
+class LSInput : public ::jxx::lang::InterfaceBase<LSInput> {
 public:
     virtual ~LSInput() = default;
 

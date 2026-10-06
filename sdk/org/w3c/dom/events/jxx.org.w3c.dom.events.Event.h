@@ -1,12 +1,14 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 #include "org/w3c/dom/events/jxx.org.w3c.dom.events.EventTarget.h"
 
 namespace jxx::org::w3c::dom::events {
 
-class Event {
+class Event : public ::jxx::lang::InterfaceBase<Event> {
 public:
     virtual ~Event() = default;
 

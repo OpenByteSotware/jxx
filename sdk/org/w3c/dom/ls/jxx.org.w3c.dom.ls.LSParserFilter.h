@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "lang/jxx_types.h"
 
 namespace jxx::org::w3c::dom {
@@ -9,7 +11,7 @@ class Node;
 
 namespace jxx::org::w3c::dom::ls {
 
-class LSParserFilter {
+class LSParserFilter : public ::jxx::lang::InterfaceBase<LSParserFilter> {
 public:
     virtual ~LSParserFilter() = default;
 

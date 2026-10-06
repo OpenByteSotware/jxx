@@ -1,14 +1,20 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 
 namespace jxx::nio::charset
 {
-    class CoderResult final : public jxx::lang::Object
+    class CoderResult final : public ::jxx::lang::ClassBase<CoderResult, ::jxx::lang::Object>
+    
     {
     public:
+
+        using JxxSuper = ::jxx::lang::Object;
+        using Super = ::jxx::lang::ClassBase<CoderResult, JxxSuper>;
         static jxx::Ptr<CoderResult> JXX_UNDERFLOW;
         static jxx::Ptr<CoderResult> JXX_OVERFLOW;
 

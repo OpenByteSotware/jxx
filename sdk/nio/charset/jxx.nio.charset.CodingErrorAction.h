@@ -1,14 +1,20 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 
 namespace jxx::nio::charset
 {
-    class CodingErrorAction final : public jxx::lang::Object
+    class CodingErrorAction final : public ::jxx::lang::ClassBase<CodingErrorAction, ::jxx::lang::Object>
+    
     {
     public:
+
+        using JxxSuper = ::jxx::lang::Object;
+        using Super = ::jxx::lang::ClassBase<CodingErrorAction, JxxSuper>;
         static jxx::Ptr<CodingErrorAction> IGNORE;
         static jxx::Ptr<CodingErrorAction> REPLACE;
         static jxx::Ptr<CodingErrorAction> REPORT;

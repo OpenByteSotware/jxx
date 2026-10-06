@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "lang/jxx_types.h"
 
 namespace jxx::lang {
@@ -10,7 +12,7 @@ namespace jxx::org::w3c::dom::ls {
 
 class LSInput;
 
-class LSResourceResolver {
+class LSResourceResolver : public ::jxx::lang::InterfaceBase<LSResourceResolver> {
 public:
     virtual ~LSResourceResolver() = default;
 

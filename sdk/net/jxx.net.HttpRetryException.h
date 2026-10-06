@@ -1,15 +1,20 @@
 #pragma once
 
-#include <stdexcept>
+#include "lang/jxx.lang.ClassInfo.h"
+#include "io/jxx.io.IOException.h"
+
 
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.String.h"
 
 namespace jxx::net
 {
-    class HttpRetryException final : public std::runtime_error
+    class HttpRetryException : public ::jxx::lang::ClassBase<HttpRetryException, ::jxx::io::IOException>
     {
     public:
+        using JxxSuper = ::jxx::io::IOException;
+        using Super = ::jxx::lang::ClassBase<HttpRetryException, JxxSuper>;
+
         HttpRetryException(const jxx::Ptr<jxx::lang::String> detail,
                            jxx::lang::jint code);
         HttpRetryException(const jxx::Ptr<jxx::lang::String> detail,

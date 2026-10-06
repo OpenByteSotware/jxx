@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "lang/jxx_types.h"
 
 namespace jxx::org::w3c::dom {
@@ -8,7 +10,7 @@ class Node;
 
 namespace jxx::org::w3c::dom::traversal {
 
-class NodeFilter {
+class NodeFilter : public ::jxx::lang::InterfaceBase<NodeFilter> {
 public:
     virtual ~NodeFilter() = default;
 

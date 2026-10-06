@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "lang/jxx_types.h"
 
 namespace jxx::lang {
@@ -17,7 +19,7 @@ namespace jxx::org::w3c::dom::ls {
 class LSInput;
 class LSParserFilter;
 
-class LSParser {
+class LSParser : public ::jxx::lang::InterfaceBase<LSParser> {
 public:
     virtual ~LSParser() = default;
 

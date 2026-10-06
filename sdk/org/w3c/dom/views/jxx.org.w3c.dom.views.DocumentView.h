@@ -1,12 +1,14 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "lang/jxx.lang.Object.h"
 
 namespace jxx::org::w3c::dom::views {
 
 class AbstractView;
 
-class DocumentView {
+class DocumentView : public ::jxx::lang::InterfaceBase<DocumentView> {
 public:
     virtual ~DocumentView() = default;
 

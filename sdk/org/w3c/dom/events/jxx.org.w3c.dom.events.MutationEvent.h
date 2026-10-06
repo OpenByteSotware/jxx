@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "org/w3c/dom/events/jxx.org.w3c.dom.events.Event.h"
 
 namespace jxx::lang {
@@ -12,7 +14,7 @@ class Node;
 
 namespace jxx::org::w3c::dom::events {
 
-class MutationEvent : public virtual Event {
+class MutationEvent : public ::jxx::lang::InterfaceBase<MutationEvent, Event> {
 public:
     static constexpr ::jxx::lang::jshort MODIFICATION = 1;
     static constexpr ::jxx::lang::jshort ADDITION = 2;

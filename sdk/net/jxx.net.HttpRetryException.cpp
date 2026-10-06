@@ -11,7 +11,7 @@ namespace jxx::net
     HttpRetryException::HttpRetryException(const jxx::Ptr<jxx::lang::String> detail,
                                            jxx::lang::jint code,
                                            jxx::Ptr<jxx::lang::String> location)
-        : std::runtime_error(detail ? detail->utf8() : std::string("HttpRetryException")),
+        : Super(detail ? detail->utf8() : std::string("HttpRetryException")),
           detail_(std::move(detail)),
           code_(code),
           location_(std::move(location))

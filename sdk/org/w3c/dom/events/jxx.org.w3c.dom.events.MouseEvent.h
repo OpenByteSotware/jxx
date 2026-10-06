@@ -1,12 +1,14 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "org/w3c/dom/events/jxx.org.w3c.dom.events.UIEvent.h"
 
 namespace jxx::org::w3c::dom::events {
 
 class EventTarget;
 
-class MouseEvent : public virtual UIEvent {
+class MouseEvent : public ::jxx::lang::InterfaceBase<MouseEvent, UIEvent> {
 public:
     ~MouseEvent() override = default;
 

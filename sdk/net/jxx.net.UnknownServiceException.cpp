@@ -3,17 +3,17 @@
 namespace jxx::net
 {
     UnknownServiceException::UnknownServiceException()
-        : std::runtime_error("UnknownServiceException")
+        : Super("UnknownServiceException")
     {
     }
 
     UnknownServiceException::UnknownServiceException(const char* message)
-        : std::runtime_error(message ? message : "UnknownServiceException")
+        : Super(message ? message : "UnknownServiceException")
     {
     }
 
     UnknownServiceException::UnknownServiceException(const std::string& message)
-        : std::runtime_error(message)
+        : Super(message)
     {
     }
 }

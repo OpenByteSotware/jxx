@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include <vector>
 
 #include "lang/jxx_types.h"
@@ -22,9 +24,13 @@ namespace jxx::nio::charset
     class CharsetDecoder;
     class CharsetEncoder;
 
-    class Charset : public jxx::lang::Object
+    class Charset : public ::jxx::lang::ClassBase<Charset, ::jxx::lang::Object>
+    
     {
     public:
+
+        using JxxSuper = ::jxx::lang::Object;
+        using Super = ::jxx::lang::ClassBase<Charset, JxxSuper>;
         Charset(const jxx::Ptr<jxx::lang::String> canonicalName,
                 const jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> aliases);
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "org/w3c/dom/events/jxx.org.w3c.dom.events.Event.h"
 
 namespace jxx::org::w3c::dom::views {
@@ -8,7 +10,7 @@ class AbstractView;
 
 namespace jxx::org::w3c::dom::events {
 
-class UIEvent : public virtual Event {
+class UIEvent : public ::jxx::lang::InterfaceBase<UIEvent, Event> {
 public:
     ~UIEvent() override = default;
 

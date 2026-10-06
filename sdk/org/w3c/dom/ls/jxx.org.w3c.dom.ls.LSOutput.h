@@ -1,12 +1,14 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "io/jxx.io.OutputStream.h"
 #include "io/jxx.io.Writer.h"
 #include "lang/jxx.lang.String.h"
 
 namespace jxx::org::w3c::dom::ls {
 
-class LSOutput {
+class LSOutput : public ::jxx::lang::InterfaceBase<LSOutput> {
 public:
     virtual ~LSOutput() = default;
 

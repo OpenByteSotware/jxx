@@ -1,12 +1,14 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "lang/jxx.lang.Object.h"
 
 namespace jxx::org::w3c::dom::events {
 
 class Event;
 
-class EventListener {
+class EventListener : public ::jxx::lang::InterfaceBase<EventListener> {
 public:
     virtual ~EventListener() = default;
 

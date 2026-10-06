@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.String.h"
 #include "nio/jxx.nio.ByteBuffer.h"
@@ -11,9 +13,13 @@ namespace jxx::nio::charset
 {
     class Charset;
 
-    class CharsetEncoder final : public jxx::lang::Object
+    class CharsetEncoder : public ::jxx::lang::ClassBase<CharsetEncoder, ::jxx::lang::Object>
+    
     {
     public:
+
+        using JxxSuper = ::jxx::lang::Object;
+        using Super = ::jxx::lang::ClassBase<CharsetEncoder, JxxSuper>;
         explicit CharsetEncoder(const jxx::Ptr<Charset> cs);
         ~CharsetEncoder() override = default;
 

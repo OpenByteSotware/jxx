@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx_types.h"
 
@@ -10,7 +12,7 @@ class LSOutput;
 class LSParser;
 class LSSerializer;
 
-class DOMImplementationLS {
+class DOMImplementationLS : public ::jxx::lang::InterfaceBase<DOMImplementationLS> {
 public:
     virtual ~DOMImplementationLS() = default;
 

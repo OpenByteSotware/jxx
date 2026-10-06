@@ -3,17 +3,17 @@
 namespace jxx::net
 {
     MalformedURLException::MalformedURLException()
-        : std::runtime_error("MalformedURLException")
+        : Super("MalformedURLException")
     {
     }
 
     MalformedURLException::MalformedURLException(const char* message)
-        : std::runtime_error(message ? message : "MalformedURLException")
+        : Super(message ? message : "MalformedURLException")
     {
     }
 
     MalformedURLException::MalformedURLException(const std::string& message)
-        : std::runtime_error(message)
+        : Super(message)
     {
     }
 }

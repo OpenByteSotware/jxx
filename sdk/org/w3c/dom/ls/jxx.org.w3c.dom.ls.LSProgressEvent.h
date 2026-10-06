@@ -1,11 +1,13 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "org/w3c/dom/events/jxx.org.w3c.dom.events.Event.h"
 
 namespace jxx::org::w3c::dom::ls {
 class LSInput;
 
-class LSProgressEvent : public virtual ::jxx::org::w3c::dom::events::Event {
+class LSProgressEvent : public ::jxx::lang::InterfaceBase<LSProgressEvent, ::jxx::org::w3c::dom::events::Event> {
 public:
     ~LSProgressEvent() override = default;
     virtual ::jxx::Ptr<LSInput> getInput() const = 0;

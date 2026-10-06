@@ -1,15 +1,20 @@
 #pragma once
 
-#include <stdexcept>
+#include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.Exception.h"
+
 
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.String.h"
 
 namespace jxx::net
 {
-    class URISyntaxException final : public std::runtime_error
+    class URISyntaxException : public ::jxx::lang::ClassBase<URISyntaxException, ::jxx::lang::Exception>
     {
     public:
+        using JxxSuper = ::jxx::lang::Exception;
+        using Super = ::jxx::lang::ClassBase<URISyntaxException, JxxSuper>;
+
         URISyntaxException(const jxx::Ptr<jxx::lang::String> input,
                            jxx::Ptr<jxx::lang::String> reason,
                            jxx::lang::jint index);

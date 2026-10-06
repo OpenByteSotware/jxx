@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "lang/jxx_types.h"
 
 namespace jxx::lang {
@@ -16,7 +18,7 @@ namespace jxx::org::w3c::dom::ls {
 class LSOutput;
 class LSSerializerFilter;
 
-class LSSerializer {
+class LSSerializer : public ::jxx::lang::InterfaceBase<LSSerializer> {
 public:
     virtual ~LSSerializer() = default;
 
