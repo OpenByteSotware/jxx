@@ -81,7 +81,7 @@ TEST(JxxTransformSerializationDiagnosticTest, ByteArrayOutputStreamRoundTrip)
     const auto output = ::jxx::NEW<::jxx::io::ByteArrayOutputStream>();
     const auto bytes = text("probe")->getBytes(text("UTF-8"));
     ASSERT_NE(nullptr, bytes);
-    output->write(bytes);
+    output->write( bytes, 0,  static_cast<::jxx::lang::jint>(bytes->length));
     const auto value = output->toString();
     ASSERT_NE(nullptr, value);
     EXPECT_EQ("probe", value->utf8());

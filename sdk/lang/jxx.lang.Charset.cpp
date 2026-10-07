@@ -43,7 +43,15 @@ jxx::lang::ByteArray Charset::encode(const jxx::Ptr<String>& s) const {
     if (!s) throw NullPointerException();
 
     if (kind_ == Kind::UTF8) {
-        return s->getBytes();
+        const auto utf8 = s->utf8();
+        auto out = jxx::NEW<jxx::lang::ByteArrayType>(
+            static_cast<std::uint32_t>(utf8.size()));
+        for (std::size_t i = 0; i < utf8.size(); ++i) {
+            (*out)[static_cast<jint>(i)] =
+                static_cast<jbyte>(
+                    static_cast<unsigned char>(utf8[i]));
+        }
+        return out;
     }
 
     auto u = s->utf16();
