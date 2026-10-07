@@ -1005,7 +1005,11 @@ public:
 
     ::jxx::Ptr<Text> createTextNode(
         const ::jxx::Ptr<String>& data) override {
-        auto value = store_->document.append_child(pugi::node_pcdata);
+        // pugixml does not permit a pcdata node directly beneath a document.
+        // Keep the new DOM Text node under a private temporary owner until the
+        // first DOM insertion moves it to its requested parent.
+        auto owner = store_->document.append_child("__jxx_detached_text_owner__");
+        auto value = owner.append_child(pugi::node_pcdata);
         value.set_value(data ? data->utf8().c_str() : "");
         return ::jxx::CAST<Text>(wrap(store_, value));
     }
@@ -2018,9 +2022,16 @@ private:
         return child;
     }
 
-    const auto moved = value->node_.parent()
+    const auto previousParent = value->node_.parent();
+    const bool removeTemporaryOwner =
+        previousParent &&
+        std::string(previousParent.name()) == "__jxx_detached_text_owner__";
+    const auto moved = previousParent
         ? node_.append_move(value->node_)
         : node_.append_copy(value->node_);
+    if (removeTemporaryOwner && previousParent.parent()) {
+        previousParent.parent().remove_child(previousParent);
+    }
     return wrap(store_, moved);
 }
 

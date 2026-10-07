@@ -1,9 +1,13 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 #include <atomic>
 #include "util/concurrent/jxx.util.concurrent.ForkJoinTask.h"
 namespace jxx::util::concurrent {
 template<typename T> class CountedCompleter:public ForkJoinTask<T>{
 public:
+ using Super=ForkJoinTask<T>;
+ using JxxClassInfoMarker=::jxx::lang::ClassInfo<CountedCompleter<T>,ForkJoinTask<T>>;
+ static ::jxx::Ptr<::jxx::lang::ClassAny> Class(){return JxxClassInfoMarker::Class();}
  explicit CountedCompleter(const ::jxx::Ptr<CountedCompleter<T>>& completer=nullptr,::jxx::lang::jint initialPendingCount=0):completer_(completer),pending_(initialPendingCount){}
  ::jxx::Ptr<CountedCompleter<T>> getCompleter()const{return completer_;}
  ::jxx::lang::jint getPendingCount()const noexcept{return pending_.load();}

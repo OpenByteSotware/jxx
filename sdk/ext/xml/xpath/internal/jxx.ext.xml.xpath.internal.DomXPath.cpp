@@ -96,9 +96,26 @@ std::vector<::jxx::Ptr<Node>> select(const ::jxx::Ptr<Node>& context, const std:
     if (steps.empty()) throw ::jxx::ext::xml::xpath::XPathExpressionException(
         ::jxx::NEW<::jxx::lang::String>("Empty XPath expression"));
     if (descendant) {
-        std::vector<::jxx::Ptr<Node>> found;
-        descendants(context, steps.front(), found);
-        return found;
+        std::vector<::jxx::Ptr<Node>> current;
+        descendants(context, steps.front(), current);
+        for (std::size_t stepIndex = 1U; stepIndex < steps.size(); ++stepIndex) {
+            std::vector<::jxx::Ptr<Node>> next;
+            for (const auto& node : current) {
+                const auto children = node->getChildNodes();
+                if (children == nullptr) continue;
+                for (::jxx::lang::jint index = 0;
+                     index < children->getLength(); ++index) {
+                    const auto child = children->item(index);
+                    if (child != nullptr &&
+                        child->getNodeType() == Node::ELEMENT_NODE &&
+                        named(child, steps[stepIndex])) {
+                        next.push_back(child);
+                    }
+                }
+            }
+            current = std::move(next);
+        }
+        return current;
     }
     ::jxx::Ptr<Node> root = context;
     if (absolute) {
@@ -137,7 +154,7 @@ bool same(const ::jxx::Ptr<::jxx::ext::xml::namespace_::QName>& left,
     if (expression == nullptr || returnType == nullptr) throw ::jxx::lang::NullPointerException();
     const auto nodes = select(asNode(item), expression->utf8());
     if (same(returnType, ::jxx::ext::xml::xpath::XPathConstants::NODESET())) {
-        return std::make_shared<SnapshotNodeList>(nodes);
+        return ::jxx::NEW<SnapshotNodeList>(nodes);
     }
     const auto first = nodes.empty() ? nullptr : nodes.front();
     if (same(returnType, ::jxx::ext::xml::xpath::XPathConstants::NODE())) {
@@ -170,7 +187,7 @@ void DomXPath::reset() {}
 ::jxx::Ptr<::jxx::ext::xml::xpath::XPathExpression> DomXPath::compile(
     const ::jxx::Ptr<::jxx::lang::String>& expression) {
     if (expression == nullptr) throw ::jxx::lang::NullPointerException();
-    return std::make_shared<CompiledExpression>(expression);
+    return ::jxx::NEW<CompiledExpression>(expression);
 }
 ::jxx::Ptr<::jxx::lang::Object> DomXPath::evaluate(
     const ::jxx::Ptr<::jxx::lang::String>& expression,

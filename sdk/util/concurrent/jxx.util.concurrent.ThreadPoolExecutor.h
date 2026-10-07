@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include <condition_variable>
 #include <deque>
 #include <mutex>
@@ -16,6 +18,13 @@ namespace jxx::util::concurrent {
 
 class ThreadPoolExecutor : public AbstractExecutorService {
 public:
+    using Super = AbstractExecutorService;
+    using JxxClassInfoMarker =
+        ::jxx::lang::ClassInfo<ThreadPoolExecutor, AbstractExecutorService>;
+
+    static ::jxx::Ptr<::jxx::lang::ClassAny> Class() {
+        return JxxClassInfoMarker::Class();
+    }
     ThreadPoolExecutor(
         ::jxx::lang::jint corePoolSize,
         ::jxx::lang::jint maximumPoolSize,
