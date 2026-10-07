@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "util/jxx.util.EmptyStackException.h"
 #include "util/jxx.util.Vector.h"
 
@@ -9,7 +11,13 @@ template <typename E>
 class Stack : public Vector<E> {
 public:
     using JxxSuper = Vector<E>;
-    using Super = Vector<E>;
+    using Super = JxxSuper;
+    using JxxClassInfoMarker =
+        ::jxx::lang::ClassInfo<Stack<E>, JxxSuper>;
+
+    static ::jxx::Ptr<::jxx::lang::ClassAny> Class() {
+        return JxxClassInfoMarker::Class();
+    }
 
     Stack() = default;
     ~Stack() override = default;

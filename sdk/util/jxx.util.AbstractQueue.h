@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.Object.h"
 
@@ -40,6 +42,15 @@ template <typename E>
 class AbstractQueue
     : public virtual AbstractCollection<E>
     , public virtual Queue<E> {
+public:
+    using Super = AbstractCollection<E>;
+    using JxxClassInfoMarker =
+        ::jxx::lang::ClassInfo<AbstractQueue<E>, AbstractCollection<E>, Queue<E>>;
+
+    static ::jxx::Ptr<::jxx::lang::ClassAny> Class() {
+        return JxxClassInfoMarker::Class();
+    }
+
 protected:
     /**
      * Java:

@@ -1,5 +1,9 @@
 #pragma once
 
+#include "util/jxx.util.NavigableSet.h"
+
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include <cstddef>
 #include <memory>
 #include <set>
@@ -39,6 +43,9 @@ namespace jxx {
             ::jxx::Ptr<ComparatorSuper<E>> comparator_;
 
         public:
+            using JxxSuper = AbstractSet<E>;
+            using Super = ::jxx::lang::ClassBase<TreeSet<E>, JxxSuper, NavigableSet<E>, ::jxx::lang::Cloneable, ::jxx::io::SerializableI>;
+
             TreeSetElemLess()
                 : comparator_(nullptr) {}
 
@@ -151,9 +158,7 @@ namespace jxx {
 
         template <typename E>
         class TreeSet
-            : public virtual AbstractSet<E>
-            , public virtual ::jxx::lang::Cloneable
-            , public virtual ::jxx::io::SerializableI {
+            : public ::jxx::lang::ClassBase<TreeSet<E>, AbstractSet<E>, NavigableSet<E>, ::jxx::lang::Cloneable, ::jxx::io::SerializableI> {
         private:
             template <typename T>
             friend class TreeSetIterator;

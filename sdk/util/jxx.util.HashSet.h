@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include <cmath>
 #include <cstddef>
 #include <memory>
@@ -28,6 +30,9 @@ namespace jxx {
         template <typename E>
         class ElemHash final {
         public:
+            using JxxSuper = AbstractSet<E>;
+            using Super = ::jxx::lang::ClassBase<HashSet<E>, JxxSuper, ::jxx::lang::Cloneable, ::jxx::io::SerializableI>;
+
             std::size_t operator()(
                 const ::jxx::Ptr<E>& element) const {
 
@@ -154,9 +159,7 @@ namespace jxx {
 
         template <typename E>
         class HashSet
-            : public AbstractSet<E>
-            , public virtual ::jxx::lang::Cloneable
-            , public virtual ::jxx::io::SerializableI {
+            : public ::jxx::lang::ClassBase<HashSet<E>, AbstractSet<E>, ::jxx::lang::Cloneable, ::jxx::io::SerializableI> {
         private:
             /*
              * Allow the external iterator implementation to access set_

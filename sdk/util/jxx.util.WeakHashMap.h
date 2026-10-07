@@ -1,4 +1,6 @@
 #pragma once
+
+#include "lang/jxx.lang.ClassInfo.h"
 #include <cstdint>
 
 #include <algorithm>
@@ -12,8 +14,11 @@
 namespace jxx::util {
 
 template <typename K, typename V>
-class WeakHashMap final : public HashMap<K, V> {
+class WeakHashMap final : public ::jxx::lang::ClassBase<WeakHashMap<K, V>, HashMap<K, V>> {
 public:
+    using JxxSuper = HashMap<K, V>;
+    using Super = ::jxx::lang::ClassBase<WeakHashMap<K, V>, JxxSuper>;
+
     using JxxSuper = HashMap<K, V>;
 
     WeakHashMap() = default;

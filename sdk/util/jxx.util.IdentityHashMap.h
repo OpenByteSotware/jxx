@@ -1,4 +1,6 @@
 #pragma once
+
+#include "lang/jxx.lang.ClassInfo.h"
 #include <cstdint>
 
 #include <vector>
@@ -9,8 +11,11 @@
 namespace jxx::util {
 
 template <typename K, typename V>
-class IdentityHashMap final : public HashMap<K, V> {
+class IdentityHashMap final : public ::jxx::lang::ClassBase<IdentityHashMap<K, V>, HashMap<K, V>> {
 public:
+    using JxxSuper = HashMap<K, V>;
+    using Super = ::jxx::lang::ClassBase<IdentityHashMap<K, V>, JxxSuper>;
+
     using JxxSuper = HashMap<K, V>;
 
     IdentityHashMap() = default;
