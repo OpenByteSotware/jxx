@@ -39,8 +39,8 @@ namespace jxx::util::logging
 		::jxx::lang::jbool getUseParentHandlers() const; void setUseParentHandlers(::jxx::lang::jbool value);
 		::jxx::Ptr<::jxx::util::ResourceBundle> getResourceBundle() const; ::jxx::Ptr<::jxx::lang::String> getResourceBundleName() const; void setResourceBundle(const ::jxx::Ptr<::jxx::util::ResourceBundle>& bundle);
 		
-	protected: 
-		
+		// JXX deviation: public so ::jxx::NEW<Logger> can use std::make_shared
+		// while constructing the exact Logger runtime type and initializing thisPtr.
 		Logger(const ::jxx::Ptr<::jxx::lang::String>& name, const ::jxx::Ptr<::jxx::lang::String>& resourceBundleName);
 
 	private: ::jxx::Ptr<Level> effectiveLevel_() const; mutable std::recursive_mutex mutex_; ::jxx::Ptr<::jxx::lang::String> name_; ::jxx::Ptr<::jxx::lang::String> bundleName_; ::jxx::Ptr<::jxx::util::ResourceBundle> bundle_; ::jxx::Ptr<Level> level_; ::jxx::Ptr<Filter> filter_; std::vector<::jxx::Ptr<Handler>> handlers_; ::jxx::Ptr<Logger> parent_; ::jxx::lang::jbool useParentHandlers_;

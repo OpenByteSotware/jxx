@@ -51,9 +51,7 @@ namespace jxx::util::logging
             }
         }
 
-        auto logger = ::jxx::Ptr<Logger>(new Logger(n, b));
-        ::jxx::detail::ObjectAccess::initialize(
-            ::std::static_pointer_cast<::jxx::lang::Object>(logger));
+        auto logger = ::jxx::NEW<Logger>(n, b);
 
         std::string ancestor = key;
         while (!ancestor.empty()) {
@@ -81,10 +79,7 @@ namespace jxx::util::logging
 	
 	::jxx::Ptr<Logger>Logger::getAnonymousLogger(const ::jxx::Ptr<::jxx::lang::String>& b)
 	{
-		auto x = ::jxx::Ptr<Logger>(new Logger(nullptr, b));
-		::jxx::detail::ObjectAccess::initialize(
-			::std::static_pointer_cast<::jxx::lang::Object>(x));
-		return x;
+		return ::jxx::NEW<Logger>(nullptr, b);
 	}
 	::jxx::Ptr<Level>Logger::effectiveLevel_()const
 	{
