@@ -1,4 +1,5 @@
 #pragma once
+#include "lang/jxx.lang.ClassInfo.h"
 #include "util/jxx.util.Spliterator.h"
 #include "lang/jxx.lang.ClassCastException.h"
 #include "lang/jxx.lang.NullPointerException.h"
@@ -17,6 +18,13 @@ namespace jxx::util {
         : public AbstractCollection<E>
         , public virtual Set<E> {
     public:
+        using Super = AbstractCollection<E>;
+        using JxxClassInfoMarker =
+            ::jxx::lang::ClassInfo<AbstractSet<E>, AbstractCollection<E>, Set<E>>;
+
+        static ::jxx::Ptr<::jxx::lang::ClassAny> Class() {
+            return JxxClassInfoMarker::Class();
+        }
         virtual ~AbstractSet() = default;
 
         /*
