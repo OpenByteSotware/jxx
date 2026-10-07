@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "util/jxx.util.Calendar.h"
 #include "util/jxx.util.Locale.h"
 
@@ -7,6 +9,14 @@ namespace jxx::util {
 
 class GregorianCalendar : public Calendar {
 public:
+    using Super = Calendar;
+    using JxxClassInfoMarker =
+        ::jxx::lang::ClassInfo<GregorianCalendar, Calendar>;
+
+    static ::jxx::Ptr<::jxx::lang::ClassAny> Class() {
+        return JxxClassInfoMarker::Class();
+    }
+
     static constexpr ::jxx::lang::jint BC = 0;
     static constexpr ::jxx::lang::jint AD = 1;
 

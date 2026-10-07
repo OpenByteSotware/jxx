@@ -1,4 +1,4 @@
-#include "util/jxx.util.logging.Level.h"
+#include "util/logging/jxx.util.logging.Level.h"
 #include "lang/jxx.lang.Exceptions.h"
 namespace jxx::util::logging
 {

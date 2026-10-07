@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "util/jxx.util.TimeZone.h"
 
@@ -7,6 +9,14 @@ namespace jxx::util {
 
 class SimpleTimeZone final : public TimeZone {
 public:
+    using Super = TimeZone;
+    using JxxClassInfoMarker =
+        ::jxx::lang::ClassInfo<SimpleTimeZone, TimeZone>;
+
+    static ::jxx::Ptr<::jxx::lang::ClassAny> Class() {
+        return JxxClassInfoMarker::Class();
+    }
+
     static constexpr ::jxx::lang::jint WALL_TIME = 0;
     static constexpr ::jxx::lang::jint STANDARD_TIME = 1;
     static constexpr ::jxx::lang::jint UTC_TIME = 2;

@@ -1,5 +1,5 @@
-#include "util/jxx.util.logging.Formatter.h"
-#include "util/jxx.util.logging.LogRecord.h"
+#include "util/logging/jxx.util.logging.Formatter.h"
+#include "util/logging/jxx.util.logging.LogRecord.h"
 namespace jxx::util::logging
 {
 	namespace

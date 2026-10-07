@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include "util/jxx.util.NumberFormat.h"
 
 namespace jxx::util {
@@ -10,6 +12,14 @@ private:
     jxx::lang::jint maxFractionDigits_;
 
 public:
+    using Super = NumberFormat;
+    using JxxClassInfoMarker =
+        ::jxx::lang::ClassInfo<DecimalFormat, NumberFormat>;
+
+    static ::jxx::Ptr<::jxx::lang::ClassAny> Class() {
+        return JxxClassInfoMarker::Class();
+    }
+
     DecimalFormat();
 
     static jxx::Ptr<DecimalFormat> ofPattern(const jxx::Ptr<jxx::lang::String>& pattern,

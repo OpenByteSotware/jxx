@@ -1,4 +1,4 @@
-#include "util/jxx.util.logging.LogRecord.h"
+#include "util/logging/jxx.util.logging.LogRecord.h"
 #include <atomic>
 #include <chrono>
 #include <thread>

@@ -1,10 +1,10 @@
-#include "util/jxx.util.logging.Handler.h"
-#include "util/jxx.util.logging.LogRecord.h"
+#include "util/logging/jxx.util.logging.Handler.h"
+#include "util/logging/jxx.util.logging.LogRecord.h"
 #include "lang/jxx.lang.Exceptions.h"
-#include "util/jxx.util.logging.ErrorManager.h"
-#include "util/jxx.util.logging.Filter.h"
-#include "util/jxx.util.logging.Level.h"
-#include "util/jxx.util.logging.Formatter.h"
+#include "util/logging/jxx.util.logging.ErrorManager.h"
+#include "util/logging/jxx.util.logging.Filter.h"
+#include "util/logging/jxx.util.logging.Level.h"
+#include "util/logging/jxx.util.logging.Formatter.h"
 namespace jxx::util::logging
 {
 	::jxx::Ptr<::jxx::lang::ClassAny> Handler::Class() { return JxxClassInfoMarker::Class(); }

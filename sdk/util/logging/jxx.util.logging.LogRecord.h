@@ -6,7 +6,7 @@
 #include "lang/jxx.lang.Throwable.h"
 #include "lang/jxx.lang.buildin_array.h"
 #include "util/jxx.util.ResourceBundle.h"
-#include "util/jxx.util.logging.Level.h"
+#include "util/logging/jxx.util.logging.Level.h"
 namespace jxx::util::logging {
 class LogRecord : public ::jxx::lang::ClassBase<LogRecord, ::jxx::lang::Object> {
 public:

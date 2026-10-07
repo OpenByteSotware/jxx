@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+
 #include <regex>
 #include <string>
 #include <vector>
@@ -35,6 +37,14 @@ private:
     void ensureMatchState() const;
 
 public:
+    using Super = ::jxx::lang::Object;
+    using JxxClassInfoMarker =
+        ::jxx::lang::ClassInfo<Matcher, ::jxx::lang::Object>;
+
+    static ::jxx::Ptr<::jxx::lang::ClassAny> Class() {
+        return JxxClassInfoMarker::Class();
+    }
+
     Matcher(const ::jxx::Ptr<Pattern>& pattern, const ::jxx::Ptr<::jxx::lang::CharSequence>& input);
     virtual ~Matcher() = default;
 

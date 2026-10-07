@@ -8,10 +8,10 @@
 #include "lang/jxx.lang.Throwable.h"
 #include "lang/jxx.lang.buildin_array.h"
 #include "util/jxx.util.ResourceBundle.h"
-#include "util/jxx.util.logging.Filter.h"
-#include "util/jxx.util.logging.Handler.h"
-#include "util/jxx.util.logging.Level.h"
-#include "util/jxx.util.logging.LogRecord.h"
+#include "util/logging/jxx.util.logging.Filter.h"
+#include "util/logging/jxx.util.logging.Handler.h"
+#include "util/logging/jxx.util.logging.Level.h"
+#include "util/logging/jxx.util.logging.LogRecord.h"
 namespace jxx::util::logging
 {
 	class Logger : public ::jxx::lang::ClassBase<Logger, ::jxx::lang::Object>

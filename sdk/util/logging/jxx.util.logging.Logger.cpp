@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <unordered_map>
 #include "lang/jxx.lang.Exceptions.h"
-#include "util/jxx.util.logging.Logger.h"
+#include "util/logging/jxx.util.logging.Logger.h"
 namespace jxx::util::logging
 {
 	namespace

@@ -3,10 +3,10 @@
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
-#include "util/jxx.util.logging.ErrorManager.h"
-#include "util/jxx.util.logging.Filter.h"
-#include "util/jxx.util.logging.Formatter.h"
-#include "util/jxx.util.logging.Level.h"
+#include "util/logging/jxx.util.logging.ErrorManager.h"
+#include "util/logging/jxx.util.logging.Filter.h"
+#include "util/logging/jxx.util.logging.Formatter.h"
+#include "util/logging/jxx.util.logging.Level.h"
 namespace jxx::util::logging
 {
 	class LogRecord;
