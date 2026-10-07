@@ -5,10 +5,10 @@
 #include <thread>
 
 #include "lang/jxx.lang.IllegalArgumentException.h"
-#include "util/jxx.util.concurrent.ExecutionException.h"
-#include "util/jxx.util.concurrent.RejectedExecutionException.h"
-#include "util/jxx.util.concurrent.ScheduledThreadPoolExecutor.h"
-#include "util/jxx.util.concurrent.TimeUnit.h"
+#include "util/concurrent/jxx.util.concurrent.ExecutionException.h"
+#include "util/concurrent/jxx.util.concurrent.RejectedExecutionException.h"
+#include "util/concurrent/jxx.util.concurrent.ScheduledThreadPoolExecutor.h"
+#include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
 #include "jxx_scheduled_executor_test_support.h"
 
 TEST(JxxScheduledExecutorInputRouterTest, RejectsInvalidPeriod) {

@@ -2,10 +2,10 @@
 #include <atomic>
 #include "lang/jxx.lang.Runnable.h"
 #include "lang/jxx.lang.String.h"
-#include "util/jxx.util.concurrent.CancellationException.h"
-#include "util/jxx.util.concurrent.FutureTask.h"
-#include "util/jxx.util.concurrent.TimeUnit.h"
-#include "util/jxx.util.concurrent.TimeoutException.h"
+#include "util/concurrent/jxx.util.concurrent.CancellationException.h"
+#include "util/concurrent/jxx.util.concurrent.FutureTask.h"
+#include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
+#include "util/concurrent/jxx.util.concurrent.TimeoutException.h"
 namespace {
 using S=::jxx::lang::String;
 class Increment final:public ::jxx::lang::Runnable{public:explicit Increment(std::atomic<int>& v):v_(v){}void run()override{++v_;}private:std::atomic<int>& v_;};

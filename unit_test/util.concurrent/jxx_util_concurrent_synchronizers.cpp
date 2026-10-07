@@ -5,10 +5,10 @@
 #include <thread>
 
 #include "lang/jxx.lang.Exceptions.h"
-#include "util/jxx.util.concurrent.CountDownLatch.h"
-#include "util/jxx.util.concurrent.CyclicBarrier.h"
-#include "util/jxx.util.concurrent.Phaser.h"
-#include "util/jxx.util.concurrent.Semaphore.h"
+#include "util/concurrent/jxx.util.concurrent.CountDownLatch.h"
+#include "util/concurrent/jxx.util.concurrent.CyclicBarrier.h"
+#include "util/concurrent/jxx.util.concurrent.Phaser.h"
+#include "util/concurrent/jxx.util.concurrent.Semaphore.h"
 
 namespace {
 using namespace std::chrono_literals;

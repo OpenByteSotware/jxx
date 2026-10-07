@@ -3,7 +3,7 @@
 #include "lang/jxx.lang.Runnable.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Thread.h"
-#include "util/jxx.util.concurrent.Executors.h"
+#include "util/concurrent/jxx.util.concurrent.Executors.h"
 
 namespace {
 class Increment final : public ::jxx::lang::Runnable {

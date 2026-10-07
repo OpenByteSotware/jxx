@@ -5,10 +5,10 @@
 
 #include "lang/jxx.lang.Runnable.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
-#include "util/jxx.util.concurrent.Executors.h"
-#include "util/jxx.util.concurrent.ScheduledExecutorService.h"
-#include "util/jxx.util.concurrent.ScheduledFuture.h"
-#include "util/jxx.util.concurrent.TimeUnit.h"
+#include "util/concurrent/jxx.util.concurrent.Executors.h"
+#include "util/concurrent/jxx.util.concurrent.ScheduledExecutorService.h"
+#include "util/concurrent/jxx.util.concurrent.ScheduledFuture.h"
+#include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
 
 namespace {
 using ::jxx::util::concurrent::Executors;

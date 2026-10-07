@@ -3,7 +3,7 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "util/jxx.util.AbstractCollection.h"
 #include "util/jxx.util.Deque.h"
-#include "util/jxx.util.concurrent.LinkedBlockingDeque.h"
+#include "util/concurrent/jxx.util.concurrent.LinkedBlockingDeque.h"
 namespace jxx::util::concurrent {
 template<typename E> class ConcurrentLinkedDeque final:public ::jxx::lang::ClassBase<ConcurrentLinkedDeque<E>,::jxx::util::AbstractCollection<E>,::jxx::util::Deque<E>,::jxx::io::SerializableI>{
 public:using JxxSuper=::jxx::util::AbstractCollection<E>;using Super=::jxx::lang::ClassBase<ConcurrentLinkedDeque<E>,JxxSuper,::jxx::util::Deque<E>,::jxx::io::SerializableI>;using JxxClassInfoMarker=typename Super::JxxClassInfoMarker;static ::jxx::Ptr<::jxx::lang::ClassAny>Class(){return JxxClassInfoMarker::Class();}ConcurrentLinkedDeque():Super(),delegate_(::jxx::NEW<LinkedBlockingDeque<E>>()){}

@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include "lang/jxx.lang.String.h"
-#include "util/jxx.util.concurrent.Callable.h"
-#include "util/jxx.util.concurrent.Executors.h"
-#include "util/jxx.util.concurrent.TimeUnit.h"
+#include "util/concurrent/jxx.util.concurrent.Callable.h"
+#include "util/concurrent/jxx.util.concurrent.Executors.h"
+#include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
 
 namespace {
 class ReturnValue final : public ::jxx::util::concurrent::Callable<::jxx::lang::String> {

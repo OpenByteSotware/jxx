@@ -2,12 +2,11 @@
 
 #include "lang/jxx.lang.Runnable.h"
 #include "lang/jxx.lang.RuntimeException.h"
-#include "util/jxx.util.concurrent.CancellationException.h"
-#include "util/jxx.util.concurrent.ExecutionException.h"
-#include "util/jxx.util.concurrent.ScheduledFutureTask.h"
-#include "util/jxx.util.concurrent.TimeUnit.h"
-#include "util/jxx.util.concurrent.TimeoutException.h"
-
+#include "util/concurrent/jxx.util.concurrent.CancellationException.h"
+#include "util/concurrent/jxx.util.concurrent.ExecutionException.h"
+#include "util/concurrent/jxx.util.concurrent.ScheduledFutureTask.h"
+#include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
+#include "util/concurrent/jxx.util.concurrent.TimeoutException.h"
 namespace {
 class NoOp final : public ::jxx::lang::Runnable {
 public: void run() override {}

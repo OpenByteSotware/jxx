@@ -6,8 +6,8 @@
 
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.Runnable.h"
-#include "util/jxx.util.concurrent.Executors.h"
-#include "util/jxx.util.concurrent.TimeUnit.h"
+#include "util/concurrent/jxx.util.concurrent.Executors.h"
+#include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
 
 namespace {
 class CountTask final : public ::jxx::lang::Runnable {

@@ -14,7 +14,7 @@
 #include "lang/jxx.lang.ProcessBuilder.h"
 #include "lang/jxx.lang.String.h"
 #include "ProcessTestSupport.h"
-#include "util/jxx.util.concurrent.TimeUnit.h"
+#include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
 
 namespace {
 using jxx::test::process::builder;

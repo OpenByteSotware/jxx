@@ -2,11 +2,11 @@
 #include "lang/jxx.lang.Runnable.h"
 #include "lang/jxx.lang.String.h"
 #include "util/jxx.util.ArrayList.h"
-#include "util/jxx.util.concurrent.Callable.h"
-#include "util/jxx.util.concurrent.AbstractExecutorService.h"
-#include "util/jxx.util.concurrent.Executors.h"
-#include "util/jxx.util.concurrent.TimeUnit.h"
-#include "util/jxx.util.concurrent.TimeoutException.h"
+#include "util/concurrent/jxx.util.concurrent.Callable.h"
+#include "util/concurrent/jxx.util.concurrent.AbstractExecutorService.h"
+#include "util/concurrent/jxx.util.concurrent.Executors.h"
+#include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
+#include "util/concurrent/jxx.util.concurrent.TimeoutException.h"
 namespace {
 using S=::jxx::lang::String;
 class Value final:public ::jxx::util::concurrent::Callable<S>{public:explicit Value(const char* v):v_(v){} ::jxx::Ptr<S> call()override{return ::jxx::NEW<S>(v_);}private:std::string v_;};

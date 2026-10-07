@@ -8,7 +8,7 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "util/concurrent/jxx.util.concurrent.ConcurrentMap.h"
-#include "util/jxx.util.concurrent.ForkJoinPool.h"
+#include "util/concurrent/jxx.util.concurrent.ForkJoinPool.h"
 #include "util/jxx.util.HashMap.h"
 
 namespace jxx::util::concurrent {

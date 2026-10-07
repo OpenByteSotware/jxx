@@ -4,7 +4,7 @@
 #include "lang/jxx.lang.Process.h"
 #include "lang/jxx.lang.IllegalThreadStateException.h"
 #include "lang/jxx.lang.NullPointerException.h"
-#include "util/jxx.util.concurrent.TimeUnit.h"
+#include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
 namespace jxx::lang {
 jbool Process::waitFor(
     jlong timeout,

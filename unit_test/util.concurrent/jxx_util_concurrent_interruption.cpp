@@ -4,7 +4,7 @@
 #include "lang/jxx.lang.InterruptedException.h"
 #include "lang/jxx.lang.Runnable.h"
 #include "lang/jxx.lang.Thread.h"
-#include "util/jxx.util.concurrent.CountDownLatch.h"
+#include "util/concurrent/jxx.util.concurrent.CountDownLatch.h"
 
 namespace {
 class SleepUntilInterrupted final : public jxx::lang::Runnable {

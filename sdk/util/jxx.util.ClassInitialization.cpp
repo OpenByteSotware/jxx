@@ -22,13 +22,12 @@
 #include "util/jxx.util.UnknownFormatConversionException.h"
 #include "util/jxx.util.UnknownFormatFlagsException.h"
 #include "util/jxx.util.Properties.h"
-#include "util/jxx.util.concurrent.BrokenBarrierException.h"
-#include "util/jxx.util.concurrent.CancellationException.h"
-#include "util/jxx.util.concurrent.CompletionException.h"
-#include "util/jxx.util.concurrent.ExecutionException.h"
-#include "util/jxx.util.concurrent.RejectedExecutionException.h"
-#include "util/jxx.util.concurrent.TimeoutException.h"
-
+#include "util/concurrent/jxx.util.concurrent.BrokenBarrierException.h"
+#include "util/concurrent/jxx.util.concurrent.CancellationException.h"
+#include "util/concurrent/jxx.util.concurrent.CompletionException.h"
+#include "util/concurrent/jxx.util.concurrent.ExecutionException.h"
+#include "util/concurrent/jxx.util.concurrent.RejectedExecutionException.h"
+#include "util/concurrent/jxx.util.concurrent.TimeoutException.h"
 namespace jxx::util {
 
 namespace {

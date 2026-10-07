@@ -35,7 +35,7 @@ extern char** environ;
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.Process.h"
-#include "util/jxx.util.concurrent.TimeUnit.h"
+#include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
 #include "lang/jxx.lang.ProcessBuilder.h"
 
 namespace jxx::lang {

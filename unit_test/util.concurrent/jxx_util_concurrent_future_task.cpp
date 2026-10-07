@@ -2,12 +2,11 @@
 #include <atomic>
 
 #include "lang/jxx.lang.Integer.h"
-#include "util/jxx.util.concurrent.Callable.h"
-#include "util/jxx.util.concurrent.CancellationException.h"
-#include "util/jxx.util.concurrent.FutureTask.h"
-#include "util/jxx.util.concurrent.TimeUnit.h"
-#include "util/jxx.util.concurrent.TimeoutException.h"
-
+#include "util/concurrent/jxx.util.concurrent.Callable.h"
+#include "util/concurrent/jxx.util.concurrent.CancellationException.h"
+#include "util/concurrent/jxx.util.concurrent.FutureTask.h"
+#include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
+#include "util/concurrent/jxx.util.concurrent.TimeoutException.h"
 namespace {
 using I = jxx::lang::Integer;
 

@@ -3,7 +3,7 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "util/jxx.util.Date.h"
 #include "lang/jxx_types.h"
-#include "util/jxx.util.concurrent.TimeUnit.h"
+#include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
 
 namespace jxx::util::concurrent::locks {
 

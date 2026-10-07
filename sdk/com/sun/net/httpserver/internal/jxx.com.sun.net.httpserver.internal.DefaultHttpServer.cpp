@@ -13,9 +13,9 @@
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLException.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.Http11Parser.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.ServerConnectionTask.h"
-#include "util/jxx.util.concurrent.Executor.h"
-#include "util/jxx.util.concurrent.ExecutorService.h"
-#include "util/jxx.util.concurrent.Executors.h"
+#include "util/concurrent/jxx.util.concurrent.Executor.h"
+#include "util/concurrent/jxx.util.concurrent.ExecutorService.h"
+#include "util/concurrent/jxx.util.concurrent.Executors.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.Headers.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.HttpHandler.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.Filter.h"
@@ -30,7 +30,7 @@
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_array.h"
-#include "util/jxx.util.concurrent.RejectedExecutionException.h"
+#include "util/concurrent/jxx.util.concurrent.RejectedExecutionException.h"
 namespace jxx::com::sun::net::httpserver::internal
 {
 	namespace

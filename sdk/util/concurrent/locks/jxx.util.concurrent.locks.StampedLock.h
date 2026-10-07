@@ -15,7 +15,7 @@
 #include "lang/jxx.lang.InterruptedException.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.Thread.h"
-#include "util/jxx.util.concurrent.TimeUnit.h"
+#include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
 #include "util/concurrent/locks/jxx.util.concurrent.locks.Lock.h"
 #include "util/concurrent/locks/jxx.util.concurrent.locks.ReadWriteLock.h"
 
