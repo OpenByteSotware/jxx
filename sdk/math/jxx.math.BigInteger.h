@@ -1,6 +1,8 @@
 #pragma once
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.Number.h"
+#include "lang/jxx.lang.Comparable.h"
+#include "io/jxx.io.SerializableI.h"
 
 namespace jxx::math
 {
@@ -9,8 +11,16 @@ namespace jxx::math
     static std::string stripLeadingZerosKeepOne_(const std::string& s);
     static bool allDigits_(const std::string& s);
 
-    class BigInteger final : public jxx::lang::Number {
+    class BigInteger final
+        : public ::jxx::lang::ClassBase<
+              BigInteger,
+              ::jxx::lang::Number,
+              ::jxx::lang::Comparable<BigInteger>,
+              ::jxx::io::SerializableI> {
     public:
+        using JxxSuper = ::jxx::lang::Number;
+        using Super = ::jxx::lang::ClassBase<BigInteger, JxxSuper, ::jxx::lang::Comparable<BigInteger>, ::jxx::io::SerializableI>;
+
         BigInteger(jxx::lang::jlong value);
         explicit BigInteger(const jxx::Ptr<jxx::lang::String> value);
 
@@ -18,6 +28,7 @@ namespace jxx::math
         static jxx::Ptr<BigInteger> parse(const jxx::Ptr<jxx::lang::String> value);
 
     public:
+        jxx::lang::jint compareTo(const jxx::Ptr<BigInteger>& other) const override;
         jxx::lang::jint signum() const;
         jxx::Ptr<BigInteger> abs() const;
         jxx::Ptr<BigInteger> negate() const;

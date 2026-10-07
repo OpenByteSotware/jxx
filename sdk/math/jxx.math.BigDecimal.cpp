@@ -6,6 +6,7 @@
 #include <algorithm>
 #include "lang/jxx.lang.String.h"
 #include "jxx.math.BigDecimal.h"
+#include "lang/jxx.lang.NullPointerException.h"
 
 namespace jxx::math
 {
@@ -109,6 +110,29 @@ namespace jxx::math
     jxx::Ptr<BigDecimal> BigDecimal::parse(const jxx::Ptr<jxx::lang::String> value)
     {
         return jxx::NEW<BigDecimal>(value);
+    }
+
+
+    jxx::lang::jint BigDecimal::compareTo(const jxx::Ptr<BigDecimal>& other) const
+    {
+        if (other == nullptr) {
+            throw jxx::lang::NullPointerException();
+        }
+        if (negative_ != other->negative_) {
+            return negative_ ? -1 : 1;
+        }
+        const auto commonScale = std::max(scale_, other->scale_);
+        std::string left = digits_;
+        std::string right = other->digits_;
+        left.append(static_cast<std::size_t>(commonScale - scale_), '0');
+        right.append(static_cast<std::size_t>(commonScale - other->scale_), '0');
+        jxx::lang::jint result = 0;
+        if (left.size() != right.size()) {
+            result = left.size() < right.size() ? -1 : 1;
+        } else if (left != right) {
+            result = left < right ? -1 : 1;
+        }
+        return negative_ ? -result : result;
     }
 
     jxx::lang::jint BigDecimal::signum() const

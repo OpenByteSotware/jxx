@@ -6,6 +6,7 @@
 #include <cctype>
 #include "lang/jxx.lang.String.h"
 #include "math/jxx.math.BigInteger.h"
+#include "lang/jxx.lang.NullPointerException.h"
 
 namespace jxx::math
 {
@@ -87,6 +88,24 @@ namespace jxx::math
     jxx::Ptr<BigInteger> BigInteger::parse(const jxx::Ptr<jxx::lang::String> value)
     {
         return jxx::NEW<BigInteger>(value);
+    }
+
+
+    jxx::lang::jint BigInteger::compareTo(const jxx::Ptr<BigInteger>& other) const
+    {
+        if (other == nullptr) {
+            throw jxx::lang::NullPointerException();
+        }
+        if (negative_ != other->negative_) {
+            return negative_ ? -1 : 1;
+        }
+        jxx::lang::jint result = 0;
+        if (digits_.size() != other->digits_.size()) {
+            result = digits_.size() < other->digits_.size() ? -1 : 1;
+        } else if (digits_ != other->digits_) {
+            result = digits_ < other->digits_ ? -1 : 1;
+        }
+        return negative_ ? -result : result;
     }
 
     jxx::lang::jint BigInteger::signum() const

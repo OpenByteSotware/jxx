@@ -2,6 +2,8 @@
 
 #include "lang/jxx.lang.Number.h"
 #include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.Comparable.h"
+#include "io/jxx.io.SerializableI.h"
 #include "math/jxx.math.BigInteger.h"
 
 namespace jxx::lang {
@@ -9,8 +11,16 @@ namespace jxx::lang {
 }
 
 namespace jxx::math {
-    class BigDecimal final : public jxx::lang::Number {
+    class BigDecimal final
+        : public ::jxx::lang::ClassBase<
+              BigDecimal,
+              ::jxx::lang::Number,
+              ::jxx::lang::Comparable<BigDecimal>,
+              ::jxx::io::SerializableI> {
     public:
+        using JxxSuper = ::jxx::lang::Number;
+        using Super = ::jxx::lang::ClassBase<BigDecimal, JxxSuper, ::jxx::lang::Comparable<BigDecimal>, ::jxx::io::SerializableI>;
+
         BigDecimal(jxx::lang::jlong value);
         BigDecimal(jxx::lang::jdouble value);
         explicit BigDecimal(const jxx::Ptr<jxx::lang::String> value);
@@ -20,6 +30,7 @@ namespace jxx::math {
         static jxx::Ptr<BigDecimal> parse(const jxx::Ptr<jxx::lang::String> value);
 
     public:
+        jxx::lang::jint compareTo(const jxx::Ptr<BigDecimal>& other) const override;
         jxx::lang::jint signum() const;
         jxx::lang::jint scale() const;
         jxx::Ptr<jxx::math::BigInteger> unscaledValue() const;
