@@ -176,14 +176,16 @@ namespace jxx::net
         jxx::lang::jint remotePort,
         const jxx::Ptr<InetAddress>& localAddr,
         jxx::lang::jint localPort,
-        const jxx::Ptr<jxx::nio::channels::SocketChannel>& channel)
+        const jxx::Ptr<jxx::nio::channels::SocketChannel>& channel,
+        jxx::lang::jbool connected,
+        jxx::lang::jbool bound)
         : state_(state),
           remoteAddr_(remoteAddr),
           remotePort_(remotePort),
           localAddr_(localAddr),
           localPort_(localPort),
-          connected_(state != nullptr && !state->closed),
-          bound_(state != nullptr && state->socket != internal::kInvalidSocket)
+          connected_(connected),
+          bound_(bound)
     {
         if (state_ == nullptr)
             throw ::jxx::lang::NullPointerException();

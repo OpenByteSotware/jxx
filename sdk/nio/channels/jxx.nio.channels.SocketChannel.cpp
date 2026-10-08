@@ -581,7 +581,7 @@ namespace jxx::nio::channels
 
 		socketView_ = ::jxx::NEW<::jxx::net::Socket>(
 			state_, remoteAddress, remotePort, localAddress, localPort,
-			::jxx::CAST<SocketChannel>(thisPtr()));
+			::jxx::CAST<SocketChannel>(thisPtr()), connected_, bound_);
 		return socketView_;
 	}
 	::jxx::Ptr<SocketChannel> SocketChannel::shutdownInput()

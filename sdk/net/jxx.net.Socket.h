@@ -68,7 +68,9 @@ public:
             jxx::lang::jint remotePort,
             const jxx::Ptr<InetAddress>& localAddr,
             jxx::lang::jint localPort,
-            const jxx::Ptr<jxx::nio::channels::SocketChannel>& channel);
+            const jxx::Ptr<jxx::nio::channels::SocketChannel>& channel,
+            jxx::lang::jbool connected,
+            jxx::lang::jbool bound);
         ~Socket() override;
 
     public:
