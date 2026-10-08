@@ -1,6 +1,6 @@
 #include <chrono>
 #include "lang/jxx.lang.String.h"
-#include "util/jxx.util.DateFormat.h"
+#include "text/jxx.text.DateFormat.h"
 #include "util/jxx.util.Locale.h"
 #include "util/jxx.util.StringPool.h"
 #include "util/jxx.util.ZonedDateTime.h"
@@ -25,7 +25,7 @@ ZonedDateTime::ZonedDateTime(::jxx::lang::jlong epochMillis, const ::jxx::Ptr<Ti
 ::jxx::Ptr<TimeZone> ZonedDateTime::getTimeZone() const { return timeZone_; }
 
 ::jxx::Ptr<::jxx::lang::String> ZonedDateTime::toString() const {
-    auto fmt = DateFormat::ofPattern(StringPool::intern("yyyy-MM-dd HH:mm:ss z"), Locale::getDefault());
+    auto fmt = ::jxx::text::DateFormat::ofPattern(StringPool::intern("yyyy-MM-dd HH:mm:ss z"), Locale::getDefault());
     return fmt->format(epochMillis_, timeZone_);
 }
 

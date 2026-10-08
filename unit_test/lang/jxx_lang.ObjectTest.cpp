@@ -42,6 +42,16 @@ private:
     ::jxx::lang::jint value_;
 };
 
+class ObjectTest2 : public ::testing::Test
+{
+protected:
+    static void SetUpTestSuite()
+    {
+        ASSERT_NE(nullptr, PlainObject::Class());
+        ASSERT_NE(nullptr, CloneableObject::Class());
+    }
+};
+
 TEST(ObjectTest2, EqualsDefaultsToReferenceIdentity) {
     const auto first = ::jxx::NEW<PlainObject>();
     const auto second = ::jxx::NEW<PlainObject>();
@@ -113,36 +123,26 @@ TEST(ObjectTest2, ToStringContainsRuntimeClassAndHexHash)
         PlainObject::Class();
 
     ASSERT_NE(nullptr, plainObjectClass);
+    ASSERT_NE(nullptr, plainObjectClass->getName());
 
     const auto value =
         ::jxx::NEW<PlainObject>();
 
-    const auto className =
-        value->getClassName();
-
     const auto text =
         value->toString();
 
-    ASSERT_NE(nullptr, className);
     ASSERT_NE(nullptr, text);
 
-    const std::string actual =
-        text->utf8();
-
-    EXPECT_EQ(
-        0U,
-        actual.find(className->utf8() + "@"));
-
-    std::ostringstream hash;
-    hash << std::hex
+    std::ostringstream expected;
+    expected
+        << plainObjectClass->getName()->utf8()
+        << '@'
+        << std::hex
         << static_cast<std::uint32_t>(
                value->hashCode());
 
-    EXPECT_NE(
-        std::string::npos,
-        actual.find(hash.str()));
+    EXPECT_EQ(expected.str(), text->utf8());
 }
-
 TEST(ObjectTest2, CloneRejectsAnObjectThatIsNotCloneable) {
     const auto value = ::jxx::NEW<PlainObject>();
 
