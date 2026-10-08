@@ -16,15 +16,28 @@ CountDownLatch::CountDownLatch(::jxx::lang::jint count)
 }
 
 void CountDownLatch::await() {
+    const auto current = ::jxx::lang::Thread::currentThread();
     if (::jxx::lang::Thread::interrupted()) {
         throw ::jxx::lang::InterruptedException();
     }
-    std::unique_lock<std::mutex> lock(mutex_);
-    while (count_ != 0) {
-        condition_.wait_for(lock, std::chrono::milliseconds(10));
+
+    current->setParkWakeup_([this] {
+        condition_.notify_all();
+    });
+
+    try {
+        std::unique_lock<std::mutex> lock(mutex_);
+        condition_.wait(lock, [this, &current] {
+            return count_ == 0 || current->isInterrupted();
+        });
+
+        current->clearParkWakeup_();
         if (::jxx::lang::Thread::interrupted()) {
             throw ::jxx::lang::InterruptedException();
         }
+    } catch (...) {
+        current->clearParkWakeup_();
+        throw;
     }
 }
 
@@ -34,9 +47,12 @@ void CountDownLatch::await() {
     if (unit == nullptr) {
         throw ::jxx::lang::NullPointerException();
     }
+
+    const auto current = ::jxx::lang::Thread::currentThread();
     if (::jxx::lang::Thread::interrupted()) {
         throw ::jxx::lang::InterruptedException();
     }
+
     std::unique_lock<std::mutex> lock(mutex_);
     if (count_ == 0) {
         return true;
@@ -44,28 +60,35 @@ void CountDownLatch::await() {
     if (timeout <= 0) {
         return false;
     }
+
     const auto duration = unit->toChrono(timeout);
     const auto now = std::chrono::steady_clock::now();
     const auto maximum = std::chrono::steady_clock::time_point::max() - now;
     const auto deadline = duration >= maximum
         ? std::chrono::steady_clock::time_point::max()
         : now + duration;
-    while (count_ != 0) {
-        const auto current = std::chrono::steady_clock::now();
-        if (current >= deadline) {
-            return false;
-        }
-        condition_.wait_for(
+
+    current->setParkWakeup_([this] {
+        condition_.notify_all();
+    });
+
+    try {
+        const bool completed = condition_.wait_until(
             lock,
-            std::min(
-                deadline - current,
-                std::chrono::steady_clock::duration(
-                    std::chrono::milliseconds(10))));
+            deadline,
+            [this, &current] {
+                return count_ == 0 || current->isInterrupted();
+            });
+
+        current->clearParkWakeup_();
         if (::jxx::lang::Thread::interrupted()) {
             throw ::jxx::lang::InterruptedException();
         }
+        return completed && count_ == 0;
+    } catch (...) {
+        current->clearParkWakeup_();
+        throw;
     }
-    return true;
 }
 
 void CountDownLatch::countDown() {

@@ -44,11 +44,20 @@ private:
     std::atomic<bool>& caught_;
 };
 
-void waitUntil(const std::atomic<bool>& value) {
-    for (int i = 0; i < 1000 && !value.load(); ++i) {
-        jxx::lang::Thread::yield();
+void waitUntil(const std::atomic<bool>& value,
+    const ::jxx::Ptr<::jxx::lang::Thread>& thread)
+{
+    const auto deadline =
+        std::chrono::steady_clock::now() +
+        std::chrono::seconds(5);
+
+    while (!value.load(std::memory_order_acquire) &&
+           thread->isAlive() &&
+           std::chrono::steady_clock::now() < deadline) {
+        std::this_thread::yield();
     }
-    ASSERT_TRUE(value.load());
+
+    ASSERT_TRUE(value.load(std::memory_order_acquire));
 }
 
 TEST(InterruptionTest, SleepRespondsToInterrupt) {
@@ -57,28 +66,41 @@ TEST(InterruptionTest, SleepRespondsToInterrupt) {
     auto thread = jxx::NEW<jxx::lang::Thread>(
         jxx::NEW<SleepUntilInterrupted>(started, caught));
     thread->start();
-    waitUntil(started);
+    waitUntil(started, thread);
     thread->interrupt();
     thread->join(5000);
     EXPECT_TRUE(caught.load());
     EXPECT_FALSE(thread->isAlive());
 }
+TEST(InterruptionTest, LatchAwaitRespondsToInterrupt)
+{
+    auto latch =
+        ::jxx::NEW<::jxx::util::concurrent::CountDownLatch>(1);
 
-TEST(InterruptionTest, LatchAwaitRespondsToInterrupt) {
-    auto latch = jxx::NEW<jxx::util::concurrent::CountDownLatch>(1);
-    std::atomic<bool> started{false};
-    std::atomic<bool> caught{false};
-    auto thread = jxx::NEW<jxx::lang::Thread>(
-        jxx::NEW<AwaitUntilInterrupted>(latch, started, caught));
+    std::atomic<bool> started{ false };
+    std::atomic<bool> caught{ false };
+
+    auto thread = ::jxx::NEW<::jxx::lang::Thread>(
+        ::jxx::NEW<AwaitUntilInterrupted>(
+            latch,
+            started,
+            caught));
+
     thread->start();
-    waitUntil(started);
+
+    waitUntil(started, thread);
+
     thread->interrupt();
     thread->join(5000);
-    if (thread->isAlive()) latch->countDown();
-    EXPECT_TRUE(caught.load());
+
+    if (thread->isAlive()) {
+        latch->countDown();
+        thread->join(5000);
+    }
+
+    EXPECT_TRUE(caught.load(std::memory_order_acquire));
     EXPECT_FALSE(thread->isAlive());
 }
-
 TEST(InterruptionTest, InterruptedClearsCurrentThreadFlag) {
     auto current = jxx::lang::Thread::currentThread();
     current->interrupt();
