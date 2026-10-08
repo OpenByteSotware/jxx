@@ -59,7 +59,6 @@ public:
         const std::weak_ptr<::jxx::net::internal::NativeSocketState> weakState(state);
         if (thread_->isInterrupted()) {
             interruptAccept(weakState);
-            throw ClosedByInterruptException();
         }
         thread_->setParkWakeup_([weakState] { interruptAccept(weakState); });
     }
@@ -107,7 +106,10 @@ int f=::fcntl(state_->socket,F_GETFL,0);if(f<0||::fcntl(state_->socket,F_SETFL,b
     AcceptInterruptRegistration interruptRegistration(state_);
     try {
         auto s=socket_->accept();
-        if(interruptRegistration.interrupted())throw ClosedByInterruptException();
+        if(interruptRegistration.interrupted()) {
+            close();
+            throw ClosedByInterruptException();
+        }
         if(!isOpen())throw AsynchronousCloseException();
         if(!s)return nullptr;
         auto c=::jxx::NEW<SocketChannel>(s);
@@ -116,7 +118,10 @@ int f=::fcntl(state_->socket,F_GETFL,0);if(f<0||::fcntl(state_->socket,F_SETFL,b
     } catch(const ClosedByInterruptException&) {
         throw;
     } catch(const ::jxx::net::SocketException&) {
-        if(interruptRegistration.interrupted())throw ClosedByInterruptException();
+        if(interruptRegistration.interrupted()) {
+            close();
+            throw ClosedByInterruptException();
+        }
         if(!isOpen())throw AsynchronousCloseException();
         throw;
     }

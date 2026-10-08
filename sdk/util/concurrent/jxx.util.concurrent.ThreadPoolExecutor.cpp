@@ -80,9 +80,10 @@ void ThreadPoolExecutor::execute(
             command, ::jxx::CAST<ThreadPoolExecutor>(thisPtr()));
         return;
     }
-    if (isShutdown()) {
-        throw RejectedExecutionException();
-    }
+    // The shutdown decision was made atomically while mutex_ was held above.
+    // Do not call the virtual isShutdown() here: a scheduled executor may have
+    // begun orderly shutdown while still being required to dispatch retained
+    // delayed tasks through this base executor.
     workAvailable_.notify_one();
 }
 

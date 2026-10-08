@@ -284,6 +284,8 @@ static std::vector<std::u16string> toLogicalLines(const std::u16string& text) {
             for (std::size_t p = line.size(); p > 0 && line[p - 1] == u'\\'; --p) ++backslashes;
             if ((backslashes % 2U) == 0U) break;
             if (!line.empty()) line.pop_back();
+
+            std::u16string continuation;
             while (i < text.size()) {
                 char16_t c = text[i++];
                 if (c == u'\r') {
@@ -291,11 +293,15 @@ static std::vector<std::u16string> toLogicalLines(const std::u16string& text) {
                     break;
                 }
                 if (c == u'\n') break;
-                line.push_back(c);
+                continuation.push_back(c);
             }
+
             std::size_t skip = 0;
-            while (skip < line.size() && isWs(line[skip])) ++skip;
-            if (skip > 0) line.erase(0, skip);
+            while (skip < continuation.size() &&
+                   isWs(continuation[skip])) {
+                ++skip;
+            }
+            line.append(continuation, skip, std::u16string::npos);
         }
         lines.push_back(line);
     }
@@ -563,7 +569,7 @@ static void writeXmlDocument(Properties* props, jxx::Ptr<jxx::io::OutputStream> 
     }
     writeAsciiToOutputStream(os, u"<?xml version=\"1.0\" encoding=\"");
     writeAsciiToOutputStream(os, encUtf16);
-    writeAsciiToOutputStream(os, u"\"?>\n<!DOCTYPE properties SYSTEM \"http://jxx.sun.com/dtd/properties.dtd\">\n<properties>\n");
+    writeAsciiToOutputStream(os, u"\"?>\n<!DOCTYPE properties SYSTEM \"http://java.sun.com/dtd/properties.dtd\">\n<properties>\n");
     if (comment != nullptr) {
         writeAsciiToOutputStream(os, u"  <comment>");
         writeAsciiToOutputStream(os, xmlEscape(comment->utf16(), static_cast<jxx::lang::jbool>(false)));
