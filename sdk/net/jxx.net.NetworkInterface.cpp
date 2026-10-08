@@ -405,7 +405,21 @@ namespace jxx::net {
 
     jxx::lang::ByteArray
         NetworkInterface::getHardwareAddress() const {
-        return hardwareAddr_;
+        if (hardwareAddr_ == nullptr) {
+            return nullptr;
+        }
+
+        auto copy =
+            ::jxx::NEW<::jxx::lang::ByteArrayType>(
+                hardwareAddr_->length);
+
+        for (std::uint32_t index = 0;
+             index < hardwareAddr_->length;
+             ++index) {
+            (*copy)[index] = (*hardwareAddr_)[index];
+        }
+
+        return copy;
     }
 
     jxx::Ptr<jxx::lang::String>

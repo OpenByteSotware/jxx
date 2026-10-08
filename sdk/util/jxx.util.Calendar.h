@@ -1,4 +1,9 @@
 #pragma once
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "io/jxx.io.SerializableI.h"
+#include "lang/jxx.lang.Cloneable.h"
+#include "lang/jxx.lang.Comparable.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
 #include "lang/jxx.lang.String.h"
@@ -10,10 +15,22 @@
 
 namespace jxx::util {
 
-class Calendar : public ::jxx::lang::Object {
+class Calendar
+    : public ::jxx::lang::ClassBase<
+          Calendar,
+          ::jxx::lang::Object,
+          ::jxx::lang::Cloneable,
+          ::jxx::io::SerializableI,
+          ::jxx::lang::Comparable<Calendar>> {
 public:
     using JxxSuper = ::jxx::lang::Object;
-    using JxxClassInfoMarker = ::jxx::lang::ClassInfo<Calendar, JxxSuper>;
+    using Super = ::jxx::lang::ClassBase<
+        Calendar,
+        JxxSuper,
+        ::jxx::lang::Cloneable,
+        ::jxx::io::SerializableI,
+        ::jxx::lang::Comparable<Calendar>>;
+    using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
     static ::jxx::Ptr<::jxx::lang::ClassAny> Class();
     // Java 8 field constants (subset)
     static constexpr ::jxx::lang::jint YEAR = 1;
@@ -26,6 +43,16 @@ public:
     static constexpr ::jxx::lang::jint MILLISECOND = 14;
 
     Calendar();
+
+    ::jxx::lang::jint compareTo(const ::jxx::Ptr<Calendar>& other) const override;
+
+    void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {
+        (void)out;
+    }
+    void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {
+        (void)in;
+    }
+    void readObjectNoData() override {}
     static ::jxx::Ptr<Calendar> getInstance();
 
     ::jxx::lang::jlong getTimeInMillis() const;

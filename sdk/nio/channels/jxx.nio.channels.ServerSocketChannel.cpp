@@ -103,6 +103,7 @@ int f=::fcntl(state_->socket,F_GETFL,0);if(f<0||::fcntl(state_->socket,F_SETFL,b
 ::jxx::Ptr<::jxx::net::ServerSocket> ServerSocketChannel::socket(){return socket_;}
 ::jxx::Ptr<SocketChannel> ServerSocketChannel::accept(){
     if(!isOpen())throw ClosedChannelException();
+    if(socket_ == nullptr || !socket_->isBound())throw NotYetBoundException();
     AcceptInterruptRegistration interruptRegistration(state_);
     try {
         auto s=socket_->accept();

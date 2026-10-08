@@ -11,9 +11,19 @@
 namespace {
 using namespace jxx::ext::net::ssl;
 
+::jxx::Ptr<SSLContext> initializedTlsContext()
+{
+    const auto context =
+        SSLContext::getInstance(
+            ::jxx::NEW<::jxx::lang::String>("TLS"));
+
+    context->init(nullptr, nullptr, nullptr);
+    return context;
+}
+
 TEST(OpenSslEngineTest, ContextCreatesClientAndServerEngines) {
-    const auto context = SSLContext::getInstance(
-        ::jxx::NEW<::jxx::lang::String>("TLS"));
+    const auto context = initializedTlsContext();
+    
     const auto client = context->createSSLEngine(
         ::jxx::NEW<::jxx::lang::String>("localhost"), 443);
     const auto server = context->createSSLEngine();
@@ -26,8 +36,7 @@ TEST(OpenSslEngineTest, ContextCreatesClientAndServerEngines) {
 }
 
 TEST(OpenSslEngineTest, AppliesSniAndHttpsEndpointIdentification) {
-    const auto context = SSLContext::getInstance(
-        ::jxx::NEW<::jxx::lang::String>("TLS"));
+    const auto context = initializedTlsContext();
     const auto engine = context->createSSLEngine(
         ::jxx::NEW<::jxx::lang::String>("127.0.0.1"), 443);
     engine->setUseClientMode(true);
@@ -48,8 +57,7 @@ TEST(OpenSslEngineTest, AppliesSniAndHttpsEndpointIdentification) {
 }
 
 TEST(OpenSslEngineTest, InitialClientHandshakeNeedsWrap) {
-    const auto context = SSLContext::getInstance(
-        ::jxx::NEW<::jxx::lang::String>("TLS"));
+    const auto context = initializedTlsContext();
     const auto client = context->createSSLEngine(
         ::jxx::NEW<::jxx::lang::String>("localhost"), 443);
     client->setUseClientMode(true);
@@ -64,8 +72,7 @@ TEST(OpenSslEngineTest, InitialClientHandshakeNeedsWrap) {
 }
 
 TEST(OpenSslEngineTest, EmptyServerInputReportsUnderflow) {
-    const auto context = SSLContext::getInstance(
-        ::jxx::NEW<::jxx::lang::String>("TLS"));
+    const auto context = initializedTlsContext();
     const auto server = context->createSSLEngine();
     server->setUseClientMode(false);
     const auto emptyNetwork = ::jxx::nio::ByteBuffer::allocate(0);

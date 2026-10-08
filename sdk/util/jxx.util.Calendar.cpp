@@ -63,6 +63,15 @@ Calendar::Calendar() {
     return ::jxx::NEW<Calendar>();
 }
 
+::jxx::lang::jint Calendar::compareTo(const ::jxx::Ptr<Calendar>& other) const {
+    if (other == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+    if (millis_ < other->millis_) return -1;
+    if (millis_ > other->millis_) return 1;
+    return 0;
+}
+
 ::jxx::lang::jlong Calendar::getTimeInMillis() const { return millis_; }
 void Calendar::setTimeInMillis(::jxx::lang::jlong millis) { millis_ = millis; }
 
