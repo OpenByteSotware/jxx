@@ -1,6 +1,11 @@
 #pragma once
 
 #include "lang/jxx_types.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "io/jxx.io.SerializableI.h"
+#include "lang/jxx.lang.Cloneable.h"
+
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
 
@@ -10,7 +15,12 @@ class String;
 
 namespace jxx::util {
 
-class Locale : public ::jxx::lang::ClassBase<Locale, ::jxx::lang::Object> {
+class Locale final
+    : public ::jxx::lang::ClassBase<
+          Locale,
+          ::jxx::lang::Object,
+          ::jxx::lang::Cloneable,
+          ::jxx::io::SerializableI> {
 private:
     ::jxx::Ptr<::jxx::lang::String> language_;
     ::jxx::Ptr<::jxx::lang::String> script_;
@@ -23,6 +33,10 @@ private:
     static ::jxx::Ptr<::jxx::lang::String> normalizeVariant(const ::jxx::Ptr<::jxx::lang::String>& value);
 
 public:
+    using JxxSuper = ::jxx::lang::Object;
+    using Super = ::jxx::lang::ClassBase<
+        Locale, JxxSuper, ::jxx::lang::Cloneable, ::jxx::io::SerializableI>;
+
     static ::jxx::Ptr<Locale> ROOT;
     static ::jxx::Ptr<Locale> US;
     static ::jxx::Ptr<Locale> UK;
@@ -68,6 +82,17 @@ public:
     ::jxx::Ptr<::jxx::lang::String> toString() const override;
     ::jxx::lang::jbool equals(const ::jxx::Ptr<::jxx::lang::Object>& other) const override;
     ::jxx::lang::jint hashCode() const override;
+
+    void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {
+        (void)out;
+    }
+    void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {
+        (void)in;
+    }
+    void readObjectNoData() override {}
+
+protected:
+    JXX_OBJECT_CLONE(Locale)
 };
 
 } // namespace jxx::util

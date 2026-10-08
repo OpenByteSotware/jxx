@@ -324,7 +324,7 @@ static std::vector<unsigned char> bytesFromUtf8(const std::string& s) {
     return std::vector<unsigned char>(s.begin(), s.end());
 }
 
-class PropertiesTest : public ::testing::Test {
+class PropertiesTest2 : public ::testing::Test {
 protected:
     void ExpectStringEq(const Ptr<String>& actual, const char* expected) {
         ASSERT_NE(actual, nullptr);
@@ -332,14 +332,14 @@ protected:
     }
 };
 
-TEST_F(PropertiesTest, SetAndGetProperty) {
+TEST_F(PropertiesTest2, SetAndGetProperty) {
     auto p = jxx::NEW<Properties>();
     p->setProperty(S("alpha"), S("1"));
     ExpectStringEq(p->getProperty(S("alpha")), "1");
     ExpectStringEq(p->getProperty(S("missing"), S("fallback")), "fallback");
 }
 
-TEST_F(PropertiesTest, PropertyNamesIncludesDefaultsWithoutDuplicates) {
+TEST_F(PropertiesTest2, PropertyNamesIncludesDefaultsWithoutDuplicates) {
     auto defaults = std::make_shared<Properties>();
     defaults->setProperty(S("a"), S("1"));
     defaults->setProperty(S("b"), S("2"));
@@ -361,7 +361,7 @@ TEST_F(PropertiesTest, PropertyNamesIncludesDefaultsWithoutDuplicates) {
     EXPECT_EQ(got.size(), 3U);
 }
 
-TEST_F(PropertiesTest, StringPropertyNamesOnlyIncludesStringPairs) {
+TEST_F(PropertiesTest2, StringPropertyNamesOnlyIncludesStringPairs) {
     auto p = std::make_shared<Properties>();
     p->setProperty(S("name"), S("jxx"));
     p->put(jxx::CAST<jxx::lang::Object>(S("string-key")), jxx::CAST<jxx::lang::Object>(std::make_shared<jxx::lang::Object>()));
@@ -373,7 +373,7 @@ TEST_F(PropertiesTest, StringPropertyNamesOnlyIncludesStringPairs) {
     EXPECT_EQ(got[0], "name");
 }
 
-TEST_F(PropertiesTest, LoadReaderParsesEscapesContinuationsAndSeparators) {
+TEST_F(PropertiesTest2, LoadReaderParsesEscapesContinuationsAndSeparators) {
     const std::u16string text =
         u"# comment\n"
         u"a=1\n"
@@ -383,8 +383,8 @@ TEST_F(PropertiesTest, LoadReaderParsesEscapesContinuationsAndSeparators) {
         u"escaped\\ key=hello\\ world\n"
         u"unicode=\\u0041\\u0042\\u0043\n"
         u"tab=one\\ttwo\n";
-    auto reader = std::make_shared<MemoryReader>(text);
-    auto p = std::make_shared<Properties>();
+    auto reader = jxx::NEW<MemoryReader>(text);
+    auto p = jxx::NEW<Properties>();
     p->load(jxx::CAST<jxx::io::Reader>(reader));
     ExpectStringEq(p->getProperty(S("a")), "1");
     ExpectStringEq(p->getProperty(S("b")), "two");
@@ -395,7 +395,7 @@ TEST_F(PropertiesTest, LoadReaderParsesEscapesContinuationsAndSeparators) {
     ExpectStringEq(p->getProperty(S("tab")), "one\ttwo");
 }
 
-TEST_F(PropertiesTest, LoadInputStreamUsesLatin1StyleMapping) {
+TEST_F(PropertiesTest2, LoadInputStreamUsesLatin1StyleMapping) {
     std::string raw = std::string("latin=") + char(0xE9) + "\n";
     auto in = std::make_shared<MemoryInputStream>(bytesFromAscii(raw));
     auto p = std::make_shared<Properties>();
@@ -406,7 +406,7 @@ TEST_F(PropertiesTest, LoadInputStreamUsesLatin1StyleMapping) {
     EXPECT_EQ(value->utf16()[0], 0x00E9);
 }
 
-TEST_F(PropertiesTest, StoreWriterEscapesAndEmitsComments) {
+TEST_F(PropertiesTest2, StoreWriterEscapesAndEmitsComments) {
     auto p = std::make_shared<Properties>();
     p->setProperty(S("space key"), S("value with spaces"));
     p->setProperty(S("unicode"), std::make_shared<String>(u"A\u03A9"));
@@ -420,7 +420,7 @@ TEST_F(PropertiesTest, StoreWriterEscapesAndEmitsComments) {
     EXPECT_TRUE(writer->flushed());
 }
 
-TEST_F(PropertiesTest, StoreOutputStreamEmitsAsciiSafeForm) {
+TEST_F(PropertiesTest2, StoreOutputStreamEmitsAsciiSafeForm) {
     auto p = std::make_shared<Properties>();
     p->setProperty(S("k"), std::make_shared<String>(u"\u03A9"));
     auto out = std::make_shared<MemoryOutputStream>();
@@ -430,7 +430,7 @@ TEST_F(PropertiesTest, StoreOutputStreamEmitsAsciiSafeForm) {
     EXPECT_TRUE(out->flushed());
 }
 
-TEST_F(PropertiesTest, ListTruncatesLongValues) {
+TEST_F(PropertiesTest2, ListTruncatesLongValues) {
     auto p = std::make_shared<Properties>();
     p->setProperty(S("k"), S("0123456789012345678901234567890123456789TAIL"));
     auto outStream = std::make_shared<MemoryOutputStream>();
@@ -445,7 +445,7 @@ TEST_F(PropertiesTest, ListTruncatesLongValues) {
     EXPECT_NE(writer->utf8().find("..."), std::string::npos);
 }
 
-TEST_F(PropertiesTest, SaveDelegatesToStoreOutputStream) {
+TEST_F(PropertiesTest2, SaveDelegatesToStoreOutputStream) {
     auto p = std::make_shared<Properties>();
     p->setProperty(S("key"), S("value"));
     auto out = std::make_shared<MemoryOutputStream>();
@@ -455,7 +455,7 @@ TEST_F(PropertiesTest, SaveDelegatesToStoreOutputStream) {
     EXPECT_NE(bytes.find("key=value"), std::string::npos);
 }
 
-TEST_F(PropertiesTest, StoreToXmlAndLoadFromXmlRoundTrip) {
+TEST_F(PropertiesTest2, StoreToXmlAndLoadFromXmlRoundTrip) {
     auto original = std::make_shared<Properties>();
     original->setProperty(S("alpha"), S("1"));
     original->setProperty(std::make_shared<String>(u"sym"), std::make_shared<String>(u"A<&>\"'"));
@@ -474,7 +474,7 @@ TEST_F(PropertiesTest, StoreToXmlAndLoadFromXmlRoundTrip) {
     EXPECT_EQ(sym->utf16(), std::make_shared<String>(u"A<&>\"'")->utf16());
 }
 
-TEST_F(PropertiesTest, LoadFromXmlRejectsTrailingContent) {
+TEST_F(PropertiesTest2, LoadFromXmlRejectsTrailingContent) {
     const std::string badXml =
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
         "<!DOCTYPE properties SYSTEM \"http://java.sun.com/dtd/properties.dtd\">\n"
@@ -484,14 +484,14 @@ TEST_F(PropertiesTest, LoadFromXmlRejectsTrailingContent) {
     EXPECT_THROW(p->loadFromXML(jxx::CAST<jxx::io::InputStream>(in)), jxx::lang::IllegalArgumentException);
 }
 
-TEST_F(PropertiesTest, StoreToXmlRejectsUnsupportedEncoding) {
+TEST_F(PropertiesTest2, StoreToXmlRejectsUnsupportedEncoding) {
     auto p = std::make_shared<Properties>();
     p->setProperty(S("a"), S("1"));
     auto out = std::make_shared<MemoryOutputStream>();
     EXPECT_THROW(p->storeToXML(jxx::CAST<jxx::io::OutputStream>(out), S("comment"), S("UTF-16")), jxx::lang::IllegalArgumentException);
 }
 /*
-TEST_F(PropertiesTest, NullArgumentExceptions) {
+TEST_F(PropertiesTest2, NullArgumentExceptions) {
     auto p = std::make_shared<Properties>();
     EXPECT_THROW(p->setProperty(nullptr, S("v")), jxx::lang::NullPointerException);
     EXPECT_THROW((void)p->getProperty(nullptr), jxx::lang::NullPointerException);

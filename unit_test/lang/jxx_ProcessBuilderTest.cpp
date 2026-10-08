@@ -15,6 +15,7 @@
 #include "lang/jxx.lang.String.h"
 #include "ProcessTestSupport.h"
 #include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
+#include "lang/jxx.lang.IndexOutOfBoundsException.h"
 
 namespace {
 using jxx::test::process::builder;
@@ -33,10 +34,17 @@ TEST(ProcessBuilderTest, CommandRoundTripPreservesArguments) {
     EXPECT_EQ((*command)[2]->utf8(), "");
 }
 
-TEST(ProcessBuilderTest, EmptyCommandIsRejected) {
+TEST(ProcessBuilderTest, EmptyCommandIsRejectedWhenStarted)
+{
+    const auto builder =
+        ::jxx::NEW<::jxx::lang::ProcessBuilder>(
+            commandArray({}));
+
+    ASSERT_NE(nullptr, builder);
+
     EXPECT_THROW(
-        jxx::NEW<jxx::lang::ProcessBuilder>(commandArray({})),
-        jxx::lang::IllegalArgumentException);
+        builder->start(),
+        ::jxx::lang::IndexOutOfBoundsException);
 }
 
 TEST(ProcessBuilderTest, DirectoryRoundTrip) {

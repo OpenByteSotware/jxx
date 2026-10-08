@@ -10,6 +10,7 @@
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_array.h"
 #include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
+#include "lang/jxx.lang.IndexOutOfBoundsException.h"
 
 namespace {
 using ::jxx::lang::IllegalArgumentException;
@@ -76,17 +77,35 @@ TEST(ProcessBuilderEdgeTest, ConstructorCopiesCommandAndGetterReturnsCopy) {
     EXPECT_EQ("one", (*builder->command())[1]->utf8());
 }
 
-TEST(ProcessBuilderEdgeTest, RejectsEmptyNullAndInvalidRedirectConfiguration) {
-    EXPECT_THROW(::jxx::NEW<ProcessBuilder>(nullptr), IllegalArgumentException);
-    const auto empty = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<String>, 1U>>(0U);
-    EXPECT_THROW(::jxx::NEW<ProcessBuilder>(empty), IllegalArgumentException);
+TEST(ProcessBuilderEdgeTest, RejectsEmptyNullAndInvalidRedirectConfiguration)
+{
+    EXPECT_THROW(::jxx::NEW<ProcessBuilder>(nullptr), NullPointerException);
 
-    auto withNull = command({"tool", "argument"});
+    const auto empty =
+        ::jxx::NEW<
+        ::jxx::lang::JxxArray<
+        ::jxx::Ptr<String>,
+        1U>>(0U);
+
+    const auto emptyBuilder =
+        ::jxx::NEW<ProcessBuilder>(empty);
+
+    ASSERT_NE(nullptr, emptyBuilder);
+
+    EXPECT_THROW(emptyBuilder->start(), ::jxx::lang::IndexOutOfBoundsException);
+
+    auto withNull =
+        command({ "tool", "argument" });
+
     (*withNull)[1] = nullptr;
-    EXPECT_THROW(::jxx::NEW<ProcessBuilder>(withNull), NullPointerException);
+
+    EXPECT_THROW(
+        ::jxx::NEW<ProcessBuilder>(withNull),
+        NullPointerException);
 
     const auto builder =
-        ::jxx::NEW<ProcessBuilder>(command({ "tool" }));
+        ::jxx::NEW<ProcessBuilder>(
+            command({ "tool" }));
 
     EXPECT_THROW(
         builder->redirectInput(
