@@ -283,23 +283,39 @@ namespace jxx::net
 
     void ServerSocket::close()
     {
-        if (impl_ != nullptr) { impl_->close(); impl_=nullptr; if(state_) state_->closed=true; return; }
-        if (!state_ || state_->closed)
-            return;
-        std::lock_guard<std::mutex> lock(state_->m);
-        if (!state_->closed)
-        {
-            const auto native = state_->socket;
-            state_->socket = internal::kInvalidSocket;
-            state_->closed = true;
-            if (native != internal::kInvalidSocket) {
+        const auto channel =
+            state_ != nullptr ? state_->serverChannel.lock() : nullptr;
+
+        if (impl_ != nullptr) {
+            impl_->close();
+            impl_ = nullptr;
+            if (state_ != nullptr) state_->closed = true;
+        }
+        else if (state_ != nullptr && !state_->closed) {
+            {
+                std::lock_guard<std::mutex> lock(state_->m);
+                if (!state_->closed) {
+                    const auto native = state_->socket;
+                    state_->socket = internal::kInvalidSocket;
+                    state_->closed = true;
+                    if (native != internal::kInvalidSocket) {
 #if defined(_WIN32)
-                ::shutdown(native, SD_BOTH);
+                        ::shutdown(native, SD_BOTH);
 #else
-                ::shutdown(native, SHUT_RDWR);
+                        ::shutdown(native, SHUT_RDWR);
 #endif
-                internal::closeNativeSocket(native);
+                        internal::closeNativeSocket(native);
+                    }
+                }
             }
+        }
+
+        // The socket returned by ServerSocketChannel::socket() is a view of
+        // the channel's native endpoint. Closing either view closes both.
+        // Invoke this after releasing state_->m because channel close calls
+        // back into ServerSocket::close().
+        if (channel != nullptr && channel->isOpen()) {
+            channel->close();
         }
     }
 

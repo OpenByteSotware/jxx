@@ -15,11 +15,17 @@ class String;
 
 namespace jxx::util {
 
-class ResourceBundle : public ::jxx::lang::Object {
+class ResourceBundle
+    : public ::jxx::lang::ClassBase<
+          ResourceBundle,
+          ::jxx::lang::Object> {
 public:
     using JxxSuper = ::jxx::lang::Object;
-    using JxxClassInfoMarker = ::jxx::lang::ClassInfo<ResourceBundle, JxxSuper>;
+    using Super = ::jxx::lang::ClassBase<ResourceBundle, JxxSuper>;
+    using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
     static ::jxx::Ptr<::jxx::lang::ClassAny> Class();
+    virtual ~ResourceBundle() override = default;
+
     using BundleFactory = std::function<::jxx::Ptr<ResourceBundle>()>;
 
     static ::jxx::Ptr<ResourceBundle> getBundle(
