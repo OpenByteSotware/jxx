@@ -30,10 +30,10 @@ void setProperty(const char* name, const char* value) {
 }
 
 TEST(StoreExceptionFidelityTest, UnsupportedKeyStoreTypeThrowsKeyStoreException) {
-    PropertyRestore path("javax.net.ssl.keyStore");
-    PropertyRestore type("javax.net.ssl.keyStoreType");
-    setProperty("javax.net.ssl.keyStore", "missing-store");
-    setProperty("javax.net.ssl.keyStoreType", "JKS");
+    PropertyRestore path("jxx.net.ssl.keyStore");
+    PropertyRestore type("jxx.net.ssl.keyStoreType");
+    setProperty("jxx.net.ssl.keyStore", "missing-store");
+    setProperty("jxx.net.ssl.keyStoreType", "JKS");
     EXPECT_THROW(
         ::jxx::ext::net::ssl::internal::loadDefaultPropertyKeyManagers(),
         ::jxx::security::KeyStoreException);
@@ -52,23 +52,23 @@ TEST(StoreExceptionFidelityTest, UnsupportedKeyStoreProviderThrowsNoSuchProvider
 }
 
 TEST(StoreExceptionFidelityTest, MissingKeyStoreThrowsFileNotFound) {
-    PropertyRestore path("javax.net.ssl.keyStore");
-    PropertyRestore type("javax.net.ssl.keyStoreType");
-    PropertyRestore provider("javax.net.ssl.keyStoreProvider");
-    setProperty("javax.net.ssl.keyStore", "missing-store");
-    setProperty("javax.net.ssl.keyStoreType", "PKCS12");
+    PropertyRestore path("jxx.net.ssl.keyStore");
+    PropertyRestore type("jxx.net.ssl.keyStoreType");
+    PropertyRestore provider("jxx.net.ssl.keyStoreProvider");
+    setProperty("jxx.net.ssl.keyStore", "missing-store");
+    setProperty("jxx.net.ssl.keyStoreType", "PKCS12");
     ::jxx::lang::System::clearProperty(
-        ::jxx::NEW<::jxx::lang::String>("javax.net.ssl.keyStoreProvider"));
+        ::jxx::NEW<::jxx::lang::String>("jxx.net.ssl.keyStoreProvider"));
     EXPECT_THROW(
         ::jxx::ext::net::ssl::internal::loadDefaultPropertyKeyManagers(),
         ::jxx::io::FileNotFoundException);
 }
 
 TEST(StoreExceptionFidelityTest, UnsupportedTrustStoreTypeThrowsKeyStoreException) {
-    PropertyRestore path("javax.net.ssl.trustStore");
-    PropertyRestore type("javax.net.ssl.trustStoreType");
-    setProperty("javax.net.ssl.trustStore", "missing-store");
-    setProperty("javax.net.ssl.trustStoreType", "JKS");
+    PropertyRestore path("jxx.net.ssl.trustStore");
+    PropertyRestore type("jxx.net.ssl.trustStoreType");
+    setProperty("jxx.net.ssl.trustStore", "missing-store");
+    setProperty("jxx.net.ssl.trustStoreType", "JKS");
     EXPECT_THROW(
         ::jxx::ext::net::ssl::internal::loadDefaultPropertyTrustManagers(),
         ::jxx::security::KeyStoreException);

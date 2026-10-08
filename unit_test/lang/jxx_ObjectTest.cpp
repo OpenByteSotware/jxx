@@ -104,8 +104,7 @@ TEST(ObjectOwnershipTest, NewInitializesSelfReference)
 TEST(ObjectOwnershipTest, SharedPtrConstructionEstablishesOwnership)
 {
     auto object =
-        jxx::Ptr<DummyObject>(
-            new DummyObject());
+        jxx::NEW<DummyObject>();
 
     auto self =
         object->thisPtr();
@@ -203,22 +202,17 @@ TEST(ObjectNewTest, SameUsesIdentity) {
     EXPECT_TRUE(a->same(b));
     EXPECT_FALSE(a->same(c));
 }
-TEST(ObjectNewTest, SharedPtrConstructionEstablishesSharedOwnership)
+TEST(ObjectNewTest, NewEstablishesSharedOwnership)
 {
-    auto object =
-        jxx::Ptr<DummyObject>(
-            new DummyObject());
+    auto object = jxx::NEW<DummyObject>();
 
     auto self = object->thisPtr();
 
     ASSERT_NE(self, nullptr);
     EXPECT_EQ(self.get(), object.get());
 
-    EXPECT_FALSE(
-        self.owner_before(object));
-
-    EXPECT_FALSE(
-        object.owner_before(self));
+    EXPECT_FALSE(self.owner_before(object));
+    EXPECT_FALSE(object.owner_before(self));
 }
 TEST(ObjectNewTest, ManyObjectsMaintainOwnership) {
     std::vector<jxx::Ptr<DummyObject>> values;

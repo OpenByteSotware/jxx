@@ -257,8 +257,12 @@ namespace jxx::lang
             static const jxx::Ptr<UnicodeBlock> MIAO;
             static const jxx::Ptr<UnicodeBlock> ARABIC_MATHEMATICAL_ALPHABETIC_SYMBOLS;
 
-        private:
+        public:
+            // JXX deviation: public so jxx::NEW<UnicodeBlock> can construct
+            // the exact runtime type and initialize Object::thisPtr metadata.
             UnicodeBlock(const jxx::Ptr<String>& name, jint start, jint end);
+
+        private:
             jint start_;
             jint end_;
         };
@@ -377,7 +381,9 @@ namespace jxx::lang
             static const jxx::Ptr<UnicodeScript> UNKNOWN;
 
 
-        private:
+        public:
+            // JXX deviation: public so jxx::NEW<UnicodeScript> can construct
+            // the exact runtime type and initialize Object::thisPtr metadata.
             UnicodeScript(const jxx::Ptr<String>& name, jint ordinal);
         };
         static constexpr jchar MIN_VALUE = 0x0000;
