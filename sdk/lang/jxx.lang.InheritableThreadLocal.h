@@ -2,6 +2,7 @@
 
 #include <functional>
 
+#include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.ThreadLocal.h"
 #include "lang/jxx.lang.ThreadLocalSupport.h"
 
@@ -14,6 +15,12 @@ class InheritableThreadLocal
 public:
     using JxxSuper = ThreadLocal<T>;
     using Super = JxxSuper;
+    using JxxClassInfoMarker =
+        ::jxx::lang::ClassInfo<InheritableThreadLocal<T>, JxxSuper>;
+
+    static ::jxx::Ptr<::jxx::lang::ClassAny> Class() {
+        return JxxClassInfoMarker::Class();
+    }
 
     InheritableThreadLocal()
         : JxxSuper() {

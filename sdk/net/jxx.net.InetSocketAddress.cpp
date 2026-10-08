@@ -60,10 +60,11 @@ namespace jxx::net
                                                                     jxx::lang::jint port)
     {
         if (host == nullptr) {
-            throw jxx::lang::NullPointerException();
+            throw jxx::lang::IllegalArgumentException(
+                "hostname can't be null");
         }
-        return std::shared_ptr<InetSocketAddress>(
-            new InetSocketAddress(nullptr, host, port, true));
+        return ::jxx::NEW<InetSocketAddress>(
+            nullptr, host, port, true);
     }
 
     jxx::lang::jint InetSocketAddress::getPort() const noexcept { return port_; }

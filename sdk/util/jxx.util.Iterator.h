@@ -20,7 +20,7 @@ public:
     virtual void forEachRemaining(
         const ::jxx::Ptr<::jxx::util::function::Consumer<E>>& action) {
         if (action == nullptr) throw ::jxx::lang::NullPointerException();
-        while (hasNext()) action->accept(next());
+        while (hasNext()) action->acceptSuper(next());
     }
 };
 } // namespace jxx::util

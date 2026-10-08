@@ -36,7 +36,9 @@ public:
         jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& other) const override;
         jxx::lang::jint hashCode() const override;
 
-    private:
+    public:
+        // JXX deviation: public so jxx::NEW<InetSocketAddress> can construct
+        // the exact runtime type while initializing Object::thisPtr metadata.
         InetSocketAddress(const jxx::Ptr<InetAddress>& addr,
                           const jxx::Ptr<jxx::lang::String>& host,
                           jxx::lang::jint port,

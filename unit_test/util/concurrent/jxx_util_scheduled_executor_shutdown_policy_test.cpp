@@ -2,11 +2,11 @@
 #include <atomic>
 #include "lang/jxx.lang.Runnable.h"
 #include "util/jxx.util.List.h"
-#include "util/jxx.util.concurrent.Executors.h"
-#include "util/jxx.util.concurrent.ScheduledExecutorService.h"
-#include "util/jxx.util.concurrent.ScheduledFuture.h"
-#include "util/jxx.util.concurrent.ScheduledThreadPoolExecutor.h"
-#include "util/jxx.util.concurrent.TimeUnit.h"
+#include "util/concurrent/jxx.util.concurrent.Executors.h"
+#include "util/concurrent/jxx.util.concurrent.ScheduledExecutorService.h"
+#include "util/concurrent/jxx.util.concurrent.ScheduledFuture.h"
+#include "util/concurrent/jxx.util.concurrent.ScheduledThreadPoolExecutor.h"
+#include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
 namespace {
 class Increment final:public ::jxx::lang::Runnable{public:explicit Increment(std::atomic<int>& v):v_(v){}void run()override{++v_;}private:std::atomic<int>& v_;};
 TEST(ScheduledExecutorShutdownPolicyTest, DefaultPoliciesMatchExpectedLifecycle){
