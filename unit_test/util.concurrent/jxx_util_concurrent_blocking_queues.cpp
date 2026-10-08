@@ -5,9 +5,9 @@
 
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.String.h"
-#include "util/jxx.util.concurrent.ArrayBlockingQueue.h"
-#include "util/jxx.util.concurrent.LinkedBlockingQueue.h"
-#include "util/jxx.util.concurrent.SynchronousQueue.h"
+#include "util/concurrent/jxx.util.concurrent.ArrayBlockingQueue.h"
+#include "util/concurrent/jxx.util.concurrent.LinkedBlockingQueue.h"
+#include "util/concurrent/jxx.util.concurrent.SynchronousQueue.h"
 
 namespace {
 using namespace std::chrono_literals;

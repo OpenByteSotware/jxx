@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 #include <atomic>
 #include "lang/jxx.lang.Runnable.h"
-#include "util/jxx.util.concurrent.Executors.h"
-#include "util/jxx.util.concurrent.RejectedExecutionException.h"
-#include "util/jxx.util.concurrent.TimeUnit.h"
+#include "util/concurrent/jxx.util.concurrent.Executors.h"
+#include "util/concurrent/jxx.util.concurrent.RejectedExecutionException.h"
+#include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
 
 namespace {
 class CountTask final : public ::jxx::lang::Runnable {

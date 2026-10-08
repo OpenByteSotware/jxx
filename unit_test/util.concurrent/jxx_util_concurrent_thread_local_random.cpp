@@ -2,7 +2,7 @@
 #include <future>
 
 #include "lang/jxx.lang.Exceptions.h"
-#include "util/jxx.util.concurrent.ThreadLocalRandom.h"
+#include "util/concurrent/jxx.util.concurrent.ThreadLocalRandom.h"
 
 namespace {
 using jxx::util::concurrent::ThreadLocalRandom;

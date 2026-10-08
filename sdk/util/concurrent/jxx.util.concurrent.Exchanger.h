@@ -6,8 +6,8 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx_types.h"
-#include "util/jxx.util.concurrent.TimeUnit.h"
-#include "util/jxx.util.concurrent.TimeoutException.h"
+#include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
+#include "util/concurrent/jxx.util.concurrent.TimeoutException.h"
 
 namespace jxx::util::concurrent {
 

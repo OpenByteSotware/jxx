@@ -8,18 +8,16 @@
 #include <memory>
 #include <vector>
 
-#include "util/jxx.util.HashMap.h"
+#include "util/jxx.util.AbstractMap.h"
 #include "util/jxx.util.HashSet.h"
 
 namespace jxx::util {
 
 template <typename K, typename V>
-class WeakHashMap final : public ::jxx::lang::ClassBase<WeakHashMap<K, V>, HashMap<K, V>> {
+class WeakHashMap final : public ::jxx::lang::ClassBase<WeakHashMap<K, V>, AbstractMap<K, V>> {
 public:
-    using JxxSuper = HashMap<K, V>;
+    using JxxSuper = AbstractMap<K, V>;
     using Super = ::jxx::lang::ClassBase<WeakHashMap<K, V>, JxxSuper>;
-
-    using JxxSuper = HashMap<K, V>;
 
     WeakHashMap() = default;
     explicit WeakHashMap(::jxx::lang::jint initialCapacity)

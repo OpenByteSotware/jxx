@@ -3,10 +3,10 @@
 
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.String.h"
-#include "util/jxx.util.concurrent.Exchanger.h"
-#include "util/jxx.util.concurrent.LinkedTransferQueue.h"
-#include "util/jxx.util.concurrent.PriorityBlockingQueue.h"
-#include "util/jxx.util.concurrent.TimeUnit.h"
+#include "util/concurrent/jxx.util.concurrent.Exchanger.h"
+#include "util/concurrent/jxx.util.concurrent.LinkedTransferQueue.h"
+#include "util/concurrent/jxx.util.concurrent.PriorityBlockingQueue.h"
+#include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
 
 namespace {
 using S = jxx::lang::String;

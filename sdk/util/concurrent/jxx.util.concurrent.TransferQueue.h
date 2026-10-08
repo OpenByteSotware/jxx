@@ -1,6 +1,6 @@
 #pragma once
 #include "lang/jxx.lang.ClassInfo.h"
-#include "util/jxx.util.concurrent.BlockingQueue.h"
+#include "util/concurrent/jxx.util.concurrent.BlockingQueue.h"
 namespace jxx::util::concurrent {
 template<typename E>
 class TransferQueue : public ::jxx::lang::InterfaceBase<TransferQueue<E>, BlockingQueue<E>> {

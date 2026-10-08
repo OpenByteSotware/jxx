@@ -18,7 +18,7 @@
 #include "util/jxx.util.AbstractQueue.h"
 #include "util/jxx.util.Iterator.h"
 #include "util/jxx.util.NoSuchElementException.h"
-#include "util/jxx.util.concurrent.BlockingQueue.h"
+#include "util/concurrent/jxx.util.concurrent.BlockingQueue.h"
 
 namespace jxx::util::concurrent {
 

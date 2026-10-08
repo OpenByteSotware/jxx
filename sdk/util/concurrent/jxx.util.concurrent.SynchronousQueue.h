@@ -7,7 +7,7 @@
 #include "lang/jxx.lang.Exceptions.h"
 #include "util/jxx.util.AbstractQueue.h"
 #include "util/jxx.util.Iterator.h"
-#include "util/jxx.util.concurrent.BlockingQueue.h"
+#include "util/concurrent/jxx.util.concurrent.BlockingQueue.h"
 namespace jxx::util::concurrent {
 template<typename E> class SynchronousQueue final : public ::jxx::lang::ClassBase<SynchronousQueue<E>,::jxx::util::AbstractQueue<E>,BlockingQueue<E>,::jxx::io::SerializableI> {
  class EmptyIterator final : public ::jxx::lang::ClassBase<EmptyIterator,::jxx::lang::Object,::jxx::util::Iterator<E>> { public: ::jxx::lang::jbool hasNext() override{return false;} ::jxx::Ptr<E> next() override{throw ::jxx::util::NoSuchElementException();} void remove() override{throw ::jxx::lang::UnsupportedOperationException();} };

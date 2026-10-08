@@ -2,10 +2,10 @@
 #include <atomic>
 
 #include "lang/jxx.lang.Integer.h"
-#include "util/jxx.util.concurrent.CountedCompleter.h"
-#include "util/jxx.util.concurrent.ForkJoinPool.h"
-#include "util/jxx.util.concurrent.RecursiveAction.h"
-#include "util/jxx.util.concurrent.RecursiveTask.h"
+#include "util/concurrent/jxx.util.concurrent.CountedCompleter.h"
+#include "util/concurrent/jxx.util.concurrent.ForkJoinPool.h"
+#include "util/concurrent/jxx.util.concurrent.RecursiveAction.h"
+#include "util/concurrent/jxx.util.concurrent.RecursiveTask.h"
 
 namespace {
 class SumTask final : public jxx::util::concurrent::RecursiveTask<jxx::lang::Integer> {

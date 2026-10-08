@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <vector>
-#include "util/jxx.util.logging.Logger.h"
+#include "util/logging/jxx.util.logging.Logger.h"
 namespace
 {
 	using namespace jxx::util::logging; class CaptureHandler final :public Handler

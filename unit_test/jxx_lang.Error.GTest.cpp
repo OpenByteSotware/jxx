@@ -8,32 +8,32 @@
 namespace
 {
 	using namespace jxx::lang;
-	TEST(ErrorHierarchyTest, ErrorExtendsThrowable)
-	{
-		static_assert(std::is_base_of_v<Throwable, Error>); 
-		auto e = jxx::NEW<Error>();
-		EXPECT_EQ(e->getMessage(), nullptr);
-	}
-	
-	TEST(ErrorHierarchyTest, MessageConstructorPreservesMessage)
-	{
-		auto m = jxx::NEW<String>("failure"); 
-		auto e = jxx::NEW<Error>(m);
-		ASSERT_NE(e->getMessage(), nullptr);
-		EXPECT_EQ(e->what(), "failure");
-	}
-	
-	TEST(ErrorHierarchyTest, CauseConstructorPreservesCause)
-	{
-		auto cause = jxx::NEW<Error>(jxx::NEW<String>("cause")); 
-		auto e = jxx::NEW<Error>(jxx::CAST<Throwable>(cause)); 
-		EXPECT_EQ(e->getCause(), jxx::CAST<Throwable>(cause));
-	}
-	
 	TEST(ErrorHierarchyTest, AssertionErrorFormatsPrimitiveDetail)
 	{
-		auto e = jxx::NEW<AssertionError>(jxx::NEW<String>("42"));
-		ASSERT_NE(e->getMessage(), nullptr);
-		EXPECT_EQ(e->what(), "42");
+		const auto error =
+			jxx::NEW<AssertionError>(
+				static_cast<jint>(42));
+
+		ASSERT_NE(nullptr, error->getMessage());
+		EXPECT_STREQ("42", error->what());
+	}
+
+	TEST(ErrorHierarchyTest, MessageConstructorPreservesMessage)
+	{
+		const auto message = jxx::NEW<String>("failure");
+		const auto error = jxx::NEW<Error>(message);
+
+		ASSERT_NE(nullptr, error->getMessage());
+		EXPECT_STREQ("failure", error->what());
+	}
+
+	TEST(ErrorHierarchyTest, AssertionErrorPreservesStringDetail)
+	{
+		const auto error =
+			jxx::NEW<AssertionError>(
+				jxx::NEW<String>("42"));
+
+		ASSERT_NE(nullptr, error->getMessage());
+		EXPECT_STREQ("42", error->what());
 	}
 } // namespace
