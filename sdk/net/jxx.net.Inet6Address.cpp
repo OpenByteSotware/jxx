@@ -71,8 +71,7 @@ namespace jxx::net {
         const jxx::Ptr<NetworkInterface>& nif) {
         validateIPv6Address(addr);
 
-        return jxx::Ptr<Inet6Address>(
-            new Inet6Address(host, nullptr, addr, 0, nif));
+        return jxx::NEW<Inet6Address>(host, nullptr, addr, 0, nif);
     }
 
     jxx::lang::ByteArray Inet6Address::getAddress() const {

@@ -71,7 +71,7 @@ jxx::Ptr<Matcher> Matcher::reset() {
     matchBase_ = regionStart_;
     hasMatch_ = static_cast<jxx::lang::jbool>(false);
     lastMatch_ = std::match_results<std::string::const_iterator>();
-    return jxx::CAST<Matcher>(jxx::CAST<jxx::lang::Object>(shared_from_this()));
+    return jxx::CAST<Matcher>(thisPtr());
 }
 
 jxx::Ptr<Matcher> Matcher::reset(const jxx::Ptr<jxx::lang::CharSequence>& input) {
@@ -194,9 +194,9 @@ jxx::Ptr<Matcher> Matcher::region(jxx::lang::jint startValue, jxx::lang::jint en
 }
 jxx::lang::jint Matcher::regionStart() const { return static_cast<jxx::lang::jint>(regionStart_); }
 jxx::lang::jint Matcher::regionEnd() const { return static_cast<jxx::lang::jint>(regionEnd_); }
-jxx::Ptr<Matcher> Matcher::useAnchoringBounds(jxx::lang::jbool value){ anchoringBounds_=value; return jxx::CAST<Matcher>(shared_from_this()); }
+jxx::Ptr<Matcher> Matcher::useAnchoringBounds(jxx::lang::jbool value){ anchoringBounds_=value; return jxx::CAST<Matcher>(thisPtr()); }
 jxx::lang::jbool Matcher::hasAnchoringBounds() const{return anchoringBounds_;}
-jxx::Ptr<Matcher> Matcher::useTransparentBounds(jxx::lang::jbool value){ transparentBounds_=value; return jxx::CAST<Matcher>(shared_from_this()); }
+jxx::Ptr<Matcher> Matcher::useTransparentBounds(jxx::lang::jbool value){ transparentBounds_=value; return jxx::CAST<Matcher>(thisPtr()); }
 jxx::lang::jbool Matcher::hasTransparentBounds() const{return transparentBounds_;}
 jxx::lang::jbool Matcher::hitEnd() const{return hitEnd_;}
 jxx::lang::jbool Matcher::requireEnd() const{return requireEnd_;}
@@ -206,7 +206,7 @@ jxx::Ptr<Matcher> Matcher::appendReplacement(const jxx::Ptr<jxx::lang::StringBuf
     const auto matchStart=static_cast<std::size_t>(start()); const auto matchEnd=static_cast<std::size_t>(end());
     buffer->append(jxx::NEW<jxx::lang::String>(inputUtf8_.substr(appendPos_,matchStart-appendPos_)));
     buffer->append(jxx::NEW<jxx::lang::String>(lastMatch_.format(replacement->utf8())));
-    appendPos_=matchEnd; return jxx::CAST<Matcher>(shared_from_this());
+    appendPos_=matchEnd; return jxx::CAST<Matcher>(thisPtr());
 }
 jxx::Ptr<jxx::lang::StringBuffer> Matcher::appendTail(const jxx::Ptr<jxx::lang::StringBuffer>& buffer){
     if(!buffer)throw jxx::lang::NullPointerException();

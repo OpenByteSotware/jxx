@@ -43,7 +43,7 @@ KeyStore::KeyStore(const ::jxx::Ptr<::jxx::lang::String>& type) : type_(type) {}
     if (type == nullptr) throw ::jxx::lang::NullPointerException();
     if (type->utf8() != "PKCS12" && type->utf8() != "PKCS#12")
         throw ::jxx::lang::IllegalArgumentException("unsupported KeyStore type");
-    return ::jxx::Ptr<KeyStore>(new KeyStore(::jxx::NEW<::jxx::lang::String>("PKCS12")));
+    return ::jxx::NEW<KeyStore>(::jxx::NEW<::jxx::lang::String>("PKCS12"));
 }
 
 ::jxx::Ptr<::jxx::lang::String> KeyStore::getDefaultType() {
@@ -319,7 +319,7 @@ KeyStore::Builder::Builder(const ::jxx::Ptr<KeyStore>& store,
     const ::jxx::Ptr<ProtectionParameter>& protection) {
     if (store == nullptr || protection == nullptr) throw ::jxx::lang::NullPointerException();
     store->ensureLoaded();
-    return ::jxx::Ptr<Builder>(new Builder(store, protection));
+    return ::jxx::NEW<Builder>(store, protection);
 }
 ::jxx::Ptr<KeyStore> KeyStore::Builder::getKeyStore() const { return keyStore_; }
 ::jxx::Ptr<KeyStore::ProtectionParameter> KeyStore::Builder::getProtectionParameter(

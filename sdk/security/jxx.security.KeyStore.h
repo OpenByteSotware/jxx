@@ -104,7 +104,8 @@ public:
         ::jxx::Ptr<KeyStore> getKeyStore() const;
         ::jxx::Ptr<ProtectionParameter> getProtectionParameter(
             const ::jxx::Ptr<::jxx::lang::String>& alias) const;
-    private:
+    public:
+        // JXX deviation: public so jxx::NEW<Builder> can initialize thisPtr.
         Builder(const ::jxx::Ptr<KeyStore>& keyStore,
                 const ::jxx::Ptr<ProtectionParameter>& protectionParameter);
         ::jxx::Ptr<KeyStore> keyStore_;
@@ -163,8 +164,11 @@ public:
 
     ::jxx::Ptr<X509CertificateArray> trustedCertificates() const;
 
-private:
+public:
+    // JXX deviation: public so jxx::NEW<KeyStore> can initialize thisPtr.
     explicit KeyStore(const ::jxx::Ptr<::jxx::lang::String>& type);
+
+private:
     void ensureLoaded() const;
 
     ::jxx::Ptr<::jxx::lang::String> type_;

@@ -108,7 +108,7 @@ jxx::lang::jbool Pattern::matches(
 }
 
 jxx::Ptr<Matcher> Pattern::matcher(const jxx::Ptr<jxx::lang::CharSequence>& input) {
-    return jxx::NEW<Matcher>(jxx::CAST<Pattern>(jxx::CAST<jxx::lang::Object>(shared_from_this())), input);
+    return jxx::NEW<Matcher>(jxx::CAST<Pattern>(thisPtr()), input);
 }
 
 jxx::Ptr<jxx::lang::String> Pattern::pattern() const {

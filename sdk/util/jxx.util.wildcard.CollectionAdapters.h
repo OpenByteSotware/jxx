@@ -57,7 +57,7 @@ public:
     }
 
     virtual ::jxx::Ptr<Iterator<::jxx::lang::Object>> iteratorObject() override {
-        return ::jxx::Ptr<Iterator<::jxx::lang::Object>>(new ObjectIteratorView(inner->iterator()));
+        return ::jxx::CAST<Iterator<::jxx::lang::Object>>(::jxx::NEW<ObjectIteratorView>(inner->iterator()));
     }
 };
 
@@ -131,11 +131,11 @@ public:
     }
 
     virtual ::jxx::Ptr<Iterator<::jxx::lang::Object>> iteratorObject() override {
-        return ::jxx::Ptr<Iterator<::jxx::lang::Object>>(new ObjectIteratorView(inner->iterator()));
+        return ::jxx::CAST<Iterator<::jxx::lang::Object>>(::jxx::NEW<ObjectIteratorView>(inner->iterator()));
     }
 
     virtual ::jxx::Ptr<Iterator<Base>> iteratorExtends() override {
-        return ::jxx::Ptr<Iterator<Base>>(new BaseIteratorView(inner->iterator()));
+        return ::jxx::CAST<Iterator<Base>>(::jxx::NEW<BaseIteratorView>(inner->iterator()));
     }
 };
 

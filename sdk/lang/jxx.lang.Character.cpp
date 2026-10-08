@@ -57,227 +57,227 @@ namespace jxx::lang
         const jxx::Ptr<String>& name, jint start, jint end)
         : ClassBase<UnicodeBlock, Subset>(name), start_(start), end_(end) {}
 
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BASIC_LATIN(new Character::UnicodeBlock(jxx::NEW<String>("BASIC_LATIN"), 0x0, 0x7F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LATIN_1_SUPPLEMENT(new Character::UnicodeBlock(jxx::NEW<String>("LATIN_1_SUPPLEMENT"), 0x80, 0xFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LATIN_EXTENDED_A(new Character::UnicodeBlock(jxx::NEW<String>("LATIN_EXTENDED_A"), 0x100, 0x17F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LATIN_EXTENDED_B(new Character::UnicodeBlock(jxx::NEW<String>("LATIN_EXTENDED_B"), 0x180, 0x24F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::IPA_EXTENSIONS(new Character::UnicodeBlock(jxx::NEW<String>("IPA_EXTENSIONS"), 0x250, 0x2AF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SPACING_MODIFIER_LETTERS(new Character::UnicodeBlock(jxx::NEW<String>("SPACING_MODIFIER_LETTERS"), 0x2B0, 0x2FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::COMBINING_DIACRITICAL_MARKS(new Character::UnicodeBlock(jxx::NEW<String>("COMBINING_DIACRITICAL_MARKS"), 0x300, 0x36F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::GREEK(new Character::UnicodeBlock(jxx::NEW<String>("GREEK"), 0x370, 0x3FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CYRILLIC(new Character::UnicodeBlock(jxx::NEW<String>("CYRILLIC"), 0x400, 0x4FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ARMENIAN(new Character::UnicodeBlock(jxx::NEW<String>("ARMENIAN"), 0x530, 0x58F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HEBREW(new Character::UnicodeBlock(jxx::NEW<String>("HEBREW"), 0x590, 0x5FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ARABIC(new Character::UnicodeBlock(jxx::NEW<String>("ARABIC"), 0x600, 0x6FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::DEVANAGARI(new Character::UnicodeBlock(jxx::NEW<String>("DEVANAGARI"), 0x900, 0x97F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BENGALI(new Character::UnicodeBlock(jxx::NEW<String>("BENGALI"), 0x980, 0x9FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::GURMUKHI(new Character::UnicodeBlock(jxx::NEW<String>("GURMUKHI"), 0xA00, 0xA7F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::GUJARATI(new Character::UnicodeBlock(jxx::NEW<String>("GUJARATI"), 0xA80, 0xAFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ORIYA(new Character::UnicodeBlock(jxx::NEW<String>("ORIYA"), 0xB00, 0xB7F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TAMIL(new Character::UnicodeBlock(jxx::NEW<String>("TAMIL"), 0xB80, 0xBFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TELUGU(new Character::UnicodeBlock(jxx::NEW<String>("TELUGU"), 0xC00, 0xC7F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::KANNADA(new Character::UnicodeBlock(jxx::NEW<String>("KANNADA"), 0xC80, 0xCFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MALAYALAM(new Character::UnicodeBlock(jxx::NEW<String>("MALAYALAM"), 0xD00, 0xD7F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::THAI(new Character::UnicodeBlock(jxx::NEW<String>("THAI"), 0xE00, 0xE7F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LAO(new Character::UnicodeBlock(jxx::NEW<String>("LAO"), 0xE80, 0xEFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TIBETAN(new Character::UnicodeBlock(jxx::NEW<String>("TIBETAN"), 0xF00, 0xFFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::GEORGIAN(new Character::UnicodeBlock(jxx::NEW<String>("GEORGIAN"), 0x10A0, 0x10FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HANGUL_JAMO(new Character::UnicodeBlock(jxx::NEW<String>("HANGUL_JAMO"), 0x1100, 0x11FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LATIN_EXTENDED_ADDITIONAL(new Character::UnicodeBlock(jxx::NEW<String>("LATIN_EXTENDED_ADDITIONAL"), 0x1E00, 0x1EFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::GREEK_EXTENDED(new Character::UnicodeBlock(jxx::NEW<String>("GREEK_EXTENDED"), 0x1F00, 0x1FFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::GENERAL_PUNCTUATION(new Character::UnicodeBlock(jxx::NEW<String>("GENERAL_PUNCTUATION"), 0x2000, 0x206F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SUPERSCRIPTS_AND_SUBSCRIPTS(new Character::UnicodeBlock(jxx::NEW<String>("SUPERSCRIPTS_AND_SUBSCRIPTS"), 0x2070, 0x209F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CURRENCY_SYMBOLS(new Character::UnicodeBlock(jxx::NEW<String>("CURRENCY_SYMBOLS"), 0x20A0, 0x20CF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::COMBINING_MARKS_FOR_SYMBOLS(new Character::UnicodeBlock(jxx::NEW<String>("COMBINING_MARKS_FOR_SYMBOLS"), 0x20D0, 0x20FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LETTERLIKE_SYMBOLS(new Character::UnicodeBlock(jxx::NEW<String>("LETTERLIKE_SYMBOLS"), 0x2100, 0x214F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::NUMBER_FORMS(new Character::UnicodeBlock(jxx::NEW<String>("NUMBER_FORMS"), 0x2150, 0x218F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ARROWS(new Character::UnicodeBlock(jxx::NEW<String>("ARROWS"), 0x2190, 0x21FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MATHEMATICAL_OPERATORS(new Character::UnicodeBlock(jxx::NEW<String>("MATHEMATICAL_OPERATORS"), 0x2200, 0x22FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MISCELLANEOUS_TECHNICAL(new Character::UnicodeBlock(jxx::NEW<String>("MISCELLANEOUS_TECHNICAL"), 0x2300, 0x23FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CONTROL_PICTURES(new Character::UnicodeBlock(jxx::NEW<String>("CONTROL_PICTURES"), 0x2400, 0x243F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::OPTICAL_CHARACTER_RECOGNITION(new Character::UnicodeBlock(jxx::NEW<String>("OPTICAL_CHARACTER_RECOGNITION"), 0x2440, 0x245F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ENCLOSED_ALPHANUMERICS(new Character::UnicodeBlock(jxx::NEW<String>("ENCLOSED_ALPHANUMERICS"), 0x2460, 0x24FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BOX_DRAWING(new Character::UnicodeBlock(jxx::NEW<String>("BOX_DRAWING"), 0x2500, 0x257F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BLOCK_ELEMENTS(new Character::UnicodeBlock(jxx::NEW<String>("BLOCK_ELEMENTS"), 0x2580, 0x259F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::GEOMETRIC_SHAPES(new Character::UnicodeBlock(jxx::NEW<String>("GEOMETRIC_SHAPES"), 0x25A0, 0x25FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MISCELLANEOUS_SYMBOLS(new Character::UnicodeBlock(jxx::NEW<String>("MISCELLANEOUS_SYMBOLS"), 0x2600, 0x26FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::DINGBATS(new Character::UnicodeBlock(jxx::NEW<String>("DINGBATS"), 0x2700, 0x27BF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_SYMBOLS_AND_PUNCTUATION(new Character::UnicodeBlock(jxx::NEW<String>("CJK_SYMBOLS_AND_PUNCTUATION"), 0x3000, 0x303F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HIRAGANA(new Character::UnicodeBlock(jxx::NEW<String>("HIRAGANA"), 0x3040, 0x309F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::KATAKANA(new Character::UnicodeBlock(jxx::NEW<String>("KATAKANA"), 0x30A0, 0x30FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BOPOMOFO(new Character::UnicodeBlock(jxx::NEW<String>("BOPOMOFO"), 0x3100, 0x312F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HANGUL_COMPATIBILITY_JAMO(new Character::UnicodeBlock(jxx::NEW<String>("HANGUL_COMPATIBILITY_JAMO"), 0x3130, 0x318F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::KANBUN(new Character::UnicodeBlock(jxx::NEW<String>("KANBUN"), 0x3190, 0x319F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ENCLOSED_CJK_LETTERS_AND_MONTHS(new Character::UnicodeBlock(jxx::NEW<String>("ENCLOSED_CJK_LETTERS_AND_MONTHS"), 0x3200, 0x32FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_COMPATIBILITY(new Character::UnicodeBlock(jxx::NEW<String>("CJK_COMPATIBILITY"), 0x3300, 0x33FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_UNIFIED_IDEOGRAPHS(new Character::UnicodeBlock(jxx::NEW<String>("CJK_UNIFIED_IDEOGRAPHS"), 0x4E00, 0x9FFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HANGUL_SYLLABLES(new Character::UnicodeBlock(jxx::NEW<String>("HANGUL_SYLLABLES"), 0xAC00, 0xD7AF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::PRIVATE_USE_AREA(new Character::UnicodeBlock(jxx::NEW<String>("PRIVATE_USE_AREA"), 0xE000, 0xF8FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_COMPATIBILITY_IDEOGRAPHS(new Character::UnicodeBlock(jxx::NEW<String>("CJK_COMPATIBILITY_IDEOGRAPHS"), 0xF900, 0xFAFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ALPHABETIC_PRESENTATION_FORMS(new Character::UnicodeBlock(jxx::NEW<String>("ALPHABETIC_PRESENTATION_FORMS"), 0xFB00, 0xFB4F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ARABIC_PRESENTATION_FORMS_A(new Character::UnicodeBlock(jxx::NEW<String>("ARABIC_PRESENTATION_FORMS_A"), 0xFB50, 0xFDFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::COMBINING_HALF_MARKS(new Character::UnicodeBlock(jxx::NEW<String>("COMBINING_HALF_MARKS"), 0xFE20, 0xFE2F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_COMPATIBILITY_FORMS(new Character::UnicodeBlock(jxx::NEW<String>("CJK_COMPATIBILITY_FORMS"), 0xFE30, 0xFE4F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SMALL_FORM_VARIANTS(new Character::UnicodeBlock(jxx::NEW<String>("SMALL_FORM_VARIANTS"), 0xFE50, 0xFE6F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ARABIC_PRESENTATION_FORMS_B(new Character::UnicodeBlock(jxx::NEW<String>("ARABIC_PRESENTATION_FORMS_B"), 0xFE70, 0xFEFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HALFWIDTH_AND_FULLWIDTH_FORMS(new Character::UnicodeBlock(jxx::NEW<String>("HALFWIDTH_AND_FULLWIDTH_FORMS"), 0xFF00, 0xFFEF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SPECIALS(new Character::UnicodeBlock(jxx::NEW<String>("SPECIALS"), 0xFFF0, 0xFFFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SURROGATES_AREA(new Character::UnicodeBlock(jxx::NEW<String>("SURROGATES_AREA"), -1, -1));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SYRIAC(new Character::UnicodeBlock(jxx::NEW<String>("SYRIAC"), 0x700, 0x74F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::THAANA(new Character::UnicodeBlock(jxx::NEW<String>("THAANA"), 0x780, 0x7BF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SINHALA(new Character::UnicodeBlock(jxx::NEW<String>("SINHALA"), 0xD80, 0xDFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MYANMAR(new Character::UnicodeBlock(jxx::NEW<String>("MYANMAR"), 0x1000, 0x109F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ETHIOPIC(new Character::UnicodeBlock(jxx::NEW<String>("ETHIOPIC"), 0x1200, 0x137F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CHEROKEE(new Character::UnicodeBlock(jxx::NEW<String>("CHEROKEE"), 0x13A0, 0x13FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::UNIFIED_CANADIAN_ABORIGINAL_SYLLABICS(new Character::UnicodeBlock(jxx::NEW<String>("UNIFIED_CANADIAN_ABORIGINAL_SYLLABICS"), 0x1400, 0x167F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::OGHAM(new Character::UnicodeBlock(jxx::NEW<String>("OGHAM"), 0x1680, 0x169F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::RUNIC(new Character::UnicodeBlock(jxx::NEW<String>("RUNIC"), 0x16A0, 0x16FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::KHMER(new Character::UnicodeBlock(jxx::NEW<String>("KHMER"), 0x1780, 0x17FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MONGOLIAN(new Character::UnicodeBlock(jxx::NEW<String>("MONGOLIAN"), 0x1800, 0x18AF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BRAILLE_PATTERNS(new Character::UnicodeBlock(jxx::NEW<String>("BRAILLE_PATTERNS"), 0x2800, 0x28FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_RADICALS_SUPPLEMENT(new Character::UnicodeBlock(jxx::NEW<String>("CJK_RADICALS_SUPPLEMENT"), 0x2E80, 0x2EFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::KANGXI_RADICALS(new Character::UnicodeBlock(jxx::NEW<String>("KANGXI_RADICALS"), 0x2F00, 0x2FDF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::IDEOGRAPHIC_DESCRIPTION_CHARACTERS(new Character::UnicodeBlock(jxx::NEW<String>("IDEOGRAPHIC_DESCRIPTION_CHARACTERS"), 0x2FF0, 0x2FFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BOPOMOFO_EXTENDED(new Character::UnicodeBlock(jxx::NEW<String>("BOPOMOFO_EXTENDED"), 0x31A0, 0x31BF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A(new Character::UnicodeBlock(jxx::NEW<String>("CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A"), 0x3400, 0x4DBF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::YI_SYLLABLES(new Character::UnicodeBlock(jxx::NEW<String>("YI_SYLLABLES"), 0xA000, 0xA48F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::YI_RADICALS(new Character::UnicodeBlock(jxx::NEW<String>("YI_RADICALS"), 0xA490, 0xA4CF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CYRILLIC_SUPPLEMENTARY(new Character::UnicodeBlock(jxx::NEW<String>("CYRILLIC_SUPPLEMENTARY"), 0x500, 0x52F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TAGALOG(new Character::UnicodeBlock(jxx::NEW<String>("TAGALOG"), 0x1700, 0x171F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HANUNOO(new Character::UnicodeBlock(jxx::NEW<String>("HANUNOO"), 0x1720, 0x173F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BUHID(new Character::UnicodeBlock(jxx::NEW<String>("BUHID"), 0x1740, 0x175F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TAGBANWA(new Character::UnicodeBlock(jxx::NEW<String>("TAGBANWA"), 0x1760, 0x177F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LIMBU(new Character::UnicodeBlock(jxx::NEW<String>("LIMBU"), 0x1900, 0x194F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TAI_LE(new Character::UnicodeBlock(jxx::NEW<String>("TAI_LE"), 0x1950, 0x197F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::KHMER_SYMBOLS(new Character::UnicodeBlock(jxx::NEW<String>("KHMER_SYMBOLS"), 0x19E0, 0x19FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::PHONETIC_EXTENSIONS(new Character::UnicodeBlock(jxx::NEW<String>("PHONETIC_EXTENSIONS"), 0x1D00, 0x1D7F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MISCELLANEOUS_MATHEMATICAL_SYMBOLS_A(new Character::UnicodeBlock(jxx::NEW<String>("MISCELLANEOUS_MATHEMATICAL_SYMBOLS_A"), 0x27C0, 0x27EF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SUPPLEMENTAL_ARROWS_A(new Character::UnicodeBlock(jxx::NEW<String>("SUPPLEMENTAL_ARROWS_A"), 0x27F0, 0x27FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SUPPLEMENTAL_ARROWS_B(new Character::UnicodeBlock(jxx::NEW<String>("SUPPLEMENTAL_ARROWS_B"), 0x2900, 0x297F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MISCELLANEOUS_MATHEMATICAL_SYMBOLS_B(new Character::UnicodeBlock(jxx::NEW<String>("MISCELLANEOUS_MATHEMATICAL_SYMBOLS_B"), 0x2980, 0x29FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SUPPLEMENTAL_MATHEMATICAL_OPERATORS(new Character::UnicodeBlock(jxx::NEW<String>("SUPPLEMENTAL_MATHEMATICAL_OPERATORS"), 0x2A00, 0x2AFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MISCELLANEOUS_SYMBOLS_AND_ARROWS(new Character::UnicodeBlock(jxx::NEW<String>("MISCELLANEOUS_SYMBOLS_AND_ARROWS"), 0x2B00, 0x2BFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::KATAKANA_PHONETIC_EXTENSIONS(new Character::UnicodeBlock(jxx::NEW<String>("KATAKANA_PHONETIC_EXTENSIONS"), 0x31F0, 0x31FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::YIJING_HEXAGRAM_SYMBOLS(new Character::UnicodeBlock(jxx::NEW<String>("YIJING_HEXAGRAM_SYMBOLS"), 0x4DC0, 0x4DFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::VARIATION_SELECTORS(new Character::UnicodeBlock(jxx::NEW<String>("VARIATION_SELECTORS"), 0xFE00, 0xFE0F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LINEAR_B_SYLLABARY(new Character::UnicodeBlock(jxx::NEW<String>("LINEAR_B_SYLLABARY"), 0x10000, 0x1007F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LINEAR_B_IDEOGRAMS(new Character::UnicodeBlock(jxx::NEW<String>("LINEAR_B_IDEOGRAMS"), 0x10080, 0x100FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::AEGEAN_NUMBERS(new Character::UnicodeBlock(jxx::NEW<String>("AEGEAN_NUMBERS"), 0x10100, 0x1013F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::OLD_ITALIC(new Character::UnicodeBlock(jxx::NEW<String>("OLD_ITALIC"), 0x10300, 0x1032F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::GOTHIC(new Character::UnicodeBlock(jxx::NEW<String>("GOTHIC"), 0x10330, 0x1034F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::UGARITIC(new Character::UnicodeBlock(jxx::NEW<String>("UGARITIC"), 0x10380, 0x1039F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::DESERET(new Character::UnicodeBlock(jxx::NEW<String>("DESERET"), 0x10400, 0x1044F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SHAVIAN(new Character::UnicodeBlock(jxx::NEW<String>("SHAVIAN"), 0x10450, 0x1047F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::OSMANYA(new Character::UnicodeBlock(jxx::NEW<String>("OSMANYA"), 0x10480, 0x104AF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CYPRIOT_SYLLABARY(new Character::UnicodeBlock(jxx::NEW<String>("CYPRIOT_SYLLABARY"), 0x10800, 0x1083F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BYZANTINE_MUSICAL_SYMBOLS(new Character::UnicodeBlock(jxx::NEW<String>("BYZANTINE_MUSICAL_SYMBOLS"), 0x1D000, 0x1D0FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MUSICAL_SYMBOLS(new Character::UnicodeBlock(jxx::NEW<String>("MUSICAL_SYMBOLS"), 0x1D100, 0x1D1FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TAI_XUAN_JING_SYMBOLS(new Character::UnicodeBlock(jxx::NEW<String>("TAI_XUAN_JING_SYMBOLS"), 0x1D300, 0x1D35F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MATHEMATICAL_ALPHANUMERIC_SYMBOLS(new Character::UnicodeBlock(jxx::NEW<String>("MATHEMATICAL_ALPHANUMERIC_SYMBOLS"), 0x1D400, 0x1D7FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B(new Character::UnicodeBlock(jxx::NEW<String>("CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B"), 0x20000, 0x2A6DF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_COMPATIBILITY_IDEOGRAPHS_SUPPLEMENT(new Character::UnicodeBlock(jxx::NEW<String>("CJK_COMPATIBILITY_IDEOGRAPHS_SUPPLEMENT"), 0x2F800, 0x2FA1F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TAGS(new Character::UnicodeBlock(jxx::NEW<String>("TAGS"), 0xE0000, 0xE007F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::VARIATION_SELECTORS_SUPPLEMENT(new Character::UnicodeBlock(jxx::NEW<String>("VARIATION_SELECTORS_SUPPLEMENT"), 0xE0100, 0xE01EF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SUPPLEMENTARY_PRIVATE_USE_AREA_A(new Character::UnicodeBlock(jxx::NEW<String>("SUPPLEMENTARY_PRIVATE_USE_AREA_A"), 0xF0000, 0xFFFFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SUPPLEMENTARY_PRIVATE_USE_AREA_B(new Character::UnicodeBlock(jxx::NEW<String>("SUPPLEMENTARY_PRIVATE_USE_AREA_B"), 0x100000, 0x10FFFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HIGH_SURROGATES(new Character::UnicodeBlock(jxx::NEW<String>("HIGH_SURROGATES"), 0xD800, 0xDB7F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HIGH_PRIVATE_USE_SURROGATES(new Character::UnicodeBlock(jxx::NEW<String>("HIGH_PRIVATE_USE_SURROGATES"), 0xDB80, 0xDBFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LOW_SURROGATES(new Character::UnicodeBlock(jxx::NEW<String>("LOW_SURROGATES"), 0xDC00, 0xDFFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ARABIC_SUPPLEMENT(new Character::UnicodeBlock(jxx::NEW<String>("ARABIC_SUPPLEMENT"), 0x750, 0x77F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::NKO(new Character::UnicodeBlock(jxx::NEW<String>("NKO"), 0x7C0, 0x7FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SAMARITAN(new Character::UnicodeBlock(jxx::NEW<String>("SAMARITAN"), 0x800, 0x83F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MANDAIC(new Character::UnicodeBlock(jxx::NEW<String>("MANDAIC"), 0x840, 0x85F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ETHIOPIC_SUPPLEMENT(new Character::UnicodeBlock(jxx::NEW<String>("ETHIOPIC_SUPPLEMENT"), 0x1380, 0x139F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::UNIFIED_CANADIAN_ABORIGINAL_SYLLABICS_EXTENDED(new Character::UnicodeBlock(jxx::NEW<String>("UNIFIED_CANADIAN_ABORIGINAL_SYLLABICS_EXTENDED"), 0x18B0, 0x18FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::NEW_TAI_LUE(new Character::UnicodeBlock(jxx::NEW<String>("NEW_TAI_LUE"), 0x1980, 0x19DF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BUGINESE(new Character::UnicodeBlock(jxx::NEW<String>("BUGINESE"), 0x1A00, 0x1A1F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TAI_THAM(new Character::UnicodeBlock(jxx::NEW<String>("TAI_THAM"), 0x1A20, 0x1AAF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BALINESE(new Character::UnicodeBlock(jxx::NEW<String>("BALINESE"), 0x1B00, 0x1B7F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SUNDANESE(new Character::UnicodeBlock(jxx::NEW<String>("SUNDANESE"), 0x1B80, 0x1BBF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BATAK(new Character::UnicodeBlock(jxx::NEW<String>("BATAK"), 0x1BC0, 0x1BFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LEPCHA(new Character::UnicodeBlock(jxx::NEW<String>("LEPCHA"), 0x1C00, 0x1C4F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::OL_CHIKI(new Character::UnicodeBlock(jxx::NEW<String>("OL_CHIKI"), 0x1C50, 0x1C7F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::VEDIC_EXTENSIONS(new Character::UnicodeBlock(jxx::NEW<String>("VEDIC_EXTENSIONS"), 0x1CD0, 0x1CFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::PHONETIC_EXTENSIONS_SUPPLEMENT(new Character::UnicodeBlock(jxx::NEW<String>("PHONETIC_EXTENSIONS_SUPPLEMENT"), 0x1D80, 0x1DBF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::COMBINING_DIACRITICAL_MARKS_SUPPLEMENT(new Character::UnicodeBlock(jxx::NEW<String>("COMBINING_DIACRITICAL_MARKS_SUPPLEMENT"), 0x1DC0, 0x1DFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::GLAGOLITIC(new Character::UnicodeBlock(jxx::NEW<String>("GLAGOLITIC"), 0x2C00, 0x2C5F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LATIN_EXTENDED_C(new Character::UnicodeBlock(jxx::NEW<String>("LATIN_EXTENDED_C"), 0x2C60, 0x2C7F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::COPTIC(new Character::UnicodeBlock(jxx::NEW<String>("COPTIC"), 0x2C80, 0x2CFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::GEORGIAN_SUPPLEMENT(new Character::UnicodeBlock(jxx::NEW<String>("GEORGIAN_SUPPLEMENT"), 0x2D00, 0x2D2F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TIFINAGH(new Character::UnicodeBlock(jxx::NEW<String>("TIFINAGH"), 0x2D30, 0x2D7F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ETHIOPIC_EXTENDED(new Character::UnicodeBlock(jxx::NEW<String>("ETHIOPIC_EXTENDED"), 0x2D80, 0x2DDF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CYRILLIC_EXTENDED_A(new Character::UnicodeBlock(jxx::NEW<String>("CYRILLIC_EXTENDED_A"), 0x2DE0, 0x2DFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SUPPLEMENTAL_PUNCTUATION(new Character::UnicodeBlock(jxx::NEW<String>("SUPPLEMENTAL_PUNCTUATION"), 0x2E00, 0x2E7F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_STROKES(new Character::UnicodeBlock(jxx::NEW<String>("CJK_STROKES"), 0x31C0, 0x31EF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LISU(new Character::UnicodeBlock(jxx::NEW<String>("LISU"), 0xA4D0, 0xA4FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::VAI(new Character::UnicodeBlock(jxx::NEW<String>("VAI"), 0xA500, 0xA63F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CYRILLIC_EXTENDED_B(new Character::UnicodeBlock(jxx::NEW<String>("CYRILLIC_EXTENDED_B"), 0xA640, 0xA69F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BAMUM(new Character::UnicodeBlock(jxx::NEW<String>("BAMUM"), 0xA6A0, 0xA6FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MODIFIER_TONE_LETTERS(new Character::UnicodeBlock(jxx::NEW<String>("MODIFIER_TONE_LETTERS"), 0xA700, 0xA71F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LATIN_EXTENDED_D(new Character::UnicodeBlock(jxx::NEW<String>("LATIN_EXTENDED_D"), 0xA720, 0xA7FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SYLOTI_NAGRI(new Character::UnicodeBlock(jxx::NEW<String>("SYLOTI_NAGRI"), 0xA800, 0xA82F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::COMMON_INDIC_NUMBER_FORMS(new Character::UnicodeBlock(jxx::NEW<String>("COMMON_INDIC_NUMBER_FORMS"), 0xA830, 0xA83F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::PHAGS_PA(new Character::UnicodeBlock(jxx::NEW<String>("PHAGS_PA"), 0xA840, 0xA87F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SAURASHTRA(new Character::UnicodeBlock(jxx::NEW<String>("SAURASHTRA"), 0xA880, 0xA8DF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::DEVANAGARI_EXTENDED(new Character::UnicodeBlock(jxx::NEW<String>("DEVANAGARI_EXTENDED"), 0xA8E0, 0xA8FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::KAYAH_LI(new Character::UnicodeBlock(jxx::NEW<String>("KAYAH_LI"), 0xA900, 0xA92F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::REJANG(new Character::UnicodeBlock(jxx::NEW<String>("REJANG"), 0xA930, 0xA95F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HANGUL_JAMO_EXTENDED_A(new Character::UnicodeBlock(jxx::NEW<String>("HANGUL_JAMO_EXTENDED_A"), 0xA960, 0xA97F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::JAVANESE(new Character::UnicodeBlock(jxx::NEW<String>("JAVANESE"), 0xA980, 0xA9DF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CHAM(new Character::UnicodeBlock(jxx::NEW<String>("CHAM"), 0xAA00, 0xAA5F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MYANMAR_EXTENDED_A(new Character::UnicodeBlock(jxx::NEW<String>("MYANMAR_EXTENDED_A"), 0xAA60, 0xAA7F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TAI_VIET(new Character::UnicodeBlock(jxx::NEW<String>("TAI_VIET"), 0xAA80, 0xAADF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ETHIOPIC_EXTENDED_A(new Character::UnicodeBlock(jxx::NEW<String>("ETHIOPIC_EXTENDED_A"), 0xAB00, 0xAB2F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MEETEI_MAYEK(new Character::UnicodeBlock(jxx::NEW<String>("MEETEI_MAYEK"), 0xABC0, 0xABFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HANGUL_JAMO_EXTENDED_B(new Character::UnicodeBlock(jxx::NEW<String>("HANGUL_JAMO_EXTENDED_B"), 0xD7B0, 0xD7FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::VERTICAL_FORMS(new Character::UnicodeBlock(jxx::NEW<String>("VERTICAL_FORMS"), 0xFE10, 0xFE1F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ANCIENT_GREEK_NUMBERS(new Character::UnicodeBlock(jxx::NEW<String>("ANCIENT_GREEK_NUMBERS"), 0x10140, 0x1018F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ANCIENT_SYMBOLS(new Character::UnicodeBlock(jxx::NEW<String>("ANCIENT_SYMBOLS"), 0x10190, 0x101CF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::PHAISTOS_DISC(new Character::UnicodeBlock(jxx::NEW<String>("PHAISTOS_DISC"), 0x101D0, 0x101FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LYCIAN(new Character::UnicodeBlock(jxx::NEW<String>("LYCIAN"), 0x10280, 0x1029F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CARIAN(new Character::UnicodeBlock(jxx::NEW<String>("CARIAN"), 0x102A0, 0x102DF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::OLD_PERSIAN(new Character::UnicodeBlock(jxx::NEW<String>("OLD_PERSIAN"), 0x103A0, 0x103DF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::IMPERIAL_ARAMAIC(new Character::UnicodeBlock(jxx::NEW<String>("IMPERIAL_ARAMAIC"), 0x10840, 0x1085F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::PHOENICIAN(new Character::UnicodeBlock(jxx::NEW<String>("PHOENICIAN"), 0x10900, 0x1091F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LYDIAN(new Character::UnicodeBlock(jxx::NEW<String>("LYDIAN"), 0x10920, 0x1093F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::KHAROSHTHI(new Character::UnicodeBlock(jxx::NEW<String>("KHAROSHTHI"), 0x10A00, 0x10A5F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::OLD_SOUTH_ARABIAN(new Character::UnicodeBlock(jxx::NEW<String>("OLD_SOUTH_ARABIAN"), 0x10A60, 0x10A7F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::AVESTAN(new Character::UnicodeBlock(jxx::NEW<String>("AVESTAN"), 0x10B00, 0x10B3F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::INSCRIPTIONAL_PARTHIAN(new Character::UnicodeBlock(jxx::NEW<String>("INSCRIPTIONAL_PARTHIAN"), 0x10B40, 0x10B5F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::INSCRIPTIONAL_PAHLAVI(new Character::UnicodeBlock(jxx::NEW<String>("INSCRIPTIONAL_PAHLAVI"), 0x10B60, 0x10B7F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::OLD_TURKIC(new Character::UnicodeBlock(jxx::NEW<String>("OLD_TURKIC"), 0x10C00, 0x10C4F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::RUMI_NUMERAL_SYMBOLS(new Character::UnicodeBlock(jxx::NEW<String>("RUMI_NUMERAL_SYMBOLS"), 0x10E60, 0x10E7F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BRAHMI(new Character::UnicodeBlock(jxx::NEW<String>("BRAHMI"), 0x11000, 0x1107F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::KAITHI(new Character::UnicodeBlock(jxx::NEW<String>("KAITHI"), 0x11080, 0x110CF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CUNEIFORM(new Character::UnicodeBlock(jxx::NEW<String>("CUNEIFORM"), 0x12000, 0x123FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CUNEIFORM_NUMBERS_AND_PUNCTUATION(new Character::UnicodeBlock(jxx::NEW<String>("CUNEIFORM_NUMBERS_AND_PUNCTUATION"), 0x12400, 0x1247F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::EGYPTIAN_HIEROGLYPHS(new Character::UnicodeBlock(jxx::NEW<String>("EGYPTIAN_HIEROGLYPHS"), 0x13000, 0x1342F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BAMUM_SUPPLEMENT(new Character::UnicodeBlock(jxx::NEW<String>("BAMUM_SUPPLEMENT"), 0x16800, 0x16A3F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::KANA_SUPPLEMENT(new Character::UnicodeBlock(jxx::NEW<String>("KANA_SUPPLEMENT"), 0x1B000, 0x1B0FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ANCIENT_GREEK_MUSICAL_NOTATION(new Character::UnicodeBlock(jxx::NEW<String>("ANCIENT_GREEK_MUSICAL_NOTATION"), 0x1D200, 0x1D24F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::COUNTING_ROD_NUMERALS(new Character::UnicodeBlock(jxx::NEW<String>("COUNTING_ROD_NUMERALS"), 0x1D360, 0x1D37F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MAHJONG_TILES(new Character::UnicodeBlock(jxx::NEW<String>("MAHJONG_TILES"), 0x1F000, 0x1F02F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::DOMINO_TILES(new Character::UnicodeBlock(jxx::NEW<String>("DOMINO_TILES"), 0x1F030, 0x1F09F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::PLAYING_CARDS(new Character::UnicodeBlock(jxx::NEW<String>("PLAYING_CARDS"), 0x1F0A0, 0x1F0FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ENCLOSED_ALPHANUMERIC_SUPPLEMENT(new Character::UnicodeBlock(jxx::NEW<String>("ENCLOSED_ALPHANUMERIC_SUPPLEMENT"), 0x1F100, 0x1F1FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ENCLOSED_IDEOGRAPHIC_SUPPLEMENT(new Character::UnicodeBlock(jxx::NEW<String>("ENCLOSED_IDEOGRAPHIC_SUPPLEMENT"), 0x1F200, 0x1F2FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MISCELLANEOUS_SYMBOLS_AND_PICTOGRAPHS(new Character::UnicodeBlock(jxx::NEW<String>("MISCELLANEOUS_SYMBOLS_AND_PICTOGRAPHS"), 0x1F300, 0x1F5FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::EMOTICONS(new Character::UnicodeBlock(jxx::NEW<String>("EMOTICONS"), 0x1F600, 0x1F64F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TRANSPORT_AND_MAP_SYMBOLS(new Character::UnicodeBlock(jxx::NEW<String>("TRANSPORT_AND_MAP_SYMBOLS"), 0x1F680, 0x1F6FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ALCHEMICAL_SYMBOLS(new Character::UnicodeBlock(jxx::NEW<String>("ALCHEMICAL_SYMBOLS"), 0x1F700, 0x1F77F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_UNIFIED_IDEOGRAPHS_EXTENSION_C(new Character::UnicodeBlock(jxx::NEW<String>("CJK_UNIFIED_IDEOGRAPHS_EXTENSION_C"), 0x2A700, 0x2B73F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_UNIFIED_IDEOGRAPHS_EXTENSION_D(new Character::UnicodeBlock(jxx::NEW<String>("CJK_UNIFIED_IDEOGRAPHS_EXTENSION_D"), 0x2B740, 0x2B81F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ARABIC_EXTENDED_A(new Character::UnicodeBlock(jxx::NEW<String>("ARABIC_EXTENDED_A"), 0x8A0, 0x8FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SUNDANESE_SUPPLEMENT(new Character::UnicodeBlock(jxx::NEW<String>("SUNDANESE_SUPPLEMENT"), 0x1CC0, 0x1CCF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MEETEI_MAYEK_EXTENSIONS(new Character::UnicodeBlock(jxx::NEW<String>("MEETEI_MAYEK_EXTENSIONS"), 0xAAE0, 0xAAFF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MEROITIC_HIEROGLYPHS(new Character::UnicodeBlock(jxx::NEW<String>("MEROITIC_HIEROGLYPHS"), 0x10980, 0x1099F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MEROITIC_CURSIVE(new Character::UnicodeBlock(jxx::NEW<String>("MEROITIC_CURSIVE"), 0x109A0, 0x109FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SORA_SOMPENG(new Character::UnicodeBlock(jxx::NEW<String>("SORA_SOMPENG"), 0x110D0, 0x110FF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CHAKMA(new Character::UnicodeBlock(jxx::NEW<String>("CHAKMA"), 0x11100, 0x1114F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SHARADA(new Character::UnicodeBlock(jxx::NEW<String>("SHARADA"), 0x11180, 0x111DF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TAKRI(new Character::UnicodeBlock(jxx::NEW<String>("TAKRI"), 0x11680, 0x116CF));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MIAO(new Character::UnicodeBlock(jxx::NEW<String>("MIAO"), 0x16F00, 0x16F9F));
-    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ARABIC_MATHEMATICAL_ALPHABETIC_SYMBOLS(new Character::UnicodeBlock(jxx::NEW<String>("ARABIC_MATHEMATICAL_ALPHABETIC_SYMBOLS"), 0x1EE00, 0x1EEFF));
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BASIC_LATIN = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("BASIC_LATIN"), 0x0, 0x7F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LATIN_1_SUPPLEMENT = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("LATIN_1_SUPPLEMENT"), 0x80, 0xFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LATIN_EXTENDED_A = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("LATIN_EXTENDED_A"), 0x100, 0x17F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LATIN_EXTENDED_B = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("LATIN_EXTENDED_B"), 0x180, 0x24F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::IPA_EXTENSIONS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("IPA_EXTENSIONS"), 0x250, 0x2AF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SPACING_MODIFIER_LETTERS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("SPACING_MODIFIER_LETTERS"), 0x2B0, 0x2FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::COMBINING_DIACRITICAL_MARKS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("COMBINING_DIACRITICAL_MARKS"), 0x300, 0x36F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::GREEK = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("GREEK"), 0x370, 0x3FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CYRILLIC = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CYRILLIC"), 0x400, 0x4FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ARMENIAN = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("ARMENIAN"), 0x530, 0x58F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HEBREW = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("HEBREW"), 0x590, 0x5FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ARABIC = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("ARABIC"), 0x600, 0x6FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::DEVANAGARI = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("DEVANAGARI"), 0x900, 0x97F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BENGALI = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("BENGALI"), 0x980, 0x9FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::GURMUKHI = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("GURMUKHI"), 0xA00, 0xA7F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::GUJARATI = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("GUJARATI"), 0xA80, 0xAFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ORIYA = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("ORIYA"), 0xB00, 0xB7F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TAMIL = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("TAMIL"), 0xB80, 0xBFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TELUGU = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("TELUGU"), 0xC00, 0xC7F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::KANNADA = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("KANNADA"), 0xC80, 0xCFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MALAYALAM = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("MALAYALAM"), 0xD00, 0xD7F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::THAI = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("THAI"), 0xE00, 0xE7F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LAO = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("LAO"), 0xE80, 0xEFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TIBETAN = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("TIBETAN"), 0xF00, 0xFFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::GEORGIAN = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("GEORGIAN"), 0x10A0, 0x10FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HANGUL_JAMO = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("HANGUL_JAMO"), 0x1100, 0x11FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LATIN_EXTENDED_ADDITIONAL = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("LATIN_EXTENDED_ADDITIONAL"), 0x1E00, 0x1EFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::GREEK_EXTENDED = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("GREEK_EXTENDED"), 0x1F00, 0x1FFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::GENERAL_PUNCTUATION = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("GENERAL_PUNCTUATION"), 0x2000, 0x206F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SUPERSCRIPTS_AND_SUBSCRIPTS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("SUPERSCRIPTS_AND_SUBSCRIPTS"), 0x2070, 0x209F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CURRENCY_SYMBOLS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CURRENCY_SYMBOLS"), 0x20A0, 0x20CF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::COMBINING_MARKS_FOR_SYMBOLS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("COMBINING_MARKS_FOR_SYMBOLS"), 0x20D0, 0x20FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LETTERLIKE_SYMBOLS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("LETTERLIKE_SYMBOLS"), 0x2100, 0x214F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::NUMBER_FORMS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("NUMBER_FORMS"), 0x2150, 0x218F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ARROWS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("ARROWS"), 0x2190, 0x21FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MATHEMATICAL_OPERATORS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("MATHEMATICAL_OPERATORS"), 0x2200, 0x22FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MISCELLANEOUS_TECHNICAL = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("MISCELLANEOUS_TECHNICAL"), 0x2300, 0x23FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CONTROL_PICTURES = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CONTROL_PICTURES"), 0x2400, 0x243F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::OPTICAL_CHARACTER_RECOGNITION = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("OPTICAL_CHARACTER_RECOGNITION"), 0x2440, 0x245F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ENCLOSED_ALPHANUMERICS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("ENCLOSED_ALPHANUMERICS"), 0x2460, 0x24FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BOX_DRAWING = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("BOX_DRAWING"), 0x2500, 0x257F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BLOCK_ELEMENTS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("BLOCK_ELEMENTS"), 0x2580, 0x259F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::GEOMETRIC_SHAPES = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("GEOMETRIC_SHAPES"), 0x25A0, 0x25FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MISCELLANEOUS_SYMBOLS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("MISCELLANEOUS_SYMBOLS"), 0x2600, 0x26FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::DINGBATS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("DINGBATS"), 0x2700, 0x27BF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_SYMBOLS_AND_PUNCTUATION = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CJK_SYMBOLS_AND_PUNCTUATION"), 0x3000, 0x303F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HIRAGANA = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("HIRAGANA"), 0x3040, 0x309F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::KATAKANA = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("KATAKANA"), 0x30A0, 0x30FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BOPOMOFO = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("BOPOMOFO"), 0x3100, 0x312F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HANGUL_COMPATIBILITY_JAMO = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("HANGUL_COMPATIBILITY_JAMO"), 0x3130, 0x318F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::KANBUN = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("KANBUN"), 0x3190, 0x319F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ENCLOSED_CJK_LETTERS_AND_MONTHS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("ENCLOSED_CJK_LETTERS_AND_MONTHS"), 0x3200, 0x32FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_COMPATIBILITY = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CJK_COMPATIBILITY"), 0x3300, 0x33FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_UNIFIED_IDEOGRAPHS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CJK_UNIFIED_IDEOGRAPHS"), 0x4E00, 0x9FFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HANGUL_SYLLABLES = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("HANGUL_SYLLABLES"), 0xAC00, 0xD7AF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::PRIVATE_USE_AREA = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("PRIVATE_USE_AREA"), 0xE000, 0xF8FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_COMPATIBILITY_IDEOGRAPHS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CJK_COMPATIBILITY_IDEOGRAPHS"), 0xF900, 0xFAFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ALPHABETIC_PRESENTATION_FORMS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("ALPHABETIC_PRESENTATION_FORMS"), 0xFB00, 0xFB4F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ARABIC_PRESENTATION_FORMS_A = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("ARABIC_PRESENTATION_FORMS_A"), 0xFB50, 0xFDFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::COMBINING_HALF_MARKS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("COMBINING_HALF_MARKS"), 0xFE20, 0xFE2F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_COMPATIBILITY_FORMS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CJK_COMPATIBILITY_FORMS"), 0xFE30, 0xFE4F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SMALL_FORM_VARIANTS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("SMALL_FORM_VARIANTS"), 0xFE50, 0xFE6F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ARABIC_PRESENTATION_FORMS_B = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("ARABIC_PRESENTATION_FORMS_B"), 0xFE70, 0xFEFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HALFWIDTH_AND_FULLWIDTH_FORMS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("HALFWIDTH_AND_FULLWIDTH_FORMS"), 0xFF00, 0xFFEF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SPECIALS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("SPECIALS"), 0xFFF0, 0xFFFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SURROGATES_AREA = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("SURROGATES_AREA"), -1, -1);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SYRIAC = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("SYRIAC"), 0x700, 0x74F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::THAANA = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("THAANA"), 0x780, 0x7BF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SINHALA = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("SINHALA"), 0xD80, 0xDFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MYANMAR = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("MYANMAR"), 0x1000, 0x109F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ETHIOPIC = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("ETHIOPIC"), 0x1200, 0x137F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CHEROKEE = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CHEROKEE"), 0x13A0, 0x13FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::UNIFIED_CANADIAN_ABORIGINAL_SYLLABICS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("UNIFIED_CANADIAN_ABORIGINAL_SYLLABICS"), 0x1400, 0x167F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::OGHAM = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("OGHAM"), 0x1680, 0x169F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::RUNIC = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("RUNIC"), 0x16A0, 0x16FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::KHMER = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("KHMER"), 0x1780, 0x17FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MONGOLIAN = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("MONGOLIAN"), 0x1800, 0x18AF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BRAILLE_PATTERNS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("BRAILLE_PATTERNS"), 0x2800, 0x28FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_RADICALS_SUPPLEMENT = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CJK_RADICALS_SUPPLEMENT"), 0x2E80, 0x2EFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::KANGXI_RADICALS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("KANGXI_RADICALS"), 0x2F00, 0x2FDF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::IDEOGRAPHIC_DESCRIPTION_CHARACTERS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("IDEOGRAPHIC_DESCRIPTION_CHARACTERS"), 0x2FF0, 0x2FFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BOPOMOFO_EXTENDED = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("BOPOMOFO_EXTENDED"), 0x31A0, 0x31BF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A"), 0x3400, 0x4DBF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::YI_SYLLABLES = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("YI_SYLLABLES"), 0xA000, 0xA48F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::YI_RADICALS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("YI_RADICALS"), 0xA490, 0xA4CF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CYRILLIC_SUPPLEMENTARY = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CYRILLIC_SUPPLEMENTARY"), 0x500, 0x52F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TAGALOG = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("TAGALOG"), 0x1700, 0x171F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HANUNOO = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("HANUNOO"), 0x1720, 0x173F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BUHID = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("BUHID"), 0x1740, 0x175F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TAGBANWA = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("TAGBANWA"), 0x1760, 0x177F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LIMBU = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("LIMBU"), 0x1900, 0x194F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TAI_LE = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("TAI_LE"), 0x1950, 0x197F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::KHMER_SYMBOLS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("KHMER_SYMBOLS"), 0x19E0, 0x19FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::PHONETIC_EXTENSIONS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("PHONETIC_EXTENSIONS"), 0x1D00, 0x1D7F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MISCELLANEOUS_MATHEMATICAL_SYMBOLS_A = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("MISCELLANEOUS_MATHEMATICAL_SYMBOLS_A"), 0x27C0, 0x27EF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SUPPLEMENTAL_ARROWS_A = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("SUPPLEMENTAL_ARROWS_A"), 0x27F0, 0x27FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SUPPLEMENTAL_ARROWS_B = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("SUPPLEMENTAL_ARROWS_B"), 0x2900, 0x297F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MISCELLANEOUS_MATHEMATICAL_SYMBOLS_B = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("MISCELLANEOUS_MATHEMATICAL_SYMBOLS_B"), 0x2980, 0x29FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SUPPLEMENTAL_MATHEMATICAL_OPERATORS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("SUPPLEMENTAL_MATHEMATICAL_OPERATORS"), 0x2A00, 0x2AFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MISCELLANEOUS_SYMBOLS_AND_ARROWS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("MISCELLANEOUS_SYMBOLS_AND_ARROWS"), 0x2B00, 0x2BFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::KATAKANA_PHONETIC_EXTENSIONS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("KATAKANA_PHONETIC_EXTENSIONS"), 0x31F0, 0x31FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::YIJING_HEXAGRAM_SYMBOLS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("YIJING_HEXAGRAM_SYMBOLS"), 0x4DC0, 0x4DFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::VARIATION_SELECTORS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("VARIATION_SELECTORS"), 0xFE00, 0xFE0F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LINEAR_B_SYLLABARY = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("LINEAR_B_SYLLABARY"), 0x10000, 0x1007F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LINEAR_B_IDEOGRAMS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("LINEAR_B_IDEOGRAMS"), 0x10080, 0x100FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::AEGEAN_NUMBERS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("AEGEAN_NUMBERS"), 0x10100, 0x1013F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::OLD_ITALIC = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("OLD_ITALIC"), 0x10300, 0x1032F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::GOTHIC = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("GOTHIC"), 0x10330, 0x1034F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::UGARITIC = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("UGARITIC"), 0x10380, 0x1039F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::DESERET = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("DESERET"), 0x10400, 0x1044F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SHAVIAN = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("SHAVIAN"), 0x10450, 0x1047F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::OSMANYA = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("OSMANYA"), 0x10480, 0x104AF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CYPRIOT_SYLLABARY = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CYPRIOT_SYLLABARY"), 0x10800, 0x1083F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BYZANTINE_MUSICAL_SYMBOLS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("BYZANTINE_MUSICAL_SYMBOLS"), 0x1D000, 0x1D0FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MUSICAL_SYMBOLS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("MUSICAL_SYMBOLS"), 0x1D100, 0x1D1FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TAI_XUAN_JING_SYMBOLS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("TAI_XUAN_JING_SYMBOLS"), 0x1D300, 0x1D35F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MATHEMATICAL_ALPHANUMERIC_SYMBOLS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("MATHEMATICAL_ALPHANUMERIC_SYMBOLS"), 0x1D400, 0x1D7FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B"), 0x20000, 0x2A6DF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_COMPATIBILITY_IDEOGRAPHS_SUPPLEMENT = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CJK_COMPATIBILITY_IDEOGRAPHS_SUPPLEMENT"), 0x2F800, 0x2FA1F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TAGS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("TAGS"), 0xE0000, 0xE007F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::VARIATION_SELECTORS_SUPPLEMENT = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("VARIATION_SELECTORS_SUPPLEMENT"), 0xE0100, 0xE01EF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SUPPLEMENTARY_PRIVATE_USE_AREA_A = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("SUPPLEMENTARY_PRIVATE_USE_AREA_A"), 0xF0000, 0xFFFFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SUPPLEMENTARY_PRIVATE_USE_AREA_B = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("SUPPLEMENTARY_PRIVATE_USE_AREA_B"), 0x100000, 0x10FFFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HIGH_SURROGATES = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("HIGH_SURROGATES"), 0xD800, 0xDB7F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HIGH_PRIVATE_USE_SURROGATES = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("HIGH_PRIVATE_USE_SURROGATES"), 0xDB80, 0xDBFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LOW_SURROGATES = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("LOW_SURROGATES"), 0xDC00, 0xDFFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ARABIC_SUPPLEMENT = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("ARABIC_SUPPLEMENT"), 0x750, 0x77F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::NKO = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("NKO"), 0x7C0, 0x7FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SAMARITAN = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("SAMARITAN"), 0x800, 0x83F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MANDAIC = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("MANDAIC"), 0x840, 0x85F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ETHIOPIC_SUPPLEMENT = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("ETHIOPIC_SUPPLEMENT"), 0x1380, 0x139F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::UNIFIED_CANADIAN_ABORIGINAL_SYLLABICS_EXTENDED = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("UNIFIED_CANADIAN_ABORIGINAL_SYLLABICS_EXTENDED"), 0x18B0, 0x18FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::NEW_TAI_LUE = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("NEW_TAI_LUE"), 0x1980, 0x19DF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BUGINESE = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("BUGINESE"), 0x1A00, 0x1A1F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TAI_THAM = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("TAI_THAM"), 0x1A20, 0x1AAF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BALINESE = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("BALINESE"), 0x1B00, 0x1B7F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SUNDANESE = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("SUNDANESE"), 0x1B80, 0x1BBF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BATAK = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("BATAK"), 0x1BC0, 0x1BFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LEPCHA = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("LEPCHA"), 0x1C00, 0x1C4F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::OL_CHIKI = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("OL_CHIKI"), 0x1C50, 0x1C7F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::VEDIC_EXTENSIONS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("VEDIC_EXTENSIONS"), 0x1CD0, 0x1CFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::PHONETIC_EXTENSIONS_SUPPLEMENT = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("PHONETIC_EXTENSIONS_SUPPLEMENT"), 0x1D80, 0x1DBF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::COMBINING_DIACRITICAL_MARKS_SUPPLEMENT = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("COMBINING_DIACRITICAL_MARKS_SUPPLEMENT"), 0x1DC0, 0x1DFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::GLAGOLITIC = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("GLAGOLITIC"), 0x2C00, 0x2C5F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LATIN_EXTENDED_C = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("LATIN_EXTENDED_C"), 0x2C60, 0x2C7F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::COPTIC = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("COPTIC"), 0x2C80, 0x2CFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::GEORGIAN_SUPPLEMENT = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("GEORGIAN_SUPPLEMENT"), 0x2D00, 0x2D2F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TIFINAGH = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("TIFINAGH"), 0x2D30, 0x2D7F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ETHIOPIC_EXTENDED = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("ETHIOPIC_EXTENDED"), 0x2D80, 0x2DDF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CYRILLIC_EXTENDED_A = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CYRILLIC_EXTENDED_A"), 0x2DE0, 0x2DFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SUPPLEMENTAL_PUNCTUATION = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("SUPPLEMENTAL_PUNCTUATION"), 0x2E00, 0x2E7F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_STROKES = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CJK_STROKES"), 0x31C0, 0x31EF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LISU = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("LISU"), 0xA4D0, 0xA4FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::VAI = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("VAI"), 0xA500, 0xA63F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CYRILLIC_EXTENDED_B = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CYRILLIC_EXTENDED_B"), 0xA640, 0xA69F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BAMUM = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("BAMUM"), 0xA6A0, 0xA6FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MODIFIER_TONE_LETTERS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("MODIFIER_TONE_LETTERS"), 0xA700, 0xA71F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LATIN_EXTENDED_D = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("LATIN_EXTENDED_D"), 0xA720, 0xA7FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SYLOTI_NAGRI = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("SYLOTI_NAGRI"), 0xA800, 0xA82F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::COMMON_INDIC_NUMBER_FORMS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("COMMON_INDIC_NUMBER_FORMS"), 0xA830, 0xA83F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::PHAGS_PA = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("PHAGS_PA"), 0xA840, 0xA87F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SAURASHTRA = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("SAURASHTRA"), 0xA880, 0xA8DF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::DEVANAGARI_EXTENDED = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("DEVANAGARI_EXTENDED"), 0xA8E0, 0xA8FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::KAYAH_LI = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("KAYAH_LI"), 0xA900, 0xA92F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::REJANG = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("REJANG"), 0xA930, 0xA95F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HANGUL_JAMO_EXTENDED_A = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("HANGUL_JAMO_EXTENDED_A"), 0xA960, 0xA97F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::JAVANESE = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("JAVANESE"), 0xA980, 0xA9DF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CHAM = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CHAM"), 0xAA00, 0xAA5F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MYANMAR_EXTENDED_A = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("MYANMAR_EXTENDED_A"), 0xAA60, 0xAA7F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TAI_VIET = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("TAI_VIET"), 0xAA80, 0xAADF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ETHIOPIC_EXTENDED_A = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("ETHIOPIC_EXTENDED_A"), 0xAB00, 0xAB2F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MEETEI_MAYEK = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("MEETEI_MAYEK"), 0xABC0, 0xABFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::HANGUL_JAMO_EXTENDED_B = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("HANGUL_JAMO_EXTENDED_B"), 0xD7B0, 0xD7FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::VERTICAL_FORMS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("VERTICAL_FORMS"), 0xFE10, 0xFE1F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ANCIENT_GREEK_NUMBERS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("ANCIENT_GREEK_NUMBERS"), 0x10140, 0x1018F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ANCIENT_SYMBOLS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("ANCIENT_SYMBOLS"), 0x10190, 0x101CF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::PHAISTOS_DISC = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("PHAISTOS_DISC"), 0x101D0, 0x101FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LYCIAN = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("LYCIAN"), 0x10280, 0x1029F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CARIAN = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CARIAN"), 0x102A0, 0x102DF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::OLD_PERSIAN = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("OLD_PERSIAN"), 0x103A0, 0x103DF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::IMPERIAL_ARAMAIC = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("IMPERIAL_ARAMAIC"), 0x10840, 0x1085F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::PHOENICIAN = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("PHOENICIAN"), 0x10900, 0x1091F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::LYDIAN = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("LYDIAN"), 0x10920, 0x1093F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::KHAROSHTHI = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("KHAROSHTHI"), 0x10A00, 0x10A5F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::OLD_SOUTH_ARABIAN = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("OLD_SOUTH_ARABIAN"), 0x10A60, 0x10A7F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::AVESTAN = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("AVESTAN"), 0x10B00, 0x10B3F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::INSCRIPTIONAL_PARTHIAN = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("INSCRIPTIONAL_PARTHIAN"), 0x10B40, 0x10B5F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::INSCRIPTIONAL_PAHLAVI = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("INSCRIPTIONAL_PAHLAVI"), 0x10B60, 0x10B7F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::OLD_TURKIC = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("OLD_TURKIC"), 0x10C00, 0x10C4F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::RUMI_NUMERAL_SYMBOLS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("RUMI_NUMERAL_SYMBOLS"), 0x10E60, 0x10E7F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BRAHMI = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("BRAHMI"), 0x11000, 0x1107F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::KAITHI = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("KAITHI"), 0x11080, 0x110CF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CUNEIFORM = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CUNEIFORM"), 0x12000, 0x123FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CUNEIFORM_NUMBERS_AND_PUNCTUATION = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CUNEIFORM_NUMBERS_AND_PUNCTUATION"), 0x12400, 0x1247F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::EGYPTIAN_HIEROGLYPHS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("EGYPTIAN_HIEROGLYPHS"), 0x13000, 0x1342F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::BAMUM_SUPPLEMENT = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("BAMUM_SUPPLEMENT"), 0x16800, 0x16A3F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::KANA_SUPPLEMENT = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("KANA_SUPPLEMENT"), 0x1B000, 0x1B0FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ANCIENT_GREEK_MUSICAL_NOTATION = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("ANCIENT_GREEK_MUSICAL_NOTATION"), 0x1D200, 0x1D24F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::COUNTING_ROD_NUMERALS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("COUNTING_ROD_NUMERALS"), 0x1D360, 0x1D37F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MAHJONG_TILES = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("MAHJONG_TILES"), 0x1F000, 0x1F02F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::DOMINO_TILES = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("DOMINO_TILES"), 0x1F030, 0x1F09F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::PLAYING_CARDS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("PLAYING_CARDS"), 0x1F0A0, 0x1F0FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ENCLOSED_ALPHANUMERIC_SUPPLEMENT = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("ENCLOSED_ALPHANUMERIC_SUPPLEMENT"), 0x1F100, 0x1F1FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ENCLOSED_IDEOGRAPHIC_SUPPLEMENT = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("ENCLOSED_IDEOGRAPHIC_SUPPLEMENT"), 0x1F200, 0x1F2FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MISCELLANEOUS_SYMBOLS_AND_PICTOGRAPHS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("MISCELLANEOUS_SYMBOLS_AND_PICTOGRAPHS"), 0x1F300, 0x1F5FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::EMOTICONS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("EMOTICONS"), 0x1F600, 0x1F64F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TRANSPORT_AND_MAP_SYMBOLS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("TRANSPORT_AND_MAP_SYMBOLS"), 0x1F680, 0x1F6FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ALCHEMICAL_SYMBOLS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("ALCHEMICAL_SYMBOLS"), 0x1F700, 0x1F77F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_UNIFIED_IDEOGRAPHS_EXTENSION_C = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CJK_UNIFIED_IDEOGRAPHS_EXTENSION_C"), 0x2A700, 0x2B73F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CJK_UNIFIED_IDEOGRAPHS_EXTENSION_D = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CJK_UNIFIED_IDEOGRAPHS_EXTENSION_D"), 0x2B740, 0x2B81F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ARABIC_EXTENDED_A = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("ARABIC_EXTENDED_A"), 0x8A0, 0x8FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SUNDANESE_SUPPLEMENT = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("SUNDANESE_SUPPLEMENT"), 0x1CC0, 0x1CCF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MEETEI_MAYEK_EXTENSIONS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("MEETEI_MAYEK_EXTENSIONS"), 0xAAE0, 0xAAFF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MEROITIC_HIEROGLYPHS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("MEROITIC_HIEROGLYPHS"), 0x10980, 0x1099F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MEROITIC_CURSIVE = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("MEROITIC_CURSIVE"), 0x109A0, 0x109FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SORA_SOMPENG = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("SORA_SOMPENG"), 0x110D0, 0x110FF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::CHAKMA = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("CHAKMA"), 0x11100, 0x1114F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::SHARADA = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("SHARADA"), 0x11180, 0x111DF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::TAKRI = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("TAKRI"), 0x11680, 0x116CF);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::MIAO = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("MIAO"), 0x16F00, 0x16F9F);
+    const jxx::Ptr<Character::UnicodeBlock> Character::UnicodeBlock::ARABIC_MATHEMATICAL_ALPHABETIC_SYMBOLS = jxx::NEW<Character::UnicodeBlock>(jxx::NEW<String>("ARABIC_MATHEMATICAL_ALPHABETIC_SYMBOLS"), 0x1EE00, 0x1EEFF);
 
     namespace {
         const std::vector<jxx::Ptr<Character::UnicodeBlock>>& unicodeBlocks() {
@@ -533,210 +533,210 @@ namespace jxx::lang
         const jxx::Ptr<String>& name, jint ordinal)
         : Enum<UnicodeScript>(name, ordinal) {}
 
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::COMMON(
-        new Character::UnicodeScript(jxx::NEW<String>("COMMON"), 0));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::LATIN(
-        new Character::UnicodeScript(jxx::NEW<String>("LATIN"), 1));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::GREEK(
-        new Character::UnicodeScript(jxx::NEW<String>("GREEK"), 2));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::CYRILLIC(
-        new Character::UnicodeScript(jxx::NEW<String>("CYRILLIC"), 3));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::ARMENIAN(
-        new Character::UnicodeScript(jxx::NEW<String>("ARMENIAN"), 4));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::HEBREW(
-        new Character::UnicodeScript(jxx::NEW<String>("HEBREW"), 5));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::ARABIC(
-        new Character::UnicodeScript(jxx::NEW<String>("ARABIC"), 6));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::SYRIAC(
-        new Character::UnicodeScript(jxx::NEW<String>("SYRIAC"), 7));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::THAANA(
-        new Character::UnicodeScript(jxx::NEW<String>("THAANA"), 8));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::DEVANAGARI(
-        new Character::UnicodeScript(jxx::NEW<String>("DEVANAGARI"), 9));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::BENGALI(
-        new Character::UnicodeScript(jxx::NEW<String>("BENGALI"), 10));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::GURMUKHI(
-        new Character::UnicodeScript(jxx::NEW<String>("GURMUKHI"), 11));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::GUJARATI(
-        new Character::UnicodeScript(jxx::NEW<String>("GUJARATI"), 12));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::ORIYA(
-        new Character::UnicodeScript(jxx::NEW<String>("ORIYA"), 13));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::TAMIL(
-        new Character::UnicodeScript(jxx::NEW<String>("TAMIL"), 14));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::TELUGU(
-        new Character::UnicodeScript(jxx::NEW<String>("TELUGU"), 15));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::KANNADA(
-        new Character::UnicodeScript(jxx::NEW<String>("KANNADA"), 16));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::MALAYALAM(
-        new Character::UnicodeScript(jxx::NEW<String>("MALAYALAM"), 17));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::SINHALA(
-        new Character::UnicodeScript(jxx::NEW<String>("SINHALA"), 18));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::THAI(
-        new Character::UnicodeScript(jxx::NEW<String>("THAI"), 19));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::LAO(
-        new Character::UnicodeScript(jxx::NEW<String>("LAO"), 20));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::TIBETAN(
-        new Character::UnicodeScript(jxx::NEW<String>("TIBETAN"), 21));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::MYANMAR(
-        new Character::UnicodeScript(jxx::NEW<String>("MYANMAR"), 22));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::GEORGIAN(
-        new Character::UnicodeScript(jxx::NEW<String>("GEORGIAN"), 23));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::HANGUL(
-        new Character::UnicodeScript(jxx::NEW<String>("HANGUL"), 24));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::ETHIOPIC(
-        new Character::UnicodeScript(jxx::NEW<String>("ETHIOPIC"), 25));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::CHEROKEE(
-        new Character::UnicodeScript(jxx::NEW<String>("CHEROKEE"), 26));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::CANADIAN_ABORIGINAL(
-        new Character::UnicodeScript(jxx::NEW<String>("CANADIAN_ABORIGINAL"), 27));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::OGHAM(
-        new Character::UnicodeScript(jxx::NEW<String>("OGHAM"), 28));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::RUNIC(
-        new Character::UnicodeScript(jxx::NEW<String>("RUNIC"), 29));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::KHMER(
-        new Character::UnicodeScript(jxx::NEW<String>("KHMER"), 30));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::MONGOLIAN(
-        new Character::UnicodeScript(jxx::NEW<String>("MONGOLIAN"), 31));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::HIRAGANA(
-        new Character::UnicodeScript(jxx::NEW<String>("HIRAGANA"), 32));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::KATAKANA(
-        new Character::UnicodeScript(jxx::NEW<String>("KATAKANA"), 33));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::BOPOMOFO(
-        new Character::UnicodeScript(jxx::NEW<String>("BOPOMOFO"), 34));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::HAN(
-        new Character::UnicodeScript(jxx::NEW<String>("HAN"), 35));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::YI(
-        new Character::UnicodeScript(jxx::NEW<String>("YI"), 36));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::OLD_ITALIC(
-        new Character::UnicodeScript(jxx::NEW<String>("OLD_ITALIC"), 37));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::GOTHIC(
-        new Character::UnicodeScript(jxx::NEW<String>("GOTHIC"), 38));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::DESERET(
-        new Character::UnicodeScript(jxx::NEW<String>("DESERET"), 39));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::INHERITED(
-        new Character::UnicodeScript(jxx::NEW<String>("INHERITED"), 40));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::TAGALOG(
-        new Character::UnicodeScript(jxx::NEW<String>("TAGALOG"), 41));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::HANUNOO(
-        new Character::UnicodeScript(jxx::NEW<String>("HANUNOO"), 42));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::BUHID(
-        new Character::UnicodeScript(jxx::NEW<String>("BUHID"), 43));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::TAGBANWA(
-        new Character::UnicodeScript(jxx::NEW<String>("TAGBANWA"), 44));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::LIMBU(
-        new Character::UnicodeScript(jxx::NEW<String>("LIMBU"), 45));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::TAI_LE(
-        new Character::UnicodeScript(jxx::NEW<String>("TAI_LE"), 46));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::LINEAR_B(
-        new Character::UnicodeScript(jxx::NEW<String>("LINEAR_B"), 47));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::UGARITIC(
-        new Character::UnicodeScript(jxx::NEW<String>("UGARITIC"), 48));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::SHAVIAN(
-        new Character::UnicodeScript(jxx::NEW<String>("SHAVIAN"), 49));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::OSMANYA(
-        new Character::UnicodeScript(jxx::NEW<String>("OSMANYA"), 50));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::CYPRIOT(
-        new Character::UnicodeScript(jxx::NEW<String>("CYPRIOT"), 51));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::BRAILLE(
-        new Character::UnicodeScript(jxx::NEW<String>("BRAILLE"), 52));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::BUGINESE(
-        new Character::UnicodeScript(jxx::NEW<String>("BUGINESE"), 53));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::COPTIC(
-        new Character::UnicodeScript(jxx::NEW<String>("COPTIC"), 54));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::NEW_TAI_LUE(
-        new Character::UnicodeScript(jxx::NEW<String>("NEW_TAI_LUE"), 55));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::GLAGOLITIC(
-        new Character::UnicodeScript(jxx::NEW<String>("GLAGOLITIC"), 56));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::TIFINAGH(
-        new Character::UnicodeScript(jxx::NEW<String>("TIFINAGH"), 57));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::SYLOTI_NAGRI(
-        new Character::UnicodeScript(jxx::NEW<String>("SYLOTI_NAGRI"), 58));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::OLD_PERSIAN(
-        new Character::UnicodeScript(jxx::NEW<String>("OLD_PERSIAN"), 59));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::KHAROSHTHI(
-        new Character::UnicodeScript(jxx::NEW<String>("KHAROSHTHI"), 60));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::BALINESE(
-        new Character::UnicodeScript(jxx::NEW<String>("BALINESE"), 61));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::CUNEIFORM(
-        new Character::UnicodeScript(jxx::NEW<String>("CUNEIFORM"), 62));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::PHOENICIAN(
-        new Character::UnicodeScript(jxx::NEW<String>("PHOENICIAN"), 63));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::PHAGS_PA(
-        new Character::UnicodeScript(jxx::NEW<String>("PHAGS_PA"), 64));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::NKO(
-        new Character::UnicodeScript(jxx::NEW<String>("NKO"), 65));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::SUNDANESE(
-        new Character::UnicodeScript(jxx::NEW<String>("SUNDANESE"), 66));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::LEPCHA(
-        new Character::UnicodeScript(jxx::NEW<String>("LEPCHA"), 67));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::OL_CHIKI(
-        new Character::UnicodeScript(jxx::NEW<String>("OL_CHIKI"), 68));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::VAI(
-        new Character::UnicodeScript(jxx::NEW<String>("VAI"), 69));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::SAURASHTRA(
-        new Character::UnicodeScript(jxx::NEW<String>("SAURASHTRA"), 70));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::KAYAH_LI(
-        new Character::UnicodeScript(jxx::NEW<String>("KAYAH_LI"), 71));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::REJANG(
-        new Character::UnicodeScript(jxx::NEW<String>("REJANG"), 72));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::LYCIAN(
-        new Character::UnicodeScript(jxx::NEW<String>("LYCIAN"), 73));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::CARIAN(
-        new Character::UnicodeScript(jxx::NEW<String>("CARIAN"), 74));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::LYDIAN(
-        new Character::UnicodeScript(jxx::NEW<String>("LYDIAN"), 75));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::CHAM(
-        new Character::UnicodeScript(jxx::NEW<String>("CHAM"), 76));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::TAI_THAM(
-        new Character::UnicodeScript(jxx::NEW<String>("TAI_THAM"), 77));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::TAI_VIET(
-        new Character::UnicodeScript(jxx::NEW<String>("TAI_VIET"), 78));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::AVESTAN(
-        new Character::UnicodeScript(jxx::NEW<String>("AVESTAN"), 79));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::EGYPTIAN_HIEROGLYPHS(
-        new Character::UnicodeScript(jxx::NEW<String>("EGYPTIAN_HIEROGLYPHS"), 80));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::SAMARITAN(
-        new Character::UnicodeScript(jxx::NEW<String>("SAMARITAN"), 81));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::MANDAIC(
-        new Character::UnicodeScript(jxx::NEW<String>("MANDAIC"), 82));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::LISU(
-        new Character::UnicodeScript(jxx::NEW<String>("LISU"), 83));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::BAMUM(
-        new Character::UnicodeScript(jxx::NEW<String>("BAMUM"), 84));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::JAVANESE(
-        new Character::UnicodeScript(jxx::NEW<String>("JAVANESE"), 85));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::MEETEI_MAYEK(
-        new Character::UnicodeScript(jxx::NEW<String>("MEETEI_MAYEK"), 86));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::IMPERIAL_ARAMAIC(
-        new Character::UnicodeScript(jxx::NEW<String>("IMPERIAL_ARAMAIC"), 87));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::OLD_SOUTH_ARABIAN(
-        new Character::UnicodeScript(jxx::NEW<String>("OLD_SOUTH_ARABIAN"), 88));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::INSCRIPTIONAL_PARTHIAN(
-        new Character::UnicodeScript(jxx::NEW<String>("INSCRIPTIONAL_PARTHIAN"), 89));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::INSCRIPTIONAL_PAHLAVI(
-        new Character::UnicodeScript(jxx::NEW<String>("INSCRIPTIONAL_PAHLAVI"), 90));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::OLD_TURKIC(
-        new Character::UnicodeScript(jxx::NEW<String>("OLD_TURKIC"), 91));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::BRAHMI(
-        new Character::UnicodeScript(jxx::NEW<String>("BRAHMI"), 92));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::KAITHI(
-        new Character::UnicodeScript(jxx::NEW<String>("KAITHI"), 93));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::MEROITIC_HIEROGLYPHS(
-        new Character::UnicodeScript(jxx::NEW<String>("MEROITIC_HIEROGLYPHS"), 94));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::MEROITIC_CURSIVE(
-        new Character::UnicodeScript(jxx::NEW<String>("MEROITIC_CURSIVE"), 95));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::SORA_SOMPENG(
-        new Character::UnicodeScript(jxx::NEW<String>("SORA_SOMPENG"), 96));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::CHAKMA(
-        new Character::UnicodeScript(jxx::NEW<String>("CHAKMA"), 97));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::SHARADA(
-        new Character::UnicodeScript(jxx::NEW<String>("SHARADA"), 98));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::TAKRI(
-        new Character::UnicodeScript(jxx::NEW<String>("TAKRI"), 99));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::MIAO(
-        new Character::UnicodeScript(jxx::NEW<String>("MIAO"), 100));
-    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::UNKNOWN(
-        new Character::UnicodeScript(jxx::NEW<String>("UNKNOWN"), 101));
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::COMMON =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("COMMON"), 0);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::LATIN =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("LATIN"), 1);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::GREEK =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("GREEK"), 2);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::CYRILLIC =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("CYRILLIC"), 3);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::ARMENIAN =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("ARMENIAN"), 4);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::HEBREW =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("HEBREW"), 5);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::ARABIC =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("ARABIC"), 6);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::SYRIAC =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("SYRIAC"), 7);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::THAANA =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("THAANA"), 8);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::DEVANAGARI =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("DEVANAGARI"), 9);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::BENGALI =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("BENGALI"), 10);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::GURMUKHI =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("GURMUKHI"), 11);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::GUJARATI =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("GUJARATI"), 12);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::ORIYA =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("ORIYA"), 13);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::TAMIL =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("TAMIL"), 14);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::TELUGU =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("TELUGU"), 15);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::KANNADA =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("KANNADA"), 16);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::MALAYALAM =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("MALAYALAM"), 17);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::SINHALA =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("SINHALA"), 18);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::THAI =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("THAI"), 19);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::LAO =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("LAO"), 20);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::TIBETAN =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("TIBETAN"), 21);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::MYANMAR =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("MYANMAR"), 22);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::GEORGIAN =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("GEORGIAN"), 23);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::HANGUL =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("HANGUL"), 24);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::ETHIOPIC =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("ETHIOPIC"), 25);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::CHEROKEE =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("CHEROKEE"), 26);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::CANADIAN_ABORIGINAL =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("CANADIAN_ABORIGINAL"), 27);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::OGHAM =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("OGHAM"), 28);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::RUNIC =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("RUNIC"), 29);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::KHMER =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("KHMER"), 30);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::MONGOLIAN =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("MONGOLIAN"), 31);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::HIRAGANA =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("HIRAGANA"), 32);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::KATAKANA =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("KATAKANA"), 33);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::BOPOMOFO =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("BOPOMOFO"), 34);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::HAN =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("HAN"), 35);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::YI =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("YI"), 36);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::OLD_ITALIC =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("OLD_ITALIC"), 37);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::GOTHIC =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("GOTHIC"), 38);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::DESERET =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("DESERET"), 39);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::INHERITED =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("INHERITED"), 40);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::TAGALOG =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("TAGALOG"), 41);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::HANUNOO =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("HANUNOO"), 42);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::BUHID =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("BUHID"), 43);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::TAGBANWA =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("TAGBANWA"), 44);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::LIMBU =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("LIMBU"), 45);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::TAI_LE =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("TAI_LE"), 46);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::LINEAR_B =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("LINEAR_B"), 47);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::UGARITIC =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("UGARITIC"), 48);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::SHAVIAN =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("SHAVIAN"), 49);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::OSMANYA =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("OSMANYA"), 50);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::CYPRIOT =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("CYPRIOT"), 51);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::BRAILLE =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("BRAILLE"), 52);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::BUGINESE =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("BUGINESE"), 53);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::COPTIC =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("COPTIC"), 54);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::NEW_TAI_LUE =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("NEW_TAI_LUE"), 55);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::GLAGOLITIC =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("GLAGOLITIC"), 56);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::TIFINAGH =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("TIFINAGH"), 57);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::SYLOTI_NAGRI =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("SYLOTI_NAGRI"), 58);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::OLD_PERSIAN =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("OLD_PERSIAN"), 59);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::KHAROSHTHI =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("KHAROSHTHI"), 60);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::BALINESE =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("BALINESE"), 61);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::CUNEIFORM =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("CUNEIFORM"), 62);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::PHOENICIAN =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("PHOENICIAN"), 63);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::PHAGS_PA =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("PHAGS_PA"), 64);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::NKO =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("NKO"), 65);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::SUNDANESE =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("SUNDANESE"), 66);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::LEPCHA =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("LEPCHA"), 67);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::OL_CHIKI =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("OL_CHIKI"), 68);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::VAI =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("VAI"), 69);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::SAURASHTRA =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("SAURASHTRA"), 70);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::KAYAH_LI =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("KAYAH_LI"), 71);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::REJANG =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("REJANG"), 72);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::LYCIAN =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("LYCIAN"), 73);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::CARIAN =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("CARIAN"), 74);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::LYDIAN =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("LYDIAN"), 75);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::CHAM =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("CHAM"), 76);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::TAI_THAM =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("TAI_THAM"), 77);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::TAI_VIET =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("TAI_VIET"), 78);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::AVESTAN =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("AVESTAN"), 79);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::EGYPTIAN_HIEROGLYPHS =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("EGYPTIAN_HIEROGLYPHS"), 80);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::SAMARITAN =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("SAMARITAN"), 81);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::MANDAIC =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("MANDAIC"), 82);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::LISU =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("LISU"), 83);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::BAMUM =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("BAMUM"), 84);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::JAVANESE =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("JAVANESE"), 85);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::MEETEI_MAYEK =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("MEETEI_MAYEK"), 86);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::IMPERIAL_ARAMAIC =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("IMPERIAL_ARAMAIC"), 87);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::OLD_SOUTH_ARABIAN =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("OLD_SOUTH_ARABIAN"), 88);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::INSCRIPTIONAL_PARTHIAN =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("INSCRIPTIONAL_PARTHIAN"), 89);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::INSCRIPTIONAL_PAHLAVI =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("INSCRIPTIONAL_PAHLAVI"), 90);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::OLD_TURKIC =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("OLD_TURKIC"), 91);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::BRAHMI =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("BRAHMI"), 92);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::KAITHI =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("KAITHI"), 93);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::MEROITIC_HIEROGLYPHS =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("MEROITIC_HIEROGLYPHS"), 94);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::MEROITIC_CURSIVE =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("MEROITIC_CURSIVE"), 95);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::SORA_SOMPENG =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("SORA_SOMPENG"), 96);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::CHAKMA =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("CHAKMA"), 97);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::SHARADA =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("SHARADA"), 98);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::TAKRI =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("TAKRI"), 99);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::MIAO =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("MIAO"), 100);
+    const jxx::Ptr<Character::UnicodeScript> Character::UnicodeScript::UNKNOWN =
+        jxx::NEW<Character::UnicodeScript>(jxx::NEW<String>("UNKNOWN"), 101);
 
     jxx::Ptr<ClassAny> Character::UnicodeScript::Class() {
         return ClassInfo<UnicodeScript, Enum<UnicodeScript>>::Class();

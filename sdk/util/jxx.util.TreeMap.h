@@ -261,12 +261,12 @@ public:
     virtual jxx::Ptr<Collection<V>> values() override { return AbstractMap<K, V>::values(); }
 
     virtual jxx::Ptr<Set<MapEntry<K, V>>> entrySet() override {
-        if (entrySetView_ == nullptr) entrySetView_ = jxx::Ptr<Set<MapEntry<K, V>>>(new EntrySet(this));
+        if (entrySetView_ == nullptr) entrySetView_ = jxx::CAST<Set<MapEntry<K, V>>>(jxx::NEW<EntrySet>(this));
         return entrySetView_;
     }
 
     virtual jxx::Ptr<jxx::lang::Object> clone() {
-        jxx::Ptr<TreeMap<K, V>> cloned(new TreeMap<K, V>(comparator_));
+        auto cloned = jxx::NEW<TreeMap<K, V>>(comparator_);
         for (const auto& kv : map_) {
             cloned->map_.emplace(kv.first, kv.second);
         }
@@ -319,7 +319,7 @@ protected:
     };
 
     jxx::Ptr<MapEntry<K, V>> makeEntryView(const jxx::Ptr<K> key) {
-        return jxx::Ptr<MapEntry<K, V>>(new EntryView(this, key));
+        return jxx::CAST<MapEntry<K, V>>(jxx::NEW<EntryView>(this, key));
     }
 
     class EntryIterator : public virtual Iterator<MapEntry<K, V>> {
@@ -379,7 +379,7 @@ protected:
             return value->equals(e->getValue());
         }
         virtual jxx::Ptr<Iterator<MapEntry<K, V>>> iterator() override {
-            return jxx::Ptr<Iterator<MapEntry<K, V>>>(new EntryIterator(map_));
+            return jxx::CAST<Iterator<MapEntry<K, V>>>(jxx::NEW<EntryIterator>(map_));
         }
         virtual ::jxx::lang::ObjectArray toArray() override {
             return AbstractCollection<MapEntry<K, V>>::toArray();

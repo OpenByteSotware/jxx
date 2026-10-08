@@ -38,7 +38,7 @@ void OutputStreamWriter::writeString(
     if (out_ == nullptr) throw IOException();
     const auto encoding = encoding_->utf8();
     if (encoding == "ISO-8859-1" || encoding == "US-ASCII") {
-        auto bytes = std::make_shared<::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(
+        auto bytes = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(
             static_cast<std::uint32_t>(value->length()));
         for (::jxx::lang::jint index = 0; index < value->length(); ++index) {
             const auto ch = value->charAt(index);
