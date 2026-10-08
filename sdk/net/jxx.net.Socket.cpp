@@ -20,6 +20,7 @@
 #include <mutex>
 #include <stdexcept>
 #include "net/jxx.net.Socket.h"
+#include "nio/channels/jxx.nio.channels.SocketChannel.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "net/jxx.net.ConnectException.h"
@@ -537,28 +538,42 @@ namespace jxx::net
 
     void Socket::close()
     {
-        if (impl_ != nullptr) { impl_->close(); impl_=nullptr; if(state_) state_->closed=true; return; }
-        if (!state_)
-            return;
-        internal::NativeSocket socket = internal::kInvalidSocket;
-        {
-            std::lock_guard<std::mutex> lock(state_->m);
-            if (state_->closed)
-                return;
-            state_->closed = true;
-            state_->inputShutdown = true;
-            state_->outputShutdown = true;
-            socket = state_->socket;
-            state_->socket = internal::kInvalidSocket;
+        const auto channel =
+            state_ != nullptr ? state_->channel.lock() : nullptr;
+
+        if (impl_ != nullptr) {
+            impl_->close();
+            impl_ = nullptr;
+            if (state_ != nullptr) {
+                state_->closed = true;
+                state_->inputShutdown = true;
+                state_->outputShutdown = true;
+            }
         }
-        if (socket != internal::kInvalidSocket)
-        {
-        #if defined(_WIN32)
-            ::shutdown(socket, SD_BOTH);
-        #else
-            ::shutdown(socket, SHUT_RDWR);
-        #endif
-            internal::closeNativeSocket(socket);
+        else if (state_ != nullptr) {
+            internal::NativeSocket socket = internal::kInvalidSocket;
+            {
+                std::lock_guard<std::mutex> lock(state_->m);
+                if (!state_->closed) {
+                    state_->closed = true;
+                    state_->inputShutdown = true;
+                    state_->outputShutdown = true;
+                    socket = state_->socket;
+                    state_->socket = internal::kInvalidSocket;
+                }
+            }
+            if (socket != internal::kInvalidSocket) {
+#if defined(_WIN32)
+                ::shutdown(socket, SD_BOTH);
+#else
+                ::shutdown(socket, SHUT_RDWR);
+#endif
+                internal::closeNativeSocket(socket);
+            }
+        }
+
+        if (channel != nullptr && channel->isOpen()) {
+            channel->close();
         }
     }
 
