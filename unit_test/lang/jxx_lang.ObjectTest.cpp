@@ -73,14 +73,22 @@ TEST(ObjectTest2, HashCodeIsStableAndIdentityCompatible) {
     EXPECT_EQ(firstHash, alias->hashCode());
 }
 
-TEST(ObjectTest2, GetClassReturnsExactRuntimeClassDescriptor) {
+TEST(ObjectTest2, GetClassReturnsExactRuntimeClassDescriptor)
+{
+    const auto plainObjectClass =
+        PlainObject::Class();
+
+    ASSERT_NE(nullptr, plainObjectClass);
+
     const ::jxx::Ptr<::jxx::lang::Object> value =
         ::jxx::NEW<PlainObject>();
 
-    const auto runtimeClass = value->getClass();
+    const auto runtimeClass =
+        value->getClass();
+
     ASSERT_NE(nullptr, runtimeClass);
-    EXPECT_EQ(PlainObject::Class(), runtimeClass);
-    EXPECT_TRUE(PlainObject::Class()->isInstance(value));
+    EXPECT_EQ(plainObjectClass, runtimeClass);
+    EXPECT_TRUE(plainObjectClass->isInstance(value));
 }
 
 TEST(ObjectTest2, ThisPtrReturnsTheOwningReference) {
@@ -99,20 +107,40 @@ TEST(ObjectTest2, SameUsesReferenceIdentity) {
     EXPECT_FALSE(first->same(nullptr));
 }
 
-TEST(ObjectTest2, ToStringContainsRuntimeClassAndHexHash) {
-    const auto value = ::jxx::NEW<PlainObject>();
-    const auto className = value->getClassName();
-    const auto text = value->toString();
+TEST(ObjectTest2, ToStringContainsRuntimeClassAndHexHash)
+{
+    const auto plainObjectClass =
+        PlainObject::Class();
+
+    ASSERT_NE(nullptr, plainObjectClass);
+
+    const auto value =
+        ::jxx::NEW<PlainObject>();
+
+    const auto className =
+        value->getClassName();
+
+    const auto text =
+        value->toString();
 
     ASSERT_NE(nullptr, className);
     ASSERT_NE(nullptr, text);
 
-    const std::string actual = text->utf8();
-    EXPECT_EQ(0U, actual.find(className->utf8() + "@"));
+    const std::string actual =
+        text->utf8();
+
+    EXPECT_EQ(
+        0U,
+        actual.find(className->utf8() + "@"));
 
     std::ostringstream hash;
-    hash << std::hex << value->hashCode();
-    EXPECT_NE(std::string::npos, actual.find(hash.str()));
+    hash << std::hex
+        << static_cast<std::uint32_t>(
+               value->hashCode());
+
+    EXPECT_NE(
+        std::string::npos,
+        actual.find(hash.str()));
 }
 
 TEST(ObjectTest2, CloneRejectsAnObjectThatIsNotCloneable) {
@@ -120,17 +148,24 @@ TEST(ObjectTest2, CloneRejectsAnObjectThatIsNotCloneable) {
 
     EXPECT_THROW(value->clone(), ::jxx::lang::CloneNotSupportedException);
 }
+TEST(ObjectTest2, CloneableObjectProducesDistinctShallowCopy)
+{
+    const auto cloneableObjectClass =
+        CloneableObject::Class();
 
-TEST(ObjectTest2, CloneableObjectProducesDistinctShallowCopy) {
-    const auto value = ::jxx::NEW<CloneableObject>(42);
+    ASSERT_NE(nullptr, cloneableObjectClass);
+
+    const auto value =
+        ::jxx::NEW<CloneableObject>(42);
 
     const auto clonedBase = value->clone();
-    const auto cloned = ::jxx::CAST<CloneableObject>(clonedBase);
+    const auto cloned =
+        ::jxx::CAST<CloneableObject>(clonedBase);
 
     ASSERT_NE(nullptr, cloned);
     EXPECT_NE(value.get(), cloned.get());
     EXPECT_EQ(value->value(), cloned->value());
-    EXPECT_EQ(CloneableObject::Class(), cloned->getClass());
+    EXPECT_EQ(cloneableObjectClass, cloned->getClass());
 }
 
 TEST(ObjectTest2, SynchronizedReturnsCallbackResult) {
