@@ -30,12 +30,15 @@ public:
                           std::atomic<bool>& started,
                           std::atomic<bool>& caught)
         : latch_(latch), started_(started), caught_(caught) {}
-    void run() override {
-        started_.store(true);
+    void run() override
+    {
+        started_.store(true, std::memory_order_release);
+
         try {
             latch_->await();
-        } catch (const jxx::lang::InterruptedException&) {
-            caught_.store(true);
+        }
+        catch (const ::jxx::lang::InterruptedException&) {
+            caught_.store(true, std::memory_order_release);
         }
     }
 private:

@@ -242,7 +242,8 @@ jbool Thread::interrupted() {
 }
 
 jbool Thread::isAlive() const {
-    return state_->running.load();
+    return state_->started.load(std::memory_order_acquire) &&
+           !state_->finished.load(std::memory_order_acquire);
 }
 
 void Thread::join() {

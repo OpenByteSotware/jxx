@@ -1,84 +1,151 @@
 #pragma once
 
+#include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.IllegalStateException.h"
+#include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.Object.h"
 #include "util/function/jxx.util.function.PredicateSuper.h"
 
-namespace jxx {
-namespace util {
-namespace function {
+namespace jxx::util::function {
 
 template <typename T>
-class Predicate : public virtual PredicateSuper<T> {
+class Predicate
+    : public ::jxx::lang::InterfaceBase<Predicate<T>, PredicateSuper<T>> {
 public:
-    virtual ~Predicate() = default;
+    ~Predicate() override = default;
 
-    virtual jxx::Ptr<Predicate<T>> and_(const jxx::Ptr<PredicateSuper<T>> other) {
+    ::jxx::Ptr<Predicate<T>> and_(
+        const ::jxx::Ptr<PredicateSuper<T>>& other) {
         if (other == nullptr) {
-            throw NullPointerException();
+            throw ::jxx::lang::NullPointerException();
         }
 
-        class AndPredicate : public virtual Predicate<T> {
-        private:
-            jxx::Ptr<PredicateSuper<T>> a_;
-            jxx::Ptr<PredicateSuper<T>> b_;
-
+        class AndPredicate final
+            : public ::jxx::lang::ClassBase<
+                  AndPredicate,
+                  ::jxx::lang::Object,
+                  Predicate<T>> {
         public:
-            AndPredicate(const jxx::Ptr<PredicateSuper<T>> a, jxx::Ptr<PredicateSuper<T>> b)
-                : a_(a), b_(b) {}
-
-            virtual ~AndPredicate() = default;
-
-            virtual jbool test(const jxx::Ptr<T> value) override {
-                return a_->test(value) && b_->test(value);
+            AndPredicate(
+                const ::jxx::Ptr<PredicateSuper<T>>& first,
+                const ::jxx::Ptr<PredicateSuper<T>>& second)
+                : first_(first), second_(second) {
             }
+
+            ::jxx::lang::jbool test(
+                const ::jxx::Ptr<T>& value) override {
+                return first_->test(value) && second_->test(value);
+            }
+
+        private:
+            ::jxx::Ptr<PredicateSuper<T>> first_;
+            ::jxx::Ptr<PredicateSuper<T>> second_;
         };
 
-        return jxx::Ptr<Predicate<T>>(new AndPredicate(const jxx::Ptr<PredicateSuper<T>>(this), other));
+        return ::jxx::CAST<Predicate<T>>(
+            ::jxx::NEW<AndPredicate>(selfSuper_(), other));
     }
 
-    virtual jxx::Ptr<Predicate<T>> negate() {
-        class NegatePredicate : public virtual Predicate<T> {
-        private:
-            jxx::Ptr<PredicateSuper<T>> inner_;
-
+    ::jxx::Ptr<Predicate<T>> negate() {
+        class NegatePredicate final
+            : public ::jxx::lang::ClassBase<
+                  NegatePredicate,
+                  ::jxx::lang::Object,
+                  Predicate<T>> {
         public:
-            explicit NegatePredicate(const jxx::Ptr<PredicateSuper<T>> inner)
-                : inner_(inner) {}
+            explicit NegatePredicate(
+                const ::jxx::Ptr<PredicateSuper<T>>& inner)
+                : inner_(inner) {
+            }
 
-            virtual ~NegatePredicate() = default;
-
-            virtual jbool test(const jxx::Ptr<T> value) override {
+            ::jxx::lang::jbool test(
+                const ::jxx::Ptr<T>& value) override {
                 return !inner_->test(value);
             }
+
+        private:
+            ::jxx::Ptr<PredicateSuper<T>> inner_;
         };
 
-        return jxx::Ptr<Predicate<T>>(new NegatePredicate(const jxx::Ptr<PredicateSuper<T>>(this)));
+        return ::jxx::CAST<Predicate<T>>(
+            ::jxx::NEW<NegatePredicate>(selfSuper_()));
     }
 
-    virtual jxx::Ptr<Predicate<T>> or_(const jxx::Ptr<PredicateSuper<T>> other) {
+    ::jxx::Ptr<Predicate<T>> or_(
+        const ::jxx::Ptr<PredicateSuper<T>>& other) {
         if (other == nullptr) {
-            throw NullPointerException();
+            throw ::jxx::lang::NullPointerException();
         }
 
-        class OrPredicate : public virtual Predicate<T> {
-        private:
-            jxx::Ptr<PredicateSuper<T>> a_;
-            jxx::Ptr<PredicateSuper<T>> b_;
-
+        class OrPredicate final
+            : public ::jxx::lang::ClassBase<
+                  OrPredicate,
+                  ::jxx::lang::Object,
+                  Predicate<T>> {
         public:
-            OrPredicate(const jxx::Ptr<PredicateSuper<T>> a, jxx::Ptr<PredicateSuper<T>> b)
-                : a_(a), b_(b) {}
-
-            virtual ~OrPredicate() = default;
-
-            virtual jbool test(const jxx::Ptr<T> value) override {
-                return a_->test(value) || b_->test(value);
+            OrPredicate(
+                const ::jxx::Ptr<PredicateSuper<T>>& first,
+                const ::jxx::Ptr<PredicateSuper<T>>& second)
+                : first_(first), second_(second) {
             }
+
+            ::jxx::lang::jbool test(
+                const ::jxx::Ptr<T>& value) override {
+                return first_->test(value) || second_->test(value);
+            }
+
+        private:
+            ::jxx::Ptr<PredicateSuper<T>> first_;
+            ::jxx::Ptr<PredicateSuper<T>> second_;
         };
 
-        return jxx::Ptr<Predicate<T>>(new OrPredicate(const jxx::Ptr<PredicateSuper<T>>(this), other));
+        return ::jxx::CAST<Predicate<T>>(
+            ::jxx::NEW<OrPredicate>(selfSuper_(), other));
+    }
+
+    template <typename U>
+    static ::jxx::Ptr<Predicate<U>> isEqual(
+        const ::jxx::Ptr<::jxx::lang::Object>& targetReference) {
+        class EqualityPredicate final
+            : public ::jxx::lang::ClassBase<
+                  EqualityPredicate,
+                  ::jxx::lang::Object,
+                  Predicate<U>> {
+        public:
+            explicit EqualityPredicate(
+                const ::jxx::Ptr<::jxx::lang::Object>& target)
+                : target_(target) {
+            }
+
+            ::jxx::lang::jbool test(
+                const ::jxx::Ptr<U>& value) override {
+                auto object = ::jxx::CAST<::jxx::lang::Object>(value);
+                if (target_ == nullptr) {
+                    return object == nullptr;
+                }
+                return target_->equals(object);
+            }
+
+        private:
+            ::jxx::Ptr<::jxx::lang::Object> target_;
+        };
+
+        return ::jxx::CAST<Predicate<U>>(
+            ::jxx::NEW<EqualityPredicate>(targetReference));
+    }
+
+private:
+    ::jxx::Ptr<PredicateSuper<T>> selfSuper_() {
+        auto* object = dynamic_cast<::jxx::lang::Object*>(this);
+        if (object == nullptr) {
+            throw ::jxx::lang::IllegalStateException();
+        }
+        auto self = ::jxx::CAST<PredicateSuper<T>>(object->thisPtr());
+        if (self == nullptr) {
+            throw ::jxx::lang::IllegalStateException();
+        }
+        return self;
     }
 };
 
-} // namespace function
-} // namespace util
-} // namespace jxx
+} // namespace jxx::util::function
