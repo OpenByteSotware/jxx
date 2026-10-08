@@ -336,6 +336,18 @@ void OpenSslSocket::startHandshake() {
             continue;
         }
 
+        if (soTimeout_ > 0) {
+            const auto elapsed =
+                std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now() -
+                    handshakeStarted).count();
+            if (elapsed >= soTimeout_) {
+                close();
+                throw ::jxx::net::SocketTimeoutException(
+                    "TLS handshake timed out");
+            }
+        }
+
         try {
             throwTlsFailure(
                 failedSsl,

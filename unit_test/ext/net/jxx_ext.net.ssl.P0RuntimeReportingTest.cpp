@@ -8,10 +8,18 @@
 
 namespace {
 
+    ::jxx::Ptr<::jxx::ext::net::ssl::SSLContext> initializedTlsContext()
+    {
+        const auto context =
+            ::jxx::ext::net::ssl::SSLContext::getInstance(
+                ::jxx::NEW<::jxx::lang::String>("TLS"));
+
+        context->init(nullptr, nullptr, nullptr);
+        return context;
+    }
+
 TEST(P0RuntimeReportingTest, ClientFactoryReportsRuntimeCipherSuites) {
-    const auto context =
-        ::jxx::ext::net::ssl::SSLContext::getInstance(
-            ::jxx::NEW<::jxx::lang::String>("TLS"));
+    const auto context = initializedTlsContext();
     const auto factory = context->getSocketFactory();
     ASSERT_NE(factory, nullptr);
     const auto defaults = factory->getDefaultCipherSuites();
@@ -23,9 +31,7 @@ TEST(P0RuntimeReportingTest, ClientFactoryReportsRuntimeCipherSuites) {
 }
 
 TEST(P0RuntimeReportingTest, ServerFactoryReportsRuntimeCipherSuites) {
-    const auto context =
-        ::jxx::ext::net::ssl::SSLContext::getInstance(
-            ::jxx::NEW<::jxx::lang::String>("TLS"));
+    const auto context = initializedTlsContext();
     const auto factory = context->getServerSocketFactory();
     ASSERT_NE(factory, nullptr);
     const auto defaults = factory->getDefaultCipherSuites();
