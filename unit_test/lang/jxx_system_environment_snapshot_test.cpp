@@ -2,6 +2,7 @@
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.System.h"
+#include "util/jxx.util.Map.h"
 
 namespace {
 TEST(SystemEnvironmentSnapshotParity, NamedPathMatchesSnapshot) {
