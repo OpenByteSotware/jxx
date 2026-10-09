@@ -454,34 +454,41 @@ namespace jxx::nio::channels
 
 	void SocketChannel::implCloseSelectableChannel()
 	{
-		std::lock_guard<std::mutex> lock(mutex_);
-		if (state_ == nullptr || state_->closed) {
+		::jxx::net::internal::NativeSocket native =
+			::jxx::net::internal::kInvalidSocket;
+
+		{
+			std::lock_guard<std::mutex> lock(mutex_);
+
+			// Publish the channel-close state before waking a blocked native I/O
+			// operation. This lets the blocked operation classify the wakeup as
+			// an asynchronous close instead of exposing a platform socket error.
 			open_ = false;
 			connected_ = false;
 			pending_ = false;
-			return;
-		}
-		::jxx::net::internal::NativeSocket native =
-			::jxx::net::internal::kInvalidSocket;
-		{
+
+			if (state_ == nullptr) return;
+
 			std::lock_guard<std::mutex> stateLock(state_->m);
+			if (state_->closed) return;
+
 			state_->closed = true;
 			state_->inputShutdown = true;
 			state_->outputShutdown = true;
 			native = state_->socket;
 			state_->socket = ::jxx::net::internal::kInvalidSocket;
 		}
+
+		// Never hold the channel mutex across native shutdown/close. A blocked
+		// read or write must be able to reacquire it and observe open_ == false.
 		if (native != ::jxx::net::internal::kInvalidSocket) {
 #if defined(_WIN32)
-			::shutdown(native, SD_BOTH);
+			(void)::shutdown(native, SD_BOTH);
 #else
-			::shutdown(native, SHUT_RDWR);
+			(void)::shutdown(native, SHUT_RDWR);
 #endif
 			::jxx::net::internal::closeNativeSocket(native);
 		}
-		open_ = false;
-		connected_ = false;
-		pending_ = false;
 	}
 	::jxx::Ptr<SocketChannel::NetworkChannel> SocketChannel::bind(const ::jxx::Ptr<::jxx::net::SocketAddress>& local)
 	{
