@@ -99,6 +99,41 @@ namespace jxx::net {
         ::freeaddrinfo(res);
     }
 
+    inline std::string inet_address_to_ip(
+        const ::jxx::Ptr<::jxx::net::InetAddress>& address) {
+        if (address == nullptr) {
+            throw ::jxx::lang::IllegalArgumentException(
+                "socket address has no address");
+        }
+#if defined(_WIN32)
+        wsa_ensure_started();
+#endif
+        const auto bytes = address->getAddress();
+        if (bytes == nullptr) {
+            throw ::jxx::lang::IllegalArgumentException(
+                "socket address has no address bytes");
+        }
+
+        char text[INET6_ADDRSTRLEN] = {0};
+        int family = AF_UNSPEC;
+        if (bytes->length == 4) family = AF_INET;
+        else if (bytes->length == 16) family = AF_INET6;
+        else {
+            throw ::jxx::lang::IllegalArgumentException(
+                "unsupported socket address length");
+        }
+
+        if (::inet_ntop(
+                family,
+                reinterpret_cast<const void*>(&(*bytes)[0]),
+                text,
+                sizeof(text)) == nullptr) {
+            throw ::jxx::net::SocketException(
+                "could not format socket address");
+        }
+        return std::string(text);
+    }
+
     inline std::string sockaddr_to_ip(const sockaddr* sa, socklen_t salen, std::uint16_t& portOut) {
         char host[NI_MAXHOST]{};
         char serv[NI_MAXSERV]{};
@@ -403,7 +438,37 @@ struct NativeDatagramPacket { std::vector<std::uint8_t> buffer; std::size_t offs
 
             sockaddr_storage address{};
             socklen_t addressLength{};
-            fill_sockaddr(localAddress, localPort, address, addressLength, family_);
+
+            // A resolved InetSocketAddress reaches this method as a numeric
+            // address. Build the native endpoint directly so wildcard binds
+            // never depend on name-service configuration.
+            if (family_ == AF_INET) {
+                auto* ipv4 = reinterpret_cast<sockaddr_in*>(&address);
+                ipv4->sin_family = AF_INET;
+                ipv4->sin_port = htons(localPort);
+                if (::inet_pton(AF_INET, localAddress.c_str(),
+                                &ipv4->sin_addr) != 1) {
+                    throw jxx::net::SocketException(
+                        "invalid numeric IPv4 bind address");
+                }
+                addressLength = static_cast<socklen_t>(sizeof(sockaddr_in));
+            }
+            else if (family_ == AF_INET6) {
+                auto* ipv6 = reinterpret_cast<sockaddr_in6*>(&address);
+                ipv6->sin6_family = AF_INET6;
+                ipv6->sin6_port = htons(localPort);
+                if (::inet_pton(AF_INET6, localAddress.c_str(),
+                                &ipv6->sin6_addr) != 1) {
+                    throw jxx::net::SocketException(
+                        "invalid numeric IPv6 bind address");
+                }
+                addressLength = static_cast<socklen_t>(sizeof(sockaddr_in6));
+            }
+            else {
+                throw jxx::net::SocketException(
+                    "unsupported datagram socket address family");
+            }
+
             const auto* socketAddress = reinterpret_cast<const sockaddr*>(&address);
             if (::bind(sock_, socketAddress, addressLength) != 0) {
                 throw jxx::net::SocketException("bind failed: " + sock_error_string());
@@ -781,7 +846,7 @@ void DatagramSocket::bind(const jxx::Ptr<SocketAddress>& address) {
     if (resolvedAddress == nullptr) {
         throw jxx::lang::IllegalArgumentException("socket address has no address");
     }
-    impl_->bind(resolvedAddress->getHostAddress()->utf8(),
+    impl_->bind(inet_address_to_ip(resolvedAddress),
         static_cast<std::uint16_t>(inetAddress->getPort()));
 }
 void DatagramSocket::connect(const jxx::Ptr<InetAddress>&a,::jxx::lang::jint p){if(!a)throw jxx::lang::NullPointerException();validatePort_(p);impl_->connect(a->getHostAddress()->utf8(),static_cast<std::uint16_t>(p));}

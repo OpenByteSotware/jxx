@@ -32,7 +32,6 @@ private:
     ::jxx::Ptr<::jxx::lang::String> name_;
     ::jxx::Ptr<::jxx::lang::String> previous_;
 };
-
 TEST(
     SSLContextDefaultTrustStoreParity,
     ExplicitNoneProducesEmptyTrustConfiguration)
@@ -68,7 +67,9 @@ TEST(
         ::jxx::ext::net::ssl::internal::
         loadDefaultPropertyTrustManagers();
 
-    EXPECT_EQ(nullptr, managers);
+    ASSERT_NE(nullptr, managers);
+    ASSERT_EQ(1U, managers->length);
+    ASSERT_NE(nullptr, (*managers)[0]);
 }
 TEST(SSLContextDefaultTrustStoreParity, AbsentTrustStoreUsesDefaultTrustPath) {
     SystemPropertyGuard trustStore("jxx.ext.net.ssl.trustStore");
