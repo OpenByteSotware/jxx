@@ -7,9 +7,7 @@
 #include "util/logging/jxx.util.logging.Formatter.h"
 namespace jxx::util::logging
 {
-	::jxx::Ptr<::jxx::lang::ClassAny> Handler::Class() { return JxxClassInfoMarker::Class(); }
-
-	Handler::Handler() :errorManager_(::jxx::NEW<ErrorManager>()), level_(Level::ALL())
+Handler::Handler() :errorManager_(::jxx::NEW<ErrorManager>()), level_(Level::ALL())
 	{
 	}void Handler::setFormatter(const ::jxx::Ptr<Formatter>& v)
 	{

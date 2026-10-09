@@ -17,7 +17,11 @@ namespace regex {
 
 class Pattern;
 
-class Matcher final : public ::jxx::lang::Object {
+class Matcher final
+    : public ::jxx::lang::ClassBase<
+          Matcher,
+          ::jxx::lang::Object,
+          MatchResult> {
 private:
     ::jxx::Ptr<Pattern> pattern_;
     ::jxx::Ptr<::jxx::lang::String> input_;
@@ -37,13 +41,8 @@ private:
     void ensureMatchState() const;
 
 public:
-    using Super = ::jxx::lang::Object;
-    using JxxClassInfoMarker =
-        ::jxx::lang::ClassInfo<Matcher, ::jxx::lang::Object>;
-
-    static ::jxx::Ptr<::jxx::lang::ClassAny> Class() {
-        return JxxClassInfoMarker::Class();
-    }
+    using JxxSuper = ::jxx::lang::Object;
+    using Super = ::jxx::lang::ClassBase<Matcher, JxxSuper, MatchResult>;
 
     Matcher(const ::jxx::Ptr<Pattern>& pattern, const ::jxx::Ptr<::jxx::lang::CharSequence>& input);
     virtual ~Matcher() = default;
