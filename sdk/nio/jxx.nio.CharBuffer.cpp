@@ -58,7 +58,7 @@ namespace jxx::nio
         for (jxx::lang::jint i = 0; i < array->length; ++i)
             (*storage)[static_cast<std::size_t>(i)] = (*array)[i];
 
-        auto out = std::shared_ptr<CharBuffer>(new CharBuffer(storage, offset, length, false));
+        auto out = ::jxx::ADOPT(std::shared_ptr<CharBuffer>(new CharBuffer(storage, offset, length, false)));
         out->position(0);
         out->limit(length);
         return out;
@@ -182,7 +182,7 @@ namespace jxx::nio
 
     jxx::Ptr<CharBuffer> CharBuffer::slice() const
     {
-        auto out = std::shared_ptr<CharBuffer>(new CharBuffer(storage_, offset_ + pos_, remaining(), readOnly_));
+        auto out = ::jxx::ADOPT(std::shared_ptr<CharBuffer>(new CharBuffer(storage_, offset_ + pos_, remaining(), readOnly_)));
         out->position(0);
         out->limit(remaining());
         return out;
@@ -190,7 +190,7 @@ namespace jxx::nio
 
     jxx::Ptr<CharBuffer> CharBuffer::duplicate() const
     {
-        auto out = std::shared_ptr<CharBuffer>(new CharBuffer(storage_, offset_, cap_, readOnly_));
+        auto out = ::jxx::ADOPT(std::shared_ptr<CharBuffer>(new CharBuffer(storage_, offset_, cap_, readOnly_)));
         out->mark_ = mark_;
         out->pos_ = pos_;
         out->lim_ = lim_;
@@ -199,7 +199,7 @@ namespace jxx::nio
 
     jxx::Ptr<CharBuffer> CharBuffer::asReadOnlyBuffer() const
     {
-        auto out = std::shared_ptr<CharBuffer>(new CharBuffer(storage_, offset_, cap_, true));
+        auto out = ::jxx::ADOPT(std::shared_ptr<CharBuffer>(new CharBuffer(storage_, offset_, cap_, true)));
         out->mark_ = mark_;
         out->pos_ = pos_;
         out->lim_ = lim_;

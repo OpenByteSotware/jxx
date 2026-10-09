@@ -35,7 +35,7 @@ namespace jxx::nio
         if (capacity < 0)
             throwIAE_("capacity < 0");
         auto storage = std::make_shared<std::vector<jxx::lang::jdouble>>(static_cast<std::size_t>(capacity));
-        return std::shared_ptr<DoubleBuffer>(new DoubleBuffer(storage, 0, capacity, false));
+        return ::jxx::ADOPT(std::shared_ptr<DoubleBuffer>(new DoubleBuffer(storage, 0, capacity, false)));
     }
 
     jxx::Ptr<DoubleBuffer> DoubleBuffer::wrap(const jxx::lang::DoubleArray array)
@@ -58,7 +58,7 @@ namespace jxx::nio
         for (jxx::lang::jint i = 0; i < array->length; ++i)
             (*storage)[static_cast<std::size_t>(i)] = (*array)[i];
 
-        auto out = std::shared_ptr<DoubleBuffer>(new DoubleBuffer(storage, offset, length, false));
+        auto out = ::jxx::ADOPT(std::shared_ptr<DoubleBuffer>(new DoubleBuffer(storage, offset, length, false)));
         out->position(0);
         out->limit(length);
         return out;
@@ -175,7 +175,7 @@ namespace jxx::nio
 
     jxx::Ptr<DoubleBuffer> DoubleBuffer::slice() const
     {
-        auto out = std::shared_ptr<DoubleBuffer>(new DoubleBuffer(storage_, offset_ + pos_, remaining(), readOnly_));
+        auto out = ::jxx::ADOPT(std::shared_ptr<DoubleBuffer>(new DoubleBuffer(storage_, offset_ + pos_, remaining(), readOnly_)));
         out->position(0);
         out->limit(remaining());
         return out;
@@ -183,7 +183,7 @@ namespace jxx::nio
 
     jxx::Ptr<DoubleBuffer> DoubleBuffer::duplicate() const
     {
-        auto out = std::shared_ptr<DoubleBuffer>(new DoubleBuffer(storage_, offset_, cap_, readOnly_));
+        auto out = ::jxx::ADOPT(std::shared_ptr<DoubleBuffer>(new DoubleBuffer(storage_, offset_, cap_, readOnly_)));
         out->mark_ = mark_;
         out->pos_ = pos_;
         out->lim_ = lim_;
@@ -192,7 +192,7 @@ namespace jxx::nio
 
     jxx::Ptr<DoubleBuffer> DoubleBuffer::asReadOnlyBuffer() const
     {
-        auto out = std::shared_ptr<DoubleBuffer>(new DoubleBuffer(storage_, offset_, cap_, true));
+        auto out = ::jxx::ADOPT(std::shared_ptr<DoubleBuffer>(new DoubleBuffer(storage_, offset_, cap_, true)));
         out->mark_ = mark_;
         out->pos_ = pos_;
         out->lim_ = lim_;

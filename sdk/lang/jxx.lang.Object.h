@@ -320,6 +320,20 @@ namespace jxx
         };
     } // namespace detail
 
+    template <typename T>
+    jxx::Ptr<T> ADOPT(jxx::Ptr<T> object) noexcept
+    {
+        static_assert(
+            std::is_base_of_v<jxx::lang::Object, T>,
+            "jxx::ADOPT<T> requires an Object-derived concrete type.");
+
+        if (object != nullptr) {
+            detail::ObjectAccess::initialize(
+                std::static_pointer_cast<jxx::lang::Object>(object));
+        }
+        return object;
+    }
+
     template <typename T, typename... Args>
     jxx::Ptr<T> NEW(Args&&... arguments)
     {

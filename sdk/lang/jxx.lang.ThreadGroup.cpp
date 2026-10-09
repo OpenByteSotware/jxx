@@ -31,7 +31,7 @@ ThreadGroup::~ThreadGroup() {
 }
 jxx::Ptr<ThreadGroup> ThreadGroup::systemThreadGroup() {
     static auto value = [] {
-        auto group = jxx::Ptr<ThreadGroup>(new ThreadGroup());
+        auto group = jxx::ADOPT(jxx::Ptr<ThreadGroup>(new ThreadGroup()));
         group->name_ = jxx::NEW<String>("system");
         group->maxPriority_ = Thread::MAX_PRIORITY;
         return group;

@@ -37,7 +37,8 @@ namespace jxx::nio::channels
                                             jxx::lang::jbool writable,
                                             jxx::lang::jbool append)
     {
-        return std::shared_ptr<FileChannel>(new FileChannel(std::move(file), readable, writable, append));
+        return ::jxx::ADOPT(std::shared_ptr<FileChannel>(
+            new FileChannel(std::move(file), readable, writable, append)));
     }
 
     FileChannel::FileChannel(const jxx::Ptr<jxx::io::File> file,
