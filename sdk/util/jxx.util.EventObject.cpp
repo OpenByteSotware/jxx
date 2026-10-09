@@ -44,4 +44,18 @@ EventObject::cloneImpl() const {
         ::jxx::NEW<EventObject>(source_));
 }
 
+
+void EventObject::writeObject(
+    const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) {
+    (void)output;
+}
+
+void EventObject::readObject(
+    const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) {
+    (void)input;
+}
+
+void EventObject::readObjectNoData() {
+}
+
 } // namespace jxx::util

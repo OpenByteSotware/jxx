@@ -395,7 +395,13 @@ namespace jxx::lang
 
     jxx::Ptr<Throwable> Throwable::cloneThrowable() const
     {
-        return jxx::CAST<Throwable>(clone());
+        // Throwable instances are not Cloneable. This internal copy operation
+        // is used to preserve the dynamic exception type when a value-thrown
+        // exception must cross into a pointer-based JXX API, such as an
+        // uncaught-exception handler. Calling Object::clone() incorrectly
+        // performs the public Cloneable check and throws
+        // CloneNotSupportedException before dispatch can occur.
+        return jxx::CAST<Throwable>(cloneImpl());
     }
 
     const char* Throwable::typeName() const noexcept

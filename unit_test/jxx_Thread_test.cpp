@@ -187,14 +187,15 @@ TEST(ThreadTest, CurrentThreadIsAvailableInsideRun) {
     EXPECT_TRUE(found.load());
 }
 
-TEST(ThreadTest, InterruptStatusCanBeObserved) {
-    auto thread = jxx::NEW<Thread>();
+TEST(ThreadTest, InterruptBeforeStartHasNoEffect)
+{
+    const auto thread = jxx::NEW<Thread>();
 
-    EXPECT_FALSE(thread->isInterrupted());
+    EXPECT_EQ(Thread::State::NEW, thread->getState());
 
     thread->interrupt();
 
-    EXPECT_TRUE(thread->isInterrupted());
+    EXPECT_FALSE(thread->isInterrupted());
 }
 
 } // namespace

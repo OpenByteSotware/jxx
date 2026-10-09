@@ -10,14 +10,22 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "io/jxx.io.SerializableI.h"
 
 namespace jxx::util {
 
 class EventObject
     : public ::jxx::lang::ClassBase<
           EventObject,
-          ::jxx::lang::Object> {
+          ::jxx::lang::Object,
+          ::jxx::io::SerializableI> {
 public:
+    using JxxSuper = ::jxx::lang::Object;
+    using Super = ::jxx::lang::ClassBase<
+        EventObject, JxxSuper, ::jxx::io::SerializableI>;
+
     explicit EventObject(
         const ::jxx::Ptr<::jxx::lang::Object>& source);
 
@@ -26,6 +34,12 @@ public:
     ::jxx::Ptr<::jxx::lang::Object> getSource() const;
 
     ::jxx::Ptr<::jxx::lang::String> toString() const override;
+
+    void writeObject(
+        const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) override;
+    void readObject(
+        const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) override;
+    void readObjectNoData() override;
 
 protected:
     void setSource(
