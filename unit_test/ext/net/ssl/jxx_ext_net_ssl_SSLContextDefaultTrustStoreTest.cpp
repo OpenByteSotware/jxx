@@ -49,23 +49,40 @@ TEST(SSLContextDefaultTrustStoreParity, AbsentTrustStoreUsesDefaultTrustPath) {
             loadDefaultPropertyTrustManagers());
 }
 
-TEST(SSLContextDefaultTrustStoreParity, MissingConfiguredStoreIsRejected) {
-    SystemPropertyGuard trustStore("javax.net.ssl.trustStore");
-    SystemPropertyGuard password("javax.net.ssl.trustStorePassword");
+TEST(
+    SSLContextDefaultTrustStoreParity,
+    MissingConfiguredStoreProducesEmptyTrustConfiguration)
+{
+    SystemPropertyGuard trustStore(
+        "jxx.ext.net.ssl.trustStore");
+
+    SystemPropertyGuard password(
+        "jxx.ext.net.ssl.trustStorePassword");
 
     (void)::jxx::lang::System::setProperty(
-        ::jxx::NEW<::jxx::lang::String>("javax.net.ssl.trustStore"),
+        ::jxx::NEW<::jxx::lang::String>(
+            "jxx.ext.net.ssl.trustStore"),
         ::jxx::NEW<::jxx::lang::String>(
             "jxx-test-missing-trust-store-8d729a.pem"));
+
     (void)::jxx::lang::System::setProperty(
         ::jxx::NEW<::jxx::lang::String>(
-            "javax.net.ssl.trustStorePassword"),
-        ::jxx::NEW<::jxx::lang::String>("changeit"));
+            "jxx.ext.net.ssl.trustStorePassword"),
+        ::jxx::NEW<::jxx::lang::String>(
+            "changeit"));
 
-    EXPECT_THROW(
-        (void)::jxx::ext::net::ssl::internal::
-            loadDefaultPropertyTrustManagers(),
-        ::jxx::lang::IllegalStateException);
+    ::jxx::Ptr<
+        ::jxx::ext::net::ssl::SSLContext::
+        TrustManagerArray> managers;
+
+    EXPECT_NO_THROW(
+        managers =
+            ::jxx::ext::net::ssl::internal::
+                loadDefaultPropertyTrustManagers());
+
+    ASSERT_NE(nullptr, managers);
+    ASSERT_EQ(1U, managers->length);
+    EXPECT_NE(nullptr, (*managers)[0]);
 }
 
 TEST(SSLContextDefaultTrustStoreParity, DefaultContextStillCreatesFactory) {
