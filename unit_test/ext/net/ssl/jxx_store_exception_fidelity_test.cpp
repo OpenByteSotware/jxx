@@ -40,12 +40,12 @@ TEST(StoreExceptionFidelityTest, UnsupportedKeyStoreTypeThrowsKeyStoreException)
 }
 
 TEST(StoreExceptionFidelityTest, UnsupportedKeyStoreProviderThrowsNoSuchProvider) {
-    PropertyRestore path("javax.net.ssl.keyStore");
-    PropertyRestore type("javax.net.ssl.keyStoreType");
-    PropertyRestore provider("javax.net.ssl.keyStoreProvider");
-    setProperty("javax.net.ssl.keyStore", "missing-store");
-    setProperty("javax.net.ssl.keyStoreType", "PKCS12");
-    setProperty("javax.net.ssl.keyStoreProvider", "missing-provider");
+    PropertyRestore path("jxx.ext.net.ssl.keyStore");
+    PropertyRestore type("jxx.ext.net.ssl.keyStoreType");
+    PropertyRestore provider("jxx.ext.net.ssl.keyStoreProvider");
+    setProperty("jxx.ext.net.ssl.keyStore", "missing-store");
+    setProperty("jxx.ext.net.ssl.keyStoreType", "PKCS12");
+    setProperty("jxx.ext.net.ssl.keyStoreProvider", "missing-provider");
     EXPECT_THROW(
         ::jxx::ext::net::ssl::internal::loadDefaultPropertyKeyManagers(),
         ::jxx::security::NoSuchProviderException);

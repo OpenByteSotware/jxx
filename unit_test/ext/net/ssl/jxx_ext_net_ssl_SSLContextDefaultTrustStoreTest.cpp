@@ -71,14 +71,14 @@ TEST(
     EXPECT_EQ(nullptr, managers);
 }
 TEST(SSLContextDefaultTrustStoreParity, AbsentTrustStoreUsesDefaultTrustPath) {
-    SystemPropertyGuard trustStore("javax.net.ssl.trustStore");
-    SystemPropertyGuard password("javax.net.ssl.trustStorePassword");
+    SystemPropertyGuard trustStore("jxx.ext.net.ssl.trustStore");
+    SystemPropertyGuard password("jxx.ext.net.ssl.trustStorePassword");
 
     (void)::jxx::lang::System::clearProperty(
-        ::jxx::NEW<::jxx::lang::String>("javax.net.ssl.trustStore"));
+        ::jxx::NEW<::jxx::lang::String>("jxx.ext.net.ssl.trustStore"));
     (void)::jxx::lang::System::clearProperty(
         ::jxx::NEW<::jxx::lang::String>(
-            "javax.net.ssl.trustStorePassword"));
+            "jxx.ext.net.ssl.trustStorePassword"));
 
     EXPECT_EQ(
         nullptr,

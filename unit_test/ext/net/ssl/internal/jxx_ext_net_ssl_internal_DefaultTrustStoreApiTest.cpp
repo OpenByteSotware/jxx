@@ -47,16 +47,16 @@ private:
 };
 
 TEST(DefaultTrustStoreApiParity, TrustStorePropertiesRoundTripSafely) {
-    SystemPropertyGuard trustStore("javax.net.ssl.trustStore");
+    SystemPropertyGuard trustStore("jxx.ext.net.ssl.trustStore");
     SystemPropertyGuard trustStorePassword(
-        "javax.net.ssl.trustStorePassword");
+        "jxx.ext.net.ssl.trustStorePassword");
 
     const auto trustStoreName =
         ::jxx::NEW<::jxx::lang::String>(
-            "javax.net.ssl.trustStore");
+            "jxx.ext.net.ssl.trustStore");
     const auto trustStorePasswordName =
         ::jxx::NEW<::jxx::lang::String>(
-            "javax.net.ssl.trustStorePassword");
+            "jxx.ext.net.ssl.trustStorePassword");
     const auto trustStoreValue =
         ::jxx::NEW<::jxx::lang::String>(
             "jxx-test-trust-store.p12");
@@ -82,12 +82,11 @@ TEST(DefaultTrustStoreApiParity, TrustStorePropertiesRoundTripSafely) {
 }
 
 TEST(DefaultTrustStoreApiParity, MissingTrustStorePropertyRemainsAbsent) {
-    SystemPropertyGuard trustStore("javax.net.ssl.trustStore");
+    SystemPropertyGuard trustStore("jxx.ext.net.ssl.trustStore");
 
     const auto trustStoreName =
         ::jxx::NEW<::jxx::lang::String>(
-            "javax.net.ssl.trustStore");
-
+            "jxx.ext.net.ssl.trustStore");
     (void)::jxx::lang::System::clearProperty(trustStoreName);
 
     EXPECT_EQ(
