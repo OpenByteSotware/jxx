@@ -884,16 +884,18 @@ namespace {
         EXPECT_EQ((*parts)[2]->utf8(), "three");
     }
 
-    TEST(StringTest, SplitWithPositiveLimitRestrictsResultCount) {
-        auto value = S("one,two,three");
+    TEST(StringTest, SplitWithPositiveLimitRestrictsResultCount)
+    {
+        const auto value = S("one,two,three");
 
-        auto parts = value->split(S(","), 2);
+        const auto parts =
+            value->split(S(","), 2);
 
-        ASSERT_NE(parts, nullptr);
-        ASSERT_EQ(parts->length, 2U);
+        ASSERT_NE(nullptr, parts);
+        ASSERT_EQ(2U, parts->length);
 
-        EXPECT_EQ((*parts)[0]->utf8(), "one");
-        EXPECT_EQ((*parts)[1]->utf8(), "two");
+        EXPECT_EQ("one", (*parts)[0]->utf8());
+        EXPECT_EQ("two,three", (*parts)[1]->utf8());
     }
 
     /*

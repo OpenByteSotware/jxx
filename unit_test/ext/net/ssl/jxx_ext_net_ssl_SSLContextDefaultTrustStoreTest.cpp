@@ -49,8 +49,7 @@ TEST(SSLContextDefaultTrustStoreParity, AbsentTrustStoreUsesDefaultTrustPath) {
             loadDefaultPropertyTrustManagers());
 }
 
-TEST(
-    SSLContextDefaultTrustStoreParity,
+TEST(SSLContextDefaultTrustStoreParity,
     MissingConfiguredStoreProducesEmptyTrustConfiguration)
 {
     SystemPropertyGuard trustStore(
@@ -59,26 +58,36 @@ TEST(
     SystemPropertyGuard password(
         "jxx.ext.net.ssl.trustStorePassword");
 
-    (void)::jxx::lang::System::setProperty(
+    const auto trustStoreKey =
         ::jxx::NEW<::jxx::lang::String>(
-            "jxx.ext.net.ssl.trustStore"),
+            "jxx.ext.net.ssl.trustStore");
+
+    const auto passwordKey =
+        ::jxx::NEW<::jxx::lang::String>(
+            "jxx.ext.net.ssl.trustStorePassword");
+
+    (void)::jxx::lang::System::setProperty(
+        trustStoreKey,
         ::jxx::NEW<::jxx::lang::String>(
             "jxx-test-missing-trust-store-8d729a.pem"));
 
     (void)::jxx::lang::System::setProperty(
-        ::jxx::NEW<::jxx::lang::String>(
-            "jxx.ext.net.ssl.trustStorePassword"),
+        passwordKey,
         ::jxx::NEW<::jxx::lang::String>(
             "changeit"));
 
-    ::jxx::Ptr<
-        ::jxx::ext::net::ssl::SSLContext::
-        TrustManagerArray> managers;
+    const auto configuredTrustStore =
+        ::jxx::lang::System::getProperty(
+            trustStoreKey);
 
-    EXPECT_NO_THROW(
-        managers =
-            ::jxx::ext::net::ssl::internal::
-                loadDefaultPropertyTrustManagers());
+    ASSERT_NE(nullptr, configuredTrustStore);
+    EXPECT_EQ(
+        "jxx-test-missing-trust-store-8d729a.pem",
+        configuredTrustStore->utf8());
+
+    const auto managers =
+        ::jxx::ext::net::ssl::internal::
+        loadDefaultPropertyTrustManagers();
 
     ASSERT_NE(nullptr, managers);
     ASSERT_EQ(1U, managers->length);

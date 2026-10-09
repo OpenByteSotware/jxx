@@ -31,21 +31,30 @@ jxx::Ptr<ClassAny> StringBuffer::Class() {
     }
 
     // ---- constructors ----
-    StringBuffer::StringBuffer() : Super(), value_() {}
-
-    StringBuffer::StringBuffer(jint capacity) : Super(), value_() {
-        if (capacity < 0) throwIAE_("negative capacity");
-        value_.reserve((std::size_t)capacity);
+    StringBuffer::StringBuffer() : Super(), value_(), capacity_(16) {
+        value_.reserve(16U);
     }
 
-    StringBuffer::StringBuffer(const jxx::Ptr<String>& str) : Super(), value_() {
+    StringBuffer::StringBuffer(jint capacity)
+        : Super(), value_(), capacity_(capacity) {
+        if (capacity < 0) throwIAE_("negative capacity");
+        value_.reserve(static_cast<std::size_t>(capacity_));
+    }
+
+    StringBuffer::StringBuffer(const jxx::Ptr<String>& str)
+        : Super(), value_(), capacity_(16) {
         if (!str) throwNPE_();
         value_ = str->utf16();
+        capacity_ = static_cast<jint>(value_.size()) + 16;
+        value_.reserve(static_cast<std::size_t>(capacity_));
     }
 
-    StringBuffer::StringBuffer(const jxx::Ptr<CharSequence>& seq) : Super(), value_() {
+    StringBuffer::StringBuffer(const jxx::Ptr<CharSequence>& seq)
+        : Super(), value_(), capacity_(16) {
         if (!seq) throwNPE_();
         value_ = toUtf16_(seq);
+        capacity_ = static_cast<jint>(value_.size()) + 16;
+        value_.reserve(static_cast<std::size_t>(capacity_));
     }
 
     // ---- capacity / length ----
@@ -53,7 +62,7 @@ jxx::Ptr<ClassAny> StringBuffer::Class() {
         return this->synchronized([&]()->jint { return (jint)value_.size(); });
     }
     jint StringBuffer::capacity() const {
-        return this->synchronized([&]()->jint { return (jint)value_.capacity(); });
+        return this->synchronized([&]()->jint { return capacity_; });
     }
 
     jint StringBuffer::newCapacity_(jint minCapacity) const {
@@ -64,8 +73,9 @@ jxx::Ptr<ClassAny> StringBuffer::Class() {
     }
 
     void StringBuffer::ensureCapacityInternal_(jint minCapacity) {
-        if (minCapacity <= (jint)value_.capacity()) return;
-        value_.reserve((std::size_t)newCapacity_(minCapacity));
+        if (minCapacity <= capacity_) return;
+        capacity_ = newCapacity_(minCapacity);
+        value_.reserve(static_cast<std::size_t>(capacity_));
     }
 
     void StringBuffer::ensureCapacity(jint minimumCapacity) {
@@ -75,7 +85,11 @@ jxx::Ptr<ClassAny> StringBuffer::Class() {
     }
 
     void StringBuffer::trimToSize() {
-        this->synchronized([&] { value_.shrink_to_fit(); });
+        this->synchronized([&] {
+            capacity_ = static_cast<jint>(value_.size());
+            std::u16string trimmed(value_);
+            value_.swap(trimmed);
+        });
     }
 
     void StringBuffer::setLength(jint newLength) {
@@ -139,12 +153,12 @@ jxx::Ptr<ClassAny> StringBuffer::Class() {
     jxx::Ptr<StringBuffer> StringBuffer::append(jbool b) { return append(jxx::NEW<String>(b ? "true" : "false")); }
 
     jxx::Ptr<Appendable> StringBuffer::append(jchar c) {
-        this->synchronized([&] { value_.push_back((char16_t)c); });
+        this->synchronized([&] { ensureCapacityInternal_(static_cast<jint>(value_.size()) + 1); value_.push_back((char16_t)c); });
         return self_();
     }
 
     jxx::Ptr<StringBuffer> StringBuffer::appendSB(jchar c) {
-        this->synchronized([&] { value_.push_back((char16_t)c); });
+        this->synchronized([&] { ensureCapacityInternal_(static_cast<jint>(value_.size()) + 1); value_.push_back((char16_t)c); });
         return self_();
     }
 
@@ -269,6 +283,8 @@ jxx::Ptr<ClassAny> StringBuffer::Class() {
     jxx::Ptr<StringBuffer> StringBuffer::appendCodePoint(jint codePoint) {
         this->synchronized([&] {
             if (codePoint < 0 || codePoint > 0x10FFFF) throwIAE_("Invalid code point");
+            ensureCapacityInternal_(static_cast<jint>(value_.size()) +
+                (codePoint <= 0xFFFF ? 1 : 2));
             if (codePoint <= 0xFFFF) value_.push_back((char16_t)codePoint);
             else {
                 jint cp = codePoint - 0x10000;
@@ -395,6 +411,7 @@ jxx::Ptr<ClassAny> StringBuffer::Class() {
     jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, jchar c) {
         this->synchronized([&] {
             if (offset < 0 || offset >(jint)value_.size()) throwSIOOBE_();
+            ensureCapacityInternal_(static_cast<jint>(value_.size()) + 1);
             value_.insert(value_.begin() + offset, (char16_t)c);
             });
         return self_();

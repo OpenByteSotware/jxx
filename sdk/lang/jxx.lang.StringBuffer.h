@@ -110,6 +110,7 @@ public:
 
     private:
         std::u16string value_;
+        jxx::lang::jint capacity_ = 16;
 
         void ensureCapacityInternal_(jxx::lang::jint minCapacity);
         jxx::lang::jint newCapacity_(jxx::lang::jint minCapacity) const;
