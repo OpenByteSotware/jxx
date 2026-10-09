@@ -271,8 +271,8 @@ namespace jxx {
             virtual ::jxx::Ptr<Iterator<E>>
                 iterator() override {
 
-                return ::jxx::Ptr<Iterator<E>>(
-                    new TreeSetIterator<E>(this));
+                return ::jxx::CAST<Iterator<E>>(
+                    ::jxx::NEW<TreeSetIterator<E>>(this));
             }
 
             virtual ::jxx::lang::jbool add(const ::jxx::Ptr<E>& element) override {
@@ -550,9 +550,7 @@ namespace jxx {
             virtual ::jxx::Ptr<::jxx::lang::Object>
                 clone() {
 
-                auto cloned =
-                    ::jxx::Ptr<TreeSet<E>>(
-                        new TreeSet<E>(comparator_));
+                auto cloned = ::jxx::NEW<TreeSet<E>>(comparator_);
 
                 for (const auto& element : set_) {
                     cloned->set_.insert(element);

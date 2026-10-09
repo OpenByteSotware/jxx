@@ -285,8 +285,8 @@ namespace jxx {
                 /*
                  * The template argument is explicit.
                  */
-                return ::jxx::Ptr<Iterator<E>>(
-                    new HashSetIterator<E>(this));
+                return ::jxx::CAST<Iterator<E>>(
+                    ::jxx::NEW<HashSetIterator<E>>(this));
             }
 
             virtual ::jxx::lang::jint size() override {

@@ -22,7 +22,7 @@ public:
             }
         };
 
-        return jxx::Ptr<UnaryOperator<T>>(new IdentityUnaryOperator());
+        return ::jxx::CAST<UnaryOperator<T>>(::jxx::NEW<IdentityUnaryOperator>());
     }
 };
 

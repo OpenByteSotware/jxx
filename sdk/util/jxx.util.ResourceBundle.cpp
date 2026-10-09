@@ -217,8 +217,8 @@ void ResourceBundle::registerBundle(
         }
     }
 
-    return ::jxx::Ptr<Enumeration<::jxx::lang::String>>(
-        new KeyEnumeration(std::move(keys)));
+    return ::jxx::CAST<Enumeration<::jxx::lang::String>>(
+        ::jxx::NEW<KeyEnumeration>(std::move(keys)));
 }
 
 

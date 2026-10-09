@@ -140,11 +140,11 @@ public:
     };
 
     virtual ::jxx::Ptr<Iterator<E>> iterator() override {
-        return ::jxx::Ptr<Iterator<E>>(new ForwardIterator(this));
+        return ::jxx::CAST<Iterator<E>>(::jxx::NEW<ForwardIterator>(this));
     }
 
     virtual ::jxx::Ptr<Iterator<E>> descendingIterator() override {
-        return ::jxx::Ptr<Iterator<E>>(new DescendingIteratorImpl(this));
+        return ::jxx::CAST<Iterator<E>>(::jxx::NEW<DescendingIteratorImpl>(this));
     }
 
     virtual ::jxx::lang::ObjectArray toArray() override {
@@ -302,7 +302,7 @@ public:
     }
 
     virtual ::jxx::Ptr<::jxx::lang::Object> clone() {
-        auto cloned = ::jxx::Ptr<ArrayDeque<E>>(new ArrayDeque<E>());
+        auto cloned = ::jxx::NEW<ArrayDeque<E>>();
         for (const auto& e : data_) {
             cloned->data_.push_back(e);
         }

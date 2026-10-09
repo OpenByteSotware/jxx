@@ -87,7 +87,7 @@ public:
         return static_cast<jxx::lang::jbool>(false);
     }
     virtual jxx::Ptr<Iterator<jxx::lang::String>> iterator() override {
-        return std::make_shared<StringIteratorImpl>(values_);
+        return ::jxx::CAST<Iterator<jxx::lang::String>>(::jxx::NEW<StringIteratorImpl>(values_));
     }
     virtual jxx::lang::jbool add(const jxx::Ptr<jxx::lang::String>& /*e*/) override {
         throw jxx::lang::UnsupportedOperationException();
@@ -417,7 +417,7 @@ static void writeCommentsToOutputStream(const jxx::Ptr<jxx::io::OutputStream> ou
 static void writeOnePropertyToWriter(const jxx::Ptr<jxx::io::Writer> writer, jxx::Ptr<jxx::lang::String> key, jxx::Ptr<jxx::lang::String> value) {
     const auto k = saveConvert(key->utf16(), static_cast<jxx::lang::jbool>(true), static_cast<jxx::lang::jbool>(false));
     const auto v = saveConvert(value->utf16(), static_cast<jxx::lang::jbool>(false), static_cast<jxx::lang::jbool>(false));
-    writer->write(std::make_shared<jxx::lang::String>(k + u"=" + v + u"\n"));
+    writer->write(::jxx::NEW<jxx::lang::String>(k + u"=" + v + u"\n"));
 }
 
 static void writeOnePropertyToOutputStream(const jxx::Ptr<jxx::io::OutputStream> out, jxx::Ptr<jxx::lang::String> key, jxx::Ptr<jxx::lang::String> value) {
@@ -659,13 +659,13 @@ void Properties::collectStringPropertyNames(std::vector<jxx::Ptr<jxx::lang::Stri
 jxx::Ptr<Enumeration<jxx::lang::Object>> Properties::propertyNames() {
     std::vector<jxx::Ptr<jxx::lang::Object>> names;
     collectPropertyNames(names);
-    return std::make_shared<ObjectEnumerationImpl>(std::move(names));
+    return ::jxx::CAST<Enumeration<jxx::lang::Object>>(::jxx::NEW<ObjectEnumerationImpl>(std::move(names)));
 }
 
 jxx::Ptr<Set<jxx::lang::String>> Properties::stringPropertyNames() {
     std::vector<jxx::Ptr<jxx::lang::String>> names;
     collectStringPropertyNames(names);
-    return std::make_shared<StringSetImpl>(std::move(names));
+    return ::jxx::CAST<Set<jxx::lang::String>>(::jxx::NEW<StringSetImpl>(std::move(names)));
 }
 
 void Properties::list(const jxx::Ptr<jxx::io::PrintStream> out) {

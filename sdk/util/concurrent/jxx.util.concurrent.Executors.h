@@ -77,7 +77,7 @@ public:
 
     static ::jxx::Ptr<ThreadFactory> defaultThreadFactory() {
         static const auto factory =
-            ::jxx::Ptr<ThreadFactory>(new executors_detail::DefaultThreadFactory());
+            ::jxx::CAST<ThreadFactory>(::jxx::NEW<executors_detail::DefaultThreadFactory>());
         return factory;
     }
 

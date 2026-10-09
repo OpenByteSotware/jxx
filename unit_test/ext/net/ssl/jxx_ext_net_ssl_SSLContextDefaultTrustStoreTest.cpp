@@ -49,8 +49,7 @@ TEST(SSLContextDefaultTrustStoreParity, AbsentTrustStoreUsesDefaultTrustPath) {
             loadDefaultPropertyTrustManagers());
 }
 
-TEST(SSLContextDefaultTrustStoreParity,
-    MissingConfiguredStoreProducesEmptyTrustConfiguration)
+TEST(SSLContextDefaultTrustStoreParity, MissingConfiguredStoreProducesEmptyTrustConfiguration)
 {
     SystemPropertyGuard trustStore(
         "jxx.ext.net.ssl.trustStore");
