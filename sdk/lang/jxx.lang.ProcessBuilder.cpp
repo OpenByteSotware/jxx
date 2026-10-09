@@ -466,12 +466,12 @@ std::unordered_map<std::string,std::string> currentEnvironment(){std::unordered_
 ProcessBuilder::Redirect::Redirect(Type type, const jxx::Ptr<jxx::io::File>& file)
     : type_(type), file_(file) {}
 jxx::Ptr<ProcessBuilder::Redirect> ProcessBuilder::Redirect::PIPE =
-    jxx::Ptr<Redirect>(new Redirect(Type::PIPE, nullptr));
+    jxx::NEW<Redirect>(Type::PIPE, nullptr);
 jxx::Ptr<ProcessBuilder::Redirect> ProcessBuilder::Redirect::INHERIT =
-    jxx::Ptr<Redirect>(new Redirect(Type::INHERIT, nullptr));
-jxx::Ptr<ProcessBuilder::Redirect> ProcessBuilder::Redirect::from(const jxx::Ptr<jxx::io::File>& file){if(!file)throw NullPointerException();return jxx::Ptr<Redirect>(new Redirect(Type::READ,file));}
-jxx::Ptr<ProcessBuilder::Redirect> ProcessBuilder::Redirect::to(const jxx::Ptr<jxx::io::File>& file){if(!file)throw NullPointerException();return jxx::Ptr<Redirect>(new Redirect(Type::WRITE,file));}
-jxx::Ptr<ProcessBuilder::Redirect> ProcessBuilder::Redirect::appendTo(const jxx::Ptr<jxx::io::File>& file){if(!file)throw NullPointerException();return jxx::Ptr<Redirect>(new Redirect(Type::APPEND,file));}
+    jxx::NEW<Redirect>(Type::INHERIT, nullptr);
+jxx::Ptr<ProcessBuilder::Redirect> ProcessBuilder::Redirect::from(const jxx::Ptr<jxx::io::File>& file){if(!file)throw NullPointerException();return jxx::NEW<Redirect>(Type::READ,file);}
+jxx::Ptr<ProcessBuilder::Redirect> ProcessBuilder::Redirect::to(const jxx::Ptr<jxx::io::File>& file){if(!file)throw NullPointerException();return jxx::NEW<Redirect>(Type::WRITE,file);}
+jxx::Ptr<ProcessBuilder::Redirect> ProcessBuilder::Redirect::appendTo(const jxx::Ptr<jxx::io::File>& file){if(!file)throw NullPointerException();return jxx::NEW<Redirect>(Type::APPEND,file);}
 ProcessBuilder::Redirect::Type ProcessBuilder::Redirect::type()const{return type_;}
 jxx::Ptr<jxx::io::File> ProcessBuilder::Redirect::file()const{return file_;}
 jbool ProcessBuilder::Redirect::equals(const jxx::Ptr<Object>& other) const {auto value=jxx::CAST<Redirect>(other);if(value==nullptr||type_!=value->type_)return false;if(file_==nullptr||value->file_==nullptr)return file_==value->file_;return file_->getPath()->equals(value->file_->getPath());}

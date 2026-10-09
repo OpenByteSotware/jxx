@@ -27,8 +27,10 @@ public:
         jxx::Ptr<jxx::io::File> file() const;
         jbool equals(const jxx::Ptr<Object>& other) const override;
         jint hashCode() const override;
-    private:
+    public:
         Redirect(Type type, const jxx::Ptr<jxx::io::File>& file);
+
+    private:
         Type type_;
         jxx::Ptr<jxx::io::File> file_;
     };

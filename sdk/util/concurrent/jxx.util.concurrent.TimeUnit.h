@@ -46,8 +46,10 @@ public:
         const ::jxx::Ptr<::jxx::lang::Thread>& thread,
         ::jxx::lang::jlong timeout) const;
 
-private:
+public:
     explicit TimeUnit(Kind kind);
+
+    private:
     static ::jxx::lang::jlong factor(Kind kind) noexcept;
     static ::jxx::lang::jlong saturatedMultiply(
         ::jxx::lang::jlong value,

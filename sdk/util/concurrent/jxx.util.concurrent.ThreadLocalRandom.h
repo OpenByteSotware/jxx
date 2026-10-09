@@ -14,7 +14,9 @@ public:
  ::jxx::lang::jlong nextLong(::jxx::lang::jlong origin,::jxx::lang::jlong bound);
  ::jxx::lang::jdouble nextDouble(::jxx::lang::jdouble bound);
  ::jxx::lang::jdouble nextDouble(::jxx::lang::jdouble origin,::jxx::lang::jdouble bound);
-private:
+public:
  ThreadLocalRandom();
+
+    private:
  ::jxx::lang::jbool initialized_=false;
 };}

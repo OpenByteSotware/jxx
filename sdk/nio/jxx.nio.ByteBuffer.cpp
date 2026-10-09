@@ -193,7 +193,7 @@ namespace jxx::nio
 
     jxx::Ptr<ByteBuffer> ByteBuffer::slice() const
     {
-        auto out = std::shared_ptr<ByteBuffer>(new ByteBuffer(storage_, offset_ + pos_, remaining(), readOnly_, direct_, order_));
+        auto out = ::jxx::NEW<ByteBuffer>(storage_, offset_ + pos_, remaining(), readOnly_, direct_, order_);
         out->position(0);
         out->limit(remaining());
         return out;
@@ -201,7 +201,7 @@ namespace jxx::nio
 
     jxx::Ptr<ByteBuffer> ByteBuffer::duplicate() const
     {
-        auto out = std::shared_ptr<ByteBuffer>(new ByteBuffer(storage_, offset_, cap_, readOnly_, direct_, order_));
+        auto out = ::jxx::NEW<ByteBuffer>(storage_, offset_, cap_, readOnly_, direct_, order_);
         out->mark_ = mark_;
         out->pos_ = pos_;
         out->lim_ = lim_;
@@ -210,7 +210,7 @@ namespace jxx::nio
 
     jxx::Ptr<ByteBuffer> ByteBuffer::asReadOnlyBuffer() const
     {
-        auto out = std::shared_ptr<ByteBuffer>(new ByteBuffer(storage_, offset_, cap_, true, direct_, order_));
+        auto out = ::jxx::NEW<ByteBuffer>(storage_, offset_, cap_, true, direct_, order_);
         out->mark_ = mark_;
         out->pos_ = pos_;
         out->lim_ = lim_;

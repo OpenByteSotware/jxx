@@ -30,7 +30,7 @@ TimeUnit::TimeUnit(Kind kind) : kind_(kind) {}
     return value * multiplier;
 }
 
-#define UNIT_FACTORY(NAME) ::jxx::Ptr<TimeUnit> TimeUnit::NAME() { static auto value = ::jxx::Ptr<TimeUnit>(new TimeUnit(Kind::NAME)); return value; }
+#define UNIT_FACTORY(NAME) ::jxx::Ptr<TimeUnit> TimeUnit::NAME() { static auto value = ::jxx::NEW<TimeUnit>(Kind::NAME); return value; }
 UNIT_FACTORY(NANOSECONDS)
 UNIT_FACTORY(MICROSECONDS)
 UNIT_FACTORY(MILLISECONDS)

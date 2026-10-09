@@ -33,9 +33,7 @@ private:
     ::jxx::Ptr<::jxx::lang::String> previous_;
 };
 
-TEST(
-    SSLContextDefaultTrustStoreParity,
-    ExplicitNoneProducesEmptyTrustConfiguration)
+TEST(SSLContextDefaultTrustStoreParity, ExplicitNoneProducesEmptyTrustConfiguration)
 {
     SystemPropertyGuard trustStore(
         "jxx.ext.net.ssl.trustStore");

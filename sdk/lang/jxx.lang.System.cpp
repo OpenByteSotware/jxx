@@ -26,6 +26,8 @@
 #include "util/jxx.util.Properties.h"
 #include "util/jxx.util.HashMap.h"
 #include "lang/jxx.lang.System.h"
+#include <algorithm>
+#include <cctype>
 
 
 #ifndef _WIN32
@@ -176,8 +178,18 @@ jxx::Ptr<jxx::util::Map<String, String>> System::getenv() {
         const std::string entry(*current);
         const auto separator = entry.find('=');
         if (separator == std::string::npos || separator == 0U) continue;
+        std::string name = entry.substr(0U, separator);
+#ifdef _WIN32
+        // Environment variable names are case-insensitive on Windows.
+        // Canonicalize snapshot keys so conventional uppercase lookups such
+        // as PATH agree with System::getenv(String).
+        std::transform(name.begin(), name.end(), name.begin(),
+            [](unsigned char value) {
+                return static_cast<char>(std::toupper(value));
+            });
+#endif
         result->put(
-            jxx::NEW<String>(entry.substr(0U, separator)),
+            jxx::NEW<String>(name),
             jxx::NEW<String>(entry.substr(separator + 1U)));
     }
     return result;
