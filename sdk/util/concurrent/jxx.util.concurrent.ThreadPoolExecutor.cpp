@@ -59,27 +59,36 @@ void ThreadPoolExecutor::startWorkerLocked_() {
 void ThreadPoolExecutor::execute(
     const ::jxx::Ptr<::jxx::lang::Runnable>& command) {
     if (command == nullptr) throw ::jxx::lang::NullPointerException();
+
     ::jxx::Ptr<RejectedExecutionHandler> rejectionHandler;
+    bool rejected = false;
     {
         std::lock_guard<std::mutex> lock(mutex_);
         if (shutdown_) {
+            rejected = true;
             rejectionHandler = handler_;
         }
         else {
             queue_.push_back(command);
-        ++submittedTaskCount_;
-        if (liveWorkerCount_ < corePoolSize_ ||
-            (cachedMode_() && liveWorkerCount_ < maximumPoolSize_ &&
-             activeCount_ + static_cast<::jxx::lang::jint>(queue_.size()) > liveWorkerCount_)) {
-            startWorkerLocked_();
-        }
+            ++submittedTaskCount_;
+            if (liveWorkerCount_ < corePoolSize_ ||
+                (cachedMode_() && liveWorkerCount_ < maximumPoolSize_ &&
+                 activeCount_ + static_cast<::jxx::lang::jint>(queue_.size()) > liveWorkerCount_)) {
+                startWorkerLocked_();
+            }
         }
     }
-    if (rejectionHandler != nullptr) {
-        rejectionHandler->rejectedExecution(
-            command, ::jxx::CAST<ThreadPoolExecutor>(thisPtr()));
-        return;
+
+    if (rejected) {
+        if (rejectionHandler != nullptr) {
+            rejectionHandler->rejectedExecution(
+                command, ::jxx::CAST<ThreadPoolExecutor>(thisPtr()));
+            return;
+        }
+        throw RejectedExecutionException(
+            "task rejected from ThreadPoolExecutor");
     }
+
     // The shutdown decision was made atomically while mutex_ was held above.
     // Do not call the virtual isShutdown() here: a scheduled executor may have
     // begun orderly shutdown while still being required to dispatch retained

@@ -147,7 +147,7 @@ namespace
 	{
 		PendingLoopback pending; auto c = Channel::open(); Outcome o; std::thread worker([&]
 	   {
-				  runConnect(c, pending.port(), o);
+		   runConnect(c, pending.port(), o);
 	   }); waitEntered(o); std::this_thread::sleep_for(75ms); ASSERT_EQ(Result::None, o.result.load()); c->close(); worker.join(); EXPECT_EQ(Result::AsyncClosed, o.result.load());
 	}
 	TEST(SocketChannelInterruptParity, InterruptBlockingRead)
@@ -158,18 +158,20 @@ namespace
 	{
 		ConnectedPair p; Outcome o; std::thread worker([&]
 	   {
-				  runRead(p.channel, o);
+		   runRead(p.channel, o);
 	   }); waitEntered(o); std::this_thread::sleep_for(50ms); p.channel->close(); worker.join(); EXPECT_EQ(Result::AsyncClosed, o.result.load());
 	}
 	TEST(SocketChannelInterruptParity, InterruptBlockingWrite)
 	{
-		ConnectedPair p; p.channel->socket()->setSendBufferSize(1024); Outcome o; auto t = ::jxx::NEW<::jxx::lang::Thread>(::jxx::CAST<::jxx::lang::Runnable>(::jxx::NEW<OperationTask>(OperationTask::Kind::Write, p.channel, o))); t->start(); waitEntered(o); std::this_thread::sleep_for(100ms); t->interrupt(); t->join(3000); EXPECT_EQ(Result::Interrupted, o.result.load()); EXPECT_TRUE(t->isInterrupted());
+		ConnectedPair p; p.channel->socket()->setSendBufferSize(1024); Outcome o;
+		auto t = ::jxx::NEW<::jxx::lang::Thread>(::jxx::CAST<::jxx::lang::Runnable>(::jxx::NEW<OperationTask>(OperationTask::Kind::Write, p.channel, o))); t->start(); waitEntered(o); std::this_thread::sleep_for(100ms); t->interrupt(); t->join(3000); EXPECT_EQ(Result::Interrupted, o.result.load()); EXPECT_TRUE(t->isInterrupted());
 	}
 	TEST(SocketChannelInterruptParity, AsynchronousCloseDuringBlockingWriteIsDistinct)
 	{
 		ConnectedPair p; p.channel->socket()->setSendBufferSize(1024); Outcome o; std::thread worker([&]
 	   {
-				  runWrite(p.channel, o);
-	   }); waitEntered(o); std::this_thread::sleep_for(100ms); p.channel->close(); worker.join(); EXPECT_EQ(Result::AsyncClosed, o.result.load());
+		   runWrite(p.channel, o);
+	   }); waitEntered(o); std::this_thread::sleep_for(100ms);
+		p.channel->close(); worker.join(); EXPECT_EQ(Result::AsyncClosed, o.result.load());
 	}
 }
