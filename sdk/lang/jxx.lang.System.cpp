@@ -56,6 +56,38 @@ void requirePropertyKey(const jxx::Ptr<String>& key) {
     if (key == nullptr) throw NullPointerException();
     if (key->length() == 0) throw IllegalArgumentException();
 }
+
+// Resolve property keys by String value as a defensive parity path. The
+// Properties implementation should already use Object::hashCode/equals, but
+// System properties must remain value-addressable even when a Properties
+// implementation or binary boundary supplies a distinct String instance.
+jxx::Ptr<String> findPropertyByStringValue(
+    const jxx::Ptr<jxx::util::Properties>& properties,
+    const jxx::Ptr<String>& key,
+    jxx::Ptr<Object>* matchedKey = nullptr) {
+
+    auto direct = properties->getProperty(key);
+    if (direct != nullptr) {
+        if (matchedKey != nullptr) {
+            *matchedKey = jxx::CAST<Object>(key);
+        }
+        return direct;
+    }
+
+    const auto requested = key->utf8();
+    const auto names = properties->keys();
+    while (names->hasMoreElements()) {
+        const auto candidateObject = names->nextElement();
+        const auto candidate = jxx::CAST<String>(candidateObject);
+        if (candidate != nullptr && candidate->utf8() == requested) {
+            if (matchedKey != nullptr) {
+                *matchedKey = candidateObject;
+            }
+            return properties->getProperty(candidate);
+        }
+    }
+    return nullptr;
+}
 } // namespace
 
 std::shared_ptr<InputStream> System::in;
@@ -267,7 +299,7 @@ jxx::Ptr<String> System::getProperty(const jxx::Ptr<String>& key) {
     if (manager != nullptr) manager->checkPropertyAccess(key);
     requirePropertyKey(key);
     std::lock_guard<std::mutex> guard(propertyMutex());
-    return systemProperties()->getProperty(key);
+    return findPropertyByStringValue(systemProperties(), key);
 }
 
 jxx::Ptr<String> System::getProperty(
@@ -277,7 +309,8 @@ jxx::Ptr<String> System::getProperty(
     if (manager != nullptr) manager->checkPropertyAccess(key);
     requirePropertyKey(key);
     std::lock_guard<std::mutex> guard(propertyMutex());
-    return systemProperties()->getProperty(key, defaultValue);
+    const auto value = findPropertyByStringValue(systemProperties(), key);
+    return value == nullptr ? defaultValue : value;
 }
 
 jxx::Ptr<String> System::setProperty(
@@ -296,9 +329,11 @@ jxx::Ptr<String> System::clearProperty(const jxx::Ptr<String>& key) {
     const auto manager = getSecurityManager();
     if (manager != nullptr) manager->checkPropertiesAccess();
     std::lock_guard<std::mutex> guard(propertyMutex());
-    const auto previous = systemProperties()->getProperty(key);
-    if (previous != nullptr) {
-        systemProperties()->remove(jxx::CAST<Object>(key));
+    jxx::Ptr<Object> matchedKey;
+    const auto previous = findPropertyByStringValue(
+        systemProperties(), key, &matchedKey);
+    if (previous != nullptr && matchedKey != nullptr) {
+        systemProperties()->remove(matchedKey);
     }
     return previous;
 }
