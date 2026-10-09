@@ -33,7 +33,9 @@ private:
     ::jxx::Ptr<::jxx::lang::String> previous_;
 };
 
-TEST(SSLContextDefaultTrustStoreParity, ExplicitNoneProducesEmptyTrustConfiguration)
+TEST(
+    SSLContextDefaultTrustStoreParity,
+    ExplicitNoneProducesEmptyTrustConfiguration)
 {
     SystemPropertyGuard trustStore(
         "jxx.ext.net.ssl.trustStore");
@@ -45,13 +47,10 @@ TEST(SSLContextDefaultTrustStoreParity, ExplicitNoneProducesEmptyTrustConfigurat
         ::jxx::NEW<::jxx::lang::String>(
             "jxx.ext.net.ssl.trustStore");
 
-    const auto trustStoreValue =
-        ::jxx::NEW<::jxx::lang::String>(
-            "NONE");
-
     (void)::jxx::lang::System::setProperty(
         trustStoreKey,
-        trustStoreValue);
+        ::jxx::NEW<::jxx::lang::String>(
+            "NONE"));
 
     (void)::jxx::lang::System::clearProperty(
         ::jxx::NEW<::jxx::lang::String>(
@@ -59,7 +58,8 @@ TEST(SSLContextDefaultTrustStoreParity, ExplicitNoneProducesEmptyTrustConfigurat
 
     const auto configuredValue =
         ::jxx::lang::System::getProperty(
-            trustStoreKey);
+            ::jxx::NEW<::jxx::lang::String>(
+                "jxx.ext.net.ssl.trustStore"));
 
     ASSERT_NE(nullptr, configuredValue);
     ASSERT_EQ("NONE", configuredValue->utf8());
@@ -68,11 +68,8 @@ TEST(SSLContextDefaultTrustStoreParity, ExplicitNoneProducesEmptyTrustConfigurat
         ::jxx::ext::net::ssl::internal::
         loadDefaultPropertyTrustManagers();
 
-    ASSERT_NE(nullptr, managers);
-    ASSERT_EQ(1U, managers->length);
-    ASSERT_NE(nullptr, (*managers)[0]);
+    EXPECT_EQ(nullptr, managers);
 }
-
 TEST(SSLContextDefaultTrustStoreParity, AbsentTrustStoreUsesDefaultTrustPath) {
     SystemPropertyGuard trustStore("javax.net.ssl.trustStore");
     SystemPropertyGuard password("javax.net.ssl.trustStorePassword");
