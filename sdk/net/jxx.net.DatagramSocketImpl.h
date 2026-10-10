@@ -429,7 +429,7 @@ struct NativeDatagramPacket { std::vector<std::uint8_t> buffer; std::size_t offs
 
         // -------- Core operations --------
         void bind(std::uint16_t localPort) {
-            bind("0.0.0.0", localPort); // INADDR_ANY (IPv4). If you want dual-stack, use "::" on IPv6-enabled OS.
+            bind(family_ == AF_INET6 ? "::" : "0.0.0.0", localPort);
         }
 
         void bind(const std::string& localAddress, std::uint16_t localPort) {
@@ -448,10 +448,18 @@ struct NativeDatagramPacket { std::vector<std::uint8_t> buffer; std::size_t offs
                 auto* ipv4 = reinterpret_cast<sockaddr_in*>(&address);
                 ipv4->sin_family = AF_INET;
                 ipv4->sin_port = htons(localPort);
-                if (::inet_pton(AF_INET, localAddress.c_str(),
-                                &ipv4->sin_addr) != 1) {
+                if (localAddress.empty() ||
+                    localAddress == "0.0.0.0" ||
+                    localAddress == "::" ||
+                    localAddress == "::0" ||
+                    localAddress == "0:0:0:0:0:0:0:0") {
+                    ipv4->sin_addr.s_addr = htonl(INADDR_ANY);
+                }
+                else if (::inet_pton(AF_INET, localAddress.c_str(),
+                                     &ipv4->sin_addr) != 1) {
                     throw jxx::net::SocketException(
-                        "invalid numeric IPv4 bind address");
+                        "invalid numeric IPv4 bind address: '" +
+                        localAddress + "'");
                 }
                 addressLength = static_cast<socklen_t>(sizeof(sockaddr_in));
             }
@@ -459,10 +467,18 @@ struct NativeDatagramPacket { std::vector<std::uint8_t> buffer; std::size_t offs
                 auto* ipv6 = reinterpret_cast<sockaddr_in6*>(&address);
                 ipv6->sin6_family = AF_INET6;
                 ipv6->sin6_port = htons(localPort);
-                if (::inet_pton(AF_INET6, localAddress.c_str(),
-                                &ipv6->sin6_addr) != 1) {
+                if (localAddress.empty() ||
+                    localAddress == "0.0.0.0" ||
+                    localAddress == "::" ||
+                    localAddress == "::0" ||
+                    localAddress == "0:0:0:0:0:0:0:0") {
+                    ipv6->sin6_addr = in6addr_any;
+                }
+                else if (::inet_pton(AF_INET6, localAddress.c_str(),
+                                     &ipv6->sin6_addr) != 1) {
                     throw jxx::net::SocketException(
-                        "invalid numeric IPv6 bind address");
+                        "invalid numeric IPv6 bind address: '" +
+                        localAddress + "'");
                 }
                 addressLength = static_cast<socklen_t>(sizeof(sockaddr_in6));
             }
