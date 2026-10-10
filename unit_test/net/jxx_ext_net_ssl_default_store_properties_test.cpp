@@ -1,13 +1,54 @@
 #include <gtest/gtest.h>
+#include <cstdio>
+#include <fstream>
+#include <string>
 
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslPropertyKeyManager.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslPropertyTrustManager.h"
-#include "lang/jxx.lang.IllegalStateException.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.System.h"
+#include "security/jxx.security.KeyStoreException.h"
+#include "security/jxx.security.NoSuchProviderException.h"
 
 namespace
 {
+    class TemporaryFile final
+    {
+    public:
+        explicit TemporaryFile(const char* path)
+            : path_(path)
+        {
+            std::ofstream stream(
+                path_,
+                std::ios::binary);
+
+            if (stream.good()) {
+                stream.put('\0');
+            }
+        }
+
+        ~TemporaryFile()
+        {
+            (void)std::remove(path_.c_str());
+        }
+
+        const std::string& path() const
+        {
+            return path_;
+        }
+
+        bool exists() const
+        {
+            std::ifstream stream(
+                path_,
+                std::ios::binary);
+
+            return stream.good();
+        }
+
+    private:
+        std::string path_;
+    };
 
     class PropertyRestore final
     {
@@ -71,7 +112,7 @@ TEST(
     EXPECT_THROW(
         ::jxx::ext::net::ssl::internal::
             loadDefaultPropertyKeyManagers(),
-        ::jxx::lang::IllegalStateException);
+        ::jxx::security::KeyStoreException);
 }
 
 TEST(
@@ -102,7 +143,7 @@ TEST(
     EXPECT_THROW(
         ::jxx::ext::net::ssl::internal::
             loadDefaultPropertyKeyManagers(),
-        ::jxx::lang::IllegalStateException);
+        ::jxx::security::NoSuchProviderException);
 }
 
 TEST(
@@ -115,9 +156,14 @@ TEST(
     PropertyRestore type(
         "jxx.ext.net.ssl.trustStoreType");
 
+    const TemporaryFile temporaryStore(
+        "jxx-trust-store-type-validation.tmp");
+
+    ASSERT_TRUE(temporaryStore.exists());
+
     setProperty(
         "jxx.ext.net.ssl.trustStore",
-        "missing-store");
+        temporaryStore.path().c_str());
 
     setProperty(
         "jxx.ext.net.ssl.trustStoreType",
@@ -126,9 +172,8 @@ TEST(
     EXPECT_THROW(
         ::jxx::ext::net::ssl::internal::
             loadDefaultPropertyTrustManagers(),
-        ::jxx::lang::IllegalStateException);
+        ::jxx::security::KeyStoreException);
 }
-
 TEST(
     DefaultStorePropertiesTest,
     RejectsUnsupportedTrustStoreProvider)
@@ -142,9 +187,14 @@ TEST(
     PropertyRestore provider(
         "jxx.ext.net.ssl.trustStoreProvider");
 
+    const TemporaryFile temporaryStore(
+        "jxx-trust-store-provider-validation.tmp");
+
+    ASSERT_TRUE(temporaryStore.exists());
+
     setProperty(
         "jxx.ext.net.ssl.trustStore",
-        "missing-store");
+        temporaryStore.path().c_str());
 
     setProperty(
         "jxx.ext.net.ssl.trustStoreType",
@@ -157,5 +207,5 @@ TEST(
     EXPECT_THROW(
         ::jxx::ext::net::ssl::internal::
             loadDefaultPropertyTrustManagers(),
-        ::jxx::lang::IllegalStateException);
+        ::jxx::security::NoSuchProviderException);
 }
