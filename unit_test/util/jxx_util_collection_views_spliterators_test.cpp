@@ -19,19 +19,27 @@ public:
     ::jxx::lang::jint count = 0;
 };
 
-TEST(AbstractSetSpliteratorParityTest, ReportsDistinctAndSizedAndTraverses) {
+TEST(AbstractSetSpliteratorParityTest2, ReportsDistinctAndSizedAndTraverses)
+{
     const auto set = ::jxx::NEW<::jxx::util::HashSet<S>>();
     set->add(::jxx::NEW<S>("a"));
     set->add(::jxx::NEW<S>("b"));
+
     const auto spliterator = set->spliterator();
+
     EXPECT_TRUE(spliterator->hasCharacteristics(
         ::jxx::util::Spliterator<S>::DISTINCT));
     EXPECT_TRUE(spliterator->hasCharacteristics(
         ::jxx::util::Spliterator<S>::SIZED));
     EXPECT_EQ(2, spliterator->getExactSizeIfKnown());
+
     const auto consumer = ::jxx::NEW<CountingConsumer>();
-    spliterator->forEachRemaining(
-        ::jxx::CAST<::jxx::util::function::Consumer<S>>(consumer));
+    const auto consumerInterface = ::jxx::CAST<
+        ::jxx::util::function::Consumer<S>>(consumer);
+
+    ASSERT_NE(nullptr, consumerInterface);
+    spliterator->forEachRemaining(consumerInterface);
+
     EXPECT_EQ(2, consumer->count);
     EXPECT_EQ(0, spliterator->estimateSize());
 }
