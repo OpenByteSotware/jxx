@@ -8,6 +8,7 @@
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.buildin_array.h"
 #include "lang/jxx_types.h"
 
 namespace jxx::util {
@@ -22,6 +23,14 @@ public:
 
     BitSet();
     explicit BitSet(::jxx::lang::jint numberOfBits);
+
+    static ::jxx::Ptr<BitSet> valueOf(
+        const ::jxx::lang::LongArray& longs);
+    static ::jxx::Ptr<BitSet> valueOf(
+        const ::jxx::lang::ByteArray& bytes);
+
+    ::jxx::lang::LongArray toLongArray() const;
+    ::jxx::lang::ByteArray toByteArray() const;
 
     void flip(::jxx::lang::jint bitIndex);
     void flip(::jxx::lang::jint fromIndex, ::jxx::lang::jint toIndex);

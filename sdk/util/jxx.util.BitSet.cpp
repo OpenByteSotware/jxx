@@ -6,6 +6,60 @@
 namespace jxx::util {
 namespace { constexpr int BITS=64; }
 BitSet::BitSet():Super(){} BitSet::BitSet(::jxx::lang::jint n):Super(){if(n<0)throw ::jxx::lang::IndexOutOfBoundsException();words_.resize((n+63)/64);}
+::jxx::Ptr<BitSet> BitSet::valueOf(
+    const ::jxx::lang::LongArray& longs) {
+    if (longs == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+    auto result = ::jxx::NEW<BitSet>();
+    result->words_.reserve(static_cast<std::size_t>(longs->length));
+    for (::jxx::lang::jint i = 0; i < longs->length; ++i) {
+        result->words_.push_back(static_cast<std::uint64_t>((*longs)[i]));
+    }
+    result->trim_();
+    return result;
+}
+
+::jxx::Ptr<BitSet> BitSet::valueOf(
+    const ::jxx::lang::ByteArray& bytes) {
+    if (bytes == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+    auto result = ::jxx::NEW<BitSet>();
+    for (::jxx::lang::jint i = 0; i < bytes->length; ++i) {
+        const auto value = static_cast<std::uint8_t>((*bytes)[i]);
+        const auto wordIndex = static_cast<std::size_t>(i / 8);
+        if (result->words_.size() <= wordIndex) {
+            result->words_.resize(wordIndex + 1, 0);
+        }
+        result->words_[wordIndex] |=
+            static_cast<std::uint64_t>(value) << ((i % 8) * 8);
+    }
+    result->trim_();
+    return result;
+}
+
+::jxx::lang::LongArray BitSet::toLongArray() const {
+    auto result = ::jxx::NEW<::jxx::lang::LongArrayType>(
+        static_cast<::jxx::lang::jint>(words_.size()));
+    for (std::size_t i = 0; i < words_.size(); ++i) {
+        (*result)[static_cast<::jxx::lang::jint>(i)] =
+            static_cast<::jxx::lang::jlong>(words_[i]);
+    }
+    return result;
+}
+
+::jxx::lang::ByteArray BitSet::toByteArray() const {
+    const auto byteCount = static_cast<::jxx::lang::jint>((length() + 7) / 8);
+    auto result = ::jxx::NEW<::jxx::lang::ByteArrayType>(byteCount);
+    for (::jxx::lang::jint i = 0; i < byteCount; ++i) {
+        const auto word = words_[static_cast<std::size_t>(i / 8)];
+        (*result)[i] = static_cast<::jxx::lang::jbyte>(
+            (word >> ((i % 8) * 8)) & 0xffU);
+    }
+    return result;
+}
+
 void BitSet::checkIndex_(::jxx::lang::jint i){if(i<0)throw ::jxx::lang::IndexOutOfBoundsException();}
 void BitSet::checkRange_(::jxx::lang::jint f,::jxx::lang::jint t){if(f<0||t<0||f>t)throw ::jxx::lang::IndexOutOfBoundsException();}
 void BitSet::ensure_(::jxx::lang::jint i){auto n=static_cast<std::size_t>(i/BITS+1);if(words_.size()<n)words_.resize(n);}
