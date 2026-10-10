@@ -19,6 +19,12 @@ class ListResourceBundle
 public:
     using JxxSuper = ResourceBundle;
     using Super = ::jxx::lang::ClassBase<ListResourceBundle, JxxSuper>;
+    using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
+
+    static ::jxx::Ptr<::jxx::lang::ClassAny> Class() {
+        return JxxClassInfoMarker::Class();
+    }
+
     using ContentsArray = ::jxx::lang::JxxArray<
         ::jxx::Ptr<::jxx::lang::Object>, 2U>;
 

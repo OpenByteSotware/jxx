@@ -32,9 +32,11 @@ jxx::Ptr<jxx::lang::String> StringPool::intern(const char* text) {
         return it->second;
     }
 
-    auto s = jxx::lang::String::valueOf(text);
-    p.emplace(text, s);
-    return s;
+    // Construct explicitly. Passing const char* to valueOf selects the
+    // boolean overload, which interns "true" instead of the requested text.
+    auto value = ::jxx::NEW<::jxx::lang::String>(text);
+    p.emplace(text, value);
+    return value;
 }
 
 } // namespace jxx::util
