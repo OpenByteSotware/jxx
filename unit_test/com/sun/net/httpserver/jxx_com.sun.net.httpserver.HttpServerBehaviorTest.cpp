@@ -50,14 +50,21 @@ TEST_F(HttpServerBehaviorTest, CreateReturnsUnboundServer)
 TEST_F(HttpServerBehaviorTest, BindPublishesConfiguredAddress)
 {
     server_ = HttpServer::create();
-    const auto address = ::jxx::NEW<::jxx::net::InetSocketAddress>(0);
 
-    server_->bind(address, 0);
+    const auto requested =
+        ::jxx::NEW<::jxx::net::InetSocketAddress>(0);
 
-    ASSERT_NE(nullptr, server_->getAddress());
-    EXPECT_EQ(address.get(), server_->getAddress().get());
+    server_->bind(requested, 0);
+
+    const auto bound = server_->getAddress();
+
+    ASSERT_NE(nullptr, bound);
+    EXPECT_EQ(0, requested->getPort());
+    EXPECT_GT(bound->getPort(), 0);
+    EXPECT_EQ(
+        requested->getAddress(),
+        bound->getAddress());
 }
-
 TEST_F(HttpServerBehaviorTest, BindRejectsNullAndSecondBind)
 {
     server_ = HttpServer::create();

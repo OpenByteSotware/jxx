@@ -22,7 +22,9 @@ public:
     }
 };
 
-class HttpServerBehaviorTest : public ::testing::Test {
+// This file intentionally uses a unique suite name. Another translation unit
+// already defines HttpServerBehaviorTest with a different fixture type.
+class HttpServerBehaviorExtendedTest : public ::testing::Test {
 protected:
     void TearDown() override
     {
@@ -38,7 +40,7 @@ protected:
     ::jxx::Ptr<HttpServer> server_;
 };
 
-TEST_F(HttpServerBehaviorTest, CreateReturnsUnboundServer)
+TEST_F(HttpServerBehaviorExtendedTest, CreateReturnsUnboundServer)
 {
     server_ = HttpServer::create();
 
@@ -47,18 +49,21 @@ TEST_F(HttpServerBehaviorTest, CreateReturnsUnboundServer)
     EXPECT_EQ(nullptr, server_->getExecutor());
 }
 
-TEST_F(HttpServerBehaviorTest, BindPublishesConfiguredAddress)
+TEST_F(HttpServerBehaviorExtendedTest, BindPublishesConfiguredAddress)
 {
     server_ = HttpServer::create();
-    const auto address = ::jxx::NEW<::jxx::net::InetSocketAddress>(0);
+    const auto requested = ::jxx::NEW<::jxx::net::InetSocketAddress>(0);
 
-    server_->bind(address, 0);
+    server_->bind(requested, 0);
 
-    ASSERT_NE(nullptr, server_->getAddress());
-    EXPECT_EQ(address.get(), server_->getAddress().get());
+    const auto bound = server_->getAddress();
+    ASSERT_NE(nullptr, bound);
+    EXPECT_EQ(requested->getAddress(), bound->getAddress());
+    EXPECT_EQ(0, requested->getPort());
+    EXPECT_GT(bound->getPort(), 0);
 }
 
-TEST_F(HttpServerBehaviorTest, BindRejectsNullAndSecondBind)
+TEST_F(HttpServerBehaviorExtendedTest, BindRejectsNullAndSecondBind)
 {
     server_ = HttpServer::create();
     const ::jxx::Ptr<::jxx::net::InetSocketAddress> nullAddress;
@@ -73,14 +78,14 @@ TEST_F(HttpServerBehaviorTest, BindRejectsNullAndSecondBind)
                  ::jxx::lang::IllegalStateException);
 }
 
-TEST_F(HttpServerBehaviorTest, StartRequiresBoundServer)
+TEST_F(HttpServerBehaviorExtendedTest, StartRequiresBoundServer)
 {
     server_ = HttpServer::create();
 
     EXPECT_THROW(server_->start(), ::jxx::lang::IllegalStateException);
 }
 
-TEST_F(HttpServerBehaviorTest, CreateContextExposesHandlerPathAndServer)
+TEST_F(HttpServerBehaviorExtendedTest, CreateContextExposesHandlerPathAndServer)
 {
     server_ = HttpServer::create();
     const auto path = ::jxx::NEW<::jxx::lang::String>("/service");
@@ -96,7 +101,7 @@ TEST_F(HttpServerBehaviorTest, CreateContextExposesHandlerPathAndServer)
     ASSERT_NE(nullptr, context->getFilters());
 }
 
-TEST_F(HttpServerBehaviorTest, DuplicateContextPathIsRejected)
+TEST_F(HttpServerBehaviorExtendedTest, DuplicateContextPathIsRejected)
 {
     server_ = HttpServer::create();
     const auto path = ::jxx::NEW<::jxx::lang::String>("/duplicate");
@@ -107,7 +112,7 @@ TEST_F(HttpServerBehaviorTest, DuplicateContextPathIsRejected)
                  ::jxx::lang::IllegalArgumentException);
 }
 
-TEST_F(HttpServerBehaviorTest, ContextCanBeRemovedByObjectAndPath)
+TEST_F(HttpServerBehaviorExtendedTest, ContextCanBeRemovedByObjectAndPath)
 {
     server_ = HttpServer::create();
     const auto handler = ::jxx::NEW<NoOpHandler>();
@@ -122,7 +127,7 @@ TEST_F(HttpServerBehaviorTest, ContextCanBeRemovedByObjectAndPath)
                  ::jxx::lang::IllegalArgumentException);
 }
 
-TEST_F(HttpServerBehaviorTest, ContextRejectsNullPathAndHandler)
+TEST_F(HttpServerBehaviorExtendedTest, ContextRejectsNullPathAndHandler)
 {
     server_ = HttpServer::create();
     const auto path = ::jxx::NEW<::jxx::lang::String>("/service");
@@ -136,7 +141,7 @@ TEST_F(HttpServerBehaviorTest, ContextRejectsNullPathAndHandler)
                  ::jxx::lang::NullPointerException);
 }
 
-TEST_F(HttpServerBehaviorTest, StopRejectsNegativeDelay)
+TEST_F(HttpServerBehaviorExtendedTest, StopRejectsNegativeDelay)
 {
     server_ = HttpServer::create();
 

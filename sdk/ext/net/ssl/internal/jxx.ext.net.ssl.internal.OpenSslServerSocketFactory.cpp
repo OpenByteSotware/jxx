@@ -8,9 +8,14 @@
 
 namespace jxx::ext::net::ssl::internal {
 namespace {
-void validate(::jxx::lang::jint port, ::jxx::lang::jint backlog) {
-    if (port < 0 || port > 65535 || backlog < 1)
+void validatePort(::jxx::lang::jint port) {
+    if (port < 0 || port > 65535) {
         throw ::jxx::lang::IllegalArgumentException();
+    }
+}
+
+::jxx::lang::jint normalizeBacklog(::jxx::lang::jint backlog) {
+    return backlog < 1 ? 50 : backlog;
 }
 } // namespace
 OpenSslServerSocketFactory::OpenSslServerSocketFactory(
@@ -29,16 +34,16 @@ OpenSslServerSocketFactory::createServerSocket() {
 }
 ::jxx::Ptr<::jxx::net::ServerSocket>
 OpenSslServerSocketFactory::createServerSocket(::jxx::lang::jint port) {
-    validate(port, 50); return ::jxx::NEW<OpenSslServerSocket>(port, 50, nullptr, config_);
+    validatePort(port); return ::jxx::NEW<OpenSslServerSocket>(port, 50, nullptr, config_);
 }
 ::jxx::Ptr<::jxx::net::ServerSocket>
 OpenSslServerSocketFactory::createServerSocket(::jxx::lang::jint port, ::jxx::lang::jint backlog) {
-    validate(port, backlog); return ::jxx::NEW<OpenSslServerSocket>(port, backlog, nullptr, config_);
+    validatePort(port); return ::jxx::NEW<OpenSslServerSocket>(port, normalizeBacklog(backlog), nullptr, config_);
 }
 ::jxx::Ptr<::jxx::net::ServerSocket>
 OpenSslServerSocketFactory::createServerSocket(
     ::jxx::lang::jint port, ::jxx::lang::jint backlog,
     const ::jxx::Ptr<::jxx::net::InetAddress>& address) {
-    validate(port, backlog); return ::jxx::NEW<OpenSslServerSocket>(port, backlog, address, config_);
+    validatePort(port); return ::jxx::NEW<OpenSslServerSocket>(port, normalizeBacklog(backlog), address, config_);
 }
 } // namespace jxx::ext::net::ssl::internal
