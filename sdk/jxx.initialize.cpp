@@ -2,6 +2,7 @@
 
 #include <mutex>
 
+#include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.ClassInitialization.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.ClassInitialization.h"
 #include "ext/xml/parsers/jxx.ext.xml.parsers.ClassInitialization.h"
 #include "ext/xml/validation/jxx.ext.xml.validation.ClassInitialization.h"
@@ -41,6 +42,7 @@ void initialize() {
         ::jxx::security::initializeClasses();
         ::jxx::org::w3c::dom::initializeClasses();
         ::jxx::org::xml::sax::initializeClasses();
+        ::jxx::com::sun::net::httpserver::initializeClasses();
         ::jxx::ext::net::ssl::initializeClasses();
         ::jxx::ext::xml::validation::initializeClasses();
         ::jxx::ext::xml::parsers::initializeClasses();
