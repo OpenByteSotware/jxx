@@ -19,7 +19,8 @@ class ListResourceBundle
 public:
     using JxxSuper = ResourceBundle;
     using Super = ::jxx::lang::ClassBase<ListResourceBundle, JxxSuper>;
-    using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
+    using JxxClassInfoMarker =
+        ::jxx::lang::ClassInfo<ListResourceBundle, JxxSuper>;
 
     static ::jxx::Ptr<::jxx::lang::ClassAny> Class() {
         return JxxClassInfoMarker::Class();
