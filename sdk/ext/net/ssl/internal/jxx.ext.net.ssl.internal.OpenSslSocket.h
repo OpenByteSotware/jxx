@@ -95,6 +95,15 @@ public:
     void setEnableSessionCreation(::jxx::lang::jbool value) override;
     ::jxx::lang::jbool getEnableSessionCreation() const override;
 
+    ::jxx::Ptr<::jxx::net::InetAddress> getInetAddress() const override;
+    ::jxx::Ptr<::jxx::net::InetAddress> getLocalAddress() const override;
+    ::jxx::lang::jint getPort() const noexcept override;
+    ::jxx::lang::jint getLocalPort() const noexcept override;
+    ::jxx::Ptr<::jxx::net::SocketAddress>
+    getRemoteSocketAddress() const override;
+    ::jxx::Ptr<::jxx::net::SocketAddress>
+    getLocalSocketAddress() const override;
+
     ::jxx::Ptr<::jxx::ext::net::ssl::SSLParameters>
     getSSLParameters() const override;
     void setSSLParameters(

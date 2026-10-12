@@ -162,6 +162,46 @@ OpenSslSocket::OpenSslSocket(const ::jxx::Ptr<::jxx::net::Socket>& transport,
 
 OpenSslSocket::~OpenSslSocket() = default;
 
+::jxx::Ptr<::jxx::net::InetAddress>
+OpenSslSocket::getInetAddress() const {
+    return transport_ != nullptr
+        ? transport_->getInetAddress()
+        : ::jxx::net::Socket::getInetAddress();
+}
+
+::jxx::Ptr<::jxx::net::InetAddress>
+OpenSslSocket::getLocalAddress() const {
+    return transport_ != nullptr
+        ? transport_->getLocalAddress()
+        : ::jxx::net::Socket::getLocalAddress();
+}
+
+::jxx::lang::jint OpenSslSocket::getPort() const noexcept {
+    return transport_ != nullptr
+        ? transport_->getPort()
+        : ::jxx::net::Socket::getPort();
+}
+
+::jxx::lang::jint OpenSslSocket::getLocalPort() const noexcept {
+    return transport_ != nullptr
+        ? transport_->getLocalPort()
+        : ::jxx::net::Socket::getLocalPort();
+}
+
+::jxx::Ptr<::jxx::net::SocketAddress>
+OpenSslSocket::getRemoteSocketAddress() const {
+    return transport_ != nullptr
+        ? transport_->getRemoteSocketAddress()
+        : ::jxx::net::Socket::getRemoteSocketAddress();
+}
+
+::jxx::Ptr<::jxx::net::SocketAddress>
+OpenSslSocket::getLocalSocketAddress() const {
+    return transport_ != nullptr
+        ? transport_->getLocalSocketAddress()
+        : ::jxx::net::Socket::getLocalSocketAddress();
+}
+
 void OpenSslSocket::startHandshake() {
     std::lock_guard<std::recursive_mutex> tlsLock(tlsMutex_);
     if (closed_)

@@ -81,12 +81,12 @@ public:
                      jxx::lang::jint timeout);
         virtual void bind(const jxx::Ptr<SocketAddress>& bindpoint);
 
-        jxx::Ptr<InetAddress> getInetAddress() const;
-        jxx::Ptr<InetAddress> getLocalAddress() const;
-        jxx::lang::jint getPort() const noexcept;
-        jxx::lang::jint getLocalPort() const noexcept;
-        jxx::Ptr<SocketAddress> getRemoteSocketAddress() const;
-        jxx::Ptr<SocketAddress> getLocalSocketAddress() const;
+        virtual jxx::Ptr<InetAddress> getInetAddress() const;
+        virtual jxx::Ptr<InetAddress> getLocalAddress() const;
+        virtual jxx::lang::jint getPort() const noexcept;
+        virtual jxx::lang::jint getLocalPort() const noexcept;
+        virtual jxx::Ptr<SocketAddress> getRemoteSocketAddress() const;
+        virtual jxx::Ptr<SocketAddress> getLocalSocketAddress() const;
         jxx::Ptr<jxx::nio::channels::SocketChannel> getChannel() const;
 
         virtual jxx::Ptr<jxx::io::InputStream> getInputStream();
