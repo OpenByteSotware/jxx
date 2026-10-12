@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <cctype>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -182,8 +183,9 @@ protected:
     {
         const auto factory = createClientContext()->getSocketFactory();
         const auto socket = factory->createSocket(
-            ::jxx::NEW<::jxx::lang::String>("localhost"), port_);
-        auto sslSocket = ::jxx::CAST<::jxx::ext::net::ssl::SSLSocket>(socket);
+            ::jxx::NEW<::jxx::lang::String>("127.0.0.1"), port_);
+        auto sslSocket =
+            ::jxx::CAST<::jxx::ext::net::ssl::SSLSocket>(socket);
         if (sslSocket != nullptr) {
             sslSocket->setUseClientMode(true);
             sslSocket->startHandshake();
@@ -239,7 +241,7 @@ TEST_F(HttpsServerTlsBehaviorTest, RejectsClientThatDoesNotTrustCertificate)
         ::jxx::NEW<::jxx::lang::String>("TLS"));
     context->init(nullptr, nullptr, nullptr);
     const auto socket = context->getSocketFactory()->createSocket(
-        ::jxx::NEW<::jxx::lang::String>("localhost"), port_);
+        ::jxx::NEW<::jxx::lang::String>("127.0.0.1"), port_);
     client_ = ::jxx::CAST<::jxx::ext::net::ssl::SSLSocket>(socket);
 
     ASSERT_NE(nullptr, client_);
