@@ -66,6 +66,45 @@ std::string join(const std::vector<std::string>& v) {
     for (const auto& s : v) { if (!r.empty()) r.push_back(':'); r += s; }
     return r;
 }
+std::string tlsFailureMessage(
+    SSL* ssl,
+    int sslError,
+    const char* message) {
+    std::string detail = message == nullptr
+        ? std::string("TLS operation failed")
+        : std::string(message);
+    detail += " [SSL_get_error=" + std::to_string(sslError) + "]";
+
+    if (ssl != nullptr) {
+        const long verifyResult = SSL_get_verify_result(ssl);
+        if (verifyResult != X509_V_OK) {
+            const char* verifyText =
+                X509_verify_cert_error_string(verifyResult);
+            detail += " [verify=" + std::to_string(verifyResult);
+            if (verifyText != nullptr && *verifyText != '\0') {
+                detail += ": ";
+                detail += verifyText;
+            }
+            detail += "]";
+        }
+    }
+
+    bool firstOpenSslError = true;
+    for (;;) {
+        const unsigned long code = ERR_get_error();
+        if (code == 0UL) break;
+        char buffer[256] = {};
+        ERR_error_string_n(code, buffer, sizeof(buffer));
+        detail += firstOpenSslError
+            ? " [OpenSSL: "
+            : "; ";
+        detail += buffer;
+        firstOpenSslError = false;
+    }
+    if (!firstOpenSslError) detail += "]";
+    return detail;
+}
+
 [[noreturn]] void throwTlsFailure(
     SSL* ssl,
     int operation,
@@ -74,20 +113,21 @@ std::string join(const std::vector<std::string>& v) {
     const int error = ssl == nullptr
         ? SSL_ERROR_SSL
         : SSL_get_error(ssl, operation);
+    const auto detail = tlsFailureMessage(ssl, error, message);
     switch (error) {
     case SSL_ERROR_SSL:
         if (handshake)
-            throw ::jxx::ext::net::ssl::SSLHandshakeException(message);
-        throw ::jxx::ext::net::ssl::SSLProtocolException(message);
+            throw ::jxx::ext::net::ssl::SSLHandshakeException(detail.c_str());
+        throw ::jxx::ext::net::ssl::SSLProtocolException(detail.c_str());
     case SSL_ERROR_SYSCALL:
-        throw ::jxx::ext::net::ssl::SSLException(message);
+        throw ::jxx::ext::net::ssl::SSLException(detail.c_str());
     case SSL_ERROR_ZERO_RETURN:
         throw ::jxx::ext::net::ssl::SSLException("TLS peer closed the connection");
     case SSL_ERROR_WANT_READ:
     case SSL_ERROR_WANT_WRITE:
         throw ::jxx::ext::net::ssl::SSLException("TLS operation requires additional I/O");
     default:
-        throw ::jxx::ext::net::ssl::SSLException(message);
+        throw ::jxx::ext::net::ssl::SSLException(detail.c_str());
     }
 }
 
