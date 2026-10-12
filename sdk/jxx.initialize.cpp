@@ -15,6 +15,7 @@
 #include "org/xml/sax/jxx.org.xml.sax.ClassInitialization.h"
 #include "security/jxx.security.ClassInitialization.h"
 #include "util/jxx.util.ClassInitialization.h"
+#include "util/concurrent/jxx.util.concurrent.ClassInitialization.h"
 
 namespace jxx {
 
@@ -26,6 +27,7 @@ void initialize() {
         ::jxx::lang::initializeClasses();
         ::jxx::io::initializeClasses();
         ::jxx::util::initializeClasses();
+        ::jxx::util::concurrent::initializeClasses();
         ::jxx::math::initializeClasses();
         ::jxx::net::initializeClasses();
         ::jxx::nio::initializeClasses();
