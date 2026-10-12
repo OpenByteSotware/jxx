@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-
+#include "security/cert/jxx.security.cert.Certificate.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.HttpsConfigurator.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.HttpsServer.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.KeyManagerFactory.h"
@@ -134,19 +134,77 @@ BQAEIA+aUvzQwLuIW3dxQlk8NMjYpcdSXgjdqPymwKmnxEcHBAhluiMFA17kxgICCAA=
     return context;
 }
 
-::jxx::Ptr<::jxx::ext::net::ssl::SSLContext> createClientContext()
-{
-    const auto store = loadTestKeyStore();
-    const auto trustFactory =
-        ::jxx::ext::net::ssl::TrustManagerFactory::getInstance(
-            ::jxx::ext::net::ssl::TrustManagerFactory::getDefaultAlgorithm());
-    trustFactory->init(store);
 
-    const auto context = ::jxx::ext::net::ssl::SSLContext::getInstance(
-        ::jxx::NEW<::jxx::lang::String>("TLS"));
-    context->init(nullptr, trustFactory->getTrustManagers(), nullptr);
+::jxx::Ptr<::jxx::ext::net::ssl::SSLContext>
+createClientContext()
+{
+    const auto identityStore =
+        loadTestKeyStore();
+
+    const auto aliases =
+        identityStore->aliases();
+
+    if (aliases == nullptr || aliases->length == 0) {
+        throw std::runtime_error(
+            "test PKCS12 contains no aliases");
+    }
+
+    ::jxx::Ptr<::jxx::security::cert::Certificate>
+        serverCertificate;
+
+    for (::jxx::lang::jint index = 0;
+         index < aliases->length;
+         ++index) {
+        const auto alias = (*aliases)[index];
+
+        const auto certificate = identityStore->getCertificate(alias);
+
+        if (certificate != nullptr) {
+            serverCertificate = certificate;
+            break;
+        }
+    }
+
+    if (serverCertificate == nullptr) {
+        throw std::runtime_error(
+            "test PKCS12 contains no certificate");
+    }
+
+    const auto trustStore =
+        ::jxx::security::KeyStore::getInstance(
+            ::jxx::NEW<::jxx::lang::String>(
+                "PKCS12"));
+
+    trustStore->load(nullptr, nullptr);
+
+    trustStore->setCertificateEntry(
+        ::jxx::NEW<::jxx::lang::String>(
+            "test-server"),
+        serverCertificate);
+
+    const auto trustFactory =
+        ::jxx::ext::net::ssl::TrustManagerFactory::
+        getInstance(
+            ::jxx::ext::net::ssl::
+                TrustManagerFactory::
+                    getDefaultAlgorithm());
+
+    trustFactory->init(trustStore);
+
+    const auto context =
+        ::jxx::ext::net::ssl::SSLContext::
+        getInstance(
+            ::jxx::NEW<::jxx::lang::String>(
+                "TLS"));
+
+    context->init(
+        nullptr,
+        trustFactory->getTrustManagers(),
+        nullptr);
+
     return context;
 }
+
 
 ::jxx::lang::jint reserveLoopbackPort()
 {
