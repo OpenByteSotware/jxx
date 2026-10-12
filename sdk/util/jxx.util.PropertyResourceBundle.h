@@ -20,6 +20,12 @@ class PropertyResourceBundle final
 public:
     using JxxSuper = ResourceBundle;
     using Super = ::jxx::lang::ClassBase<PropertyResourceBundle, JxxSuper>;
+    using JxxClassInfoMarker =
+        ::jxx::lang::ClassInfo<PropertyResourceBundle, JxxSuper>;
+
+    static ::jxx::Ptr<::jxx::lang::ClassAny> Class() {
+        return JxxClassInfoMarker::Class();
+    }
 
     explicit PropertyResourceBundle(
         const ::jxx::Ptr<::jxx::io::InputStream>& stream);

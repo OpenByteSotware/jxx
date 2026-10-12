@@ -451,6 +451,11 @@ namespace jxx::net
 
     void Socket::setSoTimeout(jxx::lang::jint timeout)
     {
+        if (timeout < 0) {
+            throw ::jxx::lang::IllegalArgumentException(
+                "timeout cannot be negative");
+        }
+
         ensureCreated_(true);
         soTimeout_ = timeout;
     #if defined(_WIN32)
