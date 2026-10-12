@@ -250,13 +250,51 @@ namespace jxx::com::sun::net::httpserver::internal
 	{
 		return executor_;
 	}
-	::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>DefaultHttpServer::createContext(const ::jxx::Ptr<::jxx::lang::String>& p, const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpHandler>& h)
+	::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>
+	DefaultHttpServer::createContext(
+		const ::jxx::Ptr<::jxx::lang::String>& p,
+		const ::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpHandler>& h)
 	{
-		auto c = ::jxx::NEW<DefaultHttpContext>(::jxx::CAST<::jxx::com::sun::net::httpserver::HttpServer>(this->thisPtr()), p, h); std::lock_guard<std::mutex>lock(mutex_); for (auto& e : contexts_)if (e->getPath()->equals(p))throw ::jxx::lang::IllegalArgumentException(); contexts_.push_back(c); return c;
+		if (p == nullptr || h == nullptr) {
+			throw ::jxx::lang::NullPointerException();
+		}
+
+		auto c = ::jxx::NEW<DefaultHttpContext>(
+			::jxx::CAST<::jxx::com::sun::net::httpserver::HttpServer>(
+				this->thisPtr()),
+			p,
+			h);
+		std::lock_guard<std::mutex> lock(mutex_);
+		for (const auto& e : contexts_) {
+			if (e->getPath()->equals(p)) {
+				throw ::jxx::lang::IllegalArgumentException();
+			}
+		}
+		contexts_.push_back(c);
+		return c;
 	}
-	::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>DefaultHttpServer::createContext(const ::jxx::Ptr<::jxx::lang::String>& p)
+
+	::jxx::Ptr<::jxx::com::sun::net::httpserver::HttpContext>
+	DefaultHttpServer::createContext(
+		const ::jxx::Ptr<::jxx::lang::String>& p)
 	{
-		return createContext(p, nullptr);
+		if (p == nullptr) {
+			throw ::jxx::lang::NullPointerException();
+		}
+
+		auto c = ::jxx::NEW<DefaultHttpContext>(
+			::jxx::CAST<::jxx::com::sun::net::httpserver::HttpServer>(
+				this->thisPtr()),
+			p,
+			nullptr);
+		std::lock_guard<std::mutex> lock(mutex_);
+		for (const auto& e : contexts_) {
+			if (e->getPath()->equals(p)) {
+				throw ::jxx::lang::IllegalArgumentException();
+			}
+		}
+		contexts_.push_back(c);
+		return c;
 	} void DefaultHttpServer::removeContext(const ::jxx::Ptr<::jxx::lang::String>& p)
 	{
 		if (!p) throw ::jxx::lang::NullPointerException();

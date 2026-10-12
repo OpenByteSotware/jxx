@@ -1,31 +1,42 @@
 #pragma once
 
 #include "lang/jxx.lang.ClassInfo.h"
-
+#include "lang/jxx.lang.Object.h"
 #include "util/function/jxx.util.function.Function.h"
 
-namespace jxx {
-namespace util {
-namespace function {
+namespace jxx::util::function {
 
 template <typename T>
-class UnaryOperator : public ::jxx::lang::InterfaceBase<UnaryOperator<T>, Function<T, T>> {
+class UnaryOperator
+    : public ::jxx::lang::InterfaceBase<
+          UnaryOperator<T>,
+          Function<T, T>> {
 public:
-    virtual ~UnaryOperator() = default;
+    ~UnaryOperator() override = default;
 
-    static jxx::Ptr<UnaryOperator<T>> identity() {
-        class IdentityUnaryOperator : public virtual UnaryOperator<T> {
-        public:
-            virtual ~IdentityUnaryOperator() = default;
-            virtual jxx::Ptr<T> apply(const jxx::Ptr<T>& t) override {
-                return t;
-            }
-        };
+    virtual ::jxx::Ptr<T> apply(
+        const ::jxx::Ptr<T>& value) override = 0;
 
-        return ::jxx::CAST<UnaryOperator<T>>(::jxx::NEW<IdentityUnaryOperator>());
+    static ::jxx::Ptr<UnaryOperator<T>> identity();
+};
+
+template <typename T>
+class IdentityUnaryOperator final
+    : public ::jxx::lang::ClassBase<
+          IdentityUnaryOperator<T>,
+          ::jxx::lang::Object,
+          UnaryOperator<T>> {
+public:
+    ::jxx::Ptr<T> apply(
+        const ::jxx::Ptr<T>& value) override {
+        return value;
     }
 };
 
-} // namespace function
-} // namespace util
-} // namespace jxx
+template <typename T>
+::jxx::Ptr<UnaryOperator<T>> UnaryOperator<T>::identity() {
+    auto result = ::jxx::NEW<IdentityUnaryOperator<T>>();
+    return std::static_pointer_cast<UnaryOperator<T>>(result);
+}
+
+} // namespace jxx::util::function

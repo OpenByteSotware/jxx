@@ -7,6 +7,7 @@
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.String.h"
 #include "net/jxx.net.InetSocketAddress.h"
+#include "net/jxx.net.InetAddress.h"
 
 namespace jxx::com::sun::net::httpserver {
 namespace {
@@ -49,19 +50,37 @@ TEST_F(HttpServerBehaviorExtendedTest, CreateReturnsUnboundServer)
     EXPECT_EQ(nullptr, server_->getExecutor());
 }
 
-TEST_F(HttpServerBehaviorExtendedTest, BindPublishesConfiguredAddress)
+TEST_F(
+    HttpServerBehaviorExtendedTest,
+    BindPublishesConfiguredAddress)
 {
     server_ = HttpServer::create();
-    const auto requested = ::jxx::NEW<::jxx::net::InetSocketAddress>(0);
+
+    const auto requested =
+        ::jxx::NEW<::jxx::net::InetSocketAddress>(0);
 
     server_->bind(requested, 0);
 
-    const auto bound = server_->getAddress();
+    const auto bound =
+        server_->getAddress();
+
     ASSERT_NE(nullptr, bound);
-    EXPECT_EQ(requested->getAddress(), bound->getAddress());
+
+    const auto requestedAddress =
+        requested->getAddress();
+
+    const auto boundAddress =
+        bound->getAddress();
+
+    ASSERT_NE(nullptr, requestedAddress);
+    ASSERT_NE(nullptr, boundAddress);
+
+    EXPECT_TRUE(requestedAddress->equals(boundAddress));
+
     EXPECT_EQ(0, requested->getPort());
     EXPECT_GT(bound->getPort(), 0);
 }
+
 
 TEST_F(HttpServerBehaviorExtendedTest, BindRejectsNullAndSecondBind)
 {

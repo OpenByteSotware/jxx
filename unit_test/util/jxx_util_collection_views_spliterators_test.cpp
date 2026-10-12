@@ -19,28 +19,72 @@ public:
     ::jxx::lang::jint count = 0;
 };
 
-TEST(AbstractSetSpliteratorParityTest2, ReportsDistinctAndSizedAndTraverses)
+namespace
 {
-    const auto set = ::jxx::NEW<::jxx::util::HashSet<S>>();
-    set->add(::jxx::NEW<S>("a"));
-    set->add(::jxx::NEW<S>("b"));
 
-    const auto spliterator = set->spliterator();
+    using S = ::jxx::lang::String;
+
+    class AbstractSetCountingConsumer2 final
+        : public ::jxx::lang::ClassBase<
+        AbstractSetCountingConsumer2,
+        ::jxx::lang::Object,
+        ::jxx::util::function::Consumer<S>> {
+    public:
+        void accept(
+            const ::jxx::Ptr<S>& value) override
+        {
+            (void)value;
+            ++count;
+        }
+
+        ::jxx::lang::jint count = 0;
+    };
+
+} // namespace
+
+TEST(
+    AbstractSetSpliteratorParityTest2,
+    ReportsDistinctAndSizedAndTraverses)
+{
+    const auto set =
+        ::jxx::NEW<::jxx::util::HashSet<S>>();
+
+    EXPECT_TRUE(set->add(::jxx::NEW<S>("a")));
+    EXPECT_TRUE(set->add(::jxx::NEW<S>("b")));
+
+    const auto spliterator =
+        set->spliterator();
+
+    ASSERT_NE(nullptr, spliterator);
 
     EXPECT_TRUE(spliterator->hasCharacteristics(
         ::jxx::util::Spliterator<S>::DISTINCT));
+
     EXPECT_TRUE(spliterator->hasCharacteristics(
         ::jxx::util::Spliterator<S>::SIZED));
-    EXPECT_EQ(2, spliterator->getExactSizeIfKnown());
 
-    const auto consumer = ::jxx::NEW<CountingConsumer>();
-    const auto consumerInterface = ::jxx::CAST<
-        ::jxx::util::function::Consumer<S>>(consumer);
+    EXPECT_EQ(
+        2,
+        spliterator->getExactSizeIfKnown());
 
-    ASSERT_NE(nullptr, consumerInterface);
-    spliterator->forEachRemaining(consumerInterface);
+    const auto concrete =
+        ::jxx::NEW<AbstractSetCountingConsumer2>();
 
-    EXPECT_EQ(2, consumer->count);
+    const auto consumer =
+        ::jxx::CAST<
+        ::jxx::util::function::Consumer<S>>(
+            concrete);
+
+    ASSERT_NE(nullptr, consumer);
+
+    // Confirms this test's interface object dispatches to this exact
+    // concrete consumer before involving the spliterator.
+    consumer->accept(::jxx::NEW<S>("direct"));
+    ASSERT_EQ(1, concrete->count);
+
+    spliterator->forEachRemaining(consumer);
+
+    EXPECT_EQ(3, concrete->count);
     EXPECT_EQ(0, spliterator->estimateSize());
 }
 
