@@ -22,7 +22,8 @@ class ResourceBundle
 public:
     using JxxSuper = ::jxx::lang::Object;
     using Super = ::jxx::lang::ClassBase<ResourceBundle, JxxSuper>;
-    using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
+    using JxxClassInfoMarker =
+        ::jxx::lang::ClassInfo<ResourceBundle, JxxSuper>;
     static ::jxx::Ptr<::jxx::lang::ClassAny> Class();
     virtual ~ResourceBundle() override = default;
 
