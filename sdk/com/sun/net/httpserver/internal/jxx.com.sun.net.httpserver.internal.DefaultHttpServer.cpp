@@ -1,4 +1,5 @@
 #include <chrono>
+#include <cstdio>
 #include <memory>
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpServer.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpContext.h"
@@ -371,9 +372,16 @@ namespace jxx::com::sun::net::httpserver::internal
 					handshakeComplete = true;
 					socket->setSoTimeout(0);
 				}
-				catch (...) {
+				catch (const std::exception& exception) {
+					std::fprintf(stderr, "HTTPS server TLS handshake failed: %s\n", exception.what());
 					try { socket->setSoTimeout(0); } catch (...) {}
-					socket->close();
+					try { socket->close(); } catch (...) {}
+					return;
+				}
+				catch (...) {
+					std::fprintf(stderr, "HTTPS server TLS handshake failed: unknown exception\n");
+					try { socket->setSoTimeout(0); } catch (...) {}
+					try { socket->close(); } catch (...) {}
 					return;
 				}
 			}
