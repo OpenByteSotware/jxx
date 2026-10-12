@@ -308,6 +308,14 @@ Http11Parser::Result Http11Parser::parse(
         return Result::Error;
     }
 
+    // Publish validated request-framing metadata before waiting for body
+    // bytes. parseHead() intentionally completes once the request head is
+    // available, even when parse() still needs more fixed-length or chunked
+    // body data.
+    output.contentLength = contentLength;
+    output.contentLengthPresent = contentLengthPresent;
+    output.chunked = chunked;
+
     const auto bodyStart = headersEnd + 4;
     if (chunked) {
         const auto result = decodeChunked(
