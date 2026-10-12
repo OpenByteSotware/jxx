@@ -72,19 +72,3 @@ void throw_test() {
     throw jxx::NEW<ThrowableTest>("cleanup failed");
 }
 
-TEST(TestThrowableTest, ThrowException) {
-    //const std::string input_filepath = "this/package/testdata/myinputfile.dat";
-    //const std::string output_filepath = "this/package/testdata/myoutputfile.dat";
-    int val = 1;
-
-    EXPECT_THROW(throw_test(), ThrowableTest);
-     //   ASSERT_THROW(statement, exception_type)
-}
-
-TEST(TestThrowableTest, IntValueTestScope) {
-    //const std::string input_filepath = "this/package/testdata/myinputfile.dat";
-    //const std::string output_filepath = "this/package/testdata/myoutputfile.dat";
-    int val = 5;
-    
- 
-}

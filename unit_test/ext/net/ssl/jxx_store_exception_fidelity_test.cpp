@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
-
+#include <cstdio>
+#include <fstream>
+#include <string>
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslPropertyKeyManager.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.OpenSslPropertyTrustManager.h"
 #include "io/jxx.io.FileNotFoundException.h"
@@ -27,16 +29,60 @@ void setProperty(const char* name, const char* value) {
         ::jxx::NEW<::jxx::lang::String>(name),
         ::jxx::NEW<::jxx::lang::String>(value));
 }
-}
 
-TEST(StoreExceptionFidelityTest, UnsupportedKeyStoreTypeThrowsKeyStoreException) {
-    PropertyRestore path("jxx.net.ssl.keyStore");
-    PropertyRestore type("jxx.net.ssl.keyStoreType");
-    setProperty("jxx.net.ssl.keyStore", "missing-store");
-    setProperty("jxx.net.ssl.keyStoreType", "JKS");
+class TemporaryFile final
+{
+public:
+    explicit TemporaryFile(const char* path)
+        : path_(path)
+    {
+        std::ofstream stream(path_, std::ios::binary);
+        if (stream.good()) {
+            stream.put('\0');
+        }
+    }
+
+    ~TemporaryFile()
+    {
+        (void)std::remove(path_.c_str());
+    }
+
+    const std::string& path() const
+    {
+        return path_;
+    }
+
+    bool exists() const
+    {
+        std::ifstream stream(path_, std::ios::binary);
+        return stream.good();
+    }
+
+private:
+    std::string path_;
+};
+
+}
+TEST(
+    StoreExceptionFidelityTest,
+    UnsupportedKeyStoreTypeThrowsKeyStoreException)
+{
+    PropertyRestore path(
+        "jxx.ext.net.ssl.keyStore");
+
+    PropertyRestore type(
+        "jxx.ext.net.ssl.keyStoreType");
+
+    setProperty(
+        "jxx.ext.net.ssl.keyStore",
+        "missing-store");
+
+    setProperty(
+        "jxx.ext.net.ssl.keyStoreType",
+        "JKS");
+
     EXPECT_THROW(
-        ::jxx::ext::net::ssl::internal::loadDefaultPropertyKeyManagers(),
-        ::jxx::security::KeyStoreException);
+        ::jxx::ext::net::ssl::internal::loadDefaultPropertyKeyManagers(), ::jxx::security::KeyStoreException);
 }
 
 TEST(StoreExceptionFidelityTest, UnsupportedKeyStoreProviderThrowsNoSuchProvider) {
@@ -51,25 +97,59 @@ TEST(StoreExceptionFidelityTest, UnsupportedKeyStoreProviderThrowsNoSuchProvider
         ::jxx::security::NoSuchProviderException);
 }
 
-TEST(StoreExceptionFidelityTest, MissingKeyStoreThrowsFileNotFound) {
-    PropertyRestore path("jxx.net.ssl.keyStore");
-    PropertyRestore type("jxx.net.ssl.keyStoreType");
-    PropertyRestore provider("jxx.net.ssl.keyStoreProvider");
-    setProperty("jxx.net.ssl.keyStore", "missing-store");
-    setProperty("jxx.net.ssl.keyStoreType", "PKCS12");
+TEST(StoreExceptionFidelityTest, MissingKeyStoreThrowsFileNotFound)
+{
+    PropertyRestore path(
+        "jxx.ext.net.ssl.keyStore");
+
+    PropertyRestore type(
+        "jxx.ext.net.ssl.keyStoreType");
+
+    PropertyRestore provider(
+        "jxx.ext.net.ssl.keyStoreProvider");
+
+    setProperty(
+        "jxx.ext.net.ssl.keyStore",
+        "missing-store");
+
+    setProperty(
+        "jxx.ext.net.ssl.keyStoreType",
+        "PKCS12");
+
     ::jxx::lang::System::clearProperty(
-        ::jxx::NEW<::jxx::lang::String>("jxx.net.ssl.keyStoreProvider"));
+        ::jxx::NEW<::jxx::lang::String>(
+            "jxx.ext.net.ssl.keyStoreProvider"));
+
     EXPECT_THROW(
-        ::jxx::ext::net::ssl::internal::loadDefaultPropertyKeyManagers(),
+        ::jxx::ext::net::ssl::internal::
+            loadDefaultPropertyKeyManagers(),
         ::jxx::io::FileNotFoundException);
 }
+TEST(
+    StoreExceptionFidelityTest,
+    UnsupportedTrustStoreTypeThrowsKeyStoreException)
+{
+    PropertyRestore path(
+        "jxx.ext.net.ssl.trustStore");
 
-TEST(StoreExceptionFidelityTest, UnsupportedTrustStoreTypeThrowsKeyStoreException) {
-    PropertyRestore path("jxx.net.ssl.trustStore");
-    PropertyRestore type("jxx.net.ssl.trustStoreType");
-    setProperty("jxx.net.ssl.trustStore", "missing-store");
-    setProperty("jxx.net.ssl.trustStoreType", "JKS");
+    PropertyRestore type(
+        "jxx.ext.net.ssl.trustStoreType");
+
+    const TemporaryFile temporaryStore(
+        "jxx-unsupported-trust-store-type.tmp");
+
+    ASSERT_TRUE(temporaryStore.exists());
+
+    setProperty(
+        "jxx.ext.net.ssl.trustStore",
+        temporaryStore.path().c_str());
+
+    setProperty(
+        "jxx.ext.net.ssl.trustStoreType",
+        "JKS");
+
     EXPECT_THROW(
-        ::jxx::ext::net::ssl::internal::loadDefaultPropertyTrustManagers(),
+        ::jxx::ext::net::ssl::internal::
+            loadDefaultPropertyTrustManagers(),
         ::jxx::security::KeyStoreException);
 }

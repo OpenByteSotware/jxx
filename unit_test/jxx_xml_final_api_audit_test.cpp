@@ -11,14 +11,17 @@ TEST(XmlFinalApiAuditStage, ParserFactoryCreatesDefaultParser) {
     EXPECT_NE(parser, nullptr);
 }
 
-TEST(XmlFinalApiAuditStage, ParserFactoryCreatesNamedDefaultReader) {
+TEST(
+    XmlFinalApiAuditStage,
+    ParserFactoryCreatesNamedDefaultReader)
+{
     const auto parser =
         ::jxx::org::xml::sax::helpers::ParserFactory::makeParser(
             ::jxx::NEW<::jxx::lang::String>(
-                "org.xml.sax.internal.PugiXMLReader"));
-    EXPECT_NE(parser, nullptr);
-}
+                "jxx.org.xml.sax.internal.PugiXMLReader"));
 
+    EXPECT_NE(nullptr, parser);
+}
 TEST(XmlFinalApiAuditStage, ParserFactoryRejectsNullClassName) {
     EXPECT_THROW(
         ::jxx::org::xml::sax::helpers::ParserFactory::makeParser(nullptr),
