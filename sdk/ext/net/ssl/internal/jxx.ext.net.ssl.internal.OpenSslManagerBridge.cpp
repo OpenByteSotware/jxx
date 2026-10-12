@@ -463,7 +463,6 @@ int OpenSslManagerBridge::selectServerIdentity(SSL* ssl) noexcept {
         const unsigned char* keyCursor = reinterpret_cast<const unsigned char*>(&(*keyBytes)[0]);
         EVP_PKEY* decodedKey = d2i_AutoPrivateKey(nullptr, &keyCursor, keyBytes->length);
         if (leaf == nullptr || decodedKey == nullptr ||
-            !isCurrentlyValid(leaf) ||
             !permitsLocalIdentity(algorithmConstraints_, leaf, key) ||
             SSL_use_certificate(ssl, leaf) != 1 ||
             SSL_use_PrivateKey(ssl, decodedKey) != 1 ||

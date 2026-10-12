@@ -21,6 +21,20 @@ private:
 
 public:
     template <typename E>
+    static ::jxx::Ptr<::jxx::util::Spliterator<E>> emptySpliterator() {
+        auto values = ::jxx::NEW<
+            ::jxx::lang::JxxArray<::jxx::Ptr<E>, 1U>>(0);
+        return ::jxx::NEW<
+            ::jxx::util::spliterators::ArrayRefSpliterator<E>>(
+                values,
+                static_cast<::jxx::lang::jint>(0),
+                static_cast<::jxx::lang::jint>(0),
+                ::jxx::util::Spliterator<E>::SIZED |
+                    ::jxx::util::Spliterator<E>::SUBSIZED,
+                nullptr);
+    }
+
+    template <typename E>
     static ::jxx::Ptr<::jxx::util::Spliterator<E>> forArray(
         ::jxx::Ptr<JxxArray<::jxx::Ptr<E>, 1U>> array,
         ::jxx::lang::jint characteristics = 0,
