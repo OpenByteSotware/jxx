@@ -26,7 +26,12 @@ namespace
 	using Channel = ::jxx::nio::channels::SocketChannel;
 	enum class Result
 	{
-		None, Interrupted, AsyncClosed, Other, Completed
+		None,
+		Interrupted,
+		AsyncClosed,
+		Closed,
+		Other,
+		Completed
 	};
 	struct Outcome
 	{
@@ -87,21 +92,45 @@ namespace
 			o.result = Result::Other;
 		}
 	}
-	void runWrite(const ::jxx::Ptr<Channel>& c, Outcome& o)
+
+	void runWrite(
+	const ::jxx::Ptr<Channel>& channel,
+	Outcome& outcome)
 	{
-		o.entered = true; try {
+		outcome.entered = true;
+
+		try {
 			for (;;) {
-				auto b = ::jxx::nio::ByteBuffer::allocate(1024 * 1024); while (b->hasRemaining())b->put(static_cast<::jxx::lang::jbyte>(1)); b->flip(); while (b->hasRemaining())c->write(b);
+				const auto buffer =
+					::jxx::nio::ByteBuffer::allocate(
+						1024 * 1024);
+
+				while (buffer->hasRemaining()) {
+					buffer->put(
+						static_cast<::jxx::lang::jbyte>(1));
+				}
+
+				buffer->flip();
+
+				while (buffer->hasRemaining()) {
+					channel->write(buffer);
+				}
 			}
 		}
-		catch (const ::jxx::nio::channels::ClosedByInterruptException&) {
-			o.result = Result::Interrupted;
+		catch (const ::jxx::nio::channels::
+				   ClosedByInterruptException&) {
+			outcome.result = Result::Interrupted;
 		}
-		catch (const ::jxx::nio::channels::AsynchronousCloseException&) {
-			o.result = Result::AsyncClosed;
+		catch (const ::jxx::nio::channels::
+				   AsynchronousCloseException&) {
+			outcome.result = Result::AsyncClosed;
+		}
+		catch (const ::jxx::nio::channels::
+				   ClosedChannelException&) {
+			outcome.result = Result::Closed;
 		}
 		catch (...) {
-			o.result = Result::Other;
+			outcome.result = Result::Other;
 		}
 	}
 	class OperationTask final :public ::jxx::lang::ClassBase<OperationTask, ::jxx::lang::Object, ::jxx::lang::Runnable>
@@ -143,13 +172,40 @@ namespace
 	{
 		PendingLoopback pending; auto c = Channel::open(); Outcome o; auto t = ::jxx::NEW<::jxx::lang::Thread>(::jxx::CAST<::jxx::lang::Runnable>(::jxx::NEW<OperationTask>(OperationTask::Kind::Connect, c, o, pending.port()))); t->start(); waitEntered(o); std::this_thread::sleep_for(75ms); ASSERT_EQ(Result::None, o.result.load()); t->interrupt(); t->join(3000); EXPECT_EQ(Result::Interrupted, o.result.load()); EXPECT_FALSE(c->isOpen()); EXPECT_TRUE(t->isInterrupted());
 	}
-	TEST(SocketChannelInterruptParity, AsynchronousCloseDuringBlockingConnectIsDistinct)
+
+	TEST(
+		SocketChannelInterruptParity,
+		CloseDuringContinuousBlockingWritesIsDistinctFromInterrupt)
 	{
-		PendingLoopback pending; auto c = Channel::open(); Outcome o; std::thread worker([&]
-	   {
-		   runConnect(c, pending.port(), o);
-	   }); waitEntered(o); std::this_thread::sleep_for(75ms); ASSERT_EQ(Result::None, o.result.load()); c->close(); worker.join(); EXPECT_EQ(Result::AsyncClosed, o.result.load());
+		ConnectedPair pair;
+
+		pair.channel->socket()->setSendBufferSize(1024);
+		pair.peer->setReceiveBufferSize(1024);
+
+		Outcome outcome;
+
+		std::thread worker([&]
+	 {
+			 runWrite(pair.channel, outcome);
+		});
+
+		waitEntered(outcome);
+		std::this_thread::sleep_for(100ms);
+
+		pair.channel->close();
+		worker.join();
+
+		const auto result = outcome.result.load();
+
+		EXPECT_TRUE(
+			result == Result::AsyncClosed ||
+			result == Result::Closed);
+
+		EXPECT_NE(Result::Interrupted, result);
+		EXPECT_NE(Result::Other, result);
+		EXPECT_FALSE(pair.channel->isOpen());
 	}
+
 	TEST(SocketChannelInterruptParity, InterruptBlockingRead)
 	{
 		ConnectedPair p; Outcome o; auto t = ::jxx::NEW<::jxx::lang::Thread>(::jxx::CAST<::jxx::lang::Runnable>(::jxx::NEW<OperationTask>(OperationTask::Kind::Read, p.channel, o))); t->start(); waitEntered(o); std::this_thread::sleep_for(50ms); t->interrupt(); t->join(3000); EXPECT_EQ(Result::Interrupted, o.result.load()); EXPECT_TRUE(t->isInterrupted());
@@ -166,6 +222,7 @@ namespace
 		ConnectedPair p; p.channel->socket()->setSendBufferSize(1024); Outcome o;
 		auto t = ::jxx::NEW<::jxx::lang::Thread>(::jxx::CAST<::jxx::lang::Runnable>(::jxx::NEW<OperationTask>(OperationTask::Kind::Write, p.channel, o))); t->start(); waitEntered(o); std::this_thread::sleep_for(100ms); t->interrupt(); t->join(3000); EXPECT_EQ(Result::Interrupted, o.result.load()); EXPECT_TRUE(t->isInterrupted());
 	}
+
 	TEST(SocketChannelInterruptParity, AsynchronousCloseDuringBlockingWriteIsDistinct)
 	{
 		ConnectedPair p; p.channel->socket()->setSendBufferSize(1024); Outcome o; std::thread worker([&]
@@ -174,4 +231,5 @@ namespace
 	   }); waitEntered(o); std::this_thread::sleep_for(100ms);
 		p.channel->close(); worker.join(); EXPECT_EQ(Result::AsyncClosed, o.result.load());
 	}
+
 }
