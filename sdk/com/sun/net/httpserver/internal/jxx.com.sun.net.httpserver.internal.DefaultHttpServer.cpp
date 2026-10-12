@@ -373,13 +373,13 @@ namespace jxx::com::sun::net::httpserver::internal
 					socket->setSoTimeout(0);
 				}
 				catch (const ::jxx::lang::Throwable& throwable) {
-					const auto message = throwable.getMessage();
+					const auto description = throwable.toString();
 					std::fprintf(
 						stderr,
 						"HTTPS server TLS handshake failed: %s\n",
-						message == nullptr
-							? "<no JXX exception message>"
-							: message->utf8().c_str());
+						description == nullptr
+							? "<unavailable JXX exception description>"
+							: description->utf8().c_str());
 					try { socket->setSoTimeout(0); } catch (...) {}
 					try { socket->close(); } catch (...) {}
 					return;

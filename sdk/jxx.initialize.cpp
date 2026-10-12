@@ -17,6 +17,8 @@
 #include "security/jxx.security.ClassInitialization.h"
 #include "util/jxx.util.ClassInitialization.h"
 #include "util/concurrent/jxx.util.concurrent.ClassInitialization.h"
+#include "util/logging/jxx.util.logging.ClassInitialization.h"
+#include "util/regex/jxx.util.regex.ClassInitialization.h"
 
 namespace jxx {
 
@@ -29,6 +31,8 @@ void initialize() {
         ::jxx::io::initializeClasses();
         ::jxx::util::initializeClasses();
         ::jxx::util::concurrent::initializeClasses();
+        ::jxx::util::logging::initializeClasses();
+        ::jxx::util::regex::initializeClasses();
         ::jxx::math::initializeClasses();
         ::jxx::net::initializeClasses();
         ::jxx::nio::initializeClasses();
