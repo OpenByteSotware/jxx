@@ -52,7 +52,19 @@ KeyStore::KeyStore(const ::jxx::Ptr<::jxx::lang::String>& type) : type_(type) {}
 
 void KeyStore::load(const ::jxx::Ptr<::jxx::io::InputStream>& stream,
                     const ::jxx::Ptr<CharArray>& password) {
-    if (stream == nullptr) throw ::jxx::lang::NullPointerException();
+    if (stream == nullptr) {
+        keyAliases_.clear();
+        privateKeys_.clear();
+        chains_.clear();
+        certificateAliases_.clear();
+        certificates_.clear();
+        creationTime_ = static_cast<::jxx::lang::jlong>(
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::system_clock::now().time_since_epoch()).count());
+        loaded_ = true;
+        return;
+    }
+
     std::vector<unsigned char> bytes;
     const auto buffer = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::jbyte, 1U>>(4096);
     for (;;) {
