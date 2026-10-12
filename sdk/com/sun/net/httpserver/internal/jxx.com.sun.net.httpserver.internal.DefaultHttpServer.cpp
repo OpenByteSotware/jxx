@@ -351,8 +351,11 @@ namespace jxx::com::sun::net::httpserver::internal
 					httpsConfigurator_->configure(httpsParameters);
 					auto aggregate = httpsParameters->getAppliedSSLParameters();
 					if (aggregate != nullptr) {
-						validateTlsValues(aggregate->getCipherSuites(), sslSocket->getSupportedCipherSuites());
-						validateTlsValues(aggregate->getProtocols(), sslSocket->getSupportedProtocols());
+						// Apply the configurator's aggregate parameters through the
+						// SSLSocket API. The socket is responsible for validating its
+						// enabled cipher suites and protocols. Pre-validating context
+						// defaults against a separately generated capability list can
+						// reject valid provider defaults before the handshake begins.
 						sslSocket->setSSLParameters(aggregate);
 					}
 					else {
