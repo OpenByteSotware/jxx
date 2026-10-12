@@ -155,7 +155,7 @@ BQAEIA+aUvzQwLuIW3dxQlk8NMjYpcdSXgjdqPymwKmnxEcHBAhluiMFA17kxgICCAA=
     return port;
 }
 
-class HttpsServerTlsBehaviorTest : public ::testing::Test {
+class HttpsServerTlsBehaviorTest2 : public ::testing::Test {
 protected:
     void TearDown() override
     {
@@ -197,7 +197,7 @@ protected:
     ::jxx::lang::jint port_ = 0;
 };
 
-TEST_F(HttpsServerTlsBehaviorTest, CompletesTlsHandshake)
+TEST_F(HttpsServerTlsBehaviorTest2, CompletesTlsHandshake)
 {
     startServer();
 
@@ -213,7 +213,7 @@ TEST_F(HttpsServerTlsBehaviorTest, CompletesTlsHandshake)
     EXPECT_FALSE(session->getCipherSuite()->isEmpty());
 }
 
-TEST_F(HttpsServerTlsBehaviorTest, ExposesServerCertificateToClient)
+TEST_F(HttpsServerTlsBehaviorTest2, ExposesServerCertificateToClient)
 {
     startServer();
 
@@ -231,7 +231,7 @@ TEST_F(HttpsServerTlsBehaviorTest, ExposesServerCertificateToClient)
         ::jxx::NEW<::jxx::lang::String>("X.509")));
 }
 
-TEST_F(HttpsServerTlsBehaviorTest, RejectsClientThatDoesNotTrustCertificate)
+TEST_F(HttpsServerTlsBehaviorTest2, RejectsClientThatDoesNotTrustCertificate)
 {
     startServer();
 

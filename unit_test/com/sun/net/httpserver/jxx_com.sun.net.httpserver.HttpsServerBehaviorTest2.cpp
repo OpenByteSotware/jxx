@@ -10,7 +10,7 @@
 namespace jxx::com::sun::net::httpserver {
 namespace {
 
-class HttpsServerBehaviorTest : public ::testing::Test {
+class HttpsServerBehaviorTest3 : public ::testing::Test {
 protected:
     void TearDown() override
     {
@@ -34,7 +34,7 @@ protected:
     ::jxx::Ptr<HttpsServer> server_;
 };
 
-TEST_F(HttpsServerBehaviorTest, CreateReturnsUnboundServerWithoutConfigurator)
+TEST_F(HttpsServerBehaviorTest3, CreateReturnsUnboundServerWithoutConfigurator)
 {
     server_ = HttpsServer::create();
 
@@ -43,7 +43,7 @@ TEST_F(HttpsServerBehaviorTest, CreateReturnsUnboundServerWithoutConfigurator)
     EXPECT_EQ(nullptr, server_->getHttpsConfigurator());
 }
 
-TEST_F(HttpsServerBehaviorTest, ConfiguratorRoundTripsByIdentity)
+TEST_F(HttpsServerBehaviorTest3, ConfiguratorRoundTripsByIdentity)
 {
     server_ = HttpsServer::create();
     const auto configurator = newConfigurator();
@@ -53,7 +53,7 @@ TEST_F(HttpsServerBehaviorTest, ConfiguratorRoundTripsByIdentity)
     EXPECT_EQ(configurator.get(), server_->getHttpsConfigurator().get());
 }
 
-TEST_F(HttpsServerBehaviorTest, NullConfiguratorIsRejected)
+TEST_F(HttpsServerBehaviorTest3, NullConfiguratorIsRejected)
 {
     server_ = HttpsServer::create();
     const ::jxx::Ptr<HttpsConfigurator> nullConfigurator;
@@ -62,7 +62,7 @@ TEST_F(HttpsServerBehaviorTest, NullConfiguratorIsRejected)
                  ::jxx::lang::NullPointerException);
 }
 
-TEST_F(HttpsServerBehaviorTest, StartRequiresBoundAddress)
+TEST_F(HttpsServerBehaviorTest3, StartRequiresBoundAddress)
 {
     server_ = HttpsServer::create();
     server_->setHttpsConfigurator(newConfigurator());
@@ -70,7 +70,7 @@ TEST_F(HttpsServerBehaviorTest, StartRequiresBoundAddress)
     EXPECT_THROW(server_->start(), ::jxx::lang::IllegalStateException);
 }
 
-TEST_F(HttpsServerBehaviorTest, StartRequiresHttpsConfigurator)
+TEST_F(HttpsServerBehaviorTest3, StartRequiresHttpsConfigurator)
 {
     server_ = HttpsServer::create();
     server_->bind(::jxx::NEW<::jxx::net::InetSocketAddress>(0), 0);
@@ -78,7 +78,7 @@ TEST_F(HttpsServerBehaviorTest, StartRequiresHttpsConfigurator)
     EXPECT_THROW(server_->start(), ::jxx::lang::IllegalStateException);
 }
 
-TEST_F(HttpsServerBehaviorTest, BoundFactoryPublishesAddress)
+TEST_F(HttpsServerBehaviorTest3, BoundFactoryPublishesAddress)
 {
     const auto address = ::jxx::NEW<::jxx::net::InetSocketAddress>(0);
     server_ = HttpsServer::create(address, 0);
@@ -87,7 +87,7 @@ TEST_F(HttpsServerBehaviorTest, BoundFactoryPublishesAddress)
     EXPECT_EQ(address.get(), server_->getAddress().get());
 }
 
-TEST_F(HttpsServerBehaviorTest, ConfiguratorCannotChangeAfterStop)
+TEST_F(HttpsServerBehaviorTest3, ConfiguratorCannotChangeAfterStop)
 {
     server_ = HttpsServer::create();
     server_->stop(0);
@@ -97,7 +97,7 @@ TEST_F(HttpsServerBehaviorTest, ConfiguratorCannotChangeAfterStop)
     server_.reset();
 }
 
-TEST_F(HttpsServerBehaviorTest, StopRejectsNegativeDelay)
+TEST_F(HttpsServerBehaviorTest3, StopRejectsNegativeDelay)
 {
     server_ = HttpsServer::create();
 
