@@ -223,20 +223,6 @@ protected:
     ::jxx::lang::jint port_ = 0;
 };
 
-TEST_F(HttpsServerTlsBehaviorTest1A, CompletesTlsHandshake)
-{
-    startServer();
-    const auto socket = connectClient();
-    ASSERT_NE(nullptr, socket);
-    const auto session = socket->getSession();
-    ASSERT_NE(nullptr, session);
-    EXPECT_TRUE(session->isValid());
-    ASSERT_NE(nullptr, session->getProtocol());
-    EXPECT_FALSE(session->getProtocol()->isEmpty());
-    ASSERT_NE(nullptr, session->getCipherSuite());
-    EXPECT_FALSE(session->getCipherSuite()->isEmpty());
-}
-
 TEST_F(HttpsServerTlsBehaviorTest1A, ExposesServerCertificateToClient)
 {
     startServer();

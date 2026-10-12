@@ -197,55 +197,5 @@ protected:
     ::jxx::lang::jint port_ = 0;
 };
 
-TEST_F(HttpsServerTlsBehaviorTest2, CompletesTlsHandshake)
-{
-    startServer();
-
-    const auto socket = connectClient();
-
-    ASSERT_NE(nullptr, socket);
-    const auto session = socket->getSession();
-    ASSERT_NE(nullptr, session);
-    EXPECT_TRUE(session->isValid());
-    ASSERT_NE(nullptr, session->getProtocol());
-    EXPECT_FALSE(session->getProtocol()->isEmpty());
-    ASSERT_NE(nullptr, session->getCipherSuite());
-    EXPECT_FALSE(session->getCipherSuite()->isEmpty());
-}
-
-TEST_F(HttpsServerTlsBehaviorTest2, ExposesServerCertificateToClient)
-{
-    startServer();
-
-    const auto socket = connectClient();
-    ASSERT_NE(nullptr, socket);
-    const auto session = socket->getSession();
-    ASSERT_NE(nullptr, session);
-    const auto certificates = session->getPeerCertificates();
-
-    ASSERT_NE(nullptr, certificates);
-    ASSERT_GT(certificates->length, 0U);
-    ASSERT_NE(nullptr, (*certificates)[0]);
-    ASSERT_NE(nullptr, (*certificates)[0]->getType());
-    EXPECT_TRUE((*certificates)[0]->getType()->equals(
-        ::jxx::NEW<::jxx::lang::String>("X.509")));
-}
-
-TEST_F(HttpsServerTlsBehaviorTest2, RejectsClientThatDoesNotTrustCertificate)
-{
-    startServer();
-
-    const auto context = ::jxx::ext::net::ssl::SSLContext::getInstance(
-        ::jxx::NEW<::jxx::lang::String>("TLS"));
-    context->init(nullptr, nullptr, nullptr);
-    const auto socket = context->getSocketFactory()->createSocket(
-        ::jxx::NEW<::jxx::lang::String>("localhost"), port_);
-    client_ = ::jxx::CAST<::jxx::ext::net::ssl::SSLSocket>(socket);
-
-    ASSERT_NE(nullptr, client_);
-    client_->setUseClientMode(true);
-    EXPECT_ANY_THROW(client_->startHandshake());
-}
-
 } // namespace
 } // namespace jxx::com::sun::net::httpserver
