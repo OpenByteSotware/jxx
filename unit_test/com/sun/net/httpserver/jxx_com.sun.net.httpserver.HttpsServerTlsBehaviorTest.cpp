@@ -2,9 +2,10 @@
 
 #include <cctype>
 #include <cstdint>
+#include <stdexcept>
 #include <string>
 #include <vector>
-#include "security/cert/jxx.security.cert.Certificate.h"
+
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.HttpsConfigurator.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.HttpsServer.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.KeyManagerFactory.h"
@@ -18,58 +19,61 @@
 #include "net/jxx.net.InetSocketAddress.h"
 #include "net/jxx.net.ServerSocket.h"
 #include "security/jxx.security.KeyStore.h"
+#include "security/cert/jxx.security.cert.Certificate.h"
 
 namespace jxx::com::sun::net::httpserver {
 namespace {
 
 const char* PKCS12_BASE64 = R"PKCS12(
-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
+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
 )PKCS12";
 
 ::jxx::lang::ByteArray decodeBase64(const char* text)
@@ -80,16 +84,10 @@ BQAEIA+aUvzQwLuIW3dxQlk8NMjYpcdSXgjdqPymwKmnxEcHBAhluiMFA17kxgICCAA=
     ::jxx::lang::jint value = 0;
     ::jxx::lang::jint bits = -8;
     for (const unsigned char character : std::string(text)) {
-        if (std::isspace(character)) {
-            continue;
-        }
-        if (character == '=') {
-            break;
-        }
+        if (std::isspace(character)) continue;
+        if (character == '=') break;
         const auto position = alphabet.find(static_cast<char>(character));
-        if (position == std::string::npos) {
-            continue;
-        }
+        if (position == std::string::npos) continue;
         value = (value << 6) + static_cast<::jxx::lang::jint>(position);
         bits += 6;
         if (bits >= 0) {
@@ -127,84 +125,52 @@ BQAEIA+aUvzQwLuIW3dxQlk8NMjYpcdSXgjdqPymwKmnxEcHBAhluiMFA17kxgICCAA=
         ::jxx::ext::net::ssl::KeyManagerFactory::getInstance(
             ::jxx::ext::net::ssl::KeyManagerFactory::getDefaultAlgorithm());
     keyFactory->init(store, password);
-
     const auto context = ::jxx::ext::net::ssl::SSLContext::getInstance(
         ::jxx::NEW<::jxx::lang::String>("TLS"));
     context->init(keyFactory->getKeyManagers(), nullptr, nullptr);
     return context;
 }
 
-
-::jxx::Ptr<::jxx::ext::net::ssl::SSLContext>
-createClientContext()
+::jxx::Ptr<::jxx::ext::net::ssl::SSLContext> createClientContext()
 {
-    const auto identityStore =
-        loadTestKeyStore();
-
-    const auto aliases =
-        identityStore->aliases();
-
+    const auto identityStore = loadTestKeyStore();
+    const auto aliases = identityStore->aliases();
     if (aliases == nullptr || aliases->length == 0) {
-        throw std::runtime_error(
-            "test PKCS12 contains no aliases");
+        throw std::runtime_error("test PKCS12 contains no aliases");
     }
 
-    ::jxx::Ptr<::jxx::security::cert::Certificate>
-        serverCertificate;
-
+    ::jxx::Ptr<::jxx::security::cert::Certificate> serverCertificate;
     for (::jxx::lang::jint index = 0;
-         index < aliases->length;
-         ++index) {
-        const auto alias = (*aliases)[index];
-
-        const auto certificate = identityStore->getCertificate(alias);
-
+         index < static_cast<::jxx::lang::jint>(aliases->length); ++index) {
+        const ::jxx::Ptr<::jxx::lang::String> certificateAlias =
+            (*aliases)[index];
+        if (certificateAlias == nullptr) continue;
+        const auto certificate = identityStore->getCertificate(certificateAlias);
         if (certificate != nullptr) {
             serverCertificate = certificate;
             break;
         }
     }
-
     if (serverCertificate == nullptr) {
-        throw std::runtime_error(
-            "test PKCS12 contains no certificate");
+        throw std::runtime_error("test PKCS12 contains no certificate");
     }
 
-    const auto trustStore =
-        ::jxx::security::KeyStore::getInstance(
-            ::jxx::NEW<::jxx::lang::String>(
-                "PKCS12"));
-
+    const auto trustStore = ::jxx::security::KeyStore::getInstance(
+        ::jxx::NEW<::jxx::lang::String>("PKCS12"));
     trustStore->load(nullptr, nullptr);
-
     trustStore->setCertificateEntry(
-        ::jxx::NEW<::jxx::lang::String>(
-            "test-server"),
+        ::jxx::NEW<::jxx::lang::String>("test-server"),
         serverCertificate);
 
     const auto trustFactory =
-        ::jxx::ext::net::ssl::TrustManagerFactory::
-        getInstance(
-            ::jxx::ext::net::ssl::
-                TrustManagerFactory::
-                    getDefaultAlgorithm());
-
+        ::jxx::ext::net::ssl::TrustManagerFactory::getInstance(
+            ::jxx::ext::net::ssl::TrustManagerFactory::getDefaultAlgorithm());
     trustFactory->init(trustStore);
-
-    const auto context =
-        ::jxx::ext::net::ssl::SSLContext::
-        getInstance(
-            ::jxx::NEW<::jxx::lang::String>(
-                "TLS"));
-
-    context->init(
-        nullptr,
-        trustFactory->getTrustManagers(),
-        nullptr);
-
+    const auto context = ::jxx::ext::net::ssl::SSLContext::getInstance(
+        ::jxx::NEW<::jxx::lang::String>("TLS"));
+    context->init(nullptr, trustFactory->getTrustManagers(), nullptr);
     return context;
 }
-
 
 ::jxx::lang::jint reserveLoopbackPort()
 {
@@ -260,9 +226,7 @@ protected:
 TEST_F(HttpsServerTlsBehaviorTest1A, CompletesTlsHandshake)
 {
     startServer();
-
     const auto socket = connectClient();
-
     ASSERT_NE(nullptr, socket);
     const auto session = socket->getSession();
     ASSERT_NE(nullptr, session);
@@ -276,13 +240,11 @@ TEST_F(HttpsServerTlsBehaviorTest1A, CompletesTlsHandshake)
 TEST_F(HttpsServerTlsBehaviorTest1A, ExposesServerCertificateToClient)
 {
     startServer();
-
     const auto socket = connectClient();
     ASSERT_NE(nullptr, socket);
     const auto session = socket->getSession();
     ASSERT_NE(nullptr, session);
     const auto certificates = session->getPeerCertificates();
-
     ASSERT_NE(nullptr, certificates);
     ASSERT_GT(certificates->length, 0U);
     ASSERT_NE(nullptr, (*certificates)[0]);
@@ -294,14 +256,12 @@ TEST_F(HttpsServerTlsBehaviorTest1A, ExposesServerCertificateToClient)
 TEST_F(HttpsServerTlsBehaviorTest1A, RejectsClientThatDoesNotTrustCertificate)
 {
     startServer();
-
     const auto context = ::jxx::ext::net::ssl::SSLContext::getInstance(
         ::jxx::NEW<::jxx::lang::String>("TLS"));
     context->init(nullptr, nullptr, nullptr);
     const auto socket = context->getSocketFactory()->createSocket(
         ::jxx::NEW<::jxx::lang::String>("127.0.0.1"), port_);
     client_ = ::jxx::CAST<::jxx::ext::net::ssl::SSLSocket>(socket);
-
     ASSERT_NE(nullptr, client_);
     client_->setUseClientMode(true);
     EXPECT_ANY_THROW(client_->startHandshake());
