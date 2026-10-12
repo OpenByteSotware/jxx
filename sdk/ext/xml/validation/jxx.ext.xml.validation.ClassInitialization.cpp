@@ -2,11 +2,26 @@
 
 #include <mutex>
 
-namespace jxx::ext::xml::validation {
+#include "ext/xml/validation/jxx.ext.xml.validation.Schema.h"
+#include "lang/jxx.lang.ClassInfo.h"
 
-void initializeClasses() {
+namespace jxx::ext::xml::validation {
+namespace {
+
+template <typename T>
+void registerType()
+{
+    ::jxx::lang::class_info_detail::registerClassInfo<T>();
+}
+
+} // namespace
+
+void initializeClasses()
+{
     static std::once_flag flag;
-    std::call_once(flag, [] {});
+    std::call_once(flag, [] {
+        registerType<Schema>();
+    });
 }
 
 } // namespace jxx::ext::xml::validation
