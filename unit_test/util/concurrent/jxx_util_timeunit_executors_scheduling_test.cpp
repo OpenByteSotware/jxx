@@ -48,11 +48,18 @@ TEST(ExecutorsSchedulingParityTest, FactoryCreatesOneShotScheduler) {
     scheduler->shutdown();
 }
 
-TEST(ExecutorsSchedulingParityTest, InvalidPoolSizesAreRejected) {
-    EXPECT_THROW(Executors::newFixedThreadPool(0),
-                 ::jxx::lang::IllegalArgumentException);
-    EXPECT_THROW(Executors::newScheduledThreadPool(0),
-                 ::jxx::lang::IllegalArgumentException);
+TEST(ExecutorsSchedulingParityTest, InvalidPoolSizesAreRejected)
+{
+    EXPECT_THROW(
+        Executors::newFixedThreadPool(0),
+        ::jxx::lang::IllegalArgumentException);
+
+    EXPECT_NO_THROW(
+        Executors::newScheduledThreadPool(0));
+
+    EXPECT_THROW(
+        Executors::newScheduledThreadPool(-1),
+        ::jxx::lang::IllegalArgumentException);
 }
 
 } // namespace
