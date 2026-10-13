@@ -111,7 +111,15 @@ TimeUnit::values() {
 ::jxx::lang::jlong TimeUnit::toHours(::jxx::lang::jlong d) const { return toMinutes(d) / 60LL; }
 ::jxx::lang::jlong TimeUnit::toDays(::jxx::lang::jlong d) const { return toHours(d) / 24LL; }
 std::chrono::nanoseconds TimeUnit::toChrono(::jxx::lang::jlong d) const { return std::chrono::nanoseconds(toNanos(d)); }
-void TimeUnit::sleep(::jxx::lang::jlong timeout) const { if (timeout > 0) std::this_thread::sleep_for(toChrono(timeout)); }
+void TimeUnit::sleep(::jxx::lang::jlong timeout) const {
+    if (timeout <= 0) return;
+
+    const auto nanos = toNanos(timeout);
+    const auto millis = nanos / 1000000LL;
+    const auto nanoRemainder = static_cast<::jxx::lang::jint>(
+        nanos % 1000000LL);
+    ::jxx::lang::Thread::sleep(millis, nanoRemainder);
+}
 void TimeUnit::timedWait(
     const ::jxx::Ptr<::jxx::lang::Object>& object,
     ::jxx::lang::jlong timeout) const {
