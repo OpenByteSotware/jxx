@@ -193,10 +193,42 @@ ThreadPoolExecutor::shutdownNow() {
     ::jxx::lang::jlong timeout,
     const ::jxx::Ptr<TimeUnit>& unit) {
     if (unit == nullptr) throw ::jxx::lang::NullPointerException();
+
+    const auto current = ::jxx::lang::Thread::currentThread();
+    if (::jxx::lang::Thread::interrupted()) {
+        throw ::jxx::lang::InterruptedException();
+    }
+
     std::unique_lock<std::mutex> lock(mutex_);
-    return terminated_.wait_for(lock, unit->toChrono(timeout), [&] {
-        return shutdown_ && queue_.empty() && activeCount_ == 0 && liveWorkerCount_ == 0;
-    });
+    const auto terminated = [this] {
+        return shutdown_ && queue_.empty() &&
+            activeCount_ == 0 && liveWorkerCount_ == 0;
+    };
+    if (terminated()) return true;
+    if (timeout <= 0) return false;
+
+    const auto duration = unit->toChrono(timeout);
+    const auto now = std::chrono::steady_clock::now();
+    const auto remaining = std::chrono::steady_clock::time_point::max() - now;
+    const auto deadline = duration >= remaining
+        ? std::chrono::steady_clock::time_point::max()
+        : now + duration;
+
+    current->setParkWakeup_([this] { terminated_.notify_all(); });
+    try {
+        const auto completed = terminated_.wait_until(
+            lock,
+            deadline,
+            [&] { return terminated() || current->isInterrupted(); });
+        current->clearParkWakeup_();
+        if (::jxx::lang::Thread::interrupted()) {
+            throw ::jxx::lang::InterruptedException();
+        }
+        return completed && terminated();
+    } catch (...) {
+        current->clearParkWakeup_();
+        throw;
+    }
 }
 
 ::jxx::lang::jint ThreadPoolExecutor::getCorePoolSize() const noexcept { return corePoolSize_; }
