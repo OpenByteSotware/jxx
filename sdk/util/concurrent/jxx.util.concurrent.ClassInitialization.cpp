@@ -5,6 +5,7 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "util/concurrent/jxx.util.concurrent.CountDownLatch.h"
 #include "util/concurrent/jxx.util.concurrent.CyclicBarrier.h"
+#include "util/concurrent/jxx.util.concurrent.DelegatedExecutorService.h"
 #include "util/concurrent/jxx.util.concurrent.Delayed.h"
 #include "util/concurrent/jxx.util.concurrent.Executor.h"
 #include "util/concurrent/jxx.util.concurrent.ExecutorService.h"
@@ -34,6 +35,8 @@ void initializeClasses()
     std::call_once(flag, [] {
         registerType<CountDownLatch>();
         registerType<CyclicBarrier>();
+        registerType<executors_detail::DelegatedExecutorService>();
+        registerType<executors_detail::DelegatedScheduledExecutorService>();
         registerType<Delayed>();
         registerType<Executor>();
         registerType<ExecutorService>();
