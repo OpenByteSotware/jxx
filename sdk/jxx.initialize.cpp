@@ -37,6 +37,7 @@
 #include "org/w3c/dom/ls/internal/jxx.org.w3c.dom.ls.internal.ClassInitialization.h"
 #include "org/w3c/dom/views/internal/jxx.org.w3c.dom.views.internal.ClassInitialization.h"
 #include "org/xml/sax/jxx.org.xml.sax.ClassInitialization.h"
+#include "org/xml/sax/ext/jxx.org.xml.sax.ext.ClassInitialization.h"
 #include "org/xml/sax/helpers/jxx.org.xml.sax.helpers.ClassInitialization.h"
 #include "security/jxx.security.ClassInitialization.h"
 #include "text/jxx.text.ClassInitialization.h"
@@ -79,6 +80,7 @@ void initialize() {
         ::jxx::org::w3c::dom::ls::internal::initializeClasses();
         ::jxx::org::w3c::dom::views::internal::initializeClasses();
         ::jxx::org::xml::sax::initializeClasses();
+        ::jxx::org::xml::sax::ext::initializeClasses();
         ::jxx::org::xml::sax::helpers::initializeClasses();
         ::com::google::gson::initializeClasses();
         ::jxx::com::sun::net::httpserver::initializeClasses();
