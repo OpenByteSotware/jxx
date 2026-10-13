@@ -85,6 +85,7 @@ void ThreadPoolExecutor::execute(
             queue_.push_back(command);
             ++submittedTaskCount_;
             if (liveWorkerCount_ < corePoolSize_ ||
+                (liveWorkerCount_ == 0 && !queue_.empty()) ||
                 (cachedMode_() && liveWorkerCount_ < maximumPoolSize_ &&
                  activeCount_ + static_cast<::jxx::lang::jint>(queue_.size()) > liveWorkerCount_)) {
                 startWorkerLocked_();

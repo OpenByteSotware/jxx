@@ -17,7 +17,8 @@ namespace jxx::util::concurrent
 	ScheduledThreadPoolExecutor::ScheduledThreadPoolExecutor(
         ::jxx::lang::jint core,
         const ::jxx::Ptr<ThreadFactory>& threadFactory)
-        : Super(core, core, 0, TimeUnit::NANOSECONDS(), threadFactory)
+        : Super(core, std::max<::jxx::lang::jint>(1, core), 0,
+              TimeUnit::NANOSECONDS(), threadFactory)
 	{
 		dispatcher_ = std::thread([this]
 	   {

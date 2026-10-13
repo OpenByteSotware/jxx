@@ -44,14 +44,14 @@ namespace jxx::util::concurrent
     }
 	jxx::Ptr<ScheduledExecutorService> Executors::newScheduledThreadPool(jxx::lang::jint corePoolSize)
 	{
-		if (corePoolSize <= 0) throw jxx::lang::IllegalArgumentException();
+		if (corePoolSize < 0) throw jxx::lang::IllegalArgumentException();
 		return jxx::CAST<ScheduledExecutorService>(jxx::NEW<ScheduledThreadPoolExecutor>(corePoolSize));
 	}
     jxx::Ptr<ScheduledExecutorService> Executors::newScheduledThreadPool(
         jxx::lang::jint corePoolSize,
         const jxx::Ptr<ThreadFactory>& threadFactory)
     {
-        if (corePoolSize <= 0) throw jxx::lang::IllegalArgumentException();
+        if (corePoolSize < 0) throw jxx::lang::IllegalArgumentException();
         if (threadFactory == nullptr) throw jxx::lang::NullPointerException();
         return jxx::CAST<ScheduledExecutorService>(
             jxx::NEW<ScheduledThreadPoolExecutor>(corePoolSize, threadFactory));
