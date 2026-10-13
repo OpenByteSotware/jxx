@@ -76,9 +76,13 @@ TimeUnit::values() {
     const ::jxx::Ptr<::jxx::lang::String>& nameValue) {
     if (nameValue == nullptr) throw ::jxx::lang::NullPointerException();
     const auto text = nameValue->utf8();
-    for (const auto& value : *values()) {
-        if (value->name()->utf8() == text) return value;
-    }
+    if (text == "NANOSECONDS") return NANOSECONDS();
+    if (text == "MICROSECONDS") return MICROSECONDS();
+    if (text == "MILLISECONDS") return MILLISECONDS();
+    if (text == "SECONDS") return SECONDS();
+    if (text == "MINUTES") return MINUTES();
+    if (text == "HOURS") return HOURS();
+    if (text == "DAYS") return DAYS();
     throw ::jxx::lang::IllegalArgumentException();
 }
 
