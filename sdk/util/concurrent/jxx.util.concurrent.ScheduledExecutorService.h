@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Runnable.h"
 #include "util/concurrent/jxx.util.concurrent.Callable.h"
@@ -28,8 +30,10 @@ public:
         if (callable == nullptr || unit == nullptr) {
             throw ::jxx::lang::NullPointerException();
         }
+        const auto delayNanos = std::max<::jxx::lang::jlong>(
+            0, unit->toNanos(delay));
         auto task = ::jxx::NEW<ScheduledFutureTask<V>>(
-            callable, 0);
+            callable, delayNanos);
         (void)schedule(
             ::jxx::CAST<::jxx::lang::Runnable>(task),
             delay,
