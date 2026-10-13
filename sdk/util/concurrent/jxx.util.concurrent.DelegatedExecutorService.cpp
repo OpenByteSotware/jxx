@@ -53,6 +53,12 @@ DelegatedScheduledExecutorService::submit(
     return scheduled_->submit(task);
 }
 
+void DelegatedScheduledExecutorService::enqueueScheduledTask_(
+    const ::jxx::Ptr<
+        ::jxx::util::concurrent::scheduled_detail::ScheduledTask>& task) {
+    scheduled_->enqueueScheduledTask_(task);
+}
+
 ::jxx::Ptr<::jxx::util::concurrent::ScheduledFuture<::jxx::lang::Object>>
 DelegatedScheduledExecutorService::schedule(
     const ::jxx::Ptr<::jxx::lang::Runnable>& command,

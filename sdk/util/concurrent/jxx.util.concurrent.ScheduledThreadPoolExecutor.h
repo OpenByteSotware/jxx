@@ -39,6 +39,10 @@ public:
         const ::jxx::Ptr<::jxx::lang::Runnable>& command,::jxx::lang::jlong initialDelay,
         ::jxx::lang::jlong delay,const ::jxx::Ptr<TimeUnit>& unit) override;
     void execute(const ::jxx::Ptr<::jxx::lang::Runnable>& command) override;
+    ::jxx::Ptr<wildcard::FutureAny> submit(
+        const ::jxx::Ptr<::jxx::lang::Runnable>& task) override;
+    void enqueueScheduledTask_(
+        const ::jxx::Ptr<scheduled_detail::ScheduledTask>& task) override;
     void shutdown() override;
     ::jxx::Ptr<::jxx::util::List<::jxx::lang::Runnable>> shutdownNow() override;
     ::jxx::lang::jbool isShutdown() override;
@@ -53,7 +57,7 @@ public:
     getExecuteExistingDelayedTasksAfterShutdownPolicy() const;
 
 private:
-    using Task = ScheduledFutureTask<::jxx::lang::Object>;
+    using Task = scheduled_detail::ScheduledTask;
 
     class ScheduledTaskRunner final
         : public ::jxx::lang::ClassBase<
@@ -75,7 +79,7 @@ private:
         ScheduledThreadPoolExecutor* owner_;
         ::jxx::Ptr<Task> task_;
     };
-    struct Later { bool operator()(const ::jxx::Ptr<Task>& a,const ::jxx::Ptr<Task>& b) const { return a->compareTo(::jxx::CAST<Delayed>(b))>0; } };
+    struct Later { bool operator()(const ::jxx::Ptr<Task>& a,const ::jxx::Ptr<Task>& b) const { return a->getDelay(TimeUnit::NANOSECONDS()) > b->getDelay(TimeUnit::NANOSECONDS()); } };
     ::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> schedule_(const ::jxx::Ptr<::jxx::lang::Runnable>& command,::jxx::lang::jlong delayNanos,::jxx::lang::jlong periodNanos);
     void dispatch_();
     void afterExecute_(const ::jxx::Ptr<Task>& task);

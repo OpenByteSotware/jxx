@@ -14,6 +14,7 @@
 #include "ext/xml/transform/stream/jxx.ext.xml.transform.stream.ClassInitialization.h"
 #include "ext/xml/validation/jxx.ext.xml.validation.ClassInitialization.h"
 #include "ext/xml/xpath/jxx.ext.xml.xpath.ClassInitialization.h"
+#include "ext/xml/xpath/internal/jxx.ext.xml.xpath.internal.ClassInitialization.h"
 #include "io/jxx.io.ClassInitialization.h"
 #include "lang/jxx.lang.ClassInitialization.h"
 #include "lang/jxx.lang.initialize.h"
@@ -70,6 +71,7 @@ void initialize() {
         ::jxx::ext::xml::transform::internal::initializeClasses();
         ::jxx::ext::xml::transform::stream::initializeClasses();
         ::jxx::ext::xml::xpath::initializeClasses();
+        ::jxx::ext::xml::xpath::internal::initializeClasses();
         ::jxx::ext::xml::validation::initializeClasses();
         ::jxx::ext::xml::parsers::initializeClasses();
     });

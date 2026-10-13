@@ -1,4 +1,5 @@
 #include "util/concurrent/jxx.util.concurrent.ScheduledThreadPoolExecutor.h"
+#include "util/jxx.util.ArrayList.h"
 #include "util/concurrent/jxx.util.concurrent.Executors.h"
 
 #include "lang/jxx.lang.Class.h"
@@ -43,19 +44,40 @@ namespace jxx::util::concurrent
 	::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> ScheduledThreadPoolExecutor::schedule_(const ::jxx::Ptr<::jxx::lang::Runnable>& command, ::jxx::lang::jlong delayNanos, ::jxx::lang::jlong periodNanos)
 	{
 		if (command == nullptr) throw ::jxx::lang::NullPointerException();
-		const auto task = ::jxx::NEW<Task>(command, nullptr, delayNanos, periodNanos);
+		const auto concreteTask = ::jxx::NEW<ScheduledFutureTask<::jxx::lang::Object>>(command, nullptr, delayNanos, periodNanos);
+		const auto task = ::jxx::CAST<Task>(concreteTask);
 		{
 			std::lock_guard<std::mutex> lock(scheduleMutex_);
 			if (shutdownRequested_.load(std::memory_order_acquire) || stopping_) throw RejectedExecutionException();
 			scheduled_.push(task);
 		}
 		scheduleChanged_.notify_all();
-		return ::jxx::CAST<ScheduledFuture<::jxx::lang::Object>>(task);
+		return ::jxx::CAST<ScheduledFuture<::jxx::lang::Object>>(concreteTask);
 	}
+	void ScheduledThreadPoolExecutor::enqueueScheduledTask_(
+        const ::jxx::Ptr<scheduled_detail::ScheduledTask>& task)
+    {
+        if (task == nullptr) throw ::jxx::lang::NullPointerException();
+        {
+            std::lock_guard<std::mutex> lock(scheduleMutex_);
+            if (shutdownRequested_.load(std::memory_order_acquire) || stopping_) {
+                throw RejectedExecutionException();
+            }
+            scheduled_.push(task);
+        }
+        scheduleChanged_.notify_all();
+    }
+
 	void ScheduledThreadPoolExecutor::execute(const ::jxx::Ptr<::jxx::lang::Runnable>& c)
 	{
 		(void)schedule(c, 0, TimeUnit::NANOSECONDS());
 	}
+	::jxx::Ptr<wildcard::FutureAny> ScheduledThreadPoolExecutor::submit(
+        const ::jxx::Ptr<::jxx::lang::Runnable>& task)
+    {
+        return ::jxx::CAST<wildcard::FutureAny>(
+            schedule(task, 0, TimeUnit::NANOSECONDS()));
+    }
 	void ScheduledThreadPoolExecutor::dispatch_()
 	{
 		for (;;) {
@@ -137,13 +159,26 @@ namespace jxx::util::concurrent
 
 	::jxx::Ptr<::jxx::util::List<::jxx::lang::Runnable>> ScheduledThreadPoolExecutor::shutdownNow()
 	{
+        auto pending = ::jxx::NEW<::jxx::util::ArrayList<::jxx::lang::Runnable>>();
 		shutdownRequested_.store(true, std::memory_order_release);
 		{
-			std::lock_guard<std::mutex>l(scheduleMutex_); stopping_ = true; while (!scheduled_.empty()) {
-				scheduled_.top()->cancel(false); scheduled_.pop();
-			}
+			std::lock_guard<std::mutex> lock(scheduleMutex_);
+            stopping_ = true;
+            while (!scheduled_.empty()) {
+                const auto task = scheduled_.top();
+                scheduled_.pop();
+                (void)task->cancel(false);
+                pending->add(::jxx::CAST<::jxx::lang::Runnable>(task));
+            }
 		}
-		scheduleChanged_.notify_all(); return ThreadPoolExecutor::shutdownNow();
+		scheduleChanged_.notify_all();
+        const auto basePending = ThreadPoolExecutor::shutdownNow();
+        if (basePending != nullptr) {
+            for (::jxx::lang::jint index = 0; index < basePending->size(); ++index) {
+                pending->add(basePending->get(index));
+            }
+        }
+        return ::jxx::CAST<::jxx::util::List<::jxx::lang::Runnable>>(pending);
 	}
 
 	::jxx::lang::jbool ScheduledThreadPoolExecutor::isShutdown()

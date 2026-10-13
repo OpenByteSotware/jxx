@@ -8,6 +8,7 @@
 #include "util/concurrent/jxx.util.concurrent.ExecutorService.h"
 #include "util/concurrent/jxx.util.concurrent.ScheduledFuture.h"
 #include "util/concurrent/jxx.util.concurrent.ScheduledFutureTask.h"
+#include "util/concurrent/jxx.util.concurrent.ScheduledTask.h"
 #include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
 
 namespace jxx::util::concurrent {
@@ -34,12 +35,13 @@ public:
             0, unit->toNanos(delay));
         auto task = ::jxx::NEW<ScheduledFutureTask<V>>(
             callable, delayNanos);
-        (void)schedule(
-            ::jxx::CAST<::jxx::lang::Runnable>(task),
-            delay,
-            unit);
+        enqueueScheduledTask_(
+            ::jxx::CAST<scheduled_detail::ScheduledTask>(task));
         return ::jxx::CAST<ScheduledFuture<V>>(task);
     }
+
+    virtual void enqueueScheduledTask_(
+        const ::jxx::Ptr<scheduled_detail::ScheduledTask>& task) = 0;
 
     virtual ::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> schedule(
         const ::jxx::Ptr<::jxx::lang::Runnable>& command,
