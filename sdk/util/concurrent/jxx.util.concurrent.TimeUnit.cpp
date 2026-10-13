@@ -99,10 +99,20 @@ TimeUnit::values() {
 }
 
 ::jxx::lang::jlong TimeUnit::toNanos(::jxx::lang::jlong duration) const { return saturatedMultiply(duration, factor(kind_)); }
-::jxx::lang::jlong TimeUnit::convert(::jxx::lang::jlong duration, const ::jxx::Ptr<TimeUnit>& source) const {
+::jxx::lang::jlong TimeUnit::convert(
+    ::jxx::lang::jlong duration,
+    const ::jxx::Ptr<TimeUnit>& source) const {
     if (source == nullptr) throw ::jxx::lang::NullPointerException();
-    const auto nanos = source->toNanos(duration);
-    return nanos / factor(kind_);
+
+    const auto sourceFactor = factor(source->kind_);
+    const auto targetFactor = factor(kind_);
+    if (sourceFactor == targetFactor) return duration;
+
+    if (sourceFactor < targetFactor) {
+        return duration / (targetFactor / sourceFactor);
+    }
+
+    return saturatedMultiply(duration, sourceFactor / targetFactor);
 }
 ::jxx::lang::jlong TimeUnit::toMicros(::jxx::lang::jlong d) const { return toNanos(d) / 1000LL; }
 ::jxx::lang::jlong TimeUnit::toMillis(::jxx::lang::jlong d) const { return toNanos(d) / 1000000LL; }
