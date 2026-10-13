@@ -32,7 +32,7 @@ public:
         const ::jxx::Ptr<V>& result, ::jxx::lang::jlong delayNanos,
         ::jxx::lang::jlong periodNanos = 0)
         : Super(), command_(command), result_(result),
-          trigger_(clock::now()+std::chrono::nanoseconds(delayNanos)),
+          trigger_(deadlineAfter_(delayNanos)),
           periodNanos_(periodNanos), sequence_(nextSequence_++) {
         if(!command_) throw ::jxx::lang::NullPointerException();
     }
@@ -41,7 +41,7 @@ public:
         const ::jxx::Ptr<Callable<V>>& callable,
         ::jxx::lang::jlong delayNanos)
         : Super(), callable_(callable),
-          trigger_(clock::now()+std::chrono::nanoseconds(delayNanos)),
+          trigger_(deadlineAfter_(delayNanos)),
           periodNanos_(0), sequence_(nextSequence_++) {
         if (callable_ == nullptr) throw ::jxx::lang::NullPointerException();
     }
@@ -106,6 +106,21 @@ public:
 
 private:
     using clock=std::chrono::steady_clock;
+
+    static clock::time_point addSaturated_(
+        const clock::time_point& base,
+        ::jxx::lang::jlong nanos) noexcept {
+        if (nanos <= 0) return base;
+        const auto duration = std::chrono::nanoseconds(nanos);
+        const auto remaining = clock::time_point::max() - base;
+        if (duration >= remaining) return clock::time_point::max();
+        return base + duration;
+    }
+
+    static clock::time_point deadlineAfter_(
+        ::jxx::lang::jlong delayNanos) noexcept {
+        return addSaturated_(clock::now(), delayNanos);
+    }
     void finishRun_(const ::jxx::Ptr<::jxx::lang::Throwable>& failure) {
         std::lock_guard<std::mutex> l(mutex_);
         running_ = false;
@@ -113,8 +128,8 @@ private:
         if(cancelled_) return;
         if(failure){failure_=failure;done_=true;condition_.notify_all();return;}
         if(periodNanos_==0){done_=true;condition_.notify_all();return;}
-        if(periodNanos_>0) trigger_+=std::chrono::nanoseconds(periodNanos_);
-        else trigger_=clock::now()+std::chrono::nanoseconds(-periodNanos_);
+        if (periodNanos_ > 0) trigger_ = addSaturated_(trigger_, periodNanos_);
+        else trigger_ = deadlineAfter_(-periodNanos_);
     }
     ::jxx::Ptr<V> report_(){if(cancelled_)throw CancellationException();if(failure_)throw ExecutionException(failure_);return result_;}
     inline static std::atomic<::jxx::lang::jlong> nextSequence_{0};
