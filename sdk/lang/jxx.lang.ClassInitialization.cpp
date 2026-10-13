@@ -184,6 +184,7 @@ void initializeClasses()
             registerType<RuntimePermission>();
             registerType<SecurityManager>();
             registerType<ProcessBuilder>();
+            registerType<Process>();
         registerType<Appendable>();
         registerType<AutoCloseable>();
         registerType<CharSequence>();
