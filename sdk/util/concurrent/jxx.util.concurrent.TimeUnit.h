@@ -3,7 +3,7 @@
 #include <chrono>
 
 #include "lang/jxx.lang.ClassInfo.h"
-#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.Enum.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_array.h"
 #include "lang/jxx.lang.Thread.h"
@@ -12,8 +12,12 @@
 namespace jxx::util::concurrent {
 
 class TimeUnit final
-    : public ::jxx::lang::ClassBase<TimeUnit, ::jxx::lang::Object> {
+    : public ::jxx::lang::ClassBase<
+          TimeUnit, ::jxx::lang::Enum<TimeUnit>> {
 public:
+    using JxxSuper = ::jxx::lang::Enum<TimeUnit>;
+    using Super = ::jxx::lang::ClassBase<TimeUnit, JxxSuper>;
+
     enum class Kind : ::jxx::lang::jint {
         NANOSECONDS,
         MICROSECONDS,
@@ -36,10 +40,6 @@ public:
         ::jxx::Ptr<TimeUnit>, 1U>> values();
     static ::jxx::Ptr<TimeUnit> valueOf(
         const ::jxx::Ptr<::jxx::lang::String>& name);
-
-    ::jxx::Ptr<::jxx::lang::String> name() const;
-    ::jxx::lang::jint ordinal() const noexcept;
-    ::jxx::Ptr<::jxx::lang::String> toString() const override;
 
     ::jxx::lang::jlong convert(
         ::jxx::lang::jlong sourceDuration,

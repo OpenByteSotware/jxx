@@ -24,7 +24,11 @@ const char* timeUnitName(::jxx::util::concurrent::TimeUnit::Kind kind) noexcept 
 } // namespace
 
 
-TimeUnit::TimeUnit(Kind kind) : kind_(kind) {}
+TimeUnit::TimeUnit(Kind kind)
+    : Super(
+          ::jxx::NEW<::jxx::lang::String>(timeUnitName(kind)),
+          static_cast<::jxx::lang::jint>(kind)),
+      kind_(kind) {}
 
 ::jxx::lang::jlong TimeUnit::factor(Kind kind) noexcept {
     switch (kind) {
@@ -110,18 +114,6 @@ TimeUnit::values() {
     if (text == "HOURS") return HOURS();
     if (text == "DAYS") return DAYS();
     throw ::jxx::lang::IllegalArgumentException();
-}
-
-::jxx::Ptr<::jxx::lang::String> TimeUnit::name() const {
-    return ::jxx::NEW<::jxx::lang::String>(timeUnitName(kind_));
-}
-
-::jxx::lang::jint TimeUnit::ordinal() const noexcept {
-    return static_cast<::jxx::lang::jint>(kind_);
-}
-
-::jxx::Ptr<::jxx::lang::String> TimeUnit::toString() const {
-    return name();
 }
 
 ::jxx::lang::jlong TimeUnit::toNanos(::jxx::lang::jlong duration) const { return saturatedMultiply(duration, factor(kind_)); }
