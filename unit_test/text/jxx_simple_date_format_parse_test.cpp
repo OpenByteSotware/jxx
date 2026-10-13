@@ -3,6 +3,7 @@
 #include "lang/jxx.lang.String.h"
 #include "text/jxx.text.ParseException.h"
 #include "text/jxx.text.SimpleDateFormat.h"
+#include "util/jxx.util.Date.h"
 #include "util/jxx.util.TimeZone.h"
 
 TEST(SimpleDateFormatParseParity, ParsesNumericDateTimeInConfiguredZone) {

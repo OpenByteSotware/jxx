@@ -193,9 +193,9 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
     bool quoted = false;
     for (std::size_t index = 0; index < pattern.size();) {
         const char symbol = pattern[index];
-        if (symbol == ''') {
-            if (index + 1 < pattern.size() && pattern[index + 1] == ''') {
-                nativePattern.push_back('''); index += 2; continue;
+        if (symbol == '\'') {
+            if (index + 1 < pattern.size() && pattern[index + 1] == '\'') {
+                nativePattern.push_back('\''); index += 2; continue;
             }
             quoted = !quoted; ++index; continue;
         }
