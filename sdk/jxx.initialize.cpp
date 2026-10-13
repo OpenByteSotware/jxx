@@ -24,6 +24,7 @@
 #include "util/function/jxx.util.function.ClassInitialization.h"
 #include "util/logging/jxx.util.logging.ClassInitialization.h"
 #include "util/regex/jxx.util.regex.ClassInitialization.h"
+#include "util/zip/jxx.util.zip.ClassInitialization.h"
 
 namespace jxx {
 
@@ -39,6 +40,7 @@ void initialize() {
         ::jxx::util::function::initializeClasses();
         ::jxx::util::logging::initializeClasses();
         ::jxx::util::regex::initializeClasses();
+        ::jxx::util::zip::initializeClasses();
         ::jxx::math::initializeClasses();
         ::jxx::net::initializeClasses();
         ::jxx::nio::initializeClasses();
