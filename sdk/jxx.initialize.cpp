@@ -35,6 +35,7 @@
 #include "org/w3c/dom/internal/jxx.org.w3c.dom.internal.ClassInitialization.h"
 #include "org/w3c/dom/bootstrap/jxx.org.w3c.dom.bootstrap.ClassInitialization.h"
 #include "org/w3c/dom/ls/jxx.org.w3c.dom.ls.ClassInitialization.h"
+#include "org/w3c/dom/traversal/jxx.org.w3c.dom.traversal.ClassInitialization.h"
 #include "org/w3c/dom/ls/internal/jxx.org.w3c.dom.ls.internal.ClassInitialization.h"
 #include "org/w3c/dom/views/internal/jxx.org.w3c.dom.views.internal.ClassInitialization.h"
 #include "org/xml/sax/jxx.org.xml.sax.ClassInitialization.h"
@@ -78,6 +79,7 @@ void initialize() {
         ::jxx::org::w3c::dom::internal::initializeClasses();
         ::jxx::org::w3c::dom::bootstrap::initializeClasses();
         ::jxx::org::w3c::dom::ls::initializeClasses();
+        ::jxx::org::w3c::dom::traversal::initializeClasses();
         ::jxx::org::w3c::dom::ls::internal::initializeClasses();
         ::jxx::org::w3c::dom::views::internal::initializeClasses();
         ::jxx::org::xml::sax::initializeClasses();
