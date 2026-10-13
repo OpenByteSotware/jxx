@@ -123,9 +123,17 @@ void TimeUnit::timedWait(
     object->wait(millis, nanoRemainder);
 }
 
-void TimeUnit::timedJoin(const ::jxx::Ptr<::jxx::lang::Thread>& thread, ::jxx::lang::jlong timeout) const {
+void TimeUnit::timedJoin(
+    const ::jxx::Ptr<::jxx::lang::Thread>& thread,
+    ::jxx::lang::jlong timeout) const {
     if (thread == nullptr) throw ::jxx::lang::NullPointerException();
-    if (timeout > 0) thread->join(toMillis(timeout));
+    if (timeout <= 0) return;
+
+    const auto nanos = toNanos(timeout);
+    const auto millis = nanos / 1000000LL;
+    const auto nanoRemainder = static_cast<::jxx::lang::jint>(
+        nanos % 1000000LL);
+    thread->join(millis, nanoRemainder);
 }
 
 } // namespace jxx::util::concurrent
