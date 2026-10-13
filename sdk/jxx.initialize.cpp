@@ -47,6 +47,7 @@
 #include "org/xml/sax/helpers/jxx.org.xml.sax.helpers.ClassInitialization.h"
 #include "org/xml/sax/internal/jxx.org.xml.sax.internal.ClassInitialization.h"
 #include "security/jxx.security.ClassInitialization.h"
+#include "security/cert/jxx.security.cert.ClassInitialization.h"
 #include "security/internal/jxx.security.internal.ClassInitialization.h"
 #include "text/jxx.text.ClassInitialization.h"
 #include "util/jxx.util.ClassInitialization.h"
@@ -82,6 +83,7 @@ void initialize() {
         ::jxx::nio::channels::spi::initializeClasses();
         ::jxx::nio::channels::spi::internal::initializeClasses();
         ::jxx::security::initializeClasses();
+        ::jxx::security::cert::initializeClasses();
         ::jxx::security::internal::initializeClasses();
         ::jxx::text::initializeClasses();
         ::jxx::org::w3c::dom::initializeClasses();
