@@ -8,10 +8,10 @@
 TEST(JxxStage49ClassInitialization, MetadataAndIdempotence)
 {
     ::jxx::initialize();
-    EXPECT_NE((::jxx::lang::ClassBase<DomUnmarshaller, ::jxx::lang::Object, ::jxx::ext::xml::bind::Unmarshaller>::Class()), nullptr);
-    EXPECT_NE((::jxx::lang::ClassBase<XmlMarshaller, ::jxx::lang::Object, ::jxx::ext::xml::bind::Marshaller>::Class()), nullptr);
-    const auto before = ::jxx::lang::ClassBase<DomUnmarshaller, ::jxx::lang::Object, ::jxx::ext::xml::bind::Unmarshaller>::Class();
+    EXPECT_NE((::jxx::lang::ClassBase<::jxx::ext::xml::bind::internal::DomUnmarshaller, ::jxx::lang::Object, ::jxx::ext::xml::bind::Unmarshaller>::Class()), nullptr);
+    EXPECT_NE((::jxx::lang::ClassBase<::jxx::ext::xml::bind::internal::XmlMarshaller, ::jxx::lang::Object, ::jxx::ext::xml::bind::Marshaller>::Class()), nullptr);
+    const auto before = ::jxx::lang::ClassBase<::jxx::ext::xml::bind::internal::DomUnmarshaller, ::jxx::lang::Object, ::jxx::ext::xml::bind::Unmarshaller>::Class();
     EXPECT_NO_THROW(::jxx::ext::xml::bind::internal::initializeClasses());
     EXPECT_NO_THROW(::jxx::ext::xml::bind::internal::initializeClasses());
-    EXPECT_EQ(before, (::jxx::lang::ClassBase<DomUnmarshaller, ::jxx::lang::Object, ::jxx::ext::xml::bind::Unmarshaller>::Class()));
+    EXPECT_EQ(before, (::jxx::lang::ClassBase<::jxx::ext::xml::bind::internal::DomUnmarshaller, ::jxx::lang::Object, ::jxx::ext::xml::bind::Unmarshaller>::Class()));
 }
