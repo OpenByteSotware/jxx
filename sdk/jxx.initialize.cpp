@@ -3,9 +3,12 @@
 #include <mutex>
 
 #include "com/google/gson/jxx.com.google.gson.ClassInitialization.h"
+#include "com/google/gson/internal/jxx.com.google.gson.internal.ClassInitialization.h"
+#include "com/google/gson/annotations/jxx.com.google.gson.annotations.ClassInitialization.h"
 #include "com/google/gson/stream/jxx.com.google.gson.stream.ClassInitialization.h"
 #include "com/google/gson/reflect/jxx.com.google.gson.reflect.ClassInitialization.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.ClassInitialization.h"
+#include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.ClassInitialization.h"
 #include "com/sun/net/httpserver/spi/jxx.com.sun.net.httpserver.spi.ClassInitialization.h"
 #include "ext/crypto/jxx.ext.crypto.ClassInitialization.h"
 #include "ext/security/auth/jxx.ext.security.auth.ClassInitialization.h"
@@ -13,7 +16,9 @@
 #include "ext/security/cert/jxx.ext.security.cert.ClassInitialization.h"
 #include "ext/security/cert/internal/jxx.ext.security.cert.internal.ClassInitialization.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.ClassInitialization.h"
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.ClassInitialization.h"
 #include "ext/xml/bind/jxx.ext.xml.bind.ClassInitialization.h"
+#include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.ClassInitialization.h"
 #include "ext/xml/bind/annotation/adapters/jxx.ext.xml.bind.annotation.adapters.ClassInitialization.h"
 #include "ext/xml/bind/internal/jxx.ext.xml.bind.internal.ClassInitialization.h"
 #include "ext/xml/namespace/jxx.ext.xml.namespace.ClassInitialization.h"
@@ -105,9 +110,12 @@ void initialize() {
         ::jxx::org::xml::sax::helpers::initializeClasses();
         ::jxx::org::xml::sax::internal::initializeClasses();
         ::com::google::gson::initializeClasses();
+        ::com::google::gson::internal::initializeClasses();
+        ::com::google::gson::annotations::initializeClasses();
         ::com::google::gson::stream::initializeClasses();
         ::com::google::gson::reflect::initializeClasses();
         ::jxx::com::sun::net::httpserver::initializeClasses();
+        ::jxx::com::sun::net::httpserver::internal::initializeClasses();
         ::jxx::com::sun::net::httpserver::spi::initializeClasses();
         ::jxx::ext::security::auth::initializeClasses();
         ::jxx::ext::security::auth::x500::initializeClasses();
@@ -115,7 +123,9 @@ void initialize() {
         ::jxx::ext::security::cert::internal::initializeClasses();
         ::jxx::ext::crypto::initializeClasses();
         ::jxx::ext::net::ssl::initializeClasses();
+        ::jxx::ext::net::ssl::internal::initializeClasses();
         ::jxx::ext::xml::bind::initializeClasses();
+        ::jxx::ext::xml::bind::metadata::initializeClasses();
         ::jxx::ext::xml::bind::annotation::adapters::initializeClasses();
         ::jxx::ext::xml::bind::internal::initializeClasses();
         ::jxx::ext::xml::namespace_::initializeClasses();
