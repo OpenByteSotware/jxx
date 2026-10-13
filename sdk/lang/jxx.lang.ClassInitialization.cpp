@@ -191,7 +191,6 @@ void initializeClasses()
         registerType<InvocationTargetException>();
         registerType<Math>();
         registerType<Number>();
-        registerType<Object>();
         registerType<Readable>();
         registerType<Runnable>();
         registerType<StrictMath>();

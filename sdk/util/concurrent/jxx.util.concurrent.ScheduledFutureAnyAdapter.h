@@ -14,6 +14,13 @@ class ScheduledFutureAnyAdapter final
           ::jxx::util::concurrent::ScheduledFuture<::jxx::lang::Object>,
           ::jxx::util::concurrent::wildcard::FutureAny> {
 public:
+    using Super = ::jxx::lang::ClassBase<
+        ScheduledFutureAnyAdapter,
+        ::jxx::lang::Object,
+        ::jxx::util::concurrent::ScheduledFuture<::jxx::lang::Object>,
+        ::jxx::util::concurrent::wildcard::FutureAny>;
+    using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
+
     explicit ScheduledFutureAnyAdapter(
         const ::jxx::Ptr<::jxx::util::concurrent::ScheduledFuture<
             ::jxx::lang::Object>>& delegate);
