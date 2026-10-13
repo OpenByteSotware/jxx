@@ -10,6 +10,7 @@
 #include "util/jxx.util.ArrayList.h"
 #include "util/concurrent/jxx.util.concurrent.RejectedExecutionException.h"
 #include "util/concurrent/jxx.util.concurrent.Executors.h"
+#include "util/concurrent/jxx.util.concurrent.CancellableTask.h"
 
 namespace jxx::util::concurrent {
 
@@ -297,8 +298,8 @@ void ThreadPoolExecutor::purge() {
     while (!queue_.empty()) {
         const auto command = queue_.front();
         queue_.pop_front();
-        const auto future = ::jxx::CAST<wildcard::FutureAny>(command);
-        if (future == nullptr || !future->isCancelled()) {
+        const auto cancellable = ::jxx::CAST<internal::CancellableTask>(command);
+        if (cancellable == nullptr || !cancellable->isCancelled()) {
             retained.push_back(command);
         }
     }

@@ -3,14 +3,17 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx_types.h"
 #include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
+#include "util/concurrent/jxx.util.concurrent.CancellableTask.h"
 
 namespace jxx::util::concurrent {
 
 template<typename V>
 class Future
-    : public ::jxx::lang::InterfaceBase<Future<V>> {
+    : public ::jxx::lang::InterfaceBase<
+          Future<V>, internal::CancellableTask> {
 public:
-    using Super = ::jxx::lang::InterfaceBase<Future<V>>;
+    using Super = ::jxx::lang::InterfaceBase<
+        Future<V>, internal::CancellableTask>;
     using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
     ~Future() override = default;
     virtual ::jxx::lang::jbool cancel(
