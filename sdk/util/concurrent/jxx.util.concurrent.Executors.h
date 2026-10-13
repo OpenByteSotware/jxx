@@ -94,6 +94,12 @@ public:
     newSingleThreadScheduledExecutor(
         const ::jxx::Ptr<ThreadFactory>& threadFactory);
 
+    static ::jxx::Ptr<ExecutorService> unconfigurableExecutorService(
+        const ::jxx::Ptr<ExecutorService>& executor);
+    static ::jxx::Ptr<ScheduledExecutorService>
+    unconfigurableScheduledExecutorService(
+        const ::jxx::Ptr<ScheduledExecutorService>& executor);
+
     static ::jxx::Ptr<ThreadFactory> defaultThreadFactory() {
         return ::jxx::CAST<ThreadFactory>(
             ::jxx::NEW<executors_detail::DefaultThreadFactory>());

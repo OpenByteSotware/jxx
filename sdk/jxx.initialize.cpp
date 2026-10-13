@@ -10,6 +10,7 @@
 #include "ext/xml/parsers/jxx.ext.xml.parsers.ClassInitialization.h"
 #include "ext/xml/transform/jxx.ext.xml.transform.ClassInitialization.h"
 #include "ext/xml/validation/jxx.ext.xml.validation.ClassInitialization.h"
+#include "ext/xml/xpath/jxx.ext.xml.xpath.ClassInitialization.h"
 #include "io/jxx.io.ClassInitialization.h"
 #include "lang/jxx.lang.ClassInitialization.h"
 #include "lang/jxx.lang.initialize.h"
@@ -62,6 +63,7 @@ void initialize() {
         ::jxx::ext::xml::bind::initializeClasses();
         ::jxx::ext::xml::namespace_::initializeClasses();
         ::jxx::ext::xml::transform::initializeClasses();
+        ::jxx::ext::xml::xpath::initializeClasses();
         ::jxx::ext::xml::validation::initializeClasses();
         ::jxx::ext::xml::parsers::initializeClasses();
     });

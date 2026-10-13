@@ -1,5 +1,6 @@
 #include <limits>
 #include "util/concurrent/jxx.util.concurrent.Executors.h"
+#include "util/concurrent/jxx.util.concurrent.DelegatedExecutorService.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "util/concurrent/jxx.util.concurrent.ThreadPoolExecutor.h"
 #include "util/concurrent/jxx.util.concurrent.ScheduledThreadPoolExecutor.h"
@@ -62,6 +63,23 @@ namespace jxx::util::concurrent
         const jxx::Ptr<ThreadFactory>& threadFactory)
     {
         return newScheduledThreadPool(1, threadFactory);
+    }
+
+    jxx::Ptr<ExecutorService> Executors::unconfigurableExecutorService(
+        const jxx::Ptr<ExecutorService>& executor)
+    {
+        if (executor == nullptr) throw jxx::lang::NullPointerException();
+        return jxx::CAST<ExecutorService>(
+            jxx::NEW<executors_detail::DelegatedExecutorService>(executor));
+    }
+
+    jxx::Ptr<ScheduledExecutorService>
+    Executors::unconfigurableScheduledExecutorService(
+        const jxx::Ptr<ScheduledExecutorService>& executor)
+    {
+        if (executor == nullptr) throw jxx::lang::NullPointerException();
+        return jxx::CAST<ScheduledExecutorService>(
+            jxx::NEW<executors_detail::DelegatedScheduledExecutorService>(executor));
     }
 
 	jxx::Ptr<jxx::lang::Object> Executors::cloneImpl() const
