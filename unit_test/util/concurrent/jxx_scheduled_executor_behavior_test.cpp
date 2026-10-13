@@ -13,6 +13,7 @@
 #include "util/concurrent/jxx.util.concurrent.ScheduledExecutorService.h"
 #include "util/concurrent/jxx.util.concurrent.ScheduledFuture.h"
 #include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
+#include "util/concurrent/jxx.util.concurrent.RejectedExecutionException.h"
 
 namespace {
 
