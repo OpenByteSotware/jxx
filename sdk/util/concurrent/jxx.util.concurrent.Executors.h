@@ -68,12 +68,25 @@ private:
 public:
     static ::jxx::Ptr<ExecutorService> newFixedThreadPool(
         ::jxx::lang::jint threadCount);
+    static ::jxx::Ptr<ExecutorService> newFixedThreadPool(
+        ::jxx::lang::jint threadCount,
+        const ::jxx::Ptr<ThreadFactory>& threadFactory);
     static ::jxx::Ptr<ExecutorService> newSingleThreadExecutor();
+    static ::jxx::Ptr<ExecutorService> newSingleThreadExecutor(
+        const ::jxx::Ptr<ThreadFactory>& threadFactory);
     static ::jxx::Ptr<ExecutorService> newCachedThreadPool();
+    static ::jxx::Ptr<ExecutorService> newCachedThreadPool(
+        const ::jxx::Ptr<ThreadFactory>& threadFactory);
     static ::jxx::Ptr<ScheduledExecutorService> newScheduledThreadPool(
         ::jxx::lang::jint corePoolSize);
+    static ::jxx::Ptr<ScheduledExecutorService> newScheduledThreadPool(
+        ::jxx::lang::jint corePoolSize,
+        const ::jxx::Ptr<ThreadFactory>& threadFactory);
     static ::jxx::Ptr<ScheduledExecutorService>
     newSingleThreadScheduledExecutor();
+    static ::jxx::Ptr<ScheduledExecutorService>
+    newSingleThreadScheduledExecutor(
+        const ::jxx::Ptr<ThreadFactory>& threadFactory);
 
     static ::jxx::Ptr<ThreadFactory> defaultThreadFactory() {
         static const auto factory =

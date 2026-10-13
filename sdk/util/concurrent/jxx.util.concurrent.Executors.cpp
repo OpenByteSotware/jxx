@@ -10,25 +10,59 @@ namespace jxx::util::concurrent
 	{
 		if (n <= 0)throw jxx::lang::IllegalArgumentException(); return jxx::CAST<ExecutorService>(jxx::NEW<ThreadPoolExecutor>(n, n, 0, TimeUnit::MILLISECONDS()));
 	}
+	jxx::Ptr<ExecutorService> Executors::newFixedThreadPool(
+        jxx::lang::jint n,
+        const jxx::Ptr<ThreadFactory>& threadFactory)
+    {
+        if (n <= 0) throw jxx::lang::IllegalArgumentException();
+        if (threadFactory == nullptr) throw jxx::lang::NullPointerException();
+        return jxx::CAST<ExecutorService>(jxx::NEW<ThreadPoolExecutor>(
+            n, n, 0, TimeUnit::MILLISECONDS(), threadFactory));
+    }
 	jxx::Ptr<ExecutorService> Executors::newSingleThreadExecutor()
 	{
 		return newFixedThreadPool(1);
 	}
+    jxx::Ptr<ExecutorService> Executors::newSingleThreadExecutor(
+        const jxx::Ptr<ThreadFactory>& threadFactory)
+    {
+        return newFixedThreadPool(1, threadFactory);
+    }
 	jxx::Ptr<ExecutorService> Executors::newCachedThreadPool()
 	{
+        return newCachedThreadPool(defaultThreadFactory());
+	}
+    jxx::Ptr<ExecutorService> Executors::newCachedThreadPool(
+        const jxx::Ptr<ThreadFactory>& threadFactory)
+    {
+        if (threadFactory == nullptr) throw jxx::lang::NullPointerException();
 		return jxx::CAST<ExecutorService>(jxx::NEW<ThreadPoolExecutor>(
             0, std::numeric_limits<jxx::lang::jint>::max(),
-            60, TimeUnit::SECONDS()));
-	}
+            60, TimeUnit::SECONDS(), threadFactory));
+    }
 	jxx::Ptr<ScheduledExecutorService> Executors::newScheduledThreadPool(jxx::lang::jint corePoolSize)
 	{
 		if (corePoolSize <= 0) throw jxx::lang::IllegalArgumentException();
 		return jxx::CAST<ScheduledExecutorService>(jxx::NEW<ScheduledThreadPoolExecutor>(corePoolSize));
 	}
+    jxx::Ptr<ScheduledExecutorService> Executors::newScheduledThreadPool(
+        jxx::lang::jint corePoolSize,
+        const jxx::Ptr<ThreadFactory>& threadFactory)
+    {
+        if (corePoolSize <= 0) throw jxx::lang::IllegalArgumentException();
+        if (threadFactory == nullptr) throw jxx::lang::NullPointerException();
+        return jxx::CAST<ScheduledExecutorService>(
+            jxx::NEW<ScheduledThreadPoolExecutor>(corePoolSize, threadFactory));
+    }
 	jxx::Ptr<ScheduledExecutorService> Executors::newSingleThreadScheduledExecutor()
 	{
 		return newScheduledThreadPool(1);
 	}
+    jxx::Ptr<ScheduledExecutorService> Executors::newSingleThreadScheduledExecutor(
+        const jxx::Ptr<ThreadFactory>& threadFactory)
+    {
+        return newScheduledThreadPool(1, threadFactory);
+    }
 
 	jxx::Ptr<jxx::lang::Object> Executors::cloneImpl() const
 	{

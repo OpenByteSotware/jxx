@@ -13,6 +13,7 @@
 #include "util/concurrent/jxx.util.concurrent.AbstractExecutorService.h"
 #include "util/concurrent/jxx.util.concurrent.RejectedExecutionHandler.h"
 #include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
+#include "util/concurrent/jxx.util.concurrent.ThreadFactory.h"
 
 namespace jxx::util::concurrent {
 
@@ -30,6 +31,12 @@ public:
         ::jxx::lang::jint maximumPoolSize,
         ::jxx::lang::jlong keepAliveTime,
         const ::jxx::Ptr<TimeUnit>& unit);
+    ThreadPoolExecutor(
+        ::jxx::lang::jint corePoolSize,
+        ::jxx::lang::jint maximumPoolSize,
+        ::jxx::lang::jlong keepAliveTime,
+        const ::jxx::Ptr<TimeUnit>& unit,
+        const ::jxx::Ptr<ThreadFactory>& threadFactory);
     ~ThreadPoolExecutor() override;
 
     void execute(const ::jxx::Ptr<::jxx::lang::Runnable>& command) override;
@@ -90,6 +97,7 @@ private:
     ::jxx::lang::jint maximumPoolSize_;
     ::jxx::lang::jlong keepAliveTime_;
     ::jxx::Ptr<TimeUnit> keepAliveUnit_;
+    ::jxx::Ptr<ThreadFactory> threadFactory_;
     ::jxx::Ptr<RejectedExecutionHandler> handler_;
 
     void startWorkerLocked_();

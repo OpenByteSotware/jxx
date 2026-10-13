@@ -24,6 +24,9 @@ public:
     static ::jxx::Ptr<::jxx::lang::ClassAny> Class();
 
     explicit ScheduledThreadPoolExecutor(::jxx::lang::jint corePoolSize);
+    ScheduledThreadPoolExecutor(
+        ::jxx::lang::jint corePoolSize,
+        const ::jxx::Ptr<ThreadFactory>& threadFactory);
     ~ScheduledThreadPoolExecutor() override;
 
     ::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> schedule(

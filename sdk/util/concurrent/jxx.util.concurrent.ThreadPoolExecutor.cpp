@@ -9,6 +9,7 @@
 #include "lang/jxx.lang.Exceptions.h"
 #include "util/jxx.util.ArrayList.h"
 #include "util/concurrent/jxx.util.concurrent.RejectedExecutionException.h"
+#include "util/concurrent/jxx.util.concurrent.Executors.h"
 
 namespace jxx::util::concurrent {
 
@@ -17,14 +18,26 @@ ThreadPoolExecutor::ThreadPoolExecutor(
     ::jxx::lang::jint maximum,
     ::jxx::lang::jlong keepAlive,
     const ::jxx::Ptr<TimeUnit>& unit)
+    : ThreadPoolExecutor(core, maximum, keepAlive, unit,
+          Executors::defaultThreadFactory()) {}
+
+ThreadPoolExecutor::ThreadPoolExecutor(
+    ::jxx::lang::jint core,
+    ::jxx::lang::jint maximum,
+    ::jxx::lang::jlong keepAlive,
+    const ::jxx::Ptr<TimeUnit>& unit,
+    const ::jxx::Ptr<ThreadFactory>& threadFactory)
     : corePoolSize_(core)
     , maximumPoolSize_(maximum)
     , keepAliveTime_(keepAlive)
-    , keepAliveUnit_(unit) {
+    , keepAliveUnit_(unit)
+    , threadFactory_(threadFactory) {
     if (core < 0 || maximum <= 0 || maximum < core || keepAlive < 0) {
         throw ::jxx::lang::IllegalArgumentException();
     }
-    if (unit == nullptr) throw ::jxx::lang::NullPointerException();
+    if (unit == nullptr || threadFactory == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
 }
 
 ThreadPoolExecutor::~ThreadPoolExecutor() {

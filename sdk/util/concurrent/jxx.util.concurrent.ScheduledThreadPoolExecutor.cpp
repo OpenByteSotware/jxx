@@ -1,4 +1,5 @@
 #include "util/concurrent/jxx.util.concurrent.ScheduledThreadPoolExecutor.h"
+#include "util/concurrent/jxx.util.concurrent.Executors.h"
 
 #include "lang/jxx.lang.Class.h"
 #include "lang/jxx.lang.Exceptions.h"
@@ -9,7 +10,12 @@ namespace jxx::util::concurrent
 	{
 		return JxxClassInfoMarker::Class();
 	}
-	ScheduledThreadPoolExecutor::ScheduledThreadPoolExecutor(::jxx::lang::jint core) :Super(core, core, 0, TimeUnit::NANOSECONDS())
+	ScheduledThreadPoolExecutor::ScheduledThreadPoolExecutor(::jxx::lang::jint core)
+        : ScheduledThreadPoolExecutor(core, Executors::defaultThreadFactory()) {}
+	ScheduledThreadPoolExecutor::ScheduledThreadPoolExecutor(
+        ::jxx::lang::jint core,
+        const ::jxx::Ptr<ThreadFactory>& threadFactory)
+        : Super(core, core, 0, TimeUnit::NANOSECONDS(), threadFactory)
 	{
 		dispatcher_ = std::thread([this]
 	   {
