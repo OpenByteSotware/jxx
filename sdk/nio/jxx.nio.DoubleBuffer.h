@@ -50,7 +50,7 @@ namespace jxx::nio
         jxx::lang::jbool isDirect() const override;
 
     private:
-        DoubleBuffer(std::shared_ptr<std::vector<jxx::lang::jdouble>> storage,
+        DoubleBuffer(jxx::lang::DoubleArray storage,
               jxx::lang::jint offset,
               jxx::lang::jint capacity,
               jxx::lang::jbool readOnly);
@@ -61,7 +61,7 @@ namespace jxx::nio
         const jxx::lang::jdouble& at_(jxx::lang::jint index) const;
 
     private:
-        std::shared_ptr<std::vector<jxx::lang::jdouble>> storage_;
+        jxx::lang::DoubleArray storage_;
         jxx::lang::jint offset_ = 0;
         jxx::lang::jbool readOnly_ = false;
     };

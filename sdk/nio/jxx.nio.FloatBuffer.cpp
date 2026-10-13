@@ -17,7 +17,7 @@ namespace
 
 namespace jxx::nio
 {
-    FloatBuffer::FloatBuffer(std::shared_ptr<std::vector<jxx::lang::jfloat>> storage,
+    FloatBuffer::FloatBuffer(jxx::lang::FloatArray storage,
                  jxx::lang::jint offset,
                  jxx::lang::jint capacity,
                  jxx::lang::jbool readOnly)
@@ -34,7 +34,7 @@ namespace jxx::nio
     {
         if (capacity < 0)
             throwIAE_("capacity < 0");
-        auto storage = std::make_shared<std::vector<jxx::lang::jfloat>>(static_cast<std::size_t>(capacity));
+        auto storage = ::jxx::NEW<::jxx::lang::FloatArrayType>(static_cast<std::uint32_t>(capacity));
         return ::jxx::ADOPT(std::shared_ptr<FloatBuffer>(new FloatBuffer(storage, 0, capacity, false)));
     }
 
@@ -54,13 +54,10 @@ namespace jxx::nio
         if (offset < 0 || length < 0 || offset > array->length - length)
             throwIAE_("index out of bounds");
 
-        auto storage = std::make_shared<std::vector<jxx::lang::jfloat>>(static_cast<std::size_t>(array->length));
-        for (jxx::lang::jint i = 0; i < array->length; ++i)
-            (*storage)[static_cast<std::size_t>(i)] = (*array)[i];
-
-        auto out = ::jxx::ADOPT(std::shared_ptr<FloatBuffer>(new FloatBuffer(storage, offset, length, false)));
-        out->position(0);
-        out->limit(length);
+        auto out = ::jxx::ADOPT(std::shared_ptr<FloatBuffer>(
+            new FloatBuffer(array, 0, array->length, false)));
+        out->position(offset);
+        out->limit(offset + length);
         return out;
     }
 
@@ -79,12 +76,12 @@ namespace jxx::nio
 
     jxx::lang::jfloat& FloatBuffer::at_(jxx::lang::jint index)
     {
-        return (*storage_)[static_cast<std::size_t>(offset_ + index)];
+        return (*storage_)[offset_ + index];
     }
 
     const jxx::lang::jfloat& FloatBuffer::at_(jxx::lang::jint index) const
     {
-        return (*storage_)[static_cast<std::size_t>(offset_ + index)];
+        return (*storage_)[offset_ + index];
     }
 
     jxx::lang::jfloat FloatBuffer::get()
@@ -213,17 +210,22 @@ namespace jxx::nio
         return self__();
     }
 
-    jxx::lang::jbool FloatBuffer::hasArray() const { return true; }
+    jxx::lang::jbool FloatBuffer::hasArray() const { return !readOnly_; }
 
     jxx::lang::FloatArray FloatBuffer::array() const
     {
-        auto out = jxx::NEW<jxx::lang::FloatArrayType>(cap_);
-        for (jxx::lang::jint i = 0; i < cap_; ++i)
-            (*out)[i] = at_(i);
-        return out;
+        if (readOnly_)
+            throwState_("buffer is read-only");
+        return storage_;
     }
 
-    jxx::lang::jint FloatBuffer::arrayOffset() const { return 0; }
+    jxx::lang::jint FloatBuffer::arrayOffset() const
+    {
+        if (readOnly_)
+            throwState_("buffer is read-only");
+        return offset_;
+    }
+
     jxx::lang::jbool FloatBuffer::isReadOnly() const { return readOnly_; }
     jxx::lang::jbool FloatBuffer::isDirect() const { return false; }
 }

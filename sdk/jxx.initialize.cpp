@@ -2,6 +2,7 @@
 
 #include <mutex>
 
+#include "com/google/gson/jxx.com.google.gson.ClassInitialization.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.ClassInitialization.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.ClassInitialization.h"
 #include "ext/xml/parsers/jxx.ext.xml.parsers.ClassInitialization.h"
@@ -44,6 +45,7 @@ void initialize() {
         ::jxx::security::initializeClasses();
         ::jxx::org::w3c::dom::initializeClasses();
         ::jxx::org::xml::sax::initializeClasses();
+        ::com::google::gson::initializeClasses();
         ::jxx::com::sun::net::httpserver::initializeClasses();
         ::jxx::ext::net::ssl::initializeClasses();
         ::jxx::ext::xml::validation::initializeClasses();

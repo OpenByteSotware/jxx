@@ -4,11 +4,13 @@
 
 namespace com::google::gson {
 
+void initializeClasses();
+
 template <typename K, typename V>
 void initializeLinkedTreeMapClass()
 {
     using MapType =
-        com::google::gson::internal::LinkedTreeMap<K, V>;
+        ::com::google::gson::internal::LinkedTreeMap<K, V>;
 
     (void)MapType::Class();
 }

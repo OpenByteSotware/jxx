@@ -18,7 +18,7 @@ namespace
 
 namespace jxx::nio
 {
-    LongBuffer::LongBuffer(std::shared_ptr<std::vector<jxx::lang::jlong>> storage,
+    LongBuffer::LongBuffer(jxx::lang::LongArray storage,
                  jxx::lang::jint offset,
                  jxx::lang::jint capacity,
                  jxx::lang::jbool readOnly)
@@ -35,7 +35,7 @@ namespace jxx::nio
     {
         if (capacity < 0)
             throwIAE_("capacity < 0");
-        auto storage = std::make_shared<std::vector<jxx::lang::jlong>>(static_cast<std::size_t>(capacity));
+        auto storage = ::jxx::NEW<::jxx::lang::LongArrayType>(static_cast<std::uint32_t>(capacity));
         return ::jxx::ADOPT(std::shared_ptr<LongBuffer>(new LongBuffer(storage, 0, capacity, false)));
     }
 
@@ -55,13 +55,10 @@ namespace jxx::nio
         if (offset < 0 || length < 0 || offset > array->length - length)
             throwIAE_("index out of bounds");
 
-        auto storage = std::make_shared<std::vector<jxx::lang::jlong>>(static_cast<std::size_t>(array->length));
-        for (jxx::lang::jint i = 0; i < array->length; ++i)
-            (*storage)[static_cast<std::size_t>(i)] = (*array)[i];
-
-        auto out = ::jxx::ADOPT(std::shared_ptr<LongBuffer>(new LongBuffer(storage, offset, length, false)));
-        out->position(0);
-        out->limit(length);
+        auto out = ::jxx::ADOPT(std::shared_ptr<LongBuffer>(
+            new LongBuffer(array, 0, array->length, false)));
+        out->position(offset);
+        out->limit(offset + length);
         return out;
     }
 
@@ -80,12 +77,12 @@ namespace jxx::nio
 
     jxx::lang::jlong& LongBuffer::at_(jxx::lang::jint index)
     {
-        return (*storage_)[static_cast<std::size_t>(offset_ + index)];
+        return (*storage_)[offset_ + index];
     }
 
     const jxx::lang::jlong& LongBuffer::at_(jxx::lang::jint index) const
     {
-        return (*storage_)[static_cast<std::size_t>(offset_ + index)];
+        return (*storage_)[offset_ + index];
     }
 
     jxx::lang::jlong LongBuffer::get()
@@ -214,17 +211,22 @@ namespace jxx::nio
         return self__();
     }
 
-    jxx::lang::jbool LongBuffer::hasArray() const { return true; }
+    jxx::lang::jbool LongBuffer::hasArray() const { return !readOnly_; }
 
     jxx::lang::LongArray LongBuffer::array() const
     {
-        auto out = jxx::NEW<jxx::lang::LongArrayType>(cap_);
-        for (jxx::lang::jint i = 0; i < cap_; ++i)
-            (*out)[i] = at_(i);
-        return out;
+        if (readOnly_)
+            throwState_("buffer is read-only");
+        return storage_;
     }
 
-    jxx::lang::jint LongBuffer::arrayOffset() const { return 0; }
+    jxx::lang::jint LongBuffer::arrayOffset() const
+    {
+        if (readOnly_)
+            throwState_("buffer is read-only");
+        return offset_;
+    }
+
     jxx::lang::jbool LongBuffer::isReadOnly() const { return readOnly_; }
     jxx::lang::jbool LongBuffer::isDirect() const { return false; }
 }

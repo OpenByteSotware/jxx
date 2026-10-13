@@ -50,7 +50,7 @@ namespace jxx::nio
         jxx::lang::jbool isDirect() const override;
 
     private:
-        FloatBuffer(std::shared_ptr<std::vector<jxx::lang::jfloat>> storage,
+        FloatBuffer(jxx::lang::FloatArray storage,
               jxx::lang::jint offset,
               jxx::lang::jint capacity,
               jxx::lang::jbool readOnly);
@@ -61,7 +61,7 @@ namespace jxx::nio
         const jxx::lang::jfloat& at_(jxx::lang::jint index) const;
 
     private:
-        std::shared_ptr<std::vector<jxx::lang::jfloat>> storage_;
+        jxx::lang::FloatArray storage_;
         jxx::lang::jint offset_ = 0;
         jxx::lang::jbool readOnly_ = false;
     };

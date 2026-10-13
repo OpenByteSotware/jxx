@@ -50,7 +50,7 @@ namespace jxx::nio
         jxx::lang::jbool isDirect() const override;
 
     private:
-        LongBuffer(std::shared_ptr<std::vector<jxx::lang::jlong>> storage,
+        LongBuffer(jxx::lang::LongArray storage,
               jxx::lang::jint offset,
               jxx::lang::jint capacity,
               jxx::lang::jbool readOnly);
@@ -61,7 +61,7 @@ namespace jxx::nio
         const jxx::lang::jlong& at_(jxx::lang::jint index) const;
 
     private:
-        std::shared_ptr<std::vector<jxx::lang::jlong>> storage_;
+        jxx::lang::LongArray storage_;
         jxx::lang::jint offset_ = 0;
         jxx::lang::jbool readOnly_ = false;
     };

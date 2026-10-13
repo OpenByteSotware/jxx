@@ -17,7 +17,7 @@ namespace
 
 namespace jxx::nio
 {
-    DoubleBuffer::DoubleBuffer(std::shared_ptr<std::vector<jxx::lang::jdouble>> storage,
+    DoubleBuffer::DoubleBuffer(jxx::lang::DoubleArray storage,
                  jxx::lang::jint offset,
                  jxx::lang::jint capacity,
                  jxx::lang::jbool readOnly)
@@ -34,7 +34,7 @@ namespace jxx::nio
     {
         if (capacity < 0)
             throwIAE_("capacity < 0");
-        auto storage = std::make_shared<std::vector<jxx::lang::jdouble>>(static_cast<std::size_t>(capacity));
+        auto storage = ::jxx::NEW<::jxx::lang::DoubleArrayType>(static_cast<std::uint32_t>(capacity));
         return ::jxx::ADOPT(std::shared_ptr<DoubleBuffer>(new DoubleBuffer(storage, 0, capacity, false)));
     }
 
@@ -54,13 +54,10 @@ namespace jxx::nio
         if (offset < 0 || length < 0 || offset > array->length - length)
             throwIAE_("index out of bounds");
 
-        auto storage = std::make_shared<std::vector<jxx::lang::jdouble>>(static_cast<std::size_t>(array->length));
-        for (jxx::lang::jint i = 0; i < array->length; ++i)
-            (*storage)[static_cast<std::size_t>(i)] = (*array)[i];
-
-        auto out = ::jxx::ADOPT(std::shared_ptr<DoubleBuffer>(new DoubleBuffer(storage, offset, length, false)));
-        out->position(0);
-        out->limit(length);
+        auto out = ::jxx::ADOPT(std::shared_ptr<DoubleBuffer>(
+            new DoubleBuffer(array, 0, array->length, false)));
+        out->position(offset);
+        out->limit(offset + length);
         return out;
     }
 
@@ -77,12 +74,12 @@ namespace jxx::nio
 
     jxx::lang::jdouble& DoubleBuffer::at_(jxx::lang::jint index)
     {
-        return (*storage_)[static_cast<std::size_t>(offset_ + index)];
+        return (*storage_)[offset_ + index];
     }
 
     const jxx::lang::jdouble& DoubleBuffer::at_(jxx::lang::jint index) const
     {
-        return (*storage_)[static_cast<std::size_t>(offset_ + index)];
+        return (*storage_)[offset_ + index];
     }
 
     jxx::lang::jdouble DoubleBuffer::get()
@@ -211,17 +208,22 @@ namespace jxx::nio
         return self__();
     }
 
-    jxx::lang::jbool DoubleBuffer::hasArray() const { return true; }
+    jxx::lang::jbool DoubleBuffer::hasArray() const { return !readOnly_; }
 
     jxx::lang::DoubleArray DoubleBuffer::array() const
     {
-        auto out = jxx::NEW<jxx::lang::DoubleArrayType>(cap_);
-        for (jxx::lang::jint i = 0; i < cap_; ++i)
-            (*out)[i] = at_(i);
-        return out;
+        if (readOnly_)
+            throwState_("buffer is read-only");
+        return storage_;
     }
 
-    jxx::lang::jint DoubleBuffer::arrayOffset() const { return 0; }
+    jxx::lang::jint DoubleBuffer::arrayOffset() const
+    {
+        if (readOnly_)
+            throwState_("buffer is read-only");
+        return offset_;
+    }
+
     jxx::lang::jbool DoubleBuffer::isReadOnly() const { return readOnly_; }
     jxx::lang::jbool DoubleBuffer::isDirect() const { return false; }
 }
