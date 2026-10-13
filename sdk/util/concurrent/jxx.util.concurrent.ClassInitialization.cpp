@@ -68,15 +68,15 @@ void initializeClasses()
         registerType<wildcard::FutureAny>();
         registerType<AbstractExecutorService>();
         registerType<BrokenBarrierException>();
-        registerType<CancellableTask>();
+        registerType<::jxx::util::concurrent::internal::CancellableTask>();
         registerType<CancellationException>();
         registerType<CompletionException>();
         registerType<ExecutionException>();
         registerType<ForkJoinWorkerThread>();
         registerType<RecursiveAction>();
         registerType<RejectedExecutionException>();
-        registerType<ScheduledFutureAnyAdapter>();
-        registerType<ScheduledTask>();
+        registerType<::jxx::util::concurrent::scheduled_detail::ScheduledFutureAnyAdapter>();
+        registerType<::jxx::util::concurrent::scheduled_detail::ScheduledTask>();
         registerType<ThreadFactory>();
         registerType<ThreadLocalRandom>();
         registerType<ThreadPoolExecutor>();

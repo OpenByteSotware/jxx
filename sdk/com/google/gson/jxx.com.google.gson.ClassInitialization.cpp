@@ -60,9 +60,9 @@ void initializeClasses()
         (void)ToNumberStrategy::Class();
         (void)TypeAdapter::Class();
         (void)TypeAdapterFactory::Class();
-        (void)FieldNamingPolicy::JxxClassInfoMarker::Class();
-        (void)LongSerializationPolicy::JxxClassInfoMarker::Class();
-        (void)ToNumberPolicy::JxxClassInfoMarker::Class();
+        (void)FieldNamingPolicies::Class();
+        (void)LongSerializationPolicies::Class();
+        (void)ToNumberPolicies::Class();
     });
 }
 

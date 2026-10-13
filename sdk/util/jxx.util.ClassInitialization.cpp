@@ -152,7 +152,7 @@ void initializeClasses()
         registerType<TimerTask>();
         registerType<TimeZone>();
         registerType<UUID>();
-        registerType<CollectionAny>();
+        registerType<::jxx::util::wildcard::CollectionAny>();
         registerType<ZonedDateTime>();
         });
 }
