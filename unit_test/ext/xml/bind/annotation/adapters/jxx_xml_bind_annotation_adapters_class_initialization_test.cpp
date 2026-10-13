@@ -9,11 +9,11 @@
 TEST(JxxStage51ClassInitialization, MetadataAndIdempotence)
 {
     ::jxx::initialize();
-    EXPECT_NE((::jxx::lang::InterfaceBase<XmlAdapter>::Class()), nullptr);
-    EXPECT_NE((::jxx::lang::ClassBase<XmlJavaTypeAdapter, ::jxx::lang::Object>::Class()), nullptr);
-    EXPECT_NE((::jxx::lang::ClassBase<XmlJavaTypeAdapters, ::jxx::lang::Object>::Class()), nullptr);
-    const auto before = ::jxx::lang::InterfaceBase<XmlAdapter>::Class();
+    EXPECT_NE((::jxx::lang::InterfaceBase<::jxx::ext::xml::bind::annotation::adapters::XmlAdapter>::Class()), nullptr);
+    EXPECT_NE((::jxx::lang::ClassBase<::jxx::ext::xml::bind::annotation::adapters::XmlJavaTypeAdapter, ::jxx::lang::Object>::Class()), nullptr);
+    EXPECT_NE((::jxx::lang::ClassBase<::jxx::ext::xml::bind::annotation::adapters::XmlJavaTypeAdapters, ::jxx::lang::Object>::Class()), nullptr);
+    const auto before = ::jxx::lang::InterfaceBase<::jxx::ext::xml::bind::annotation::adapters::XmlAdapter>::Class();
     EXPECT_NO_THROW(::jxx::ext::xml::bind::annotation::adapters::initializeClasses());
     EXPECT_NO_THROW(::jxx::ext::xml::bind::annotation::adapters::initializeClasses());
-    EXPECT_EQ(before, (::jxx::lang::InterfaceBase<XmlAdapter>::Class()));
+    EXPECT_EQ(before, (::jxx::lang::InterfaceBase<::jxx::ext::xml::bind::annotation::adapters::XmlAdapter>::Class()));
 }
