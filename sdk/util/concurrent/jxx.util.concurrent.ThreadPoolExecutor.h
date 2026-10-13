@@ -100,7 +100,7 @@ private:
     ::jxx::Ptr<ThreadFactory> threadFactory_;
     ::jxx::Ptr<RejectedExecutionHandler> handler_;
 
-    void startWorkerLocked_();
+    ::jxx::lang::jbool startWorkerLocked_();
     void workerLoop_();
     void reject_(const ::jxx::Ptr<::jxx::lang::Runnable>& command);
     ::jxx::lang::jbool cachedMode_() const noexcept;

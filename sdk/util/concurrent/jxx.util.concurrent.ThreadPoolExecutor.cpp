@@ -56,18 +56,22 @@ void ThreadPoolExecutor::joinWorkers_() {
         maximumPoolSize_ == std::numeric_limits<::jxx::lang::jint>::max();
 }
 
-void ThreadPoolExecutor::startWorkerLocked_() {
-    ++liveWorkerCount_;
-    largestPoolSize_ = std::max(largestPoolSize_, liveWorkerCount_);
+::jxx::lang::jbool ThreadPoolExecutor::startWorkerLocked_() {
     const auto runnable = ::jxx::CAST<::jxx::lang::Runnable>(
         ::jxx::NEW<WorkerRunnable>(this));
-    const auto worker = threadFactory_->newThread(runnable);
-    if (worker == nullptr) {
-        --liveWorkerCount_;
-        throw ::jxx::lang::NullPointerException();
+    ::jxx::Ptr<::jxx::lang::Thread> worker;
+    try {
+        worker = threadFactory_->newThread(runnable);
+        if (worker == nullptr) return false;
+        worker->start();
+    } catch (...) {
+        return false;
     }
+
     workers_.push_back(worker);
-    worker->start();
+    ++liveWorkerCount_;
+    largestPoolSize_ = std::max(largestPoolSize_, liveWorkerCount_);
+    return true;
 }
 
 void ThreadPoolExecutor::execute(
@@ -89,7 +93,12 @@ void ThreadPoolExecutor::execute(
                 (liveWorkerCount_ == 0 && !queue_.empty()) ||
                 (cachedMode_() && liveWorkerCount_ < maximumPoolSize_ &&
                  activeCount_ + static_cast<::jxx::lang::jint>(queue_.size()) > liveWorkerCount_)) {
-                startWorkerLocked_();
+                if (!startWorkerLocked_() && liveWorkerCount_ == 0) {
+                    queue_.pop_back();
+                    --submittedTaskCount_;
+                    rejected = true;
+                    rejectionHandler = handler_;
+                }
             }
         }
     }
