@@ -31,20 +31,25 @@ namespace jxx::util::concurrent
 	}
 	::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> ScheduledThreadPoolExecutor::schedule(const ::jxx::Ptr<::jxx::lang::Runnable>& c, ::jxx::lang::jlong d, const ::jxx::Ptr<TimeUnit>& u)
 	{
-		if (!u)throw ::jxx::lang::NullPointerException(); return schedule_(c, std::max<::jxx::lang::jlong>(0, u->toNanos(d)), 0);
+		if (!u)throw ::jxx::lang::NullPointerException(); return schedule_(c, std::max<::jxx::lang::jlong>(0, u->toNanos(d)), 0,
+            ConcreteTask::PeriodicMode::OneShot);
 	}
 	::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> ScheduledThreadPoolExecutor::scheduleAtFixedRate(const ::jxx::Ptr<::jxx::lang::Runnable>& c, ::jxx::lang::jlong d, ::jxx::lang::jlong p, const ::jxx::Ptr<TimeUnit>& u)
 	{
-		if (!u)throw ::jxx::lang::NullPointerException(); if (p <= 0)throw ::jxx::lang::IllegalArgumentException(); return schedule_(c, std::max<::jxx::lang::jlong>(0, u->toNanos(d)), u->toNanos(p));
+		if (!u)throw ::jxx::lang::NullPointerException(); if (p <= 0)throw ::jxx::lang::IllegalArgumentException(); return schedule_(c, std::max<::jxx::lang::jlong>(0, u->toNanos(d)),
+            u->toNanos(p), ConcreteTask::PeriodicMode::FixedRate);
 	}
 	::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> ScheduledThreadPoolExecutor::scheduleWithFixedDelay(const ::jxx::Ptr<::jxx::lang::Runnable>& c, ::jxx::lang::jlong d, ::jxx::lang::jlong p, const ::jxx::Ptr<TimeUnit>& u)
 	{
-		if (!u)throw ::jxx::lang::NullPointerException(); if (p <= 0)throw ::jxx::lang::IllegalArgumentException(); return schedule_(c, std::max<::jxx::lang::jlong>(0, u->toNanos(d)), -u->toNanos(p));
+		if (!u)throw ::jxx::lang::NullPointerException(); if (p <= 0)throw ::jxx::lang::IllegalArgumentException(); return schedule_(c, std::max<::jxx::lang::jlong>(0, u->toNanos(d)),
+            u->toNanos(p), ConcreteTask::PeriodicMode::FixedDelay);
 	}
-	::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> ScheduledThreadPoolExecutor::schedule_(const ::jxx::Ptr<::jxx::lang::Runnable>& command, ::jxx::lang::jlong delayNanos, ::jxx::lang::jlong periodNanos)
+	::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> ScheduledThreadPoolExecutor::schedule_(const ::jxx::Ptr<::jxx::lang::Runnable>& command, ::jxx::lang::jlong delayNanos, ::jxx::lang::jlong periodNanos,
+        ConcreteTask::PeriodicMode periodicMode)
 	{
 		if (command == nullptr) throw ::jxx::lang::NullPointerException();
-		const auto concreteTask = ::jxx::NEW<ScheduledFutureTask<::jxx::lang::Object>>(command, nullptr, delayNanos, periodNanos);
+		const auto concreteTask = ::jxx::NEW<ScheduledFutureTask<::jxx::lang::Object>>(
+            command, nullptr, delayNanos, periodNanos, periodicMode);
 		const auto task = ::jxx::CAST<Task>(concreteTask);
 		{
 			std::lock_guard<std::mutex> lock(scheduleMutex_);

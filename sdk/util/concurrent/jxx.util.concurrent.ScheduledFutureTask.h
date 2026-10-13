@@ -22,6 +22,12 @@ class ScheduledFutureTask final
     : public ::jxx::lang::ClassBase<ScheduledFutureTask<V>,
           ::jxx::lang::Object, RunnableScheduledFuture<V>> {
 public:
+    enum class PeriodicMode {
+        OneShot,
+        FixedRate,
+        FixedDelay
+    };
+
     using JxxSuper = ::jxx::lang::Object;
     using Super = ::jxx::lang::ClassBase<ScheduledFutureTask<V>,
         JxxSuper, RunnableScheduledFuture<V>>;
@@ -30,10 +36,16 @@ public:
 
     ScheduledFutureTask(const ::jxx::Ptr<::jxx::lang::Runnable>& command,
         const ::jxx::Ptr<V>& result, ::jxx::lang::jlong delayNanos,
-        ::jxx::lang::jlong periodNanos = 0)
+        ::jxx::lang::jlong periodNanos = 0,
+        PeriodicMode periodicMode = PeriodicMode::OneShot)
         : Super(), command_(command), result_(result),
           trigger_(deadlineAfter_(delayNanos)),
-          periodNanos_(periodNanos), sequence_(nextSequence_++) {
+          periodNanos_(periodNanos), periodicMode_(periodicMode),
+          sequence_(nextSequence_++) {
+        if (periodicMode_ == PeriodicMode::OneShot) periodNanos_ = 0;
+        if (periodicMode_ != PeriodicMode::OneShot && periodNanos_ <= 0) {
+            throw ::jxx::lang::IllegalArgumentException();
+        }
         if(!command_) throw ::jxx::lang::NullPointerException();
     }
 
@@ -127,16 +139,26 @@ private:
         runner_.reset();
         if(cancelled_) return;
         if(failure){failure_=failure;done_=true;condition_.notify_all();return;}
-        if(periodNanos_==0){done_=true;condition_.notify_all();return;}
-        if (periodNanos_ > 0) trigger_ = addSaturated_(trigger_, periodNanos_);
-        else trigger_ = deadlineAfter_(-periodNanos_);
+        if (periodicMode_ == PeriodicMode::OneShot) {
+            done_ = true;
+            condition_.notify_all();
+            return;
+        }
+        if (periodicMode_ == PeriodicMode::FixedRate) {
+            trigger_ = addSaturated_(trigger_, periodNanos_);
+        } else {
+            trigger_ = deadlineAfter_(periodNanos_);
+        }
     }
     ::jxx::Ptr<V> report_(){if(cancelled_)throw CancellationException();if(failure_)throw ExecutionException(failure_);return result_;}
     inline static std::atomic<::jxx::lang::jlong> nextSequence_{0};
     ::jxx::Ptr<::jxx::lang::Runnable> command_;
     ::jxx::Ptr<Callable<V>> callable_;
     ::jxx::Ptr<V> result_;
-    clock::time_point trigger_; ::jxx::lang::jlong periodNanos_; ::jxx::lang::jlong sequence_;
+    clock::time_point trigger_;
+    ::jxx::lang::jlong periodNanos_;
+    PeriodicMode periodicMode_ = PeriodicMode::OneShot;
+    ::jxx::lang::jlong sequence_;
     mutable std::mutex mutex_; std::condition_variable condition_;
     ::jxx::lang::jbool running_=false,done_=false,cancelled_=false;
     std::weak_ptr<::jxx::lang::Thread> runner_;

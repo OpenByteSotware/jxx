@@ -58,6 +58,7 @@ public:
 
 private:
     using Task = scheduled_detail::ScheduledTask;
+    using ConcreteTask = ScheduledFutureTask<::jxx::lang::Object>;
 
     class ScheduledTaskRunner final
         : public ::jxx::lang::ClassBase<
@@ -80,7 +81,11 @@ private:
         ::jxx::Ptr<Task> task_;
     };
     struct Later { bool operator()(const ::jxx::Ptr<Task>& a,const ::jxx::Ptr<Task>& b) const { return a->getDelay(TimeUnit::NANOSECONDS()) > b->getDelay(TimeUnit::NANOSECONDS()); } };
-    ::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> schedule_(const ::jxx::Ptr<::jxx::lang::Runnable>& command,::jxx::lang::jlong delayNanos,::jxx::lang::jlong periodNanos);
+    ::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> schedule_(
+        const ::jxx::Ptr<::jxx::lang::Runnable>& command,
+        ::jxx::lang::jlong delayNanos,
+        ::jxx::lang::jlong periodNanos,
+        typename ConcreteTask::PeriodicMode periodicMode);
     void dispatch_();
     void afterExecute_(const ::jxx::Ptr<Task>& task);
     mutable std::mutex scheduleMutex_; std::condition_variable scheduleChanged_;
