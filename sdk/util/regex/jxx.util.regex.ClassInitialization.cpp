@@ -6,6 +6,7 @@
 #include "util/regex/jxx.util.regex.MatchResult.h"
 #include "util/regex/jxx.util.regex.Matcher.h"
 #include "util/regex/jxx.util.regex.Pattern.h"
+#include "util/regex/jxx.util.regex.PatternSyntaxException.h"
 
 namespace jxx::util::regex {
 namespace {
@@ -25,6 +26,7 @@ void initializeClasses()
         registerType<MatchResult>();
         registerType<Matcher>();
         registerType<Pattern>();
+        registerType<PatternSyntaxException>();
     });
 }
 
