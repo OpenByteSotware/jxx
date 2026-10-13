@@ -9,6 +9,8 @@ namespace jxx::util { class Date; class Locale; class TimeZone; }
 
 namespace jxx::text {
 
+class ParsePosition;
+
 class SimpleDateFormat final : public DateFormat {
 public:
     using JxxSuper = DateFormat;
@@ -29,6 +31,9 @@ public:
 
     ::jxx::Ptr<::jxx::util::Date> parse(
         const ::jxx::Ptr<::jxx::lang::String>& source) const;
+    ::jxx::Ptr<::jxx::util::Date> parse(
+        const ::jxx::Ptr<::jxx::lang::String>& source,
+        const ::jxx::Ptr<ParsePosition>& position) const;
 
     void applyPattern(const ::jxx::Ptr<::jxx::lang::String>& pattern);
     void applyLocalizedPattern(

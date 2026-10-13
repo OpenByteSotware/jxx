@@ -10,6 +10,7 @@
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
 #include "text/jxx.text.ParseException.h"
+#include "text/jxx.text.ParsePosition.h"
 #include "util/jxx.util.Date.h"
 #include "util/jxx.util.Locale.h"
 #include "util/jxx.util.TimeZone.h"
@@ -261,6 +262,37 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
     const auto localMillis = static_cast<::jxx::lang::jlong>(seconds) * 1000LL;
     const auto offset = timeZone_ == nullptr ? 0 : timeZone_->getOffset(localMillis);
     return ::jxx::NEW<::jxx::util::Date>(localMillis - offset);
+}
+
+::jxx::Ptr<::jxx::util::Date> SimpleDateFormat::parse(
+    const ::jxx::Ptr<::jxx::lang::String>& source,
+    const ::jxx::Ptr<ParsePosition>& position) const {
+    if (source == nullptr || position == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+    const auto text = source->utf8();
+    const auto start = position->getIndex();
+    if (start < 0 || static_cast<std::size_t>(start) > text.size()) {
+        position->setErrorIndex(start);
+        return nullptr;
+    }
+
+    // The String-only overload requires complete consumption. Try prefixes
+    // longest-first to reproduce ParsePosition's partial-consumption contract.
+    for (std::size_t end = text.size(); end > static_cast<std::size_t>(start); --end) {
+        try {
+            const auto candidate = ::jxx::NEW<::jxx::lang::String>(
+                text.substr(static_cast<std::size_t>(start),
+                            end - static_cast<std::size_t>(start)));
+            const auto result = parse(candidate);
+            position->setIndex(static_cast<::jxx::lang::jint>(end));
+            position->setErrorIndex(-1);
+            return result;
+        } catch (const ParseException&) {
+        }
+    }
+    position->setErrorIndex(start);
+    return nullptr;
 }
 
 void SimpleDateFormat::applyPattern(
