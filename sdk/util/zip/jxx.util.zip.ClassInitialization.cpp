@@ -14,7 +14,9 @@
 #include "util/zip/jxx.util.zip.GZIPOutputStream.h"
 #include "util/zip/jxx.util.zip.Inflater.h"
 #include "util/zip/jxx.util.zip.InflaterInputStream.h"
+#include "util/zip/jxx.util.zip.ZipEntry.h"
 #include "util/zip/jxx.util.zip.ZipException.h"
+#include "util/zip/jxx.util.zip.ZipFile.h"
 #include "util/zip/jxx.util.zip.ZipInputStream.h"
 #include "util/zip/jxx.util.zip.ZipOutputStream.h"
 
@@ -36,7 +38,9 @@ void initializeClasses()
         (void)GZIPOutputStream::JxxClassInfoMarker::Class();
         (void)Inflater::JxxClassInfoMarker::Class();
         (void)InflaterInputStream::JxxClassInfoMarker::Class();
+        (void)ZipEntry::JxxClassInfoMarker::Class();
         (void)ZipException::JxxClassInfoMarker::Class();
+        (void)ZipFile::JxxClassInfoMarker::Class();
         (void)ZipInputStream::JxxClassInfoMarker::Class();
         (void)ZipOutputStream::JxxClassInfoMarker::Class();
     });
