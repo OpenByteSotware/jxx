@@ -22,12 +22,13 @@ namespace jxx::util::concurrent
     }
 	jxx::Ptr<ExecutorService> Executors::newSingleThreadExecutor()
 	{
-		return newFixedThreadPool(1);
+		return unconfigurableExecutorService(newFixedThreadPool(1));
 	}
     jxx::Ptr<ExecutorService> Executors::newSingleThreadExecutor(
         const jxx::Ptr<ThreadFactory>& threadFactory)
     {
-        return newFixedThreadPool(1, threadFactory);
+        return unconfigurableExecutorService(
+            newFixedThreadPool(1, threadFactory));
     }
 	jxx::Ptr<ExecutorService> Executors::newCachedThreadPool()
 	{
@@ -57,12 +58,14 @@ namespace jxx::util::concurrent
     }
 	jxx::Ptr<ScheduledExecutorService> Executors::newSingleThreadScheduledExecutor()
 	{
-		return newScheduledThreadPool(1);
+		return unconfigurableScheduledExecutorService(
+            newScheduledThreadPool(1));
 	}
     jxx::Ptr<ScheduledExecutorService> Executors::newSingleThreadScheduledExecutor(
         const jxx::Ptr<ThreadFactory>& threadFactory)
     {
-        return newScheduledThreadPool(1, threadFactory);
+        return unconfigurableScheduledExecutorService(
+            newScheduledThreadPool(1, threadFactory));
     }
 
     jxx::Ptr<ExecutorService> Executors::unconfigurableExecutorService(
