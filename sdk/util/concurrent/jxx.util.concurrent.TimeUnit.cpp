@@ -2,9 +2,27 @@
 #include <thread>
 
 #include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
 #include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
 
 namespace jxx::util::concurrent {
+
+namespace {
+const char* timeUnitName(::jxx::util::concurrent::TimeUnit::Kind kind) noexcept {
+    using Kind = ::jxx::util::concurrent::TimeUnit::Kind;
+    switch (kind) {
+    case Kind::NANOSECONDS: return "NANOSECONDS";
+    case Kind::MICROSECONDS: return "MICROSECONDS";
+    case Kind::MILLISECONDS: return "MILLISECONDS";
+    case Kind::SECONDS: return "SECONDS";
+    case Kind::MINUTES: return "MINUTES";
+    case Kind::HOURS: return "HOURS";
+    case Kind::DAYS: return "DAYS";
+    }
+    return "";
+}
+} // namespace
+
 
 TimeUnit::TimeUnit(Kind kind) : kind_(kind) {}
 
@@ -39,6 +57,42 @@ UNIT_FACTORY(MINUTES)
 UNIT_FACTORY(HOURS)
 UNIT_FACTORY(DAYS)
 #undef UNIT_FACTORY
+
+::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<TimeUnit>, 1U>>
+TimeUnit::values() {
+    auto result = ::jxx::NEW<::jxx::lang::JxxArray<
+        ::jxx::Ptr<TimeUnit>, 1U>>(7U);
+    (*result)[0] = NANOSECONDS();
+    (*result)[1] = MICROSECONDS();
+    (*result)[2] = MILLISECONDS();
+    (*result)[3] = SECONDS();
+    (*result)[4] = MINUTES();
+    (*result)[5] = HOURS();
+    (*result)[6] = DAYS();
+    return result;
+}
+
+::jxx::Ptr<TimeUnit> TimeUnit::valueOf(
+    const ::jxx::Ptr<::jxx::lang::String>& nameValue) {
+    if (nameValue == nullptr) throw ::jxx::lang::NullPointerException();
+    const auto text = nameValue->utf8();
+    for (const auto& value : *values()) {
+        if (value->name()->utf8() == text) return value;
+    }
+    throw ::jxx::lang::IllegalArgumentException();
+}
+
+::jxx::Ptr<::jxx::lang::String> TimeUnit::name() const {
+    return ::jxx::NEW<::jxx::lang::String>(timeUnitName(kind_));
+}
+
+::jxx::lang::jint TimeUnit::ordinal() const noexcept {
+    return static_cast<::jxx::lang::jint>(kind_);
+}
+
+::jxx::Ptr<::jxx::lang::String> TimeUnit::toString() const {
+    return name();
+}
 
 ::jxx::lang::jlong TimeUnit::toNanos(::jxx::lang::jlong duration) const { return saturatedMultiply(duration, factor(kind_)); }
 ::jxx::lang::jlong TimeUnit::convert(::jxx::lang::jlong duration, const ::jxx::Ptr<TimeUnit>& source) const {

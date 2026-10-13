@@ -6,6 +6,7 @@
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.ClassInitialization.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.ClassInitialization.h"
 #include "ext/xml/bind/jxx.ext.xml.bind.ClassInitialization.h"
+#include "ext/xml/namespace/jxx.ext.xml.namespace.ClassInitialization.h"
 #include "ext/xml/parsers/jxx.ext.xml.parsers.ClassInitialization.h"
 #include "ext/xml/validation/jxx.ext.xml.validation.ClassInitialization.h"
 #include "io/jxx.io.ClassInitialization.h"
@@ -56,6 +57,7 @@ void initialize() {
         ::jxx::com::sun::net::httpserver::initializeClasses();
         ::jxx::ext::net::ssl::initializeClasses();
         ::jxx::ext::xml::bind::initializeClasses();
+        ::jxx::ext::xml::namespace_::initializeClasses();
         ::jxx::ext::xml::validation::initializeClasses();
         ::jxx::ext::xml::parsers::initializeClasses();
     });

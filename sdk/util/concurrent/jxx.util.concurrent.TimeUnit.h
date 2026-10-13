@@ -4,6 +4,8 @@
 
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.buildin_array.h"
 #include "lang/jxx.lang.Thread.h"
 #include "lang/jxx_types.h"
 
@@ -29,6 +31,15 @@ public:
     static ::jxx::Ptr<TimeUnit> MINUTES();
     static ::jxx::Ptr<TimeUnit> HOURS();
     static ::jxx::Ptr<TimeUnit> DAYS();
+
+    static ::jxx::Ptr<::jxx::lang::JxxArray<
+        ::jxx::Ptr<TimeUnit>, 1U>> values();
+    static ::jxx::Ptr<TimeUnit> valueOf(
+        const ::jxx::Ptr<::jxx::lang::String>& name);
+
+    ::jxx::Ptr<::jxx::lang::String> name() const;
+    ::jxx::lang::jint ordinal() const noexcept;
+    ::jxx::Ptr<::jxx::lang::String> toString() const override;
 
     ::jxx::lang::jlong convert(
         ::jxx::lang::jlong sourceDuration,
