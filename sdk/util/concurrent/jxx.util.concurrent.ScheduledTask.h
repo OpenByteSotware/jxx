@@ -20,6 +20,8 @@ public:
     virtual ::jxx::lang::jbool isCancelled() = 0;
     virtual ::jxx::lang::jbool isDone() = 0;
     virtual ::jxx::lang::jbool isPeriodic() const noexcept = 0;
+    virtual ::jxx::lang::jlong scheduledTimeNanos() const noexcept = 0;
+    virtual ::jxx::lang::jlong sequenceNumber() const noexcept = 0;
     virtual void setCancelCallback(std::function<void()> callback) = 0;
 };
 

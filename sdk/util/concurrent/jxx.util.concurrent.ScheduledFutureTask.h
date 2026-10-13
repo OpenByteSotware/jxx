@@ -134,6 +134,15 @@ public:
     ::jxx::lang::jbool isPeriodic() const noexcept override {
         return periodicMode_ != PeriodicMode::OneShot;
     }
+
+    ::jxx::lang::jlong scheduledTimeNanos() const noexcept override {
+        return std::chrono::duration_cast<std::chrono::nanoseconds>(
+            trigger_.time_since_epoch()).count();
+    }
+
+    ::jxx::lang::jlong sequenceNumber() const noexcept override {
+        return sequence_;
+    }
     ::jxx::Ptr<V> get() override {
         const auto current = ::jxx::lang::Thread::currentThread();
         if (::jxx::lang::Thread::interrupted()) {
@@ -205,8 +214,17 @@ public:
     }
     ::jxx::lang::jint compareTo(const ::jxx::Ptr<Delayed>& other) const override {
         if(!other) throw ::jxx::lang::NullPointerException();
-        auto task=::jxx::CAST<ScheduledFutureTask<V>>(other);
-        if(task){if(trigger_<task->trigger_)return -1;if(trigger_>task->trigger_)return 1;return sequence_<task->sequence_?-1:sequence_>task->sequence_;}
+        const auto scheduled = ::jxx::CAST<scheduled_detail::ScheduledTask>(other);
+        if (scheduled != nullptr) {
+            const auto thisTime = scheduledTimeNanos();
+            const auto otherTime = scheduled->scheduledTimeNanos();
+            if (thisTime < otherTime) return -1;
+            if (thisTime > otherTime) return 1;
+            const auto otherSequence = scheduled->sequenceNumber();
+            if (sequence_ < otherSequence) return -1;
+            if (sequence_ > otherSequence) return 1;
+            return 0;
+        }
         const auto thisDelay = getDelay(TimeUnit::NANOSECONDS());
         const auto otherDelay = other->getDelay(TimeUnit::NANOSECONDS());
         if (thisDelay < otherDelay) return -1;

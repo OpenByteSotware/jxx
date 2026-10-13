@@ -82,7 +82,16 @@ private:
         ScheduledThreadPoolExecutor* owner_;
         ::jxx::Ptr<Task> task_;
     };
-    struct Later { bool operator()(const ::jxx::Ptr<Task>& a,const ::jxx::Ptr<Task>& b) const { return a->getDelay(TimeUnit::NANOSECONDS()) > b->getDelay(TimeUnit::NANOSECONDS()); } };
+    struct Later {
+        bool operator()(
+            const ::jxx::Ptr<Task>& left,
+            const ::jxx::Ptr<Task>& right) const noexcept {
+            const auto leftTime = left->scheduledTimeNanos();
+            const auto rightTime = right->scheduledTimeNanos();
+            if (leftTime != rightTime) return leftTime > rightTime;
+            return left->sequenceNumber() > right->sequenceNumber();
+        }
+    };
     ::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> schedule_(
         const ::jxx::Ptr<::jxx::lang::Runnable>& command,
         ::jxx::lang::jlong delayNanos,
