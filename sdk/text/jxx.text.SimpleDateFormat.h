@@ -2,6 +2,8 @@
 
 #include "text/jxx.text.DateFormat.h"
 
+#include <string>
+
 namespace jxx::lang { class String; }
 namespace jxx::util { class Date; class Locale; class TimeZone; }
 
@@ -24,6 +26,9 @@ public:
         const ::jxx::Ptr<::jxx::util::Date>& date) const;
     ::jxx::Ptr<::jxx::lang::String> format(
         ::jxx::lang::jlong epochMillis) const;
+
+    ::jxx::Ptr<::jxx::util::Date> parse(
+        const ::jxx::Ptr<::jxx::lang::String>& source) const;
 
     void applyPattern(const ::jxx::Ptr<::jxx::lang::String>& pattern);
     void applyLocalizedPattern(

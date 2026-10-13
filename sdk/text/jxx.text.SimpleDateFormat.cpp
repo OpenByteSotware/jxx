@@ -9,6 +9,7 @@
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
+#include "text/jxx.text.ParseException.h"
 #include "util/jxx.util.Date.h"
 #include "util/jxx.util.Locale.h"
 #include "util/jxx.util.TimeZone.h"
@@ -176,6 +177,90 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
         index = end;
     }
     return ::jxx::NEW<::jxx::lang::String>(output);
+}
+
+
+::jxx::Ptr<::jxx::util::Date> SimpleDateFormat::parse(
+    const ::jxx::Ptr<::jxx::lang::String>& source) const {
+    if (source == nullptr) throw ::jxx::lang::NullPointerException();
+
+    const auto pattern = pattern_->utf8();
+    const auto value = source->utf8();
+    std::tm fields{};
+    fields.tm_mday = 1;
+
+    std::string nativePattern;
+    bool quoted = false;
+    for (std::size_t index = 0; index < pattern.size();) {
+        const char symbol = pattern[index];
+        if (symbol == ''') {
+            if (index + 1 < pattern.size() && pattern[index + 1] == ''') {
+                nativePattern.push_back('''); index += 2; continue;
+            }
+            quoted = !quoted; ++index; continue;
+        }
+        if (quoted || !((symbol >= 'A' && symbol <= 'Z') ||
+                        (symbol >= 'a' && symbol <= 'z'))) {
+            nativePattern.push_back(symbol); ++index; continue;
+        }
+        std::size_t end = index + 1;
+        while (end < pattern.size() && pattern[end] == symbol) ++end;
+        const int count = static_cast<int>(end - index);
+        switch (symbol) {
+        case 'y': case 'Y': nativePattern += count == 2 ? "%y" : "%Y"; break;
+        case 'M': case 'L': nativePattern += count >= 3 ? "%b" : "%m"; break;
+        case 'd': nativePattern += "%d"; break;
+        case 'D': nativePattern += "%j"; break;
+        case 'E': nativePattern += "%a"; break;
+        case 'H': case 'k': nativePattern += "%H"; break;
+        case 'K': case 'h': nativePattern += "%I"; break;
+        case 'm': nativePattern += "%M"; break;
+        case 's': nativePattern += "%S"; break;
+        case 'a': nativePattern += "%p"; break;
+        default:
+            throw ParseException(
+                ::jxx::NEW<::jxx::lang::String>("Unsupported parse pattern"),
+                static_cast<::jxx::lang::jint>(index));
+        }
+        index = end;
+    }
+
+    std::istringstream stream(value);
+    stream >> std::get_time(&fields, nativePattern.c_str());
+    if (stream.fail()) {
+        throw ParseException(
+            ::jxx::NEW<::jxx::lang::String>("Unparseable date"), 0);
+    }
+    stream >> std::ws;
+    if (!stream.eof()) {
+        throw ParseException(
+            ::jxx::NEW<::jxx::lang::String>("Unparseable date"),
+            static_cast<::jxx::lang::jint>(stream.tellg()));
+    }
+
+    if (!lenient_) {
+        if (fields.tm_mon < 0 || fields.tm_mon > 11 ||
+            fields.tm_mday < 1 || fields.tm_mday > 31 ||
+            fields.tm_hour < 0 || fields.tm_hour > 23 ||
+            fields.tm_min < 0 || fields.tm_min > 59 ||
+            fields.tm_sec < 0 || fields.tm_sec > 59) {
+            throw ParseException(
+                ::jxx::NEW<::jxx::lang::String>("Unparseable date"), 0);
+        }
+    }
+
+#if defined(_WIN32)
+    const auto seconds = _mkgmtime(&fields);
+#else
+    const auto seconds = timegm(&fields);
+#endif
+    if (seconds == static_cast<std::time_t>(-1)) {
+        throw ParseException(
+            ::jxx::NEW<::jxx::lang::String>("Unparseable date"), 0);
+    }
+    const auto localMillis = static_cast<::jxx::lang::jlong>(seconds) * 1000LL;
+    const auto offset = timeZone_ == nullptr ? 0 : timeZone_->getOffset(localMillis);
+    return ::jxx::NEW<::jxx::util::Date>(localMillis - offset);
 }
 
 void SimpleDateFormat::applyPattern(

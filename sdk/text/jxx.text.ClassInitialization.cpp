@@ -7,6 +7,7 @@
 #include "text/jxx.text.Format.h"
 #include "text/jxx.text.MessageFormat.h"
 #include "text/jxx.text.NumberFormat.h"
+#include "text/jxx.text.ParseException.h"
 #include "text/jxx.text.SimpleDateFormat.h"
 
 namespace jxx::text {
@@ -20,6 +21,7 @@ void initializeClasses()
         (void)Format::JxxClassInfoMarker::Class();
         (void)MessageFormat::JxxClassInfoMarker::Class();
         (void)NumberFormat::JxxClassInfoMarker::Class();
+        (void)ParseException::JxxClassInfoMarker::Class();
         (void)SimpleDateFormat::JxxClassInfoMarker::Class();
     });
 }
