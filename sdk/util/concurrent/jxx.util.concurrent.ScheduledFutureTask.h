@@ -122,10 +122,69 @@ public:
     ::jxx::lang::jbool isPeriodic() const noexcept override {
         return periodicMode_ != PeriodicMode::OneShot;
     }
-    ::jxx::Ptr<V> get() override { std::unique_lock<std::mutex> l(mutex_); condition_.wait(l,[&]{return done_;}); return report_(); }
-    ::jxx::Ptr<V> get(::jxx::lang::jlong timeout,const ::jxx::Ptr<TimeUnit>& unit) override {
-        if(!unit) throw ::jxx::lang::NullPointerException(); std::unique_lock<std::mutex> l(mutex_);
-        if(!condition_.wait_for(l,unit->toChrono(timeout),[&]{return done_;})) throw TimeoutException(); return report_();
+    ::jxx::Ptr<V> get() override {
+        const auto current = ::jxx::lang::Thread::currentThread();
+        if (::jxx::lang::Thread::interrupted()) {
+            throw ::jxx::lang::InterruptedException();
+        }
+
+        std::unique_lock<std::mutex> lock(mutex_);
+        if (!done_) {
+            current->setParkWakeup_([this] { condition_.notify_all(); });
+            try {
+                condition_.wait(lock, [this, &current] {
+                    return done_ || current->isInterrupted();
+                });
+                current->clearParkWakeup_();
+            } catch (...) {
+                current->clearParkWakeup_();
+                throw;
+            }
+        }
+        if (::jxx::lang::Thread::interrupted()) {
+            throw ::jxx::lang::InterruptedException();
+        }
+        return report_();
+    }
+
+    ::jxx::Ptr<V> get(
+        ::jxx::lang::jlong timeout,
+        const ::jxx::Ptr<TimeUnit>& unit) override {
+        if (unit == nullptr) throw ::jxx::lang::NullPointerException();
+        const auto current = ::jxx::lang::Thread::currentThread();
+        if (::jxx::lang::Thread::interrupted()) {
+            throw ::jxx::lang::InterruptedException();
+        }
+
+        std::unique_lock<std::mutex> lock(mutex_);
+        if (done_) return report_();
+        if (timeout <= 0) throw TimeoutException();
+
+        const auto duration = unit->toChrono(timeout);
+        const auto now = std::chrono::steady_clock::now();
+        const auto remaining = std::chrono::steady_clock::time_point::max() - now;
+        const auto deadline = duration >= remaining
+            ? std::chrono::steady_clock::time_point::max()
+            : now + duration;
+
+        current->setParkWakeup_([this] { condition_.notify_all(); });
+        try {
+            const auto completed = condition_.wait_until(
+                lock,
+                deadline,
+                [this, &current] {
+                    return done_ || current->isInterrupted();
+                });
+            current->clearParkWakeup_();
+            if (::jxx::lang::Thread::interrupted()) {
+                throw ::jxx::lang::InterruptedException();
+            }
+            if (!completed || !done_) throw TimeoutException();
+        } catch (...) {
+            current->clearParkWakeup_();
+            throw;
+        }
+        return report_();
     }
     ::jxx::lang::jlong getDelay(const ::jxx::Ptr<TimeUnit>& unit) const override {
         if(!unit) throw ::jxx::lang::NullPointerException();
