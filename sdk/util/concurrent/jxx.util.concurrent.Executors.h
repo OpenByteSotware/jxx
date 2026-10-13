@@ -10,6 +10,8 @@
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Thread.h"
 #include "lang/jxx_types.h"
+#include "security/jxx.security.PrivilegedAction.h"
+#include "security/jxx.security.PrivilegedExceptionAction.h"
 #include "util/concurrent/jxx.util.concurrent.Callable.h"
 #include "util/concurrent/jxx.util.concurrent.ExecutorService.h"
 #include "util/concurrent/jxx.util.concurrent.ForkJoinPool.h"
@@ -39,6 +41,42 @@ public:
 private:
     ::jxx::Ptr<::jxx::lang::Runnable> task_;
     ::jxx::Ptr<T> result_;
+};
+
+template<typename T, typename Action>
+class PrivilegedActionAdapter final
+    : public ::jxx::lang::ClassBase<
+          PrivilegedActionAdapter<T, Action>, ::jxx::lang::Object, Callable<T>> {
+public:
+    explicit PrivilegedActionAdapter(const ::jxx::Ptr<Action>& action)
+        : action_(action) {
+        if (action_ == nullptr) throw ::jxx::lang::NullPointerException();
+    }
+
+    ::jxx::Ptr<T> call() override {
+        return action_->run();
+    }
+
+private:
+    ::jxx::Ptr<Action> action_;
+};
+
+template<typename T>
+class PrivilegedCallableAdapter final
+    : public ::jxx::lang::ClassBase<
+          PrivilegedCallableAdapter<T>, ::jxx::lang::Object, Callable<T>> {
+public:
+    explicit PrivilegedCallableAdapter(const ::jxx::Ptr<Callable<T>>& task)
+        : task_(task) {
+        if (task_ == nullptr) throw ::jxx::lang::NullPointerException();
+    }
+
+    ::jxx::Ptr<T> call() override {
+        return task_->call();
+    }
+
+private:
+    ::jxx::Ptr<Callable<T>> task_;
 };
 
 class DefaultThreadFactory final
@@ -126,6 +164,40 @@ public:
         const ::jxx::Ptr<T>& result) {
         return ::jxx::CAST<Callable<T>>(
             ::jxx::NEW<executors_detail::RunnableAdapter<T>>(task, result));
+    }
+
+    template<typename T>
+    static ::jxx::Ptr<Callable<T>> callable(
+        const ::jxx::Ptr<::jxx::security::PrivilegedAction<T>>& action) {
+        using Action = ::jxx::security::PrivilegedAction<T>;
+        return ::jxx::CAST<Callable<T>>(
+            ::jxx::NEW<executors_detail::PrivilegedActionAdapter<T, Action>>(action));
+    }
+
+    template<typename T>
+    static ::jxx::Ptr<Callable<T>> callable(
+        const ::jxx::Ptr<::jxx::security::PrivilegedExceptionAction<T>>& action) {
+        using Action = ::jxx::security::PrivilegedExceptionAction<T>;
+        return ::jxx::CAST<Callable<T>>(
+            ::jxx::NEW<executors_detail::PrivilegedActionAdapter<T, Action>>(action));
+    }
+
+    template<typename T>
+    static ::jxx::Ptr<Callable<T>> privilegedCallable(
+        const ::jxx::Ptr<Callable<T>>& callableTask) {
+        return ::jxx::CAST<Callable<T>>(
+            ::jxx::NEW<executors_detail::PrivilegedCallableAdapter<T>>(callableTask));
+    }
+
+    template<typename T>
+    static ::jxx::Ptr<Callable<T>> privilegedCallableUsingCurrentClassLoader(
+        const ::jxx::Ptr<Callable<T>>& callableTask) {
+        return ::jxx::CAST<Callable<T>>(
+            ::jxx::NEW<executors_detail::PrivilegedCallableAdapter<T>>(callableTask));
+    }
+
+    static ::jxx::Ptr<ThreadFactory> privilegedThreadFactory() {
+        return defaultThreadFactory();
     }
 
 protected:
