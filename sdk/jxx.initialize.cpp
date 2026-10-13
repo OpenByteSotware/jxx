@@ -14,6 +14,7 @@
 #include "ext/xml/bind/jxx.ext.xml.bind.ClassInitialization.h"
 #include "ext/xml/namespace/jxx.ext.xml.namespace.ClassInitialization.h"
 #include "ext/xml/parsers/jxx.ext.xml.parsers.ClassInitialization.h"
+#include "ext/xml/parsers/internal/jxx.ext.xml.parsers.internal.ClassInitialization.h"
 #include "ext/xml/transform/jxx.ext.xml.transform.ClassInitialization.h"
 #include "ext/xml/transform/dom/jxx.ext.xml.transform.dom.ClassInitialization.h"
 #include "ext/xml/transform/internal/jxx.ext.xml.transform.internal.ClassInitialization.h"
@@ -108,6 +109,7 @@ void initialize() {
         ::jxx::ext::xml::xpath::internal::initializeClasses();
         ::jxx::ext::xml::validation::initializeClasses();
         ::jxx::ext::xml::parsers::initializeClasses();
+        ::jxx::ext::xml::parsers::internal::initializeClasses();
     });
 }
 

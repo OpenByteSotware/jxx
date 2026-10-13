@@ -3,6 +3,7 @@
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
+#include <functional>
 #include <mutex>
 
 #include "lang/jxx.lang.ClassInfo.h"
@@ -111,7 +112,18 @@ public:
             condition_.notify_all();
         }
         if (runner != nullptr) runner->interrupt();
+        std::function<void()> callback;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            callback = cancelCallback_;
+        }
+        if (callback) callback();
         return true;
+    }
+
+    void setCancelCallback(std::function<void()> callback) override {
+        std::lock_guard<std::mutex> lock(mutex_);
+        cancelCallback_ = std::move(callback);
     }
     ::jxx::lang::jbool isCancelled() override { std::lock_guard<std::mutex> l(mutex_); return cancelled_; }
     ::jxx::lang::jbool isDone() override { std::lock_guard<std::mutex> l(mutex_); return done_; }
@@ -249,6 +261,7 @@ private:
     ::jxx::lang::jbool running_=false,done_=false,cancelled_=false;
     std::weak_ptr<::jxx::lang::Thread> runner_;
     ::jxx::Ptr<::jxx::lang::Throwable> failure_;
+    std::function<void()> cancelCallback_;
 };
 
 } // namespace jxx::util::concurrent

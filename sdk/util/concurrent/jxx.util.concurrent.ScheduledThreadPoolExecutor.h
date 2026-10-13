@@ -55,6 +55,8 @@ public:
         ::jxx::lang::jbool value);
     ::jxx::lang::jbool
     getExecuteExistingDelayedTasksAfterShutdownPolicy() const;
+    void setRemoveOnCancelPolicy(::jxx::lang::jbool value);
+    ::jxx::lang::jbool getRemoveOnCancelPolicy() const;
 
 private:
     using Task = scheduled_detail::ScheduledTask;
@@ -88,6 +90,7 @@ private:
         typename ConcreteTask::PeriodicMode periodicMode);
     void dispatch_();
     void afterExecute_(const ::jxx::Ptr<Task>& task);
+    void removeCancelledTask_(const ::jxx::Ptr<Task>& task);
     mutable std::mutex scheduleMutex_; std::condition_variable scheduleChanged_;
     std::priority_queue<::jxx::Ptr<Task>,std::vector<::jxx::Ptr<Task>>,Later> scheduled_;
     std::thread dispatcher_;
@@ -95,6 +98,7 @@ private:
     std::atomic<::jxx::lang::jbool> shutdownRequested_{false};
     ::jxx::lang::jbool continuePeriodicAfterShutdown_=false;
     ::jxx::lang::jbool executeDelayedAfterShutdown_=true;
+    ::jxx::lang::jbool removeOnCancel_=false;
 };
 
 } // namespace jxx::util::concurrent

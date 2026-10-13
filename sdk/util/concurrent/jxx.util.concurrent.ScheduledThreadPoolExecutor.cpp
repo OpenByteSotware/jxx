@@ -83,6 +83,9 @@ namespace jxx::util::concurrent
 		const auto concreteTask = ::jxx::NEW<ScheduledFutureTask<::jxx::lang::Object>>(
             command, nullptr, delayNanos, periodNanos, periodicMode);
 		const auto task = ::jxx::CAST<Task>(concreteTask);
+        task->setCancelCallback([this, weakTask = std::weak_ptr<Task>(task)] {
+            if (const auto locked = weakTask.lock()) removeCancelledTask_(locked);
+        });
 		{
 			std::lock_guard<std::mutex> lock(scheduleMutex_);
 			if (shutdownRequested_.load(std::memory_order_acquire) || stopping_) throw RejectedExecutionException();
@@ -95,6 +98,9 @@ namespace jxx::util::concurrent
         const ::jxx::Ptr<scheduled_detail::ScheduledTask>& task)
     {
         if (task == nullptr) throw ::jxx::lang::NullPointerException();
+        task->setCancelCallback([this, weakTask = std::weak_ptr<Task>(task)] {
+            if (const auto locked = weakTask.lock()) removeCancelledTask_(locked);
+        });
         {
             std::lock_guard<std::mutex> lock(scheduleMutex_);
             if (shutdownRequested_.load(std::memory_order_acquire) || stopping_) {
@@ -283,4 +289,31 @@ namespace jxx::util::concurrent
 	{
 		std::lock_guard<std::mutex> lock(scheduleMutex_); return executeDelayedAfterShutdown_;
 	}
+
+    void ScheduledThreadPoolExecutor::setRemoveOnCancelPolicy(
+        ::jxx::lang::jbool value) {
+        std::lock_guard<std::mutex> lock(scheduleMutex_);
+        removeOnCancel_ = value;
+    }
+
+    ::jxx::lang::jbool
+    ScheduledThreadPoolExecutor::getRemoveOnCancelPolicy() const {
+        std::lock_guard<std::mutex> lock(scheduleMutex_);
+        return removeOnCancel_;
+    }
+
+    void ScheduledThreadPoolExecutor::removeCancelledTask_(
+        const ::jxx::Ptr<Task>& task) {
+        std::lock_guard<std::mutex> lock(scheduleMutex_);
+        if (!removeOnCancel_ || task == nullptr) return;
+        std::vector<::jxx::Ptr<Task>> retained;
+        while (!scheduled_.empty()) {
+            const auto candidate = scheduled_.top();
+            scheduled_.pop();
+            if (candidate != task) retained.push_back(candidate);
+        }
+        for (const auto& candidate : retained) scheduled_.push(candidate);
+        scheduleChanged_.notify_all();
+    }
+
 } // namespace jxx::util::concurrent
