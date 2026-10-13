@@ -22,6 +22,7 @@
 #include "security/jxx.security.PublicKey.h"
 #include "security/jxx.security.SecureString.h"
 #include "security/jxx.security.UnrecoverableKeyException.h"
+#include "security/jxx.security.SecureRandom.h"
 
 namespace jxx::security {
 namespace {
@@ -57,6 +58,7 @@ void initializeClasses()
             registerType<PublicKey>();
             registerType<SecureString>();
             registerType<UnrecoverableKeyException>();
+        registerType<SecureRandom>();
     });
 }
 

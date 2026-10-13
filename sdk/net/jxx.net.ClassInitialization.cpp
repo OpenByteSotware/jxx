@@ -25,6 +25,30 @@
 #include "net/jxx.net.URLConnection.h"
 #include "net/jxx.net.URLPermission.h"
 #include "net/jxx.net.URLStreamHandler.h"
+#include "net/jxx.net.ContentHandler.h"
+#include "net/jxx.net.ContentHandlerFactory.h"
+#include "net/jxx.net.DatagramPacket.h"
+#include "net/jxx.net.DatagramSocket.h"
+#include "net/jxx.net.FileNameMap.h"
+#include "net/jxx.net.HttpRetryException.h"
+#include "net/jxx.net.IDN.h"
+#include "net/jxx.net.MalformedURLException.h"
+#include "net/jxx.net.MulticastSocket.h"
+#include "net/jxx.net.NoRouteToHostException.h"
+#include "net/jxx.net.PortUnreachableException.h"
+#include "net/jxx.net.ProtocolException.h"
+#include "net/jxx.net.Proxy.h"
+#include "net/jxx.net.SocketException.h"
+#include "net/jxx.net.SocketImplFactory.h"
+#include "net/jxx.net.SocketOptions.h"
+#include "net/jxx.net.SocketTimeoutException.h"
+#include "net/jxx.net.StandardSocketOptions.h"
+#include "net/jxx.net.UnknownHostException.h"
+#include "net/jxx.net.UnknownServiceException.h"
+#include "net/jxx.net.URISyntaxException.h"
+#include "net/jxx.net.URLDecoder.h"
+#include "net/jxx.net.URLEncoder.h"
+#include "net/jxx.net.URLStreamHandlerFactory.h"
 
 namespace jxx::net {
 
@@ -67,6 +91,30 @@ void initializeClasses()
             registerType<URLConnection>();
             registerType<URLPermission>();
             registerType<URLStreamHandler>();
+        registerType<ContentHandler>();
+        registerType<ContentHandlerFactory>();
+        registerType<DatagramPacket>();
+        registerType<DatagramSocket>();
+        registerType<FileNameMap>();
+        registerType<HttpRetryException>();
+        registerType<IDN>();
+        registerType<MalformedURLException>();
+        registerType<MulticastSocket>();
+        registerType<NoRouteToHostException>();
+        registerType<PortUnreachableException>();
+        registerType<ProtocolException>();
+        registerType<Proxy>();
+        registerType<SocketException>();
+        registerType<SocketImplFactory>();
+        registerType<SocketOptions>();
+        registerType<SocketTimeoutException>();
+        registerType<StandardSocketOptions>();
+        registerType<UnknownHostException>();
+        registerType<UnknownServiceException>();
+        registerType<URISyntaxException>();
+        registerType<URLDecoder>();
+        registerType<URLEncoder>();
+        registerType<URLStreamHandlerFactory>();
         });
 }
 

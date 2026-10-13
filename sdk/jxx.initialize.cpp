@@ -67,6 +67,10 @@
 #include "util/logging/jxx.util.logging.ClassInitialization.h"
 #include "util/regex/jxx.util.regex.ClassInitialization.h"
 #include "util/zip/jxx.util.zip.ClassInitialization.h"
+#include "ext/net/internal.ClassInitialization.h"
+#include "ext/xml/bind/annotation/jxx.ext.xml.bind.annotation.ClassInitialization.h"
+#include "org/w3c/dom/events/jxx.org.w3c.dom.events.ClassInitialization.h"
+#include "org/w3c/dom/views/jxx.org.w3c.dom.views.ClassInitialization.h"
 
 namespace jxx {
 
@@ -138,6 +142,10 @@ void initialize() {
         ::jxx::ext::xml::validation::initializeClasses();
         ::jxx::ext::xml::parsers::initializeClasses();
         ::jxx::ext::xml::parsers::internal::initializeClasses();
+        ::jxx::ext::net::internal::initializeClasses();
+        ::jxx::ext::xml::bind::annotation::initializeClasses();
+        ::jxx::org::w3c::dom::events::initializeClasses();
+        ::jxx::org::w3c::dom::views::initializeClasses();
     });
 }
 

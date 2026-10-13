@@ -19,6 +19,21 @@
 #include "util/concurrent/jxx.util.concurrent.Semaphore.h"
 #include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
 #include "util/concurrent/jxx.util.concurrent.wildcard.FutureAny.h"
+#include "util/concurrent/jxx.util.concurrent.AbstractExecutorService.h"
+#include "util/concurrent/jxx.util.concurrent.BrokenBarrierException.h"
+#include "util/concurrent/jxx.util.concurrent.CancellableTask.h"
+#include "util/concurrent/jxx.util.concurrent.CancellationException.h"
+#include "util/concurrent/jxx.util.concurrent.CompletionException.h"
+#include "util/concurrent/jxx.util.concurrent.ExecutionException.h"
+#include "util/concurrent/jxx.util.concurrent.ForkJoinWorkerThread.h"
+#include "util/concurrent/jxx.util.concurrent.RecursiveAction.h"
+#include "util/concurrent/jxx.util.concurrent.RejectedExecutionException.h"
+#include "util/concurrent/jxx.util.concurrent.ScheduledFutureAnyAdapter.h"
+#include "util/concurrent/jxx.util.concurrent.ScheduledTask.h"
+#include "util/concurrent/jxx.util.concurrent.ThreadFactory.h"
+#include "util/concurrent/jxx.util.concurrent.ThreadLocalRandom.h"
+#include "util/concurrent/jxx.util.concurrent.ThreadPoolExecutor.h"
+#include "util/concurrent/jxx.util.concurrent.TimeoutException.h"
 
 namespace jxx::util::concurrent {
 namespace {
@@ -51,6 +66,21 @@ void initializeClasses()
         registerType<Semaphore>();
         registerType<TimeUnit>();
         registerType<wildcard::FutureAny>();
+        registerType<AbstractExecutorService>();
+        registerType<BrokenBarrierException>();
+        registerType<CancellableTask>();
+        registerType<CancellationException>();
+        registerType<CompletionException>();
+        registerType<ExecutionException>();
+        registerType<ForkJoinWorkerThread>();
+        registerType<RecursiveAction>();
+        registerType<RejectedExecutionException>();
+        registerType<ScheduledFutureAnyAdapter>();
+        registerType<ScheduledTask>();
+        registerType<ThreadFactory>();
+        registerType<ThreadLocalRandom>();
+        registerType<ThreadPoolExecutor>();
+        registerType<TimeoutException>();
     });
 }
 

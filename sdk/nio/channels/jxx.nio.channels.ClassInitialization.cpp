@@ -25,6 +25,13 @@
 #include "nio/channels/jxx.nio.channels.SocketChannel.h"
 #include "nio/channels/jxx.nio.channels.UnresolvedAddressException.h"
 #include "nio/channels/jxx.nio.channels.UnsupportedAddressTypeException.h"
+#include "nio/channels/jxx.nio.channels.CancelledKeyException.h"
+#include "nio/channels/jxx.nio.channels.Channel.h"
+#include "nio/channels/jxx.nio.channels.ClosedSelectorException.h"
+#include "nio/channels/jxx.nio.channels.FileChannel.h"
+#include "nio/channels/jxx.nio.channels.ReadableByteChannel.h"
+#include "nio/channels/jxx.nio.channels.SeekableByteChannel.h"
+#include "nio/channels/jxx.nio.channels.WritableByteChannel.h"
 
 namespace jxx::nio::channels {
 namespace {
@@ -63,6 +70,13 @@ void initializeClasses()
         registerType<SocketChannel>();
         registerType<UnresolvedAddressException>();
         registerType<UnsupportedAddressTypeException>();
+        registerType<CancelledKeyException>();
+        registerType<Channel>();
+        registerType<ClosedSelectorException>();
+        registerType<FileChannel>();
+        registerType<ReadableByteChannel>();
+        registerType<SeekableByteChannel>();
+        registerType<WritableByteChannel>();
     });
 }
 

@@ -25,6 +25,9 @@
 #include "com/google/gson/jxx.com.google.gson.ToNumberStrategy.h"
 #include "com/google/gson/jxx.com.google.gson.TypeAdapter.h"
 #include "com/google/gson/jxx.com.google.gson.TypeAdapterFactory.h"
+#include "com/google/gson/jxx.com.google.gson.FieldNamingPolicy.h"
+#include "com/google/gson/jxx.com.google.gson.LongSerializationPolicy.h"
+#include "com/google/gson/jxx.com.google.gson.ToNumberPolicy.h"
 
 namespace com::google::gson {
 
@@ -57,6 +60,9 @@ void initializeClasses()
         (void)ToNumberStrategy::Class();
         (void)TypeAdapter::Class();
         (void)TypeAdapterFactory::Class();
+        (void)FieldNamingPolicy::JxxClassInfoMarker::Class();
+        (void)LongSerializationPolicy::JxxClassInfoMarker::Class();
+        (void)ToNumberPolicy::JxxClassInfoMarker::Class();
     });
 }
 

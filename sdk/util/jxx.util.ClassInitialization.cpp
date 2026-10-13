@@ -28,6 +28,47 @@
 #include "util/concurrent/jxx.util.concurrent.ExecutionException.h"
 #include "util/concurrent/jxx.util.concurrent.RejectedExecutionException.h"
 #include "util/concurrent/jxx.util.concurrent.TimeoutException.h"
+#include "util/jxx.util.Arrays.h"
+#include "util/jxx.util.Base64.h"
+#include "util/jxx.util.BitSet.h"
+#include "util/jxx.util.Calendar.h"
+#include "util/jxx.util.Collections.h"
+#include "util/jxx.util.Currency.h"
+#include "util/jxx.util.Date.h"
+#include "util/jxx.util.DoubleSummaryStatistics.h"
+#include "util/jxx.util.EventListener.h"
+#include "util/jxx.util.EventObject.h"
+#include "util/jxx.util.Formattable.h"
+#include "util/jxx.util.Formatter.h"
+#include "util/jxx.util.GregorianCalendar.h"
+#include "util/jxx.util.IntStream.h"
+#include "util/jxx.util.IntSummaryStatistics.h"
+#include "util/jxx.util.ListResourceBundle.h"
+#include "util/jxx.util.Locale.h"
+#include "util/jxx.util.LocaleBuilder.h"
+#include "util/jxx.util.LongSummaryStatistics.h"
+#include "util/jxx.util.Objects.h"
+#include "util/jxx.util.Observable.h"
+#include "util/jxx.util.Observer.h"
+#include "util/jxx.util.OptionalDouble.h"
+#include "util/jxx.util.OptionalInt.h"
+#include "util/jxx.util.OptionalLong.h"
+#include "util/jxx.util.PluralRules.h"
+#include "util/jxx.util.PropertyResourceBundle.h"
+#include "util/jxx.util.Random.h"
+#include "util/jxx.util.RandomAccess.h"
+#include "util/jxx.util.ResourceBundle.h"
+#include "util/jxx.util.Scanner.h"
+#include "util/jxx.util.SimpleTimeZone.h"
+#include "util/jxx.util.Spliterators.h"
+#include "util/jxx.util.SplittableRandom.h"
+#include "util/jxx.util.StringJoiner.h"
+#include "util/jxx.util.Timer.h"
+#include "util/jxx.util.TimerTask.h"
+#include "util/jxx.util.TimeZone.h"
+#include "util/jxx.util.UUID.h"
+#include "util/jxx.util.wildcard.CollectionAny.h"
+#include "util/jxx.util.ZonedDateTime.h"
 namespace jxx::util {
 
 namespace {
@@ -72,6 +113,47 @@ void initializeClasses()
             registerType<concurrent::ExecutionException>();
             registerType<concurrent::RejectedExecutionException>();
             registerType<concurrent::TimeoutException>();
+        registerType<Arrays>();
+        registerType<Base64>();
+        registerType<BitSet>();
+        registerType<Calendar>();
+        registerType<Collections>();
+        registerType<Currency>();
+        registerType<Date>();
+        registerType<DoubleSummaryStatistics>();
+        registerType<EventListener>();
+        registerType<EventObject>();
+        registerType<Formattable>();
+        registerType<Formatter>();
+        registerType<GregorianCalendar>();
+        registerType<IntStream>();
+        registerType<IntSummaryStatistics>();
+        registerType<ListResourceBundle>();
+        registerType<Locale>();
+        registerType<LocaleBuilder>();
+        registerType<LongSummaryStatistics>();
+        registerType<Objects>();
+        registerType<Observable>();
+        registerType<Observer>();
+        registerType<OptionalDouble>();
+        registerType<OptionalInt>();
+        registerType<OptionalLong>();
+        registerType<PluralRules>();
+        registerType<PropertyResourceBundle>();
+        registerType<Random>();
+        registerType<RandomAccess>();
+        registerType<ResourceBundle>();
+        registerType<Scanner>();
+        registerType<SimpleTimeZone>();
+        registerType<Spliterators>();
+        registerType<SplittableRandom>();
+        registerType<StringJoiner>();
+        registerType<Timer>();
+        registerType<TimerTask>();
+        registerType<TimeZone>();
+        registerType<UUID>();
+        registerType<CollectionAny>();
+        registerType<ZonedDateTime>();
         });
 }
 

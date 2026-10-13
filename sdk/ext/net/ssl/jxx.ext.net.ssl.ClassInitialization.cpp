@@ -38,6 +38,12 @@
 #include "ext/net/ssl/jxx.ext.net.ssl.X509ExtendedTrustManager.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.X509KeyManager.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.X509TrustManager.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.KeyManager.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SNIHostName.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SNIServerName.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SSLSessionBindingEvent.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.SSLSessionBindingListener.h"
+#include "ext/net/ssl/jxx.ext.net.ssl.TrustManager.h"
 
 namespace jxx::ext::net::ssl {
 namespace {
@@ -89,6 +95,12 @@ void initializeClasses()
         registerType<X509ExtendedTrustManager>();
         registerType<X509KeyManager>();
         registerType<X509TrustManager>();
+        registerType<KeyManager>();
+        registerType<SNIHostName>();
+        registerType<SNIServerName>();
+        registerType<SSLSessionBindingEvent>();
+        registerType<SSLSessionBindingListener>();
+        registerType<TrustManager>();
     });
 }
 

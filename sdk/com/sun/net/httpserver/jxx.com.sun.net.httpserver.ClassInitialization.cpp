@@ -14,6 +14,8 @@
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.HttpsExchange.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.HttpsParameters.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.HttpsServer.h"
+#include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.Filter.h"
+#include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.HttpContext.h"
 
 namespace jxx::com::sun::net::httpserver {
 namespace {
@@ -41,6 +43,8 @@ void initializeClasses()
         registerType<HttpsExchange>();
         registerType<HttpsParameters>();
         registerType<HttpsServer>();
+        registerType<Filter>();
+        registerType<HttpContext>();
     });
 }
 

@@ -4,6 +4,10 @@
 
 #include "ext/xml/bind/jxx.ext.xml.bind.JAXBException.h"
 #include "ext/xml/bind/jxx.ext.xml.bind.UnmarshalException.h"
+#include "ext/xml/bind/jxx.ext.xml.bind.JAXBContext.h"
+#include "ext/xml/bind/jxx.ext.xml.bind.JAXBElementI.h"
+#include "ext/xml/bind/jxx.ext.xml.bind.Marshaller.h"
+#include "ext/xml/bind/jxx.ext.xml.bind.Unmarshaller.h"
 
 namespace jxx::ext::xml::bind {
 
@@ -13,6 +17,10 @@ void initializeClasses()
     std::call_once(flag, [] {
         (void)JAXBException::JxxClassInfoMarker::Class();
         (void)UnmarshalException::JxxClassInfoMarker::Class();
+        (void)JAXBContext::JxxClassInfoMarker::Class();
+        (void)JAXBElementI::JxxClassInfoMarker::Class();
+        (void)Marshaller::JxxClassInfoMarker::Class();
+        (void)Unmarshaller::JxxClassInfoMarker::Class();
     });
 }
 

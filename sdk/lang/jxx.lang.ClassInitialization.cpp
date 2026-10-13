@@ -76,6 +76,21 @@
 #include "lang/jxx.lang.StringBuffer.h"
 #include "lang/jxx.lang.StringBuilder.h"
 #include "lang/jxx.lang.ThreadGroup.h"
+#include "lang/jxx.lang.Appendable.h"
+#include "lang/jxx.lang.AutoCloseable.h"
+#include "lang/jxx.lang.CharSequence.h"
+#include "lang/jxx.lang.Cloneable.h"
+#include "lang/jxx.lang.InvocationTargetException.h"
+#include "lang/jxx.lang.Math.h"
+#include "lang/jxx.lang.Number.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.Readable.h"
+#include "lang/jxx.lang.Runnable.h"
+#include "lang/jxx.lang.StrictMath.h"
+#include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.System.h"
+#include "lang/jxx.lang.Thread.h"
+#include "lang/jxx.lang.ThreadDeath.h"
 
 namespace jxx::lang {
 
@@ -169,6 +184,21 @@ void initializeClasses()
             registerType<RuntimePermission>();
             registerType<SecurityManager>();
             registerType<ProcessBuilder>();
+        registerType<Appendable>();
+        registerType<AutoCloseable>();
+        registerType<CharSequence>();
+        registerType<Cloneable>();
+        registerType<InvocationTargetException>();
+        registerType<Math>();
+        registerType<Number>();
+        registerType<Object>();
+        registerType<Readable>();
+        registerType<Runnable>();
+        registerType<StrictMath>();
+        registerType<String>();
+        registerType<System>();
+        registerType<Thread>();
+        registerType<ThreadDeath>();
         });
 }
 
