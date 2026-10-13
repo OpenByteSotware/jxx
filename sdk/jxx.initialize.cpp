@@ -32,6 +32,8 @@
 #include "nio/charset/jxx.nio.charset.ClassInitialization.h"
 #include "nio/file/attribute/jxx.nio.file.attribute.ClassInitialization.h"
 #include "nio/channels/jxx.nio.channels.ClassInitialization.h"
+#include "nio/channels/spi/jxx.nio.channels.spi.ClassInitialization.h"
+#include "nio/channels/spi/internal/jxx.nio.channels.spi.internal.ClassInitialization.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.ClassInitialization.h"
 #include "org/w3c/dom/events/internal/jxx.org.w3c.dom.events.internal.ClassInitialization.h"
 #include "org/w3c/dom/internal/jxx.org.w3c.dom.internal.ClassInitialization.h"
@@ -77,6 +79,8 @@ void initialize() {
         ::jxx::nio::charset::initializeClasses();
         ::jxx::nio::file::attribute::initializeClasses();
         ::jxx::nio::channels::initializeClasses();
+        ::jxx::nio::channels::spi::initializeClasses();
+        ::jxx::nio::channels::spi::internal::initializeClasses();
         ::jxx::security::initializeClasses();
         ::jxx::security::internal::initializeClasses();
         ::jxx::text::initializeClasses();
