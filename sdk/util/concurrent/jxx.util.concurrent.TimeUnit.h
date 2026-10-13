@@ -42,6 +42,9 @@ public:
     ::jxx::lang::jlong toDays(::jxx::lang::jlong duration) const;
     std::chrono::nanoseconds toChrono(::jxx::lang::jlong duration) const;
     void sleep(::jxx::lang::jlong timeout) const;
+    void timedWait(
+        const ::jxx::Ptr<::jxx::lang::Object>& object,
+        ::jxx::lang::jlong timeout) const;
     void timedJoin(
         const ::jxx::Ptr<::jxx::lang::Thread>& thread,
         ::jxx::lang::jlong timeout) const;

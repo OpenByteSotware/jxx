@@ -54,6 +54,17 @@ UNIT_FACTORY(DAYS)
 ::jxx::lang::jlong TimeUnit::toDays(::jxx::lang::jlong d) const { return toHours(d) / 24LL; }
 std::chrono::nanoseconds TimeUnit::toChrono(::jxx::lang::jlong d) const { return std::chrono::nanoseconds(toNanos(d)); }
 void TimeUnit::sleep(::jxx::lang::jlong timeout) const { if (timeout > 0) std::this_thread::sleep_for(toChrono(timeout)); }
+void TimeUnit::timedWait(
+    const ::jxx::Ptr<::jxx::lang::Object>& object,
+    ::jxx::lang::jlong timeout) const {
+    if (object == nullptr) throw ::jxx::lang::NullPointerException();
+    if (timeout <= 0) return;
+    const auto nanos = toNanos(timeout);
+    const auto millis = nanos / 1000000LL;
+    const auto nanoRemainder = static_cast<::jxx::lang::jint>(nanos % 1000000LL);
+    object->wait(millis, nanoRemainder);
+}
+
 void TimeUnit::timedJoin(const ::jxx::Ptr<::jxx::lang::Thread>& thread, ::jxx::lang::jlong timeout) const {
     if (thread == nullptr) throw ::jxx::lang::NullPointerException();
     if (timeout > 0) thread->join(toMillis(timeout));

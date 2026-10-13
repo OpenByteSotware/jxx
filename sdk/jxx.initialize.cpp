@@ -18,6 +18,7 @@
 #include "org/w3c/dom/jxx.org.w3c.dom.ClassInitialization.h"
 #include "org/xml/sax/jxx.org.xml.sax.ClassInitialization.h"
 #include "security/jxx.security.ClassInitialization.h"
+#include "text/jxx.text.ClassInitialization.h"
 #include "util/jxx.util.ClassInitialization.h"
 #include "util/concurrent/jxx.util.concurrent.ClassInitialization.h"
 #include "util/function/jxx.util.function.ClassInitialization.h"
@@ -43,6 +44,7 @@ void initialize() {
         ::jxx::nio::initializeClasses();
         ::jxx::nio::channels::initializeClasses();
         ::jxx::security::initializeClasses();
+        ::jxx::text::initializeClasses();
         ::jxx::org::w3c::dom::initializeClasses();
         ::jxx::org::xml::sax::initializeClasses();
         ::com::google::gson::initializeClasses();
