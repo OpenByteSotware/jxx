@@ -41,6 +41,7 @@
 #include "org/xml/sax/jxx.org.xml.sax.ClassInitialization.h"
 #include "org/xml/sax/ext/jxx.org.xml.sax.ext.ClassInitialization.h"
 #include "org/xml/sax/helpers/jxx.org.xml.sax.helpers.ClassInitialization.h"
+#include "org/xml/sax/internal/jxx.org.xml.sax.internal.ClassInitialization.h"
 #include "security/jxx.security.ClassInitialization.h"
 #include "text/jxx.text.ClassInitialization.h"
 #include "util/jxx.util.ClassInitialization.h"
@@ -85,6 +86,7 @@ void initialize() {
         ::jxx::org::xml::sax::initializeClasses();
         ::jxx::org::xml::sax::ext::initializeClasses();
         ::jxx::org::xml::sax::helpers::initializeClasses();
+        ::jxx::org::xml::sax::internal::initializeClasses();
         ::com::google::gson::initializeClasses();
         ::jxx::com::sun::net::httpserver::initializeClasses();
         ::jxx::com::sun::net::httpserver::spi::initializeClasses();
