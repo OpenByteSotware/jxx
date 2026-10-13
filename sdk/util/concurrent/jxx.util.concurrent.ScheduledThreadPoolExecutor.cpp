@@ -31,20 +31,50 @@ namespace jxx::util::concurrent
 		if (dispatcher_.joinable()) dispatcher_.join();
 		joinWorkers_();
 	}
-	::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> ScheduledThreadPoolExecutor::schedule(const ::jxx::Ptr<::jxx::lang::Runnable>& c, ::jxx::lang::jlong d, const ::jxx::Ptr<TimeUnit>& u)
+	::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> ScheduledThreadPoolExecutor::schedule(
+        const ::jxx::Ptr<::jxx::lang::Runnable>& command,
+        ::jxx::lang::jlong delay,
+        const ::jxx::Ptr<TimeUnit>& unit)
 	{
-		if (!u)throw ::jxx::lang::NullPointerException(); return schedule_(c, std::max<::jxx::lang::jlong>(0, u->toNanos(d)), 0,
+        if (command == nullptr || unit == nullptr) {
+            throw ::jxx::lang::NullPointerException();
+        }
+        return schedule_(command,
+            std::max<::jxx::lang::jlong>(0, unit->toNanos(delay)),
+            0,
             ConcreteTask::PeriodicMode::OneShot);
 	}
-	::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> ScheduledThreadPoolExecutor::scheduleAtFixedRate(const ::jxx::Ptr<::jxx::lang::Runnable>& c, ::jxx::lang::jlong d, ::jxx::lang::jlong p, const ::jxx::Ptr<TimeUnit>& u)
+
+	::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> ScheduledThreadPoolExecutor::scheduleAtFixedRate(
+        const ::jxx::Ptr<::jxx::lang::Runnable>& command,
+        ::jxx::lang::jlong initialDelay,
+        ::jxx::lang::jlong period,
+        const ::jxx::Ptr<TimeUnit>& unit)
 	{
-		if (!u)throw ::jxx::lang::NullPointerException(); if (p <= 0)throw ::jxx::lang::IllegalArgumentException(); return schedule_(c, std::max<::jxx::lang::jlong>(0, u->toNanos(d)),
-            u->toNanos(p), ConcreteTask::PeriodicMode::FixedRate);
+        if (command == nullptr || unit == nullptr) {
+            throw ::jxx::lang::NullPointerException();
+        }
+        if (period <= 0) throw ::jxx::lang::IllegalArgumentException();
+        return schedule_(command,
+            std::max<::jxx::lang::jlong>(0, unit->toNanos(initialDelay)),
+            unit->toNanos(period),
+            ConcreteTask::PeriodicMode::FixedRate);
 	}
-	::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> ScheduledThreadPoolExecutor::scheduleWithFixedDelay(const ::jxx::Ptr<::jxx::lang::Runnable>& c, ::jxx::lang::jlong d, ::jxx::lang::jlong p, const ::jxx::Ptr<TimeUnit>& u)
+
+	::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> ScheduledThreadPoolExecutor::scheduleWithFixedDelay(
+        const ::jxx::Ptr<::jxx::lang::Runnable>& command,
+        ::jxx::lang::jlong initialDelay,
+        ::jxx::lang::jlong delay,
+        const ::jxx::Ptr<TimeUnit>& unit)
 	{
-		if (!u)throw ::jxx::lang::NullPointerException(); if (p <= 0)throw ::jxx::lang::IllegalArgumentException(); return schedule_(c, std::max<::jxx::lang::jlong>(0, u->toNanos(d)),
-            u->toNanos(p), ConcreteTask::PeriodicMode::FixedDelay);
+        if (command == nullptr || unit == nullptr) {
+            throw ::jxx::lang::NullPointerException();
+        }
+        if (delay <= 0) throw ::jxx::lang::IllegalArgumentException();
+        return schedule_(command,
+            std::max<::jxx::lang::jlong>(0, unit->toNanos(initialDelay)),
+            unit->toNanos(delay),
+            ConcreteTask::PeriodicMode::FixedDelay);
 	}
 	::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> ScheduledThreadPoolExecutor::schedule_(const ::jxx::Ptr<::jxx::lang::Runnable>& command, ::jxx::lang::jlong delayNanos, ::jxx::lang::jlong periodNanos,
         ConcreteTask::PeriodicMode periodicMode)
