@@ -13,6 +13,7 @@
 #include "util/concurrent/jxx.util.concurrent.Callable.h"
 #include "util/concurrent/jxx.util.concurrent.ExecutionException.h"
 #include "util/concurrent/jxx.util.concurrent.RunnableScheduledFuture.h"
+#include "util/concurrent/jxx.util.concurrent.ScheduledTask.h"
 #include "util/concurrent/jxx.util.concurrent.TimeoutException.h"
 
 namespace jxx::util::concurrent {
@@ -20,7 +21,9 @@ namespace jxx::util::concurrent {
 template<typename V>
 class ScheduledFutureTask final
     : public ::jxx::lang::ClassBase<ScheduledFutureTask<V>,
-          ::jxx::lang::Object, RunnableScheduledFuture<V>> {
+          ::jxx::lang::Object,
+          RunnableScheduledFuture<V>,
+          scheduled_detail::ScheduledTask> {
 public:
     enum class PeriodicMode {
         OneShot,
@@ -30,7 +33,9 @@ public:
 
     using JxxSuper = ::jxx::lang::Object;
     using Super = ::jxx::lang::ClassBase<ScheduledFutureTask<V>,
-        JxxSuper, RunnableScheduledFuture<V>>;
+        JxxSuper,
+        RunnableScheduledFuture<V>,
+        scheduled_detail::ScheduledTask>;
     using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
     static ::jxx::Ptr<::jxx::lang::ClassAny> Class() { return JxxClassInfoMarker::Class(); }
 
@@ -42,11 +47,11 @@ public:
           trigger_(deadlineAfter_(delayNanos)),
           periodNanos_(periodNanos), periodicMode_(periodicMode),
           sequence_(nextSequence_++) {
+        if (command_ == nullptr) throw ::jxx::lang::NullPointerException();
         if (periodicMode_ == PeriodicMode::OneShot) periodNanos_ = 0;
         if (periodicMode_ != PeriodicMode::OneShot && periodNanos_ <= 0) {
             throw ::jxx::lang::IllegalArgumentException();
         }
-        if(!command_) throw ::jxx::lang::NullPointerException();
     }
 
     ScheduledFutureTask(
@@ -94,7 +99,13 @@ public:
     }
     ::jxx::lang::jbool isCancelled() override { std::lock_guard<std::mutex> l(mutex_); return cancelled_; }
     ::jxx::lang::jbool isDone() override { std::lock_guard<std::mutex> l(mutex_); return done_; }
-    ::jxx::lang::jbool isPeriodic() override { return periodNanos_!=0; }
+    ::jxx::lang::jbool isPeriodic() override {
+        return periodicMode_ != PeriodicMode::OneShot;
+    }
+
+    ::jxx::lang::jbool isPeriodic() const noexcept override {
+        return periodicMode_ != PeriodicMode::OneShot;
+    }
     ::jxx::Ptr<V> get() override { std::unique_lock<std::mutex> l(mutex_); condition_.wait(l,[&]{return done_;}); return report_(); }
     ::jxx::Ptr<V> get(::jxx::lang::jlong timeout,const ::jxx::Ptr<TimeUnit>& unit) override {
         if(!unit) throw ::jxx::lang::NullPointerException(); std::unique_lock<std::mutex> l(mutex_);
