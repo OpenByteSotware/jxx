@@ -48,6 +48,32 @@ TimeUnit::TimeUnit(Kind kind) : kind_(kind) {}
     return value * multiplier;
 }
 
+::jxx::lang::jlong TimeUnit::convertToFactor_(
+    ::jxx::lang::jlong duration,
+    ::jxx::lang::jlong targetFactor) const noexcept {
+    const auto sourceFactor = factor(kind_);
+    if (sourceFactor == targetFactor) return duration;
+    if (sourceFactor < targetFactor) {
+        return duration / (targetFactor / sourceFactor);
+    }
+    return saturatedMultiply(duration, sourceFactor / targetFactor);
+}
+
+::jxx::lang::jint TimeUnit::excessNanos_(
+    ::jxx::lang::jlong duration,
+    ::jxx::lang::jlong millis) const noexcept {
+    switch (kind_) {
+    case Kind::NANOSECONDS:
+        return static_cast<::jxx::lang::jint>(
+            duration - millis * 1000000LL);
+    case Kind::MICROSECONDS:
+        return static_cast<::jxx::lang::jint>(
+            (duration - millis * 1000LL) * 1000LL);
+    default:
+        return 0;
+    }
+}
+
 #define UNIT_FACTORY(NAME) ::jxx::Ptr<TimeUnit> TimeUnit::NAME() { static auto value = ::jxx::NEW<TimeUnit>(Kind::NAME); return value; }
 UNIT_FACTORY(NANOSECONDS)
 UNIT_FACTORY(MICROSECONDS)
@@ -114,20 +140,30 @@ TimeUnit::values() {
 
     return saturatedMultiply(duration, sourceFactor / targetFactor);
 }
-::jxx::lang::jlong TimeUnit::toMicros(::jxx::lang::jlong d) const { return toNanos(d) / 1000LL; }
-::jxx::lang::jlong TimeUnit::toMillis(::jxx::lang::jlong d) const { return toNanos(d) / 1000000LL; }
-::jxx::lang::jlong TimeUnit::toSeconds(::jxx::lang::jlong d) const { return toNanos(d) / 1000000000LL; }
-::jxx::lang::jlong TimeUnit::toMinutes(::jxx::lang::jlong d) const { return toSeconds(d) / 60LL; }
-::jxx::lang::jlong TimeUnit::toHours(::jxx::lang::jlong d) const { return toMinutes(d) / 60LL; }
-::jxx::lang::jlong TimeUnit::toDays(::jxx::lang::jlong d) const { return toHours(d) / 24LL; }
+::jxx::lang::jlong TimeUnit::toMicros(::jxx::lang::jlong d) const {
+    return convertToFactor_(d, 1000LL);
+}
+::jxx::lang::jlong TimeUnit::toMillis(::jxx::lang::jlong d) const {
+    return convertToFactor_(d, 1000000LL);
+}
+::jxx::lang::jlong TimeUnit::toSeconds(::jxx::lang::jlong d) const {
+    return convertToFactor_(d, 1000000000LL);
+}
+::jxx::lang::jlong TimeUnit::toMinutes(::jxx::lang::jlong d) const {
+    return convertToFactor_(d, 60000000000LL);
+}
+::jxx::lang::jlong TimeUnit::toHours(::jxx::lang::jlong d) const {
+    return convertToFactor_(d, 3600000000000LL);
+}
+::jxx::lang::jlong TimeUnit::toDays(::jxx::lang::jlong d) const {
+    return convertToFactor_(d, 86400000000000LL);
+}
 std::chrono::nanoseconds TimeUnit::toChrono(::jxx::lang::jlong d) const { return std::chrono::nanoseconds(toNanos(d)); }
 void TimeUnit::sleep(::jxx::lang::jlong timeout) const {
     if (timeout <= 0) return;
 
-    const auto nanos = toNanos(timeout);
-    const auto millis = nanos / 1000000LL;
-    const auto nanoRemainder = static_cast<::jxx::lang::jint>(
-        nanos % 1000000LL);
+    const auto millis = toMillis(timeout);
+    const auto nanoRemainder = excessNanos_(timeout, millis);
     ::jxx::lang::Thread::sleep(millis, nanoRemainder);
 }
 void TimeUnit::timedWait(
@@ -135,9 +171,8 @@ void TimeUnit::timedWait(
     ::jxx::lang::jlong timeout) const {
     if (object == nullptr) throw ::jxx::lang::NullPointerException();
     if (timeout <= 0) return;
-    const auto nanos = toNanos(timeout);
-    const auto millis = nanos / 1000000LL;
-    const auto nanoRemainder = static_cast<::jxx::lang::jint>(nanos % 1000000LL);
+    const auto millis = toMillis(timeout);
+    const auto nanoRemainder = excessNanos_(timeout, millis);
     object->wait(millis, nanoRemainder);
 }
 
@@ -147,10 +182,8 @@ void TimeUnit::timedJoin(
     if (thread == nullptr) throw ::jxx::lang::NullPointerException();
     if (timeout <= 0) return;
 
-    const auto nanos = toNanos(timeout);
-    const auto millis = nanos / 1000000LL;
-    const auto nanoRemainder = static_cast<::jxx::lang::jint>(
-        nanos % 1000000LL);
+    const auto millis = toMillis(timeout);
+    const auto nanoRemainder = excessNanos_(timeout, millis);
     thread->join(millis, nanoRemainder);
 }
 

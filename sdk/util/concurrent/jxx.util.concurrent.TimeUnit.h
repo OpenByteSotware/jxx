@@ -68,6 +68,12 @@ public:
     static ::jxx::lang::jlong saturatedMultiply(
         ::jxx::lang::jlong value,
         ::jxx::lang::jlong multiplier) noexcept;
+    ::jxx::lang::jlong convertToFactor_(
+        ::jxx::lang::jlong duration,
+        ::jxx::lang::jlong targetFactor) const noexcept;
+    ::jxx::lang::jint excessNanos_(
+        ::jxx::lang::jlong duration,
+        ::jxx::lang::jlong millis) const noexcept;
     Kind kind_;
 };
 
