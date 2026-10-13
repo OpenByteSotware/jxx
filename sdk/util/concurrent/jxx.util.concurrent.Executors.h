@@ -42,21 +42,27 @@ private:
 
 class DefaultThreadFactory final : public ThreadFactory {
 public:
+    DefaultThreadFactory()
+        : poolNumber_(nextPoolNumber_.fetch_add(1)) {}
+
     ::jxx::Ptr<::jxx::lang::Thread> newThread(
         const ::jxx::Ptr<::jxx::lang::Runnable>& runnable) override {
         if (runnable == nullptr) throw ::jxx::lang::NullPointerException();
-        const auto number = nextNumber_.fetch_add(1);
+        const auto threadNumber = nextThreadNumber_.fetch_add(1);
         auto thread = ::jxx::NEW<::jxx::lang::Thread>(
             runnable,
             ::jxx::NEW<::jxx::lang::String>(
-                "pool-thread-" + std::to_string(number)));
+                "pool-" + std::to_string(poolNumber_) +
+                "-thread-" + std::to_string(threadNumber)));
         thread->setDaemon(false);
         thread->setPriority(::jxx::lang::Thread::NORM_PRIORITY);
         return thread;
     }
 
 private:
-    inline static std::atomic<::jxx::lang::jlong> nextNumber_{1};
+    inline static std::atomic<::jxx::lang::jlong> nextPoolNumber_{1};
+    const ::jxx::lang::jlong poolNumber_;
+    std::atomic<::jxx::lang::jlong> nextThreadNumber_{1};
 };
 
 } // namespace executors_detail
@@ -89,9 +95,8 @@ public:
         const ::jxx::Ptr<ThreadFactory>& threadFactory);
 
     static ::jxx::Ptr<ThreadFactory> defaultThreadFactory() {
-        static const auto factory =
-            ::jxx::CAST<ThreadFactory>(::jxx::NEW<executors_detail::DefaultThreadFactory>());
-        return factory;
+        return ::jxx::CAST<ThreadFactory>(
+            ::jxx::NEW<executors_detail::DefaultThreadFactory>());
     }
 
     static ::jxx::Ptr<Callable<::jxx::lang::Object>> callable(
