@@ -59,12 +59,13 @@ void ThreadPoolExecutor::joinWorkers_() {
 void ThreadPoolExecutor::startWorkerLocked_() {
     ++liveWorkerCount_;
     largestPoolSize_ = std::max(largestPoolSize_, liveWorkerCount_);
-    const auto runnable = ::jxx::NEW<WorkerRunnable>(this);
-    const auto workerNumber = static_cast<::jxx::lang::jlong>(workers_.size() + 1U);
-    const auto worker = ::jxx::NEW<::jxx::lang::Thread>(
-        ::jxx::CAST<::jxx::lang::Runnable>(runnable),
-        ::jxx::NEW<::jxx::lang::String>(
-            "pool-worker-" + std::to_string(workerNumber)));
+    const auto runnable = ::jxx::CAST<::jxx::lang::Runnable>(
+        ::jxx::NEW<WorkerRunnable>(this));
+    const auto worker = threadFactory_->newThread(runnable);
+    if (worker == nullptr) {
+        --liveWorkerCount_;
+        throw ::jxx::lang::NullPointerException();
+    }
     workers_.push_back(worker);
     worker->start();
 }
