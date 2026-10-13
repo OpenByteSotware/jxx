@@ -35,6 +35,7 @@ void initializeClasses()
     std::call_once(flag, [] {
         registerType<CountDownLatch>();
         registerType<CyclicBarrier>();
+        registerType<executors_detail::DefaultThreadFactory>();
         registerType<executors_detail::DelegatedExecutorService>();
         registerType<executors_detail::DelegatedScheduledExecutorService>();
         registerType<Delayed>();

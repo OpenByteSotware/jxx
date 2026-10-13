@@ -40,7 +40,11 @@ private:
     ::jxx::Ptr<T> result_;
 };
 
-class DefaultThreadFactory final : public ThreadFactory {
+class DefaultThreadFactory final
+    : public ::jxx::lang::ClassBase<
+          DefaultThreadFactory,
+          ::jxx::lang::Object,
+          ThreadFactory> {
 public:
     DefaultThreadFactory()
         : poolNumber_(nextPoolNumber_.fetch_add(1)) {}
