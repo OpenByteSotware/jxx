@@ -13,6 +13,10 @@
 
 namespace jxx::util::concurrent {
 
+namespace executors_detail {
+class DelegatedScheduledExecutorService;
+}
+
 class ScheduledExecutorService
     : public ::jxx::lang::InterfaceBase<
           ScheduledExecutorService,
@@ -40,9 +44,6 @@ public:
         return ::jxx::CAST<ScheduledFuture<V>>(task);
     }
 
-    virtual void enqueueScheduledTask_(
-        const ::jxx::Ptr<scheduled_detail::ScheduledTask>& task) = 0;
-
     virtual ::jxx::Ptr<ScheduledFuture<::jxx::lang::Object>> schedule(
         const ::jxx::Ptr<::jxx::lang::Runnable>& command,
         ::jxx::lang::jlong delay,
@@ -59,6 +60,12 @@ public:
         ::jxx::lang::jlong initialDelay,
         ::jxx::lang::jlong delay,
         const ::jxx::Ptr<TimeUnit>& unit) = 0;
+protected:
+    friend class executors_detail::DelegatedScheduledExecutorService;
+
+    virtual void enqueueScheduledTask_(
+        const ::jxx::Ptr<scheduled_detail::ScheduledTask>& task) = 0;
+
 };
 
 } // namespace jxx::util::concurrent

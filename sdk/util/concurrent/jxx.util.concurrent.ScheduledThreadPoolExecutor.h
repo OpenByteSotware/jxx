@@ -41,8 +41,6 @@ public:
     void execute(const ::jxx::Ptr<::jxx::lang::Runnable>& command) override;
     ::jxx::Ptr<wildcard::FutureAny> submit(
         const ::jxx::Ptr<::jxx::lang::Runnable>& task) override;
-    void enqueueScheduledTask_(
-        const ::jxx::Ptr<scheduled_detail::ScheduledTask>& task) override;
     void shutdown() override;
     ::jxx::Ptr<::jxx::util::List<::jxx::lang::Runnable>> shutdownNow() override;
     ::jxx::lang::jbool isShutdown() override;
@@ -57,6 +55,11 @@ public:
     getExecuteExistingDelayedTasksAfterShutdownPolicy() const;
     void setRemoveOnCancelPolicy(::jxx::lang::jbool value);
     ::jxx::lang::jbool getRemoveOnCancelPolicy() const;
+
+
+protected:
+    void enqueueScheduledTask_(
+        const ::jxx::Ptr<scheduled_detail::ScheduledTask>& task) override;
 
 private:
     using Task = scheduled_detail::ScheduledTask;

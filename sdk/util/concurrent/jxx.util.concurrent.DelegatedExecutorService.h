@@ -50,9 +50,6 @@ public:
         const ::jxx::Ptr<::jxx::util::concurrent::TimeUnit>& unit) override;
     ::jxx::Ptr<::jxx::util::concurrent::wildcard::FutureAny> submit(
         const ::jxx::Ptr<::jxx::lang::Runnable>& task) override;
-    void enqueueScheduledTask_(
-        const ::jxx::Ptr<
-            ::jxx::util::concurrent::scheduled_detail::ScheduledTask>& task) override;
     ::jxx::Ptr<::jxx::util::concurrent::ScheduledFuture<::jxx::lang::Object>> schedule(
         const ::jxx::Ptr<::jxx::lang::Runnable>& command,
         ::jxx::lang::jlong delay,
@@ -67,6 +64,12 @@ public:
         ::jxx::lang::jlong initialDelay,
         ::jxx::lang::jlong delay,
         const ::jxx::Ptr<::jxx::util::concurrent::TimeUnit>& unit) override;
+
+
+protected:
+    void enqueueScheduledTask_(
+        const ::jxx::Ptr<
+            ::jxx::util::concurrent::scheduled_detail::ScheduledTask>& task) override;
 
 private:
     ::jxx::Ptr<::jxx::util::concurrent::ScheduledExecutorService> scheduled_;
