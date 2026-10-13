@@ -30,8 +30,10 @@
 #include "nio/file/attribute/jxx.nio.file.attribute.ClassInitialization.h"
 #include "nio/channels/jxx.nio.channels.ClassInitialization.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.ClassInitialization.h"
+#include "org/w3c/dom/events/internal/jxx.org.w3c.dom.events.internal.ClassInitialization.h"
 #include "org/w3c/dom/bootstrap/jxx.org.w3c.dom.bootstrap.ClassInitialization.h"
 #include "org/w3c/dom/ls/jxx.org.w3c.dom.ls.ClassInitialization.h"
+#include "org/w3c/dom/views/internal/jxx.org.w3c.dom.views.internal.ClassInitialization.h"
 #include "org/xml/sax/jxx.org.xml.sax.ClassInitialization.h"
 #include "security/jxx.security.ClassInitialization.h"
 #include "text/jxx.text.ClassInitialization.h"
@@ -67,8 +69,10 @@ void initialize() {
         ::jxx::security::initializeClasses();
         ::jxx::text::initializeClasses();
         ::jxx::org::w3c::dom::initializeClasses();
+        ::jxx::org::w3c::dom::events::internal::initializeClasses();
         ::jxx::org::w3c::dom::bootstrap::initializeClasses();
         ::jxx::org::w3c::dom::ls::initializeClasses();
+        ::jxx::org::w3c::dom::views::internal::initializeClasses();
         ::jxx::org::xml::sax::initializeClasses();
         ::com::google::gson::initializeClasses();
         ::jxx::com::sun::net::httpserver::initializeClasses();
