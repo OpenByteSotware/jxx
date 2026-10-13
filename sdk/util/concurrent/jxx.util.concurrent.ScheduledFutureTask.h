@@ -92,7 +92,7 @@ public:
             finishRun_(nullptr);
         }
         catch (const ::jxx::lang::Throwable& failure) {
-            finishRun_(::jxx::NEW<::jxx::lang::Throwable>(failure));
+            finishRun_(failure.cloneThrowable());
         }
         catch (...) {
             finishRun_(::jxx::NEW<::jxx::lang::RuntimeException>());

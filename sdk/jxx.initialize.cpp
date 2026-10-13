@@ -5,6 +5,8 @@
 #include "com/google/gson/jxx.com.google.gson.ClassInitialization.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.ClassInitialization.h"
 #include "com/sun/net/httpserver/spi/jxx.com.sun.net.httpserver.spi.ClassInitialization.h"
+#include "ext/crypto/jxx.ext.crypto.ClassInitialization.h"
+#include "ext/security/auth/jxx.ext.security.auth.ClassInitialization.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.ClassInitialization.h"
 #include "ext/xml/bind/jxx.ext.xml.bind.ClassInitialization.h"
 #include "ext/xml/namespace/jxx.ext.xml.namespace.ClassInitialization.h"
@@ -65,6 +67,8 @@ void initialize() {
         ::com::google::gson::initializeClasses();
         ::jxx::com::sun::net::httpserver::initializeClasses();
         ::jxx::com::sun::net::httpserver::spi::initializeClasses();
+        ::jxx::ext::security::auth::initializeClasses();
+        ::jxx::ext::crypto::initializeClasses();
         ::jxx::ext::net::ssl::initializeClasses();
         ::jxx::ext::xml::bind::initializeClasses();
         ::jxx::ext::xml::namespace_::initializeClasses();
