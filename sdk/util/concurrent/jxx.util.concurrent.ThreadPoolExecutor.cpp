@@ -139,6 +139,13 @@ void ThreadPoolExecutor::workerLoop_() {
             queue_.pop_front();
             ++activeCount_;
         }
+        // A worker reused for another task must not leak an interrupt that
+        // was delivered to the preceding task. Immediate shutdown is the
+        // exception: its interrupt must remain visible to the worker task.
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (!stopNow_) (void)::jxx::lang::Thread::interrupted();
+        }
         try { task->run(); } catch (...) {}
         {
             std::lock_guard<std::mutex> lock(mutex_);
