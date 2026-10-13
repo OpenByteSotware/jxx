@@ -12,6 +12,7 @@
 #include "lang/jxx_types.h"
 #include "util/concurrent/jxx.util.concurrent.Callable.h"
 #include "util/concurrent/jxx.util.concurrent.ExecutorService.h"
+#include "util/concurrent/jxx.util.concurrent.ForkJoinPool.h"
 #include "util/concurrent/jxx.util.concurrent.ScheduledExecutorService.h"
 #include "util/concurrent/jxx.util.concurrent.ThreadFactory.h"
 
@@ -84,6 +85,9 @@ public:
     static ::jxx::Ptr<ExecutorService> newSingleThreadExecutor();
     static ::jxx::Ptr<ExecutorService> newSingleThreadExecutor(
         const ::jxx::Ptr<ThreadFactory>& threadFactory);
+    static ::jxx::Ptr<ExecutorService> newWorkStealingPool();
+    static ::jxx::Ptr<ExecutorService> newWorkStealingPool(
+        ::jxx::lang::jint parallelism);
     static ::jxx::Ptr<ExecutorService> newCachedThreadPool();
     static ::jxx::Ptr<ExecutorService> newCachedThreadPool(
         const ::jxx::Ptr<ThreadFactory>& threadFactory);

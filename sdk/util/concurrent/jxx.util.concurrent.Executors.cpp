@@ -30,6 +30,18 @@ namespace jxx::util::concurrent
         return unconfigurableExecutorService(
             newFixedThreadPool(1, threadFactory));
     }
+    jxx::Ptr<ExecutorService> Executors::newWorkStealingPool() {
+        const auto parallelism = std::max<jxx::lang::jint>(
+            1, static_cast<jxx::lang::jint>(std::thread::hardware_concurrency()));
+        return newWorkStealingPool(parallelism);
+    }
+
+    jxx::Ptr<ExecutorService> Executors::newWorkStealingPool(
+        jxx::lang::jint parallelism) {
+        if (parallelism <= 0) throw jxx::lang::IllegalArgumentException();
+        return jxx::CAST<ExecutorService>(jxx::NEW<ForkJoinPool>(parallelism));
+    }
+
 	jxx::Ptr<ExecutorService> Executors::newCachedThreadPool()
 	{
         return newCachedThreadPool(defaultThreadFactory());
