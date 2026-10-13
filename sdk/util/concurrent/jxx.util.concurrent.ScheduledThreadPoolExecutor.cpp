@@ -1,4 +1,5 @@
 #include "util/concurrent/jxx.util.concurrent.ScheduledThreadPoolExecutor.h"
+#include "util/concurrent/jxx.util.concurrent.ScheduledFutureAnyAdapter.h"
 #include "util/jxx.util.ArrayList.h"
 #include "util/concurrent/jxx.util.concurrent.Executors.h"
 
@@ -80,8 +81,11 @@ namespace jxx::util::concurrent
 	::jxx::Ptr<wildcard::FutureAny> ScheduledThreadPoolExecutor::submit(
         const ::jxx::Ptr<::jxx::lang::Runnable>& task)
     {
+        const auto scheduled = schedule(
+            task, 0, TimeUnit::NANOSECONDS());
         return ::jxx::CAST<wildcard::FutureAny>(
-            schedule(task, 0, TimeUnit::NANOSECONDS()));
+            ::jxx::NEW<scheduled_detail::ScheduledFutureAnyAdapter>(
+                scheduled));
     }
 	void ScheduledThreadPoolExecutor::dispatch_()
 	{

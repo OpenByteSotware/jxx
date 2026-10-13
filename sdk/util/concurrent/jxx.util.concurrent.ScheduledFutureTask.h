@@ -39,10 +39,26 @@ public:
     using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
     static ::jxx::Ptr<::jxx::lang::ClassAny> Class() { return JxxClassInfoMarker::Class(); }
 
-    ScheduledFutureTask(const ::jxx::Ptr<::jxx::lang::Runnable>& command,
-        const ::jxx::Ptr<V>& result, ::jxx::lang::jlong delayNanos,
-        ::jxx::lang::jlong periodNanos = 0,
-        PeriodicMode periodicMode = PeriodicMode::OneShot)
+    ScheduledFutureTask(
+        const ::jxx::Ptr<::jxx::lang::Runnable>& command,
+        const ::jxx::Ptr<V>& result,
+        ::jxx::lang::jlong delayNanos,
+        ::jxx::lang::jlong periodNanos = 0)
+        : ScheduledFutureTask(
+              command,
+              result,
+              delayNanos,
+              periodNanos,
+              periodNanos > 0
+                  ? PeriodicMode::FixedRate
+                  : PeriodicMode::OneShot) {}
+
+    ScheduledFutureTask(
+        const ::jxx::Ptr<::jxx::lang::Runnable>& command,
+        const ::jxx::Ptr<V>& result,
+        ::jxx::lang::jlong delayNanos,
+        ::jxx::lang::jlong periodNanos,
+        PeriodicMode periodicMode)
         : Super(), command_(command), result_(result),
           trigger_(deadlineAfter_(delayNanos)),
           periodNanos_(periodNanos), periodicMode_(periodicMode),
