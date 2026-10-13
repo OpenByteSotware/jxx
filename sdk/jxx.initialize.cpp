@@ -8,6 +8,7 @@
 #include "ext/xml/bind/jxx.ext.xml.bind.ClassInitialization.h"
 #include "ext/xml/namespace/jxx.ext.xml.namespace.ClassInitialization.h"
 #include "ext/xml/parsers/jxx.ext.xml.parsers.ClassInitialization.h"
+#include "ext/xml/transform/jxx.ext.xml.transform.ClassInitialization.h"
 #include "ext/xml/validation/jxx.ext.xml.validation.ClassInitialization.h"
 #include "io/jxx.io.ClassInitialization.h"
 #include "lang/jxx.lang.ClassInitialization.h"
@@ -60,6 +61,7 @@ void initialize() {
         ::jxx::ext::net::ssl::initializeClasses();
         ::jxx::ext::xml::bind::initializeClasses();
         ::jxx::ext::xml::namespace_::initializeClasses();
+        ::jxx::ext::xml::transform::initializeClasses();
         ::jxx::ext::xml::validation::initializeClasses();
         ::jxx::ext::xml::parsers::initializeClasses();
     });

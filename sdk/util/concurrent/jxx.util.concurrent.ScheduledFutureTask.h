@@ -97,7 +97,11 @@ public:
         if(!other) throw ::jxx::lang::NullPointerException();
         auto task=::jxx::CAST<ScheduledFutureTask<V>>(other);
         if(task){if(trigger_<task->trigger_)return -1;if(trigger_>task->trigger_)return 1;return sequence_<task->sequence_?-1:sequence_>task->sequence_;}
-        const auto difference=getDelay(TimeUnit::NANOSECONDS())-other->getDelay(TimeUnit::NANOSECONDS()); return difference<0?-1:difference>0?1:0;
+        const auto thisDelay = getDelay(TimeUnit::NANOSECONDS());
+        const auto otherDelay = other->getDelay(TimeUnit::NANOSECONDS());
+        if (thisDelay < otherDelay) return -1;
+        if (thisDelay > otherDelay) return 1;
+        return 0;
     }
 
 private:
