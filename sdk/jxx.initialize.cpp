@@ -3,6 +3,7 @@
 #include <mutex>
 
 #include "com/google/gson/jxx.com.google.gson.ClassInitialization.h"
+#include "com/google/gson/stream/jxx.com.google.gson.stream.ClassInitialization.h"
 #include "com/google/gson/reflect/jxx.com.google.gson.reflect.ClassInitialization.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.ClassInitialization.h"
 #include "com/sun/net/httpserver/spi/jxx.com.sun.net.httpserver.spi.ClassInitialization.h"
@@ -103,6 +104,7 @@ void initialize() {
         ::jxx::org::xml::sax::helpers::initializeClasses();
         ::jxx::org::xml::sax::internal::initializeClasses();
         ::com::google::gson::initializeClasses();
+        ::com::google::gson::stream::initializeClasses();
         ::com::google::gson::reflect::initializeClasses();
         ::jxx::com::sun::net::httpserver::initializeClasses();
         ::jxx::com::sun::net::httpserver::spi::initializeClasses();
