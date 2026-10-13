@@ -56,6 +56,7 @@ public:
     ::jxx::lang::jint getLargestPoolSize();
     ::jxx::lang::jlong getCompletedTaskCount();
     ::jxx::lang::jlong getTaskCount();
+    void purge();
     void setRejectedExecutionHandler(
         const ::jxx::Ptr<RejectedExecutionHandler>& handler);
     ::jxx::Ptr<RejectedExecutionHandler> getRejectedExecutionHandler();

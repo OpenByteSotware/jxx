@@ -291,4 +291,23 @@ void ThreadPoolExecutor::reject_(const ::jxx::Ptr<::jxx::lang::Runnable>& comman
     throw RejectedExecutionException();
 }
 
+void ThreadPoolExecutor::purge() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::deque<::jxx::Ptr<::jxx::lang::Runnable>> retained;
+    while (!queue_.empty()) {
+        const auto command = queue_.front();
+        queue_.pop_front();
+        const auto future = ::jxx::CAST<wildcard::FutureAny>(command);
+        if (future == nullptr || !future->isCancelled()) {
+            retained.push_back(command);
+        }
+    }
+    queue_.swap(retained);
+    if (shutdown_ && queue_.empty() && activeCount_ == 0) {
+        workAvailable_.notify_all();
+        terminated_.notify_all();
+    }
+}
+
+
 } // namespace jxx::util::concurrent
