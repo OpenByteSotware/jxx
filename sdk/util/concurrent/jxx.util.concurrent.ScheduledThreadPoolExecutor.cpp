@@ -116,8 +116,17 @@ namespace jxx::util::concurrent
 				continue;
 			}
 			const auto runner = ::jxx::NEW<ScheduledTaskRunner>(this, task);
-			ThreadPoolExecutor::execute(
-				::jxx::CAST<::jxx::lang::Runnable>(runner));
+            try {
+                ThreadPoolExecutor::execute(
+                    ::jxx::CAST<::jxx::lang::Runnable>(runner));
+            } catch (const RejectedExecutionException&) {
+                // The scheduler already accepted this task, but the backing
+                // executor could not create or retain a worker. Do not allow
+                // the dispatcher thread to terminate with an uncaught
+                // exception or leave the returned future incomplete.
+                (void)task->cancel(false);
+                afterExecute_(task);
+            }
 		}
 	}
 
