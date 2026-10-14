@@ -597,9 +597,19 @@ void SimpleDateFormat::set2DigitYearStart(const ::jxx::Ptr<::jxx::util::Date>& d
     const auto value = ::jxx::CAST<SimpleDateFormat>(other);
     return value != nullptr && pattern_->equals(value->pattern_) &&
            lenient_ == value->lenient_ &&
-           timeZone_->getID()->equals(value->timeZone_->getID());
+           timeZone_->getID()->equals(value->timeZone_->getID()) &&
+           twoDigitYearStart_->equals(
+               ::jxx::CAST<::jxx::lang::Object>(value->twoDigitYearStart_)) &&
+           symbols_->equals(::jxx::CAST<::jxx::lang::Object>(value->symbols_));
 }
-::jxx::lang::jint SimpleDateFormat::hashCode() const { return pattern_->hashCode(); }
+::jxx::lang::jint SimpleDateFormat::hashCode() const {
+    ::jxx::lang::jint result = pattern_->hashCode();
+    result = 31 * result + timeZone_->getID()->hashCode();
+    result = 31 * result + (lenient_ ? 1231 : 1237);
+    result = 31 * result + twoDigitYearStart_->hashCode();
+    result = 31 * result + symbols_->hashCode();
+    return result;
+}
 ::jxx::Ptr<::jxx::lang::Object> SimpleDateFormat::cloneImpl() const {
     auto copy = ::jxx::NEW<SimpleDateFormat>(pattern_, locale_);
     copy->timeZone_ = timeZone_;
