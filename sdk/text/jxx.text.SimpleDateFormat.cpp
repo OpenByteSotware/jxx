@@ -232,11 +232,13 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
         throw ParseException(
             ::jxx::NEW<::jxx::lang::String>("Unparseable date"), 0);
     }
-    stream >> std::ws;
-    if (!stream.eof()) {
+    if (stream.peek() != std::char_traits<char>::eof()) {
+        const auto position = stream.tellg();
         throw ParseException(
             ::jxx::NEW<::jxx::lang::String>("Unparseable date"),
-            static_cast<::jxx::lang::jint>(stream.tellg()));
+            position == std::streampos(-1)
+                ? 0
+                : static_cast<::jxx::lang::jint>(position));
     }
 
     if (!lenient_) {
