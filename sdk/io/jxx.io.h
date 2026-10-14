@@ -15,6 +15,7 @@
 #include "jxx.io.FileInputStream.h"
 #include "jxx.io.FileNotFoundException.h"
 #include "jxx.io.FileOutputStream.h"
+#include "jxx.io.FileWriter.h"
 #include "jxx.io.FilterInputStream.h"
 #include "jxx.io.FilterOutputStream.h"
 #include "jxx.io.Flushable.h"
