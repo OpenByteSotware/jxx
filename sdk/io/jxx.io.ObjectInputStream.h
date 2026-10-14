@@ -14,6 +14,14 @@ public:
     using Super = ::jxx::lang::ClassBase<ObjectInputStream, JxxSuper, ObjectInput>;
     explicit ObjectInputStream(const ::jxx::Ptr<InputStream>& input);
     ~ObjectInputStream() override;
+    ::jxx::lang::jint read() override;
+    ::jxx::lang::jint read(const ::jxx::lang::ByteArray& buffer) override;
+    ::jxx::lang::jint read(
+        const ::jxx::lang::ByteArray& buffer,
+        ::jxx::lang::jint offset,
+        ::jxx::lang::jint length) override;
+    ::jxx::lang::jlong skip(::jxx::lang::jlong count) override;
+    ::jxx::lang::jint available() override;
     ::jxx::Ptr<::jxx::lang::Object> readObject() override;
     virtual ::jxx::Ptr<::jxx::lang::Object> readUnshared();
 protected:

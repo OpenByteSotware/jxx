@@ -13,6 +13,26 @@ namespace { using Tag = serialization::Tag; }
 ObjectInputStream::ObjectInputStream(const ::jxx::Ptr<InputStream>& input) : Super(input) { readStreamHeader_(); }
 ObjectInputStream::ObjectInputStream() : Super(::jxx::Ptr<InputStream>{}) {}
 ObjectInputStream::~ObjectInputStream() = default;
+
+::jxx::lang::jint ObjectInputStream::read() {
+    return JxxSuper::read();
+}
+::jxx::lang::jint ObjectInputStream::read(
+    const ::jxx::lang::ByteArray& buffer) {
+    return JxxSuper::read(buffer);
+}
+::jxx::lang::jint ObjectInputStream::read(
+    const ::jxx::lang::ByteArray& buffer,
+    ::jxx::lang::jint offset,
+    ::jxx::lang::jint length) {
+    return JxxSuper::read(buffer, offset, length);
+}
+::jxx::lang::jlong ObjectInputStream::skip(::jxx::lang::jlong count) {
+    return JxxSuper::skip(count);
+}
+::jxx::lang::jint ObjectInputStream::available() {
+    return JxxSuper::available();
+}
 void ObjectInputStream::readStreamHeader_() {
     if (static_cast<std::uint32_t>(readInt()) != serialization::STREAM_MAGIC ||
         readUnsignedByte() != serialization::STREAM_MAJOR_VERSION ||
