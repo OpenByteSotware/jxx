@@ -29,11 +29,11 @@ namespace jxx {
 
             public:
                 ArrayRefSpliterator(
-                    jxx::Ptr<ElementArray> array,
+                    const jxx::Ptr<ElementArray>& array,
                     jxx::lang::jint origin,
                     jxx::lang::jint fence,
                     jxx::lang::jint characteristics,
-                    jxx::Ptr<jxx::util::ComparatorSuper<E>>
+                    const jxx::Ptr<jxx::util::ComparatorSuper<E>>&
                     comparator = nullptr)
                     : array_(array)
                     , index_(origin)

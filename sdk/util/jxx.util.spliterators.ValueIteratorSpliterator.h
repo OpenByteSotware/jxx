@@ -18,7 +18,7 @@ private:
 
 public:
     ValueIteratorSpliterator(
-        jxx::Ptr<jxx::util::Iterator<jxx::util::MapEntry<K, V>>> iterator,
+        const jxx::Ptr<jxx::util::Iterator<jxx::util::MapEntry<K, V>>>& iterator,
         jxx::lang::jlong estimatedSize,
         jxx::lang::jint characteristics)
         : iterator_(iterator)

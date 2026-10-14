@@ -24,10 +24,10 @@ private:
 
 public:
     IteratorSpliterator(
-        jxx::Ptr<jxx::util::Iterator<E>> iterator,
+        const jxx::Ptr<jxx::util::Iterator<E>>& iterator,
         jxx::lang::jlong estimatedSize,
         jxx::lang::jint characteristics,
-        jxx::Ptr<jxx::util::ComparatorSuper<E>> comparator = nullptr)
+        const jxx::Ptr<jxx::util::ComparatorSuper<E>>& comparator = nullptr)
         : iterator_(iterator)
         , estimate_(estimatedSize)
         , characteristics_(characteristics)

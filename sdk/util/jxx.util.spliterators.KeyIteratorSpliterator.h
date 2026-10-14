@@ -21,10 +21,10 @@ private:
 
 public:
     KeyIteratorSpliterator(
-        jxx::Ptr<jxx::util::Iterator<jxx::util::MapEntry<K, V>>> iterator,
+        const jxx::Ptr<jxx::util::Iterator<jxx::util::MapEntry<K, V>>>& iterator,
         jxx::lang::jlong estimatedSize,
         jxx::lang::jint characteristics,
-        jxx::Ptr<jxx::util::ComparatorSuper<K>> comparator = nullptr)
+        const jxx::Ptr<jxx::util::ComparatorSuper<K>>& comparator = nullptr)
         : iterator_(iterator)
         , estimate_(estimatedSize)
         , characteristics_(characteristics)
