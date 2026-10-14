@@ -99,6 +99,40 @@ bool parseNumericOffset(const std::string& text, int& minutes) {
     return true;
 }
 
+
+std::string translatePatternLetters(
+    const std::string& pattern,
+    const std::string& from,
+    const std::string& to) {
+    if (from.size() != to.size()) {
+        throw ::jxx::lang::IllegalArgumentException();
+    }
+    std::string translated;
+    translated.reserve(pattern.size());
+    bool quoted = false;
+    for (std::size_t index = 0; index < pattern.size(); ++index) {
+        const char value = pattern[index];
+        if (value == '\'') {
+            translated.push_back(value);
+            if (index + 1 < pattern.size() && pattern[index + 1] == '\'') {
+                translated.push_back(pattern[++index]);
+            } else {
+                quoted = !quoted;
+            }
+            continue;
+        }
+        if (!quoted) {
+            const auto position = from.find(value);
+            if (position != std::string::npos) {
+                translated.push_back(to[position]);
+                continue;
+            }
+        }
+        translated.push_back(value);
+    }
+    return translated;
+}
+
 } // namespace
 
 SimpleDateFormat::SimpleDateFormat()
@@ -404,9 +438,20 @@ void SimpleDateFormat::applyPattern(
     pattern_ = pattern;
 }
 void SimpleDateFormat::applyLocalizedPattern(
-    const ::jxx::Ptr<::jxx::lang::String>& pattern) { applyPattern(pattern); }
+    const ::jxx::Ptr<::jxx::lang::String>& pattern) {
+    if (pattern == nullptr) throw ::jxx::lang::NullPointerException();
+    const auto localChars = symbols_->getLocalPatternChars()->utf8();
+    const std::string standardChars = "GyMdkHmsSEDFwWahKzZYuXL";
+    applyPattern(::jxx::NEW<::jxx::lang::String>(
+        translatePatternLetters(pattern->utf8(), localChars, standardChars)));
+}
 ::jxx::Ptr<::jxx::lang::String> SimpleDateFormat::toPattern() const { return pattern_; }
-::jxx::Ptr<::jxx::lang::String> SimpleDateFormat::toLocalizedPattern() const { return pattern_; }
+::jxx::Ptr<::jxx::lang::String> SimpleDateFormat::toLocalizedPattern() const {
+    const auto localChars = symbols_->getLocalPatternChars()->utf8();
+    const std::string standardChars = "GyMdkHmsSEDFwWahKzZYuXL";
+    return ::jxx::NEW<::jxx::lang::String>(
+        translatePatternLetters(pattern_->utf8(), standardChars, localChars));
+}
 void SimpleDateFormat::setTimeZone(const ::jxx::Ptr<::jxx::util::TimeZone>& zone) {
     if (zone == nullptr) throw ::jxx::lang::NullPointerException();
     timeZone_ = zone;

@@ -36,7 +36,7 @@ DateFormatSymbols::DateFormatSymbols(const ::jxx::Ptr<::jxx::util::Locale>& loca
     weekdays_ = strings({"", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"});
     shortWeekdays_ = strings({"", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"});
     amPmStrings_ = strings({"AM", "PM"});
-    localPatternChars_ = ::jxx::NEW<String>("GyMdkHmsSEDFwWahKzZ");
+    localPatternChars_ = ::jxx::NEW<String>("GyMdkHmsSEDFwWahKzZYuXL");
 }
 
 ::jxx::Ptr<DateFormatSymbols> DateFormatSymbols::getInstance() {
