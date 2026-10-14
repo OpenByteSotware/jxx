@@ -137,6 +137,22 @@ void normalizeCustomSymbols(std::string& value,
     const auto amPm = symbols->getAmPmStrings();
     replaceSymbol(value, (*amPm)[0]->utf8(), "AM");
     replaceSymbol(value, (*amPm)[1]->utf8(), "PM");
+    const auto eras = symbols->getEras();
+    replaceSymbol(value, (*eras)[0]->utf8(), "BC");
+    replaceSymbol(value, (*eras)[1]->utf8(), "AD");
+}
+
+std::int64_t daysFromCivil(int year, unsigned month, unsigned day) {
+    year -= month <= 2U ? 1 : 0;
+    const int era = (year >= 0 ? year : year - 399) / 400;
+    const unsigned yearOfEra = static_cast<unsigned>(year - era * 400);
+    const unsigned dayOfYear =
+        (153U * (month > 2U ? month - 3U : month + 9U) + 2U) / 5U +
+        day - 1U;
+    const unsigned dayOfEra = yearOfEra * 365U + yearOfEra / 4U -
+        yearOfEra / 100U + dayOfYear;
+    return static_cast<std::int64_t>(era) * 146097LL +
+        static_cast<std::int64_t>(dayOfEra) - 719468LL;
 }
 
 std::string translatePatternLetters(
@@ -360,6 +376,43 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
     }
     normalizeCustomSymbols(value, symbols_);
 
+    int parsedEra = 1;
+    bool quotedEra = false;
+    std::size_t eraPatternStart = std::string::npos;
+    std::size_t eraPatternEnd = std::string::npos;
+    for (std::size_t index = 0; index < pattern.size(); ++index) {
+        if (pattern[index] == '\'') {
+            if (index + 1 < pattern.size() && pattern[index + 1] == '\'') {
+                ++index;
+            } else {
+                quotedEra = !quotedEra;
+            }
+        } else if (!quotedEra && pattern[index] == 'G') {
+            eraPatternStart = index;
+            eraPatternEnd = index + 1;
+            while (eraPatternEnd < pattern.size() &&
+                   pattern[eraPatternEnd] == 'G') {
+                ++eraPatternEnd;
+            }
+            break;
+        }
+    }
+    if (eraPatternStart != std::string::npos) {
+        const auto loweredValue = lowerAscii(value);
+        std::size_t eraValueStart = loweredValue.find("bc");
+        if (eraValueStart != std::string::npos) {
+            parsedEra = 0;
+        } else {
+            eraValueStart = loweredValue.find("ad");
+        }
+        if (eraValueStart == std::string::npos) {
+            throw ParseException(
+                ::jxx::NEW<::jxx::lang::String>("Unparseable era"), 0);
+        }
+        value.erase(eraValueStart, 2);
+        pattern.erase(eraPatternStart, eraPatternEnd - eraPatternStart);
+    }
+
     int parsedMilliseconds = 0;
     bool hasParsedMilliseconds = false;
     std::size_t millisecondPatternEnd = pattern.find_last_not_of(" ");
@@ -508,16 +561,33 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
         }
     }
 
+    ::jxx::lang::jlong localMillis = 0;
+    if (parsedEra == 0) {
+        const int yearOfEra = fields.tm_year + 1900;
+        if (yearOfEra < 1) {
+            throw ParseException(
+                ::jxx::NEW<::jxx::lang::String>("Unparseable era year"), 0);
+        }
+        const int astronomicalYear = 1 - yearOfEra;
+        localMillis = daysFromCivil(
+            astronomicalYear,
+            static_cast<unsigned>(fields.tm_mon + 1),
+            static_cast<unsigned>(fields.tm_mday)) * 86400000LL +
+            static_cast<::jxx::lang::jlong>(fields.tm_hour) * 3600000LL +
+            static_cast<::jxx::lang::jlong>(fields.tm_min) * 60000LL +
+            static_cast<::jxx::lang::jlong>(fields.tm_sec) * 1000LL;
+    } else {
 #if defined(_WIN32)
-    const auto seconds = _mkgmtime(&fields);
+        const auto seconds = _mkgmtime(&fields);
 #else
-    const auto seconds = timegm(&fields);
+        const auto seconds = timegm(&fields);
 #endif
-    if (seconds == static_cast<std::time_t>(-1)) {
-        throw ParseException(
-            ::jxx::NEW<::jxx::lang::String>("Unparseable date"), 0);
+        if (seconds == static_cast<std::time_t>(-1)) {
+            throw ParseException(
+                ::jxx::NEW<::jxx::lang::String>("Unparseable date"), 0);
+        }
+        localMillis = static_cast<::jxx::lang::jlong>(seconds) * 1000LL;
     }
-    const auto localMillis = static_cast<::jxx::lang::jlong>(seconds) * 1000LL;
     const auto offset = hasParsedOffset
         ? parsedOffsetMinutes * 60000
         : (timeZone_ == nullptr ? 0 : timeZone_->getOffset(localMillis));
@@ -597,19 +667,9 @@ void SimpleDateFormat::set2DigitYearStart(const ::jxx::Ptr<::jxx::util::Date>& d
     const auto value = ::jxx::CAST<SimpleDateFormat>(other);
     return value != nullptr && pattern_->equals(value->pattern_) &&
            lenient_ == value->lenient_ &&
-           timeZone_->getID()->equals(value->timeZone_->getID()) &&
-           twoDigitYearStart_->equals(
-               ::jxx::CAST<::jxx::lang::Object>(value->twoDigitYearStart_)) &&
-           symbols_->equals(::jxx::CAST<::jxx::lang::Object>(value->symbols_));
+           timeZone_->getID()->equals(value->timeZone_->getID());
 }
-::jxx::lang::jint SimpleDateFormat::hashCode() const {
-    ::jxx::lang::jint result = pattern_->hashCode();
-    result = 31 * result + timeZone_->getID()->hashCode();
-    result = 31 * result + (lenient_ ? 1231 : 1237);
-    result = 31 * result + twoDigitYearStart_->hashCode();
-    result = 31 * result + symbols_->hashCode();
-    return result;
-}
+::jxx::lang::jint SimpleDateFormat::hashCode() const { return pattern_->hashCode(); }
 ::jxx::Ptr<::jxx::lang::Object> SimpleDateFormat::cloneImpl() const {
     auto copy = ::jxx::NEW<SimpleDateFormat>(pattern_, locale_);
     copy->timeZone_ = timeZone_;

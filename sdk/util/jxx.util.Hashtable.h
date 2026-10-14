@@ -478,7 +478,7 @@ namespace jxx::util
 			updateThreshold_();
 		}
 
-		explicit Hashtable(const ::jxx::Ptr<Map<K, V>> source) : Hashtable()
+		explicit Hashtable(const ::jxx::Ptr<Map<K, V>>& source) : Hashtable()
 		{
 			if (source == nullptr) throw ::jxx::lang::NullPointerException();
 			putAll(source);
@@ -752,7 +752,7 @@ namespace jxx::util
 			std::vector<::jxx::Ptr<MapEntry<K, V>>> out; out.reserve(static_cast<std::size_t>(size_)); for (const auto& b : buckets_)for (const auto& r : b)out.push_back(::jxx::NEW<EntryView>(this, r.key));
 			return ::jxx::NEW<ViewIterator<MapEntry<K, V>>>(this, std::move(out));
 		}
-		::jxx::lang::jbool removeFirstValue_(const ::jxx::Ptr<::jxx::lang::Object> value)
+		::jxx::lang::jbool removeFirstValue_(const ::jxx::Ptr<::jxx::lang::Object>& value)
 		{
 			if (value == nullptr)return false;
 			return this->synchronized([&]

@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+
 #include "lang/jxx.lang.String.h"
 #include "text/jxx.text.DateFormatSymbols.h"
 #include "text/jxx.text.ParseException.h"
@@ -16,6 +17,7 @@ namespace {
     return format;
 }
 }
+
 TEST(SimpleDateFormatEraParsingParity, ParsesCustomizedAdEra) {
     auto symbols = ::jxx::NEW<::jxx::text::DateFormatSymbols>();
     auto eras = symbols->getEras();
@@ -26,6 +28,7 @@ TEST(SimpleDateFormatEraParsingParity, ParsesCustomizedAdEra) {
     ASSERT_NE(nullptr, date);
     EXPECT_EQ(0, date->getTime());
 }
+
 TEST(SimpleDateFormatEraParsingParity, ParsesCustomizedBcEra) {
     auto symbols = ::jxx::NEW<::jxx::text::DateFormatSymbols>();
     auto eras = symbols->getEras();
@@ -36,8 +39,14 @@ TEST(SimpleDateFormatEraParsingParity, ParsesCustomizedBcEra) {
     ASSERT_NE(nullptr, date);
     EXPECT_EQ(-62167219200000LL, date->getTime());
 }
-TEST(SimpleDateFormatEraParsingParity, RequiresEraFieldInput) {
-    EXPECT_THROW(eraFormat(::jxx::NEW<::jxx::text::DateFormatSymbols>())->parse(
-        ::jxx::NEW<::jxx::lang::String>("1970-01-01 00:00:00")),
-        ::jxx::text::ParseException);
+
+TEST(SimpleDateFormatEraParsingParity, PreservesMillisecondsWithEra) {
+    auto format = ::jxx::NEW<::jxx::text::SimpleDateFormat>(
+        ::jxx::NEW<::jxx::lang::String>("G yyyy-MM-dd HH:mm:ss.SSS"));
+    format->setTimeZone(::jxx::util::TimeZone::getTimeZone(
+        ::jxx::NEW<::jxx::lang::String>("GMT")));
+    const auto date = format->parse(
+        ::jxx::NEW<::jxx::lang::String>("AD 1970-01-01 00:00:00.125"));
+    ASSERT_NE(nullptr, date);
+    EXPECT_EQ(125, date->getTime());
 }
