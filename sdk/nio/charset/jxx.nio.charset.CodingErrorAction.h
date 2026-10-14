@@ -20,7 +20,7 @@ namespace jxx::nio::charset
         static jxx::Ptr<CodingErrorAction> REPORT;
 
     public:
-        explicit CodingErrorAction(const jxx::Ptr<jxx::lang::String> name);
+        explicit CodingErrorAction(const jxx::Ptr<jxx::lang::String>& name);
         ~CodingErrorAction() override = default;
 
     public:

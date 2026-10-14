@@ -20,21 +20,21 @@ namespace jxx::nio::charset
 
         using JxxSuper = ::jxx::lang::Object;
         using Super = ::jxx::lang::ClassBase<CharsetEncoder, JxxSuper>;
-        explicit CharsetEncoder(const jxx::Ptr<Charset> cs);
+        explicit CharsetEncoder(const jxx::Ptr<Charset>& cs);
         ~CharsetEncoder() override = default;
 
     public:
         jxx::Ptr<Charset> charset() const;
-        jxx::Ptr<CharsetEncoder> onMalformedInput(const jxx::Ptr<CodingErrorAction> action);
-        jxx::Ptr<CharsetEncoder> onUnmappableCharacter(const jxx::Ptr<CodingErrorAction> action);
-        jxx::Ptr<CharsetEncoder> replaceWith(const jxx::lang::ByteArray replacement);
+        jxx::Ptr<CharsetEncoder> onMalformedInput(const jxx::Ptr<CodingErrorAction>& action);
+        jxx::Ptr<CharsetEncoder> onUnmappableCharacter(const jxx::Ptr<CodingErrorAction>& action);
+        jxx::Ptr<CharsetEncoder> replaceWith(const jxx::lang::ByteArray& replacement);
         jxx::lang::ByteArray replacement() const;
 
-        jxx::Ptr<jxx::nio::ByteBuffer> encode(const jxx::Ptr<jxx::nio::CharBuffer> in);
-        jxx::Ptr<CoderResult> encode(const jxx::Ptr<jxx::nio::CharBuffer> in,
-                                     jxx::Ptr<jxx::nio::ByteBuffer> out,
+        jxx::Ptr<jxx::nio::ByteBuffer> encode(const jxx::Ptr<jxx::nio::CharBuffer>& in);
+        jxx::Ptr<CoderResult> encode(const jxx::Ptr<jxx::nio::CharBuffer>& in,
+                                     const jxx::Ptr<jxx::nio::ByteBuffer>& out,
                                      jxx::lang::jbool endOfInput);
-        jxx::Ptr<CoderResult> flush(const jxx::Ptr<jxx::nio::ByteBuffer> out);
+        jxx::Ptr<CoderResult> flush(const jxx::Ptr<jxx::nio::ByteBuffer>& out);
         jxx::Ptr<CharsetEncoder> reset();
 
     private:
