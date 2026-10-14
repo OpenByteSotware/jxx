@@ -226,7 +226,7 @@ namespace
 		return {};
 	}
 
-	inline jxx::Ptr<jxx::net::InetAddress> createInet_(const jxx::Ptr<jxx::lang::String> host,
+	inline jxx::Ptr<jxx::net::InetAddress> createInet_(const const jxx::Ptr<jxx::lang::String>& host,
 													   const std::vector<jxx::lang::jbyte>& bytes,
 													   int family)
 	{

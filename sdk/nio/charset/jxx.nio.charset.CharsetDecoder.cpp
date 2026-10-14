@@ -31,7 +31,7 @@ namespace jxx::nio::charset
     jxx::Ptr<Charset> CharsetDecoder::charset() const { return cs_; }
     jxx::Ptr<CharsetDecoder> CharsetDecoder::onMalformedInput(const jxx::Ptr<CodingErrorAction>& action) { malformedAction_ = action; return self_(); }
     jxx::Ptr<CharsetDecoder> CharsetDecoder::onUnmappableCharacter(const jxx::Ptr<CodingErrorAction>& action) { unmappableAction_ = action; return self_(); }
-    jxx::Ptr<CharsetDecoder> CharsetDecoder::replaceWith(const jxx::Ptr<jxx::lang::String> newReplacement) { if (newReplacement) replacement_ = newReplacement; return self_(); }
+    jxx::Ptr<CharsetDecoder> CharsetDecoder::replaceWith(const const jxx::Ptr<jxx::lang::String>& newReplacement) { if (newReplacement) replacement_ = newReplacement; return self_(); }
     jxx::Ptr<jxx::lang::String> CharsetDecoder::replacement() const { return replacement_; }
 
     jxx::Ptr<jxx::nio::CharBuffer> CharsetDecoder::decode(const jxx::Ptr<jxx::nio::ByteBuffer>& in)

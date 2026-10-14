@@ -124,7 +124,7 @@ namespace jxx::net
 
     ServerSocket::ServerSocket(jxx::lang::jint port,
                                jxx::lang::jint backlog,
-                               jxx::Ptr<InetAddress> bindAddr)
+                               const jxx::Ptr<InetAddress>& bindAddr)
         : ServerSocket()
     {
         bind(jxx::NEW<InetSocketAddress>(std::move(bindAddr), port), backlog);

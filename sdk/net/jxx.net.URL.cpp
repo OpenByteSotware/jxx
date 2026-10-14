@@ -26,7 +26,7 @@ namespace
     class BasicURLConnection final : public jxx::net::URLConnection
     {
     public:
-        BasicURLConnection(const jxx::Ptr<jxx::net::URL> url,
+        BasicURLConnection(const const jxx::Ptr<jxx::net::URL>& url,
                            const std::string& path,
                            const std::string& type)
             : URLConnection(std::move(url)),
@@ -56,7 +56,7 @@ namespace
     class BasicHttpURLConnection final : public jxx::net::HttpURLConnection
     {
     public:
-        explicit BasicHttpURLConnection(const jxx::Ptr<jxx::net::URL> url)
+        explicit BasicHttpURLConnection(const const jxx::Ptr<jxx::net::URL>& url)
             : HttpURLConnection(std::move(url))
         {
             responseMessage_ = jxx::NEW<jxx::lang::String>("HTTP transport not yet implemented in Bundle B");
@@ -82,9 +82,9 @@ namespace
     class BasicJarURLConnection final : public jxx::net::JarURLConnection
     {
     public:
-        BasicJarURLConnection(const jxx::Ptr<jxx::net::URL> url,
-                              jxx::Ptr<jxx::net::URL> jarFileURL,
-                              jxx::Ptr<jxx::lang::String> entryName)
+        BasicJarURLConnection(const const jxx::Ptr<jxx::net::URL>& url,
+                              const jxx::Ptr<jxx::net::URL>& jarFileURL,
+                              const jxx::Ptr<jxx::lang::String>& entryName)
             : JarURLConnection(std::move(url))
         {
             jarFileURL_ = std::move(jarFileURL);

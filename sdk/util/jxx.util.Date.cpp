@@ -8,17 +8,20 @@
 #include <string>
 
 #include "lang/jxx.lang.IllegalArgumentException.h"
+#include "util/jxx.util.TimeZone.h"
 
 namespace jxx::util {
 namespace {
 
 std::tm localFields(::jxx::lang::jlong millis) {
-    const std::time_t seconds = static_cast<std::time_t>(millis / 1000LL);
+    const auto zone = TimeZone::getDefault();
+    const auto localMillisValue = millis + zone->getOffset(millis);
+    const std::time_t seconds = static_cast<std::time_t>(localMillisValue / 1000LL);
     std::tm fields{};
 #if defined(_WIN32)
-    localtime_s(&fields, &seconds);
+    gmtime_s(&fields, &seconds);
 #else
-    localtime_r(&seconds, &fields);
+    gmtime_r(&seconds, &fields);
 #endif
     return fields;
 }
@@ -43,8 +46,17 @@ std::time_t toUtc(std::tm* fields) {
 }
 
 ::jxx::lang::jlong localMillis(std::tm fields) {
-    fields.tm_isdst = -1;
-    return static_cast<::jxx::lang::jlong>(std::mktime(&fields)) * 1000LL;
+    fields.tm_isdst = 0;
+    const auto wallMillis =
+        static_cast<::jxx::lang::jlong>(toUtc(&fields)) * 1000LL;
+    const auto zone = TimeZone::getDefault();
+    auto epochMillis = wallMillis - zone->getRawOffset();
+    for (int iteration = 0; iteration < 4; ++iteration) {
+        const auto adjusted = wallMillis - zone->getOffset(epochMillis);
+        if (adjusted == epochMillis) break;
+        epochMillis = adjusted;
+    }
+    return epochMillis;
 }
 
 ::jxx::Ptr<::jxx::lang::String> formatted(
@@ -179,12 +191,7 @@ void Date::setSeconds(::jxx::lang::jint value) {
 }
 
 ::jxx::lang::jint Date::getTimezoneOffset() const {
-    auto local = localFields(time_);
-    auto utc = utcFields(time_);
-    const auto localAsLocal = std::mktime(&local);
-    const auto utcAsLocal = std::mktime(&utc);
-    return static_cast<::jxx::lang::jint>(
-        std::difftime(utcAsLocal, localAsLocal) / 60.0);
+    return -TimeZone::getDefault()->getOffset(time_) / 60000;
 }
 
 ::jxx::lang::jbool Date::after(const ::jxx::Ptr<Date>& when) const {
@@ -209,8 +216,24 @@ void Date::setSeconds(::jxx::lang::jint value) {
     return static_cast<::jxx::lang::jint>(value ^ (value >> 32U));
 }
 ::jxx::Ptr<::jxx::lang::String> Date::toString() const {
+    static const std::array<const char*, 7> weekDays{
+        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+    static const std::array<const char*, 12> months{
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
     const auto fields = localFields(time_);
-    return formatted(fields, "%a %b %d %H:%M:%S %Z %Y");
+    const auto abbreviation = TimeZone::getDefault()->getAbbreviation(time_);
+    std::ostringstream stream;
+    stream << weekDays[static_cast<std::size_t>(fields.tm_wday)] << ' '
+           << months[static_cast<std::size_t>(fields.tm_mon)] << ' '
+           << std::setw(2) << std::setfill('0') << fields.tm_mday << ' '
+           << std::setw(2) << fields.tm_hour << ':'
+           << std::setw(2) << fields.tm_min << ':'
+           << std::setw(2) << fields.tm_sec << ' '
+           << (abbreviation == nullptr ? TimeZone::getDefault()->getID()->utf8()
+                                       : abbreviation->utf8()) << ' '
+           << fields.tm_year + 1900;
+    return ::jxx::NEW<::jxx::lang::String>(stream.str());
 }
 
 } // namespace jxx::util

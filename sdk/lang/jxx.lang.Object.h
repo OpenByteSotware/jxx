@@ -321,7 +321,7 @@ namespace jxx
     } // namespace detail
 
     template <typename T>
-    jxx::Ptr<T> ADOPT(jxx::Ptr<T> object) noexcept
+    jxx::Ptr<T> ADOPT(const jxx::Ptr<T>& object) noexcept
     {
         static_assert(
             std::is_base_of_v<jxx::lang::Object, T>,

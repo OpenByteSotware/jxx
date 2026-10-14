@@ -117,7 +117,7 @@ std::vector<::jxx::Ptr<Node>> select(const ::jxx::Ptr<Node>& context, const std:
         }
         return current;
     }
-    ::jxx::Ptr<Node> root = context;
+    const ::jxx::Ptr<Node>& root = context;
     if (absolute) {
         while (root->getParentNode() != nullptr) root = root->getParentNode();
         if (root->getNodeType() == Node::DOCUMENT_NODE) {

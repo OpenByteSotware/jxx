@@ -26,11 +26,12 @@ static std::string base_dir() {
     if (const char* e = std::getenv("JXX_TIME_ZONE_INFO")) {
         return std::string(e);
     }
-#ifdef __linux__
-    return std::string("/usr/share/zoneinfo");
-#else
+    const std::filesystem::path standardRoot("/usr/share/zoneinfo");
+    std::error_code error;
+    if (std::filesystem::is_directory(standardRoot, error) && !error) {
+        return standardRoot.string();
+    }
     return std::string(".");
-#endif
 }
 
 static inline ::jxx::lang::jint parse_gmt_offset_millis(const std::string& s) {
