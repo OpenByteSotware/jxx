@@ -26,7 +26,7 @@ namespace jxx::nio
         static jxx::Ptr<ByteOrder> LITTLE_ENDIAN;
 
     public:
-        explicit ByteOrder(const jxx::Ptr<jxx::lang::String> name);
+        explicit ByteOrder(const jxx::Ptr<jxx::lang::String>& name);
         ~ByteOrder() override = default;
 
     public:

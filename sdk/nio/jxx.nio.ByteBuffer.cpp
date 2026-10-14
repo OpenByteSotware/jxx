@@ -22,7 +22,7 @@ namespace jxx::nio
                            jxx::lang::jint capacity,
                            jxx::lang::jbool readOnly,
                            jxx::lang::jbool direct,
-                           jxx::Ptr<ByteOrder> order)
+                           const jxx::Ptr<ByteOrder>& order)
         : Super(-1, 0, capacity, capacity),
           storage_(std::move(storage)),
           offset_(offset),
@@ -52,14 +52,14 @@ namespace jxx::nio
         return jxx::NEW<ByteBuffer>(storage, 0, capacity, false, true, ByteOrder::BIG_ENDIAN);
     }
 
-    jxx::Ptr<ByteBuffer> ByteBuffer::wrap(const jxx::lang::ByteArray array)
+    jxx::Ptr<ByteBuffer> ByteBuffer::wrap(const jxx::lang::ByteArray& array)
     {
         if (!array)
             throwIAE_("null array");
         return wrap(array, 0, array->length);
     }
 
-    jxx::Ptr<ByteBuffer> ByteBuffer::wrap(const jxx::lang::ByteArray array,
+    jxx::Ptr<ByteBuffer> ByteBuffer::wrap(const jxx::lang::ByteArray& array,
                                           jxx::lang::jint offset,
                                           jxx::lang::jint length)
     {
@@ -111,14 +111,14 @@ namespace jxx::nio
         return at_(index);
     }
 
-    jxx::Ptr<ByteBuffer> ByteBuffer::get(const jxx::lang::ByteArray dst)
+    jxx::Ptr<ByteBuffer> ByteBuffer::get(const jxx::lang::ByteArray& dst)
     {
         if (!dst)
             throwIAE_("null array");
         return get(dst, 0, dst->length);
     }
 
-    jxx::Ptr<ByteBuffer> ByteBuffer::get(const jxx::lang::ByteArray dst,
+    jxx::Ptr<ByteBuffer> ByteBuffer::get(const jxx::lang::ByteArray& dst,
                                          jxx::lang::jint offset,
                                          jxx::lang::jint length)
     {
@@ -150,14 +150,14 @@ namespace jxx::nio
         return self_Byte_();
     }
 
-    jxx::Ptr<ByteBuffer> ByteBuffer::put(const jxx::lang::ByteArray src)
+    jxx::Ptr<ByteBuffer> ByteBuffer::put(const jxx::lang::ByteArray& src)
     {
         if (!src)
             throwIAE_("null array");
         return put(src, 0, src->length);
     }
 
-    jxx::Ptr<ByteBuffer> ByteBuffer::put(const jxx::lang::ByteArray src,
+    jxx::Ptr<ByteBuffer> ByteBuffer::put(const jxx::lang::ByteArray& src,
                                          jxx::lang::jint offset,
                                          jxx::lang::jint length)
     {
@@ -174,7 +174,7 @@ namespace jxx::nio
         return self_Byte_();
     }
 
-    jxx::Ptr<ByteBuffer> ByteBuffer::put(const jxx::Ptr<ByteBuffer> src)
+    jxx::Ptr<ByteBuffer> ByteBuffer::put(const jxx::Ptr<ByteBuffer>& src)
     {
         if (!src)
             throwIAE_("null source buffer");
@@ -252,7 +252,7 @@ namespace jxx::nio
     jxx::lang::jbool ByteBuffer::isDirect() const { return direct_; }
     jxx::Ptr<ByteOrder> ByteBuffer::order() const { return order_; }
 
-    jxx::Ptr<ByteBuffer> ByteBuffer::order(const jxx::Ptr<ByteOrder> order)
+    jxx::Ptr<ByteBuffer> ByteBuffer::order(const jxx::Ptr<ByteOrder>& order)
     {
         order_ = order ? order : ByteOrder::BIG_ENDIAN;
         return self_Byte_();

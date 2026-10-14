@@ -73,7 +73,7 @@ int isoWeeksInYear(int year) {
 std::tuple<int, int, int> isoWeekFields(const std::tm& fields) {
     const int year = fields.tm_year + 1900;
     const int isoDay = fields.tm_wday == 0 ? 7 : fields.tm_wday;
-    int week = (fields.tm_yday + 10 - isoDay) / 7;
+    int week = (fields.tm_yday + 11 - isoDay) / 7;
     int weekYear = year;
     if (week < 1) {
         weekYear = year - 1;

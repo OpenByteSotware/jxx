@@ -18,7 +18,7 @@ namespace
 
 namespace jxx::nio
 {
-    LongBuffer::LongBuffer(jxx::lang::LongArray storage,
+    LongBuffer::LongBuffer(const jxx::lang::LongArray& storage,
                  jxx::lang::jint offset,
                  jxx::lang::jint capacity,
                  jxx::lang::jbool readOnly)
@@ -39,14 +39,14 @@ namespace jxx::nio
         return ::jxx::ADOPT(std::shared_ptr<LongBuffer>(new LongBuffer(storage, 0, capacity, false)));
     }
 
-    jxx::Ptr<LongBuffer> LongBuffer::wrap(const jxx::lang::LongArray array)
+    jxx::Ptr<LongBuffer> LongBuffer::wrap(const jxx::lang::LongArray& array)
     {
         if (!array)
             throwIAE_("null array");
         return wrap(array, 0, array->length);
     }
 
-    jxx::Ptr<LongBuffer> LongBuffer::wrap(const jxx::lang::LongArray array,
+    jxx::Ptr<LongBuffer> LongBuffer::wrap(const jxx::lang::LongArray& array,
                                 jxx::lang::jint offset,
                                 jxx::lang::jint length)
     {
@@ -97,14 +97,14 @@ namespace jxx::nio
         return at_(index);
     }
 
-    jxx::Ptr<LongBuffer> LongBuffer::get(const jxx::lang::LongArray dst)
+    jxx::Ptr<LongBuffer> LongBuffer::get(const jxx::lang::LongArray& dst)
     {
         if (!dst)
             throwIAE_("null array");
         return get(dst, 0, dst->length);
     }
 
-    jxx::Ptr<LongBuffer> LongBuffer::get(const jxx::lang::LongArray dst,
+    jxx::Ptr<LongBuffer> LongBuffer::get(const jxx::lang::LongArray& dst,
                                jxx::lang::jint offset,
                                jxx::lang::jint length)
     {
@@ -135,14 +135,14 @@ namespace jxx::nio
         return self__();
     }
 
-    jxx::Ptr<LongBuffer> LongBuffer::put(const jxx::lang::LongArray src)
+    jxx::Ptr<LongBuffer> LongBuffer::put(const jxx::lang::LongArray& src)
     {
         if (!src)
             throwIAE_("null array");
         return put(src, 0, src->length);
     }
 
-    jxx::Ptr<LongBuffer> LongBuffer::put(const jxx::lang::LongArray src,
+    jxx::Ptr<LongBuffer> LongBuffer::put(const jxx::lang::LongArray& src,
                                jxx::lang::jint offset,
                                jxx::lang::jint length)
     {
@@ -158,7 +158,7 @@ namespace jxx::nio
         return self__();
     }
 
-    jxx::Ptr<LongBuffer> LongBuffer::put(const jxx::Ptr<LongBuffer> src)
+    jxx::Ptr<LongBuffer> LongBuffer::put(const jxx::Ptr<LongBuffer>& src)
     {
         if (!src)
             throwIAE_("null source buffer");

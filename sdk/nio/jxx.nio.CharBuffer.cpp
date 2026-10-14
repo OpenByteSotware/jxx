@@ -38,14 +38,14 @@ namespace jxx::nio
         return jxx::NEW<CharBuffer>(storage, (jxx::lang::jint)0, capacity, (jxx::lang::jbool)false);
     }
 
-    jxx::Ptr<CharBuffer> CharBuffer::wrap(const jxx::lang::CharArray array)
+    jxx::Ptr<CharBuffer> CharBuffer::wrap(const jxx::lang::CharArray& array)
     {
         if (!array)
             throwIAE_("null array");
         return wrap(array, 0, array->length);
     }
 
-    jxx::Ptr<CharBuffer> CharBuffer::wrap(const jxx::lang::CharArray array,
+    jxx::Ptr<CharBuffer> CharBuffer::wrap(const jxx::lang::CharArray& array,
                                 jxx::lang::jint offset,
                                 jxx::lang::jint length)
     {
@@ -63,7 +63,7 @@ namespace jxx::nio
         out->limit(length);
         return out;
     }
-    jxx::Ptr<CharBuffer> CharBuffer::wrap(const jxx::Ptr<jxx::lang::String> str)
+    jxx::Ptr<CharBuffer> CharBuffer::wrap(const jxx::Ptr<jxx::lang::String>& str)
     {
         if (!str)
             throwIAE_("null string");
@@ -104,14 +104,14 @@ namespace jxx::nio
         return at_(index);
     }
 
-    jxx::Ptr<CharBuffer> CharBuffer::get(const jxx::lang::CharArray dst)
+    jxx::Ptr<CharBuffer> CharBuffer::get(const jxx::lang::CharArray& dst)
     {
         if (!dst)
             throwIAE_("null array");
         return get(dst, 0, dst->length);
     }
 
-    jxx::Ptr<CharBuffer> CharBuffer::get(const jxx::lang::CharArray dst,
+    jxx::Ptr<CharBuffer> CharBuffer::get(const jxx::lang::CharArray& dst,
                                jxx::lang::jint offset,
                                jxx::lang::jint length)
     {
@@ -142,14 +142,14 @@ namespace jxx::nio
         return self__();
     }
 
-    jxx::Ptr<CharBuffer> CharBuffer::put(const jxx::lang::CharArray src)
+    jxx::Ptr<CharBuffer> CharBuffer::put(const jxx::lang::CharArray& src)
     {
         if (!src)
             throwIAE_("null array");
         return put(src, 0, src->length);
     }
 
-    jxx::Ptr<CharBuffer> CharBuffer::put(const jxx::lang::CharArray src,
+    jxx::Ptr<CharBuffer> CharBuffer::put(const jxx::lang::CharArray& src,
                                jxx::lang::jint offset,
                                jxx::lang::jint length)
     {
@@ -165,7 +165,7 @@ namespace jxx::nio
         return self__();
     }
 
-    jxx::Ptr<CharBuffer> CharBuffer::put(const jxx::Ptr<CharBuffer> src)
+    jxx::Ptr<CharBuffer> CharBuffer::put(const jxx::Ptr<CharBuffer>& src)
     {
         if (!src)
             throwIAE_("null source buffer");

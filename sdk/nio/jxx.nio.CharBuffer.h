@@ -23,26 +23,26 @@ namespace jxx::nio
         ~CharBuffer() override = default;
 
         static jxx::Ptr<CharBuffer> allocate(jxx::lang::jint capacity);
-        static jxx::Ptr<CharBuffer> wrap(const jxx::lang::CharArray array);
-        static jxx::Ptr<CharBuffer> wrap(const jxx::lang::CharArray array,
+        static jxx::Ptr<CharBuffer> wrap(const jxx::lang::CharArray& array);
+        static jxx::Ptr<CharBuffer> wrap(const jxx::lang::CharArray& array,
                                     jxx::lang::jint offset,
                                     jxx::lang::jint length);
-        static jxx::Ptr<CharBuffer> wrap(const jxx::Ptr<jxx::lang::String> str);
+        static jxx::Ptr<CharBuffer> wrap(const jxx::Ptr<jxx::lang::String>& str);
 
         jxx::lang::jchar get();
         jxx::lang::jchar get(jxx::lang::jint index) const;
-        jxx::Ptr<CharBuffer> get(const jxx::lang::CharArray dst);
-        jxx::Ptr<CharBuffer> get(const jxx::lang::CharArray dst,
+        jxx::Ptr<CharBuffer> get(const jxx::lang::CharArray& dst);
+        jxx::Ptr<CharBuffer> get(const jxx::lang::CharArray& dst,
                             jxx::lang::jint offset,
                             jxx::lang::jint length);
 
         jxx::Ptr<CharBuffer> put(jxx::lang::jchar value);
         jxx::Ptr<CharBuffer> put(jxx::lang::jint index, jxx::lang::jchar value);
-        jxx::Ptr<CharBuffer> put(const jxx::lang::CharArray src);
-        jxx::Ptr<CharBuffer> put(const jxx::lang::CharArray src,
+        jxx::Ptr<CharBuffer> put(const jxx::lang::CharArray& src);
+        jxx::Ptr<CharBuffer> put(const jxx::lang::CharArray& src,
                             jxx::lang::jint offset,
                             jxx::lang::jint length);
-        jxx::Ptr<CharBuffer> put(const jxx::Ptr<CharBuffer> src);
+        jxx::Ptr<CharBuffer> put(const jxx::Ptr<CharBuffer>& src);
 
         jxx::Ptr<CharBuffer> slice() const;
         jxx::Ptr<CharBuffer> duplicate() const;

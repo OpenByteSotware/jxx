@@ -17,7 +17,7 @@ namespace
 
 namespace jxx::nio
 {
-    FloatBuffer::FloatBuffer(jxx::lang::FloatArray storage,
+    FloatBuffer::FloatBuffer(const jxx::lang::FloatArray& storage,
                  jxx::lang::jint offset,
                  jxx::lang::jint capacity,
                  jxx::lang::jbool readOnly)
@@ -38,14 +38,14 @@ namespace jxx::nio
         return ::jxx::ADOPT(std::shared_ptr<FloatBuffer>(new FloatBuffer(storage, 0, capacity, false)));
     }
 
-    jxx::Ptr<FloatBuffer> FloatBuffer::wrap(const jxx::lang::FloatArray array)
+    jxx::Ptr<FloatBuffer> FloatBuffer::wrap(const jxx::lang::FloatArray& array)
     {
         if (!array)
             throwIAE_("null array");
         return wrap(array, 0, array->length);
     }
 
-    jxx::Ptr<FloatBuffer> FloatBuffer::wrap(const jxx::lang::FloatArray array,
+    jxx::Ptr<FloatBuffer> FloatBuffer::wrap(const jxx::lang::FloatArray& array,
                                 jxx::lang::jint offset,
                                 jxx::lang::jint length)
     {
@@ -96,14 +96,14 @@ namespace jxx::nio
         return at_(index);
     }
 
-    jxx::Ptr<FloatBuffer> FloatBuffer::get(const jxx::lang::FloatArray dst)
+    jxx::Ptr<FloatBuffer> FloatBuffer::get(const jxx::lang::FloatArray& dst)
     {
         if (!dst)
             throwIAE_("null array");
         return get(dst, 0, dst->length);
     }
 
-    jxx::Ptr<FloatBuffer> FloatBuffer::get(const jxx::lang::FloatArray dst,
+    jxx::Ptr<FloatBuffer> FloatBuffer::get(const jxx::lang::FloatArray& dst,
                                jxx::lang::jint offset,
                                jxx::lang::jint length)
     {
@@ -134,14 +134,14 @@ namespace jxx::nio
         return self__();
     }
 
-    jxx::Ptr<FloatBuffer> FloatBuffer::put(const jxx::lang::FloatArray src)
+    jxx::Ptr<FloatBuffer> FloatBuffer::put(const jxx::lang::FloatArray& src)
     {
         if (!src)
             throwIAE_("null array");
         return put(src, 0, src->length);
     }
 
-    jxx::Ptr<FloatBuffer> FloatBuffer::put(const jxx::lang::FloatArray src,
+    jxx::Ptr<FloatBuffer> FloatBuffer::put(const jxx::lang::FloatArray& src,
                                jxx::lang::jint offset,
                                jxx::lang::jint length)
     {
@@ -157,7 +157,7 @@ namespace jxx::nio
         return self__();
     }
 
-    jxx::Ptr<FloatBuffer> FloatBuffer::put(const jxx::Ptr<FloatBuffer> src)
+    jxx::Ptr<FloatBuffer> FloatBuffer::put(const jxx::Ptr<FloatBuffer>& src)
     {
         if (!src)
             throwIAE_("null source buffer");

@@ -15,7 +15,7 @@ namespace jxx::nio
     jxx::Ptr<ByteOrder> ByteOrder::BIG_ENDIAN = jxx::NEW<ByteOrder>(jxx::NEW<jxx::lang::String>("BIG_ENDIAN"));
     jxx::Ptr<ByteOrder> ByteOrder::LITTLE_ENDIAN = jxx::NEW<ByteOrder>(jxx::NEW<jxx::lang::String>("LITTLE_ENDIAN"));
 
-    ByteOrder::ByteOrder(const jxx::Ptr<jxx::lang::String> name)
+    ByteOrder::ByteOrder(const jxx::Ptr<jxx::lang::String>& name)
         : name_(std::move(name))
     {
     }

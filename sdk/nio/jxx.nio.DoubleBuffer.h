@@ -18,25 +18,25 @@ namespace jxx::nio
         ~DoubleBuffer() override = default;
 
         static jxx::Ptr<DoubleBuffer> allocate(jxx::lang::jint capacity);
-        static jxx::Ptr<DoubleBuffer> wrap(const jxx::lang::DoubleArray array);
-        static jxx::Ptr<DoubleBuffer> wrap(const jxx::lang::DoubleArray array,
+        static jxx::Ptr<DoubleBuffer> wrap(const jxx::lang::DoubleArray& array);
+        static jxx::Ptr<DoubleBuffer> wrap(const jxx::lang::DoubleArray& array,
                                     jxx::lang::jint offset,
                                     jxx::lang::jint length);
 
         jxx::lang::jdouble get();
         jxx::lang::jdouble get(jxx::lang::jint index) const;
-        jxx::Ptr<DoubleBuffer> get(const jxx::lang::DoubleArray dst);
-        jxx::Ptr<DoubleBuffer> get(const jxx::lang::DoubleArray dst,
+        jxx::Ptr<DoubleBuffer> get(const jxx::lang::DoubleArray& dst);
+        jxx::Ptr<DoubleBuffer> get(const jxx::lang::DoubleArray& dst,
                             jxx::lang::jint offset,
                             jxx::lang::jint length);
 
         jxx::Ptr<DoubleBuffer> put(jxx::lang::jdouble value);
         jxx::Ptr<DoubleBuffer> put(jxx::lang::jint index, jxx::lang::jdouble value);
-        jxx::Ptr<DoubleBuffer> put(const jxx::lang::DoubleArray src);
-        jxx::Ptr<DoubleBuffer> put(const jxx::lang::DoubleArray src,
+        jxx::Ptr<DoubleBuffer> put(const jxx::lang::DoubleArray& src);
+        jxx::Ptr<DoubleBuffer> put(const jxx::lang::DoubleArray& src,
                             jxx::lang::jint offset,
                             jxx::lang::jint length);
-        jxx::Ptr<DoubleBuffer> put(const jxx::Ptr<DoubleBuffer> src);
+        jxx::Ptr<DoubleBuffer> put(const jxx::Ptr<DoubleBuffer>& src);
 
         jxx::Ptr<DoubleBuffer> slice() const;
         jxx::Ptr<DoubleBuffer> duplicate() const;
@@ -50,7 +50,7 @@ namespace jxx::nio
         jxx::lang::jbool isDirect() const override;
 
     private:
-        DoubleBuffer(jxx::lang::DoubleArray storage,
+        DoubleBuffer(const jxx::lang::DoubleArray& storage,
               jxx::lang::jint offset,
               jxx::lang::jint capacity,
               jxx::lang::jbool readOnly);

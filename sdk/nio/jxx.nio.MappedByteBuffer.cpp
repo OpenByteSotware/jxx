@@ -24,7 +24,7 @@ namespace jxx::nio
                                        jxx::lang::jbool readOnly,
                                        const std::string& path,
                                        jxx::lang::jlong fileOffset,
-                                       jxx::Ptr<ByteOrder> order)
+                                       const jxx::Ptr<ByteOrder>& order)
         : Super(std::move(storage), offset, capacity, readOnly, true, std::move(order)),
           path_(path),
           fileOffset_(fileOffset)
@@ -36,7 +36,7 @@ namespace jxx::nio
         jxx::lang::jlong fileOffset,
         jxx::lang::jint size,
         jxx::lang::jbool readOnly,
-        jxx::Ptr<ByteOrder> order)
+        const jxx::Ptr<ByteOrder>& order)
     {
         if (fileOffset < 0 || size < 0)
             throwIAE_("negative map offset/size");

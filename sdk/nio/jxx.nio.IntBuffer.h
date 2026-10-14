@@ -18,25 +18,25 @@ namespace jxx::nio
         ~IntBuffer() override = default;
 
         static jxx::Ptr<IntBuffer> allocate(jxx::lang::jint capacity);
-        static jxx::Ptr<IntBuffer> wrap(const jxx::lang::IntArray array);
-        static jxx::Ptr<IntBuffer> wrap(const jxx::lang::IntArray array,
+        static jxx::Ptr<IntBuffer> wrap(const jxx::lang::IntArray& array);
+        static jxx::Ptr<IntBuffer> wrap(const jxx::lang::IntArray& array,
                                     jxx::lang::jint offset,
                                     jxx::lang::jint length);
 
         jxx::lang::jint get();
         jxx::lang::jint get(jxx::lang::jint index) const;
-        jxx::Ptr<IntBuffer> get(const jxx::lang::IntArray dst);
-        jxx::Ptr<IntBuffer> get(const jxx::lang::IntArray dst,
+        jxx::Ptr<IntBuffer> get(const jxx::lang::IntArray& dst);
+        jxx::Ptr<IntBuffer> get(const jxx::lang::IntArray& dst,
                             jxx::lang::jint offset,
                             jxx::lang::jint length);
 
         jxx::Ptr<IntBuffer> put(jxx::lang::jint value);
         jxx::Ptr<IntBuffer> put(jxx::lang::jint index, jxx::lang::jint value);
-        jxx::Ptr<IntBuffer> put(const jxx::lang::IntArray src);
-        jxx::Ptr<IntBuffer> put(const jxx::lang::IntArray src,
+        jxx::Ptr<IntBuffer> put(const jxx::lang::IntArray& src);
+        jxx::Ptr<IntBuffer> put(const jxx::lang::IntArray& src,
                             jxx::lang::jint offset,
                             jxx::lang::jint length);
-        jxx::Ptr<IntBuffer> put(const jxx::Ptr<IntBuffer> src);
+        jxx::Ptr<IntBuffer> put(const jxx::Ptr<IntBuffer>& src);
 
         jxx::Ptr<IntBuffer> slice() const;
         jxx::Ptr<IntBuffer> duplicate() const;
@@ -50,7 +50,7 @@ namespace jxx::nio
         jxx::lang::jbool isDirect() const override;
 
     private:
-        IntBuffer(jxx::lang::IntArray storage,
+        IntBuffer(const jxx::lang::IntArray& storage,
               jxx::lang::jint offset,
               jxx::lang::jint capacity,
               jxx::lang::jbool readOnly);

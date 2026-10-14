@@ -18,25 +18,25 @@ namespace jxx::nio
         ~FloatBuffer() override = default;
 
         static jxx::Ptr<FloatBuffer> allocate(jxx::lang::jint capacity);
-        static jxx::Ptr<FloatBuffer> wrap(const jxx::lang::FloatArray array);
-        static jxx::Ptr<FloatBuffer> wrap(const jxx::lang::FloatArray array,
+        static jxx::Ptr<FloatBuffer> wrap(const jxx::lang::FloatArray& array);
+        static jxx::Ptr<FloatBuffer> wrap(const jxx::lang::FloatArray& array,
                                     jxx::lang::jint offset,
                                     jxx::lang::jint length);
 
         jxx::lang::jfloat get();
         jxx::lang::jfloat get(jxx::lang::jint index) const;
-        jxx::Ptr<FloatBuffer> get(const jxx::lang::FloatArray dst);
-        jxx::Ptr<FloatBuffer> get(const jxx::lang::FloatArray dst,
+        jxx::Ptr<FloatBuffer> get(const jxx::lang::FloatArray& dst);
+        jxx::Ptr<FloatBuffer> get(const jxx::lang::FloatArray& dst,
                             jxx::lang::jint offset,
                             jxx::lang::jint length);
 
         jxx::Ptr<FloatBuffer> put(jxx::lang::jfloat value);
         jxx::Ptr<FloatBuffer> put(jxx::lang::jint index, jxx::lang::jfloat value);
-        jxx::Ptr<FloatBuffer> put(const jxx::lang::FloatArray src);
-        jxx::Ptr<FloatBuffer> put(const jxx::lang::FloatArray src,
+        jxx::Ptr<FloatBuffer> put(const jxx::lang::FloatArray& src);
+        jxx::Ptr<FloatBuffer> put(const jxx::lang::FloatArray& src,
                             jxx::lang::jint offset,
                             jxx::lang::jint length);
-        jxx::Ptr<FloatBuffer> put(const jxx::Ptr<FloatBuffer> src);
+        jxx::Ptr<FloatBuffer> put(const jxx::Ptr<FloatBuffer>& src);
 
         jxx::Ptr<FloatBuffer> slice() const;
         jxx::Ptr<FloatBuffer> duplicate() const;
@@ -50,7 +50,7 @@ namespace jxx::nio
         jxx::lang::jbool isDirect() const override;
 
     private:
-        FloatBuffer(jxx::lang::FloatArray storage,
+        FloatBuffer(const jxx::lang::FloatArray& storage,
               jxx::lang::jint offset,
               jxx::lang::jint capacity,
               jxx::lang::jbool readOnly);

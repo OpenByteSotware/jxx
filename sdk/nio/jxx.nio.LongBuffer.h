@@ -18,25 +18,25 @@ namespace jxx::nio
         ~LongBuffer() override = default;
 
         static jxx::Ptr<LongBuffer> allocate(jxx::lang::jint capacity);
-        static jxx::Ptr<LongBuffer> wrap(const jxx::lang::LongArray array);
-        static jxx::Ptr<LongBuffer> wrap(const jxx::lang::LongArray array,
+        static jxx::Ptr<LongBuffer> wrap(const jxx::lang::LongArray& array);
+        static jxx::Ptr<LongBuffer> wrap(const jxx::lang::LongArray& array,
                                     jxx::lang::jint offset,
                                     jxx::lang::jint length);
 
         jxx::lang::jlong get();
         jxx::lang::jlong get(jxx::lang::jint index) const;
-        jxx::Ptr<LongBuffer> get(const jxx::lang::LongArray dst);
-        jxx::Ptr<LongBuffer> get(const jxx::lang::LongArray dst,
+        jxx::Ptr<LongBuffer> get(const jxx::lang::LongArray& dst);
+        jxx::Ptr<LongBuffer> get(const jxx::lang::LongArray& dst,
                             jxx::lang::jint offset,
                             jxx::lang::jint length);
 
         jxx::Ptr<LongBuffer> put(jxx::lang::jlong value);
         jxx::Ptr<LongBuffer> put(jxx::lang::jint index, jxx::lang::jlong value);
-        jxx::Ptr<LongBuffer> put(const jxx::lang::LongArray src);
-        jxx::Ptr<LongBuffer> put(const jxx::lang::LongArray src,
+        jxx::Ptr<LongBuffer> put(const jxx::lang::LongArray& src);
+        jxx::Ptr<LongBuffer> put(const jxx::lang::LongArray& src,
                             jxx::lang::jint offset,
                             jxx::lang::jint length);
-        jxx::Ptr<LongBuffer> put(const jxx::Ptr<LongBuffer> src);
+        jxx::Ptr<LongBuffer> put(const jxx::Ptr<LongBuffer>& src);
 
         jxx::Ptr<LongBuffer> slice() const;
         jxx::Ptr<LongBuffer> duplicate() const;
@@ -50,7 +50,7 @@ namespace jxx::nio
         jxx::lang::jbool isDirect() const override;
 
     private:
-        LongBuffer(jxx::lang::LongArray storage,
+        LongBuffer(const jxx::lang::LongArray& storage,
               jxx::lang::jint offset,
               jxx::lang::jint capacity,
               jxx::lang::jbool readOnly);

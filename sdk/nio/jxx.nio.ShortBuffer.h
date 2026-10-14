@@ -15,7 +15,7 @@ namespace jxx::nio
         using JxxSuper = Buffer;
         using Super = jxx::lang::ClassBase<ShortBuffer, JxxSuper>;
 
-        ShortBuffer(jxx::lang::ShortArray storage,
+        ShortBuffer(const jxx::lang::ShortArray& storage,
             jxx::lang::jint offset,
             jxx::lang::jint capacity,
             jxx::lang::jbool readOnly);
@@ -23,25 +23,25 @@ namespace jxx::nio
         ~ShortBuffer() override = default;
 
         static jxx::Ptr<ShortBuffer> allocate(jxx::lang::jint capacity);
-        static jxx::Ptr<ShortBuffer> wrap(const jxx::lang::ShortArray array);
-        static jxx::Ptr<ShortBuffer> wrap(const jxx::lang::ShortArray array,
+        static jxx::Ptr<ShortBuffer> wrap(const jxx::lang::ShortArray& array);
+        static jxx::Ptr<ShortBuffer> wrap(const jxx::lang::ShortArray& array,
                                     jxx::lang::jint offset,
                                     jxx::lang::jint length);
 
         jxx::lang::jshort get();
         jxx::lang::jshort get(jxx::lang::jint index) const;
-        jxx::Ptr<ShortBuffer> get(const jxx::lang::ShortArray dst);
-        jxx::Ptr<ShortBuffer> get(const jxx::lang::ShortArray dst,
+        jxx::Ptr<ShortBuffer> get(const jxx::lang::ShortArray& dst);
+        jxx::Ptr<ShortBuffer> get(const jxx::lang::ShortArray& dst,
                             jxx::lang::jint offset,
                             jxx::lang::jint length);
 
         jxx::Ptr<ShortBuffer> put(jxx::lang::jshort value);
         jxx::Ptr<ShortBuffer> put(jxx::lang::jint index, jxx::lang::jshort value);
-        jxx::Ptr<ShortBuffer> put(const jxx::lang::ShortArray src);
-        jxx::Ptr<ShortBuffer> put(const jxx::lang::ShortArray src,
+        jxx::Ptr<ShortBuffer> put(const jxx::lang::ShortArray& src);
+        jxx::Ptr<ShortBuffer> put(const jxx::lang::ShortArray& src,
                             jxx::lang::jint offset,
                             jxx::lang::jint length);
-        jxx::Ptr<ShortBuffer> put(const jxx::Ptr<ShortBuffer> src);
+        jxx::Ptr<ShortBuffer> put(const jxx::Ptr<ShortBuffer>& src);
 
         jxx::Ptr<ShortBuffer> slice() const;
         jxx::Ptr<ShortBuffer> duplicate() const;

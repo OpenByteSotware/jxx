@@ -17,7 +17,7 @@ namespace
 
 namespace jxx::nio
 {
-    DoubleBuffer::DoubleBuffer(jxx::lang::DoubleArray storage,
+    DoubleBuffer::DoubleBuffer(const jxx::lang::DoubleArray& storage,
                  jxx::lang::jint offset,
                  jxx::lang::jint capacity,
                  jxx::lang::jbool readOnly)
@@ -38,14 +38,14 @@ namespace jxx::nio
         return ::jxx::ADOPT(std::shared_ptr<DoubleBuffer>(new DoubleBuffer(storage, 0, capacity, false)));
     }
 
-    jxx::Ptr<DoubleBuffer> DoubleBuffer::wrap(const jxx::lang::DoubleArray array)
+    jxx::Ptr<DoubleBuffer> DoubleBuffer::wrap(const jxx::lang::DoubleArray& array)
     {
         if (!array)
             throwIAE_("null array");
         return wrap(array, 0, array->length);
     }
 
-    jxx::Ptr<DoubleBuffer> DoubleBuffer::wrap(const jxx::lang::DoubleArray array,
+    jxx::Ptr<DoubleBuffer> DoubleBuffer::wrap(const jxx::lang::DoubleArray& array,
                                 jxx::lang::jint offset,
                                 jxx::lang::jint length)
     {
@@ -94,14 +94,14 @@ namespace jxx::nio
         return at_(index);
     }
 
-    jxx::Ptr<DoubleBuffer> DoubleBuffer::get(const jxx::lang::DoubleArray dst)
+    jxx::Ptr<DoubleBuffer> DoubleBuffer::get(const jxx::lang::DoubleArray& dst)
     {
         if (!dst)
             throwIAE_("null array");
         return get(dst, 0, dst->length);
     }
 
-    jxx::Ptr<DoubleBuffer> DoubleBuffer::get(const jxx::lang::DoubleArray dst,
+    jxx::Ptr<DoubleBuffer> DoubleBuffer::get(const jxx::lang::DoubleArray& dst,
                                jxx::lang::jint offset,
                                jxx::lang::jint length)
     {
@@ -132,14 +132,14 @@ namespace jxx::nio
         return self__();
     }
 
-    jxx::Ptr<DoubleBuffer> DoubleBuffer::put(const jxx::lang::DoubleArray src)
+    jxx::Ptr<DoubleBuffer> DoubleBuffer::put(const jxx::lang::DoubleArray& src)
     {
         if (!src)
             throwIAE_("null array");
         return put(src, 0, src->length);
     }
 
-    jxx::Ptr<DoubleBuffer> DoubleBuffer::put(const jxx::lang::DoubleArray src,
+    jxx::Ptr<DoubleBuffer> DoubleBuffer::put(const jxx::lang::DoubleArray& src,
                                jxx::lang::jint offset,
                                jxx::lang::jint length)
     {
@@ -155,7 +155,7 @@ namespace jxx::nio
         return self__();
     }
 
-    jxx::Ptr<DoubleBuffer> DoubleBuffer::put(const jxx::Ptr<DoubleBuffer> src)
+    jxx::Ptr<DoubleBuffer> DoubleBuffer::put(const jxx::Ptr<DoubleBuffer>& src)
     {
         if (!src)
             throwIAE_("null source buffer");

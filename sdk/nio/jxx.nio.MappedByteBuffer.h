@@ -23,7 +23,7 @@ namespace jxx::nio
             jxx::lang::jlong fileOffset,
             jxx::lang::jint size,
             jxx::lang::jbool readOnly,
-            jxx::Ptr<ByteOrder> order);
+            const jxx::Ptr<ByteOrder>& order);
 
         jxx::lang::jbool isLoaded() const;
         jxx::Ptr<MappedByteBuffer> load();
@@ -40,7 +40,7 @@ namespace jxx::nio
                          jxx::lang::jbool readOnly,
                          const std::string& path,
                          jxx::lang::jlong fileOffset,
-                         jxx::Ptr<ByteOrder> order);
+                         const jxx::Ptr<ByteOrder>& order);
 
         jxx::Ptr<MappedByteBuffer> self_Mapped_();
 

@@ -17,7 +17,7 @@ namespace
 
 namespace jxx::nio
 {
-    IntBuffer::IntBuffer(jxx::lang::IntArray storage,
+    IntBuffer::IntBuffer(const jxx::lang::IntArray& storage,
                  jxx::lang::jint offset,
                  jxx::lang::jint capacity,
                  jxx::lang::jbool readOnly)
@@ -38,14 +38,14 @@ namespace jxx::nio
         return ::jxx::ADOPT(std::shared_ptr<IntBuffer>(new IntBuffer(storage, 0, capacity, false)));
     }
 
-    jxx::Ptr<IntBuffer> IntBuffer::wrap(const jxx::lang::IntArray array)
+    jxx::Ptr<IntBuffer> IntBuffer::wrap(const jxx::lang::IntArray& array)
     {
         if (!array)
             throwIAE_("null array");
         return wrap(array, 0, array->length);
     }
 
-    jxx::Ptr<IntBuffer> IntBuffer::wrap(const jxx::lang::IntArray array,
+    jxx::Ptr<IntBuffer> IntBuffer::wrap(const jxx::lang::IntArray& array,
                                 jxx::lang::jint offset,
                                 jxx::lang::jint length)
     {
@@ -96,14 +96,14 @@ namespace jxx::nio
         return at_(index);
     }
 
-    jxx::Ptr<IntBuffer> IntBuffer::get(const jxx::lang::IntArray dst)
+    jxx::Ptr<IntBuffer> IntBuffer::get(const jxx::lang::IntArray& dst)
     {
         if (!dst)
             throwIAE_("null array");
         return get(dst, 0, dst->length);
     }
 
-    jxx::Ptr<IntBuffer> IntBuffer::get(const jxx::lang::IntArray dst,
+    jxx::Ptr<IntBuffer> IntBuffer::get(const jxx::lang::IntArray& dst,
                                jxx::lang::jint offset,
                                jxx::lang::jint length)
     {
@@ -134,14 +134,14 @@ namespace jxx::nio
         return self__();
     }
 
-    jxx::Ptr<IntBuffer> IntBuffer::put(const jxx::lang::IntArray src)
+    jxx::Ptr<IntBuffer> IntBuffer::put(const jxx::lang::IntArray& src)
     {
         if (!src)
             throwIAE_("null array");
         return put(src, 0, src->length);
     }
 
-    jxx::Ptr<IntBuffer> IntBuffer::put(const jxx::lang::IntArray src,
+    jxx::Ptr<IntBuffer> IntBuffer::put(const jxx::lang::IntArray& src,
                                jxx::lang::jint offset,
                                jxx::lang::jint length)
     {
@@ -157,7 +157,7 @@ namespace jxx::nio
         return self__();
     }
 
-    jxx::Ptr<IntBuffer> IntBuffer::put(const jxx::Ptr<IntBuffer> src)
+    jxx::Ptr<IntBuffer> IntBuffer::put(const jxx::Ptr<IntBuffer>& src)
     {
         if (!src)
             throwIAE_("null source buffer");

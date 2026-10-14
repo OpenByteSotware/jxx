@@ -17,7 +17,7 @@ namespace
 
 namespace jxx::nio
 {
-    ShortBuffer::ShortBuffer(jxx::lang::ShortArray storage,
+    ShortBuffer::ShortBuffer(const jxx::lang::ShortArray& storage,
                  jxx::lang::jint offset,
                  jxx::lang::jint capacity,
                  jxx::lang::jbool readOnly)
@@ -38,14 +38,14 @@ namespace jxx::nio
         return jxx::NEW<ShortBuffer>(storage, 0, capacity, false);
     }
 
-    jxx::Ptr<ShortBuffer> ShortBuffer::wrap(const jxx::lang::ShortArray array)
+    jxx::Ptr<ShortBuffer> ShortBuffer::wrap(const jxx::lang::ShortArray& array)
     {
         if (!array)
             throwIAE_("null array");
         return wrap(array, 0, array->length);
     }
 
-    jxx::Ptr<ShortBuffer> ShortBuffer::wrap(const jxx::lang::ShortArray array,
+    jxx::Ptr<ShortBuffer> ShortBuffer::wrap(const jxx::lang::ShortArray& array,
                                 jxx::lang::jint offset,
                                 jxx::lang::jint length)
     {
@@ -96,14 +96,14 @@ namespace jxx::nio
         return at_(index);
     }
 
-    jxx::Ptr<ShortBuffer> ShortBuffer::get(const jxx::lang::ShortArray dst)
+    jxx::Ptr<ShortBuffer> ShortBuffer::get(const jxx::lang::ShortArray& dst)
     {
         if (!dst)
             throwIAE_("null array");
         return get(dst, 0, dst->length);
     }
 
-    jxx::Ptr<ShortBuffer> ShortBuffer::get(const jxx::lang::ShortArray dst,
+    jxx::Ptr<ShortBuffer> ShortBuffer::get(const jxx::lang::ShortArray& dst,
                                jxx::lang::jint offset,
                                jxx::lang::jint length)
     {
@@ -134,14 +134,14 @@ namespace jxx::nio
         return self__();
     }
 
-    jxx::Ptr<ShortBuffer> ShortBuffer::put(const jxx::lang::ShortArray src)
+    jxx::Ptr<ShortBuffer> ShortBuffer::put(const jxx::lang::ShortArray& src)
     {
         if (!src)
             throwIAE_("null array");
         return put(src, 0, src->length);
     }
 
-    jxx::Ptr<ShortBuffer> ShortBuffer::put(const jxx::lang::ShortArray src,
+    jxx::Ptr<ShortBuffer> ShortBuffer::put(const jxx::lang::ShortArray& src,
                                jxx::lang::jint offset,
                                jxx::lang::jint length)
     {
@@ -157,7 +157,7 @@ namespace jxx::nio
         return self__();
     }
 
-    jxx::Ptr<ShortBuffer> ShortBuffer::put(const jxx::Ptr<ShortBuffer> src)
+    jxx::Ptr<ShortBuffer> ShortBuffer::put(const jxx::Ptr<ShortBuffer>& src)
     {
         if (!src)
             throwIAE_("null source buffer");
