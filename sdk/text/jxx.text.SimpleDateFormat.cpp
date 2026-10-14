@@ -3,6 +3,8 @@
 #include <array>
 #include <ctime>
 #include <iomanip>
+#include <regex>
+#include <tuple>
 #include <sstream>
 #include <string>
 
@@ -47,6 +49,54 @@ const std::array<const char*, 7> shortDays = {
     "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
 const std::array<const char*, 7> longDays = {
     "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+
+bool leapYear(int year) {
+    return (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
+}
+
+int isoWeeksInYear(int year) {
+    std::tm januaryFirst{};
+    januaryFirst.tm_year = year - 1900;
+    januaryFirst.tm_mon = 0;
+    januaryFirst.tm_mday = 1;
+#if defined(_WIN32)
+    const auto instant = _mkgmtime(&januaryFirst);
+    gmtime_s(&januaryFirst, &instant);
+#else
+    const auto instant = timegm(&januaryFirst);
+    gmtime_r(&instant, &januaryFirst);
+#endif
+    const int isoDay = januaryFirst.tm_wday == 0 ? 7 : januaryFirst.tm_wday;
+    return isoDay == 4 || (isoDay == 3 && leapYear(year)) ? 53 : 52;
+}
+
+std::tuple<int, int, int> isoWeekFields(const std::tm& fields) {
+    const int year = fields.tm_year + 1900;
+    const int isoDay = fields.tm_wday == 0 ? 7 : fields.tm_wday;
+    int week = (fields.tm_yday + 10 - isoDay) / 7;
+    int weekYear = year;
+    if (week < 1) {
+        weekYear = year - 1;
+        week = isoWeeksInYear(weekYear);
+    } else if (week > isoWeeksInYear(year)) {
+        weekYear = year + 1;
+        week = 1;
+    }
+    return {weekYear, week, isoDay};
+}
+
+bool parseNumericOffset(const std::string& text, int& minutes) {
+    if (text == "Z" || text == "UTC" || text == "GMT") { minutes = 0; return true; }
+    std::smatch match;
+    static const std::regex offsetPattern("^(?:GMT)?([+-])(\\d{2})(?::?(\\d{2}))?$");
+    if (!std::regex_match(text, match, offsetPattern)) return false;
+    const int hours = std::stoi(match[2].str());
+    const int mins = match[3].matched ? std::stoi(match[3].str()) : 0;
+    if (hours > 23 || mins > 59) return false;
+    minutes = hours * 60 + mins;
+    if (match[1].str() == "-") minutes = -minutes;
+    return true;
+}
 
 } // namespace
 
@@ -128,14 +178,22 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
         const int year = fields.tm_year + 1900;
         switch (symbol) {
         case 'G': output += year >= 1 ? "AD" : "BC"; break;
-        case 'y': case 'Y':
+        case 'y':
             output += count == 2 ? number(year % 100, 2) : number(year, count); break;
+        case 'Y': {
+            const auto weekYear = std::get<0>(isoWeekFields(fields));
+            output += count == 2 ? number(weekYear % 100, 2) : number(weekYear, count);
+            break;
+        }
         case 'M': case 'L':
             if (count >= 4) output += longMonths[fields.tm_mon];
             else if (count == 3) output += shortMonths[fields.tm_mon];
             else output += number(fields.tm_mon + 1, count); break;
         case 'd': output += number(fields.tm_mday, count); break;
         case 'D': output += number(fields.tm_yday + 1, count); break;
+        case 'w': output += number(std::get<1>(isoWeekFields(fields)), count); break;
+        case 'W': output += number((fields.tm_mday - 1) / 7 + 1, count); break;
+        case 'F': output += number((fields.tm_mday - 1) / 7 + 1, count); break;
         case 'E': output += count >= 4 ? longDays[fields.tm_wday] : shortDays[fields.tm_wday]; break;
         case 'u': output += number(fields.tm_wday == 0 ? 7 : fields.tm_wday, count); break;
         case 'a': output += fields.tm_hour < 12 ? "AM" : "PM"; break;
@@ -185,8 +243,31 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
     const ::jxx::Ptr<::jxx::lang::String>& source) const {
     if (source == nullptr) throw ::jxx::lang::NullPointerException();
 
-    const auto pattern = pattern_->utf8();
-    const auto value = source->utf8();
+    std::string pattern = pattern_->utf8();
+    std::string value = source->utf8();
+    int parsedOffsetMinutes = 0;
+    bool hasParsedOffset = false;
+    std::smatch zoneMatch;
+    static const std::regex terminalZone(
+        "^(.*?)(?:\\s*)(Z|UTC|GMT|GMT[+-]\\d{2}(?::?\\d{2})?|[+-]\\d{2}(?::?\\d{2})?)$");
+    if (std::regex_match(value, zoneMatch, terminalZone)) {
+        const std::string zoneText = zoneMatch[2].str();
+        std::size_t last = pattern.find_last_not_of(" ");
+        if (last != std::string::npos &&
+            (pattern[last] == 'z' || pattern[last] == 'Z' || pattern[last] == 'X')) {
+            const char zoneSymbol = pattern[last];
+            while (last > 0 && pattern[last - 1] == zoneSymbol) --last;
+            pattern.erase(last);
+            while (!pattern.empty() && pattern.back() == ' ') pattern.pop_back();
+            value = zoneMatch[1].str();
+            while (!value.empty() && value.back() == ' ') value.pop_back();
+            if (!parseNumericOffset(zoneText, parsedOffsetMinutes)) {
+                throw ParseException(::jxx::NEW<::jxx::lang::String>("Unparseable time zone"),
+                                     static_cast<::jxx::lang::jint>(zoneMatch.position(2)));
+            }
+            hasParsedOffset = true;
+        }
+    }
     std::tm fields{};
     fields.tm_mday = 1;
 
@@ -262,7 +343,9 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
             ::jxx::NEW<::jxx::lang::String>("Unparseable date"), 0);
     }
     const auto localMillis = static_cast<::jxx::lang::jlong>(seconds) * 1000LL;
-    const auto offset = timeZone_ == nullptr ? 0 : timeZone_->getOffset(localMillis);
+    const auto offset = hasParsedOffset
+        ? parsedOffsetMinutes * 60000
+        : (timeZone_ == nullptr ? 0 : timeZone_->getOffset(localMillis));
     return ::jxx::NEW<::jxx::util::Date>(localMillis - offset);
 }
 

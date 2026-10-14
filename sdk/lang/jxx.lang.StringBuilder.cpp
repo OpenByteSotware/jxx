@@ -280,11 +280,11 @@ jxx::Ptr<ClassAny> StringBuilder::Class() {
 	{
 		if (o<0 || o>length())throwSIOOBE_(); ensureCapacityInternal_(length() + 1); value_.insert(value_.begin() + o, v); return self_();
 	}
-	jxx::Ptr<StringBuilder> StringBuilder::insert(jint o, const CharArray a)
+	jxx::Ptr<StringBuilder> StringBuilder::insert(jint o, const CharArray& a)
 	{
 		return a == nullptr ? insert(o, jxx::NEW<String>("null")) : insert(o, a, 0, a->length);
 	}
-	jxx::Ptr<StringBuilder> StringBuilder::insert(jint i, const CharArray a, jint o, jint n)
+	jxx::Ptr<StringBuilder> StringBuilder::insert(jint i, const CharArray& a, jint o, jint n)
 	{
 		if (a == nullptr)return insert(i, jxx::NEW<String>("null")); if (o < 0 || n<0 || o + n>a->length)throwSIOOBE_(); insertUtf16_(i, charArrayText(a, o, n)); return self_();
 	}

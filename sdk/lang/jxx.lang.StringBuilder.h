@@ -73,8 +73,8 @@ public:
 
     jxx::Ptr<StringBuilder> insert(jint offset, jbool value);
     jxx::Ptr<StringBuilder> insert(jint offset, jchar value);
-    jxx::Ptr<StringBuilder> insert(jint offset, const CharArray value);
-    jxx::Ptr<StringBuilder> insert(jint index, const CharArray value, jint offset, jint length);
+    jxx::Ptr<StringBuilder> insert(jint offset, const CharArray& value);
+    jxx::Ptr<StringBuilder> insert(jint index, const CharArray& value, jint offset, jint length);
     jxx::Ptr<StringBuilder> insert(jint offset, const jxx::Ptr<CharSequence>& value);
     jxx::Ptr<StringBuilder> insert(jint offset, const jxx::Ptr<CharSequence>& value, jint start, jint end);
     jxx::Ptr<StringBuilder> insert(jint offset, jdouble value);

@@ -36,8 +36,8 @@ public:
         jxx::Ptr<StringBuffer> append(jxx::lang::jbool b);
         jxx::Ptr<Appendable> append(jxx::lang::jchar c) override;
         jxx::Ptr<StringBuffer> appendSB(jxx::lang::jchar c);
-        jxx::Ptr<StringBuffer> append(const jxx::lang::CharArray str);
-        jxx::Ptr<StringBuffer> append(const jxx::lang::CharArray str, jxx::lang::jint offset, jxx::lang::jint len);
+        jxx::Ptr<StringBuffer> append(const jxx::lang::CharArray& str);
+        jxx::Ptr<StringBuffer> append(const jxx::lang::CharArray& str, jxx::lang::jint offset, jxx::lang::jint len);
         jxx::Ptr<Appendable> append(const jxx::Ptr<CharSequence>& s) override;
         jxx::Ptr<StringBuffer> appendSB(const jxx::Ptr<CharSequence>& s);
         jxx::Ptr<Appendable> append(const jxx::Ptr<CharSequence>& s, jxx::lang::jint start, jxx::lang::jint end) override;
@@ -48,7 +48,7 @@ public:
         jxx::Ptr<StringBuffer> append(jxx::lang::jlong lng);
         jxx::Ptr<StringBuffer> append(const jxx::Ptr<Object>& obj);
         jxx::Ptr<StringBuffer> append(const jxx::Ptr<String>& str);
-        jxx::Ptr<StringBuffer> append(const jxx::Ptr<StringBuffer> sb);
+        jxx::Ptr<StringBuffer> append(const jxx::Ptr<StringBuffer>& sb);
 
         jxx::Ptr<StringBuffer> appendCodePoint(jxx::lang::jint codePoint);
 
@@ -78,8 +78,8 @@ public:
         // insert
         jxx::Ptr<StringBuffer> insert(jxx::lang::jint offset, jxx::lang::jbool b);
         jxx::Ptr<StringBuffer> insert(jxx::lang::jint offset, jxx::lang::jchar c);
-        jxx::Ptr<StringBuffer> insert(jxx::lang::jint offset, const jxx::lang::CharArray str);
-        jxx::Ptr<StringBuffer> insert(jxx::lang::jint index, const jxx::lang::CharArray str, jxx::lang::jint offset, jxx::lang::jint len);
+        jxx::Ptr<StringBuffer> insert(jxx::lang::jint offset, const jxx::lang::CharArray& str);
+        jxx::Ptr<StringBuffer> insert(jxx::lang::jint index, const jxx::lang::CharArray& str, jxx::lang::jint offset, jxx::lang::jint len);
         jxx::Ptr<StringBuffer> insert(jxx::lang::jint dstOffset, const jxx::Ptr<CharSequence>& s);
         jxx::Ptr<StringBuffer> insert(jxx::lang::jint dstOffset, const jxx::Ptr<CharSequence>& s, jxx::lang::jint start, jxx::lang::jint end);
         jxx::Ptr<StringBuffer> insert(jxx::lang::jint offset, jxx::lang::jdouble d);
@@ -90,7 +90,7 @@ public:
         jxx::Ptr<StringBuffer> insert(jxx::lang::jint offset, const jxx::Ptr<String>& str);
 
         // getChars
-        void getChars(jxx::lang::jint srcBegin, jxx::lang::jint srcEnd, const jxx::lang::CharArray dst, jxx::lang::jint dstBegin) const;
+        void getChars(jxx::lang::jint srcBegin, jxx::lang::jint srcEnd, const jxx::lang::CharArray& dst, jxx::lang::jint dstBegin) const;
 
         // search
         jxx::lang::jint indexOf(const jxx::Ptr<String>& str) const;

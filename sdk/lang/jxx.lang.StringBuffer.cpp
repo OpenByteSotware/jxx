@@ -15,7 +15,7 @@ jxx::Ptr<ClassAny> StringBuffer::Class() {
 }
 
 
-    static inline std::u16string u16_from_char_array(const CharArray a, jint off, jint len) {
+    static inline std::u16string u16_from_char_array(const CharArray& a, jint off, jint len) {
         std::u16string out;
         out.resize((std::size_t)len);
         for (jint i = 0; i < len; ++i) out[(std::size_t)i] = (char16_t)(*a)[off + i];
@@ -162,12 +162,12 @@ jxx::Ptr<ClassAny> StringBuffer::Class() {
         return self_();
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::append(const CharArray str) {
+    jxx::Ptr<StringBuffer> StringBuffer::append(const CharArray& str) {
         if (!str) return append(jxx::NEW<String>("null"));
         return append(str, 0, (jint)str->length);
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::append(const CharArray str, jint offset, jint len) {
+    jxx::Ptr<StringBuffer> StringBuffer::append(const CharArray& str, jint offset, jint len) {
         this->synchronized([&] {
             if (!str) { appendUtf16_(u"null"); return; }
             if (offset < 0 || len < 0 || (std::uint32_t)(offset + len) > str->length) throwSIOOBE_();
@@ -274,7 +274,7 @@ jxx::Ptr<ClassAny> StringBuffer::Class() {
         return self_();
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::append(const jxx::Ptr<StringBuffer> sb) {
+    jxx::Ptr<StringBuffer> StringBuffer::append(const jxx::Ptr<StringBuffer>& sb) {
         if (!sb) return append(jxx::NEW<String>("null"));
         return append_(sb->toString());
     }
@@ -417,12 +417,12 @@ jxx::Ptr<ClassAny> StringBuffer::Class() {
         return self_();
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, const CharArray str) {
+    jxx::Ptr<StringBuffer> StringBuffer::insert(jint offset, const CharArray& str) {
         if (!str) return insert(offset, jxx::NEW<String>("null"));
         return insert(offset, str, 0, (jint)str->length);
     }
 
-    jxx::Ptr<StringBuffer> StringBuffer::insert(jint index, const CharArray str, jint offset, jint len) {
+    jxx::Ptr<StringBuffer> StringBuffer::insert(jint index, const CharArray& str, jint offset, jint len) {
         this->synchronized([&] {
             if (!str) { insertUtf16_(index, jxx::NEW<String>("null")->utf16()); return; }
             if (offset < 0 || len < 0 || (std::uint32_t)(offset + len) > str->length) throwSIOOBE_();
@@ -510,7 +510,7 @@ jxx::Ptr<ClassAny> StringBuffer::Class() {
     }
 
     // ---- getChars ----
-    void StringBuffer::getChars(jint srcBegin, jint srcEnd, const CharArray dst, jint dstBegin) const {
+    void StringBuffer::getChars(jint srcBegin, jint srcEnd, const CharArray& dst, jint dstBegin) const {
         this->synchronized([&] {
             if (!dst) throwNPE_();
             if (srcBegin < 0 || srcEnd < srcBegin || srcEnd >(jint)value_.size()) throwSIOOBE_();

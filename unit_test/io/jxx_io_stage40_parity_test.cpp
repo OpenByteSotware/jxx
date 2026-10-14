@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <cstdio>
+
 #include "io/jxx.io.FileDescriptor.h"
 #include "io/jxx.io.FileWriter.h"
 #include "io/jxx.io.IOException.h"
@@ -24,12 +26,17 @@ TEST(IOExceptionParity, CauseOnlyConstructorPreservesCause) {
     ASSERT_NE(nullptr, exception->getMessage());
 }
 
-TEST(FileWriterParity, ConstructsFromStandardOutputDescriptor) {
-    ASSERT_NE(nullptr, ::jxx::io::FileDescriptor::out);
+TEST(FileWriterParity, ConstructsFromFileDescriptor) {
+    FILE* const handle = std::tmpfile();
+    ASSERT_NE(nullptr, handle);
+    const auto descriptor = ::jxx::NEW<::jxx::io::FileDescriptor>(
+        handle, false);
+
     EXPECT_NO_THROW({
-        const auto writer = ::jxx::NEW<::jxx::io::FileWriter>(
-            ::jxx::io::FileDescriptor::out);
+        const auto writer = ::jxx::NEW<::jxx::io::FileWriter>(descriptor);
         ASSERT_NE(nullptr, writer);
         writer->flush();
     });
+
+    EXPECT_FALSE(descriptor->valid());
 }
