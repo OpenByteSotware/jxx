@@ -3,6 +3,7 @@
 #include <mutex>
 
 #include "text/jxx.text.DateFormat.h"
+#include "text/jxx.text.DateFormatSymbols.h"
 #include "text/jxx.text.DecimalFormat.h"
 #include "text/jxx.text.Format.h"
 #include "text/jxx.text.MessageFormat.h"
@@ -18,6 +19,7 @@ void initializeClasses()
     static std::once_flag flag;
     std::call_once(flag, [] {
         (void)DateFormat::JxxClassInfoMarker::Class();
+        (void)DateFormatSymbols::JxxClassInfoMarker::Class();
         (void)DecimalFormat::JxxClassInfoMarker::Class();
         (void)Format::JxxClassInfoMarker::Class();
         (void)MessageFormat::JxxClassInfoMarker::Class();

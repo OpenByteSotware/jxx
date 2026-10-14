@@ -12,6 +12,7 @@
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
 #include "text/jxx.text.ParseException.h"
+#include "text/jxx.text.DateFormatSymbols.h"
 #include "text/jxx.text.ParsePosition.h"
 #include "util/jxx.util.Date.h"
 #include "util/jxx.util.Locale.h"
@@ -118,7 +119,23 @@ SimpleDateFormat::SimpleDateFormat(
     if (pattern_ == nullptr || locale_ == nullptr) {
         throw ::jxx::lang::NullPointerException();
     }
+    symbols_ = ::jxx::NEW<DateFormatSymbols>(locale_);
     validatePattern_(pattern_->utf8());
+}
+
+SimpleDateFormat::SimpleDateFormat(
+    const ::jxx::Ptr<::jxx::lang::String>& pattern,
+    const ::jxx::Ptr<DateFormatSymbols>& symbols)
+    : SimpleDateFormat(pattern, ::jxx::util::Locale::getDefault()) {
+    setDateFormatSymbols(symbols);
+}
+
+::jxx::Ptr<DateFormatSymbols> SimpleDateFormat::getDateFormatSymbols() const {
+    return ::jxx::CAST<DateFormatSymbols>(symbols_->clone());
+}
+void SimpleDateFormat::setDateFormatSymbols(const ::jxx::Ptr<DateFormatSymbols>& symbols) {
+    if (symbols == nullptr) throw ::jxx::lang::NullPointerException();
+    symbols_ = ::jxx::CAST<DateFormatSymbols>(symbols->clone());
 }
 
 void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
@@ -186,17 +203,17 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
             break;
         }
         case 'M': case 'L':
-            if (count >= 4) output += longMonths[fields.tm_mon];
-            else if (count == 3) output += shortMonths[fields.tm_mon];
+            if (count >= 4) output += (*symbols_->getMonths())[fields.tm_mon]->utf8();
+            else if (count == 3) output += (*symbols_->getShortMonths())[fields.tm_mon]->utf8();
             else output += number(fields.tm_mon + 1, count); break;
         case 'd': output += number(fields.tm_mday, count); break;
         case 'D': output += number(fields.tm_yday + 1, count); break;
         case 'w': output += number(std::get<1>(isoWeekFields(fields)), count); break;
         case 'W': output += number((fields.tm_mday - 1) / 7 + 1, count); break;
         case 'F': output += number((fields.tm_mday - 1) / 7 + 1, count); break;
-        case 'E': output += count >= 4 ? longDays[fields.tm_wday] : shortDays[fields.tm_wday]; break;
+        case 'E': output += count >= 4 ? (*symbols_->getWeekdays())[fields.tm_wday + 1]->utf8() : (*symbols_->getShortWeekdays())[fields.tm_wday + 1]->utf8(); break;
         case 'u': output += number(fields.tm_wday == 0 ? 7 : fields.tm_wday, count); break;
-        case 'a': output += fields.tm_hour < 12 ? "AM" : "PM"; break;
+        case 'a': output += (*symbols_->getAmPmStrings())[fields.tm_hour < 12 ? 0 : 1]->utf8(); break;
         case 'H': output += number(fields.tm_hour, count); break;
         case 'k': output += number(fields.tm_hour == 0 ? 24 : fields.tm_hour, count); break;
         case 'K': output += number(fields.tm_hour % 12, count); break;
@@ -417,6 +434,7 @@ void SimpleDateFormat::set2DigitYearStart(const ::jxx::Ptr<::jxx::util::Date>& d
     copy->timeZone_ = timeZone_;
     copy->lenient_ = lenient_;
     copy->twoDigitYearStart_ = get2DigitYearStart();
+    copy->symbols_ = getDateFormatSymbols();
     return ::jxx::CAST<::jxx::lang::Object>(copy);
 }
 

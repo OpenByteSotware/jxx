@@ -10,6 +10,7 @@ namespace jxx::util { class Date; class Locale; class TimeZone; }
 namespace jxx::text {
 
 class ParsePosition;
+class DateFormatSymbols;
 
 class SimpleDateFormat final : public DateFormat {
 public:
@@ -23,6 +24,11 @@ public:
     SimpleDateFormat(
         const ::jxx::Ptr<::jxx::lang::String>& pattern,
         const ::jxx::Ptr<::jxx::util::Locale>& locale);
+    SimpleDateFormat(
+        const ::jxx::Ptr<::jxx::lang::String>& pattern,
+        const ::jxx::Ptr<DateFormatSymbols>& symbols);
+    ::jxx::Ptr<DateFormatSymbols> getDateFormatSymbols() const;
+    void setDateFormatSymbols(const ::jxx::Ptr<DateFormatSymbols>& symbols);
 
     ::jxx::Ptr<::jxx::lang::String> format(
         const ::jxx::Ptr<::jxx::util::Date>& date) const;
@@ -66,6 +72,7 @@ private:
     ::jxx::Ptr<::jxx::util::Locale> locale_;
     ::jxx::Ptr<::jxx::util::TimeZone> timeZone_;
     ::jxx::Ptr<::jxx::util::Date> twoDigitYearStart_;
+    ::jxx::Ptr<DateFormatSymbols> symbols_;
     ::jxx::lang::jbool lenient_ = true;
 };
 
