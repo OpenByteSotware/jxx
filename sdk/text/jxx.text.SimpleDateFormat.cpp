@@ -434,7 +434,25 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
         if (last != std::string::npos &&
             (pattern[last] == 'z' || pattern[last] == 'Z' || pattern[last] == 'X')) {
             const char zoneSymbol = pattern[last];
+            const std::size_t zoneFieldEnd = last + 1;
             while (last > 0 && pattern[last - 1] == zoneSymbol) --last;
+            const std::size_t zoneFieldWidth = zoneFieldEnd - last;
+            if (zoneSymbol == 'X') {
+                const bool validIsoOffset =
+                    zoneText == "Z" ||
+                    (zoneFieldWidth == 1 && std::regex_match(
+                        zoneText, std::regex("^[+-]\\d{2}$"))) ||
+                    (zoneFieldWidth == 2 && std::regex_match(
+                        zoneText, std::regex("^[+-]\\d{4}$"))) ||
+                    (zoneFieldWidth == 3 && std::regex_match(
+                        zoneText, std::regex("^[+-]\\d{2}:\\d{2}$")));
+                if (!validIsoOffset) {
+                    throw ParseException(
+                        ::jxx::NEW<::jxx::lang::String>(
+                            "Unparseable ISO 8601 time zone"),
+                        static_cast<::jxx::lang::jint>(zoneMatch.position(2)));
+                }
+            }
             pattern.erase(last);
             while (!pattern.empty() && pattern.back() == ' ') pattern.pop_back();
             value = zoneMatch[1].str();

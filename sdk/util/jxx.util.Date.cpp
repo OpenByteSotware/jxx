@@ -145,8 +145,11 @@ Date::Date(const ::jxx::Ptr<::jxx::lang::String>& value)
         const bool utc = format.find("GMT") != std::string::npos ||
                          input.find("GMT") != std::string::npos ||
                          input.find("UTC") != std::string::npos;
-        const auto seconds = utc ? toUtc(&fields) : std::mktime(&fields);
-        return static_cast<::jxx::lang::jlong>(seconds) * 1000LL;
+        if (utc) {
+            const auto seconds = toUtc(&fields);
+            return static_cast<::jxx::lang::jlong>(seconds) * 1000LL;
+        }
+        return localMillis(fields);
     }
     throw ::jxx::lang::IllegalArgumentException();
 }
@@ -186,8 +189,18 @@ void Date::setSeconds(::jxx::lang::jint value) {
 }
 
 ::jxx::Ptr<::jxx::lang::String> Date::toGMTString() const {
+    static const std::array<const char*, 12> months{
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
     const auto fields = utcFields(time_);
-    return formatted(fields, "%d %b %Y %H:%M:%S GMT");
+    std::ostringstream stream;
+    stream << fields.tm_mday << ' '
+           << months[static_cast<std::size_t>(fields.tm_mon)] << ' '
+           << fields.tm_year + 1900 << ' '
+           << std::setw(2) << std::setfill('0') << fields.tm_hour << ':'
+           << std::setw(2) << fields.tm_min << ':'
+           << std::setw(2) << fields.tm_sec << " GMT";
+    return ::jxx::NEW<::jxx::lang::String>(stream.str());
 }
 
 ::jxx::lang::jint Date::getTimezoneOffset() const {
