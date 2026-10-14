@@ -65,10 +65,32 @@ void ObjectInputStream::requireEndArray_() {
 ::jxx::Ptr<::jxx::lang::Object> ObjectInputStream::readArray_(Handle handle) {
     using Kind = serialization::ArrayElementKind;
     const auto kind = static_cast<Kind>(readUnsignedByte());
-    if (readUnsignedByte() != 1) throw StreamCorruptedException("Unsupported JXX array rank");
+    const auto rank = readUnsignedByte();
+    if (rank != 1 && rank != 2)
+        throw StreamCorruptedException("Unsupported JXX array rank");
     const auto rawLength = readHandle_();
     if (rawLength > 64U * 1024U * 1024U) throw StreamCorruptedException("Array length exceeds limit");
     const auto length = static_cast<::jxx::lang::jint>(rawLength);
+    if (rank == 2) {
+#define JXX_READ_RANK2_ARRAY(KIND, TYPE, ROWTYPE) \
+        case Kind::KIND: { auto array = jxx::NEW<TYPE>(length); registerHandle_(handle, array); \
+            for (::jxx::lang::jint i = 0; i < length; ++i) { auto row = readObject0_(); \
+                (*array)[i] = row == nullptr ? nullptr : jxx::CAST<ROWTYPE>(row); } \
+            requireEndArray_(); return array; }
+        switch (kind) {
+            JXX_READ_RANK2_ARRAY(Boolean, ::jxx::lang::BooleanArray2DType, ::jxx::lang::BooleanArrayType)
+            JXX_READ_RANK2_ARRAY(Byte, ::jxx::lang::ByteArray2DType, ::jxx::lang::ByteArrayType)
+            JXX_READ_RANK2_ARRAY(Char, ::jxx::lang::CharArray2DType, ::jxx::lang::CharArrayType)
+            JXX_READ_RANK2_ARRAY(Short, ::jxx::lang::ShortArray2DType, ::jxx::lang::ShortArrayType)
+            JXX_READ_RANK2_ARRAY(Int, ::jxx::lang::IntArray2DType, ::jxx::lang::IntArrayType)
+            JXX_READ_RANK2_ARRAY(Long, ::jxx::lang::LongArray2DType, ::jxx::lang::LongArrayType)
+            JXX_READ_RANK2_ARRAY(Float, ::jxx::lang::FloatArray2DType, ::jxx::lang::FloatArrayType)
+            JXX_READ_RANK2_ARRAY(Double, ::jxx::lang::DoubleArray2DType, ::jxx::lang::DoubleArrayType)
+            JXX_READ_RANK2_ARRAY(Object, ::jxx::lang::ObjectArray2DType, ::jxx::lang::ObjectArrayType)
+            default: throw StreamCorruptedException("Unknown JXX rank-two array element kind");
+        }
+#undef JXX_READ_RANK2_ARRAY
+    }
 #define JXX_READ_PRIMITIVE_ARRAY(KIND, TYPE, READ) \
     case Kind::KIND: { auto array = jxx::NEW<TYPE>(length); registerHandle_(handle, array); \
         for (::jxx::lang::jint i = 0; i < length; ++i) (*array)[i] = READ(); \
