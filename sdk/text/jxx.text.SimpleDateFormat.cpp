@@ -1,6 +1,8 @@
 #include "text/jxx.text.SimpleDateFormat.h"
 
 #include <array>
+#include <algorithm>
+#include <cctype>
 #include <ctime>
 #include <iomanip>
 #include <regex>
@@ -99,6 +101,43 @@ bool parseNumericOffset(const std::string& text, int& minutes) {
     return true;
 }
 
+std::string lowerAscii(std::string value) {
+    std::transform(value.begin(), value.end(), value.begin(),
+        [](unsigned char character) { return static_cast<char>(std::tolower(character)); });
+    return value;
+}
+
+void replaceSymbol(std::string& value, const std::string& custom,
+                   const std::string& standard) {
+    if (custom.empty()) return;
+    const auto loweredCustom = lowerAscii(custom);
+    auto loweredValue = lowerAscii(value);
+    std::size_t position = 0;
+    while ((position = loweredValue.find(loweredCustom, position)) != std::string::npos) {
+        value.replace(position, custom.size(), standard);
+        loweredValue.replace(position, custom.size(), lowerAscii(standard));
+        position += standard.size();
+    }
+}
+
+void normalizeCustomSymbols(std::string& value,
+                            const ::jxx::Ptr<DateFormatSymbols>& symbols) {
+    const auto months = symbols->getMonths();
+    const auto shortMonthValues = symbols->getShortMonths();
+    for (::jxx::lang::jint index = 0; index < 12; ++index) {
+        replaceSymbol(value, (*months)[index]->utf8(), shortMonths[index]);
+        replaceSymbol(value, (*shortMonthValues)[index]->utf8(), shortMonths[index]);
+    }
+    const auto weekdays = symbols->getWeekdays();
+    const auto shortWeekdayValues = symbols->getShortWeekdays();
+    for (::jxx::lang::jint index = 1; index <= 7; ++index) {
+        replaceSymbol(value, (*weekdays)[index]->utf8(), shortDays[index - 1]);
+        replaceSymbol(value, (*shortWeekdayValues)[index]->utf8(), shortDays[index - 1]);
+    }
+    const auto amPm = symbols->getAmPmStrings();
+    replaceSymbol(value, (*amPm)[0]->utf8(), "AM");
+    replaceSymbol(value, (*amPm)[1]->utf8(), "PM");
+}
 
 std::string translatePatternLetters(
     const std::string& pattern,
@@ -319,6 +358,22 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
             hasParsedOffset = true;
         }
     }
+    normalizeCustomSymbols(value, symbols_);
+    int parsedAmPm = -1;
+    std::smatch amPmMatch;
+    static const std::regex terminalAmPm(
+        "^(.*?)(?:\\s+)(AM|PM)$", std::regex::icase);
+    if (std::regex_match(value, amPmMatch, terminalAmPm)) {
+        std::size_t last = pattern.find_last_not_of(" ");
+        if (last != std::string::npos && pattern[last] == 'a') {
+            while (last > 0 && pattern[last - 1] == 'a') --last;
+            pattern.erase(last);
+            while (!pattern.empty() && pattern.back() == ' ') pattern.pop_back();
+            value = amPmMatch[1].str();
+            while (!value.empty() && value.back() == ' ') value.pop_back();
+            parsedAmPm = lowerAscii(amPmMatch[2].str()) == "pm" ? 1 : 0;
+        }
+    }
     std::tm fields{};
     fields.tm_mday = 1;
 
@@ -371,6 +426,15 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
             position == std::streampos(-1)
                 ? 0
                 : static_cast<::jxx::lang::jint>(position));
+    }
+
+    if (parsedAmPm >= 0) {
+        if (fields.tm_hour < 0 || fields.tm_hour > 12) {
+            throw ParseException(
+                ::jxx::NEW<::jxx::lang::String>("Unparseable date"), 0);
+        }
+        if (parsedAmPm == 1 && fields.tm_hour < 12) fields.tm_hour += 12;
+        if (parsedAmPm == 0 && fields.tm_hour == 12) fields.tm_hour = 0;
     }
 
     if (!lenient_) {

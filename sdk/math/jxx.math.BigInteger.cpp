@@ -10,7 +10,7 @@
 
 namespace jxx::math
 {
-    static std::string narrowAscii_(const jxx::Ptr<jxx::lang::String> s)
+    static std::string narrowAscii_(const jxx::Ptr<jxx::lang::String>& s)
     {
         if (!s) {
             throw std::runtime_error("null String");
@@ -73,7 +73,7 @@ namespace jxx::math
         normalize_(negative_, digits_);
     }
 
-    BigInteger::BigInteger(const jxx::Ptr<jxx::lang::String> value)
+    BigInteger::BigInteger(const jxx::Ptr<jxx::lang::String>& value)
         : negative_(false),
         digits_(parseDigits_(value, negative_))
     {
@@ -85,7 +85,7 @@ namespace jxx::math
         return jxx::NEW<BigInteger>(value);
     }
 
-    jxx::Ptr<BigInteger> BigInteger::parse(const jxx::Ptr<jxx::lang::String> value)
+    jxx::Ptr<BigInteger> BigInteger::parse(const jxx::Ptr<jxx::lang::String>& value)
     {
         return jxx::NEW<BigInteger>(value);
     }
@@ -228,7 +228,7 @@ namespace jxx::math
         }
     }
 
-    std::string BigInteger::parseDigits_(const jxx::Ptr<jxx::lang::String> value, jxx::lang::jbool& negative)
+    std::string BigInteger::parseDigits_(const jxx::Ptr<jxx::lang::String>& value, jxx::lang::jbool& negative)
     {
         std::string s = narrowAscii_(value);
         if (s.empty()) {

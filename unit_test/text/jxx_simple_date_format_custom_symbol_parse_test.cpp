@@ -59,3 +59,19 @@ TEST(SimpleDateFormatCustomSymbolParsingParity, ParsingIsCaseInsensitive) {
 }
 
 } // namespace
+
+TEST(SimpleDateFormatCustomSymbolParsingParity, HandlesCustomMidnightAndNoon) {
+    auto symbols = ::jxx::NEW<::jxx::text::DateFormatSymbols>();
+    auto values = symbols->getAmPmStrings();
+    (*values)[0] = ::jxx::NEW<::jxx::lang::String>("ante");
+    (*values)[1] = ::jxx::NEW<::jxx::lang::String>("post");
+    symbols->setAmPmStrings(values);
+    const auto midnight = customized("yyyy-MM-dd hh:mm a", symbols)->parse(
+        ::jxx::NEW<::jxx::lang::String>("1970-01-01 12:00 ante"));
+    const auto noon = customized("yyyy-MM-dd hh:mm a", symbols)->parse(
+        ::jxx::NEW<::jxx::lang::String>("1970-01-01 12:00 post"));
+    ASSERT_NE(nullptr, midnight);
+    ASSERT_NE(nullptr, noon);
+    EXPECT_EQ(0, midnight->getTime());
+    EXPECT_EQ(12 * 60 * 60 * 1000LL, noon->getTime());
+}

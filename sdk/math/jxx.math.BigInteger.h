@@ -6,7 +6,7 @@
 
 namespace jxx::math
 {
-    static std::string narrowAscii_(const jxx::Ptr<jxx::lang::String> s);
+    static std::string narrowAscii_(const jxx::Ptr<jxx::lang::String>& s);
     static jxx::Ptr<jxx::lang::String> stringFromAscii_(const std::string& s);
     static std::string stripLeadingZerosKeepOne_(const std::string& s);
     static bool allDigits_(const std::string& s);
@@ -22,10 +22,10 @@ namespace jxx::math
         using Super = ::jxx::lang::ClassBase<BigInteger, JxxSuper, ::jxx::lang::Comparable<BigInteger>, ::jxx::io::SerializableI>;
 
         BigInteger(jxx::lang::jlong value);
-        explicit BigInteger(const jxx::Ptr<jxx::lang::String> value);
+        explicit BigInteger(const jxx::Ptr<jxx::lang::String>& value);
 
         static jxx::Ptr<BigInteger> valueOf(jxx::lang::jlong value);
-        static jxx::Ptr<BigInteger> parse(const jxx::Ptr<jxx::lang::String> value);
+        static jxx::Ptr<BigInteger> parse(const jxx::Ptr<jxx::lang::String>& value);
 
     public:
         jxx::lang::jint compareTo(const jxx::Ptr<BigInteger>& other) const override;
@@ -52,7 +52,7 @@ namespace jxx::math
 
     private:
         static void normalize_(jxx::lang::jbool& negative, std::string& digits);
-        static std::string parseDigits_(const jxx::Ptr<jxx::lang::String> value, jxx::lang::jbool& negative);
+        static std::string parseDigits_(const jxx::Ptr<jxx::lang::String>& value, jxx::lang::jbool& negative);
         static std::string divideBySmallBase_(const std::string& dec, jxx::lang::jint base, jxx::lang::jint& remainder);
     };
 }

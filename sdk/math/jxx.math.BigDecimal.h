@@ -23,11 +23,11 @@ namespace jxx::math {
 
         BigDecimal(jxx::lang::jlong value);
         BigDecimal(jxx::lang::jdouble value);
-        explicit BigDecimal(const jxx::Ptr<jxx::lang::String> value);
+        explicit BigDecimal(const jxx::Ptr<jxx::lang::String>& value);
 
         static jxx::Ptr<BigDecimal> valueOf(jxx::lang::jlong value);
         static jxx::Ptr<BigDecimal> valueOf(jxx::lang::jdouble value);
-        static jxx::Ptr<BigDecimal> parse(const jxx::Ptr<jxx::lang::String> value);
+        static jxx::Ptr<BigDecimal> parse(const jxx::Ptr<jxx::lang::String>& value);
 
     public:
         jxx::lang::jint compareTo(const jxx::Ptr<BigDecimal>& other) const override;
@@ -55,6 +55,6 @@ namespace jxx::math {
 
     private:
         static void normalize_(jxx::lang::jbool& negative, std::string& digits, jxx::lang::jint& scale);
-        static void parse_(const jxx::Ptr<jxx::lang::String> value, jxx::lang::jbool& negative, std::string& digits, jxx::lang::jint& scale);
+        static void parse_(const jxx::Ptr<jxx::lang::String>& value, jxx::lang::jbool& negative, std::string& digits, jxx::lang::jint& scale);
     };
 }

@@ -10,7 +10,7 @@
 
 namespace jxx::math
 {
-    static std::string narrowAscii_(const jxx::Ptr<jxx::lang::String> s)
+    static std::string narrowAscii_(const jxx::Ptr<jxx::lang::String>& s)
     {
         if (!s) {
             throw std::runtime_error("null String");
@@ -88,7 +88,7 @@ namespace jxx::math
         normalize_(negative_, digits_, scale_);
     }
 
-    BigDecimal::BigDecimal(const jxx::Ptr<jxx::lang::String> value)
+    BigDecimal::BigDecimal(const jxx::Ptr<jxx::lang::String>& value)
         : negative_(false),
         digits_(),
         scale_(0)
@@ -107,7 +107,7 @@ namespace jxx::math
         return jxx::NEW<BigDecimal>(value);
     }
 
-    jxx::Ptr<BigDecimal> BigDecimal::parse(const jxx::Ptr<jxx::lang::String> value)
+    jxx::Ptr<BigDecimal> BigDecimal::parse(const jxx::Ptr<jxx::lang::String>& value)
     {
         return jxx::NEW<BigDecimal>(value);
     }
@@ -280,7 +280,7 @@ namespace jxx::math
         }
     }
 
-    void BigDecimal::parse_(const jxx::Ptr<jxx::lang::String> value, jxx::lang::jbool& negative, std::string& digits, jxx::lang::jint& scale)
+    void BigDecimal::parse_(const jxx::Ptr<jxx::lang::String>& value, jxx::lang::jbool& negative, std::string& digits, jxx::lang::jint& scale)
     {
         std::string s = narrowAscii_(value);
         if (s.empty()) {
