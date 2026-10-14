@@ -22,11 +22,14 @@ public:
         ::jxx::lang::Cloneable, ::jxx::io::SerializableI>;
     using StringArray = ::jxx::lang::JxxArray<
         ::jxx::Ptr<::jxx::lang::String>, 1U>;
+    using LocaleArray = ::jxx::lang::JxxArray<
+        ::jxx::Ptr<::jxx::util::Locale>, 1U>;
 
     DateFormatSymbols();
     explicit DateFormatSymbols(const ::jxx::Ptr<::jxx::util::Locale>& locale);
 
     static ::jxx::Ptr<DateFormatSymbols> getInstance();
+    static ::jxx::Ptr<LocaleArray> getAvailableLocales();
     static ::jxx::Ptr<DateFormatSymbols> getInstance(
         const ::jxx::Ptr<::jxx::util::Locale>& locale);
 

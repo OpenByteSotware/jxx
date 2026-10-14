@@ -42,6 +42,14 @@ DateFormatSymbols::DateFormatSymbols(const ::jxx::Ptr<::jxx::util::Locale>& loca
 ::jxx::Ptr<DateFormatSymbols> DateFormatSymbols::getInstance() {
     return ::jxx::NEW<DateFormatSymbols>();
 }
+::jxx::Ptr<DateFormatSymbols::LocaleArray> DateFormatSymbols::getAvailableLocales() {
+    std::vector<::jxx::Ptr<::jxx::util::Locale>> values{
+        ::jxx::util::Locale::ROOT, ::jxx::util::Locale::US,
+        ::jxx::util::Locale::UK, ::jxx::util::Locale::CANADA,
+        ::jxx::util::Locale::FRANCE, ::jxx::util::Locale::GERMANY,
+        ::jxx::util::Locale::JAPAN, ::jxx::util::Locale::KOREA};
+    return ::jxx::NEW<LocaleArray>(std::move(values));
+}
 ::jxx::Ptr<DateFormatSymbols> DateFormatSymbols::getInstance(
     const ::jxx::Ptr<::jxx::util::Locale>& locale) {
     return ::jxx::NEW<DateFormatSymbols>(locale);
