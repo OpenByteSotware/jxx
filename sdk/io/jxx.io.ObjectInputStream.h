@@ -31,6 +31,9 @@ private:
     void readStreamHeader_();
     ::jxx::Ptr<::jxx::lang::Object> readObject0_();
     ::jxx::Ptr<::jxx::lang::String> readString_(Handle handle);
+    ::jxx::Ptr<::jxx::lang::Object> readArray_(Handle handle);
+    void registerHandle_(Handle handle, const ::jxx::Ptr<::jxx::lang::Object>& object);
+    void requireEndArray_();
     std::string readRawUtf8_();
     Handle readHandle_();
     std::unordered_map<Handle, ::jxx::Ptr<::jxx::lang::Object>> handles_;

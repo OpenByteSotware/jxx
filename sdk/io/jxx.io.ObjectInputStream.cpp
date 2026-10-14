@@ -53,6 +53,45 @@ std::string ObjectInputStream::readRawUtf8_() {
     for (::jxx::lang::jint i = 0; i < length; ++i) value.push_back(static_cast<char>(readUnsignedByte()));
     return value;
 }
+void ObjectInputStream::registerHandle_(
+    Handle handle, const ::jxx::Ptr<::jxx::lang::Object>& object) {
+    if (!handles_.emplace(handle, object).second)
+        throw StreamCorruptedException("Duplicate object handle");
+}
+void ObjectInputStream::requireEndArray_() {
+    if (static_cast<Tag>(readUnsignedByte()) != Tag::EndArray)
+        throw StreamCorruptedException("Missing JXX array terminator");
+}
+::jxx::Ptr<::jxx::lang::Object> ObjectInputStream::readArray_(Handle handle) {
+    using Kind = serialization::ArrayElementKind;
+    const auto kind = static_cast<Kind>(readUnsignedByte());
+    if (readUnsignedByte() != 1) throw StreamCorruptedException("Unsupported JXX array rank");
+    const auto rawLength = readHandle_();
+    if (rawLength > 64U * 1024U * 1024U) throw StreamCorruptedException("Array length exceeds limit");
+    const auto length = static_cast<::jxx::lang::jint>(rawLength);
+#define JXX_READ_PRIMITIVE_ARRAY(KIND, TYPE, READ) \
+    case Kind::KIND: { auto array = jxx::NEW<TYPE>(length); registerHandle_(handle, array); \
+        for (::jxx::lang::jint i = 0; i < length; ++i) (*array)[i] = READ(); \
+        requireEndArray_(); return array; }
+    switch (kind) {
+        JXX_READ_PRIMITIVE_ARRAY(Boolean, ::jxx::lang::BooleanArrayType, readBoolean)
+        JXX_READ_PRIMITIVE_ARRAY(Byte, ::jxx::lang::ByteArrayType, readByte)
+        JXX_READ_PRIMITIVE_ARRAY(Char, ::jxx::lang::CharArrayType, readChar)
+        JXX_READ_PRIMITIVE_ARRAY(Short, ::jxx::lang::ShortArrayType, readShort)
+        JXX_READ_PRIMITIVE_ARRAY(Int, ::jxx::lang::IntArrayType, readInt)
+        JXX_READ_PRIMITIVE_ARRAY(Long, ::jxx::lang::LongArrayType, readLong)
+        JXX_READ_PRIMITIVE_ARRAY(Float, ::jxx::lang::FloatArrayType, readFloat)
+        JXX_READ_PRIMITIVE_ARRAY(Double, ::jxx::lang::DoubleArrayType, readDouble)
+#undef JXX_READ_PRIMITIVE_ARRAY
+        case Kind::Object: {
+            auto array = jxx::NEW<::jxx::lang::ObjectArrayType>(length);
+            registerHandle_(handle, array);
+            for (::jxx::lang::jint i = 0; i < length; ++i) (*array)[i] = readObject0_();
+            requireEndArray_(); return array;
+        }
+        default: throw StreamCorruptedException("Unknown JXX array element kind");
+    }
+}
 ::jxx::Ptr<::jxx::lang::String> ObjectInputStream::readString_(Handle handle) {
     const auto length = readHandle_();
     if (length > 64U * 1024U * 1024U) throw StreamCorruptedException("String length exceeds limit");
@@ -72,6 +111,7 @@ std::string ObjectInputStream::readRawUtf8_() {
         return found->second;
     }
     if (tag == Tag::NewString) return readString_(readHandle_());
+    if (tag == Tag::NewArray) return readArray_(readHandle_());
     if (tag != Tag::NewObject) throw StreamCorruptedException("Unsupported JXX object stream tag");
     const auto handle = readHandle_();
     const auto className = jxx::NEW<::jxx::lang::String>(readRawUtf8_());

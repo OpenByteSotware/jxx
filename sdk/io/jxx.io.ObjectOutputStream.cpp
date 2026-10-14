@@ -6,6 +6,7 @@
 #include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.Class.h"
 #include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.buildin_array.h"
 
 namespace jxx::io {
 namespace { using Tag = serialization::Tag; }
@@ -50,6 +51,35 @@ void ObjectOutputStream::writeObject0_(const ::jxx::Ptr<::jxx::lang::Object>& ob
         return;
     }
     const auto handle = assignHandle_(object);
+    const auto writeArrayHeader = [&](serialization::ArrayElementKind kind,
+                                      ::jxx::lang::jint length) {
+        writeByte(static_cast<::jxx::lang::jint>(Tag::NewArray));
+        writeHandle_(handle);
+        writeByte(static_cast<::jxx::lang::jint>(kind));
+        writeByte(1); // rank
+        writeHandle_(static_cast<Handle>(length));
+    };
+#define JXX_WRITE_PRIMITIVE_ARRAY(TYPE, KIND, WRITE) \
+    if (const auto array = std::dynamic_pointer_cast<TYPE>(object)) { \
+        writeArrayHeader(serialization::ArrayElementKind::KIND, array->length); \
+        for (::jxx::lang::jint i = 0; i < array->length; ++i) WRITE((*array)[i]); \
+        writeByte(static_cast<::jxx::lang::jint>(Tag::EndArray)); return; \
+    }
+    JXX_WRITE_PRIMITIVE_ARRAY(::jxx::lang::BooleanArrayType, Boolean, writeBoolean)
+    JXX_WRITE_PRIMITIVE_ARRAY(::jxx::lang::ByteArrayType, Byte, writeByte)
+    JXX_WRITE_PRIMITIVE_ARRAY(::jxx::lang::CharArrayType, Char, writeChar)
+    JXX_WRITE_PRIMITIVE_ARRAY(::jxx::lang::ShortArrayType, Short, writeShort)
+    JXX_WRITE_PRIMITIVE_ARRAY(::jxx::lang::IntArrayType, Int, writeInt)
+    JXX_WRITE_PRIMITIVE_ARRAY(::jxx::lang::LongArrayType, Long, writeLong)
+    JXX_WRITE_PRIMITIVE_ARRAY(::jxx::lang::FloatArrayType, Float, writeFloat)
+    JXX_WRITE_PRIMITIVE_ARRAY(::jxx::lang::DoubleArrayType, Double, writeDouble)
+#undef JXX_WRITE_PRIMITIVE_ARRAY
+    if (const auto array = std::dynamic_pointer_cast<::jxx::lang::ObjectArrayType>(object)) {
+        writeArrayHeader(serialization::ArrayElementKind::Object, array->length);
+        for (::jxx::lang::jint i = 0; i < array->length; ++i) writeObject0_((*array)[i]);
+        writeByte(static_cast<::jxx::lang::jint>(Tag::EndArray));
+        return;
+    }
     if (const auto stringValue = std::dynamic_pointer_cast<::jxx::lang::String>(object)) {
         writeString_(stringValue, handle);
         return;
