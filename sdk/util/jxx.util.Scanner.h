@@ -54,7 +54,7 @@ private:
     ::jxx::Ptr<::jxx::lang::String> tokenString(std::size_t start, std::size_t end) const;
 
     ::jxx::Ptr<regex::MatchResult> performRegexSearch(
-        ::jxx::Ptr<regex::Pattern> pattern,
+        const ::jxx::Ptr<regex::Pattern>& pattern,
         std::size_t searchStart,
         std::size_t searchLimit,
         ::jxx::lang::jbool anchoredAtCurrentPosition,
@@ -63,7 +63,7 @@ private:
         ::jxx::Ptr<::jxx::lang::String>& matchText) const;
 
     ::jxx::lang::jbool matchTokenAtCurrentPosition(
-        ::jxx::Ptr<regex::Pattern> pattern,
+        const ::jxx::Ptr<regex::Pattern>& pattern,
         std::size_t& tokenStart,
         std::size_t& tokenEnd,
         ::jxx::Ptr<::jxx::lang::String>& tokenText,

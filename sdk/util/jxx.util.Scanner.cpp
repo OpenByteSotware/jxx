@@ -228,7 +228,7 @@ static ::jxx::Ptr<::jxx::lang::String> requirePatternString(const ::jxx::Ptr<::j
 }
 
 static ::jxx::Ptr<regex::MatchResult> snapshotForTokenMatch(
-    ::jxx::Ptr<regex::Pattern> pattern,
+    const ::jxx::Ptr<regex::Pattern>& pattern,
     const std::string& tokenUtf8,
     std::size_t absoluteTokenStart,
     ::jxx::Ptr<::jxx::lang::String>& tokenTextOut) {
@@ -392,7 +392,7 @@ std::size_t Scanner::skipDelimitersFrom(std::size_t pos) const {
 }
 
 ::jxx::Ptr<regex::MatchResult> Scanner::performRegexSearch(
-    ::jxx::Ptr<regex::Pattern> pattern,
+    const ::jxx::Ptr<regex::Pattern>& pattern,
     std::size_t searchStart,
     std::size_t searchLimit,
     ::jxx::lang::jbool anchoredAtCurrentPosition,
@@ -448,7 +448,7 @@ std::size_t Scanner::skipDelimitersFrom(std::size_t pos) const {
 }
 
 ::jxx::lang::jbool Scanner::matchTokenAtCurrentPosition(
-    ::jxx::Ptr<regex::Pattern> pattern,
+    const ::jxx::Ptr<regex::Pattern>& pattern,
     std::size_t& tokenStart,
     std::size_t& tokenEnd,
     ::jxx::Ptr<::jxx::lang::String>& tokenText,

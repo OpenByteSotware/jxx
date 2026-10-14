@@ -226,7 +226,7 @@ namespace jxx::util {
 
         template <typename T>
         static ::jxx::Ptr<T> min(
-            ::jxx::Ptr<Collection<T>> collection,
+            const ::jxx::Ptr<Collection<T>>& collection,
             const ::jxx::Ptr<ComparatorSuper<T>>& comparator) {
 
             if (collection == nullptr) {
@@ -255,7 +255,7 @@ namespace jxx::util {
 
         template <typename T>
         static ::jxx::Ptr<T> max(
-            ::jxx::Ptr<Collection<T>> collection,
+            const ::jxx::Ptr<Collection<T>>& collection,
             const ::jxx::Ptr<ComparatorSuper<T>>& comparator) {
 
             if (collection == nullptr) {
@@ -278,7 +278,7 @@ namespace jxx::util {
         }
 
         static ::jxx::lang::jint frequency(
-            ::jxx::Ptr<wildcard::CollectionAny> collection,
+            const ::jxx::Ptr<wildcard::CollectionAny>& collection,
             const ::jxx::Ptr<::jxx::lang::Object>& object) {
 
             if (collection == nullptr) {
@@ -297,7 +297,7 @@ namespace jxx::util {
         }
 
         static ::jxx::lang::jbool disjoint(
-            ::jxx::Ptr<wildcard::CollectionAny> first,
+            const ::jxx::Ptr<wildcard::CollectionAny>& first,
             const ::jxx::Ptr<wildcard::CollectionAny>& second) {
 
             if (first == nullptr || second == nullptr) {
@@ -334,7 +334,7 @@ namespace jxx::util {
 
         template <typename T>
         static void copy(
-            ::jxx::Ptr<List<T>> destination,
+            const ::jxx::Ptr<List<T>>& destination,
             const ::jxx::Ptr<List<T>>& source) {
 
             if (destination == nullptr || source == nullptr) {
