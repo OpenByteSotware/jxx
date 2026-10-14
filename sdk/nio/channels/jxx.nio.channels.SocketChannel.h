@@ -55,9 +55,9 @@ public:
     ::jxx::Ptr<::jxx::util::Set<Option>> supportedOptions() const override;
 
     ::jxx::lang::jint read(
-        const ::jxx::Ptr<::jxx::nio::ByteBuffer> destination) override;
+        const ::jxx::Ptr<::jxx::nio::ByteBuffer>& destination) override;
     ::jxx::lang::jint write(
-        const ::jxx::Ptr<::jxx::nio::ByteBuffer> source) override;
+        const ::jxx::Ptr<::jxx::nio::ByteBuffer>& source) override;
 
 
 public:

@@ -30,7 +30,7 @@ namespace jxx::nio::channels
             static jxx::Ptr<MapMode> READ_WRITE;
             static jxx::Ptr<MapMode> PRIVATE_;
 
-            explicit MapMode(const jxx::Ptr<jxx::lang::String> name);
+            explicit MapMode(const jxx::Ptr<jxx::lang::String>& name);
             ~MapMode() override = default;
 
             jxx::Ptr<jxx::lang::String> toString() const override;
@@ -42,7 +42,7 @@ namespace jxx::nio::channels
         };
 
     public:
-        static jxx::Ptr<FileChannel> open(const jxx::Ptr<jxx::io::File> file,
+        static jxx::Ptr<FileChannel> open(const jxx::Ptr<jxx::io::File>& file,
                                           jxx::lang::jbool readable,
                                           jxx::lang::jbool writable,
                                           jxx::lang::jbool append = false);
@@ -53,8 +53,8 @@ namespace jxx::nio::channels
         jxx::lang::jbool isOpen() const override;
         void close() override;
 
-        jxx::lang::jint read(const jxx::Ptr<jxx::nio::ByteBuffer> dst) override;
-        jxx::lang::jint write(const jxx::Ptr<jxx::nio::ByteBuffer> src) override;
+        jxx::lang::jint read(const jxx::Ptr<jxx::nio::ByteBuffer>& dst) override;
+        jxx::lang::jint write(const jxx::Ptr<jxx::nio::ByteBuffer>& src) override;
 
         jxx::lang::jlong position() const override;
         jxx::Ptr<SeekableByteChannel> position(jxx::lang::jlong newPosition) override;
@@ -62,14 +62,14 @@ namespace jxx::nio::channels
         jxx::Ptr<SeekableByteChannel> truncate(jxx::lang::jlong size) override;
 
         void force(jxx::lang::jbool metaData);
-        jxx::Ptr<jxx::nio::MappedByteBuffer> map(const jxx::Ptr<MapMode> mode,
+        jxx::Ptr<jxx::nio::MappedByteBuffer> map(const jxx::Ptr<MapMode>& mode,
                                                  jxx::lang::jlong position,
                                                  jxx::lang::jlong size);
 
         jxx::Ptr<jxx::io::File> file() const;
 
     private:
-        FileChannel(const jxx::Ptr<jxx::io::File> file,
+        FileChannel(const jxx::Ptr<jxx::io::File>& file,
                     jxx::lang::jbool readable,
                     jxx::lang::jbool writable,
                     jxx::lang::jbool append);

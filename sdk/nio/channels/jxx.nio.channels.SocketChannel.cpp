@@ -362,7 +362,7 @@ namespace jxx::nio::channels
 
 
 	::jxx::lang::jint SocketChannel::read(
-		const ::jxx::Ptr<::jxx::nio::ByteBuffer> destination)
+		const ::jxx::Ptr<::jxx::nio::ByteBuffer>& destination)
 	{
 		if (destination == nullptr) throw ::jxx::lang::NullPointerException();
 		::jxx::net::internal::NativeSocket native;
@@ -408,7 +408,7 @@ namespace jxx::nio::channels
 	}
 
 	::jxx::lang::jint SocketChannel::write(
-		const ::jxx::Ptr<::jxx::nio::ByteBuffer> source)
+		const ::jxx::Ptr<::jxx::nio::ByteBuffer>& source)
 	{
 		if (source == nullptr) throw ::jxx::lang::NullPointerException();
 		::jxx::net::internal::NativeSocket native;

@@ -23,7 +23,7 @@ namespace jxx::nio::channels
     jxx::Ptr<FileChannel::MapMode> FileChannel::MapMode::READ_WRITE = jxx::NEW<FileChannel::MapMode>(jxx::NEW<jxx::lang::String>("READ_WRITE"));
     jxx::Ptr<FileChannel::MapMode> FileChannel::MapMode::PRIVATE_ = jxx::NEW<FileChannel::MapMode>(jxx::NEW<jxx::lang::String>("PRIVATE"));
 
-    FileChannel::MapMode::MapMode(const jxx::Ptr<jxx::lang::String> name) : name_(std::move(name)) {}
+    FileChannel::MapMode::MapMode(const jxx::Ptr<jxx::lang::String>& name) : name_(std::move(name)) {}
     jxx::Ptr<jxx::lang::String> FileChannel::MapMode::toString() const { return name_; }
     jxx::lang::jbool FileChannel::MapMode::equals(const jxx::Ptr<jxx::lang::Object>& other) const
     {
@@ -32,7 +32,7 @@ namespace jxx::nio::channels
     }
     jxx::lang::jint FileChannel::MapMode::hashCode() const { return name_ ? name_->hashCode() : 0; }
 
-    jxx::Ptr<FileChannel> FileChannel::open(const jxx::Ptr<jxx::io::File> file,
+    jxx::Ptr<FileChannel> FileChannel::open(const jxx::Ptr<jxx::io::File>& file,
                                             jxx::lang::jbool readable,
                                             jxx::lang::jbool writable,
                                             jxx::lang::jbool append)
@@ -41,7 +41,7 @@ namespace jxx::nio::channels
             new FileChannel(std::move(file), readable, writable, append)));
     }
 
-    FileChannel::FileChannel(const jxx::Ptr<jxx::io::File> file,
+    FileChannel::FileChannel(const jxx::Ptr<jxx::io::File>& file,
                              jxx::lang::jbool readable,
                              jxx::lang::jbool writable,
                              jxx::lang::jbool append)
@@ -100,7 +100,7 @@ namespace jxx::nio::channels
         }
     }
 
-    jxx::lang::jint FileChannel::read(const jxx::Ptr<jxx::nio::ByteBuffer> dst)
+    jxx::lang::jint FileChannel::read(const jxx::Ptr<jxx::nio::ByteBuffer>& dst)
     {
         ensureOpen_();
         if (!readable_)
@@ -119,7 +119,7 @@ namespace jxx::nio::channels
         return n;
     }
 
-    jxx::lang::jint FileChannel::write(const jxx::Ptr<jxx::nio::ByteBuffer> src)
+    jxx::lang::jint FileChannel::write(const jxx::Ptr<jxx::nio::ByteBuffer>& src)
     {
         ensureOpen_();
         if (!writable_)
@@ -189,7 +189,7 @@ namespace jxx::nio::channels
         stream_.flush();
     }
 
-    jxx::Ptr<jxx::nio::MappedByteBuffer> FileChannel::map(const jxx::Ptr<MapMode> mode,
+    jxx::Ptr<jxx::nio::MappedByteBuffer> FileChannel::map(const jxx::Ptr<MapMode>& mode,
                                                           jxx::lang::jlong position,
                                                           jxx::lang::jlong size)
     {
