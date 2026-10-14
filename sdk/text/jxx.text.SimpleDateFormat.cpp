@@ -107,6 +107,47 @@ std::string lowerAscii(std::string value) {
     return value;
 }
 
+bool extractTerminalZoneName(
+    std::string& pattern,
+    std::string& value,
+    const ::jxx::Ptr<DateFormatSymbols>& symbols,
+    std::string& zoneId) {
+    const auto last = pattern.find_last_not_of(" ");
+    if (last == std::string::npos || pattern[last] != 'z') return false;
+
+    std::size_t fieldStart = last;
+    while (fieldStart > 0 && pattern[fieldStart - 1] == 'z') --fieldStart;
+
+    const auto loweredValue = lowerAscii(value);
+    const auto rows = symbols->getZoneStrings();
+    std::size_t bestLength = 0;
+    for (::jxx::lang::jint rowIndex = 0; rowIndex < rows->length; ++rowIndex) {
+        const auto& row = rows->row(rowIndex);
+        if (row == nullptr || row->length < 5 || (*row)[0] == nullptr) continue;
+        for (::jxx::lang::jint column = 1; column < 5; ++column) {
+            if ((*row)[column] == nullptr) continue;
+            const auto candidate = lowerAscii((*row)[column]->utf8());
+            if (candidate.empty() || candidate.size() < bestLength ||
+                candidate.size() > loweredValue.size()) continue;
+            const auto candidateStart = loweredValue.size() - candidate.size();
+            if (loweredValue.compare(candidateStart, candidate.size(), candidate) != 0) continue;
+            if (candidateStart != 0 &&
+                !std::isspace(static_cast<unsigned char>(value[candidateStart - 1]))) continue;
+            bestLength = candidate.size();
+            zoneId = (*row)[0]->utf8();
+        }
+    }
+    if (bestLength == 0) return false;
+
+    value.erase(value.size() - bestLength);
+    while (!value.empty() &&
+           std::isspace(static_cast<unsigned char>(value.back()))) value.pop_back();
+    pattern.erase(fieldStart);
+    while (!pattern.empty() &&
+           std::isspace(static_cast<unsigned char>(pattern.back()))) pattern.pop_back();
+    return true;
+}
+
 void replaceSymbol(std::string& value, const std::string& custom,
                    const std::string& standard) {
     if (custom.empty()) return;
@@ -242,11 +283,6 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
                               (value >= 'a' && value <= 'z')) &&
                    valid.find(value) == std::string::npos) {
             throw ::jxx::lang::IllegalArgumentException();
-        } else if (!quoted && value == 'X') {
-            std::size_t end = index + 1;
-            while (end < pattern.size() && pattern[end] == 'X') ++end;
-            if (end - index > 3) throw ::jxx::lang::IllegalArgumentException();
-            index = end - 1;
         }
     }
     if (quoted) throw ::jxx::lang::IllegalArgumentException();
@@ -358,10 +394,13 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
     std::string value = source->utf8();
     int parsedOffsetMinutes = 0;
     bool hasParsedOffset = false;
+    std::string parsedZoneId;
+    const bool hasParsedNamedZone =
+        extractTerminalZoneName(pattern, value, symbols_, parsedZoneId);
     std::smatch zoneMatch;
     static const std::regex terminalZone(
         "^(.*?)(?:\\s*)(Z|UTC|GMT|GMT[+-]\\d{2}(?::?\\d{2})?|[+-]\\d{2}(?::?\\d{2})?)$");
-    if (std::regex_match(value, zoneMatch, terminalZone)) {
+    if (!hasParsedNamedZone && std::regex_match(value, zoneMatch, terminalZone)) {
         const std::string zoneText = zoneMatch[2].str();
         std::size_t last = pattern.find_last_not_of(" ");
         if (last != std::string::npos &&
@@ -523,6 +562,7 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
         case 'm': nativePattern += "%M"; break;
         case 's': nativePattern += "%S"; break;
         case 'a': nativePattern += "%p"; break;
+        case 'z': break;
         default:
             throw ParseException(
                 ::jxx::NEW<::jxx::lang::String>("Unsupported parse pattern"),
@@ -593,9 +633,15 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
         }
         localMillis = static_cast<::jxx::lang::jlong>(seconds) * 1000LL;
     }
+    const auto parsedNamedZone = hasParsedNamedZone
+        ? ::jxx::util::TimeZone::getTimeZone(
+              ::jxx::NEW<::jxx::lang::String>(parsedZoneId))
+        : nullptr;
     const auto offset = hasParsedOffset
         ? parsedOffsetMinutes * 60000
-        : (timeZone_ == nullptr ? 0 : timeZone_->getOffset(localMillis));
+        : (parsedNamedZone != nullptr
+            ? parsedNamedZone->getOffset(localMillis)
+            : (timeZone_ == nullptr ? 0 : timeZone_->getOffset(localMillis)));
     const auto resultMillis = localMillis - offset +
         (hasParsedMilliseconds ? parsedMilliseconds : 0);
     return ::jxx::NEW<::jxx::util::Date>(resultMillis);

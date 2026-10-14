@@ -1,37 +1,84 @@
 #include "io/jxx.io.ObjectInputStream.h"
 
-#include "io/jxx.io.IOException.h"
+#include "io/jxx.io.InvalidClassException.h"
+#include "io/jxx.io.ObjectStreamFormat.h"
+#include "io/jxx.io.SerializableI.h"
+#include "io/jxx.io.StreamCorruptedException.h"
+#include "lang/jxx.lang.Class.h"
 #include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.buildin_array.h"
 
 namespace jxx::io {
-
-ObjectInputStream::ObjectInputStream(
-    const ::jxx::Ptr<InputStream>& input)
-    : Super(input) {
-}
-
-ObjectInputStream::ObjectInputStream()
-    : Super(::jxx::Ptr<InputStream>{}) {
-}
-
+namespace { using Tag = serialization::Tag; }
+ObjectInputStream::ObjectInputStream(const ::jxx::Ptr<InputStream>& input) : Super(input) { readStreamHeader_(); }
+ObjectInputStream::ObjectInputStream() : Super(::jxx::Ptr<InputStream>{}) {}
 ObjectInputStream::~ObjectInputStream() = default;
-
-::jxx::Ptr<::jxx::lang::Object>
-ObjectInputStream::readObject() {
+void ObjectInputStream::readStreamHeader_() {
+    if (static_cast<std::uint32_t>(readInt()) != serialization::STREAM_MAGIC ||
+        readUnsignedByte() != serialization::STREAM_MAJOR_VERSION ||
+        readUnsignedByte() != serialization::STREAM_MINOR_VERSION)
+        throw StreamCorruptedException("Invalid JXX object stream header");
+    (void)readUnsignedShort();
+    if (readLong() != 0) throw StreamCorruptedException("Invalid reserved header bytes");
+}
+ObjectInputStream::Handle ObjectInputStream::readHandle_() {
+    const auto value = readLong();
+    if (value <= 0) throw StreamCorruptedException("Invalid object handle");
+    return static_cast<Handle>(value);
+}
+std::string ObjectInputStream::readRawUtf8_() {
+    const auto length = readInt();
+    if (length < 0 || length > 1024 * 1024) throw StreamCorruptedException("Invalid metadata length");
+    std::string value; value.reserve(static_cast<std::size_t>(length));
+    for (::jxx::lang::jint i = 0; i < length; ++i) value.push_back(static_cast<char>(readUnsignedByte()));
+    return value;
+}
+::jxx::Ptr<::jxx::lang::String> ObjectInputStream::readString_(Handle handle) {
+    const auto length = readHandle_();
+    if (length > 64U * 1024U * 1024U) throw StreamCorruptedException("String length exceeds limit");
+    auto chars = jxx::NEW<::jxx::lang::CharArrayType>(static_cast<std::uint32_t>(length));
+    for (std::uint64_t i = 0; i < length; ++i) (*chars)[static_cast<::jxx::lang::jint>(i)] = readChar();
+    auto value = jxx::NEW<::jxx::lang::String>(chars);
+    if (!handles_.emplace(handle, value).second) throw StreamCorruptedException("Duplicate object handle");
+    return value;
+}
+::jxx::Ptr<::jxx::lang::Object> ObjectInputStream::readObject0_() {
+    const auto tag = static_cast<Tag>(readUnsignedByte());
+    if (tag == Tag::Null) return nullptr;
+    if (tag == Tag::Reset) { handles_.clear(); return readObject0_(); }
+    if (tag == Tag::Reference) {
+        const auto found = handles_.find(readHandle_());
+        if (found == handles_.end()) throw StreamCorruptedException("Unknown object handle");
+        return found->second;
+    }
+    if (tag == Tag::NewString) return readString_(readHandle_());
+    if (tag != Tag::NewObject) throw StreamCorruptedException("Unsupported JXX object stream tag");
+    const auto handle = readHandle_();
+    const auto className = jxx::NEW<::jxx::lang::String>(readRawUtf8_());
+    const auto serialVersionUID = readLong();
+    if (serialVersionUID != 1) throw InvalidClassException(className, jxx::NEW<::jxx::lang::String>("Unsupported JXX serialVersionUID"));
+    const auto runtimeClass = ::jxx::lang::ClassAny::forName(className);
+    auto object = runtimeClass->newInstance();
+    auto serializable = std::dynamic_pointer_cast<SerializableI>(object);
+    if (serializable == nullptr) throw InvalidClassException(className, jxx::NEW<::jxx::lang::String>("Class does not implement SerializableI"));
+    if (!handles_.emplace(handle, object).second) throw StreamCorruptedException("Duplicate object handle");
+    serializable->readObject(jxx::CAST<ObjectInputStream>(thisPtr()));
+    if (static_cast<Tag>(readUnsignedByte()) != Tag::EndCustomData ||
+        static_cast<Tag>(readUnsignedByte()) != Tag::EndObject)
+        throw StreamCorruptedException("Missing JXX object terminator");
+    return object;
+}
+::jxx::Ptr<::jxx::lang::Object> ObjectInputStream::readObject() {
+    return synchronized([&]() -> ::jxx::Ptr<::jxx::lang::Object> { return readObject0_(); });
+}
+::jxx::Ptr<::jxx::lang::Object> ObjectInputStream::readUnshared() {
     return synchronized([&]() -> ::jxx::Ptr<::jxx::lang::Object> {
-    throw IOException(
-        ::jxx::NEW<::jxx::lang::String>(
-            "Object graph input is not implemented"));
-
+        auto object = readObject0_();
+        if (object != nullptr) {
+            for (auto iterator = handles_.begin(); iterator != handles_.end(); ++iterator)
+                if (iterator->second == object) { handles_.erase(iterator); break; }
+        }
+        return object;
     });
 }
-
-::jxx::Ptr<::jxx::lang::Object>
-ObjectInputStream::readUnshared() {
-    return synchronized([&]() -> ::jxx::Ptr<::jxx::lang::Object> {
-    return readObject();
-
-    });
-}
-
 } // namespace jxx::io
