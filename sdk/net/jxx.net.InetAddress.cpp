@@ -484,7 +484,7 @@ namespace jxx::net
 	}
 
 	jxx::lang::ByteArray InetAddress::copyAddressBytes_(
-		jxx::lang::ByteArray bytes)
+		const jxx::lang::ByteArray& bytes)
 	{
 		if (bytes == nullptr) {
 			return nullptr;

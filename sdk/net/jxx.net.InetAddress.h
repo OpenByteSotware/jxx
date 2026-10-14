@@ -86,7 +86,7 @@ public:
         jxx::lang::ByteArray rawBytes_() const noexcept;
 
         static jxx::lang::ByteArray copyAddressBytes_(
-            jxx::lang::ByteArray bytes);
+            const jxx::lang::ByteArray& bytes);
 
     protected:
         jxx::Ptr<jxx::lang::String> hostName_;

@@ -103,7 +103,7 @@ void appendDecoded(
     return result;
 }
 
-std::u16string UTF8::decode(const ::jxx::lang::ByteArray bytes) {
+std::u16string UTF8::decode(const ::jxx::lang::ByteArray& bytes) {
     std::u16string output;
     if (bytes == nullptr) {
         return output;
