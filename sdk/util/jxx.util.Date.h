@@ -31,9 +31,42 @@ public:
 
     Date();
     explicit Date(::jxx::lang::jlong epochMillis);
+    Date(::jxx::lang::jint year, ::jxx::lang::jint month,
+         ::jxx::lang::jint date);
+    Date(::jxx::lang::jint year, ::jxx::lang::jint month,
+         ::jxx::lang::jint date, ::jxx::lang::jint hours,
+         ::jxx::lang::jint minutes);
+    Date(::jxx::lang::jint year, ::jxx::lang::jint month,
+         ::jxx::lang::jint date, ::jxx::lang::jint hours,
+         ::jxx::lang::jint minutes, ::jxx::lang::jint seconds);
+    explicit Date(const ::jxx::Ptr<::jxx::lang::String>& value);
+
+    static ::jxx::lang::jlong UTC(
+        ::jxx::lang::jint year, ::jxx::lang::jint month,
+        ::jxx::lang::jint date, ::jxx::lang::jint hours,
+        ::jxx::lang::jint minutes, ::jxx::lang::jint seconds);
+    static ::jxx::lang::jlong parse(
+        const ::jxx::Ptr<::jxx::lang::String>& value);
 
     ::jxx::lang::jlong getTime() const;
     void setTime(::jxx::lang::jlong epochMillis);
+
+    ::jxx::lang::jint getYear() const;
+    void setYear(::jxx::lang::jint year);
+    ::jxx::lang::jint getMonth() const;
+    void setMonth(::jxx::lang::jint month);
+    ::jxx::lang::jint getDate() const;
+    void setDate(::jxx::lang::jint date);
+    ::jxx::lang::jint getDay() const;
+    ::jxx::lang::jint getHours() const;
+    void setHours(::jxx::lang::jint hours);
+    ::jxx::lang::jint getMinutes() const;
+    void setMinutes(::jxx::lang::jint minutes);
+    ::jxx::lang::jint getSeconds() const;
+    void setSeconds(::jxx::lang::jint seconds);
+    ::jxx::Ptr<::jxx::lang::String> toLocaleString() const;
+    ::jxx::Ptr<::jxx::lang::String> toGMTString() const;
+    ::jxx::lang::jint getTimezoneOffset() const;
 
     ::jxx::lang::jbool after(const ::jxx::Ptr<Date>& when) const;
     ::jxx::lang::jbool before(const ::jxx::Ptr<Date>& when) const;
