@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "util/jxx.util.Locale.h"
 
@@ -21,6 +22,29 @@ bool arrayEquals(const ::jxx::Ptr<Array>& left, const ::jxx::Ptr<Array>& right) 
     }
     return true;
 }
+using ZoneArray = DateFormatSymbols::ZoneStringArray;
+using ZoneRow = ZoneArray::SubArray;
+::jxx::Ptr<ZoneArray> copyZones(const ::jxx::Ptr<ZoneArray>& values) {
+    if (values == nullptr) throw ::jxx::lang::NullPointerException();
+    std::vector<::jxx::Ptr<ZoneRow>> rows;
+    rows.reserve(static_cast<std::size_t>(values->length));
+    for (::jxx::lang::jint index = 0; index < values->length; ++index) {
+        const auto& row = values->row(index);
+        if (row == nullptr) throw ::jxx::lang::NullPointerException();
+        if (row->length < 5) throw ::jxx::lang::IllegalArgumentException();
+        rows.push_back(::jxx::NEW<ZoneRow>(*row));
+    }
+    return ::jxx::NEW<ZoneArray>(std::move(rows));
+}
+bool zoneArraysEqual(const ::jxx::Ptr<ZoneArray>& left,
+                     const ::jxx::Ptr<ZoneArray>& right) {
+    if (left == nullptr || right == nullptr) return left == right;
+    if (left->length != right->length) return false;
+    for (::jxx::lang::jint index = 0; index < left->length; ++index) {
+        if (!arrayEquals(left->row(index), right->row(index))) return false;
+    }
+    return true;
+}
 } // namespace
 
 DateFormatSymbols::DateFormatSymbols()
@@ -36,6 +60,12 @@ DateFormatSymbols::DateFormatSymbols(const ::jxx::Ptr<::jxx::util::Locale>& loca
     weekdays_ = strings({"", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"});
     shortWeekdays_ = strings({"", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"});
     amPmStrings_ = strings({"AM", "PM"});
+    std::vector<::jxx::Ptr<ZoneRow>> zoneRows;
+    zoneRows.push_back(strings({"GMT", "Greenwich Mean Time", "GMT",
+                                "Greenwich Mean Time", "GMT"}));
+    zoneRows.push_back(strings({"UTC", "Coordinated Universal Time", "UTC",
+                                "Coordinated Universal Time", "UTC"}));
+    zoneStrings_ = ::jxx::NEW<ZoneArray>(std::move(zoneRows));
     localPatternChars_ = ::jxx::NEW<String>("GyMdkHmsSEDFwWahKzZYuXL");
 }
 
@@ -68,6 +98,12 @@ JXX_SYMBOL_ACCESSORS(Weekdays, weekdays_)
 JXX_SYMBOL_ACCESSORS(ShortWeekdays, shortWeekdays_)
 JXX_SYMBOL_ACCESSORS(AmPmStrings, amPmStrings_)
 #undef JXX_SYMBOL_ACCESSORS
+::jxx::Ptr<ZoneArray> DateFormatSymbols::getZoneStrings() const {
+    return copyZones(zoneStrings_);
+}
+void DateFormatSymbols::setZoneStrings(const ::jxx::Ptr<ZoneArray>& values) {
+    zoneStrings_ = copyZones(values);
+}
 ::jxx::Ptr<String> DateFormatSymbols::getLocalPatternChars() const { return localPatternChars_; }
 void DateFormatSymbols::setLocalPatternChars(const ::jxx::Ptr<String>& value) {
     if (value == nullptr) throw ::jxx::lang::NullPointerException();
@@ -79,14 +115,18 @@ void DateFormatSymbols::setLocalPatternChars(const ::jxx::Ptr<String>& value) {
     return value != nullptr && arrayEquals(eras_, value->eras_) &&
         arrayEquals(months_, value->months_) && arrayEquals(shortMonths_, value->shortMonths_) &&
         arrayEquals(weekdays_, value->weekdays_) && arrayEquals(shortWeekdays_, value->shortWeekdays_) &&
-        arrayEquals(amPmStrings_, value->amPmStrings_) && localPatternChars_->equals(value->localPatternChars_);
+        arrayEquals(amPmStrings_, value->amPmStrings_) &&
+        zoneArraysEqual(zoneStrings_, value->zoneStrings_) &&
+        localPatternChars_->equals(value->localPatternChars_);
 }
 ::jxx::lang::jint DateFormatSymbols::hashCode() const { return localPatternChars_->hashCode(); }
 ::jxx::Ptr<::jxx::lang::Object> DateFormatSymbols::cloneImpl() const {
     auto copy = ::jxx::NEW<DateFormatSymbols>();
     copy->eras_ = copy_(eras_); copy->months_ = copy_(months_); copy->shortMonths_ = copy_(shortMonths_);
     copy->weekdays_ = copy_(weekdays_); copy->shortWeekdays_ = copy_(shortWeekdays_);
-    copy->amPmStrings_ = copy_(amPmStrings_); copy->localPatternChars_ = localPatternChars_;
+    copy->amPmStrings_ = copy_(amPmStrings_);
+    copy->zoneStrings_ = copyZones(zoneStrings_);
+    copy->localPatternChars_ = localPatternChars_;
     return ::jxx::CAST<::jxx::lang::Object>(copy);
 }
 } // namespace jxx::text

@@ -24,6 +24,8 @@ public:
         ::jxx::Ptr<::jxx::lang::String>, 1U>;
     using LocaleArray = ::jxx::lang::JxxArray<
         ::jxx::Ptr<::jxx::util::Locale>, 1U>;
+    using ZoneStringArray = ::jxx::lang::JxxArray<
+        ::jxx::Ptr<::jxx::lang::String>, 2U>;
 
     DateFormatSymbols();
     explicit DateFormatSymbols(const ::jxx::Ptr<::jxx::util::Locale>& locale);
@@ -45,6 +47,8 @@ public:
     void setShortWeekdays(const ::jxx::Ptr<StringArray>& values);
     ::jxx::Ptr<StringArray> getAmPmStrings() const;
     void setAmPmStrings(const ::jxx::Ptr<StringArray>& values);
+    ::jxx::Ptr<ZoneStringArray> getZoneStrings() const;
+    void setZoneStrings(const ::jxx::Ptr<ZoneStringArray>& values);
     ::jxx::Ptr<::jxx::lang::String> getLocalPatternChars() const;
     void setLocalPatternChars(const ::jxx::Ptr<::jxx::lang::String>& value);
 
@@ -67,6 +71,7 @@ private:
     ::jxx::Ptr<StringArray> weekdays_;
     ::jxx::Ptr<StringArray> shortWeekdays_;
     ::jxx::Ptr<StringArray> amPmStrings_;
+    ::jxx::Ptr<ZoneStringArray> zoneStrings_;
     ::jxx::Ptr<::jxx::lang::String> localPatternChars_;
 };
 

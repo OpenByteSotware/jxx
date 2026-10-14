@@ -118,7 +118,7 @@ void PrintStream::text_(
     const ::jxx::Ptr<::jxx::lang::String>& value) {
     synchronized([&] {
 
-    const ::jxx::Ptr<::jxx::lang::String>& actual = value;
+    ::jxx::Ptr<::jxx::lang::String> actual = value;
 
     if (actual == nullptr) {
         actual =

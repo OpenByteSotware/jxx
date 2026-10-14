@@ -267,7 +267,7 @@ jxx::Ptr<ClassAny> StringBuffer::Class() {
 
     jxx::Ptr<StringBuffer> StringBuffer::append(const jxx::Ptr<String>& str) {
         this->synchronized([&] {
-            const jxx::Ptr<String>& str2 = str;
+            jxx::Ptr<String> str2 = str;
             if (!str2) str2 = jxx::NEW<String>("null");
             appendUtf16_(str2->utf16());
             });

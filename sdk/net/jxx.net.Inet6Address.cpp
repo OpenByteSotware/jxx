@@ -10,7 +10,7 @@ namespace jxx::net {
             return static_cast<jxx::lang::jint>(static_cast<unsigned char>(b));
         }
 
-        static void validateIPv6Address(jxx::lang::ByteArray addr) {
+        static void validateIPv6Address(const jxx::lang::ByteArray& addr) {
             if (addr == nullptr) {
                 throw jxx::lang::NullPointerException();
             }
@@ -20,7 +20,7 @@ namespace jxx::net {
             }
         }
 
-        static jxx::lang::ByteArray copyBytes(jxx::lang::ByteArray src) {
+        static jxx::lang::ByteArray copyBytes(const jxx::lang::ByteArray& src) {
             validateIPv6Address(src);
 
             auto copy = jxx::NEW<jxx::lang::ByteArrayType>(16);

@@ -199,7 +199,7 @@ namespace
 		return out;
 	}
 
-	inline std::vector<jxx::lang::jbyte> fromByteArray_(const jxx::lang::ByteArray arr)
+	inline std::vector<jxx::lang::jbyte> fromByteArray_(const jxx::lang::ByteArray& arr)
 	{
 		std::vector<jxx::lang::jbyte> out;
 		if (!arr)
