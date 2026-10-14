@@ -702,6 +702,20 @@ namespace jxx::lang {
         pool.emplace(value_, canonical);
         return canonical;
     }
+
+    void String::writeObject(
+        const jxx::Ptr<jxx::io::ObjectOutputStream>& output) {
+        (void)output;
+    }
+
+    void String::readObject(
+        const jxx::Ptr<jxx::io::ObjectInputStream>& input) {
+        (void)input;
+    }
+
+    void String::readObjectNoData() {
+    }
+
     // ---- static methods ----
     jxx::Ptr<String> String::valueOf(jbool b) { return jxx::NEW<String>(b ? "true" : "false"); }
     jxx::Ptr<String> String::valueOf(jchar c) {

@@ -217,6 +217,11 @@ public:
         static jxx::Ptr<String> copyValueOf(const CharArray& data);
         static jxx::Ptr<String> copyValueOf(const CharArray& data, jxx::lang::jint offset, jxx::lang::jint count);
 
+        // JXX native serialization metadata hooks required by SerializableI.
+        void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& output) override;
+        void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& input) override;
+        void readObjectNoData() override;
+
         // Java 8 String.format(...) uses Formatter
         static jxx::Ptr<String> format(const jxx::Ptr<jxx::lang::String>& formatString,
             const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>& args);
