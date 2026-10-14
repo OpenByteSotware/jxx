@@ -180,7 +180,7 @@ namespace jxx::util
     };
 
     inline std::vector<ArgValue> unboxArgs_(
-        const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>> args)
+        const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>& args)
     {
         std::vector<ArgValue> out;
 

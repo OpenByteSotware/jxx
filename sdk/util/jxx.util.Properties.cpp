@@ -116,7 +116,7 @@ public:
 	virtual jxx::Ptr<Spliterator<jxx::lang::String>> spliterator() override { throw jxx::lang::UnsupportedOperationException(); }
 };
 
-static inline jxx::lang::jbool containsObjectVector(const std::vector<jxx::Ptr<jxx::lang::Object>>& values, jxx::Ptr<jxx::lang::Object> value) {
+static inline jxx::lang::jbool containsObjectVector(const std::vector<jxx::Ptr<jxx::lang::Object>>& values, const jxx::Ptr<jxx::lang::Object>& value) {
     for (const auto& existing : values) {
         if (value == nullptr) {
             if (existing == nullptr) {
@@ -129,7 +129,7 @@ static inline jxx::lang::jbool containsObjectVector(const std::vector<jxx::Ptr<j
     return static_cast<jxx::lang::jbool>(false);
 }
 
-static inline jxx::lang::jbool containsStringVector(const std::vector<jxx::Ptr<jxx::lang::String>>& values, jxx::Ptr<jxx::lang::String> value) {
+static inline jxx::lang::jbool containsStringVector(const std::vector<jxx::Ptr<jxx::lang::String>>& values, const jxx::Ptr<jxx::lang::String>& value) {
     for (const auto& existing : values) {
         if (value == nullptr) {
             if (existing == nullptr) {
@@ -414,13 +414,13 @@ static void writeCommentsToOutputStream(const jxx::Ptr<jxx::io::OutputStream>& o
     writeAsciiToOutputStream(out, u"\n");
 }
 
-static void writeOnePropertyToWriter(const jxx::Ptr<jxx::io::Writer>& writer, const jxx::Ptr<jxx::lang::String>& key, jxx::Ptr<jxx::lang::String> value) {
+static void writeOnePropertyToWriter(const jxx::Ptr<jxx::io::Writer>& writer, const jxx::Ptr<jxx::lang::String>& key, const jxx::Ptr<jxx::lang::String>& value) {
     const auto k = saveConvert(key->utf16(), static_cast<jxx::lang::jbool>(true), static_cast<jxx::lang::jbool>(false));
     const auto v = saveConvert(value->utf16(), static_cast<jxx::lang::jbool>(false), static_cast<jxx::lang::jbool>(false));
     writer->write(::jxx::NEW<jxx::lang::String>(k + u"=" + v + u"\n"));
 }
 
-static void writeOnePropertyToOutputStream(const jxx::Ptr<jxx::io::OutputStream>& out, const jxx::Ptr<jxx::lang::String>& key, jxx::Ptr<jxx::lang::String> value) {
+static void writeOnePropertyToOutputStream(const jxx::Ptr<jxx::io::OutputStream>& out, const jxx::Ptr<jxx::lang::String>& key, const jxx::Ptr<jxx::lang::String>& value) {
     const auto k = saveConvert(key->utf16(), static_cast<jxx::lang::jbool>(true), static_cast<jxx::lang::jbool>(true));
     const auto v = saveConvert(value->utf16(), static_cast<jxx::lang::jbool>(false), static_cast<jxx::lang::jbool>(true));
     writeAsciiToOutputStream(out, k + u"=" + v + u"\n");
@@ -560,7 +560,7 @@ static void loadXmlIntoProperties(Properties* props, const std::u16string& xml) 
     }
 }
 
-static void writeXmlDocument(Properties* props, jxx::Ptr<jxx::io::OutputStream> os, const jxx::Ptr<jxx::lang::String>& comment, const jxx::Ptr<jxx::lang::String>& encoding) {
+static void writeXmlDocument(Properties* props, const jxx::Ptr<jxx::io::OutputStream>& os, const jxx::Ptr<jxx::lang::String>& comment, const jxx::Ptr<jxx::lang::String>& encoding) {
     const auto enc = (encoding == nullptr) ? jxx::NEW<jxx::lang::String>("UTF-8") : encoding;
     const auto encUtf16 = enc->utf16();
     const auto encUtf8 = enc->utf8();

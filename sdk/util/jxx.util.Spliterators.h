@@ -36,7 +36,7 @@ public:
 
     template <typename E>
     static ::jxx::Ptr<::jxx::util::Spliterator<E>> forArray(
-        ::jxx::Ptr<JxxArray<::jxx::Ptr<E>, 1U>> array,
+        const ::jxx::Ptr<JxxArray<::jxx::Ptr<E>, 1U>>& array,
         ::jxx::lang::jint characteristics = 0,
         const ::jxx::Ptr<::jxx::util::ComparatorSuper<E>>& comparator = nullptr) {
         if (array == nullptr) {
@@ -102,7 +102,7 @@ public:
 
     template <typename K, typename V>
     static ::jxx::Ptr<::jxx::util::Spliterator<::jxx::util::MapEntry<K, V>>> forEntryIterator(
-        ::jxx::Ptr<::jxx::util::Iterator<::jxx::util::MapEntry<K, V>>> iterator,
+        const ::jxx::Ptr<::jxx::util::Iterator<::jxx::util::MapEntry<K, V>>>& iterator,
         ::jxx::lang::jlong size,
         ::jxx::lang::jint extraCharacteristics = 0) {
         return ::jxx::Ptr<::jxx::util::Spliterator<::jxx::util::MapEntry<K, V>>>(
@@ -116,7 +116,7 @@ public:
 
     template <typename K, typename V>
     static ::jxx::Ptr<::jxx::util::Spliterator<K>> forKeyIterator(
-        ::jxx::Ptr<::jxx::util::Iterator<::jxx::util::MapEntry<K, V>>> iterator,
+        const ::jxx::Ptr<::jxx::util::Iterator<::jxx::util::MapEntry<K, V>>>& iterator,
         ::jxx::lang::jlong size,
         ::jxx::lang::jint extraCharacteristics = 0,
         const ::jxx::Ptr<::jxx::util::ComparatorSuper<K>>& comparator = nullptr) {
@@ -133,7 +133,7 @@ public:
 
     template <typename K, typename V>
     static ::jxx::Ptr<::jxx::util::Spliterator<V>> forValueIterator(
-        ::jxx::Ptr<::jxx::util::Iterator<::jxx::util::MapEntry<K, V>>> iterator,
+        const ::jxx::Ptr<::jxx::util::Iterator<::jxx::util::MapEntry<K, V>>>& iterator,
         ::jxx::lang::jlong size,
         ::jxx::lang::jint extraCharacteristics = 0) {
         return ::jxx::Ptr<::jxx::util::Spliterator<V>>(

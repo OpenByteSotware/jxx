@@ -24,7 +24,7 @@ public:
 
 public:
     IllegalFormatException() = default;
-    explicit IllegalFormatException(const jxx::Ptr<jxx::lang::String> msg)
+    explicit IllegalFormatException(const jxx::Ptr<jxx::lang::String>& msg)
         : jxx::lang::IllegalArgumentException(std::move(msg)) {}
 };
 

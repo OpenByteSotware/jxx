@@ -92,7 +92,7 @@ static std::string bytesToString(const std::vector<unsigned char>& bytes) {
 
 static ::jxx::Ptr<::jxx::lang::String> decodeBytes(
     const std::vector<unsigned char>& bytes,
-    ::jxx::Ptr<::jxx::lang::String> charsetName) {
+    const ::jxx::Ptr<::jxx::lang::String>& charsetName) {
 
     if (charsetName == nullptr) {
         return ::jxx::NEW<::jxx::lang::String>(bytesToString(bytes));
@@ -119,7 +119,7 @@ static std::string asciiLower(std::string s) {
 }
 
 static ::jxx::lang::jbool tryParseLong(
-    ::jxx::Ptr<::jxx::lang::String> token,
+    const ::jxx::Ptr<::jxx::lang::String>& token,
     ::jxx::lang::jint radix,
     ::jxx::lang::jlong& out) {
     if (token == nullptr) return static_cast<::jxx::lang::jbool>(false);
@@ -136,7 +136,7 @@ static ::jxx::lang::jbool tryParseLong(
 }
 
 static ::jxx::lang::jbool tryParseInt(
-    ::jxx::Ptr<::jxx::lang::String> token,
+    const ::jxx::Ptr<::jxx::lang::String>& token,
     ::jxx::lang::jint radix,
     ::jxx::lang::jint& out) {
     ::jxx::lang::jlong value = 0;
@@ -151,7 +151,7 @@ static ::jxx::lang::jbool tryParseInt(
 }
 
 static ::jxx::lang::jbool tryParseShort(
-    ::jxx::Ptr<::jxx::lang::String> token,
+    const ::jxx::Ptr<::jxx::lang::String>& token,
     ::jxx::lang::jint radix,
     ::jxx::lang::jshort& out) {
     ::jxx::lang::jint value = 0;
@@ -166,7 +166,7 @@ static ::jxx::lang::jbool tryParseShort(
 }
 
 static ::jxx::lang::jbool tryParseByte(
-    ::jxx::Ptr<::jxx::lang::String> token,
+    const ::jxx::Ptr<::jxx::lang::String>& token,
     ::jxx::lang::jint radix,
     ::jxx::lang::jbyte& out) {
     ::jxx::lang::jshort value = 0;
