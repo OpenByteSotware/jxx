@@ -63,7 +63,7 @@ public:
         , entrySetView_(nullptr) {
     }
 
-    explicit TreeMap(const jxx::Ptr<ComparatorSuper<K>> comparator)
+    explicit TreeMap(const jxx::Ptr<ComparatorSuper<K>>& comparator)
         : map_(KeyLess{comparator})
         , comparator_(comparator)
         , modCount_(0)
@@ -71,14 +71,14 @@ public:
     }
 
     // Standalone approximation of TreeMap(Map<? extends K, ? extends V> m)
-    explicit TreeMap(const jxx::Ptr<Map<K, V>> m)
+    explicit TreeMap(const jxx::Ptr<Map<K, V>>& m)
         : TreeMap() {
         if (m == nullptr) throw ::jxx::lang::NullPointerException();
         putAll(m);
     }
 
     // Standalone approximation of TreeMap(SortedMap<K, ? extends V> m)
-    explicit TreeMap(const jxx::Ptr<TreeMap<K, V>> m)
+    explicit TreeMap(const jxx::Ptr<TreeMap<K, V>>& m)
         : TreeMap(m == nullptr ? jxx::Ptr<ComparatorSuper<K>>(nullptr) : m->comparator()) {
         if (m == nullptr) throw ::jxx::lang::NullPointerException();
         putAll(m);
@@ -202,7 +202,7 @@ public:
         return entry;
     }
 
-    virtual jxx::Ptr<MapEntry<K, V>> lowerEntry(const jxx::Ptr<K> key) {
+    virtual jxx::Ptr<MapEntry<K, V>> lowerEntry(const jxx::Ptr<K>& key) {
         if (key == nullptr) throw ::jxx::lang::NullPointerException();
         auto it = map_.lower_bound(key);
         if (it == map_.begin()) return nullptr;
@@ -215,12 +215,12 @@ public:
         return makeEntryView(it->first);
     }
 
-    virtual jxx::Ptr<K> lowerKey(const jxx::Ptr<K> key) {
+    virtual jxx::Ptr<K> lowerKey(const jxx::Ptr<K>& key) {
         auto e = lowerEntry(key);
         return e == nullptr ? nullptr : e->getKey();
     }
 
-    virtual jxx::Ptr<MapEntry<K, V>> floorEntry(const jxx::Ptr<K> key) {
+    virtual jxx::Ptr<MapEntry<K, V>> floorEntry(const jxx::Ptr<K>& key) {
         if (key == nullptr) throw ::jxx::lang::NullPointerException();
         auto it = map_.upper_bound(key);
         if (it == map_.begin()) return nullptr;
@@ -228,31 +228,31 @@ public:
         return makeEntryView(it->first);
     }
 
-    virtual jxx::Ptr<K> floorKey(const jxx::Ptr<K> key) {
+    virtual jxx::Ptr<K> floorKey(const jxx::Ptr<K>& key) {
         auto e = floorEntry(key);
         return e == nullptr ? nullptr : e->getKey();
     }
 
-    virtual jxx::Ptr<MapEntry<K, V>> ceilingEntry(const jxx::Ptr<K> key) {
+    virtual jxx::Ptr<MapEntry<K, V>> ceilingEntry(const jxx::Ptr<K>& key) {
         if (key == nullptr) throw ::jxx::lang::NullPointerException();
         auto it = map_.lower_bound(key);
         if (it == map_.end()) return nullptr;
         return makeEntryView(it->first);
     }
 
-    virtual jxx::Ptr<K> ceilingKey(const jxx::Ptr<K> key) {
+    virtual jxx::Ptr<K> ceilingKey(const jxx::Ptr<K>& key) {
         auto e = ceilingEntry(key);
         return e == nullptr ? nullptr : e->getKey();
     }
 
-    virtual jxx::Ptr<MapEntry<K, V>> higherEntry(const jxx::Ptr<K> key) {
+    virtual jxx::Ptr<MapEntry<K, V>> higherEntry(const jxx::Ptr<K>& key) {
         if (key == nullptr) throw ::jxx::lang::NullPointerException();
         auto it = map_.upper_bound(key);
         if (it == map_.end()) return nullptr;
         return makeEntryView(it->first);
     }
 
-    virtual jxx::Ptr<K> higherKey(const jxx::Ptr<K> key) {
+    virtual jxx::Ptr<K> higherKey(const jxx::Ptr<K>& key) {
         auto e = higherEntry(key);
         return e == nullptr ? nullptr : e->getKey();
     }
@@ -274,7 +274,7 @@ public:
     }
 
 private:
-    jxx::lang::jbool keysEqual(const jxx::Ptr<K> a, jxx::Ptr<K> b) {
+    jxx::lang::jbool keysEqual(const jxx::Ptr<K>& a, const jxx::Ptr<K>& b) {
         if (a == nullptr) return b == nullptr;
         if (b == nullptr) return false;
         if (comparator_ != nullptr) {
@@ -291,7 +291,7 @@ protected:
         TreeMap<K, V>* map_;
         jxx::Ptr<K> key_;
     public:
-        EntryView(TreeMap<K, V>* map, jxx::Ptr<K> key) : map_(map), key_(key) {}
+        EntryView(TreeMap<K, V>* map, const jxx::Ptr<K>& key) : map_(map), key_(key) {}
         virtual ~EntryView() = default;
         virtual jxx::Ptr<K> getKey() override { return key_; }
         virtual jxx::Ptr<V> getValue() override {
@@ -318,7 +318,7 @@ protected:
         }
     };
 
-    jxx::Ptr<MapEntry<K, V>> makeEntryView(const jxx::Ptr<K> key) {
+    jxx::Ptr<MapEntry<K, V>> makeEntryView(const jxx::Ptr<K>& key) {
         return jxx::CAST<MapEntry<K, V>>(jxx::NEW<EntryView>(this, key));
     }
 

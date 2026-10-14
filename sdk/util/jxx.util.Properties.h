@@ -29,35 +29,35 @@ protected:
 
 public:
     Properties();
-    explicit Properties(const jxx::Ptr<Properties> defaults);
+    explicit Properties(const jxx::Ptr<Properties>& defaults);
     virtual ~Properties() = default;
 
     virtual jxx::Ptr<jxx::lang::Object> setProperty(const jxx::Ptr<jxx::lang::String>& key,
         const jxx::Ptr<jxx::lang::String>& value);
 
     virtual jxx::Ptr<jxx::lang::String> getProperty(
-        jxx::Ptr<jxx::lang::String> key);
+        const jxx::Ptr<jxx::lang::String>& key);
 
     virtual jxx::Ptr<jxx::lang::String> getProperty(
-        jxx::Ptr<jxx::lang::String> key,
-        jxx::Ptr<jxx::lang::String> defaultValue);
+        const jxx::Ptr<jxx::lang::String>& key,
+        const jxx::Ptr<jxx::lang::String>& defaultValue);
 
     virtual jxx::Ptr<Enumeration<jxx::lang::Object>> propertyNames();
     virtual jxx::Ptr<Set<jxx::lang::String>> stringPropertyNames();
 
-    virtual void list(const jxx::Ptr<jxx::io::PrintStream> out);
-    virtual void list(const jxx::Ptr<jxx::io::PrintWriter> out);
+    virtual void list(const jxx::Ptr<jxx::io::PrintStream>& out);
+    virtual void list(const jxx::Ptr<jxx::io::PrintWriter>& out);
 
-    virtual void load(const jxx::Ptr<jxx::io::Reader> reader);
-    virtual void load(const jxx::Ptr<jxx::io::InputStream> inStream);
+    virtual void load(const jxx::Ptr<jxx::io::Reader>& reader);
+    virtual void load(const jxx::Ptr<jxx::io::InputStream>& inStream);
 
-    virtual void save(const jxx::Ptr<jxx::io::OutputStream> out, jxx::Ptr<jxx::lang::String> comments);
-    virtual void store(const jxx::Ptr<jxx::io::Writer> writer, jxx::Ptr<jxx::lang::String> comments);
-    virtual void store(const jxx::Ptr<jxx::io::OutputStream> out, jxx::Ptr<jxx::lang::String> comments);
+    virtual void save(const jxx::Ptr<jxx::io::OutputStream>& out, const jxx::Ptr<jxx::lang::String>& comments);
+    virtual void store(const jxx::Ptr<jxx::io::Writer>& writer, const jxx::Ptr<jxx::lang::String>& comments);
+    virtual void store(const jxx::Ptr<jxx::io::OutputStream>& out, const jxx::Ptr<jxx::lang::String>& comments);
 
-    virtual void loadFromXML(const jxx::Ptr<jxx::io::InputStream> in);
-    virtual void storeToXML(const jxx::Ptr<jxx::io::OutputStream> os, jxx::Ptr<jxx::lang::String> comment);
-    virtual void storeToXML(const jxx::Ptr<jxx::io::OutputStream> os, jxx::Ptr<jxx::lang::String> comment, jxx::Ptr<jxx::lang::String> encoding);
+    virtual void loadFromXML(const jxx::Ptr<jxx::io::InputStream>& in);
+    virtual void storeToXML(const jxx::Ptr<jxx::io::OutputStream>& os, const jxx::Ptr<jxx::lang::String>& comment);
+    virtual void storeToXML(const jxx::Ptr<jxx::io::OutputStream>& os, const jxx::Ptr<jxx::lang::String>& comment, const jxx::Ptr<jxx::lang::String>& encoding);
 
 private:
     void collectPropertyNames(std::vector<jxx::Ptr<jxx::lang::Object>>& out);

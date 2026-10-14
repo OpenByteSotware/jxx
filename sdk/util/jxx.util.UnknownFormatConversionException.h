@@ -18,8 +18,8 @@ public:
     ~UnknownFormatConversionException() override = default;
 
 public:
-    explicit UnknownFormatConversionException(const jxx::Ptr<jxx::lang::String> msg)
-        : IllegalFormatException(std::move(msg)) {}
+    explicit UnknownFormatConversionException(const jxx::Ptr<jxx::lang::String>& msg)
+        : IllegalFormatException(msg) {}
 };
 
 } // namespace jxx::util::format

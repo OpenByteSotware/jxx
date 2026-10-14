@@ -234,7 +234,7 @@ static std::u16string formatDateLine() {
     return jxx::NEW<jxx::lang::String>(oss.str())->utf16();
 }
 
-static std::u16string readAllFromReader(const jxx::Ptr<jxx::io::Reader> reader) {
+static std::u16string readAllFromReader(const jxx::Ptr<jxx::io::Reader>& reader) {
     std::u16string out;
     while (true) {
         const auto ch = reader->read();
@@ -244,7 +244,7 @@ static std::u16string readAllFromReader(const jxx::Ptr<jxx::io::Reader> reader) 
     return out;
 }
 
-static std::u16string readAllFromInputStreamLatin1(const jxx::Ptr<jxx::io::InputStream> in) {
+static std::u16string readAllFromInputStreamLatin1(const jxx::Ptr<jxx::io::InputStream>& in) {
     std::u16string out;
     while (true) {
         const auto b = in->read();
@@ -254,7 +254,7 @@ static std::u16string readAllFromInputStreamLatin1(const jxx::Ptr<jxx::io::Input
     return out;
 }
 
-static std::u16string readAllFromInputStreamUtf8(const jxx::Ptr<jxx::io::InputStream> in) {
+static std::u16string readAllFromInputStreamUtf8(const jxx::Ptr<jxx::io::InputStream>& in) {
     std::string bytes;
     while (true) {
         const auto b = in->read();
@@ -352,7 +352,7 @@ static std::u16string abbreviateForList(const std::u16string& in) {
     return in.substr(0, 37U) + u"...";
 }
 
-static void writeCommentsToWriter(const jxx::Ptr<jxx::io::Writer> writer, jxx::Ptr<jxx::lang::String> comments) {
+static void writeCommentsToWriter(const jxx::Ptr<jxx::io::Writer>& writer, const jxx::Ptr<jxx::lang::String>& comments) {
     if (comments == nullptr) return;
     const std::u16string text = comments->utf16();
     static const char16_t hex[] = u"0123456789ABCDEF";
@@ -380,13 +380,13 @@ static void writeCommentsToWriter(const jxx::Ptr<jxx::io::Writer> writer, jxx::P
     writer->write(jxx::NEW<jxx::lang::String>(u"\n"));
 }
 
-static void writeAsciiToOutputStream(const jxx::Ptr<jxx::io::OutputStream> out, const std::u16string& text) {
+static void writeAsciiToOutputStream(const jxx::Ptr<jxx::io::OutputStream>& out, const std::u16string& text) {
     for (char16_t c : text) {
         out->write(static_cast<jxx::lang::jint>(static_cast<unsigned char>(c & 0xFF)));
     }
 }
 
-static void writeCommentsToOutputStream(const jxx::Ptr<jxx::io::OutputStream> out, jxx::Ptr<jxx::lang::String> comments) {
+static void writeCommentsToOutputStream(const jxx::Ptr<jxx::io::OutputStream>& out, const jxx::Ptr<jxx::lang::String>& comments) {
     if (comments == nullptr) return;
     static const char16_t hex[] = u"0123456789ABCDEF";
     const std::u16string text = comments->utf16();
@@ -414,13 +414,13 @@ static void writeCommentsToOutputStream(const jxx::Ptr<jxx::io::OutputStream> ou
     writeAsciiToOutputStream(out, u"\n");
 }
 
-static void writeOnePropertyToWriter(const jxx::Ptr<jxx::io::Writer> writer, jxx::Ptr<jxx::lang::String> key, jxx::Ptr<jxx::lang::String> value) {
+static void writeOnePropertyToWriter(const jxx::Ptr<jxx::io::Writer>& writer, const jxx::Ptr<jxx::lang::String>& key, jxx::Ptr<jxx::lang::String> value) {
     const auto k = saveConvert(key->utf16(), static_cast<jxx::lang::jbool>(true), static_cast<jxx::lang::jbool>(false));
     const auto v = saveConvert(value->utf16(), static_cast<jxx::lang::jbool>(false), static_cast<jxx::lang::jbool>(false));
     writer->write(::jxx::NEW<jxx::lang::String>(k + u"=" + v + u"\n"));
 }
 
-static void writeOnePropertyToOutputStream(const jxx::Ptr<jxx::io::OutputStream> out, jxx::Ptr<jxx::lang::String> key, jxx::Ptr<jxx::lang::String> value) {
+static void writeOnePropertyToOutputStream(const jxx::Ptr<jxx::io::OutputStream>& out, const jxx::Ptr<jxx::lang::String>& key, jxx::Ptr<jxx::lang::String> value) {
     const auto k = saveConvert(key->utf16(), static_cast<jxx::lang::jbool>(true), static_cast<jxx::lang::jbool>(true));
     const auto v = saveConvert(value->utf16(), static_cast<jxx::lang::jbool>(false), static_cast<jxx::lang::jbool>(true));
     writeAsciiToOutputStream(out, k + u"=" + v + u"\n");
@@ -560,7 +560,7 @@ static void loadXmlIntoProperties(Properties* props, const std::u16string& xml) 
     }
 }
 
-static void writeXmlDocument(Properties* props, jxx::Ptr<jxx::io::OutputStream> os, jxx::Ptr<jxx::lang::String> comment, jxx::Ptr<jxx::lang::String> encoding) {
+static void writeXmlDocument(Properties* props, jxx::Ptr<jxx::io::OutputStream> os, const jxx::Ptr<jxx::lang::String>& comment, const jxx::Ptr<jxx::lang::String>& encoding) {
     const auto enc = (encoding == nullptr) ? jxx::NEW<jxx::lang::String>("UTF-8") : encoding;
     const auto encUtf16 = enc->utf16();
     const auto encUtf8 = enc->utf8();
@@ -597,7 +597,7 @@ static void writeXmlDocument(Properties* props, jxx::Ptr<jxx::io::OutputStream> 
 Properties::Properties() : defaults(nullptr) {
 }
 
-Properties::Properties(const jxx::Ptr<Properties> defaults_)
+Properties::Properties(const jxx::Ptr<Properties>& defaults_)
     : defaults(defaults_) {
 }
 
@@ -610,7 +610,7 @@ jxx::Ptr<jxx::lang::Object> Properties::setProperty(const jxx::Ptr<jxx::lang::St
     return this->put(jxx::CAST<jxx::lang::Object>(key), tmp);
 }
 
-jxx::Ptr<jxx::lang::String> Properties::getProperty(const jxx::Ptr<jxx::lang::String> key) {
+jxx::Ptr<jxx::lang::String> Properties::getProperty(const const jxx::Ptr<jxx::lang::String>& key) {
     if (key == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -622,7 +622,7 @@ jxx::Ptr<jxx::lang::String> Properties::getProperty(const jxx::Ptr<jxx::lang::St
     return defaults == nullptr ? nullptr : defaults->getProperty(key);
 }
 
-jxx::Ptr<jxx::lang::String> Properties::getProperty(const jxx::Ptr<jxx::lang::String> key, jxx::Ptr<jxx::lang::String> defaultValue) {
+jxx::Ptr<jxx::lang::String> Properties::getProperty(const const jxx::Ptr<jxx::lang::String>& key, const jxx::Ptr<jxx::lang::String>& defaultValue) {
     auto value = getProperty(key);
     return value == nullptr ? defaultValue : value;
 }
@@ -668,7 +668,7 @@ jxx::Ptr<Set<jxx::lang::String>> Properties::stringPropertyNames() {
     return ::jxx::CAST<Set<jxx::lang::String>>(::jxx::NEW<StringSetImpl>(std::move(names)));
 }
 
-void Properties::list(const jxx::Ptr<jxx::io::PrintStream> out) {
+void Properties::list(const jxx::Ptr<jxx::io::PrintStream>& out) {
     if (out == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -685,7 +685,7 @@ void Properties::list(const jxx::Ptr<jxx::io::PrintStream> out) {
     }
 }
 
-void Properties::list(const jxx::Ptr<jxx::io::PrintWriter> out) {
+void Properties::list(const jxx::Ptr<jxx::io::PrintWriter>& out) {
     if (out == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -702,28 +702,28 @@ void Properties::list(const jxx::Ptr<jxx::io::PrintWriter> out) {
     }
 }
 
-void Properties::load(const jxx::Ptr<jxx::io::Reader> reader) {
+void Properties::load(const jxx::Ptr<jxx::io::Reader>& reader) {
     if (reader == nullptr) {
         throw jxx::lang::NullPointerException();
     }
     loadIntoProperties(this, readAllFromReader(reader));
 }
 
-void Properties::load(const jxx::Ptr<jxx::io::InputStream> inStream) {
+void Properties::load(const jxx::Ptr<jxx::io::InputStream>& inStream) {
     if (inStream == nullptr) {
         throw jxx::lang::NullPointerException();
     }
     loadIntoProperties(this, readAllFromInputStreamLatin1(inStream));
 }
 
-void Properties::save(const jxx::Ptr<jxx::io::OutputStream> out, jxx::Ptr<jxx::lang::String> comments) {
+void Properties::save(const jxx::Ptr<jxx::io::OutputStream>& out, const jxx::Ptr<jxx::lang::String>& comments) {
     if (out == nullptr) {
         throw jxx::lang::NullPointerException();
     }
     store(out, comments);
 }
 
-void Properties::store(const jxx::Ptr<jxx::io::Writer> writer, jxx::Ptr<jxx::lang::String> comments) {
+void Properties::store(const jxx::Ptr<jxx::io::Writer>& writer, const jxx::Ptr<jxx::lang::String>& comments) {
     if (writer == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -743,7 +743,7 @@ void Properties::store(const jxx::Ptr<jxx::io::Writer> writer, jxx::Ptr<jxx::lan
     writer->flush();
 }
 
-void Properties::store(const jxx::Ptr<jxx::io::OutputStream> out, jxx::Ptr<jxx::lang::String> comments) {
+void Properties::store(const jxx::Ptr<jxx::io::OutputStream>& out, const jxx::Ptr<jxx::lang::String>& comments) {
     if (out == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -763,21 +763,21 @@ void Properties::store(const jxx::Ptr<jxx::io::OutputStream> out, jxx::Ptr<jxx::
     out->flush();
 }
 
-void Properties::loadFromXML(const jxx::Ptr<jxx::io::InputStream> in) {
+void Properties::loadFromXML(const jxx::Ptr<jxx::io::InputStream>& in) {
     if (in == nullptr) {
         throw jxx::lang::NullPointerException();
     }
     loadXmlIntoProperties(this, readAllFromInputStreamUtf8(in));
 }
 
-void Properties::storeToXML(const jxx::Ptr<jxx::io::OutputStream> os, jxx::Ptr<jxx::lang::String> comment) {
+void Properties::storeToXML(const jxx::Ptr<jxx::io::OutputStream>& os, const jxx::Ptr<jxx::lang::String>& comment) {
     if (os == nullptr) {
         throw jxx::lang::NullPointerException();
     }
     writeXmlDocument(this, os, comment, jxx::NEW<jxx::lang::String>("UTF-8"));
 }
 
-void Properties::storeToXML(const jxx::Ptr<jxx::io::OutputStream> os, jxx::Ptr<jxx::lang::String> comment, jxx::Ptr<jxx::lang::String> encoding) {
+void Properties::storeToXML(const jxx::Ptr<jxx::io::OutputStream>& os, const jxx::Ptr<jxx::lang::String>& comment, const jxx::Ptr<jxx::lang::String>& encoding) {
     if (os == nullptr) {
         throw jxx::lang::NullPointerException();
     }
