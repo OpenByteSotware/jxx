@@ -360,18 +360,25 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
     }
     normalizeCustomSymbols(value, symbols_);
     int parsedAmPm = -1;
-    std::smatch amPmMatch;
-    static const std::regex terminalAmPm(
-        "^(.*?)(?:\\s+)(AM|PM)$", std::regex::icase);
-    if (std::regex_match(value, amPmMatch, terminalAmPm)) {
-        std::size_t last = pattern.find_last_not_of(" ");
-        if (last != std::string::npos && pattern[last] == 'a') {
+    std::size_t last = pattern.find_last_not_of(" ");
+    if (last != std::string::npos && pattern[last] == 'a') {
+        const auto loweredValue = lowerAscii(value);
+        const auto markerStart = loweredValue.size() >= 2
+            ? loweredValue.size() - 2
+            : std::string::npos;
+        if (markerStart != std::string::npos && markerStart > 0 &&
+            std::isspace(static_cast<unsigned char>(value[markerStart - 1])) &&
+            (loweredValue.compare(markerStart, 2, "am") == 0 ||
+             loweredValue.compare(markerStart, 2, "pm") == 0)) {
+            parsedAmPm = loweredValue.compare(markerStart, 2, "pm") == 0 ? 1 : 0;
             while (last > 0 && pattern[last - 1] == 'a') --last;
             pattern.erase(last);
             while (!pattern.empty() && pattern.back() == ' ') pattern.pop_back();
-            value = amPmMatch[1].str();
-            while (!value.empty() && value.back() == ' ') value.pop_back();
-            parsedAmPm = lowerAscii(amPmMatch[2].str()) == "pm" ? 1 : 0;
+            value.erase(markerStart);
+            while (!value.empty() &&
+                   std::isspace(static_cast<unsigned char>(value.back()))) {
+                value.pop_back();
+            }
         }
     }
     std::tm fields{};

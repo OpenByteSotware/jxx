@@ -46,12 +46,12 @@ namespace
         throw jxx::net::SocketException(msg);
     }
 
-    inline bool isIpv6_(const jxx::Ptr<jxx::net::InetAddress> addr)
+    inline bool isIpv6_(const jxx::Ptr<jxx::net::InetAddress>& addr)
     {
         return std::dynamic_pointer_cast<jxx::net::Inet6Address>(addr) != nullptr;
     }
 
-    inline sockaddr_storage toSockaddr_(const jxx::Ptr<jxx::net::InetAddress> addr,
+    inline sockaddr_storage toSockaddr_(const jxx::Ptr<jxx::net::InetAddress>& addr,
                                         jxx::lang::jint port,
                                         socklen_t& len)
     {

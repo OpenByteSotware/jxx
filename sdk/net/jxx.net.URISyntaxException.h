@@ -15,11 +15,11 @@ namespace jxx::net
         using JxxSuper = ::jxx::lang::Exception;
         using Super = ::jxx::lang::ClassBase<URISyntaxException, JxxSuper>;
 
-        URISyntaxException(const jxx::Ptr<jxx::lang::String> input,
-                           jxx::Ptr<jxx::lang::String> reason,
+        URISyntaxException(const jxx::Ptr<jxx::lang::String>& input,
+                           const jxx::Ptr<jxx::lang::String>& reason,
                            jxx::lang::jint index);
-        URISyntaxException(const jxx::Ptr<jxx::lang::String> input,
-                           jxx::Ptr<jxx::lang::String> reason);
+        URISyntaxException(const jxx::Ptr<jxx::lang::String>& input,
+                           const jxx::Ptr<jxx::lang::String>& reason);
         ~URISyntaxException() override = default;
 
     public:

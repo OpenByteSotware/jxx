@@ -15,11 +15,11 @@ namespace jxx::net
         using JxxSuper = ::jxx::io::IOException;
         using Super = ::jxx::lang::ClassBase<HttpRetryException, JxxSuper>;
 
-        HttpRetryException(const jxx::Ptr<jxx::lang::String> detail,
+        HttpRetryException(const jxx::Ptr<jxx::lang::String>& detail,
                            jxx::lang::jint code);
-        HttpRetryException(const jxx::Ptr<jxx::lang::String> detail,
+        HttpRetryException(const jxx::Ptr<jxx::lang::String>& detail,
                            jxx::lang::jint code,
-                           jxx::Ptr<jxx::lang::String> location);
+                           const jxx::Ptr<jxx::lang::String>& location);
         ~HttpRetryException() override = default;
 
     public:

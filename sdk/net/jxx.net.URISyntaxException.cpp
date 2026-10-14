@@ -2,19 +2,19 @@
 
 namespace jxx::net
 {
-    URISyntaxException::URISyntaxException(const jxx::Ptr<jxx::lang::String> input,
-                                           jxx::Ptr<jxx::lang::String> reason,
+    URISyntaxException::URISyntaxException(const jxx::Ptr<jxx::lang::String>& input,
+                                           const jxx::Ptr<jxx::lang::String>& reason,
                                            jxx::lang::jint index)
         : Super(reason ? reason->utf8() : std::string("URISyntaxException")),
-          input_(std::move(input)),
-          reason_(std::move(reason)),
+          input_(input),
+          reason_(reason),
           index_(index)
     {
     }
 
-    URISyntaxException::URISyntaxException(const jxx::Ptr<jxx::lang::String> input,
-                                           jxx::Ptr<jxx::lang::String> reason)
-        : URISyntaxException(std::move(input), std::move(reason), -1)
+    URISyntaxException::URISyntaxException(const jxx::Ptr<jxx::lang::String>& input,
+                                           const jxx::Ptr<jxx::lang::String>& reason)
+        : URISyntaxException(input, reason, -1)
     {
     }
 
