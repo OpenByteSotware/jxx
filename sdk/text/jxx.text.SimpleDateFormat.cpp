@@ -359,6 +359,59 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
         }
     }
     normalizeCustomSymbols(value, symbols_);
+
+    int parsedMilliseconds = 0;
+    bool hasParsedMilliseconds = false;
+    std::size_t millisecondPatternEnd = pattern.find_last_not_of(" ");
+    if (millisecondPatternEnd != std::string::npos) {
+        // When a zone field is terminal, the earlier zone extraction has already
+        // removed it. Therefore a millisecond field immediately before that zone
+        // is terminal here as well.
+        if (pattern[millisecondPatternEnd] == 'S') {
+            std::size_t millisecondPatternStart = millisecondPatternEnd;
+            while (millisecondPatternStart > 0 &&
+                   pattern[millisecondPatternStart - 1] == 'S') {
+                --millisecondPatternStart;
+            }
+            std::size_t valueEnd = value.find_last_not_of(" ");
+            if (valueEnd == std::string::npos ||
+                !std::isdigit(static_cast<unsigned char>(value[valueEnd]))) {
+                throw ParseException(
+                    ::jxx::NEW<::jxx::lang::String>("Unparseable milliseconds"),
+                    static_cast<::jxx::lang::jint>(value.size()));
+            }
+            std::size_t valueStart = valueEnd;
+            while (valueStart > 0 &&
+                   std::isdigit(static_cast<unsigned char>(value[valueStart - 1]))) {
+                --valueStart;
+            }
+            const auto digits = value.substr(valueStart, valueEnd - valueStart + 1);
+            try {
+                parsedMilliseconds = std::stoi(digits);
+            } catch (...) {
+                throw ParseException(
+                    ::jxx::NEW<::jxx::lang::String>("Unparseable milliseconds"),
+                    static_cast<::jxx::lang::jint>(valueStart));
+            }
+            if (parsedMilliseconds < 0 || parsedMilliseconds > 999) {
+                throw ParseException(
+                    ::jxx::NEW<::jxx::lang::String>("Unparseable milliseconds"),
+                    static_cast<::jxx::lang::jint>(valueStart));
+            }
+            hasParsedMilliseconds = true;
+            pattern.erase(millisecondPatternStart);
+            while (!pattern.empty() && pattern.back() == ' ') pattern.pop_back();
+            if (!pattern.empty() && !value.empty() &&
+                pattern.back() == value[valueStart - (valueStart > 0 ? 1 : 0)] &&
+                valueStart > 0) {
+                pattern.pop_back();
+                --valueStart;
+            }
+            value.erase(valueStart);
+            while (!value.empty() && value.back() == ' ') value.pop_back();
+        }
+    }
+
     int parsedAmPm = -1;
     std::size_t last = pattern.find_last_not_of(" ");
     if (last != std::string::npos && pattern[last] == 'a') {
@@ -468,7 +521,9 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
     const auto offset = hasParsedOffset
         ? parsedOffsetMinutes * 60000
         : (timeZone_ == nullptr ? 0 : timeZone_->getOffset(localMillis));
-    return ::jxx::NEW<::jxx::util::Date>(localMillis - offset);
+    const auto resultMillis = localMillis - offset +
+        (hasParsedMilliseconds ? parsedMilliseconds : 0);
+    return ::jxx::NEW<::jxx::util::Date>(resultMillis);
 }
 
 ::jxx::Ptr<::jxx::util::Date> SimpleDateFormat::parse(
