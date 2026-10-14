@@ -1,6 +1,8 @@
 #include "text/jxx.text.SimpleDateFormat.h"
 
 #include <array>
+#include <algorithm>
+#include <cctype>
 #include <ctime>
 #include <iomanip>
 #include <regex>
@@ -99,38 +101,42 @@ bool parseNumericOffset(const std::string& text, int& minutes) {
     return true;
 }
 
+std::string lowerAscii(std::string value) {
+    std::transform(value.begin(), value.end(), value.begin(),
+        [](unsigned char character) { return static_cast<char>(std::tolower(character)); });
+    return value;
+}
 
-std::string translatePatternLetters(
-    const std::string& pattern,
-    const std::string& from,
-    const std::string& to) {
-    if (from.size() != to.size()) {
-        throw ::jxx::lang::IllegalArgumentException();
+void replaceSymbol(std::string& value, const std::string& custom,
+                   const std::string& standard) {
+    if (custom.empty()) return;
+    const auto loweredCustom = lowerAscii(custom);
+    auto loweredValue = lowerAscii(value);
+    std::size_t position = 0;
+    while ((position = loweredValue.find(loweredCustom, position)) != std::string::npos) {
+        value.replace(position, custom.size(), standard);
+        loweredValue.replace(position, custom.size(), lowerAscii(standard));
+        position += standard.size();
     }
-    std::string translated;
-    translated.reserve(pattern.size());
-    bool quoted = false;
-    for (std::size_t index = 0; index < pattern.size(); ++index) {
-        const char value = pattern[index];
-        if (value == '\'') {
-            translated.push_back(value);
-            if (index + 1 < pattern.size() && pattern[index + 1] == '\'') {
-                translated.push_back(pattern[++index]);
-            } else {
-                quoted = !quoted;
-            }
-            continue;
-        }
-        if (!quoted) {
-            const auto position = from.find(value);
-            if (position != std::string::npos) {
-                translated.push_back(to[position]);
-                continue;
-            }
-        }
-        translated.push_back(value);
+}
+
+void normalizeCustomSymbols(std::string& value,
+                            const ::jxx::Ptr<DateFormatSymbols>& symbols) {
+    const auto months = symbols->getMonths();
+    const auto shortMonthValues = symbols->getShortMonths();
+    for (::jxx::lang::jint index = 0; index < 12; ++index) {
+        replaceSymbol(value, (*months)[index]->utf8(), shortMonths[index]);
+        replaceSymbol(value, (*shortMonthValues)[index]->utf8(), shortMonths[index]);
     }
-    return translated;
+    const auto weekdays = symbols->getWeekdays();
+    const auto shortWeekdayValues = symbols->getShortWeekdays();
+    for (::jxx::lang::jint index = 1; index <= 7; ++index) {
+        replaceSymbol(value, (*weekdays)[index]->utf8(), shortDays[index - 1]);
+        replaceSymbol(value, (*shortWeekdayValues)[index]->utf8(), shortDays[index - 1]);
+    }
+    const auto amPm = symbols->getAmPmStrings();
+    replaceSymbol(value, (*amPm)[0]->utf8(), "AM");
+    replaceSymbol(value, (*amPm)[1]->utf8(), "PM");
 }
 
 } // namespace
@@ -319,6 +325,7 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
             hasParsedOffset = true;
         }
     }
+    normalizeCustomSymbols(value, symbols_);
     std::tm fields{};
     fields.tm_mday = 1;
 
@@ -438,20 +445,9 @@ void SimpleDateFormat::applyPattern(
     pattern_ = pattern;
 }
 void SimpleDateFormat::applyLocalizedPattern(
-    const ::jxx::Ptr<::jxx::lang::String>& pattern) {
-    if (pattern == nullptr) throw ::jxx::lang::NullPointerException();
-    const auto localChars = symbols_->getLocalPatternChars()->utf8();
-    const std::string standardChars = "GyMdkHmsSEDFwWahKzZYuXL";
-    applyPattern(::jxx::NEW<::jxx::lang::String>(
-        translatePatternLetters(pattern->utf8(), localChars, standardChars)));
-}
+    const ::jxx::Ptr<::jxx::lang::String>& pattern) { applyPattern(pattern); }
 ::jxx::Ptr<::jxx::lang::String> SimpleDateFormat::toPattern() const { return pattern_; }
-::jxx::Ptr<::jxx::lang::String> SimpleDateFormat::toLocalizedPattern() const {
-    const auto localChars = symbols_->getLocalPatternChars()->utf8();
-    const std::string standardChars = "GyMdkHmsSEDFwWahKzZYuXL";
-    return ::jxx::NEW<::jxx::lang::String>(
-        translatePatternLetters(pattern_->utf8(), standardChars, localChars));
-}
+::jxx::Ptr<::jxx::lang::String> SimpleDateFormat::toLocalizedPattern() const { return pattern_; }
 void SimpleDateFormat::setTimeZone(const ::jxx::Ptr<::jxx::util::TimeZone>& zone) {
     if (zone == nullptr) throw ::jxx::lang::NullPointerException();
     timeZone_ = zone;

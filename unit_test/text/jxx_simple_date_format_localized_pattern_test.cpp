@@ -3,6 +3,7 @@
 #include "lang/jxx.lang.String.h"
 #include "text/jxx.text.DateFormatSymbols.h"
 #include "text/jxx.text.SimpleDateFormat.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
 
 TEST(SimpleDateFormatLocalizedPatternParity, TranslatesPatternLettersAndPreservesQuotes) {
     auto symbols = ::jxx::NEW<::jxx::text::DateFormatSymbols>();
