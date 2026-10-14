@@ -19,6 +19,19 @@ IOException::IOException(const jxx::Ptr<jxx::lang::String>& message)
 {
 }
 
+IOException::IOException(
+    const jxx::Ptr<jxx::lang::String>& message,
+    const jxx::Ptr<jxx::lang::Throwable>& cause)
+    : Super(message, cause)
+{
+}
+
+IOException::IOException(
+    const jxx::Ptr<jxx::lang::Throwable>& cause)
+    : Super(cause)
+{
+}
+
 IOException::IOException(const char* message)
     : Super(message)
 {

@@ -10,6 +10,7 @@ class String;
 namespace jxx::io {
 
 class File;
+class FileDescriptor;
 
 class FileWriter
     : public ::jxx::lang::ClassBase<
@@ -36,6 +37,9 @@ public:
     FileWriter(
         const ::jxx::Ptr<File>& file,
         ::jxx::lang::jbool append);
+
+    explicit FileWriter(
+        const ::jxx::Ptr<FileDescriptor>& descriptor);
 
     ~FileWriter() override;
 };

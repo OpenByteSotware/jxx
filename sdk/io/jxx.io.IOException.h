@@ -20,6 +20,11 @@ public:
 public:
     IOException();
     explicit IOException(const jxx::Ptr<jxx::lang::String>& message);
+    IOException(
+        const jxx::Ptr<jxx::lang::String>& message,
+        const jxx::Ptr<jxx::lang::Throwable>& cause);
+    explicit IOException(
+        const jxx::Ptr<jxx::lang::Throwable>& cause);
     explicit IOException(const char* message);
     explicit IOException(const std::string& message);
 

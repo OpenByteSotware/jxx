@@ -1,6 +1,7 @@
 #include "io/jxx.io.FileWriter.h"
 
 #include "io/jxx.io.File.h"
+#include "io/jxx.io.FileDescriptor.h"
 #include "io/jxx.io.FileOutputStream.h"
 
 namespace jxx::io {
@@ -31,6 +32,11 @@ FileWriter::FileWriter(
           ::jxx::NEW<FileOutputStream>(
               file,
               append)) {
+}
+
+FileWriter::FileWriter(
+    const ::jxx::Ptr<FileDescriptor>& descriptor)
+    : Super(::jxx::NEW<FileOutputStream>(descriptor)) {
 }
 
 FileWriter::~FileWriter() = default;
