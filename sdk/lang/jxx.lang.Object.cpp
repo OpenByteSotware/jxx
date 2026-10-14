@@ -215,6 +215,9 @@ namespace jxx::lang {
         monitorCondition_.notify_all();
     }
 
+    void Object::finalize() {
+    }
+
     jxx::Ptr<jxx::lang::Object> Object::cloneImpl() const {
         throw CloneNotSupportedException();
     }

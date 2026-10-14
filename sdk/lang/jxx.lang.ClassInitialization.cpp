@@ -88,6 +88,7 @@
 #include "lang/jxx.lang.Runnable.h"
 #include "lang/jxx.lang.StrictMath.h"
 #include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.StringCaseInsensitiveComparator.h"
 #include "lang/jxx.lang.System.h"
 #include "lang/jxx.lang.Thread.h"
 #include "lang/jxx.lang.ThreadDeath.h"
@@ -196,6 +197,7 @@ void initializeClasses()
         registerType<Runnable>();
         registerType<StrictMath>();
         registerType<String>();
+        registerType<StringCaseInsensitiveComparator>();
         registerType<System>();
         registerType<Thread>();
         registerType<ThreadDeath>();

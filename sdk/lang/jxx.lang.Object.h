@@ -143,6 +143,7 @@ namespace jxx::lang
         }
 
     protected:
+        virtual void finalize();
         virtual jxx::Ptr<jxx::lang::Object> cloneImpl() const;
 
         template <typename T>

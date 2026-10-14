@@ -16,9 +16,13 @@
 #include "lang/jxx.lang.Iterable.h"
 #include "lang/jxx.lang.BootstrapClasses.h"
 #include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.StringCaseInsensitiveComparator.h"
 
 
 namespace jxx::lang {
+    const jxx::Ptr<jxx::util::Comparator<String>> String::CASE_INSENSITIVE_ORDER =
+        jxx::NEW<StringCaseInsensitiveComparator>();
+
     jxx::Ptr<ClassAny> String::Class() { return class_info_detail::ensureStringRegistered(); }
 
     String::String(const std::string& stdString) {

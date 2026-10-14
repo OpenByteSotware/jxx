@@ -10,7 +10,8 @@
 #include "jxx.lang.Object.h"
 #include "jxx.lang.CharSequence.h"
 #include "jxx.lang.Comparable.h"
-#include "io/jxx.io.Serializable.h"
+#include "io/jxx.io.SerializableI.h"
+#include "util/jxx.util.Comparator.h"
 #include "jxx.lang.Charset.h"
 
 
@@ -43,13 +44,14 @@ namespace jxx::lang {
      * Internal storage: UTF-16 code units (std::u16string)
      */
     class String final
-        : public jxx::lang::ClassBase<String, Object, CharSequence, Comparable<String>, jxx::io::Serializable> {
+        : public jxx::lang::ClassBase<String, Object, CharSequence, Comparable<String>, jxx::io::SerializableI> {
 public:
     using JxxSuper = Object;
-    using Super = jxx::lang::ClassBase<String, JxxSuper, CharSequence, Comparable<String>, jxx::io::Serializable>;
+    using Super = jxx::lang::ClassBase<String, JxxSuper, CharSequence, Comparable<String>, jxx::io::SerializableI>;
 
     public:
         static jxx::Ptr<ClassAny> Class();
+        static const jxx::Ptr<jxx::util::Comparator<String>> CASE_INSENSITIVE_ORDER;
 
 
         // String()
