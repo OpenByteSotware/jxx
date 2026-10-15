@@ -5,7 +5,6 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "io/jxx.io.ArrayCodecRegistry.h"
 #include "io/jxx.io.SerializationClassRegistry.h"
-#include "io/jxx.io.ArrayCodecRegistry.h"
 #include "lang/jxx.lang.Throwable.h"
 #include "lang/jxx.lang.Exception.h"
 #include "lang/jxx.lang.RuntimeException.h"
@@ -194,6 +193,9 @@ void initializeClasses()
             registerType<Short>();
             registerType<StringBuffer>();
             registerType<StringBuilder>();
+            ::jxx::io::serialization::registerSerializableClass<StringBuilder>(1);
+            ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+                StringBuilder, 1U, 2U>();
             registerType<ThreadGroup>();
             registerType<Runtime>();
             registerType<RuntimePermission>();
