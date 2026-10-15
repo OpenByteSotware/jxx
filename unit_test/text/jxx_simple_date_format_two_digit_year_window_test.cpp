@@ -15,7 +15,6 @@ namespace {
     return format;
 }
 }
-
 TEST(SimpleDateFormatTwoDigitYearParity, HonorsConfiguredCenturyWindow) {
     jxx::initialize();
     auto format = yearFormat("MM/dd/yy");
