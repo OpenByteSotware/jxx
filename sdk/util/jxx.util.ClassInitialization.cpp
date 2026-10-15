@@ -3,6 +3,7 @@
 #include <mutex>
 
 #include "lang/jxx.lang.ClassInfo.h"
+#include "io/jxx.io.SerializationClassRegistry.h"
 #include "util/jxx.util.ConcurrentModificationException.h"
 #include "util/jxx.util.DuplicateFormatFlagsException.h"
 #include "util/jxx.util.EmptyStackException.h"
@@ -120,6 +121,7 @@ void initializeClasses()
         registerType<Collections>();
         registerType<Currency>();
         registerType<Date>();
+        ::jxx::io::serialization::registerSerializableClass<Date>(1);
         registerType<DoubleSummaryStatistics>();
         registerType<EventListener>();
         registerType<EventObject>();
@@ -130,6 +132,9 @@ void initializeClasses()
         registerType<IntSummaryStatistics>();
         registerType<ListResourceBundle>();
         registerType<Locale>();
+        ::jxx::io::serialization::registerSerializableClass<Locale>(1, [] {
+            return ::jxx::NEW<Locale>(::jxx::NEW<::jxx::lang::String>(""));
+        });
         registerType<LocaleBuilder>();
         registerType<LongSummaryStatistics>();
         registerType<Objects>();
@@ -152,6 +157,9 @@ void initializeClasses()
         registerType<TimerTask>();
         registerType<TimeZone>();
         registerType<UUID>();
+        ::jxx::io::serialization::registerSerializableClass<UUID>(1, [] {
+            return ::jxx::NEW<UUID>(0, 0);
+        });
         registerType<::jxx::util::wildcard::CollectionAny>();
         registerType<ZonedDateTime>();
         });

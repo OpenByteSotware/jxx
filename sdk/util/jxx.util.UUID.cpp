@@ -1,4 +1,7 @@
 #include "util/jxx.util.UUID.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "lang/jxx.lang.NullPointerException.h"
 
 #include <array>
 #include <iomanip>
@@ -46,6 +49,6 @@ UUID::UUID(::jxx::lang::jlong most,::jxx::lang::jlong least):Super(),mostSigBits
 ::jxx::lang::jbool UUID::equals(const ::jxx::Ptr<::jxx::lang::Object>&v)const{auto other=::jxx::CAST<UUID>(v);return other&&mostSigBits_==other->mostSigBits_&&leastSigBits_==other->leastSigBits_;}
 ::jxx::lang::jint UUID::hashCode()const{auto value=bits(mostSigBits_)^bits(leastSigBits_);return static_cast<::jxx::lang::jint>((value>>32)^value);}
 ::jxx::Ptr<::jxx::lang::String> UUID::toString()const{std::ostringstream out;out<<std::hex<<std::setfill('0')<<std::nouppercase;auto most=bits(mostSigBits_),least=bits(leastSigBits_);out<<std::setw(8)<<(most>>32)<<'-'<<std::setw(4)<<((most>>16)&0xffff)<<'-'<<std::setw(4)<<(most&0xffff)<<'-'<<std::setw(4)<<(least>>48)<<'-'<<std::setw(12)<<(least&0xffffffffffffULL);return ::jxx::NEW<::jxx::lang::String>(out.str());}
-void UUID::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>&){throw ::jxx::lang::UnsupportedOperationException();}void UUID::readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>&){throw ::jxx::lang::UnsupportedOperationException();}void UUID::readObjectNoData(){throw ::jxx::lang::UnsupportedOperationException();}
+void UUID::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out){if(!out)throw ::jxx::lang::NullPointerException();out->writeLong(mostSigBits_);out->writeLong(leastSigBits_);}void UUID::readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in){if(!in)throw ::jxx::lang::NullPointerException();mostSigBits_=in->readLong();leastSigBits_=in->readLong();}void UUID::readObjectNoData(){mostSigBits_=0;leastSigBits_=0;}
 ::jxx::Ptr<::jxx::lang::Object> UUID::cloneImpl()const{throw ::jxx::lang::CloneNotSupportedException();}
 } // namespace jxx::util

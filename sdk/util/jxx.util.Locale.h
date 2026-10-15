@@ -5,6 +5,8 @@
 #include "io/jxx.io.ObjectOutputStream.h"
 #include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.Cloneable.h"
+#include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.String.h"
 
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
@@ -84,12 +86,26 @@ public:
     ::jxx::lang::jint hashCode() const override;
 
     void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {
-        (void)out;
+        if (out == nullptr) throw ::jxx::lang::NullPointerException();
+        out->writeObject(language_);
+        out->writeObject(script_);
+        out->writeObject(country_);
+        out->writeObject(variant_);
     }
     void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {
-        (void)in;
+        if (in == nullptr) throw ::jxx::lang::NullPointerException();
+        language_ = normalizeLanguage(::jxx::CAST<::jxx::lang::String>(in->readObject()));
+        script_ = normalizeScript(::jxx::CAST<::jxx::lang::String>(in->readObject()));
+        country_ = normalizeCountry(::jxx::CAST<::jxx::lang::String>(in->readObject()));
+        variant_ = normalizeVariant(::jxx::CAST<::jxx::lang::String>(in->readObject()));
     }
-    void readObjectNoData() override {}
+    void readObjectNoData() override {
+        const auto empty = ::jxx::NEW<::jxx::lang::String>("");
+        language_ = empty;
+        script_ = empty;
+        country_ = empty;
+        variant_ = empty;
+    }
 
 protected:
     JXX_OBJECT_CLONE(Locale)

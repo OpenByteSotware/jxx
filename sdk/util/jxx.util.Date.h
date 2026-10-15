@@ -78,12 +78,14 @@ public:
     ::jxx::Ptr<::jxx::lang::String> toString() const override;
 
     void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {
-        (void)out;
+        if (out == nullptr) throw ::jxx::lang::NullPointerException();
+        out->writeLong(time_);
     }
     void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {
-        (void)in;
+        if (in == nullptr) throw ::jxx::lang::NullPointerException();
+        time_ = in->readLong();
     }
-    void readObjectNoData() override {}
+    void readObjectNoData() override { time_ = 0; }
 
 protected:
     JXX_OBJECT_CLONE(Date)

@@ -6,8 +6,10 @@
 #include "lang/jxx.lang.Cast.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_array.h"
+#include "jxx.initialize.h"
 
 TEST(JxxObjectStreamRank2Array, RoundTripsJaggedPrimitiveArrayWithNullAndSharedRows) {
+    jxx::initialize();
     auto value = jxx::NEW<jxx::lang::IntArray2DType>(3);
     auto row = jxx::NEW<jxx::lang::IntArrayType>(2);
     (*row)[0] = 17; (*row)[1] = -4;
