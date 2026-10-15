@@ -174,6 +174,12 @@ namespace jxx::lang {
     jbool ClassAny::isPrimitive() const { return meta_.isPrimitive; }
     jbool ClassAny::isArray() const { return meta_.isArray; }
     jbool ClassAny::isEnum() const { return meta_.isEnum; }
+    jxx::Ptr<Object> ClassAny::resolveEnumConstant(const jxx::Ptr<String>& name) const {
+        if (name == nullptr) throw NullPointerException();
+        if (!meta_.isEnum || !meta_.enumResolver)
+            throw IllegalArgumentException(name);
+        return meta_.enumResolver(name);
+    }
     jbool ClassAny::isAnnotation() const { return meta_.isAnnotation; }
     jbool ClassAny::isSynthetic() const { return meta_.isSynthetic; }
 

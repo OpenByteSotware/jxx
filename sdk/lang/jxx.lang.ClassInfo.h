@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "lang/jxx.lang.Class.h"
+#include "lang/jxx.lang.EnumValue.h"
 #include "lang/jxx.lang.ClassInfoMarker.h"
 #include "lang/jxx.lang.IllegalStateException.h"
 #include "lang/jxx.lang.Object.h"
@@ -23,6 +24,14 @@ template <
 class ClassInfo;
 
 namespace class_info_detail {
+
+template <typename T, typename = void>
+struct HasEnumValueOf : std::false_type {};
+
+template <typename T>
+struct HasEnumValueOf<T, std::void_t<decltype(T::valueOf(std::declval<jxx::Ptr<String>>()))>>
+    : std::true_type {};
+
 
 
 template <typename T>
@@ -391,7 +400,7 @@ public:
             metadata.isInterface = !isClass;
             metadata.isPrimitive = false;
             metadata.isArray = false;
-            metadata.isEnum = false;
+            metadata.isEnum = std::is_base_of_v<EnumValue, Derived> && class_info_detail::HasEnumValueOf<Derived>::value;
             metadata.isAnnotation = false;
             metadata.isSynthetic = false;
             metadata.componentType = nullptr;
@@ -421,6 +430,11 @@ public:
                         return object != nullptr &&
                             jxx::CAST<Derived>(object) != nullptr;
                     };
+                if constexpr (std::is_base_of_v<EnumValue, Derived> && class_info_detail::HasEnumValueOf<Derived>::value) {
+                    metadata.enumResolver = [](const jxx::Ptr<String>& name) -> jxx::Ptr<Object> {
+                        return jxx::CAST<Object>(Derived::valueOf(name));
+                    };
+                }
             } else {
                 metadata.superClass = nullptr;
                 metadata.modifiers = 0x0001 | 0x0200 | 0x0400;

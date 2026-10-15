@@ -10,6 +10,7 @@
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.EnumValue.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx_types.h"
 
@@ -17,12 +18,14 @@ namespace jxx::lang {
 
 template <typename E>
 class Enum
-    : public ClassBase<Enum<E>, Object, Comparable<E>, jxx::io::SerializableI> {
+    : public ClassBase<Enum<E>, Object, Comparable<E>, jxx::io::SerializableI>, public virtual EnumValue {
 public:
     using JxxSuper = Object;
     using Super = ClassBase<Enum<E>, JxxSuper, Comparable<E>, jxx::io::SerializableI>;
 
     jxx::Ptr<String> name() const { return name_; }
+    jxx::Ptr<String> enumName() const override { return name_; }
+    jxx::Ptr<ClassAny> enumDeclaringClass() const override { return E::Class(); }
     jint ordinal() const noexcept { return ordinal_; }
 
     jxx::Ptr<String> toString() const override { return name_; }

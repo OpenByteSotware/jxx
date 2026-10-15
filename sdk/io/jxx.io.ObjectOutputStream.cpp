@@ -5,6 +5,7 @@
 #include "io/jxx.io.ObjectStreamFormat.h"
 #include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.Class.h"
+#include "lang/jxx.lang.EnumValue.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_array.h"
 
@@ -118,6 +119,19 @@ void ObjectOutputStream::writeObject0_(const ::jxx::Ptr<::jxx::lang::Object>& ob
     JXX_WRITE_RANK2_ARRAY(::jxx::lang::DoubleArray2DType, Double)
     JXX_WRITE_RANK2_ARRAY(::jxx::lang::ObjectArray2DType, Object)
 #undef JXX_WRITE_RANK2_ARRAY
+    if (const auto classValue = std::dynamic_pointer_cast<::jxx::lang::ClassAny>(object)) {
+        writeByte(static_cast<::jxx::lang::jint>(Tag::NewClass));
+        writeHandle_(handle);
+        writeRawUtf8_(classValue->getName()->utf8());
+        return;
+    }
+    if (const auto enumValue = std::dynamic_pointer_cast<::jxx::lang::EnumValue>(object)) {
+        writeByte(static_cast<::jxx::lang::jint>(Tag::NewEnum));
+        writeHandle_(handle);
+        writeClassDescriptor_(enumValue->enumDeclaringClass()->getName()->utf8());
+        writeRawUtf8_(enumValue->enumName()->utf8());
+        return;
+    }
     if (const auto stringValue = std::dynamic_pointer_cast<::jxx::lang::String>(object)) {
         writeString_(stringValue, handle);
         return;

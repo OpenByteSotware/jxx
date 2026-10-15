@@ -182,6 +182,21 @@ void ObjectInputStream::requireEndArray_() {
         if (found == handles_.end()) throw StreamCorruptedException("Unknown object handle");
         return found->second;
     }
+    if (tag == Tag::NewClass) {
+        const auto handle = readHandle_();
+        auto type = ::jxx::lang::ClassAny::forName(jxx::NEW<::jxx::lang::String>(readRawUtf8_()));
+        registerHandle_(handle, type);
+        return type;
+    }
+    if (tag == Tag::NewEnum) {
+        const auto handle = readHandle_();
+        const auto descriptor = readClassDescriptor_();
+        auto type = ::jxx::lang::ClassAny::forName(jxx::NEW<::jxx::lang::String>(descriptor.binaryName));
+        if (!type->isEnum()) throw InvalidClassException(type->getName(), jxx::NEW<::jxx::lang::String>("Class descriptor is not an enum"));
+        auto value = type->resolveEnumConstant(jxx::NEW<::jxx::lang::String>(readRawUtf8_()));
+        registerHandle_(handle, value);
+        return value;
+    }
     if (tag == Tag::NewString) return readString_(readHandle_());
     if (tag == Tag::NewArray) return readArray_(readHandle_());
     if (tag != Tag::NewObject) throw StreamCorruptedException("Unsupported JXX object stream tag");

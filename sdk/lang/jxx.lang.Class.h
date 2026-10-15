@@ -33,6 +33,7 @@ namespace jxx::lang {
         using FactoryFn = std::function<jxx::Ptr<Object>()>;
 
         using InstancePredicate = std::function<jbool(const jxx::Ptr<Object>&)>;
+        using EnumResolver = std::function<jxx::Ptr<Object>(const jxx::Ptr<String>&)>;
 
         struct Meta
         {
@@ -75,6 +76,7 @@ namespace jxx::lang {
              */
             InstancePredicate
                 instancePredicate;
+            EnumResolver enumResolver;
         };
 
         explicit ClassAny(Meta meta);
@@ -110,6 +112,7 @@ namespace jxx::lang {
         jbool isPrimitive() const;
         jbool isArray() const;
         jbool isEnum() const;
+        jxx::Ptr<Object> resolveEnumConstant(const jxx::Ptr<String>& name) const;
         jbool isAnnotation() const;
         jbool isSynthetic() const;
 
