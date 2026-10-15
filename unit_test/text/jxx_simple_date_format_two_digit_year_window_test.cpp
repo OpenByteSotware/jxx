@@ -34,15 +34,30 @@ TEST(SimpleDateFormatTwoDigitYearParity, HonorsConfiguredCenturyWindow)
             "01/01/49"))->getYear() + 1900);
 }
 
-TEST(SimpleDateFormatTwoDigitYearParity, UsesExactStartInstantBoundary) {
-    jxx::initialize(); 
+TEST(SimpleDateFormatTwoDigitYearParity, UsesExactStartInstantBoundary)
+{
+    jxx::initialize();
+
     auto format = yearFormat("MM/dd/yy HH:mm:ss");
+
     format->set2DigitYearStart(
-        ::jxx::NEW<::jxx::util::Date>(50, 5, 15, 12, 0, 0));
-    EXPECT_EQ(2050, format->parse(::jxx::NEW<::jxx::lang::String>(
-        "06/15/50 11:59:59"))->getYear() + 1900);
-    EXPECT_EQ(1950, format->parse(::jxx::NEW<::jxx::lang::String>(
-        "06/15/50 12:00:00"))->getYear() + 1900);
+        ::jxx::NEW<::jxx::util::Date>(
+            ::jxx::util::Date::UTC(
+                50, 5, 15, 12, 0, 0)));
+
+    EXPECT_EQ(
+        2050,
+        format->parse(
+            ::jxx::NEW<::jxx::lang::String>(
+                "06/15/50 11:59:59"))
+            ->getYear() + 1900);
+
+    EXPECT_EQ(
+        1950,
+        format->parse(
+            ::jxx::NEW<::jxx::lang::String>(
+                "06/15/50 12:00:00"))
+            ->getYear() + 1900);
 }
 
 TEST(SimpleDateFormatTwoDigitYearParity, FourDigitYearIsNotWindowed) {

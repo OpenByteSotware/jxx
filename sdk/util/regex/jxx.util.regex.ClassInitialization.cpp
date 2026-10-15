@@ -3,6 +3,9 @@
 #include <mutex>
 
 #include "lang/jxx.lang.ClassInfo.h"
+#include "io/jxx.io.ArrayCodecRegistry.h"
+#include "io/jxx.io.SerializationClassRegistry.h"
+#include "lang/jxx.lang.String.h"
 #include "util/regex/jxx.util.regex.MatchResult.h"
 #include "util/regex/jxx.util.regex.Matcher.h"
 #include "util/regex/jxx.util.regex.Pattern.h"
@@ -26,6 +29,14 @@ void initializeClasses()
         registerType<MatchResult>();
         registerType<Matcher>();
         registerType<Pattern>();
+        ::jxx::io::serialization::registerSerializableClass<Pattern>(
+            1,
+            [] {
+                return Pattern::compile(
+                    ::jxx::NEW<::jxx::lang::String>(""));
+            });
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            Pattern, 1U, 2U>();
         registerType<PatternSyntaxException>();
     });
 }
