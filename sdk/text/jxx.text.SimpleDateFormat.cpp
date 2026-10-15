@@ -196,6 +196,39 @@ std::int64_t daysFromCivil(int year, unsigned month, unsigned day) {
         static_cast<std::int64_t>(dayOfEra) - 719468LL;
 }
 
+std::string zoneDisplayName(
+    const ::jxx::Ptr<DateFormatSymbols>& symbols,
+    const ::jxx::Ptr<::jxx::util::TimeZone>& zone,
+    ::jxx::lang::jlong epochMillis,
+    int patternCount) {
+    if (zone == nullptr) return std::string();
+
+    const auto zoneId = zone->getID();
+    const bool daylight = zone->inDaylightTime(
+        ::jxx::NEW<::jxx::util::Date>(epochMillis));
+    const auto rows = symbols->getZoneStrings();
+    for (::jxx::lang::jint rowIndex = 0;
+         rowIndex < rows->length; ++rowIndex) {
+        const auto& row = rows->row(rowIndex);
+        if (row == nullptr || row->length < 5 ||
+            (*row)[0] == nullptr || !(*row)[0]->equals(zoneId)) {
+            continue;
+        }
+        const ::jxx::lang::jint column = patternCount >= 4
+            ? (daylight ? 3 : 1)
+            : (daylight ? 4 : 2);
+        if ((*row)[column] != nullptr &&
+            !(*row)[column]->utf8().empty()) {
+            return (*row)[column]->utf8();
+        }
+    }
+
+    const auto abbreviation = zone->getAbbreviation(epochMillis);
+    return abbreviation == nullptr
+        ? zoneId->utf8()
+        : abbreviation->utf8();
+}
+
 std::string translatePatternLetters(
     const std::string& pattern,
     const std::string& from,
@@ -359,10 +392,8 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
         case 's': output += number(fields.tm_sec, count); break;
         case 'S': output += number(static_cast<int>((epochMillis % 1000 + 1000) % 1000), count); break;
         case 'z':
-            if (timeZone_ != nullptr) {
-                const auto abbreviation = timeZone_->getAbbreviation(epochMillis);
-                output += abbreviation == nullptr ? timeZone_->getID()->utf8() : abbreviation->utf8();
-            }
+            output += zoneDisplayName(
+                symbols_, timeZone_, epochMillis, count);
             break;
         case 'Z': {
             const int totalMinutes = offset / 60000;
