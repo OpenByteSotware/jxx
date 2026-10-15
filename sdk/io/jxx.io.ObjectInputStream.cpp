@@ -1,6 +1,8 @@
 #include "io/jxx.io.ObjectInputStream.h"
 
 #include "io/jxx.io.InvalidClassException.h"
+#include "io/jxx.io.ArrayCodecRegistry.h"
+#include "lang/jxx.lang.initialize.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "io/jxx.io.ObjectStreamFormat.h"
 #include "io/jxx.io.SerializableI.h"
@@ -11,7 +13,7 @@
 
 namespace jxx::io {
 namespace { using Tag = serialization::Tag; }
-ObjectInputStream::ObjectInputStream(const ::jxx::Ptr<InputStream>& input) : Super(input) { readStreamHeader_(); }
+ObjectInputStream::ObjectInputStream(const ::jxx::Ptr<InputStream>& input) : Super(input) { ::jxx::lang::initialize(); readStreamHeader_(); }
 ObjectInputStream::ObjectInputStream() : Super(::jxx::Ptr<InputStream>{}) {}
 ObjectInputStream::~ObjectInputStream() = default;
 
@@ -114,11 +116,23 @@ void ObjectInputStream::requireEndArray_() {
     using Kind = serialization::ArrayElementKind;
     const auto kind = static_cast<Kind>(readUnsignedByte());
     const auto rank = readUnsignedByte();
-    if (rank != 1 && rank != 2)
-        throw StreamCorruptedException("Unsupported JXX array rank");
+    if (rank == 0)
+        throw StreamCorruptedException("Invalid JXX array rank");
     const auto rawLength = readHandle_();
     if (rawLength > limits_.maxArrayElements) throw StreamCorruptedException("Array length exceeds limit");
     const auto length = static_cast<::jxx::lang::jint>(rawLength);
+    if (kind == Kind::TypedObject) {
+        const auto componentName = readRawUtf8_();
+        const auto* codec = serialization::ArrayCodecRegistry::findByWireType(componentName, rank);
+        if (codec == nullptr) throw InvalidClassException(jxx::NEW<::jxx::lang::String>(componentName), jxx::NEW<::jxx::lang::String>("No typed reference-array codec is registered"));
+        auto array = codec->create(length);
+        registerHandle_(handle, array);
+        for (::jxx::lang::jint i = 0; i < length; ++i) codec->set(array, i, readObject0_());
+        requireEndArray_();
+        return array;
+    }
+    if (rank != 1 && rank != 2)
+        throw StreamCorruptedException("Unsupported built-in JXX array rank");
     if (rank == 2) {
 #define JXX_READ_RANK2_ARRAY(KIND, TYPE, ROWTYPE) \
         case Kind::KIND: { auto array = jxx::NEW<TYPE>(length); registerHandle_(handle, array); \

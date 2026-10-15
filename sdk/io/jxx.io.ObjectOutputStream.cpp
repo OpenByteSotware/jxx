@@ -2,6 +2,8 @@
 
 #include <limits>
 #include "io/jxx.io.NotSerializableException.h"
+#include "io/jxx.io.ArrayCodecRegistry.h"
+#include "lang/jxx.lang.initialize.h"
 #include "io/jxx.io.ObjectStreamFormat.h"
 #include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.Class.h"
@@ -13,6 +15,7 @@ namespace jxx::io {
 namespace { using Tag = serialization::Tag; }
 
 ObjectOutputStream::ObjectOutputStream(const ::jxx::Ptr<OutputStream>& output) : Super(output) {
+    ::jxx::lang::initialize();
     writeStreamHeader_();
 }
 ObjectOutputStream::ObjectOutputStream() : Super(::jxx::Ptr<OutputStream>{}) {}
@@ -69,6 +72,17 @@ void ObjectOutputStream::writeObject0_(const ::jxx::Ptr<::jxx::lang::Object>& ob
         return;
     }
     const auto handle = assignHandle_(object);
+    if (const auto* codec = serialization::ArrayCodecRegistry::findByType(std::type_index(typeid(*object)))) {
+        writeByte(static_cast<::jxx::lang::jint>(Tag::NewArray));
+        writeHandle_(handle);
+        writeByte(static_cast<::jxx::lang::jint>(serialization::ArrayElementKind::TypedObject));
+        writeByte(static_cast<::jxx::lang::jint>(codec->rank));
+        writeHandle_(static_cast<Handle>(codec->length(object)));
+        writeRawUtf8_(codec->componentBinaryName);
+        for (::jxx::lang::jint i = 0; i < codec->length(object); ++i) writeObject0_(codec->get(object, i));
+        writeByte(static_cast<::jxx::lang::jint>(Tag::EndArray));
+        return;
+    }
     const auto writeArrayHeader = [&](serialization::ArrayElementKind kind,
                                       ::jxx::lang::jint length) {
         writeByte(static_cast<::jxx::lang::jint>(Tag::NewArray));

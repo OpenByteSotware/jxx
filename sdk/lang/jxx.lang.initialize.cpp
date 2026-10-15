@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <atomic>
+#include <unordered_set>
 #include <exception>
 #include <utility>
 #include "lang/jxx.lang.initialize.h"
@@ -60,6 +61,15 @@ std::mutex& initializationMutex() {
     return mutex;
 }
 
+
+std::mutex& clientInitializerMutex() { static std::mutex mutex; return mutex; }
+std::unordered_set<ClientInitializer>& completedClientInitializers() {
+    static std::unordered_set<ClientInitializer> values; return values;
+}
+std::unordered_set<ClientInitializer>& runningClientInitializers() {
+    static std::unordered_set<ClientInitializer> values; return values;
+}
+
 } // namespace
 
 void initialize() {
@@ -101,6 +111,26 @@ void initialize() {
     initializedFlag().store(
         true,
         std::memory_order_release);
+}
+
+void initialize(ClientInitializer callback) {
+    initialize();
+    if (callback == nullptr) return;
+    {
+        std::lock_guard<std::mutex> lock(clientInitializerMutex());
+        if (completedClientInitializers().count(callback) != 0U || runningClientInitializers().count(callback) != 0U) return;
+        runningClientInitializers().insert(callback);
+    }
+    try {
+        callback();
+        std::lock_guard<std::mutex> lock(clientInitializerMutex());
+        runningClientInitializers().erase(callback);
+        completedClientInitializers().insert(callback);
+    } catch (...) {
+        std::lock_guard<std::mutex> lock(clientInitializerMutex());
+        runningClientInitializers().erase(callback);
+        throw;
+    }
 }
 
 bool isInitialized() noexcept {

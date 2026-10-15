@@ -12,7 +12,7 @@ inline constexpr std::uint64_t FIRST_HANDLE = 1U;
 enum class ArrayElementKind : std::uint8_t {
     Boolean = 0x01, Byte = 0x02, Char = 0x03, Short = 0x04,
     Int = 0x05, Long = 0x06, Float = 0x07, Double = 0x08,
-    Object = 0x09
+    Object = 0x09, TypedObject = 0x0A
 };
 
 enum class Tag : std::uint8_t {
