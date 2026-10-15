@@ -1,4 +1,8 @@
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.AtomicLongArray.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "io/jxx.io.StreamCorruptedException.h"
+#include "lang/jxx.lang.NullPointerException.h"
 
 #include "lang/jxx.lang.Exceptions.h"
 namespace jxx::util::concurrent::atomic {
@@ -16,7 +20,9 @@ void AtomicLongArray::lazySet(::jxx::lang::jint i,::jxx::lang::jlong v){set(i,v)
 ::jxx::lang::jlong AtomicLongArray::getAndAdd(::jxx::lang::jint i,::jxx::lang::jlong d){std::lock_guard<std::mutex>l(mutex_);auto&x=values_[index_(i)];auto old=x;x+=d;return old;}
 ::jxx::lang::jlong AtomicLongArray::incrementAndGet(::jxx::lang::jint i){return addAndGet(i,1);} ::jxx::lang::jlong AtomicLongArray::decrementAndGet(::jxx::lang::jint i){return addAndGet(i,-1);}
 ::jxx::lang::jlong AtomicLongArray::addAndGet(::jxx::lang::jint i,::jxx::lang::jlong d){std::lock_guard<std::mutex>l(mutex_);return values_[index_(i)]+=d;}
-void AtomicLongArray::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>&o){(void)o;}void AtomicLongArray::readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>&i){(void)i;}void AtomicLongArray::readObjectNoData(){}
+void AtomicLongArray::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out){if(!out)throw ::jxx::lang::NullPointerException();std::lock_guard<std::mutex> lock(mutex_);out->writeInt(static_cast<::jxx::lang::jint>(values_.size()));for(const auto value:values_)out->writeLong(value);}
+void AtomicLongArray::readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in){if(!in)throw ::jxx::lang::NullPointerException();const auto size=in->readInt();if(size<0||size>16777216)throw ::jxx::io::StreamCorruptedException("Invalid AtomicLongArray length");std::vector<::jxx::lang::jlong> restored;restored.reserve(static_cast<std::size_t>(size));for(::jxx::lang::jint index=0;index<size;++index)restored.push_back(in->readLong());std::lock_guard<std::mutex> lock(mutex_);values_=std::move(restored);}
+void AtomicLongArray::readObjectNoData(){std::lock_guard<std::mutex> lock(mutex_);values_.clear();}
 std::size_t AtomicLongArray::checkedLength_(::jxx::lang::jint n){if(n<0)throw ::jxx::lang::IllegalArgumentException();return static_cast<std::size_t>(n);}
 std::size_t AtomicLongArray::index_(::jxx::lang::jint i)const{if(i<0||i>=length())throw ::jxx::lang::IndexOutOfBoundsException();return static_cast<std::size_t>(i);}
 } // namespace jxx::util::concurrent::atomic

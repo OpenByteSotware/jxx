@@ -1,4 +1,8 @@
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.AtomicIntegerArray.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "io/jxx.io.StreamCorruptedException.h"
+#include "lang/jxx.lang.NullPointerException.h"
 
 #include "lang/jxx.lang.Exceptions.h"
 namespace jxx::util::concurrent::atomic {
@@ -16,7 +20,9 @@ void AtomicIntegerArray::lazySet(::jxx::lang::jint i,::jxx::lang::jint v){set(i,
 ::jxx::lang::jint AtomicIntegerArray::getAndAdd(::jxx::lang::jint i,::jxx::lang::jint d){std::lock_guard<std::mutex>l(mutex_);auto&x=values_[index_(i)];auto old=x;x+=d;return old;}
 ::jxx::lang::jint AtomicIntegerArray::incrementAndGet(::jxx::lang::jint i){return addAndGet(i,1);} ::jxx::lang::jint AtomicIntegerArray::decrementAndGet(::jxx::lang::jint i){return addAndGet(i,-1);}
 ::jxx::lang::jint AtomicIntegerArray::addAndGet(::jxx::lang::jint i,::jxx::lang::jint d){std::lock_guard<std::mutex>l(mutex_);return values_[index_(i)]+=d;}
-void AtomicIntegerArray::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>&o){(void)o;}void AtomicIntegerArray::readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>&i){(void)i;}void AtomicIntegerArray::readObjectNoData(){}
+void AtomicIntegerArray::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out){if(!out)throw ::jxx::lang::NullPointerException();std::lock_guard<std::mutex> lock(mutex_);out->writeInt(static_cast<::jxx::lang::jint>(values_.size()));for(const auto value:values_)out->writeInt(value);}
+void AtomicIntegerArray::readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in){if(!in)throw ::jxx::lang::NullPointerException();const auto size=in->readInt();if(size<0||size>16777216)throw ::jxx::io::StreamCorruptedException("Invalid AtomicIntegerArray length");std::vector<::jxx::lang::jint> restored;restored.reserve(static_cast<std::size_t>(size));for(::jxx::lang::jint index=0;index<size;++index)restored.push_back(in->readInt());std::lock_guard<std::mutex> lock(mutex_);values_=std::move(restored);}
+void AtomicIntegerArray::readObjectNoData(){std::lock_guard<std::mutex> lock(mutex_);values_.clear();}
 std::size_t AtomicIntegerArray::checkedLength_(::jxx::lang::jint n){if(n<0)throw ::jxx::lang::IllegalArgumentException();return static_cast<std::size_t>(n);}
 std::size_t AtomicIntegerArray::index_(::jxx::lang::jint i)const{if(i<0||i>=length())throw ::jxx::lang::IndexOutOfBoundsException();return static_cast<std::size_t>(i);}
 } // namespace jxx::util::concurrent::atomic

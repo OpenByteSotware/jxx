@@ -5,6 +5,7 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "io/jxx.io.SerializationClassRegistry.h"
 #include "io/jxx.io.SerializationClassRegistry.h"
+#include "io/jxx.io.SerializationClassRegistry.h"
 #include "util/jxx.util.ConcurrentModificationException.h"
 #include "util/jxx.util.DuplicateFormatFlagsException.h"
 #include "util/jxx.util.EmptyStackException.h"
@@ -133,6 +134,7 @@ void initializeClasses()
         registerType<Formatter>();
         registerType<GregorianCalendar>();
         registerType<IntStream>();
+        ::jxx::io::serialization::registerSerializableClass<IntStream>(1, [] { return IntStream::of(::jxx::NEW<::jxx::lang::IntArrayType>(0)); });
         registerType<IntSummaryStatistics>();
         registerType<ListResourceBundle>();
         registerType<Locale>();

@@ -1,5 +1,8 @@
 #include "lang/jxx.lang.buildin_array.h"
 #include "util/jxx.util.IntStream.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "lang/jxx.lang.NullPointerException.h"
 
 namespace jxx::util {
 
@@ -21,14 +24,14 @@ IntStream::IntStream(const ::jxx::lang::IntArray& backing) : data_(backing) {}
 
 void IntStream::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out)
 {
-
+    if (out == nullptr) throw ::jxx::lang::NullPointerException();
+    out->writeObject(data_);
 }
 
 void IntStream::readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) {
-
+    if (in == nullptr) throw ::jxx::lang::NullPointerException();
+    data_ = ::jxx::CAST<::jxx::lang::IntArrayType>(in->readObject());
 }
-void IntStream::readObjectNoData() {
-
-}
+void IntStream::readObjectNoData() { data_ = nullptr; }
 
 } // namespace jxx::util
