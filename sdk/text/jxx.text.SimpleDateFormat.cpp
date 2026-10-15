@@ -3,6 +3,7 @@
 #include <array>
 #include <algorithm>
 #include <cctype>
+#include <cstring>
 #include <ctime>
 #include <iomanip>
 #include <regex>
@@ -287,6 +288,65 @@ bool hasUnquotedTwoDigitYear(const std::string& pattern) {
     return false;
 }
 
+bool normalizeExtendedNumericYear(
+    const std::string& pattern,
+    std::string& value,
+    int& parsedYear) {
+    bool quoted = false;
+    std::string expression = "^";
+    int captureIndex = 0;
+    int yearCapture = 0;
+    for (std::size_t index = 0; index < pattern.size();) {
+        const char symbol = pattern[index];
+        if (symbol == '\'') {
+            if (index + 1 < pattern.size() && pattern[index + 1] == '\'') {
+                expression += "\\'";
+                index += 2;
+                continue;
+            }
+            quoted = !quoted;
+            ++index;
+            continue;
+        }
+        if (!quoted && std::isalpha(static_cast<unsigned char>(symbol))) {
+            std::size_t end = index + 1;
+            while (end < pattern.size() && pattern[end] == symbol) ++end;
+            const std::size_t count = end - index;
+            if ((symbol == 'y' || symbol == 'Y') && count != 2) {
+                expression += "([0-9]+)";
+                yearCapture = ++captureIndex;
+            } else if (symbol == 'M' || symbol == 'L' || symbol == 'd' ||
+                       symbol == 'D' || symbol == 'H' || symbol == 'k' ||
+                       symbol == 'K' || symbol == 'h' || symbol == 'm' ||
+                       symbol == 's' || symbol == 'S') {
+                expression += "([0-9]+)";
+                ++captureIndex;
+            } else {
+                return false;
+            }
+            index = end;
+            continue;
+        }
+        if (std::strchr(R"(\.^$|()[]{}*+?)", symbol) != nullptr) {
+            expression.push_back('\\');
+        }
+        expression.push_back(symbol);
+        ++index;
+    }
+    expression += "$";
+    if (yearCapture == 0) return false;
+    std::smatch match;
+    if (!std::regex_match(value, match, std::regex(expression))) return false;
+    const auto digits = match[static_cast<std::size_t>(yearCapture)].str();
+    if (digits.empty() || digits[0] != '0') return false;
+    parsedYear = std::stoi(digits);
+    const auto position = static_cast<std::size_t>(
+        match.position(static_cast<std::size_t>(yearCapture)));
+    value.replace(position, digits.size(), std::string(digits.size(), '0'));
+    value.replace(position + digits.size() - 4, 4, "1970");
+    return true;
+}
+
 ::jxx::Ptr<::jxx::util::Date> defaultTwoDigitYearStart() {
     auto start = ::jxx::NEW<::jxx::util::Date>();
     start->setYear(start->getYear() - 80);
@@ -462,6 +522,9 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
     std::string pattern = pattern_->utf8();
     const bool ambiguousTwoDigitYear = hasUnquotedTwoDigitYear(pattern);
     std::string value = source->utf8();
+    int parsedExtendedYear = 0;
+    const bool hasParsedExtendedYear =
+        normalizeExtendedNumericYear(pattern, value, parsedExtendedYear);
     int parsedOffsetMinutes = 0;
     bool hasParsedOffset = false;
     std::string parsedZoneId;
@@ -677,6 +740,10 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
             position == std::streampos(-1)
                 ? 0
                 : static_cast<::jxx::lang::jint>(position));
+    }
+
+    if (hasParsedExtendedYear) {
+        fields.tm_year = parsedExtendedYear - 1900;
     }
 
     if (ambiguousTwoDigitYear) {
