@@ -756,16 +756,20 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
         const int startYear = startFields.tm_year + 1900;
         int resolvedYear = (startYear / 100) * 100 + parsedTwoDigitYear;
         if (resolvedYear < startYear) resolvedYear += 100;
-        if (resolvedYear == startYear) {
-            const auto parsedTail = std::make_tuple(
-                fields.tm_mon, fields.tm_mday, fields.tm_hour,
-                fields.tm_min, fields.tm_sec);
-            const auto startTail = std::make_tuple(
-                startFields.tm_mon, startFields.tm_mday,
-                startFields.tm_hour, startFields.tm_min,
-                startFields.tm_sec);
-            if (parsedTail < startTail) resolvedYear += 100;
-        }
+
+        const auto candidateLocalMillis = daysFromCivil(
+            resolvedYear,
+            static_cast<unsigned>(fields.tm_mon + 1),
+            static_cast<unsigned>(fields.tm_mday)) * 86400000LL +
+            static_cast<::jxx::lang::jlong>(fields.tm_hour) * 3600000LL +
+            static_cast<::jxx::lang::jlong>(fields.tm_min) * 60000LL +
+            static_cast<::jxx::lang::jlong>(fields.tm_sec) * 1000LL;
+        const auto candidateOffset = timeZone_ == nullptr
+            ? 0
+            : timeZone_->getOffset(candidateLocalMillis);
+        const auto candidateInstant = candidateLocalMillis - candidateOffset;
+        if (candidateInstant < startMillis) resolvedYear += 100;
+
         fields.tm_year = resolvedYear - 1900;
     }
 

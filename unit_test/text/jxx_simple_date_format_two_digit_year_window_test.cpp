@@ -16,23 +16,26 @@ namespace {
 }
 }
 
-TEST(SimpleDateFormatTwoDigitYearParity, HonorsConfiguredCenturyWindow)
+
+TEST(SimpleDateFormatTwoDigitYearParity, HonorsConfiguredCenturyWindowInstant)
 {
-    jxx::initialize();
-    auto format = yearFormat("MM/dd/yy");
+    auto format = ::jxx::NEW<::jxx::text::SimpleDateFormat>(
+        ::jxx::NEW<::jxx::lang::String>("MM/dd/yy"));
+    format->setTimeZone(::jxx::util::TimeZone::getTimeZone(
+        ::jxx::NEW<::jxx::lang::String>("GMT")));
+    const auto start = ::jxx::util::Date::UTC(50, 0, 1, 0, 0, 0);
+    format->set2DigitYearStart(::jxx::NEW<::jxx::util::Date>(start));
 
-    format->set2DigitYearStart(
-        ::jxx::NEW<::jxx::util::Date>(
-            ::jxx::util::Date::UTC(50, 0, 1, 0, 0, 0)));
+    const auto atBoundary = format->parse(
+        ::jxx::NEW<::jxx::lang::String>("01/01/50"));
+    const auto previousYear = format->parse(
+        ::jxx::NEW<::jxx::lang::String>("01/01/49"));
 
-    EXPECT_EQ(1950,
-        format->parse(::jxx::NEW<::jxx::lang::String>(
-            "01/01/50"))->getYear() + 1900);
-
-    EXPECT_EQ(2049,
-        format->parse(::jxx::NEW<::jxx::lang::String>(
-            "01/01/49"))->getYear() + 1900);
+    EXPECT_EQ(start, atBoundary->getTime());
+    EXPECT_EQ("01/01/49", format->format(previousYear)->utf8());
+    EXPECT_GT(previousYear->getTime(), atBoundary->getTime());
 }
+
 
 TEST(SimpleDateFormatTwoDigitYearParity, UsesExactStartInstantBoundary)
 {
