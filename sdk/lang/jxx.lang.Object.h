@@ -351,7 +351,12 @@ namespace jxx
         // automatically on first construction. Client initialization callbacks
         // only register client-owned classes and interfaces, never List<T> or
         // another SDK template specialization.
-        if constexpr (jxx::lang::class_info_detail::HasClassInfoV<T>) {
+        // ClassAny is the metadata object created by ClassAny::registerClass()
+        // while the registry mutex is held. Calling ClassAny::Class() from that
+        // bootstrap path would recursively enter the registry and deadlock.
+        if constexpr (
+            jxx::lang::class_info_detail::HasClassInfoV<T> &&
+            !std::is_same_v<std::remove_cv_t<T>, jxx::lang::ClassAny>) {
             (void)T::Class();
         }
 
