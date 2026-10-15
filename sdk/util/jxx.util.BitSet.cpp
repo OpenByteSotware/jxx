@@ -1,4 +1,8 @@
 #include "util/jxx.util.BitSet.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "io/jxx.io.StreamCorruptedException.h"
+#include "lang/jxx.lang.NullPointerException.h"
 #include <algorithm>
 #include <sstream>
 #include "lang/jxx.lang.NullPointerException.h"
@@ -91,8 +95,8 @@ void BitSet::andNot(const ::jxx::Ptr<BitSet>&v){if(!v)throw ::jxx::lang::NullPoi
 ::jxx::lang::jbool BitSet::equals(const ::jxx::Ptr<::jxx::lang::Object>&o)const{auto v=::jxx::CAST<BitSet>(o);return v&&words_==v->words_;}
 ::jxx::lang::jint BitSet::hashCode()const{std::uint64_t h=1234;for(std::size_t i=words_.size();i>0;--i)h^=words_[i-1]*i;return static_cast<::jxx::lang::jint>((h>>32)^h);}
 ::jxx::Ptr<::jxx::lang::String> BitSet::toString()const{std::ostringstream s;s<<'{';bool first=true;for(auto i=nextSetBit(0);i>=0;i=nextSetBit(i+1)){if(!first)s<<", ";first=false;s<<i;}s<<'}';return ::jxx::NEW<::jxx::lang::String>(s.str());}
-void BitSet::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>&){throw ::jxx::lang::UnsupportedOperationException();}
-void BitSet::readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>&){throw ::jxx::lang::UnsupportedOperationException();}
-void BitSet::readObjectNoData(){throw ::jxx::lang::UnsupportedOperationException();}
+void BitSet::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out){if(!out)throw ::jxx::lang::NullPointerException();out->writeInt(static_cast<::jxx::lang::jint>(words_.size()));for(const auto word:words_)out->writeLong(static_cast<::jxx::lang::jlong>(word));}
+void BitSet::readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in){if(!in)throw ::jxx::lang::NullPointerException();const auto size=in->readInt();if(size<0||size>16777216)throw ::jxx::io::StreamCorruptedException("Invalid BitSet word count");words_.clear();words_.reserve(static_cast<std::size_t>(size));for(::jxx::lang::jint i=0;i<size;++i)words_.push_back(static_cast<std::uint64_t>(in->readLong()));trim_();}
+void BitSet::readObjectNoData(){words_.clear();}
 ::jxx::Ptr<::jxx::lang::Object> BitSet::cloneImpl()const{auto copy=::jxx::NEW<BitSet>();copy->words_=words_;return ::jxx::CAST<::jxx::lang::Object>(copy);}
 } // namespace jxx::util

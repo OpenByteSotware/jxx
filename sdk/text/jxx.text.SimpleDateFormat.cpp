@@ -262,6 +262,37 @@ std::string translatePatternLetters(
     return translated;
 }
 
+bool hasUnquotedTwoDigitYear(const std::string& pattern) {
+    bool quoted = false;
+    for (std::size_t index = 0; index < pattern.size();) {
+        if (pattern[index] == '\'') {
+            if (index + 1 < pattern.size() && pattern[index + 1] == '\'') {
+                index += 2;
+                continue;
+            }
+            quoted = !quoted;
+            ++index;
+            continue;
+        }
+        if (!quoted && (pattern[index] == 'y' || pattern[index] == 'Y')) {
+            const char symbol = pattern[index];
+            std::size_t end = index + 1;
+            while (end < pattern.size() && pattern[end] == symbol) ++end;
+            if (end - index == 2) return true;
+            index = end;
+            continue;
+        }
+        ++index;
+    }
+    return false;
+}
+
+::jxx::Ptr<::jxx::util::Date> defaultTwoDigitYearStart() {
+    auto start = ::jxx::NEW<::jxx::util::Date>();
+    start->setYear(start->getYear() - 80);
+    return start;
+}
+
 } // namespace
 
 SimpleDateFormat::SimpleDateFormat()
@@ -278,7 +309,7 @@ SimpleDateFormat::SimpleDateFormat(
     const ::jxx::Ptr<::jxx::util::Locale>& locale)
     : DateFormat(pattern, locale), pattern_(pattern), locale_(locale),
       timeZone_(::jxx::util::TimeZone::getDefault()),
-      twoDigitYearStart_(::jxx::NEW<::jxx::util::Date>(-631152000000LL)) {
+      twoDigitYearStart_(defaultTwoDigitYearStart()) {
     if (pattern_ == nullptr || locale_ == nullptr) {
         throw ::jxx::lang::NullPointerException();
     }
@@ -429,6 +460,7 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
     if (source == nullptr) throw ::jxx::lang::NullPointerException();
 
     std::string pattern = pattern_->utf8();
+    const bool ambiguousTwoDigitYear = hasUnquotedTwoDigitYear(pattern);
     std::string value = source->utf8();
     int parsedOffsetMinutes = 0;
     bool hasParsedOffset = false;
@@ -645,6 +677,24 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
             position == std::streampos(-1)
                 ? 0
                 : static_cast<::jxx::lang::jint>(position));
+    }
+
+    if (ambiguousTwoDigitYear) {
+        const int parsedTwoDigitYear = (fields.tm_year + 1900) % 100;
+        const int startYear = twoDigitYearStart_->getYear() + 1900;
+        int resolvedYear = (startYear / 100) * 100 + parsedTwoDigitYear;
+        if (resolvedYear < startYear) resolvedYear += 100;
+        if (resolvedYear == startYear) {
+            const auto parsedTail = std::make_tuple(
+                fields.tm_mon, fields.tm_mday, fields.tm_hour,
+                fields.tm_min, fields.tm_sec);
+            const auto startTail = std::make_tuple(
+                twoDigitYearStart_->getMonth(), twoDigitYearStart_->getDate(),
+                twoDigitYearStart_->getHours(), twoDigitYearStart_->getMinutes(),
+                twoDigitYearStart_->getSeconds());
+            if (parsedTail < startTail) resolvedYear += 100;
+        }
+        fields.tm_year = resolvedYear - 1900;
     }
 
     if (parsedAmPm >= 0) {

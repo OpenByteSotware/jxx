@@ -47,15 +47,16 @@ EventObject::cloneImpl() const {
 
 void EventObject::writeObject(
     const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) {
-    (void)output;
+    if (output == nullptr) throw ::jxx::lang::NullPointerException();
+    output->writeObject(source_);
 }
 
 void EventObject::readObject(
     const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) {
-    (void)input;
+    if (input == nullptr) throw ::jxx::lang::NullPointerException();
+    source_ = input->readObject();
 }
 
-void EventObject::readObjectNoData() {
-}
+void EventObject::readObjectNoData() { source_ = nullptr; }
 
 } // namespace jxx::util

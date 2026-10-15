@@ -7,6 +7,8 @@
 
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.String.h"
 #include "util/jxx.util.Locale.h"
 
 namespace jxx::lang {
@@ -47,13 +49,9 @@ public:
     ::jxx::Ptr<::jxx::lang::String> getDisplayName(const ::jxx::Ptr<Locale>& locale) const;
     ::jxx::Ptr<::jxx::lang::String> toString() const override;
 
-    void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {
-        (void)out;
-    }
-    void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {
-        (void)in;
-    }
-    void readObjectNoData() override {}
+    void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override { if(!out)throw ::jxx::lang::NullPointerException();out->writeObject(code_);out->writeObject(symbol_);out->writeInt(numericCode_);out->writeInt(defaultFractionDigits_); }
+    void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override { if(!in)throw ::jxx::lang::NullPointerException();code_=::jxx::CAST<::jxx::lang::String>(in->readObject());symbol_=::jxx::CAST<::jxx::lang::String>(in->readObject());numericCode_=in->readInt();defaultFractionDigits_=in->readInt(); }
+    void readObjectNoData() override { code_=::jxx::NEW<::jxx::lang::String>("");symbol_=code_;numericCode_=0;defaultFractionDigits_=2; }
 };
 
 } // namespace jxx::util

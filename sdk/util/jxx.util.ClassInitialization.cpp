@@ -4,6 +4,7 @@
 
 #include "lang/jxx.lang.ClassInfo.h"
 #include "io/jxx.io.SerializationClassRegistry.h"
+#include "io/jxx.io.SerializationClassRegistry.h"
 #include "util/jxx.util.ConcurrentModificationException.h"
 #include "util/jxx.util.DuplicateFormatFlagsException.h"
 #include "util/jxx.util.EmptyStackException.h"
@@ -117,14 +118,17 @@ void initializeClasses()
         registerType<Arrays>();
         registerType<Base64>();
         registerType<BitSet>();
+        ::jxx::io::serialization::registerSerializableClass<BitSet>(1);
         registerType<Calendar>();
         registerType<Collections>();
         registerType<Currency>();
+        ::jxx::io::serialization::registerSerializableClass<Currency>(1, [] { return ::jxx::NEW<Currency>(::jxx::NEW<::jxx::lang::String>("XXX"), ::jxx::NEW<::jxx::lang::String>("XXX"), 999, 2); });
         registerType<Date>();
         ::jxx::io::serialization::registerSerializableClass<Date>(1);
         registerType<DoubleSummaryStatistics>();
         registerType<EventListener>();
         registerType<EventObject>();
+        ::jxx::io::serialization::registerSerializableClass<EventObject>(1, [] { return ::jxx::NEW<EventObject>(::jxx::NEW<::jxx::lang::Object>()); });
         registerType<Formattable>();
         registerType<Formatter>();
         registerType<GregorianCalendar>();
@@ -146,6 +150,7 @@ void initializeClasses()
         registerType<PluralRules>();
         registerType<PropertyResourceBundle>();
         registerType<Random>();
+        ::jxx::io::serialization::registerSerializableClass<Random>(1);
         registerType<RandomAccess>();
         registerType<ResourceBundle>();
         registerType<Scanner>();
