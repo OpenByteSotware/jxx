@@ -8,6 +8,16 @@
 
 namespace jxx::lang { class Object; class String; }
 namespace jxx::io {
+
+struct ObjectInputLimits final {
+    std::uint64_t maxObjects = 1000000U;
+    std::uint64_t maxStringCodeUnits = 64U * 1024U * 1024U;
+    std::uint64_t maxArrayElements = 64U * 1024U * 1024U;
+    std::uint32_t maxGraphDepth = 1024U;
+    std::uint32_t maxClassNameBytes = 1024U * 1024U;
+    std::uint32_t maxClassDescriptors = 65536U;
+};
+
 class ObjectInputStream : public ::jxx::lang::ClassBase<ObjectInputStream, DataInputStream, ObjectInput> {
 public:
     using JxxSuper = DataInputStream;
@@ -24,6 +34,8 @@ public:
     ::jxx::lang::jint available() override;
     ::jxx::Ptr<::jxx::lang::Object> readObject() override;
     virtual ::jxx::Ptr<::jxx::lang::Object> readUnshared();
+    void setLimits(const ObjectInputLimits& limits);
+    const ObjectInputLimits& getLimits() const noexcept;
 protected:
     ObjectInputStream();
 private:
@@ -35,10 +47,16 @@ private:
     ::jxx::Ptr<::jxx::lang::Object> readArray_(Handle handle);
     void registerHandle_(Handle handle, const ::jxx::Ptr<::jxx::lang::Object>& object);
     void requireEndArray_();
+    void validateNewHandle_(Handle handle);
+    void enterGraph_();
+    void leaveGraph_() noexcept;
     std::string readRawUtf8_();
     Handle readHandle_();
     ClassDescriptor readClassDescriptor_();
     std::unordered_map<Handle, ::jxx::Ptr<::jxx::lang::Object>> handles_;
     std::unordered_map<Handle, ClassDescriptor> descriptors_;
+    ObjectInputLimits limits_{};
+    std::uint64_t objectCount_ = 0U;
+    std::uint32_t graphDepth_ = 0U;
 };
 } // namespace jxx::io

@@ -1,6 +1,7 @@
 #include "io/jxx.io.ObjectInputStream.h"
 
 #include "io/jxx.io.InvalidClassException.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
 #include "io/jxx.io.ObjectStreamFormat.h"
 #include "io/jxx.io.SerializableI.h"
 #include "io/jxx.io.StreamCorruptedException.h"
@@ -33,6 +34,27 @@ ObjectInputStream::~ObjectInputStream() = default;
 ::jxx::lang::jint ObjectInputStream::available() {
     return JxxSuper::available();
 }
+void ObjectInputStream::setLimits(const ObjectInputLimits& limits) {
+    if (limits.maxObjects == 0U || limits.maxStringCodeUnits == 0U ||
+        limits.maxArrayElements == 0U || limits.maxGraphDepth == 0U ||
+        limits.maxClassNameBytes == 0U || limits.maxClassDescriptors == 0U)
+        throw ::jxx::lang::IllegalArgumentException("Object input limits must be positive");
+    limits_ = limits;
+}
+const ObjectInputLimits& ObjectInputStream::getLimits() const noexcept { return limits_; }
+void ObjectInputStream::validateNewHandle_(Handle handle) {
+    if (handles_.find(handle) != handles_.end())
+        throw StreamCorruptedException("Duplicate object handle");
+    if (++objectCount_ > limits_.maxObjects)
+        throw StreamCorruptedException("JXX object count exceeds limit");
+}
+void ObjectInputStream::enterGraph_() {
+    if (++graphDepth_ > limits_.maxGraphDepth) {
+        --graphDepth_;
+        throw StreamCorruptedException("JXX object graph depth exceeds limit");
+    }
+}
+void ObjectInputStream::leaveGraph_() noexcept { if (graphDepth_ != 0U) --graphDepth_; }
 void ObjectInputStream::readStreamHeader_() {
     if (static_cast<std::uint32_t>(readInt()) != serialization::STREAM_MAGIC ||
         readUnsignedByte() != serialization::STREAM_MAJOR_VERSION ||
@@ -66,21 +88,23 @@ ObjectInputStream::ClassDescriptor ObjectInputStream::readClassDescriptor_() {
         throw StreamCorruptedException("JXX v1 reflected fields are unsupported");
     if (static_cast<Tag>(readUnsignedByte()) != Tag::EndClassDescriptor)
         throw StreamCorruptedException("Missing JXX class descriptor terminator");
+    if (descriptors_.size() >= limits_.maxClassDescriptors)
+        throw StreamCorruptedException("JXX class descriptor count exceeds limit");
     if (!descriptors_.emplace(handle, descriptor).second)
         throw StreamCorruptedException("Duplicate class descriptor handle");
     return descriptor;
 }
 std::string ObjectInputStream::readRawUtf8_() {
     const auto length = readInt();
-    if (length < 0 || length > 1024 * 1024) throw StreamCorruptedException("Invalid metadata length");
+    if (length < 0 || static_cast<std::uint64_t>(length) > limits_.maxClassNameBytes) throw StreamCorruptedException("Invalid metadata length");
     std::string value; value.reserve(static_cast<std::size_t>(length));
     for (::jxx::lang::jint i = 0; i < length; ++i) value.push_back(static_cast<char>(readUnsignedByte()));
     return value;
 }
 void ObjectInputStream::registerHandle_(
     Handle handle, const ::jxx::Ptr<::jxx::lang::Object>& object) {
-    if (!handles_.emplace(handle, object).second)
-        throw StreamCorruptedException("Duplicate object handle");
+    validateNewHandle_(handle);
+    handles_.emplace(handle, object);
 }
 void ObjectInputStream::requireEndArray_() {
     if (static_cast<Tag>(readUnsignedByte()) != Tag::EndArray)
@@ -93,7 +117,7 @@ void ObjectInputStream::requireEndArray_() {
     if (rank != 1 && rank != 2)
         throw StreamCorruptedException("Unsupported JXX array rank");
     const auto rawLength = readHandle_();
-    if (rawLength > 64U * 1024U * 1024U) throw StreamCorruptedException("Array length exceeds limit");
+    if (rawLength > limits_.maxArrayElements) throw StreamCorruptedException("Array length exceeds limit");
     const auto length = static_cast<::jxx::lang::jint>(rawLength);
     if (rank == 2) {
 #define JXX_READ_RANK2_ARRAY(KIND, TYPE, ROWTYPE) \
@@ -140,17 +164,19 @@ void ObjectInputStream::requireEndArray_() {
 }
 ::jxx::Ptr<::jxx::lang::String> ObjectInputStream::readString_(Handle handle) {
     const auto length = readHandle_();
-    if (length > 64U * 1024U * 1024U) throw StreamCorruptedException("String length exceeds limit");
+    if (length > limits_.maxStringCodeUnits) throw StreamCorruptedException("String length exceeds limit");
     auto chars = jxx::NEW<::jxx::lang::CharArrayType>(static_cast<std::uint32_t>(length));
     for (std::uint64_t i = 0; i < length; ++i) (*chars)[static_cast<::jxx::lang::jint>(i)] = readChar();
     auto value = jxx::NEW<::jxx::lang::String>(chars);
-    if (!handles_.emplace(handle, value).second) throw StreamCorruptedException("Duplicate object handle");
+    registerHandle_(handle, value);
     return value;
 }
 ::jxx::Ptr<::jxx::lang::Object> ObjectInputStream::readObject0_() {
+    enterGraph_();
+    struct GraphExit final { ObjectInputStream* stream; ~GraphExit() { stream->leaveGraph_(); } } graphExit{this};
     const auto tag = static_cast<Tag>(readUnsignedByte());
     if (tag == Tag::Null) return nullptr;
-    if (tag == Tag::Reset) { handles_.clear(); descriptors_.clear(); return readObject0_(); }
+    if (tag == Tag::Reset) { handles_.clear(); descriptors_.clear(); objectCount_ = 0U; return readObject0_(); }
     if (tag == Tag::Reference) {
         const auto found = handles_.find(readHandle_());
         if (found == handles_.end()) throw StreamCorruptedException("Unknown object handle");
