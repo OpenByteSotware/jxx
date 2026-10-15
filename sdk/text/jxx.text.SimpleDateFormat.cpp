@@ -858,10 +858,10 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
             static_cast<::jxx::lang::jlong>(fields.tm_hour) * 3600000LL +
             static_cast<::jxx::lang::jlong>(fields.tm_min) * 60000LL +
             static_cast<::jxx::lang::jlong>(fields.tm_sec) * 1000LL;
-    } else if (hasParsedExtendedYear) {
-        // Native UTC conversion is not portable for proleptic years such as
-        // 0049, particularly on Windows. The parsed fields are already
-        // validated, so use the cross-platform civil-date conversion.
+    } else if (hasParsedExtendedYear || ambiguousTwoDigitYear) {
+        // Native UTC conversion is not portable for pre-epoch and proleptic
+        // years on Windows. Both explicit non-two-digit years and resolved
+        // two-digit years have already been validated and normalized here.
         localMillis = daysFromCivil(
             fields.tm_year + 1900,
             static_cast<unsigned>(fields.tm_mon + 1),
