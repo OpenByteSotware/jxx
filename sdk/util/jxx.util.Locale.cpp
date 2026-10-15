@@ -66,7 +66,7 @@ namespace {
     if (!s.empty()) {
         s[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(s[0])));
     }
-    return ::jxx::lang::String::valueOf(s.c_str());
+    return ::jxx::NEW<::jxx::lang::String>(s);
 }
 
 ::jxx::Ptr<::jxx::lang::String> Locale::normalizeCountry(const ::jxx::Ptr<::jxx::lang::String>& value) {
