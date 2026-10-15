@@ -550,7 +550,8 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
                     ::jxx::NEW<::jxx::lang::String>("Unparseable milliseconds"),
                     static_cast<::jxx::lang::jint>(valueStart));
             }
-            if (parsedMilliseconds < 0 || parsedMilliseconds > 999) {
+            if (!lenient_ &&
+                (parsedMilliseconds < 0 || parsedMilliseconds > 999)) {
                 throw ParseException(
                     ::jxx::NEW<::jxx::lang::String>("Unparseable milliseconds"),
                     static_cast<::jxx::lang::jint>(valueStart));
@@ -656,8 +657,17 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
     }
 
     if (!lenient_) {
+        const int parsedYear = fields.tm_year + 1900;
+        static const std::array<int, 12> monthLengths{
+            31, 28, 31, 30, 31, 30,
+            31, 31, 30, 31, 30, 31};
+        int maximumDay = 0;
+        if (fields.tm_mon >= 0 && fields.tm_mon <= 11) {
+            maximumDay = monthLengths[static_cast<std::size_t>(fields.tm_mon)];
+            if (fields.tm_mon == 1 && leapYear(parsedYear)) maximumDay = 29;
+        }
         if (fields.tm_mon < 0 || fields.tm_mon > 11 ||
-            fields.tm_mday < 1 || fields.tm_mday > 31 ||
+            fields.tm_mday < 1 || fields.tm_mday > maximumDay ||
             fields.tm_hour < 0 || fields.tm_hour > 23 ||
             fields.tm_min < 0 || fields.tm_min > 59 ||
             fields.tm_sec < 0 || fields.tm_sec > 59) {
