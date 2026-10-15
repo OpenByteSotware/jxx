@@ -4,6 +4,8 @@
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.System.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 
 namespace jxx::lang {
 namespace {
@@ -125,6 +127,23 @@ Boolean::Boolean(const ::jxx::Ptr<String>& value)
     ::jxx::lang::jbool left,
     ::jxx::lang::jbool right) noexcept {
     return left != right;
+}
+
+
+void Boolean::writeObject(
+    const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) {
+    if (out == nullptr) throw NullPointerException();
+    out->writeBoolean(value_);
+}
+
+void Boolean::readObject(
+    const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) {
+    if (in == nullptr) throw NullPointerException();
+    value_ = in->readBoolean();
+}
+
+void Boolean::readObjectNoData() {
+    value_ = false;
 }
 
 } // namespace jxx::lang

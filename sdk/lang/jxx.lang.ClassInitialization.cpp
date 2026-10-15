@@ -180,6 +180,11 @@ void initializeClasses()
             registerType<VerifyError>();
             (void)Void::TYPE;
             registerType<Boolean>();
+            ::jxx::io::serialization::registerSerializableClass<Boolean>(
+                1,
+                [] { return ::jxx::NEW<Boolean>(false); });
+            ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+                Boolean, 1U, 2U>();
             registerType<Byte>();
             registerType<Character>();
             ::jxx::io::serialization::registerSerializableClass<Character>(

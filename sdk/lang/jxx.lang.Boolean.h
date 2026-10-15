@@ -1,6 +1,6 @@
 #pragma once
 
-#include "io/jxx.io.Serializable.h"
+#include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Comparable.h"
 #include "lang/jxx.lang.Object.h"
@@ -15,19 +15,19 @@ class Boolean final
     : public ::jxx::lang::ClassBase<
           Boolean,
           Object,
-          ::jxx::io::Serializable,
+          ::jxx::io::SerializableI,
           Comparable<Boolean>> {
 public:
     using JxxSuper = Object;
     using Super = ::jxx::lang::ClassBase<
         Boolean,
         JxxSuper,
-        ::jxx::io::Serializable,
+        ::jxx::io::SerializableI,
         Comparable<Boolean>>;
     using JxxClassInfoMarker = ::jxx::lang::ClassInfo<
         Boolean,
         JxxSuper,
-        ::jxx::io::Serializable,
+        ::jxx::io::SerializableI,
         Comparable<Boolean>>;
 
     static ::jxx::Ptr<ClassAny> Class();
@@ -73,6 +73,12 @@ public:
     static ::jxx::lang::jbool logicalXor(
         ::jxx::lang::jbool left,
         ::jxx::lang::jbool right) noexcept;
+
+    void writeObject(
+        const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override;
+    void readObject(
+        const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override;
+    void readObjectNoData() override;
 
 private:
     ::jxx::lang::jbool value_;

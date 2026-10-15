@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <regex>
 #include <tuple>
+#include <vector>
 #include <sstream>
 #include <string>
 
@@ -76,6 +77,72 @@ std::tm localFields(::jxx::lang::jlong epochMillis,
         ++fields.tm_yday;
     }
     return fields;
+}
+
+struct PatternToken {
+    enum class Kind { Field, Literal };
+    Kind kind = Kind::Literal;
+    char symbol = '\0';
+    std::size_t count = 0;
+    std::string literal;
+    std::size_t patternIndex = 0;
+};
+
+std::vector<PatternToken> tokenizePattern(const std::string& pattern) {
+    std::vector<PatternToken> tokens;
+    std::string literal;
+    std::size_t literalIndex = 0;
+    bool quoted = false;
+
+    const auto flushLiteral = [&]() {
+        if (literal.empty()) return;
+        PatternToken token;
+        token.kind = PatternToken::Kind::Literal;
+        token.literal = literal;
+        token.patternIndex = literalIndex;
+        tokens.push_back(std::move(token));
+        literal.clear();
+    };
+
+    for (std::size_t index = 0; index < pattern.size();) {
+        const char value = pattern[index];
+        if (value == '\'') {
+            if (index + 1 < pattern.size() && pattern[index + 1] == '\'') {
+                if (literal.empty()) literalIndex = index;
+                literal.push_back('\'');
+                index += 2;
+                continue;
+            }
+            quoted = !quoted;
+            ++index;
+            continue;
+        }
+
+        const bool letter =
+            (value >= 'A' && value <= 'Z') ||
+            (value >= 'a' && value <= 'z');
+        if (!quoted && letter) {
+            flushLiteral();
+            std::size_t end = index + 1;
+            while (end < pattern.size() && pattern[end] == value) ++end;
+            PatternToken token;
+            token.kind = PatternToken::Kind::Field;
+            token.symbol = value;
+            token.count = end - index;
+            token.patternIndex = index;
+            tokens.push_back(std::move(token));
+            index = end;
+            continue;
+        }
+
+        if (literal.empty()) literalIndex = index;
+        literal.push_back(value);
+        ++index;
+    }
+
+    if (quoted) throw ::jxx::lang::IllegalArgumentException();
+    flushLiteral();
+    return tokens;
 }
 
 std::string number(int value, int width) {
@@ -305,26 +372,12 @@ std::string translatePatternLetters(
 }
 
 bool hasUnquotedTwoDigitYear(const std::string& pattern) {
-    bool quoted = false;
-    for (std::size_t index = 0; index < pattern.size();) {
-        if (pattern[index] == '\'') {
-            if (index + 1 < pattern.size() && pattern[index + 1] == '\'') {
-                index += 2;
-                continue;
-            }
-            quoted = !quoted;
-            ++index;
-            continue;
+    for (const auto& token : tokenizePattern(pattern)) {
+        if (token.kind == PatternToken::Kind::Field &&
+            (token.symbol == 'y' || token.symbol == 'Y') &&
+            token.count == 2) {
+            return true;
         }
-        if (!quoted && (pattern[index] == 'y' || pattern[index] == 'Y')) {
-            const char symbol = pattern[index];
-            std::size_t end = index + 1;
-            while (end < pattern.size() && pattern[end] == symbol) ++end;
-            if (end - index == 2) return true;
-            index = end;
-            continue;
-        }
-        ++index;
     }
     return false;
 }
@@ -434,30 +487,16 @@ void SimpleDateFormat::setDateFormatSymbols(const ::jxx::Ptr<DateFormatSymbols>&
 }
 
 void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
-    bool quoted = false;
-    const std::string valid = "GyYMLwWDdFEu aHkKhmsSzZX";
-    for (std::size_t index = 0; index < pattern.size(); ++index) {
-        const char value = pattern[index];
-        if (value == '\'') {
-            if (index + 1 < pattern.size() && pattern[index + 1] == '\'') {
-                ++index;
-            } else {
-                quoted = !quoted;
-            }
-        } else if (!quoted && ((value >= 'A' && value <= 'Z') ||
-                              (value >= 'a' && value <= 'z')) &&
-                   valid.find(value) == std::string::npos) {
+    const std::string valid = "GyYMLwWDdFEuaHkKhmsSzZX";
+    for (const auto& token : tokenizePattern(pattern)) {
+        if (token.kind != PatternToken::Kind::Field) continue;
+        if (valid.find(token.symbol) == std::string::npos) {
             throw ::jxx::lang::IllegalArgumentException();
-        } else if (!quoted && value == 'X') {
-            std::size_t end = index + 1;
-            while (end < pattern.size() && pattern[end] == 'X') ++end;
-            if (end - index > 3) {
-                throw ::jxx::lang::IllegalArgumentException();
-            }
-            index = end - 1;
+        }
+        if (token.symbol == 'X' && token.count > 3) {
+            throw ::jxx::lang::IllegalArgumentException();
         }
     }
-    if (quoted) throw ::jxx::lang::IllegalArgumentException();
 }
 
 ::jxx::Ptr<::jxx::lang::String> SimpleDateFormat::format(
