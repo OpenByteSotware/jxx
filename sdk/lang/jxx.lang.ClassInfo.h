@@ -555,6 +555,10 @@ public:
         return Metadata::Class();
     }
 
+    jxx::Ptr<ClassAny> getClass() const override {
+        return Metadata::Class();
+    }
+
     virtual ~ClassBase() = default;
 
 protected:

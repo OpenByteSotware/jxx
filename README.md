@@ -640,3 +640,403 @@ nmake clean
 ```
 
 Then run `perl Configure VC-WIN64A no-shared` again from the correctly initialized x64 environment.
+
+
+
+#Java to JXX comparison for class# JXX `Class()` and `getClass()` Guide
+
+This guide compares source-language class metadata operations with their JXX C++17 equivalents.
+
+JXX uses two related APIs:
+
+- `Type::Class()` represents the class literal for a declared type.
+- `object->getClass()` returns the runtime class of an object.
+
+Both return:
+
+```cpp
+::jxx::Ptr<::jxx::lang::ClassAny>
+```
+
+## Quick reference
+
+| Source operation | JXX equivalent | Purpose |
+|---|---|---|
+| `String.class` | `String::Class()` | Obtain metadata for a declared type |
+| `object.getClass()` | `object->getClass()` | Obtain the exact runtime class of an object |
+| `ArrayList.class` | `ArrayList<T>::Class()` | Obtain erased metadata for a generic declaration |
+| `Class.forName(name)` | `ClassAny::forName(name)` | Find registered metadata by binary name |
+| `Type.class.isInstance(object)` | `Type::Class()->isInstance(object)` | Test runtime compatibility |
+| `Type.class.cast(object)` | `Type::Class()->cast(object)` | Perform a metadata-backed checked cast |
+| `object.getClass() == Type.class` | `object->getClass() == Type::Class()` | Test exact runtime class identity |
+
+## Class literal
+
+### Source
+
+```java
+Class<String> type = String.class;
+```
+
+### JXX
+
+```cpp
+::jxx::Ptr<::jxx::lang::ClassAny> type =
+    ::jxx::lang::String::Class();
+```
+
+`String::Class()` returns the canonical JXX metadata object for `String`.
+
+## Runtime class from an object
+
+### Source
+
+```java
+String value = new String("hello");
+Class<?> type = value.getClass();
+```
+
+### JXX
+
+```cpp
+auto value =
+    ::jxx::NEW<::jxx::lang::String>("hello");
+
+auto type = value->getClass();
+```
+
+The class literal and runtime class identify the same class:
+
+```cpp
+assert(
+    value->getClass() ==
+    ::jxx::lang::String::Class());
+```
+
+## Runtime class through an `Object` reference
+
+The declared pointer type does not change the runtime class returned by `getClass()`.
+
+### Source
+
+```java
+Object value = new String("hello");
+
+assert value.getClass() == String.class;
+assert value.getClass() != Object.class;
+```
+
+### JXX
+
+```cpp
+::jxx::Ptr<::jxx::lang::Object> value =
+    ::jxx::CAST<::jxx::lang::Object>(
+        ::jxx::NEW<::jxx::lang::String>("hello"));
+
+assert(
+    value->getClass() ==
+    ::jxx::lang::String::Class());
+
+assert(
+    value->getClass() !=
+    ::jxx::lang::Object::Class());
+```
+
+JXX `Object::getClass()` is virtual. Classes deriving through `ClassBase` resolve their exact runtime metadata through the `ClassBase::getClass()` override.
+
+## Generic and template class identity
+
+Generic runtime class identity is erased. Different type arguments do not create different runtime classes.
+
+### Source
+
+```java
+Class<?> type = ArrayList.class;
+```
+
+A parameterized class literal is not used:
+
+```java
+// Not valid source syntax:
+// ArrayList<String>.class
+```
+
+### JXX
+
+C++ requires a template argument to form a complete C++ type:
+
+```cpp
+auto type =
+    ::jxx::util::ArrayList<
+        ::jxx::lang::String>::Class();
+```
+
+JXX erases the template arguments when resolving runtime class identity:
+
+```cpp
+auto stringListClass =
+    ::jxx::util::ArrayList<
+        ::jxx::lang::String>::Class();
+
+auto integerListClass =
+    ::jxx::util::ArrayList<
+        ::jxx::lang::Integer>::Class();
+
+assert(stringListClass == integerListClass);
+
+assert(
+    stringListClass->getName()->utf8() ==
+    "jxx.util.ArrayList");
+```
+
+Conceptually, all of the following correspond to the same raw class:
+
+```cpp
+::jxx::util::ArrayList<::jxx::lang::String>::Class();
+::jxx::util::ArrayList<::jxx::lang::Integer>::Class();
+::jxx::util::ArrayList<MyClientType>::Class();
+```
+
+They correspond to:
+
+```java
+ArrayList.class
+```
+
+## `getClass()` on template objects
+
+### Source
+
+```java
+ArrayList<String> strings = new ArrayList<>();
+ArrayList<Integer> integers = new ArrayList<>();
+
+assert strings.getClass() == ArrayList.class;
+assert integers.getClass() == ArrayList.class;
+assert strings.getClass() == integers.getClass();
+```
+
+### JXX
+
+```cpp
+auto strings =
+    ::jxx::NEW<
+        ::jxx::util::ArrayList<
+            ::jxx::lang::String>>();
+
+auto integers =
+    ::jxx::NEW<
+        ::jxx::util::ArrayList<
+            ::jxx::lang::Integer>>();
+
+assert(
+    strings->getClass() ==
+    ::jxx::util::ArrayList<
+        ::jxx::lang::String>::Class());
+
+assert(
+    integers->getClass() ==
+    ::jxx::util::ArrayList<
+        ::jxx::lang::Integer>::Class());
+
+assert(strings->getClass() == integers->getClass());
+```
+
+Template metadata is resolved lazily when `Class()` or `getClass()` is used. Object construction does not need to enter the class registry.
+
+## Client-defined classes
+
+A client-defined class participates in JXX metadata by deriving from `ClassBase`.
+
+```cpp
+class Customer final
+    : public ::jxx::lang::ClassBase<
+          Customer,
+          ::jxx::lang::Object> {
+public:
+    Customer() = default;
+};
+```
+
+The client registers its own runtime classes through the client initialization callback:
+
+```cpp
+void initializeClientClasses()
+{
+    (void)Customer::Class();
+}
+
+int main()
+{
+    ::jxx::initialize(&initializeClientClasses);
+
+    auto literalType = Customer::Class();
+    auto customer = ::jxx::NEW<Customer>();
+    auto runtimeType = customer->getClass();
+
+    assert(literalType == runtimeType);
+}
+```
+
+## Client template specialization initialization
+
+Clients do not register SDK template specializations.
+
+```cpp
+void initializeClientClasses()
+{
+    // Register client-owned runtime types.
+    (void)Customer::Class();
+
+    // Do not register SDK template specializations.
+    // (void)::jxx::util::List<Customer>::Class();
+    // (void)::jxx::util::ArrayList<Customer>::Class();
+    // (void)::jxx::util::concurrent::Future<Customer>::Class();
+}
+```
+
+Client code uses SDK templates normally:
+
+```cpp
+auto customers =
+    ::jxx::NEW<
+        ::jxx::util::ArrayList<Customer>>();
+```
+
+If metadata is needed, JXX resolves it automatically:
+
+```cpp
+auto arrayListClass = customers->getClass();
+```
+
+A direct `Class()` call is also valid when the client explicitly needs class metadata:
+
+```cpp
+auto arrayListClass =
+    ::jxx::util::ArrayList<Customer>::Class();
+```
+
+This is metadata access, not a required client initialization step.
+
+## Exact class identity versus compatible type
+
+Use an exact class comparison when the runtime class must be precisely the requested class.
+
+### Source
+
+```java
+if (value.getClass() == String.class) {
+    // Exact runtime class
+}
+```
+
+### JXX
+
+```cpp
+if (value->getClass() ==
+    ::jxx::lang::String::Class()) {
+
+    // Exact runtime class
+}
+```
+
+Use `isInstance()` when subclasses or implementations should also match.
+
+### Source
+
+```java
+if (String.class.isInstance(value)) {
+    // Compatible instance
+}
+```
+
+### JXX
+
+```cpp
+if (::jxx::lang::String::Class()
+        ->isInstance(value)) {
+
+    // Compatible instance
+}
+```
+
+## Metadata-backed cast
+
+### Source
+
+```java
+String text = String.class.cast(value);
+```
+
+### JXX
+
+```cpp
+auto textObject =
+    ::jxx::lang::String::Class()
+        ->cast(value);
+
+auto text =
+    ::jxx::CAST<::jxx::lang::String>(
+        textObject);
+```
+
+## Lookup by binary name
+
+### Source
+
+```java
+Class<?> type = Class.forName("java.lang.String");
+```
+
+### JXX
+
+```cpp
+auto type =
+    ::jxx::lang::ClassAny::forName(
+        ::jxx::NEW<::jxx::lang::String>(
+            "jxx.lang.String"));
+```
+
+JXX uses JXX binary names such as `jxx.lang.String` and `jxx.util.ArrayList`.
+
+## Initialization model summary
+
+`jxx::initialize()` eagerly registers SDK-owned non-template classes and interfaces through package initializers.
+
+```cpp
+::jxx::initialize();
+```
+
+Clients with their own JXX runtime classes provide a callback:
+
+```cpp
+::jxx::initialize(&initializeClientClasses);
+```
+
+Template specializations that cannot be known when the SDK is built are resolved lazily through:
+
+```cpp
+TemplateType<T>::Class();
+```
+
+or:
+
+```cpp
+templateObject->getClass();
+```
+
+Client code does not need a separate template-specialization registration step.
+
+## Behavioral rules
+
+1. `Type::Class()` is the JXX equivalent of a class literal.
+2. `object->getClass()` returns the exact runtime class.
+3. `Class()` and `getClass()` return `jxx::Ptr<jxx::lang::ClassAny>`.
+4. Known SDK non-template types are registered through `jxx::initialize()`.
+5. Client-owned classes are registered through the optional client initializer callback.
+6. SDK template specializations are never manually registered by clients.
+7. Template arguments are erased from runtime class identity.
+8. Different specializations of one generic declaration share one canonical `ClassAny`.
+9. `jxx::NEW<T>()` constructs objects without entering the class registry.
+10. Template metadata is resolved when `Class()` or `getClass()` is requested.
+

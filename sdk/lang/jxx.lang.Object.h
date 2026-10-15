@@ -82,7 +82,7 @@ namespace jxx::lang
 
         virtual jbool equals(const jxx::Ptr<Object>& other) const;
         virtual jxx::lang::jint hashCode() const;
-        jxx::Ptr<jxx::lang::ClassAny> getClass() const;
+        virtual jxx::Ptr<jxx::lang::ClassAny> getClass() const;
 
         /**
          * Runtime type test backed by the registered ClassInfo graph.
@@ -347,19 +347,10 @@ namespace jxx
             std::is_constructible_v<T, Args...>,
             "jxx::NEW<T>: T is not constructible from the supplied arguments.");
 
-        // Register ClassInfo-backed SDK and client template specializations
-        // automatically on first construction. Client initialization callbacks
-        // only register client-owned classes and interfaces, never List<T> or
-        // another SDK template specialization.
-        // ClassAny is the metadata object created by ClassAny::registerClass()
-        // while the registry mutex is held. Calling ClassAny::Class() from that
-        // bootstrap path would recursively enter the registry and deadlock.
-        if constexpr (
-            jxx::lang::class_info_detail::HasClassInfoV<T> &&
-            !std::is_same_v<std::remove_cv_t<T>, jxx::lang::ClassAny>) {
-            (void)T::Class();
-        }
-
+        // Runtime class metadata is resolved lazily through the virtual
+        // ClassBase::getClass() override. Construction must not enter the
+        // class registry because metadata objects and exception paths are
+        // themselves created through jxx::NEW.
         auto object = std::make_shared<T>(
             std::forward<Args>(arguments)...);
 
