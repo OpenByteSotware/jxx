@@ -24,16 +24,57 @@
 namespace jxx::text {
 namespace {
 
+std::int64_t floorDivide(std::int64_t value, std::int64_t divisor) {
+    std::int64_t quotient = value / divisor;
+    const std::int64_t remainder = value % divisor;
+    if (remainder != 0 && ((remainder < 0) != (divisor < 0))) --quotient;
+    return quotient;
+}
+
+std::tuple<int, unsigned, unsigned> civilFromDays(std::int64_t days) {
+    days += 719468LL;
+    const std::int64_t era =
+        (days >= 0 ? days : days - 146096LL) / 146097LL;
+    const unsigned dayOfEra = static_cast<unsigned>(
+        days - era * 146097LL);
+    const unsigned yearOfEra =
+        (dayOfEra - dayOfEra / 1460U + dayOfEra / 36524U -
+         dayOfEra / 146096U) / 365U;
+    int year = static_cast<int>(yearOfEra) + static_cast<int>(era * 400LL);
+    const unsigned dayOfYear = dayOfEra -
+        (365U * yearOfEra + yearOfEra / 4U - yearOfEra / 100U);
+    const unsigned monthPrime = (5U * dayOfYear + 2U) / 153U;
+    const unsigned day = dayOfYear - (153U * monthPrime + 2U) / 5U + 1U;
+    const unsigned month = monthPrime < 10U ? monthPrime + 3U : monthPrime - 9U;
+    year += month <= 2U ? 1 : 0;
+    return {year, month, day};
+}
+
 std::tm localFields(::jxx::lang::jlong epochMillis,
                     ::jxx::lang::jint offsetMillis) {
-    std::time_t seconds = static_cast<std::time_t>(
-        (epochMillis + offsetMillis) / 1000LL);
+    const std::int64_t localMillis = epochMillis + offsetMillis;
+    const std::int64_t days = floorDivide(localMillis, 86400000LL);
+    const std::int64_t millisOfDay = localMillis - days * 86400000LL;
+    const auto civil = civilFromDays(days);
+
     std::tm fields{};
-#if defined(_WIN32)
-    gmtime_s(&fields, &seconds);
-#else
-    gmtime_r(&seconds, &fields);
-#endif
+    fields.tm_year = std::get<0>(civil) - 1900;
+    fields.tm_mon = static_cast<int>(std::get<1>(civil)) - 1;
+    fields.tm_mday = static_cast<int>(std::get<2>(civil));
+    fields.tm_hour = static_cast<int>(millisOfDay / 3600000LL);
+    fields.tm_min = static_cast<int>((millisOfDay % 3600000LL) / 60000LL);
+    fields.tm_sec = static_cast<int>((millisOfDay % 60000LL) / 1000LL);
+    fields.tm_wday = static_cast<int>((days + 4LL) % 7LL);
+    if (fields.tm_wday < 0) fields.tm_wday += 7;
+    static const std::array<int, 12> cumulativeDays{
+        0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
+    fields.tm_yday = cumulativeDays[static_cast<std::size_t>(fields.tm_mon)] +
+        fields.tm_mday - 1;
+    const int year = fields.tm_year + 1900;
+    if (fields.tm_mon > 1 &&
+        ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0)) {
+        ++fields.tm_yday;
+    }
     return fields;
 }
 

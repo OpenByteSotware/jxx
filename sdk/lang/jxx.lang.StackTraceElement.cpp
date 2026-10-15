@@ -1,6 +1,9 @@
 #include <cstddef>
 #include <utility>
 #include "lang/jxx.lang.StackTraceElement.h"
+#include "io/jxx.io.InvalidObjectException.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 
 #include "io/jxx.io.ObjectInputStream.h"
 #include "io/jxx.io.ObjectOutputStream.h"
@@ -104,15 +107,30 @@ jint StackTraceElement::hashCode() const {
 
 void StackTraceElement::writeObject(
     const jxx::Ptr<jxx::io::ObjectOutputStream>& out) {
-    (void)out;
+    if (out == nullptr) throw NullPointerException();
+    out->writeObject(::jxx::CAST<Object>(declaringClass_));
+    out->writeObject(::jxx::CAST<Object>(methodName_));
+    out->writeObject(::jxx::CAST<Object>(fileName_));
+    out->writeInt(lineNumber_);
 }
 
 void StackTraceElement::readObject(
     const jxx::Ptr<jxx::io::ObjectInputStream>& in) {
-    (void)in;
+    if (in == nullptr) throw NullPointerException();
+    declaringClass_ = ::jxx::CAST<String>(in->readObject());
+    methodName_ = ::jxx::CAST<String>(in->readObject());
+    fileName_ = ::jxx::CAST<String>(in->readObject());
+    lineNumber_ = in->readInt();
+    if (declaringClass_ == nullptr || methodName_ == nullptr) {
+        throw ::jxx::io::InvalidObjectException(
+            ::jxx::NEW<String>(
+                "StackTraceElement requires class and method names"));
+    }
 }
 
 void StackTraceElement::readObjectNoData() {
+    throw ::jxx::io::InvalidObjectException(
+        ::jxx::NEW<String>("StackTraceElement has no serialized data"));
 }
 
 ::jxx::Ptr<Object> StackTraceElement::cloneImpl() const {

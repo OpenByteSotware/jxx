@@ -4,6 +4,8 @@
 
 #include "lang/jxx.lang.ClassInfo.h"
 #include "io/jxx.io.ArrayCodecRegistry.h"
+#include "io/jxx.io.SerializationClassRegistry.h"
+#include "io/jxx.io.ArrayCodecRegistry.h"
 #include "lang/jxx.lang.Throwable.h"
 #include "lang/jxx.lang.Exception.h"
 #include "lang/jxx.lang.RuntimeException.h"
@@ -159,6 +161,17 @@ void initializeClasses()
             registerType<SecurityException>();
             registerType<StackOverflowError>();
             registerType<StackTraceElement>();
+            ::jxx::io::serialization::registerSerializableClass<StackTraceElement>(
+                1,
+                [] {
+                    return ::jxx::NEW<StackTraceElement>(
+                        ::jxx::NEW<String>("placeholder.Class"),
+                        ::jxx::NEW<String>("placeholderMethod"),
+                        nullptr,
+                        -1);
+                });
+            ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+                StackTraceElement, 1U, 2U>();
             registerType<StringIndexOutOfBoundsException>();
             registerType<TypeNotPresentException>();
             registerType<UnknownError>();
