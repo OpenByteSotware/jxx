@@ -722,7 +722,9 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
 
     // The String-only overload requires complete consumption. Try prefixes
     // longest-first to reproduce ParsePosition's partial-consumption contract.
-    for (std::size_t end = text.size(); end > static_cast<std::size_t>(start); --end) {
+    ::jxx::lang::jint furthestError = start;
+    for (std::size_t end = text.size();
+         end > static_cast<std::size_t>(start); --end) {
         try {
             const auto candidate = ::jxx::NEW<::jxx::lang::String>(
                 text.substr(static_cast<std::size_t>(start),
@@ -731,10 +733,16 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
             position->setIndex(static_cast<::jxx::lang::jint>(end));
             position->setErrorIndex(-1);
             return result;
-        } catch (const ParseException&) {
+        } catch (const ParseException& exception) {
+            const auto relative = exception.getErrorOffset();
+            if (relative >= 0) {
+                furthestError = std::max(
+                    furthestError,
+                    static_cast<::jxx::lang::jint>(start + relative));
+            }
         }
     }
-    position->setErrorIndex(start);
+    position->setErrorIndex(furthestError);
     return nullptr;
 }
 
