@@ -2,6 +2,11 @@
 
 namespace jxx::net {
 
+::jxx::Ptr<::jxx::lang::ClassAny>
+SocketException::Class() {
+    return JxxClassInfoMarker::Class();
+}
+
 SocketException::SocketException()
     : Super("SocketException") {
 }
