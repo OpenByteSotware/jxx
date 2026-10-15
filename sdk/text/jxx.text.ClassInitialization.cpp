@@ -2,6 +2,7 @@
 
 #include <mutex>
 
+#include "io/jxx.io.SerializationClassRegistry.h"
 #include "text/jxx.text.DateFormat.h"
 #include "text/jxx.text.DateFormatSymbols.h"
 #include "text/jxx.text.DecimalFormat.h"
@@ -20,6 +21,7 @@ void initializeClasses()
     std::call_once(flag, [] {
         (void)DateFormat::JxxClassInfoMarker::Class();
         (void)DateFormatSymbols::JxxClassInfoMarker::Class();
+        ::jxx::io::serialization::registerSerializableClass<DateFormatSymbols>(1);
         (void)DecimalFormat::JxxClassInfoMarker::Class();
         (void)Format::JxxClassInfoMarker::Class();
         (void)MessageFormat::JxxClassInfoMarker::Class();

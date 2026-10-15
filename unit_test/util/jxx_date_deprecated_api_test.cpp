@@ -22,11 +22,18 @@ TEST(DateDeprecatedApiParity, DeprecatedFieldsNormalizeThroughLocalCalendar) {
     EXPECT_EQ(0, date->getMonth());
 }
 
-TEST(DateDeprecatedApiParity, ParsesAndFormatsGmtValue) {
+TEST(DateDeprecatedApiParity, ParsesAndFormatsGmtValue)
+{
     const auto value = ::jxx::NEW<::jxx::lang::String>(
         "01 Jan 1970 00:00:00 GMT");
+
     const auto date = ::jxx::NEW<::jxx::util::Date>(value);
-    EXPECT_EQ(0, date->getTime());
+
+    EXPECT_EQ(
+        static_cast<::jxx::lang::jlong>(0),
+        date->getTime());
+
     EXPECT_TRUE(date->toGMTString()->equals(
-        ::jxx::NEW<::jxx::lang::String>("01 Jan 1970 00:00:00 GMT")));
+        ::jxx::NEW<::jxx::lang::String>(
+            "1 Jan 1970 00:00:00 GMT")));
 }

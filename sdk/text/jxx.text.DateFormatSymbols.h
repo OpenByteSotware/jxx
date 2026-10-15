@@ -56,9 +56,11 @@ public:
         const ::jxx::Ptr<::jxx::lang::Object>& other) const override;
     ::jxx::lang::jint hashCode() const override;
 
-    void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>&) override {}
-    void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>&) override {}
-    void readObjectNoData() override {}
+    void writeObject(
+        const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override;
+    void readObject(
+        const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override;
+    void readObjectNoData() override;
 
 protected:
     ::jxx::Ptr<::jxx::lang::Object> cloneImpl() const override;

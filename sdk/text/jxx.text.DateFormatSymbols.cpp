@@ -4,6 +4,8 @@
 
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 #include "util/jxx.util.Locale.h"
 
 namespace jxx::text {
@@ -129,4 +131,50 @@ void DateFormatSymbols::setLocalPatternChars(const ::jxx::Ptr<String>& value) {
     copy->localPatternChars_ = localPatternChars_;
     return ::jxx::CAST<::jxx::lang::Object>(copy);
 }
+
+void DateFormatSymbols::writeObject(
+    const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) {
+    if (out == nullptr) throw ::jxx::lang::NullPointerException();
+    out->writeObject(::jxx::CAST<::jxx::lang::Object>(eras_));
+    out->writeObject(::jxx::CAST<::jxx::lang::Object>(months_));
+    out->writeObject(::jxx::CAST<::jxx::lang::Object>(shortMonths_));
+    out->writeObject(::jxx::CAST<::jxx::lang::Object>(weekdays_));
+    out->writeObject(::jxx::CAST<::jxx::lang::Object>(shortWeekdays_));
+    out->writeObject(::jxx::CAST<::jxx::lang::Object>(amPmStrings_));
+    out->writeObject(::jxx::CAST<::jxx::lang::Object>(zoneStrings_));
+    out->writeObject(::jxx::CAST<::jxx::lang::Object>(localPatternChars_));
+}
+
+void DateFormatSymbols::readObject(
+    const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) {
+    if (in == nullptr) throw ::jxx::lang::NullPointerException();
+    eras_ = ::jxx::CAST<StringArray>(in->readObject());
+    months_ = ::jxx::CAST<StringArray>(in->readObject());
+    shortMonths_ = ::jxx::CAST<StringArray>(in->readObject());
+    weekdays_ = ::jxx::CAST<StringArray>(in->readObject());
+    shortWeekdays_ = ::jxx::CAST<StringArray>(in->readObject());
+    amPmStrings_ = ::jxx::CAST<StringArray>(in->readObject());
+    zoneStrings_ = ::jxx::CAST<ZoneStringArray>(in->readObject());
+    localPatternChars_ =
+        ::jxx::CAST<::jxx::lang::String>(in->readObject());
+    if (eras_ == nullptr || months_ == nullptr || shortMonths_ == nullptr ||
+        weekdays_ == nullptr || shortWeekdays_ == nullptr ||
+        amPmStrings_ == nullptr || zoneStrings_ == nullptr ||
+        localPatternChars_ == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+}
+
+void DateFormatSymbols::readObjectNoData() {
+    DateFormatSymbols defaults;
+    eras_ = defaults.eras_;
+    months_ = defaults.months_;
+    shortMonths_ = defaults.shortMonths_;
+    weekdays_ = defaults.weekdays_;
+    shortWeekdays_ = defaults.shortWeekdays_;
+    amPmStrings_ = defaults.amPmStrings_;
+    zoneStrings_ = defaults.zoneStrings_;
+    localPatternChars_ = defaults.localPatternChars_;
+}
+
 } // namespace jxx::text
