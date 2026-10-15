@@ -15,6 +15,18 @@ namespace {
     return format;
 }
 }
+
+TEST(SimpleDateFormatTwoDigitYearParity, UsesUpdatedPreEpochImplementation)
+{
+    jxx::initialize();
+
+    const auto actual =
+        ::jxx::util::Date::UTC(50, 0, 1, 0, 0, 0);
+
+    EXPECT_EQ(
+        static_cast<::jxx::lang::jlong>(-631152000000LL),
+        actual);
+}
 TEST(SimpleDateFormatTwoDigitYearParity, HonorsConfiguredCenturyWindow) {
     jxx::initialize();
     auto format = yearFormat("MM/dd/yy");
