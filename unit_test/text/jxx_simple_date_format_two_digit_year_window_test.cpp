@@ -60,11 +60,16 @@ TEST(SimpleDateFormatTwoDigitYearParity, UsesExactStartInstantBoundary)
             ->getYear() + 1900);
 }
 
-TEST(SimpleDateFormatTwoDigitYearParity, FourDigitYearIsNotWindowed) {
-    jxx::initialize();
-    auto format = yearFormat("MM/dd/yyyy");
-    format->set2DigitYearStart(
-        ::jxx::NEW<::jxx::util::Date>(50, 0, 1));
-    EXPECT_EQ(49, format->parse(::jxx::NEW<::jxx::lang::String>(
-        "01/01/0049"))->getYear() + 1900);
+TEST(SimpleDateFormatYearParity, ParsesAndFormatsProlepticYearWithoutWindowing)
+{
+    auto format = ::jxx::NEW<::jxx::text::SimpleDateFormat>(
+        ::jxx::NEW<::jxx::lang::String>("MM/dd/yyyy"));
+    format->setTimeZone(::jxx::util::TimeZone::getTimeZone(
+        ::jxx::NEW<::jxx::lang::String>("GMT")));
+
+    const auto parsed = format->parse(
+        ::jxx::NEW<::jxx::lang::String>("01/01/0049"));
+
+    ASSERT_NE(nullptr, parsed);
+    EXPECT_EQ("01/01/0049", format->format(parsed)->utf8());
 }

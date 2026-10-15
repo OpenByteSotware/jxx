@@ -813,6 +813,17 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
             static_cast<::jxx::lang::jlong>(fields.tm_hour) * 3600000LL +
             static_cast<::jxx::lang::jlong>(fields.tm_min) * 60000LL +
             static_cast<::jxx::lang::jlong>(fields.tm_sec) * 1000LL;
+    } else if (hasParsedExtendedYear) {
+        // Native UTC conversion is not portable for proleptic years such as
+        // 0049, particularly on Windows. The parsed fields are already
+        // validated, so use the cross-platform civil-date conversion.
+        localMillis = daysFromCivil(
+            fields.tm_year + 1900,
+            static_cast<unsigned>(fields.tm_mon + 1),
+            static_cast<unsigned>(fields.tm_mday)) * 86400000LL +
+            static_cast<::jxx::lang::jlong>(fields.tm_hour) * 3600000LL +
+            static_cast<::jxx::lang::jlong>(fields.tm_min) * 60000LL +
+            static_cast<::jxx::lang::jlong>(fields.tm_sec) * 1000LL;
     } else {
 #if defined(_WIN32)
         const auto seconds = _mkgmtime(&fields);
