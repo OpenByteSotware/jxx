@@ -420,13 +420,13 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
                 bool validIsoOffset = zoneText == "Z";
                 if (!validIsoOffset && zoneFieldWidth == 1) {
                     validIsoOffset = std::regex_match(
-                        zoneText, std::regex("^[+-]\d{2}$"));
+                        zoneText, std::regex(R"(^[+-]\d{2}$)"));
                 } else if (!validIsoOffset && zoneFieldWidth == 2) {
                     validIsoOffset = std::regex_match(
-                        zoneText, std::regex("^[+-]\d{4}$"));
+                        zoneText, std::regex(R"(^[+-]\d{4}$)"));
                 } else if (!validIsoOffset && zoneFieldWidth == 3) {
                     validIsoOffset = std::regex_match(
-                        zoneText, std::regex("^[+-]\d{2}:\d{2}$"));
+                        zoneText, std::regex(R"(^[+-]\d{2}:\d{2}$)"));
                 }
                 if (!validIsoOffset) {
                     throw ParseException(
