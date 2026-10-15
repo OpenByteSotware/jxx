@@ -196,32 +196,6 @@ std::int64_t daysFromCivil(int year, unsigned month, unsigned day) {
         static_cast<std::int64_t>(dayOfEra) - 719468LL;
 }
 
-std::string zoneDisplayName(
-    const ::jxx::Ptr<DateFormatSymbols>& symbols,
-    const ::jxx::Ptr<::jxx::util::TimeZone>& zone,
-    ::jxx::lang::jlong epochMillis,
-    int patternCount) {
-    if (zone == nullptr) return std::string();
-    const auto id = zone->getID();
-    const auto abbreviation = zone->getAbbreviation(epochMillis);
-    const bool daylight = zone->inDaylightTime(
-        ::jxx::NEW<::jxx::util::Date>(epochMillis));
-    const auto rows = symbols->getZoneStrings();
-    for (::jxx::lang::jint index = 0; index < rows->length; ++index) {
-        const auto& row = rows->row(index);
-        if (row == nullptr || row->length < 5 || (*row)[0] == nullptr) continue;
-        if ((*row)[0]->equals(id)) {
-            const ::jxx::lang::jint column = patternCount >= 4
-                ? (daylight ? 3 : 1)
-                : (daylight ? 4 : 2);
-            if ((*row)[column] != nullptr && !(*row)[column]->utf8().empty()) {
-                return (*row)[column]->utf8();
-            }
-        }
-    }
-    return abbreviation == nullptr ? id->utf8() : abbreviation->utf8();
-}
-
 std::string translatePatternLetters(
     const std::string& pattern,
     const std::string& from,
@@ -309,11 +283,6 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
                               (value >= 'a' && value <= 'z')) &&
                    valid.find(value) == std::string::npos) {
             throw ::jxx::lang::IllegalArgumentException();
-        } else if (!quoted && value == 'X') {
-            std::size_t end = index + 1;
-            while (end < pattern.size() && pattern[end] == 'X') ++end;
-            if (end - index > 3) throw ::jxx::lang::IllegalArgumentException();
-            index = end - 1;
         }
     }
     if (quoted) throw ::jxx::lang::IllegalArgumentException();
@@ -383,7 +352,10 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
         case 's': output += number(fields.tm_sec, count); break;
         case 'S': output += number(static_cast<int>((epochMillis % 1000 + 1000) % 1000), count); break;
         case 'z':
-            output += zoneDisplayName(symbols_, timeZone_, epochMillis, count);
+            if (timeZone_ != nullptr) {
+                const auto abbreviation = timeZone_->getAbbreviation(epochMillis);
+                output += abbreviation == nullptr ? timeZone_->getID()->utf8() : abbreviation->utf8();
+            }
             break;
         case 'Z': {
             const int totalMinutes = offset / 60000;
@@ -434,25 +406,7 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
         if (last != std::string::npos &&
             (pattern[last] == 'z' || pattern[last] == 'Z' || pattern[last] == 'X')) {
             const char zoneSymbol = pattern[last];
-            const std::size_t zoneFieldEnd = last + 1;
             while (last > 0 && pattern[last - 1] == zoneSymbol) --last;
-            const std::size_t zoneFieldWidth = zoneFieldEnd - last;
-            if (zoneSymbol == 'X') {
-                const bool validIsoOffset =
-                    zoneText == "Z" ||
-                    (zoneFieldWidth == 1 && std::regex_match(
-                        zoneText, std::regex("^[+-]\\d{2}$"))) ||
-                    (zoneFieldWidth == 2 && std::regex_match(
-                        zoneText, std::regex("^[+-]\\d{4}$"))) ||
-                    (zoneFieldWidth == 3 && std::regex_match(
-                        zoneText, std::regex("^[+-]\\d{2}:\\d{2}$")));
-                if (!validIsoOffset) {
-                    throw ParseException(
-                        ::jxx::NEW<::jxx::lang::String>(
-                            "Unparseable ISO 8601 time zone"),
-                        static_cast<::jxx::lang::jint>(zoneMatch.position(2)));
-                }
-            }
             pattern.erase(last);
             while (!pattern.empty() && pattern.back() == ' ') pattern.pop_back();
             value = zoneMatch[1].str();

@@ -28,6 +28,7 @@ protected:
     ObjectInputStream();
 private:
     using Handle = std::uint64_t;
+    struct ClassDescriptor { std::string binaryName; ::jxx::lang::jlong serialVersionUID; };
     void readStreamHeader_();
     ::jxx::Ptr<::jxx::lang::Object> readObject0_();
     ::jxx::Ptr<::jxx::lang::String> readString_(Handle handle);
@@ -36,6 +37,8 @@ private:
     void requireEndArray_();
     std::string readRawUtf8_();
     Handle readHandle_();
+    ClassDescriptor readClassDescriptor_();
     std::unordered_map<Handle, ::jxx::Ptr<::jxx::lang::Object>> handles_;
+    std::unordered_map<Handle, ClassDescriptor> descriptors_;
 };
 } // namespace jxx::io

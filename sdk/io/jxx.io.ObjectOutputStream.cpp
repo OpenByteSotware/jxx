@@ -36,6 +36,23 @@ void ObjectOutputStream::writeRawUtf8_(const std::string& value) {
     writeInt(static_cast<::jxx::lang::jint>(value.size()));
     for (const unsigned char byte : value) writeByte(byte);
 }
+void ObjectOutputStream::writeClassDescriptor_(const std::string& binaryName) {
+    const auto found = descriptorHandles_.find(binaryName);
+    if (found != descriptorHandles_.end()) {
+        writeByte(static_cast<::jxx::lang::jint>(Tag::ClassDescriptorRef));
+        writeHandle_(found->second);
+        return;
+    }
+    const auto handle = nextDescriptorHandle_++;
+    descriptorHandles_.emplace(binaryName, handle);
+    writeByte(static_cast<::jxx::lang::jint>(Tag::ClassDescriptor));
+    writeHandle_(handle);
+    writeRawUtf8_(binaryName);
+    writeLong(1); // JXX v1 default serialVersionUID
+    writeShort(0x0003); // Serializable | CustomWriteObject
+    writeInt(0); // no reflected/default fields in JXX v1
+    writeByte(static_cast<::jxx::lang::jint>(Tag::EndClassDescriptor));
+}
 void ObjectOutputStream::writeString_(const ::jxx::Ptr<::jxx::lang::String>& value, Handle handle) {
     writeByte(static_cast<::jxx::lang::jint>(Tag::NewString));
     writeHandle_(handle);
@@ -110,8 +127,7 @@ void ObjectOutputStream::writeObject0_(const ::jxx::Ptr<::jxx::lang::Object>& ob
     const auto runtimeClass = object->getClass();
     writeByte(static_cast<::jxx::lang::jint>(Tag::NewObject));
     writeHandle_(handle);
-    writeRawUtf8_(runtimeClass->getName()->utf8());
-    writeLong(1); // JXX v1 default serialVersionUID
+    writeClassDescriptor_(runtimeClass->getName()->utf8());
     serializable->writeObject(jxx::CAST<ObjectOutputStream>(thisPtr()));
     writeByte(static_cast<::jxx::lang::jint>(Tag::EndCustomData));
     writeByte(static_cast<::jxx::lang::jint>(Tag::EndObject));
@@ -129,7 +145,10 @@ void ObjectOutputStream::writeUnshared(const ::jxx::Ptr<::jxx::lang::Object>& ob
 void ObjectOutputStream::reset() {
     synchronized([&] {
         writeByte(static_cast<::jxx::lang::jint>(Tag::Reset));
-        handles_.clear(); nextHandle_ = serialization::FIRST_HANDLE;
+        handles_.clear();
+        descriptorHandles_.clear();
+        nextHandle_ = serialization::FIRST_HANDLE;
+        nextDescriptorHandle_ = serialization::FIRST_HANDLE;
     });
 }
 } // namespace jxx::io

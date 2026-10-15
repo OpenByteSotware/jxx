@@ -46,6 +46,30 @@ ObjectInputStream::Handle ObjectInputStream::readHandle_() {
     if (value <= 0) throw StreamCorruptedException("Invalid object handle");
     return static_cast<Handle>(value);
 }
+ObjectInputStream::ClassDescriptor ObjectInputStream::readClassDescriptor_() {
+    const auto tag = static_cast<Tag>(readUnsignedByte());
+    if (tag == Tag::ClassDescriptorRef) {
+        const auto found = descriptors_.find(readHandle_());
+        if (found == descriptors_.end())
+            throw StreamCorruptedException("Unknown class descriptor handle");
+        return found->second;
+    }
+    if (tag != Tag::ClassDescriptor)
+        throw StreamCorruptedException("Missing JXX class descriptor");
+    const auto handle = readHandle_();
+    ClassDescriptor descriptor{readRawUtf8_(), readLong()};
+    const auto flags = readUnsignedShort();
+    const auto fieldCount = readInt();
+    if ((flags & 0x0001) == 0)
+        throw StreamCorruptedException("Class descriptor is not serializable");
+    if (fieldCount != 0)
+        throw StreamCorruptedException("JXX v1 reflected fields are unsupported");
+    if (static_cast<Tag>(readUnsignedByte()) != Tag::EndClassDescriptor)
+        throw StreamCorruptedException("Missing JXX class descriptor terminator");
+    if (!descriptors_.emplace(handle, descriptor).second)
+        throw StreamCorruptedException("Duplicate class descriptor handle");
+    return descriptor;
+}
 std::string ObjectInputStream::readRawUtf8_() {
     const auto length = readInt();
     if (length < 0 || length > 1024 * 1024) throw StreamCorruptedException("Invalid metadata length");
@@ -126,7 +150,7 @@ void ObjectInputStream::requireEndArray_() {
 ::jxx::Ptr<::jxx::lang::Object> ObjectInputStream::readObject0_() {
     const auto tag = static_cast<Tag>(readUnsignedByte());
     if (tag == Tag::Null) return nullptr;
-    if (tag == Tag::Reset) { handles_.clear(); return readObject0_(); }
+    if (tag == Tag::Reset) { handles_.clear(); descriptors_.clear(); return readObject0_(); }
     if (tag == Tag::Reference) {
         const auto found = handles_.find(readHandle_());
         if (found == handles_.end()) throw StreamCorruptedException("Unknown object handle");
@@ -136,8 +160,9 @@ void ObjectInputStream::requireEndArray_() {
     if (tag == Tag::NewArray) return readArray_(readHandle_());
     if (tag != Tag::NewObject) throw StreamCorruptedException("Unsupported JXX object stream tag");
     const auto handle = readHandle_();
-    const auto className = jxx::NEW<::jxx::lang::String>(readRawUtf8_());
-    const auto serialVersionUID = readLong();
+    const auto descriptor = readClassDescriptor_();
+    const auto className = jxx::NEW<::jxx::lang::String>(descriptor.binaryName);
+    const auto serialVersionUID = descriptor.serialVersionUID;
     if (serialVersionUID != 1) throw InvalidClassException(className, jxx::NEW<::jxx::lang::String>("Unsupported JXX serialVersionUID"));
     const auto runtimeClass = ::jxx::lang::ClassAny::forName(className);
     auto object = runtimeClass->newInstance();
