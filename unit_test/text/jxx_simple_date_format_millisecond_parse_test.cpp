@@ -42,3 +42,20 @@ TEST(SimpleDateFormatMillisecondParsingParity,
                 "1970-01-01 00:00:00.1000")),
         ::jxx::text::ParseException);
 }
+
+
+TEST(SimpleDateFormatMillisecondParsingParity,
+     NormalizesOutOfRangeMillisecondsWhenLenient)
+{
+    auto format = utcFormat("yyyy-MM-dd HH:mm:ss.SSS");
+    format->setLenient(true);
+
+    const auto result = format->parse(
+        ::jxx::NEW<::jxx::lang::String>(
+            "1970-01-01 00:00:00.1000"));
+
+    ASSERT_NE(nullptr, result);
+    EXPECT_EQ(
+        static_cast<::jxx::lang::jlong>(1000),
+        result->getTime());
+}

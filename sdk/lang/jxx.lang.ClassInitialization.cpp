@@ -3,6 +3,7 @@
 #include <mutex>
 
 #include "lang/jxx.lang.ClassInfo.h"
+#include "io/jxx.io.ArrayCodecRegistry.h"
 #include "lang/jxx.lang.Throwable.h"
 #include "lang/jxx.lang.Exception.h"
 #include "lang/jxx.lang.RuntimeException.h"
@@ -197,6 +198,8 @@ void initializeClasses()
         registerType<Runnable>();
         registerType<StrictMath>();
         registerType<String>();
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            String, 1U, 2U>();
         registerType<StringCaseInsensitiveComparator>();
         registerType<System>();
         registerType<Thread>();

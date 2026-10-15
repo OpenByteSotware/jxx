@@ -4,6 +4,7 @@
 #include "text/jxx.text.SimpleDateFormat.h"
 #include "util/jxx.util.Date.h"
 #include "util/jxx.util.TimeZone.h"
+#include "jxx.initialize.h"
 
 namespace {
 ::jxx::Ptr<::jxx::text::SimpleDateFormat> yearFormat(const char* pattern) {
@@ -17,6 +18,7 @@ namespace {
 
 TEST(SimpleDateFormatTwoDigitYearParity, HonorsConfiguredCenturyWindow)
 {
+    jxx::initialize();
     auto format = yearFormat("MM/dd/yy");
 
     format->set2DigitYearStart(
@@ -33,6 +35,7 @@ TEST(SimpleDateFormatTwoDigitYearParity, HonorsConfiguredCenturyWindow)
 }
 
 TEST(SimpleDateFormatTwoDigitYearParity, UsesExactStartInstantBoundary) {
+    jxx::initialize(); 
     auto format = yearFormat("MM/dd/yy HH:mm:ss");
     format->set2DigitYearStart(
         ::jxx::NEW<::jxx::util::Date>(50, 5, 15, 12, 0, 0));
@@ -43,6 +46,7 @@ TEST(SimpleDateFormatTwoDigitYearParity, UsesExactStartInstantBoundary) {
 }
 
 TEST(SimpleDateFormatTwoDigitYearParity, FourDigitYearIsNotWindowed) {
+    jxx::initialize();
     auto format = yearFormat("MM/dd/yyyy");
     format->set2DigitYearStart(
         ::jxx::NEW<::jxx::util::Date>(50, 0, 1));
