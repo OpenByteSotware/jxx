@@ -28,6 +28,7 @@ TEST(JxxObjectStreamRank2Array, RoundTripsJaggedPrimitiveArrayWithNullAndSharedR
 }
 
 TEST(JxxObjectStreamRank2Array, RoundTripsObjectRowsAndSharedElements) {
+    jxx::initialize();
     auto value = jxx::NEW<jxx::lang::ObjectArray2DType>(1);
     auto row = jxx::NEW<jxx::lang::ObjectArrayType>(2);
     auto text = jxx::NEW<jxx::lang::String>("shared");

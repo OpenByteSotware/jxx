@@ -3,6 +3,9 @@
 #include <mutex>
 
 #include "lang/jxx.lang.ClassInfo.h"
+#include "io/jxx.io.ArrayCodecRegistry.h"
+#include "io/jxx.io.SerializationClassRegistry.h"
+#include "lang/jxx.lang.String.h"
 #include "security/jxx.security.AlgorithmConstraints.h"
 #include "security/jxx.security.AlgorithmParameters.h"
 #include "security/jxx.security.BasicPermission.h"
@@ -42,6 +45,14 @@ void initializeClasses()
             registerType<AlgorithmConstraints>();
             registerType<AlgorithmParameters>();
             registerType<BasicPermission>();
+            ::jxx::io::serialization::registerSerializableClass<BasicPermission>(
+                1,
+                [] {
+                    return ::jxx::NEW<BasicPermission>(
+                        ::jxx::NEW<::jxx::lang::String>("placeholder"));
+                });
+            ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+                BasicPermission, 1U, 2U>();
             registerType<CryptoPrimitive>();
             registerType<GeneralSecurityException>();
             registerType<Guard>();

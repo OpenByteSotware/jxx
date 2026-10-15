@@ -22,6 +22,12 @@ public:
     ::jxx::lang::jint hashCode() const override;
     ::jxx::Ptr<::jxx::lang::String> getActions() const override;
 
+    void writeObject(
+        const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override;
+    void readObject(
+        const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override;
+    void readObjectNoData() override;
+
 protected:
     ::jxx::lang::jbool wildcard_ = false;
     ::jxx::Ptr<::jxx::lang::String> path_;

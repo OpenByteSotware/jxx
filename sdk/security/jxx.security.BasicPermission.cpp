@@ -2,6 +2,8 @@
 
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.String.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 
 namespace jxx::security {
 
@@ -28,6 +30,29 @@ BasicPermission::BasicPermission(const ::jxx::Ptr<::jxx::lang::String>& name,
 ::jxx::Ptr<::jxx::lang::String> BasicPermission::getActions() const {
     static const auto empty = ::jxx::NEW<::jxx::lang::String>("");
     return empty;
+}
+
+
+void BasicPermission::writeObject(
+    const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) {
+    Permission::writeObject(out);
+}
+
+void BasicPermission::readObject(
+    const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) {
+    Permission::readObject(in);
+    const auto value = name_->utf8();
+    if (value.empty()) throw ::jxx::lang::IllegalArgumentException();
+    wildcard_ = value == "*" ||
+        (value.size() >= 2U && value.compare(value.size() - 2U, 2U, ".*") == 0);
+    path_ = wildcard_
+        ? ::jxx::NEW<::jxx::lang::String>(
+              value == "*" ? "" : value.substr(0U, value.size() - 1U))
+        : name_;
+}
+
+void BasicPermission::readObjectNoData() {
+    Permission::readObjectNoData();
 }
 
 } // namespace jxx::security
