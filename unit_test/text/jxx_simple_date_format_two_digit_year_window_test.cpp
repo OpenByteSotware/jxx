@@ -15,14 +15,21 @@ namespace {
 }
 }
 
-TEST(SimpleDateFormatTwoDigitYearParity, HonorsConfiguredCenturyWindow) {
+TEST(SimpleDateFormatTwoDigitYearParity, HonorsConfiguredCenturyWindow)
+{
     auto format = yearFormat("MM/dd/yy");
+
     format->set2DigitYearStart(
-        ::jxx::NEW<::jxx::util::Date>(50, 0, 1));
-    EXPECT_EQ(1950, format->parse(::jxx::NEW<::jxx::lang::String>(
-        "01/01/50"))->getYear() + 1900);
-    EXPECT_EQ(2049, format->parse(::jxx::NEW<::jxx::lang::String>(
-        "01/01/49"))->getYear() + 1900);
+        ::jxx::NEW<::jxx::util::Date>(
+            ::jxx::util::Date::UTC(50, 0, 1, 0, 0, 0)));
+
+    EXPECT_EQ(1950,
+        format->parse(::jxx::NEW<::jxx::lang::String>(
+            "01/01/50"))->getYear() + 1900);
+
+    EXPECT_EQ(2049,
+        format->parse(::jxx::NEW<::jxx::lang::String>(
+            "01/01/49"))->getYear() + 1900);
 }
 
 TEST(SimpleDateFormatTwoDigitYearParity, UsesExactStartInstantBoundary) {

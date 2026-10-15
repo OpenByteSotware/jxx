@@ -6,6 +6,7 @@
 
 #include "lang/jxx.lang.Class.h"
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
 
 namespace jxx::io::serialization {
 
