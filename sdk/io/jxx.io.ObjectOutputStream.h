@@ -27,7 +27,7 @@ private:
     void writeString_(const ::jxx::Ptr<::jxx::lang::String>& value, Handle handle);
     void writeRawUtf8_(const std::string& value);
     void writeHandle_(Handle value);
-    void writeClassDescriptor_(const std::string& binaryName);
+    void writeClassDescriptor_(const std::string& binaryName, ::jxx::lang::jlong serialVersionUID);
     Handle assignHandle_(const ::jxx::Ptr<::jxx::lang::Object>& object);
     std::unordered_map<const ::jxx::lang::Object*, Handle> handles_;
     Handle nextHandle_ = 1U;

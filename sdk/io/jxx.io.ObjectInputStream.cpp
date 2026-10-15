@@ -2,6 +2,7 @@
 
 #include "io/jxx.io.InvalidClassException.h"
 #include "io/jxx.io.ArrayCodecRegistry.h"
+#include "io/jxx.io.SerializationClassRegistry.h"
 #include "jxx.initialize.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "io/jxx.io.ObjectStreamFormat.h"
@@ -217,10 +218,16 @@ void ObjectInputStream::requireEndArray_() {
     const auto handle = readHandle_();
     const auto descriptor = readClassDescriptor_();
     const auto className = jxx::NEW<::jxx::lang::String>(descriptor.binaryName);
-    const auto serialVersionUID = descriptor.serialVersionUID;
-    if (serialVersionUID != 1) throw InvalidClassException(className, jxx::NEW<::jxx::lang::String>("Unsupported JXX serialVersionUID"));
+    const auto classMetadata = serialization::SerializationClassRegistry::resolve(
+        descriptor.binaryName);
+    if (descriptor.serialVersionUID != classMetadata.serialVersionUID)
+        throw InvalidClassException(className,
+            jxx::NEW<::jxx::lang::String>("JXX serialVersionUID mismatch"));
     const auto runtimeClass = ::jxx::lang::ClassAny::forName(className);
-    auto object = runtimeClass->newInstance();
+    auto object = classMetadata.deserializationFactory();
+    if (object == nullptr || !runtimeClass->isInstance(object))
+        throw InvalidClassException(className,
+            jxx::NEW<::jxx::lang::String>("Deserialization factory returned an incompatible object"));
     auto serializable = std::dynamic_pointer_cast<SerializableI>(object);
     if (serializable == nullptr) throw InvalidClassException(className, jxx::NEW<::jxx::lang::String>("Class does not implement SerializableI"));
     if (!handles_.emplace(handle, object).second) throw StreamCorruptedException("Duplicate object handle");

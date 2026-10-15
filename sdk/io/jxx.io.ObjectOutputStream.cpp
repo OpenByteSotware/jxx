@@ -3,6 +3,7 @@
 #include <limits>
 #include "io/jxx.io.NotSerializableException.h"
 #include "io/jxx.io.ArrayCodecRegistry.h"
+#include "io/jxx.io.SerializationClassRegistry.h"
 #include "jxx.initialize.h"
 #include "io/jxx.io.ObjectStreamFormat.h"
 #include "io/jxx.io.SerializableI.h"
@@ -40,7 +41,7 @@ void ObjectOutputStream::writeRawUtf8_(const std::string& value) {
     writeInt(static_cast<::jxx::lang::jint>(value.size()));
     for (const unsigned char byte : value) writeByte(byte);
 }
-void ObjectOutputStream::writeClassDescriptor_(const std::string& binaryName) {
+void ObjectOutputStream::writeClassDescriptor_(const std::string& binaryName, ::jxx::lang::jlong serialVersionUID) {
     const auto found = descriptorHandles_.find(binaryName);
     if (found != descriptorHandles_.end()) {
         writeByte(static_cast<::jxx::lang::jint>(Tag::ClassDescriptorRef));
@@ -52,7 +53,7 @@ void ObjectOutputStream::writeClassDescriptor_(const std::string& binaryName) {
     writeByte(static_cast<::jxx::lang::jint>(Tag::ClassDescriptor));
     writeHandle_(handle);
     writeRawUtf8_(binaryName);
-    writeLong(1); // JXX v1 default serialVersionUID
+    writeLong(serialVersionUID);
     writeShort(0x0003); // Serializable | CustomWriteObject
     writeInt(0); // no reflected/default fields in JXX v1
     writeByte(static_cast<::jxx::lang::jint>(Tag::EndClassDescriptor));
@@ -121,7 +122,7 @@ void ObjectOutputStream::writeObject0_(const ::jxx::Ptr<::jxx::lang::Object>& ob
     if (const auto enumValue = std::dynamic_pointer_cast<::jxx::lang::EnumValue>(object)) {
         writeByte(static_cast<::jxx::lang::jint>(Tag::NewEnum));
         writeHandle_(handle);
-        writeClassDescriptor_(enumValue->enumDeclaringClass()->getName()->utf8());
+        writeClassDescriptor_(enumValue->enumDeclaringClass()->getName()->utf8(), 1);
         writeRawUtf8_(enumValue->enumName()->utf8());
         return;
     }
@@ -134,7 +135,10 @@ void ObjectOutputStream::writeObject0_(const ::jxx::Ptr<::jxx::lang::Object>& ob
     const auto runtimeClass = object->getClass();
     writeByte(static_cast<::jxx::lang::jint>(Tag::NewObject));
     writeHandle_(handle);
-    writeClassDescriptor_(runtimeClass->getName()->utf8());
+    const auto classMetadata = serialization::SerializationClassRegistry::resolve(
+        runtimeClass->getName()->utf8());
+    writeClassDescriptor_(runtimeClass->getName()->utf8(),
+        classMetadata.serialVersionUID);
     serializable->writeObject(jxx::CAST<ObjectOutputStream>(thisPtr()));
     writeByte(static_cast<::jxx::lang::jint>(Tag::EndCustomData));
     writeByte(static_cast<::jxx::lang::jint>(Tag::EndObject));
