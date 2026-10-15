@@ -283,6 +283,13 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
                               (value >= 'a' && value <= 'z')) &&
                    valid.find(value) == std::string::npos) {
             throw ::jxx::lang::IllegalArgumentException();
+        } else if (!quoted && value == 'X') {
+            std::size_t end = index + 1;
+            while (end < pattern.size() && pattern[end] == 'X') ++end;
+            if (end - index > 3) {
+                throw ::jxx::lang::IllegalArgumentException();
+            }
+            index = end - 1;
         }
     }
     if (quoted) throw ::jxx::lang::IllegalArgumentException();
