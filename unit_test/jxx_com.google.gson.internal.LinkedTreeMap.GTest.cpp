@@ -3,6 +3,7 @@
 
 #include "com/google/gson/internal/jxx.com.google.gson.internal.LinkedTreeMap.h"
 #include "lang/jxx.lang.String.h"
+#include "jxx.initialize.h"
 
 namespace {
 
@@ -73,14 +74,34 @@ TEST(LinkedTreeMapTest, EntryViewRetainsMapOwner) {
     EXPECT_EQ(entry->getValue()->utf8(), "Controller");
 }
 
-TEST(LinkedTreeMapTest, ConcreteSpecializationsHaveDistinctClassDescriptors) {
-    auto innerDescriptor = InnerMap::Class();
-    auto outerDescriptor = OuterMap::Class();
+TEST(
+    LinkedTreeMapTest,
+    ConcreteSpecializationsShareErasedClassDescriptor)
+{
+    jxx::initialize();
+
+    auto innerDescriptor =
+        InnerMap::Class();
+
+    auto outerDescriptor =
+        OuterMap::Class();
+
     ASSERT_NE(innerDescriptor, nullptr);
     ASSERT_NE(outerDescriptor, nullptr);
-    EXPECT_NE(innerDescriptor, outerDescriptor);
+
+    // Generic type arguments are erased from runtime class identity.
+    EXPECT_EQ(innerDescriptor, outerDescriptor);
+
     EXPECT_FALSE(innerDescriptor->isInterface());
     EXPECT_FALSE(outerDescriptor->isInterface());
+
+    EXPECT_EQ(
+        innerDescriptor->getName()->utf8(),
+        outerDescriptor->getName()->utf8());
+
+    EXPECT_EQ(
+        innerDescriptor->getName()->utf8(),
+        "com.google.gson.internal.LinkedTreeMap");
 }
 
 } // namespace
