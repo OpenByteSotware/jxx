@@ -30,9 +30,15 @@ TEST(SimpleDateFormatMillisecondParsingParity, ParsesMillisecondsBeforeZone) {
     EXPECT_EQ(125, date->getTime());
 }
 
-TEST(SimpleDateFormatMillisecondParsingParity, RejectsOutOfRangeMilliseconds) {
+TEST(SimpleDateFormatMillisecondParsingParity,
+     RejectsOutOfRangeMilliseconds)
+{
+    auto format = utcFormat("yyyy-MM-dd HH:mm:ss.SSS");
+    format->setLenient(false);
+
     EXPECT_THROW(
-        utcFormat("yyyy-MM-dd HH:mm:ss.SSS")->parse(
-            ::jxx::NEW<::jxx::lang::String>("1970-01-01 00:00:00.1000")),
+        format->parse(
+            ::jxx::NEW<::jxx::lang::String>(
+                "1970-01-01 00:00:00.1000")),
         ::jxx::text::ParseException);
 }
