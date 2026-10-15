@@ -7,6 +7,8 @@
 #include "lang/jxx.lang.String.h"
 #include "math/jxx.math.BigInteger.h"
 #include "lang/jxx.lang.NullPointerException.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 
 namespace jxx::math
 {
@@ -278,4 +280,27 @@ namespace jxx::math
         remainder = carry;
         return q;
     }
+
+    void BigInteger::writeObject(
+        const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) {
+        if (out == nullptr) throw ::jxx::lang::NullPointerException();
+        out->writeBoolean(negative_);
+        out->writeObject(::jxx::CAST<::jxx::lang::Object>(
+            ::jxx::NEW<::jxx::lang::String>(digits_)));
+    }
+
+    void BigInteger::readObject(
+        const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) {
+        if (in == nullptr) throw ::jxx::lang::NullPointerException();
+        negative_ = in->readBoolean();
+        digits_ = narrowAscii_(::jxx::CAST<::jxx::lang::String>(
+            in->readObject()));
+        normalize_(negative_, digits_);
+    }
+
+    void BigInteger::readObjectNoData() {
+        negative_ = false;
+        digits_ = "0";
+    }
+
 }

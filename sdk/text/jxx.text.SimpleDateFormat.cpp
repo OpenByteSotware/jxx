@@ -748,7 +748,12 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
 
     if (ambiguousTwoDigitYear) {
         const int parsedTwoDigitYear = (fields.tm_year + 1900) % 100;
-        const int startYear = twoDigitYearStart_->getYear() + 1900;
+        const auto startMillis = twoDigitYearStart_->getTime();
+        const auto startOffset = timeZone_ == nullptr
+            ? 0
+            : timeZone_->getOffset(startMillis);
+        const auto startFields = localFields(startMillis, startOffset);
+        const int startYear = startFields.tm_year + 1900;
         int resolvedYear = (startYear / 100) * 100 + parsedTwoDigitYear;
         if (resolvedYear < startYear) resolvedYear += 100;
         if (resolvedYear == startYear) {
@@ -756,9 +761,9 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
                 fields.tm_mon, fields.tm_mday, fields.tm_hour,
                 fields.tm_min, fields.tm_sec);
             const auto startTail = std::make_tuple(
-                twoDigitYearStart_->getMonth(), twoDigitYearStart_->getDate(),
-                twoDigitYearStart_->getHours(), twoDigitYearStart_->getMinutes(),
-                twoDigitYearStart_->getSeconds());
+                startFields.tm_mon, startFields.tm_mday,
+                startFields.tm_hour, startFields.tm_min,
+                startFields.tm_sec);
             if (parsedTail < startTail) resolvedYear += 100;
         }
         fields.tm_year = resolvedYear - 1900;

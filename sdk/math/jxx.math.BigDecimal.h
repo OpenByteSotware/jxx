@@ -48,6 +48,12 @@ namespace jxx::math {
         jxx::lang::jint hashCode() const override;
         jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& obj) const override;
 
+        void writeObject(
+            const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override;
+        void readObject(
+            const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override;
+        void readObjectNoData() override;
+
     private:
         jxx::lang::jbool negative_;
         std::string digits_; // unscaled digits, normalized to "0" if zero
