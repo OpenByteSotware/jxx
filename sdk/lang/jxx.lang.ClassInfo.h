@@ -378,11 +378,11 @@ public:
         );
 
         if constexpr (isJxxClass) {
-            static_assert(
-                std::is_base_of_v<Object, JxxSuper>,
-                "The declared JXX superclass must derive from Object."
-            );
-
+            // If Derived is Object-derived and also derives from JxxSuper,
+            // JxxSuper is necessarily part of the Object-backed class path.
+            // Avoid asking is_base_of<Object, JxxSuper> separately here because
+            // MSVC may evaluate that trait while a template superclass is still
+            // incomplete during jxx::NEW<T>() instantiation.
             static_assert(
                 std::is_base_of_v<JxxSuper, Derived>,
                 "Derived must inherit its declared JXX superclass."
