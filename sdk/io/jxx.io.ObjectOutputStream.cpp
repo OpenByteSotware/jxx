@@ -98,27 +98,6 @@ void ObjectOutputStream::writeObject0_(const ::jxx::Ptr<::jxx::lang::Object>& ob
         writeByte(static_cast<::jxx::lang::jint>(Tag::EndArray));
         return;
     }
-#define JXX_WRITE_RANK2_ARRAY(TYPE, KIND) \
-    if (const auto array = std::dynamic_pointer_cast<TYPE>(object)) { \
-        writeByte(static_cast<::jxx::lang::jint>(Tag::NewArray)); \
-        writeHandle_(handle); \
-        writeByte(static_cast<::jxx::lang::jint>(serialization::ArrayElementKind::KIND)); \
-        writeByte(2); \
-        writeHandle_(static_cast<Handle>(array->length)); \
-        for (::jxx::lang::jint i = 0; i < array->length; ++i) \
-            writeObject0_(static_cast<typename TYPE::RowPointer>((*array)[i])); \
-        writeByte(static_cast<::jxx::lang::jint>(Tag::EndArray)); return; \
-    }
-    JXX_WRITE_RANK2_ARRAY(::jxx::lang::BooleanArray2DType, Boolean)
-    JXX_WRITE_RANK2_ARRAY(::jxx::lang::ByteArray2DType, Byte)
-    JXX_WRITE_RANK2_ARRAY(::jxx::lang::CharArray2DType, Char)
-    JXX_WRITE_RANK2_ARRAY(::jxx::lang::ShortArray2DType, Short)
-    JXX_WRITE_RANK2_ARRAY(::jxx::lang::IntArray2DType, Int)
-    JXX_WRITE_RANK2_ARRAY(::jxx::lang::LongArray2DType, Long)
-    JXX_WRITE_RANK2_ARRAY(::jxx::lang::FloatArray2DType, Float)
-    JXX_WRITE_RANK2_ARRAY(::jxx::lang::DoubleArray2DType, Double)
-    JXX_WRITE_RANK2_ARRAY(::jxx::lang::ObjectArray2DType, Object)
-#undef JXX_WRITE_RANK2_ARRAY
     if (const auto classValue = std::dynamic_pointer_cast<::jxx::lang::ClassAny>(object)) {
         writeByte(static_cast<::jxx::lang::jint>(Tag::NewClass));
         writeHandle_(handle);
