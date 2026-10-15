@@ -138,38 +138,45 @@ constexpr std::string_view simpleTypeNameView() noexcept {
     }
 }
 
+inline std::string erasedTypeName(const std::string_view raw) {
+    std::string result;
+    result.reserve(raw.size());
+    std::size_t templateDepth = 0U;
+    for (std::size_t index = 0U; index < raw.size(); ++index) {
+        const char character = raw[index];
+        if (character == '<') { ++templateDepth; continue; }
+        if (character == '>') {
+            if (templateDepth != 0U) --templateDepth;
+            continue;
+        }
+        if (templateDepth != 0U || character == ' ') continue;
+        if (index + 1U < raw.size() && character == ':' && raw[index + 1U] == ':') {
+            result.push_back('.');
+            ++index;
+        } else {
+            result.push_back(character);
+        }
+    }
+    return result;
+}
+
 template <typename T>
 const std::string& binaryTypeName() {
-    static const std::string name = [] {
-        constexpr auto raw = completeTypeNameView<T>();
-        std::string result;
-        result.reserve(raw.size());
-
-        for (std::size_t index = 0;
-             index < raw.size();
-             ++index) {
-
-            if (index + 1 < raw.size() &&
-                raw[index] == ':' &&
-                raw[index + 1] == ':') {
-
-                result.push_back('.');
-                ++index;
-            } else if (raw[index] != ' ') {
-                result.push_back(raw[index]);
-            }
-        }
-
-        return result;
-    }();
-
+    // All C++ specializations of one source generic declaration share the
+    // same erased runtime class name.
+    static const std::string name = erasedTypeName(completeTypeNameView<T>());
     return name;
 }
 
 template <typename T>
 const std::string& simpleTypeName() {
-    static const std::string name(simpleTypeNameView<T>());
+    static const std::string name = erasedTypeName(simpleTypeNameView<T>());
     return name;
+}
+
+template <typename T>
+constexpr bool isTemplateSpecialization() noexcept {
+    return completeTypeNameView<T>().find('<') != std::string_view::npos;
 }
 
 inline jxx::Ptr<ClassAny> ensureObjectRegistered() {
@@ -415,6 +422,7 @@ public:
                 }
 
                 if constexpr (
+                    !class_info_detail::isTemplateSpecialization<Derived>() &&
                     std::is_default_constructible_v<Derived> &&
                     !std::is_abstract_v<Derived>) {
 

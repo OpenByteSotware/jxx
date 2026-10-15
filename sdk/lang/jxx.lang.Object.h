@@ -347,6 +347,14 @@ namespace jxx
             std::is_constructible_v<T, Args...>,
             "jxx::NEW<T>: T is not constructible from the supplied arguments.");
 
+        // Register ClassInfo-backed SDK and client template specializations
+        // automatically on first construction. Client initialization callbacks
+        // only register client-owned classes and interfaces, never List<T> or
+        // another SDK template specialization.
+        if constexpr (jxx::lang::class_info_detail::HasClassInfoV<T>) {
+            (void)T::Class();
+        }
+
         auto object = std::make_shared<T>(
             std::forward<Args>(arguments)...);
 

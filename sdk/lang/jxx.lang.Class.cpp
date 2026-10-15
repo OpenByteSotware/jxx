@@ -28,9 +28,28 @@ namespace jxx::lang {
 
         std::lock_guard<std::mutex> lk(registryMutex_);
 
-        // Return existing canonical instance if still alive
-        if (auto it = registryByName_.find(meta.binaryName); it != registryByName_.end()) {
-            if (auto existing = it->second.lock()) return existing;
+        // Canonicalize all C++ specializations of one source generic
+        // declaration to the same erased ClassAny instance.
+        if (auto it = registryByName_.find(meta.binaryName);
+            it != registryByName_.end()) {
+            if (auto existing = it->second.lock()) {
+                if (meta.typeId != std::type_index(typeid(void))) {
+                    registryByType_[meta.typeId] = existing;
+                }
+                if (meta.instancePredicate) {
+                    if (existing->meta_.instancePredicate) {
+                        const auto previous = existing->meta_.instancePredicate;
+                        const auto additional = meta.instancePredicate;
+                        existing->meta_.instancePredicate =
+                            [previous, additional](const jxx::Ptr<Object>& object) -> jbool {
+                                return previous(object) || additional(object);
+                            };
+                    } else {
+                        existing->meta_.instancePredicate = meta.instancePredicate;
+                    }
+                }
+                return existing;
+            }
         }
 
         auto cls = jxx::NEW<ClassAny>(meta);
@@ -360,8 +379,15 @@ namespace jxx::lang {
     jbool ClassAny::isInstance(const jxx::Ptr<Object>& obj) const {
         if (!obj) return false;
 
-        if (meta_.instancePredicate) {
-            return meta_.instancePredicate(obj);
+        // Specialization registration can extend the erased raw predicate.
+        // Copy it under the registry lock, then invoke it without the lock.
+        InstancePredicate predicate;
+        {
+            std::lock_guard<std::mutex> lock(registryMutex_);
+            predicate = meta_.instancePredicate;
+        }
+        if (predicate) {
+            return predicate(obj);
         }
 
         auto oc = obj->getClass();
