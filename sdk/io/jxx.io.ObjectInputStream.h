@@ -2,12 +2,15 @@
 
 #include <cstdint>
 #include <string>
+#include <functional>
 #include <unordered_map>
 #include "io/jxx.io.DataInputStream.h"
 #include "io/jxx.io.ObjectInput.h"
 
 namespace jxx::lang { class Object; class String; }
 namespace jxx::io {
+
+using ObjectInputClassFilter = std::function<bool(const std::string&)>;
 
 struct ObjectInputLimits final {
     std::uint64_t maxObjects = 1000000U;
@@ -36,6 +39,9 @@ public:
     virtual ::jxx::Ptr<::jxx::lang::Object> readUnshared();
     void setLimits(const ObjectInputLimits& limits);
     const ObjectInputLimits& getLimits() const noexcept;
+    void setClassFilter(ObjectInputClassFilter filter);
+    void clearClassFilter();
+    bool hasClassFilter() const noexcept;
 protected:
     ObjectInputStream();
 private:
@@ -58,5 +64,6 @@ private:
     ObjectInputLimits limits_{};
     std::uint64_t objectCount_ = 0U;
     std::uint32_t graphDepth_ = 0U;
+    ObjectInputClassFilter classFilter_{};
 };
 } // namespace jxx::io

@@ -45,6 +45,18 @@ void ObjectInputStream::setLimits(const ObjectInputLimits& limits) {
     limits_ = limits;
 }
 const ObjectInputLimits& ObjectInputStream::getLimits() const noexcept { return limits_; }
+void ObjectInputStream::setClassFilter(ObjectInputClassFilter filter) {
+    if (!filter) {
+        throw ::jxx::lang::IllegalArgumentException(
+            "Object input class filter must not be empty");
+    }
+    classFilter_ = std::move(filter);
+}
+void ObjectInputStream::clearClassFilter() { classFilter_ = {}; }
+bool ObjectInputStream::hasClassFilter() const noexcept {
+    return static_cast<bool>(classFilter_);
+}
+
 void ObjectInputStream::validateNewHandle_(Handle handle) {
     if (handles_.find(handle) != handles_.end())
         throw StreamCorruptedException("Duplicate object handle");
@@ -124,6 +136,9 @@ void ObjectInputStream::requireEndArray_() {
     const auto length = static_cast<::jxx::lang::jint>(rawLength);
     if (kind == Kind::TypedObject) {
         const auto componentName = readRawUtf8_();
+        if (classFilter_ && !classFilter_(componentName))
+            throw InvalidClassException(jxx::NEW<::jxx::lang::String>(componentName),
+                jxx::NEW<::jxx::lang::String>("Array component rejected by JXX object input class filter"));
         const auto* codec = serialization::ArrayCodecRegistry::findByWireType(componentName, rank);
         if (codec == nullptr) throw InvalidClassException(jxx::NEW<::jxx::lang::String>(componentName), jxx::NEW<::jxx::lang::String>("No typed reference-array codec is registered"));
         auto array = codec->create(length);
@@ -199,13 +214,20 @@ void ObjectInputStream::requireEndArray_() {
     }
     if (tag == Tag::NewClass) {
         const auto handle = readHandle_();
-        auto type = ::jxx::lang::ClassAny::forName(jxx::NEW<::jxx::lang::String>(readRawUtf8_()));
+        const auto binaryName = readRawUtf8_();
+        if (classFilter_ && !classFilter_(binaryName))
+            throw InvalidClassException(jxx::NEW<::jxx::lang::String>(binaryName),
+                jxx::NEW<::jxx::lang::String>("Rejected by JXX object input class filter"));
+        auto type = ::jxx::lang::ClassAny::forName(jxx::NEW<::jxx::lang::String>(binaryName));
         registerHandle_(handle, type);
         return type;
     }
     if (tag == Tag::NewEnum) {
         const auto handle = readHandle_();
         const auto descriptor = readClassDescriptor_();
+        if (classFilter_ && !classFilter_(descriptor.binaryName))
+            throw InvalidClassException(jxx::NEW<::jxx::lang::String>(descriptor.binaryName),
+                jxx::NEW<::jxx::lang::String>("Rejected by JXX object input class filter"));
         auto type = ::jxx::lang::ClassAny::forName(jxx::NEW<::jxx::lang::String>(descriptor.binaryName));
         if (!type->isEnum()) throw InvalidClassException(type->getName(), jxx::NEW<::jxx::lang::String>("Class descriptor is not an enum"));
         auto value = type->resolveEnumConstant(jxx::NEW<::jxx::lang::String>(readRawUtf8_()));
@@ -218,6 +240,9 @@ void ObjectInputStream::requireEndArray_() {
     const auto handle = readHandle_();
     const auto descriptor = readClassDescriptor_();
     const auto className = jxx::NEW<::jxx::lang::String>(descriptor.binaryName);
+    if (classFilter_ && !classFilter_(descriptor.binaryName))
+        throw InvalidClassException(className,
+            jxx::NEW<::jxx::lang::String>("Rejected by JXX object input class filter"));
     const auto classMetadata = serialization::SerializationClassRegistry::resolve(
         descriptor.binaryName);
     if (descriptor.serialVersionUID != classMetadata.serialVersionUID)
