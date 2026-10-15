@@ -1562,17 +1562,20 @@ namespace jxx::lang
     void Character::writeObject(
         const jxx::Ptr<jxx::io::ObjectOutputStream>& out)
     {
-        (void)out;
+        if (out == nullptr) throw NullPointerException();
+        out->writeChar(value_);
     }
 
     void Character::readObject(
         const jxx::Ptr<jxx::io::ObjectInputStream>& in)
     {
-        (void)in;
+        if (in == nullptr) throw NullPointerException();
+        value_ = in->readChar();
     }
 
     void Character::readObjectNoData()
     {
+        value_ = 0;
     }
 
 }

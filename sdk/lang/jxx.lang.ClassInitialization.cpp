@@ -182,6 +182,11 @@ void initializeClasses()
             registerType<Boolean>();
             registerType<Byte>();
             registerType<Character>();
+            ::jxx::io::serialization::registerSerializableClass<Character>(
+                1,
+                [] { return ::jxx::NEW<Character>(jchar{0}); });
+            ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+                Character, 1U, 2U>();
             registerType<Charset>();
             registerType<ClassLoader>();
             registerType<Compiler>();
