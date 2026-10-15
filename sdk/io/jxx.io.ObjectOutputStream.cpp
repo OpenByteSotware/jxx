@@ -3,7 +3,7 @@
 #include <limits>
 #include "io/jxx.io.NotSerializableException.h"
 #include "io/jxx.io.ArrayCodecRegistry.h"
-#include "lang/jxx.lang.initialize.h"
+#include "jxx.initialize.h"
 #include "io/jxx.io.ObjectStreamFormat.h"
 #include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.Class.h"
@@ -15,7 +15,7 @@ namespace jxx::io {
 namespace { using Tag = serialization::Tag; }
 
 ObjectOutputStream::ObjectOutputStream(const ::jxx::Ptr<OutputStream>& output) : Super(output) {
-    ::jxx::lang::initialize();
+    ::jxx::initialize();
     writeStreamHeader_();
 }
 ObjectOutputStream::ObjectOutputStream() : Super(::jxx::Ptr<OutputStream>{}) {}

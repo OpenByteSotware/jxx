@@ -5,7 +5,7 @@
 #include "io/jxx.io.ObjectInputStream.h"
 #include "io/jxx.io.ObjectOutputStream.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.initialize.h"
+#include "jxx.initialize.h"
 
 namespace {
 using StringArray = jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>;

@@ -194,7 +194,7 @@ void Date::setSeconds(::jxx::lang::jint value) {
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
     const auto fields = utcFields(time_);
     std::ostringstream stream;
-    stream << std::setw(2) << std::setfill('0') << fields.tm_mday << ' '
+    stream << fields.tm_mday << ' '
            << months[static_cast<std::size_t>(fields.tm_mon)] << ' '
            << fields.tm_year + 1900 << ' '
            << std::setw(2) << std::setfill('0') << fields.tm_hour << ':'

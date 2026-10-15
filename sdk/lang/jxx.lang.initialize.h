@@ -73,9 +73,7 @@ public:
  * The operation is idempotent. Repeated calls are safe and do not recreate
  * already canonical ClassAny descriptors.
  */
-using ClientInitializer = void (*)();
 void initialize();
-void initialize(ClientInitializer clientInitializer);
 
 /** Returns true after initialize() has completed successfully at least once. */
 bool isInitialized() noexcept;
@@ -107,8 +105,3 @@ namespace {                                                                     
     JXX_DETAIL_CAT(jxx_pending_class_registration_, __COUNTER__){};             \
 }
 
-namespace jxx {
-using ClientInitializer = ::jxx::lang::ClientInitializer;
-inline void initialize() { ::jxx::lang::initialize(); }
-inline void initialize(ClientInitializer callback) { ::jxx::lang::initialize(callback); }
-} // namespace jxx

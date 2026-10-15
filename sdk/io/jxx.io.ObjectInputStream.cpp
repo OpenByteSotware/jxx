@@ -2,7 +2,7 @@
 
 #include "io/jxx.io.InvalidClassException.h"
 #include "io/jxx.io.ArrayCodecRegistry.h"
-#include "lang/jxx.lang.initialize.h"
+#include "jxx.initialize.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "io/jxx.io.ObjectStreamFormat.h"
 #include "io/jxx.io.SerializableI.h"
@@ -13,7 +13,7 @@
 
 namespace jxx::io {
 namespace { using Tag = serialization::Tag; }
-ObjectInputStream::ObjectInputStream(const ::jxx::Ptr<InputStream>& input) : Super(input) { ::jxx::lang::initialize(); readStreamHeader_(); }
+ObjectInputStream::ObjectInputStream(const ::jxx::Ptr<InputStream>& input) : Super(input) { ::jxx::initialize(); readStreamHeader_(); }
 ObjectInputStream::ObjectInputStream() : Super(::jxx::Ptr<InputStream>{}) {}
 ObjectInputStream::~ObjectInputStream() = default;
 

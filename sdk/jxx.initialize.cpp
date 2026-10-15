@@ -1,6 +1,7 @@
 #include "jxx.initialize.h"
 
 #include <mutex>
+#include <unordered_set>
 
 #include "com/google/gson/jxx.com.google.gson.ClassInitialization.h"
 #include "com/google/gson/internal/jxx.com.google.gson.internal.ClassInitialization.h"
@@ -71,6 +72,22 @@
 #include "ext/xml/bind/annotation/jxx.ext.xml.bind.annotation.ClassInitialization.h"
 #include "org/w3c/dom/events/jxx.org.w3c.dom.events.ClassInitialization.h"
 #include "org/w3c/dom/views/jxx.org.w3c.dom.views.ClassInitialization.h"
+
+
+namespace {
+std::mutex& clientInitializerMutex() {
+    static std::mutex mutex;
+    return mutex;
+}
+std::unordered_set<jxx::ClientInitializer>& completedClientInitializers() {
+    static std::unordered_set<jxx::ClientInitializer> values;
+    return values;
+}
+std::unordered_set<jxx::ClientInitializer>& runningClientInitializers() {
+    static std::unordered_set<jxx::ClientInitializer> values;
+    return values;
+}
+} // namespace
 
 namespace jxx {
 
@@ -147,6 +164,32 @@ void initialize() {
         ::jxx::org::w3c::dom::events::initializeClasses();
         ::jxx::org::w3c::dom::views::initializeClasses();
     });
+}
+
+
+void initialize(ClientInitializer callback) {
+    initialize();
+    if (callback == nullptr) {
+        return;
+    }
+    {
+        std::lock_guard<std::mutex> lock(clientInitializerMutex());
+        if (completedClientInitializers().count(callback) != 0U ||
+            runningClientInitializers().count(callback) != 0U) {
+            return;
+        }
+        runningClientInitializers().insert(callback);
+    }
+    try {
+        callback();
+        std::lock_guard<std::mutex> lock(clientInitializerMutex());
+        runningClientInitializers().erase(callback);
+        completedClientInitializers().insert(callback);
+    } catch (...) {
+        std::lock_guard<std::mutex> lock(clientInitializerMutex());
+        runningClientInitializers().erase(callback);
+        throw;
+    }
 }
 
 } // namespace jxx
