@@ -186,6 +186,11 @@ void initializeClasses()
             ::jxx::io::serialization::registerClassReferenceArrayCodecs<
                 Boolean, 1U, 2U>();
             registerType<Byte>();
+            ::jxx::io::serialization::registerSerializableClass<Byte>(
+                1,
+                [] { return ::jxx::NEW<Byte>(jbyte{0}); });
+            ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+                Byte, 1U, 2U>();
             registerType<Character>();
             ::jxx::io::serialization::registerSerializableClass<Character>(
                 1,
@@ -196,11 +201,36 @@ void initializeClasses()
             registerType<ClassLoader>();
             registerType<Compiler>();
             registerType<Double>();
+            ::jxx::io::serialization::registerSerializableClass<Double>(
+                1,
+                [] { return ::jxx::NEW<Double>(jdouble{0.0}); });
+            ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+                Double, 1U, 2U>();
             registerType<Float>();
+            ::jxx::io::serialization::registerSerializableClass<Float>(
+                1,
+                [] { return ::jxx::NEW<Float>(jfloat{0.0F}); });
+            ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+                Float, 1U, 2U>();
             registerType<Integer>();
+            ::jxx::io::serialization::registerSerializableClass<Integer>(
+                1,
+                [] { return ::jxx::NEW<Integer>(jint{0}); });
+            ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+                Integer, 1U, 2U>();
             registerType<Long>();
+            ::jxx::io::serialization::registerSerializableClass<Long>(
+                1,
+                [] { return ::jxx::NEW<Long>(jlong{0}); });
+            ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+                Long, 1U, 2U>();
             registerType<Package>();
             registerType<Short>();
+            ::jxx::io::serialization::registerSerializableClass<Short>(
+                1,
+                [] { return ::jxx::NEW<Short>(jshort{0}); });
+            ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+                Short, 1U, 2U>();
             registerType<StringBuffer>();
             registerType<StringBuilder>();
             ::jxx::io::serialization::registerSerializableClass<StringBuilder>(1);

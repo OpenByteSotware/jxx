@@ -46,6 +46,12 @@ public:
     jint hashCode() const override;
     jbool equals(const jxx::Ptr<Object>& object) const override;
     jint compareTo(const jxx::Ptr<Short>& other) const override;
+    void writeObject(
+        const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override;
+    void readObject(
+        const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override;
+    void readObjectNoData() override;
+
 private:
     jshort value_;
 };
