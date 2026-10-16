@@ -2,6 +2,7 @@
 
 #include <mutex>
 
+#include "io/jxx.io.ArrayCodecRegistry.h"
 #include "io/jxx.io.SerializationClassRegistry.h"
 
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.AtomicBoolean.h"
@@ -33,8 +34,14 @@ void initializeClasses()
             [] { return ::jxx::NEW<AtomicLongArray>(0); });
         (void)::jxx::lang::ClassBase<DoubleAccumulator, ::jxx::lang::Number, ::jxx::io::SerializableI>::Class();
         (void)::jxx::lang::ClassBase<DoubleAdder, ::jxx::lang::Number, ::jxx::io::SerializableI>::Class();
+        ::jxx::io::serialization::registerSerializableClass<DoubleAdder>(1);
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            DoubleAdder, 1U, 2U>();
         (void)::jxx::lang::ClassBase<LongAccumulator, ::jxx::lang::Number, ::jxx::io::SerializableI>::Class();
         (void)::jxx::lang::ClassBase<LongAdder, ::jxx::lang::Number, ::jxx::io::SerializableI>::Class();
+        ::jxx::io::serialization::registerSerializableClass<LongAdder>(1);
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            LongAdder, 1U, 2U>();
     });
 }
 
