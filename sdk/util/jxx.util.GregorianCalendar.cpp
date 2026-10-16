@@ -36,8 +36,39 @@ void GregorianCalendar::roll(::jxx::lang::jint field,::jxx::lang::jint amount){i
 ::jxx::lang::jint GregorianCalendar::getActualMinimum(::jxx::lang::jint field)const{switch(field){case MONTH:case HOUR_OF_DAY:case MINUTE:case SECOND:case MILLISECOND:return 0;case DAY_OF_MONTH:return 1;default:throw ::jxx::lang::IllegalArgumentException();}}
 ::jxx::Ptr<::jxx::lang::String> GregorianCalendar::getCalendarType()const{return ::jxx::NEW<::jxx::lang::String>("gregory");}
 
-void GregorianCalendar::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) { if (!out) throw ::jxx::lang::NullPointerException(); Calendar::writeObject(out); out->writeObject(::jxx::CAST<::jxx::lang::Object>(locale_)); out->writeObject(::jxx::CAST<::jxx::lang::Object>(gregorianChange_)); }
-void GregorianCalendar::readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) { if (!in) throw ::jxx::lang::NullPointerException(); Calendar::readObject(in); auto locale=::jxx::CAST<Locale>(in->readObject()); auto change=::jxx::CAST<Date>(in->readObject()); if(!locale||!change) throw ::jxx::io::InvalidObjectException(::jxx::NEW<::jxx::lang::String>("GregorianCalendar locale or change date is null")); locale_=locale; gregorianChange_=::jxx::NEW<Date>(change->getTime()); }
+void GregorianCalendar::writeObject(
+    const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) {
+    if (out == nullptr) throw ::jxx::lang::NullPointerException();
+    Calendar::writeObject(out);
+    if (locale_ == nullptr || gregorianChange_ == nullptr) {
+        throw ::jxx::io::InvalidObjectException(
+            ::jxx::NEW<::jxx::lang::String>(
+                "GregorianCalendar locale or change date is null"));
+    }
+    out->writeObject(::jxx::CAST<::jxx::lang::Object>(
+        locale_->toLanguageTag()));
+    out->writeLong(gregorianChange_->getTime());
+}
+
+void GregorianCalendar::readObject(
+    const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) {
+    if (in == nullptr) throw ::jxx::lang::NullPointerException();
+    Calendar::readObject(in);
+    const auto languageTag =
+        ::jxx::CAST<::jxx::lang::String>(in->readObject());
+    if (languageTag == nullptr) {
+        throw ::jxx::io::InvalidObjectException(
+            ::jxx::NEW<::jxx::lang::String>(
+                "GregorianCalendar locale tag is null"));
+    }
+    locale_ = Locale::forLanguageTag(languageTag);
+    if (locale_ == nullptr) {
+        throw ::jxx::io::InvalidObjectException(
+            ::jxx::NEW<::jxx::lang::String>(
+                "GregorianCalendar locale is invalid"));
+    }
+    gregorianChange_ = ::jxx::NEW<Date>(in->readLong());
+}
 void GregorianCalendar::readObjectNoData() { Calendar::readObjectNoData(); locale_=Locale::getDefault(); gregorianChange_=::jxx::NEW<Date>(-12219292800000LL); }
 
 } // namespace jxx::util
