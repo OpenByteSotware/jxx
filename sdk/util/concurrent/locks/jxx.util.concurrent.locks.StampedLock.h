@@ -10,6 +10,8 @@
 #include <vector>
 
 #include "io/jxx.io.SerializableI.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.InterruptedException.h"
@@ -265,11 +267,45 @@ public:
         return ::jxx::CAST<ReadWriteLock>(readWriteView_);
     }
 
-    void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {(void)out;}
-    void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {(void)in;}
-    void readObjectNoData() override {}
+    void writeObject(
+        const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {
+        if (out == nullptr) throw ::jxx::lang::NullPointerException();
+        // Lock ownership and stamps are transient. Preserve only a version
+        // seed so optimistic stamps issued by the restored lock remain
+        // internally consistent and distinct from its initial state.
+        std::lock_guard<std::mutex> lock(mutex_);
+        out->writeLong(static_cast<::jxx::lang::jlong>(version_));
+    }
+
+    void readObject(
+        const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {
+        if (in == nullptr) throw ::jxx::lang::NullPointerException();
+        const auto serializedVersion = in->readLong();
+        resetDeserializedState_(serializedVersion > 0
+            ? static_cast<std::uint64_t>(serializedVersion)
+            : 1U);
+    }
+
+    void readObjectNoData() override {
+        resetDeserializedState_(1U);
+    }
 
 private:
+    void resetDeserializedState_(std::uint64_t version) {
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            readers_ = 0;
+            writer_ = false;
+            version_ = version;
+            sequence_ = 0;
+            active_.clear();
+            readView_.reset();
+            writeView_.reset();
+            readWriteView_.reset();
+        }
+        condition_.notify_all();
+    }
+
     class ReadView final : public ::jxx::lang::ClassBase<ReadView, ::jxx::lang::Object, Lock> {
     public:
         using Super = ::jxx::lang::ClassBase<ReadView, ::jxx::lang::Object, Lock>;
