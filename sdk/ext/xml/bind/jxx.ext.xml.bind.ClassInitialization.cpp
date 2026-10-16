@@ -2,6 +2,7 @@
 
 #include <mutex>
 
+#include "ext/xml/bind/jxx.ext.xml.bind.DatatypeConverter.h"
 #include "ext/xml/bind/jxx.ext.xml.bind.JAXBException.h"
 #include "ext/xml/bind/jxx.ext.xml.bind.UnmarshalException.h"
 #include "ext/xml/bind/jxx.ext.xml.bind.JAXBContext.h"
@@ -15,6 +16,7 @@ void initializeClasses()
 {
     static std::once_flag flag;
     std::call_once(flag, [] {
+        (void)DatatypeConverter::JxxClassInfoMarker::Class();
         (void)JAXBException::JxxClassInfoMarker::Class();
         (void)UnmarshalException::JxxClassInfoMarker::Class();
         (void)JAXBContext::JxxClassInfoMarker::Class();
