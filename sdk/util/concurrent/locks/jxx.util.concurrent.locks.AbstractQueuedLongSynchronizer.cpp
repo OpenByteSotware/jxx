@@ -4,6 +4,9 @@
 #include <chrono>
 
 #include "lang/jxx.lang.Class.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.InterruptedException.h"
 #include "lang/jxx.lang.Thread.h"
@@ -188,6 +191,36 @@ void AbstractQueuedLongSynchronizer::removeCancelled_() {
 }
 ::jxx::lang::jbool AbstractQueuedLongSynchronizer::isHeldExclusively() const {
     throw ::jxx::lang::UnsupportedOperationException();
+}
+
+
+void AbstractQueuedLongSynchronizer::writeObject(
+    const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) {
+    if (output == nullptr) throw ::jxx::lang::NullPointerException();
+    output->writeLong(getState());
+}
+
+void AbstractQueuedLongSynchronizer::readObject(
+    const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) {
+    if (input == nullptr) throw ::jxx::lang::NullPointerException();
+    const auto restoredState = input->readLong();
+    {
+        std::lock_guard<std::mutex> lock(queueMutex_);
+        queue_.clear();
+        setState(restoredState);
+    }
+    AbstractOwnableSynchronizer::readObjectNoData();
+    queueChanged_.notify_all();
+}
+
+void AbstractQueuedLongSynchronizer::readObjectNoData() {
+    {
+        std::lock_guard<std::mutex> lock(queueMutex_);
+        queue_.clear();
+        setState(0);
+    }
+    AbstractOwnableSynchronizer::readObjectNoData();
+    queueChanged_.notify_all();
 }
 
 } // namespace jxx::util::concurrent::locks

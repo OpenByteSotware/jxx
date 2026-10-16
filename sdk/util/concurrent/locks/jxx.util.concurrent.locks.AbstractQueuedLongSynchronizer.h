@@ -36,6 +36,12 @@ public:
     ::jxx::lang::jbool hasQueuedThreads() const;
     ::jxx::lang::jint getQueueLength() const;
 
+    void writeObject(
+        const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) override;
+    void readObject(
+        const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) override;
+    void readObjectNoData() override;
+
 protected:
     AbstractQueuedLongSynchronizer();
     ::jxx::lang::jlong getState() const noexcept;
