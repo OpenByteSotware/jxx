@@ -5,10 +5,29 @@ namespace jxx::net
 static void validatePort_(::jxx::lang::jint port) {
     if (port < 0 || port > 65535) throw jxx::lang::IllegalArgumentException("port out of range");
 }
+
+static Family familyForBindAddress_(
+    const jxx::Ptr<SocketAddress>& address) {
+    const auto inetAddress =
+        std::dynamic_pointer_cast<InetSocketAddress>(address);
+    if (inetAddress == nullptr || inetAddress->isUnresolved()) {
+        return Family::Any;
+    }
+    const auto resolved = inetAddress->getAddress();
+    if (resolved == nullptr) return Family::Any;
+    const auto bytes = resolved->getAddress();
+    if (bytes != nullptr && bytes->length == 4) return Family::IPv4;
+    if (bytes != nullptr && bytes->length == 16) return Family::IPv6;
+    return Family::Any;
+}
 DatagramSocket::DatagramSocket():impl_(std::make_unique<Impl>()){} DatagramSocket::DatagramSocket(Family f):impl_(std::make_unique<Impl>(f)){}
 DatagramSocket::DatagramSocket(::jxx::lang::jint p):DatagramSocket(jxx::NEW<InetSocketAddress>(p)){}
 DatagramSocket::DatagramSocket(::jxx::lang::jint p,const jxx::Ptr<InetAddress>&a):DatagramSocket(jxx::NEW<InetSocketAddress>(a,p)){}
-DatagramSocket::DatagramSocket(const jxx::Ptr<SocketAddress>&a):impl_(std::make_unique<Impl>()){if(a)bind(a);}
+DatagramSocket::DatagramSocket(
+    const jxx::Ptr<SocketAddress>& address)
+    : impl_(std::make_unique<Impl>(familyForBindAddress_(address))) {
+    if (address != nullptr) bind(address);
+}
 DatagramSocket::DatagramSocket(DatagramSocket&&)noexcept=default; DatagramSocket& DatagramSocket::operator=(DatagramSocket&&)noexcept=default; DatagramSocket::~DatagramSocket()=default;
 void DatagramSocket::bind(const jxx::Ptr<SocketAddress>& address) {
     const auto inetAddress = std::dynamic_pointer_cast<InetSocketAddress>(address);
