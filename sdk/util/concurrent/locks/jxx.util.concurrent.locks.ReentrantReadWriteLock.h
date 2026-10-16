@@ -40,8 +40,6 @@ private:
      readCount_.store(0, std::memory_order_relaxed);
      queued_.store(0, std::memory_order_relaxed);
      writeLocked_.store(false, std::memory_order_relaxed);
-     readHolds_.erase(std::this_thread::get_id());
-     writeHolds_.erase(std::this_thread::get_id());
  }
  void readAcquired_(){++readCount_;++readHolds_[std::this_thread::get_id()];}
  void readReleased_(){auto& c=readHolds_[std::this_thread::get_id()];if(c<=0)throw ::jxx::lang::IllegalMonitorStateException();--c;--readCount_;}
