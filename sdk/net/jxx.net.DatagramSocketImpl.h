@@ -527,7 +527,8 @@ struct NativeDatagramPacket { std::vector<std::uint8_t> buffer; std::size_t offs
             ::connect(sock_, reinterpret_cast<sockaddr*>(&ra), sizeof(sockaddr_in));
 #endif
             connected_ = false;
-            bound_ = false;
+            // Disconnect removes only the default remote peer. The local
+            // binding and local endpoint remain intact.
             peerAddress_.clear(); peerPort_ = 0;
         }
 
@@ -582,9 +583,12 @@ struct NativeDatagramPacket { std::vector<std::uint8_t> buffer; std::size_t offs
             }
             sockaddr_storage from{}; socklen_t flen = sizeof(from);
 
+            const auto receiveCapacity = std::min(
+                pkt.length,
+                pkt.buffer.size() - pkt.offset);
             auto recvd = ::recvfrom(sock_,
                 reinterpret_cast<char*>(pkt.buffer.data() + pkt.offset),
-                static_cast<int>(pkt.buffer.size() - pkt.offset),
+                static_cast<int>(receiveCapacity),
                 0,
                 reinterpret_cast<sockaddr*>(&from),
                 &flen);
