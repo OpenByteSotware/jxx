@@ -2,6 +2,9 @@
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
 #include "lang/jxx.lang.String.h"
 #include "util/jxx.util.Calendar.h"
+#include "io/jxx.io.InvalidObjectException.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 
 
 namespace jxx::util {
@@ -111,6 +114,39 @@ void Calendar::setTimeZone(const ::jxx::Ptr<TimeZone>& tz) {
         default:
             throw ::jxx::lang::IndexOutOfBoundsException(::jxx::NEW<::jxx::lang::String>("Unsupported Calendar field"));
     }
+}
+
+
+void Calendar::writeObject(
+    const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) {
+    if (out == nullptr) throw ::jxx::lang::NullPointerException();
+    out->writeLong(millis_);
+    const auto zone = getTimeZone();
+    out->writeObject(::jxx::CAST<::jxx::lang::Object>(
+        zone == nullptr ? nullptr : zone->getID()));
+}
+
+void Calendar::readObject(
+    const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) {
+    if (in == nullptr) throw ::jxx::lang::NullPointerException();
+    const auto millis = in->readLong();
+    const auto zoneId = ::jxx::CAST<::jxx::lang::String>(in->readObject());
+    if (zoneId == nullptr) {
+        throw ::jxx::io::InvalidObjectException(
+            ::jxx::NEW<::jxx::lang::String>("Calendar time-zone ID is null"));
+    }
+    const auto zone = TimeZone::getTimeZone(zoneId);
+    if (zone == nullptr) {
+        throw ::jxx::io::InvalidObjectException(
+            ::jxx::NEW<::jxx::lang::String>("Calendar time zone is unavailable"));
+    }
+    millis_ = millis;
+    tz_ = zone;
+}
+
+void Calendar::readObjectNoData() {
+    millis_ = 0;
+    tz_ = TimeZone::getDefault();
 }
 
 } // namespace jxx::util

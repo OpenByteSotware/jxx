@@ -3,8 +3,7 @@
 #include <mutex>
 
 #include "lang/jxx.lang.ClassInfo.h"
-#include "io/jxx.io.SerializationClassRegistry.h"
-#include "io/jxx.io.SerializationClassRegistry.h"
+#include "io/jxx.io.ArrayCodecRegistry.h"
 #include "io/jxx.io.SerializationClassRegistry.h"
 #include "util/jxx.util.ConcurrentModificationException.h"
 #include "util/jxx.util.DuplicateFormatFlagsException.h"
@@ -121,6 +120,9 @@ void initializeClasses()
         registerType<BitSet>();
         ::jxx::io::serialization::registerSerializableClass<BitSet>(1);
         registerType<Calendar>();
+        ::jxx::io::serialization::registerSerializableClass<Calendar>(1);
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            Calendar, 1U, 2U>();
         registerType<Collections>();
         registerType<Currency>();
         ::jxx::io::serialization::registerSerializableClass<Currency>(1, [] { return ::jxx::NEW<Currency>(::jxx::NEW<::jxx::lang::String>("XXX"), ::jxx::NEW<::jxx::lang::String>("XXX"), 999, 2); });

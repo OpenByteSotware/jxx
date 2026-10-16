@@ -46,13 +46,11 @@ public:
 
     ::jxx::lang::jint compareTo(const ::jxx::Ptr<Calendar>& other) const override;
 
-    void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {
-        (void)out;
-    }
-    void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {
-        (void)in;
-    }
-    void readObjectNoData() override {}
+    void writeObject(
+        const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override;
+    void readObject(
+        const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override;
+    void readObjectNoData() override;
     static ::jxx::Ptr<Calendar> getInstance();
 
     ::jxx::lang::jlong getTimeInMillis() const;
