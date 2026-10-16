@@ -284,13 +284,13 @@ namespace jxx::net
 	jxx::Ptr<jxx::JxxArray<jxx::Ptr<InetAddress>, 1U>> InetAddress::getAllByName(const jxx::Ptr<jxx::lang::String>& host)
 	{
 		internal::ensureNetworkInitialized();
-		if (host == nullptr) {
+		if (host == nullptr || host->length() == 0) {
 			auto values = jxx::NEW<InetAddressArray>(1);
 			(*values)(0) = getLoopbackAddress();
 			return values;
 		}
 
-		const std::string name = host ? host->utf8() : std::string();
+		const std::string name = host->utf8();
 		const auto resultHost = isNumericAddress_(name)
 			? ::jxx::Ptr<::jxx::lang::String>()
 			: host;
