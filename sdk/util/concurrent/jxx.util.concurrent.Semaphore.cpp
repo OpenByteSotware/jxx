@@ -5,6 +5,10 @@
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.InterruptedException.h"
 #include "lang/jxx.lang.Thread.h"
+#include "io/jxx.io.InvalidObjectException.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "lang/jxx.lang.String.h"
 #include "util/concurrent/jxx.util.concurrent.Semaphore.h"
 
 namespace jxx::util::concurrent {
@@ -243,15 +247,41 @@ void Semaphore::release(::jxx::lang::jint permits) {
 
 void Semaphore::writeObject(
     const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) {
-    (void)out;
+    if (out == nullptr) throw ::jxx::lang::NullPointerException();
+    std::lock_guard<std::mutex> lock(mutex_);
+    out->writeInt(permits_);
+    out->writeBoolean(fair_);
 }
 
 void Semaphore::readObject(
     const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) {
-    (void)in;
+    if (in == nullptr) throw ::jxx::lang::NullPointerException();
+    const auto permits = in->readInt();
+    const auto fair = in->readBoolean();
+    if (permits < 0) {
+        throw ::jxx::io::InvalidObjectException(
+            ::jxx::NEW<::jxx::lang::String>(
+                "Semaphore permits cannot be negative"));
+    }
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        permits_ = permits;
+        fair_ = fair;
+        waiters_.clear();
+        nextTicket_ = 1U;
+    }
+    condition_.notify_all();
 }
 
 void Semaphore::readObjectNoData() {
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        permits_ = 0;
+        fair_ = false;
+        waiters_.clear();
+        nextTicket_ = 1U;
+    }
+    condition_.notify_all();
 }
 
 } // namespace jxx::util::concurrent

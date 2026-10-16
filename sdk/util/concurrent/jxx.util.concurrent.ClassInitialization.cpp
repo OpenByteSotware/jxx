@@ -3,6 +3,8 @@
 #include <mutex>
 
 #include "lang/jxx.lang.ClassInfo.h"
+#include "io/jxx.io.ArrayCodecRegistry.h"
+#include "io/jxx.io.SerializationClassRegistry.h"
 #include "util/concurrent/jxx.util.concurrent.CountDownLatch.h"
 #include "util/concurrent/jxx.util.concurrent.CyclicBarrier.h"
 #include "util/concurrent/jxx.util.concurrent.DelegatedExecutorService.h"
@@ -64,6 +66,11 @@ void initializeClasses()
         registerType<ScheduledExecutorService>();
         registerType<ScheduledThreadPoolExecutor>();
         registerType<Semaphore>();
+        ::jxx::io::serialization::registerSerializableClass<Semaphore>(
+            1,
+            [] { return ::jxx::NEW<Semaphore>(0, false); });
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            Semaphore, 1U, 2U>();
         registerType<TimeUnit>();
         registerType<wildcard::FutureAny>();
         registerType<AbstractExecutorService>();
