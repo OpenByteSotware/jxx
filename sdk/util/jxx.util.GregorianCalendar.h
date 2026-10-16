@@ -55,6 +55,10 @@ public:
     ::jxx::lang::jint getActualMinimum(::jxx::lang::jint field) const;
     ::jxx::Ptr<::jxx::lang::String> getCalendarType() const;
 
+    void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override;
+    void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override;
+    void readObjectNoData() override;
+
 private:
     static ::jxx::lang::jlong localToEpoch_(
         ::jxx::lang::jint year, ::jxx::lang::jint month,

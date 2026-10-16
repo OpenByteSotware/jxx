@@ -173,6 +173,7 @@ namespace jxx::util
         ArgKind kind = ArgKind::Null;
         bool boolValue = false;
         long long intValue = 0;
+        unsigned integralBits = 64U;
         double floatValue = 0.0;
         char32_t charValue = 0;
         std::string stringValue;
@@ -215,21 +216,25 @@ namespace jxx::util
             {
                 arg.kind = ArgKind::Integral;
                 arg.intValue = static_cast<long long>(v->byteValue());
+                arg.integralBits = 8U;
             }
             else if (auto v = jxx::CAST<jxx::lang::Short, jxx::lang::Object>(value))
             {
                 arg.kind = ArgKind::Integral;
                 arg.intValue = static_cast<long long>(v->shortValue());
+                arg.integralBits = 16U;
             }
             else if (auto v = jxx::CAST<jxx::lang::Integer, jxx::lang::Object>(value))
             {
                 arg.kind = ArgKind::Integral;
                 arg.intValue = static_cast<long long>(v->intValue());
+                arg.integralBits = 32U;
             }
             else if (auto v = jxx::CAST<jxx::lang::Long, jxx::lang::Object>(value))
             {
                 arg.kind = ArgKind::Integral;
                 arg.intValue = static_cast<long long>(v->longValue());
+                arg.integralBits = 64U;
             }
             else if (auto v = jxx::CAST<jxx::lang::Float, jxx::lang::Object>(value))
             {
@@ -556,10 +561,27 @@ namespace jxx::util
             upperHex = spec.upper;
         }
 
-        const unsigned long long magnitude =
-            negative
-            ? static_cast<unsigned long long>(-(value + 1LL)) + 1ULL
-            : static_cast<unsigned long long>(value);
+        unsigned long long magnitude = 0ULL;
+        bool renderNegativeSign = negative;
+
+        if (spec.conv == 'd')
+        {
+            magnitude = negative
+                ? static_cast<unsigned long long>(-(value + 1LL)) + 1ULL
+                : static_cast<unsigned long long>(value);
+        }
+        else
+        {
+            // For octal and hexadecimal conversions, the source runtime formats
+            // negative Byte, Short, Integer, and Long values as the unsigned
+            // two's-complement value of the wrapper's own width.
+            magnitude = static_cast<unsigned long long>(value);
+            if (arg.integralBits < 64U)
+            {
+                magnitude &= (1ULL << arg.integralBits) - 1ULL;
+            }
+            renderNegativeSign = false;
+        }
 
         std::string digits = toUnsignedBase_(magnitude, base, upperHex);
 
@@ -575,7 +597,8 @@ namespace jxx::util
                 prefix = spec.upper ? "0X" : "0x";
         }
 
-        const std::string signedBody = applySignAndParens_(negative, spec, digits);
+        const std::string signedBody =
+            applySignAndParens_(renderNegativeSign, spec, digits);
 
         if (!prefix.empty())
         {
@@ -590,7 +613,7 @@ namespace jxx::util
                     spec.zeroPad && !spec.leftJustify);
             }
 
-            if (negative && spec.parentheses)
+            if (renderNegativeSign && spec.parentheses)
             {
                 return applyWidth_(
                     prefix + signedBody,
@@ -618,7 +641,7 @@ namespace jxx::util
                 spec.zeroPad && !spec.leftJustify);
         }
 
-        if (negative && spec.parentheses)
+        if (renderNegativeSign && spec.parentheses)
         {
             return applyWidth_(
                 signedBody,

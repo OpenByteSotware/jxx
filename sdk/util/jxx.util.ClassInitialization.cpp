@@ -135,6 +135,8 @@ void initializeClasses()
         registerType<Formattable>();
         registerType<Formatter>();
         registerType<GregorianCalendar>();
+        ::jxx::io::serialization::registerSerializableClass<GregorianCalendar>(1);
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<GregorianCalendar, 1U, 2U>();
         registerType<IntStream>();
         ::jxx::io::serialization::registerSerializableClass<IntStream>(1, [] { return IntStream::of(::jxx::NEW<::jxx::lang::IntArrayType>(0)); });
         registerType<IntSummaryStatistics>();
