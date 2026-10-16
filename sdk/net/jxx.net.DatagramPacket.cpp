@@ -28,7 +28,20 @@ jxx::Ptr<jxx::lang::String> DatagramPacket::getAddressText()const{return address
 jxx::Ptr<SocketAddress> DatagramPacket::getSocketAddress()const{return address_?jxx::NEW<InetSocketAddress>(address_,port_):nullptr;}
 void DatagramPacket::setAddress(const jxx::Ptr<InetAddress>&a){address_=a;} void DatagramPacket::setPort(::jxx::lang::jint p){validatePort_(p);port_=p;}
 void DatagramPacket::setData(const jxx::lang::ByteArray&b){buffer_=b;offset_=0;length_=b?b->length:0;if(!b)throw jxx::lang::NullPointerException();}
-void DatagramPacket::setData(const jxx::lang::ByteArray&b,::jxx::lang::jint o,::jxx::lang::jint n){buffer_=b;validateRange_(o,n);offset_=o;length_=n;} void DatagramPacket::setLength(::jxx::lang::jint n){validateRange_(offset_,n);length_=n;}
+void DatagramPacket::setData(
+    const jxx::lang::ByteArray& buffer,
+    ::jxx::lang::jint offset,
+    ::jxx::lang::jint length) {
+    if (buffer == nullptr) throw jxx::lang::NullPointerException();
+    if (offset < 0 || length < 0 || offset > buffer->length ||
+        length > buffer->length - offset) {
+        throw jxx::lang::IllegalArgumentException("buffer range out of bounds");
+    }
+    buffer_ = buffer;
+    offset_ = offset;
+    length_ = length;
+}
+void DatagramPacket::setLength(::jxx::lang::jint n){validateRange_(offset_,n);length_=n;}
 void DatagramPacket::setSocketAddress(const jxx::Ptr<SocketAddress>&a){auto i=std::dynamic_pointer_cast<InetSocketAddress>(a);if(!i)throw jxx::lang::IllegalArgumentException("unsupported socket address");if(i->isUnresolved())throw jxx::lang::IllegalArgumentException("unresolved socket address");address_=i->getAddress();port_=i->getPort();}
 
 
