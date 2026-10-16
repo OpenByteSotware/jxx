@@ -34,6 +34,10 @@ void initializeClasses()
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<
             ReentrantLock, 1U, 2U>();
         (void)ReentrantReadWriteLock::JxxClassInfoMarker::Class();
+        ::jxx::io::serialization::registerSerializableClass<
+            ReentrantReadWriteLock>(1);
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            ReentrantReadWriteLock, 1U, 2U>();
         (void)StampedLock::JxxClassInfoMarker::Class();
     });
 }

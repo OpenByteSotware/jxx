@@ -6,6 +6,8 @@
 #include <thread>
 #include <unordered_map>
 #include "io/jxx.io.SerializableI.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.InterruptedException.h"
@@ -19,8 +21,28 @@ public:
  using JxxSuper=::jxx::lang::Object;using Super=::jxx::lang::ClassBase<ReentrantReadWriteLock,JxxSuper,ReadWriteLock,::jxx::io::SerializableI>;using JxxClassInfoMarker=::jxx::lang::ClassInfo<ReentrantReadWriteLock,JxxSuper,ReadWriteLock,::jxx::io::SerializableI>;static ::jxx::Ptr<::jxx::lang::ClassAny>Class(){return JxxClassInfoMarker::Class();}
  ReentrantReadWriteLock():ReentrantReadWriteLock(false){}explicit ReentrantReadWriteLock(::jxx::lang::jbool fair):Super(),fair_(fair),read_(::jxx::NEW<ReadLockImpl>(this)),write_(::jxx::NEW<WriteLockImpl>(this)){}
  ::jxx::Ptr<Lock>readLock()override{return ::jxx::CAST<Lock>(read_);}::jxx::Ptr<Lock>writeLock()override{return ::jxx::CAST<Lock>(write_);}::jxx::lang::jbool isFair()const noexcept{return fair_;}::jxx::lang::jbool isWriteLocked()const noexcept{return writeLocked_.load();}::jxx::lang::jbool isWriteLockedByCurrentThread()const noexcept{return writeHolds_[std::this_thread::get_id()]>0;}::jxx::lang::jint getWriteHoldCount()const noexcept{return writeHolds_[std::this_thread::get_id()];}::jxx::lang::jint getReadHoldCount()const noexcept{return readHolds_[std::this_thread::get_id()];}::jxx::lang::jint getReadLockCount()const noexcept{return readCount_.load();}::jxx::lang::jbool hasQueuedThreads()const noexcept{return queued_.load()>0;}::jxx::lang::jint getQueueLength()const noexcept{return queued_.load();}
- void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>&out)override{(void)out;}void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>&in)override{(void)in;}void readObjectNoData()override{}
+ void writeObject(
+     const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {
+     if (out == nullptr) throw ::jxx::lang::NullPointerException();
+     out->writeBoolean(fair_);
+ }
+ void readObject(
+     const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {
+     if (in == nullptr) throw ::jxx::lang::NullPointerException();
+     resetDeserializedState_(in->readBoolean());
+ }
+ void readObjectNoData() override {
+     resetDeserializedState_(false);
+ }
 private:
+ void resetDeserializedState_(::jxx::lang::jbool fair) {
+     fair_ = fair;
+     readCount_.store(0, std::memory_order_relaxed);
+     queued_.store(0, std::memory_order_relaxed);
+     writeLocked_.store(false, std::memory_order_relaxed);
+     readHolds_.erase(std::this_thread::get_id());
+     writeHolds_.erase(std::this_thread::get_id());
+ }
  void readAcquired_(){++readCount_;++readHolds_[std::this_thread::get_id()];}
  void readReleased_(){auto& c=readHolds_[std::this_thread::get_id()];if(c<=0)throw ::jxx::lang::IllegalMonitorStateException();--c;--readCount_;}
  void writeAcquired_(){writeLocked_=true;++writeHolds_[std::this_thread::get_id()];}
