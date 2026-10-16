@@ -516,23 +516,14 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
     const auto fields = localFields(epochMillis, offset);
     const auto pattern = pattern_->utf8();
     std::string output;
-    bool quoted = false;
 
-    for (std::size_t index = 0; index < pattern.size();) {
-        const char symbol = pattern[index];
-        if (symbol == '\'') {
-            if (index + 1 < pattern.size() && pattern[index + 1] == '\'') {
-                output.push_back('\''); index += 2; continue;
-            }
-            quoted = !quoted; ++index; continue;
+    for (const auto& token : tokenizePattern(pattern)) {
+        if (token.kind == PatternToken::Kind::Literal) {
+            output += token.literal;
+            continue;
         }
-        if (quoted || !((symbol >= 'A' && symbol <= 'Z') ||
-                        (symbol >= 'a' && symbol <= 'z'))) {
-            output.push_back(symbol); ++index; continue;
-        }
-        std::size_t end = index + 1;
-        while (end < pattern.size() && pattern[end] == symbol) ++end;
-        const int count = static_cast<int>(end - index);
+        const char symbol = token.symbol;
+        const int count = static_cast<int>(token.count);
         const int year = fields.tm_year + 1900;
         switch (symbol) {
         case 'G': output += year >= 1 ? "AD" : "BC"; break;
@@ -589,7 +580,6 @@ void SimpleDateFormat::validatePattern_(const std::string& pattern) const {
             output.append(static_cast<std::size_t>(count), symbol);
             break;
         }
-        index = end;
     }
     return ::jxx::NEW<::jxx::lang::String>(output);
 }
