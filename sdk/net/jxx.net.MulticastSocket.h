@@ -9,6 +9,8 @@
 
 namespace jxx::net {
 
+class InetAddress;
+
 class MulticastSocket : public jxx::lang::ClassBase<MulticastSocket, DatagramSocket> {
 public:
     using JxxSuper = DatagramSocket;
@@ -16,9 +18,14 @@ public:
 
     MulticastSocket();
     explicit MulticastSocket(Family family);
-    explicit MulticastSocket(std::uint16_t localPort, Family family = Family::Any);
+    explicit MulticastSocket(::jxx::lang::jint localPort);
+    MulticastSocket(::jxx::lang::jint localPort, Family family);
     ~MulticastSocket() override = default;
 
+    void joinGroup(const ::jxx::Ptr<InetAddress>& group);
+    void leaveGroup(const ::jxx::Ptr<InetAddress>& group);
+
+    // Native extensions retained for internal and existing JXX callers.
     void joinGroup(const std::string& groupIPv4,
         const std::string& interfaceIPv4 = "0.0.0.0");
     void leaveGroup(const std::string& groupIPv4,

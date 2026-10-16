@@ -5,6 +5,7 @@
 #include "net/jxx.net.InetSocketAddress.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "net/jxx.net.SocketException.h"
+#include "lang/jxx.lang.NullPointerException.h"
 
 namespace jxx::net {
 
@@ -14,13 +15,53 @@ MulticastSocket::MulticastSocket()
 MulticastSocket::MulticastSocket(Family family)
     : Super(family) {}
 
-MulticastSocket::MulticastSocket(std::uint16_t localPort, Family family)
-    : Super(family) {
+MulticastSocket::MulticastSocket(::jxx::lang::jint localPort)
+    : MulticastSocket(localPort, Family::IPv4) {}
+
+MulticastSocket::MulticastSocket(
+    ::jxx::lang::jint localPort,
+    Family family)
+    : Super(family == Family::Any ? Family::IPv4 : family) {
+    if (localPort < 0 || localPort > 65535) {
+        throw jxx::lang::IllegalArgumentException("port out of range");
+    }
     const auto addressText = family == Family::IPv6 ? "::" : "0.0.0.0";
     const auto address = InetAddress::getByName(
         jxx::NEW<jxx::lang::String>(addressText));
     bind(jxx::NEW<InetSocketAddress>(address,
-        static_cast<jxx::lang::jint>(localPort)));
+        localPort));
+}
+
+void MulticastSocket::joinGroup(
+    const ::jxx::Ptr<InetAddress>& group) {
+    if (group == nullptr) throw ::jxx::lang::NullPointerException();
+    if (!group->isMulticastAddress()) {
+        throw ::jxx::lang::IllegalArgumentException(
+            "not a multicast address");
+    }
+    const auto bytes = group->getAddress();
+    if (bytes != nullptr && bytes->length == 4) {
+        joinGroupIPv4(group->getHostAddress()->utf8());
+        return;
+    }
+    throw jxx::net::SocketException(
+        "IPv6 joinGroup requires a network interface");
+}
+
+void MulticastSocket::leaveGroup(
+    const ::jxx::Ptr<InetAddress>& group) {
+    if (group == nullptr) throw ::jxx::lang::NullPointerException();
+    if (!group->isMulticastAddress()) {
+        throw ::jxx::lang::IllegalArgumentException(
+            "not a multicast address");
+    }
+    const auto bytes = group->getAddress();
+    if (bytes != nullptr && bytes->length == 4) {
+        leaveGroupIPv4(group->getHostAddress()->utf8());
+        return;
+    }
+    throw jxx::net::SocketException(
+        "IPv6 leaveGroup requires a network interface");
 }
 
 void MulticastSocket::joinGroup(const std::string& groupIPv4,
