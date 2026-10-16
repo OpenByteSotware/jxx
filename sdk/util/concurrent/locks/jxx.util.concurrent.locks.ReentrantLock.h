@@ -9,6 +9,8 @@
 #include <thread>
 
 #include "io/jxx.io.SerializableI.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.InterruptedException.h"
@@ -314,11 +316,36 @@ public:
         return concrete->waiterCount();
     }
 
-    void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {(void)out;}
-    void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {(void)in;}
-    void readObjectNoData() override {}
+    void writeObject(
+        const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {
+        if (out == nullptr) throw ::jxx::lang::NullPointerException();
+        out->writeBoolean(fair_);
+    }
+
+    void readObject(
+        const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {
+        if (in == nullptr) throw ::jxx::lang::NullPointerException();
+        const auto fair = in->readBoolean();
+        resetDeserializedState_(fair);
+    }
+
+    void readObjectNoData() override {
+        resetDeserializedState_(false);
+    }
 
 private:
+    void resetDeserializedState_(::jxx::lang::jbool fair) {
+        owner_ = std::thread::id{};
+        ownerThread_.reset();
+        holdCount_ = 0;
+        {
+            std::lock_guard<std::mutex> lock(admissionMutex_);
+            admissionQueue_.clear();
+            fair_ = fair;
+        }
+        admissionChanged_.notify_all();
+    }
+
     void acquired_() {
         if (owner_ == std::this_thread::get_id()) ++holdCount_;
         else {

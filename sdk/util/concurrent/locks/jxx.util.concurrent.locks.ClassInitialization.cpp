@@ -3,6 +3,8 @@
 #include <mutex>
 
 #include "lang/jxx.lang.ClassInfo.h"
+#include "io/jxx.io.ArrayCodecRegistry.h"
+#include "io/jxx.io.SerializationClassRegistry.h"
 #include "util/concurrent/locks/jxx.util.concurrent.locks.AbstractOwnableSynchronizer.h"
 #include "util/concurrent/locks/jxx.util.concurrent.locks.AbstractQueuedLongSynchronizer.h"
 #include "util/concurrent/locks/jxx.util.concurrent.locks.AbstractQueuedSynchronizer.h"
@@ -28,6 +30,9 @@ void initializeClasses()
         (void)LockSupport::JxxClassInfoMarker::Class();
         (void)ReadWriteLock::JxxClassInfoMarker::Class();
         (void)ReentrantLock::JxxClassInfoMarker::Class();
+        ::jxx::io::serialization::registerSerializableClass<ReentrantLock>(1);
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            ReentrantLock, 1U, 2U>();
         (void)ReentrantReadWriteLock::JxxClassInfoMarker::Class();
         (void)StampedLock::JxxClassInfoMarker::Class();
     });
