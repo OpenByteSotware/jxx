@@ -83,6 +83,11 @@ ObjectInputStream::Handle ObjectInputStream::readHandle_() {
     if (value <= 0) throw StreamCorruptedException("Invalid object handle");
     return static_cast<Handle>(value);
 }
+std::uint64_t ObjectInputStream::readLength_() {
+    const auto value = readLong();
+    if (value < 0) throw StreamCorruptedException("Invalid serialized length");
+    return static_cast<std::uint64_t>(value);
+}
 ObjectInputStream::ClassDescriptor ObjectInputStream::readClassDescriptor_() {
     const auto tag = static_cast<Tag>(readUnsignedByte());
     if (tag == Tag::ClassDescriptorRef) {
@@ -131,7 +136,7 @@ void ObjectInputStream::requireEndArray_() {
     const auto rank = readUnsignedByte();
     if (rank == 0)
         throw StreamCorruptedException("Invalid JXX array rank");
-    const auto rawLength = readHandle_();
+    const auto rawLength = readLength_();
     if (rawLength > limits_.maxArrayElements) throw StreamCorruptedException("Array length exceeds limit");
     const auto length = static_cast<::jxx::lang::jint>(rawLength);
     if (kind == Kind::TypedObject) {
@@ -193,7 +198,7 @@ void ObjectInputStream::requireEndArray_() {
     }
 }
 ::jxx::Ptr<::jxx::lang::String> ObjectInputStream::readString_(Handle handle) {
-    const auto length = readHandle_();
+    const auto length = readLength_();
     if (length > limits_.maxStringCodeUnits) throw StreamCorruptedException("String length exceeds limit");
     auto chars = jxx::NEW<::jxx::lang::CharArrayType>(static_cast<std::uint32_t>(length));
     for (std::uint64_t i = 0; i < length; ++i) (*chars)[static_cast<::jxx::lang::jint>(i)] = readChar();

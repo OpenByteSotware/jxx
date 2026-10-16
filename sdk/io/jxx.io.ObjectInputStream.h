@@ -58,6 +58,7 @@ private:
     void leaveGraph_() noexcept;
     std::string readRawUtf8_();
     Handle readHandle_();
+    std::uint64_t readLength_();
     ClassDescriptor readClassDescriptor_();
     std::unordered_map<Handle, ::jxx::Ptr<::jxx::lang::Object>> handles_;
     std::unordered_map<Handle, ClassDescriptor> descriptors_;
