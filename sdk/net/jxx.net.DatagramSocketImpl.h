@@ -597,8 +597,19 @@ struct NativeDatagramPacket { std::vector<std::uint8_t> buffer; std::size_t offs
                 if (is_sock_wouldblock(error)) {
                     throw jxx::net::SocketTimeoutException("receive timed out");
                 }
-                throw jxx::net::SocketException(
-                    "recvfrom failed: " + sock_strerror(error));
+#if defined(_WIN32)
+                if (error == WSAEMSGSIZE) {
+                    // Winsock reports a truncated UDP datagram as an error,
+                    // but it has already copied receiveCapacity bytes. The
+                    // source API reports a successful truncated receive.
+                    recvd = static_cast<decltype(recvd)>(receiveCapacity);
+                }
+                else
+#endif
+                {
+                    throw jxx::net::SocketException(
+                        "recvfrom failed: " + sock_strerror(error));
+                }
             }
             pkt.length = static_cast<std::size_t>(recvd);
             pkt.address = sockaddr_to_ip(reinterpret_cast<sockaddr*>(&from), flen, pkt.port);
