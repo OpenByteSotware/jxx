@@ -565,13 +565,47 @@ jxx::Ptr<ClassAny> StringBuffer::Class() {
     }
 
 
-void StringBuffer::writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& output) {
-    (void)output;
+void StringBuffer::writeObject(
+    const jxx::Ptr<jxx::io::ObjectOutputStream>& output) {
+    if (output == nullptr) throwNPE_();
+    this->synchronized([&] {
+        output->writeInt(static_cast<jint>(value_.size()));
+        output->writeInt(capacity_);
+        for (const auto character : value_) {
+            output->writeChar(static_cast<jchar>(character));
+        }
+    });
 }
-void StringBuffer::readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& input) {
-    (void)input;
+
+void StringBuffer::readObject(
+    const jxx::Ptr<jxx::io::ObjectInputStream>& input) {
+    if (input == nullptr) throwNPE_();
+    const auto size = input->readInt();
+    const auto serializedCapacity = input->readInt();
+    if (size < 0 || serializedCapacity < size) {
+        throw IllegalArgumentException(
+            jxx::NEW<String>("Invalid StringBuffer serialized state"));
+    }
+
+    std::u16string restored;
+    restored.reserve(static_cast<std::size_t>(serializedCapacity));
+    for (jint index = 0; index < size; ++index) {
+        restored.push_back(static_cast<char16_t>(input->readChar()));
+    }
+
+    this->synchronized([&] {
+        value_ = std::move(restored);
+        capacity_ = serializedCapacity;
+        value_.reserve(static_cast<std::size_t>(capacity_));
+    });
 }
+
 void StringBuffer::readObjectNoData() {
+    this->synchronized([&] {
+        value_.clear();
+        capacity_ = 16;
+        value_.reserve(16U);
+    });
 }
 
 } // namespace jxx::lang

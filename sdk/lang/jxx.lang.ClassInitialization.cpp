@@ -232,6 +232,9 @@ void initializeClasses()
             ::jxx::io::serialization::registerClassReferenceArrayCodecs<
                 Short, 1U, 2U>();
             registerType<StringBuffer>();
+            ::jxx::io::serialization::registerSerializableClass<StringBuffer>(1);
+            ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+                StringBuffer, 1U, 2U>();
             registerType<StringBuilder>();
             ::jxx::io::serialization::registerSerializableClass<StringBuilder>(1);
             ::jxx::io::serialization::registerClassReferenceArrayCodecs<
