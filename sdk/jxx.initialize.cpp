@@ -17,6 +17,7 @@
 #include "ext/security/auth/x500/jxx.ext.security.auth.x500.ClassInitialization.h"
 #include "ext/security/cert/jxx.ext.security.cert.ClassInitialization.h"
 #include "ext/security/cert/internal/jxx.ext.security.cert.internal.ClassInitialization.h"
+#include "ext/imageio/stream/jxx.ext.imageio.stream.ClassInitialization.h"
 #include "ext/swing/jxx.ext.swing.ClassInitialization.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.ClassInitialization.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.ClassInitialization.h"
@@ -131,6 +132,7 @@ void initialize() {
         ::jxx::ext::security::auth::x500::initializeClasses();
         ::jxx::ext::security::cert::initializeClasses();
         ::jxx::ext::security::cert::internal::initializeClasses();
+        ::jxx::ext::imageio::stream::initializeClasses();
         ::jxx::ext::swing::initializeClasses();
         ::jxx::ext::crypto::initializeClasses();
         ::jxx::ext::net::ssl::initializeClasses();
