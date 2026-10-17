@@ -239,14 +239,14 @@ public:
 
     virtual jxx::Ptr<MapEntry<K, V>> firstEntry() const override {
         if (map_.empty()) return nullptr;
-        return makeEntryView(map_.begin()->first);
+        return makeSnapshotEntry(map_.begin());
     }
 
     virtual jxx::Ptr<MapEntry<K, V>> lastEntry() const override {
         if (map_.empty()) return nullptr;
         auto it = map_.end();
         --it;
-        return makeEntryView(it->first);
+        return makeSnapshotEntry(it);
     }
 
     virtual jxx::Ptr<MapEntry<K, V>> pollFirstEntry() override {
@@ -275,11 +275,11 @@ public:
         if (it == map_.begin()) return nullptr;
         if (it == map_.end() || !keysEqual(it->first, key)) {
             --it;
-            return makeEntryView(it->first);
+            return makeSnapshotEntry(it);
         }
         if (it == map_.begin()) return nullptr;
         --it;
-        return makeEntryView(it->first);
+        return makeSnapshotEntry(it);
     }
 
     virtual jxx::Ptr<K> lowerKey(const jxx::Ptr<K>& key) const override {
@@ -292,7 +292,7 @@ public:
         auto it = map_.upper_bound(key);
         if (it == map_.begin()) return nullptr;
         --it;
-        return makeEntryView(it->first);
+        return makeSnapshotEntry(it);
     }
 
     virtual jxx::Ptr<K> floorKey(const jxx::Ptr<K>& key) const override {
@@ -304,7 +304,7 @@ public:
         if (key == nullptr) throw ::jxx::lang::NullPointerException();
         auto it = map_.lower_bound(key);
         if (it == map_.end()) return nullptr;
-        return makeEntryView(it->first);
+        return makeSnapshotEntry(it);
     }
 
     virtual jxx::Ptr<K> ceilingKey(const jxx::Ptr<K>& key) const override {
@@ -316,7 +316,7 @@ public:
         if (key == nullptr) throw ::jxx::lang::NullPointerException();
         auto it = map_.upper_bound(key);
         if (it == map_.end()) return nullptr;
-        return makeEntryView(it->first);
+        return makeSnapshotEntry(it);
     }
 
     virtual jxx::Ptr<K> higherKey(const jxx::Ptr<K>& key) const override {
@@ -396,12 +396,16 @@ public:
         return entrySetView_;
     }
 
-    virtual jxx::Ptr<jxx::lang::Object> clone() {
-        auto cloned = jxx::NEW<TreeMap<K, V>>(comparator_);
-        for (const auto& kv : map_) {
-            cloned->map_.emplace(kv.first, kv.second);
-        }
-        return cloned;
+    ::jxx::Ptr<::jxx::lang::Object> clone() const override {
+        return cloneImpl();
+    }
+
+protected:
+    ::jxx::Ptr<::jxx::lang::Object> cloneImpl() const override {
+        auto cloned = ::jxx::NEW<TreeMap<K, V>>(comparator_);
+        for (const auto& entry : map_) cloned->map_.emplace(entry.first, entry.second);
+        cloned->modCount_ = 0;
+        return ::jxx::CAST<::jxx::lang::Object>(cloned);
     }
 
 private:
@@ -417,6 +421,41 @@ private:
     }
 
 protected:
+    class SnapshotEntry final
+        : public ::jxx::lang::ClassBase<SnapshotEntry, ::jxx::lang::Object, MapEntry<K, V>> {
+    public:
+        SnapshotEntry(const ::jxx::Ptr<K>& key, const ::jxx::Ptr<V>& value)
+            : key_(key), value_(value) {}
+        ::jxx::Ptr<K> getKey() override { return key_; }
+        ::jxx::Ptr<V> getValue() override { return value_; }
+        ::jxx::Ptr<V> setValue(const ::jxx::Ptr<V>&) override {
+            throw ::jxx::lang::UnsupportedOperationException();
+        }
+        ::jxx::lang::jbool equals(const ::jxx::Ptr<::jxx::lang::Object>& object) const override {
+            auto other = ::jxx::CAST<MapEntry<K, V>>(object);
+            if (other == nullptr) return false;
+            const auto otherKey = other->getKey();
+            const auto otherValue = other->getValue();
+            const bool keysEqual = key_ == nullptr ? otherKey == nullptr : key_->equals(otherKey);
+            const bool valuesEqual = value_ == nullptr ? otherValue == nullptr : value_->equals(otherValue);
+            return keysEqual && valuesEqual;
+        }
+        ::jxx::lang::jint hashCode() const override {
+            return (key_ == nullptr ? 0 : key_->hashCode()) ^
+                   (value_ == nullptr ? 0 : value_->hashCode());
+        }
+    private:
+        ::jxx::Ptr<K> key_;
+        ::jxx::Ptr<V> value_;
+    };
+
+    ::jxx::Ptr<MapEntry<K, V>> makeSnapshotEntry(
+        const typename InternalMap::const_iterator& iterator) const {
+        if (iterator == map_.end()) return nullptr;
+        return ::jxx::CAST<MapEntry<K, V>>(
+            ::jxx::NEW<SnapshotEntry>(iterator->first, iterator->second));
+    }
+
     class EntryView : public virtual MapEntry<K, V> {
     private:
         TreeMap<K, V>* map_;
