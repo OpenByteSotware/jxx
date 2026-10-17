@@ -4,6 +4,10 @@
 #include <vector>
 
 #include "io/jxx.io.SerializableI.h"
+#include "io/jxx.io.InvalidObjectException.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Cloneable.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "util/jxx.util.AbstractSet.h"
@@ -37,7 +41,7 @@ public:
     explicit LinkedHashSet(
         const ::jxx::Ptr<wildcard::CollectionExtends<E>>& collection) {
         if (collection == nullptr) throw ::jxx::lang::NullPointerException();
-        addAll(collection);
+        this->addAll(collection);
     }
 
     ::jxx::lang::jint size() override {
@@ -62,15 +66,38 @@ public:
         if (!values_.empty()) { values_.clear(); ++modCount_; }
     }
 
-    void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>&) override {
-        throw ::jxx::lang::UnsupportedOperationException();
+    void writeObject(
+        const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {
+        if (out == nullptr) throw ::jxx::lang::NullPointerException();
+        out->writeInt(static_cast<::jxx::lang::jint>(values_.size()));
+        for (const auto& value : values_)
+            out->writeObject(::jxx::CAST<::jxx::lang::Object>(value));
     }
-    void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>&) override {
-        throw ::jxx::lang::UnsupportedOperationException();
+    void readObject(
+        const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {
+        if (in == nullptr) throw ::jxx::lang::NullPointerException();
+        const auto count = in->readInt();
+        if (count < 0 || count > 16 * 1024 * 1024)
+            throw ::jxx::io::InvalidObjectException(
+                ::jxx::NEW<::jxx::lang::String>(
+                    "Invalid LinkedHashSet serialized size"));
+        values_.clear();
+        values_.reserve(static_cast<std::size_t>(count));
+        for (::jxx::lang::jint index = 0; index < count; ++index) {
+            const auto object = in->readObject();
+            ::jxx::Ptr<E> element;
+            if (object != nullptr) {
+                element = std::dynamic_pointer_cast<E>(object);
+                if (element == nullptr) throw ::jxx::io::InvalidObjectException(
+                    ::jxx::NEW<::jxx::lang::String>(
+                        "LinkedHashSet element has incompatible type"));
+            }
+            if (indexOf_(::jxx::CAST<::jxx::lang::Object>(element)) < 0)
+                values_.push_back(element);
+        }
+        modCount_ = 0;
     }
-    void readObjectNoData() override {
-        throw ::jxx::lang::UnsupportedOperationException();
-    }
+    void readObjectNoData() override { values_.clear(); modCount_ = 0; }
 
     ::jxx::Ptr<Iterator<E>> iterator() override {
         class OrderedIterator final : public Iterator<E> {

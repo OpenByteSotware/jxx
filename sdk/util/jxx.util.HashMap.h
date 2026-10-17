@@ -7,6 +7,10 @@
 #include <vector>
 
 #include "io/jxx.io.SerializableI.h"
+#include "io/jxx.io.InvalidObjectException.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Cloneable.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.IllegalStateException.h"
@@ -81,6 +85,7 @@ namespace jxx
 
 			static constexpr jxx::lang::jint DEFAULT_INITIAL_CAPACITY = 16;
 			static constexpr jxx::lang::jfloat DEFAULT_LOAD_FACTOR = 0.75f;
+			static constexpr jxx::lang::jint MAX_SERIALIZED_ENTRIES_ = 16 * 1024 * 1024;
 
 			InternalMap map_;
 			jxx::lang::jfloat loadFactor_;
@@ -217,30 +222,62 @@ namespace jxx
 			 * concrete without inventing ObjectStream APIs.
 			 */
 			virtual void writeObject(
-				const jxx::Ptr<jxx::io::ObjectOutputStream>& out) override
+                const jxx::Ptr<jxx::io::ObjectOutputStream>& out) override
 			{
-
-				if (out == nullptr) {
-					throw jxx::lang::NullPointerException();
-				}
-
-				throw jxx::lang::UnsupportedOperationException();
+                if (out == nullptr) throw jxx::lang::NullPointerException();
+                out->writeFloat(loadFactor_);
+                out->writeInt(size());
+                for (const auto& entry : map_) {
+                    out->writeObject(jxx::CAST<jxx::lang::Object>(entry.first));
+                    out->writeObject(jxx::CAST<jxx::lang::Object>(entry.second));
+                }
 			}
 
 			virtual void readObject(
-				const jxx::Ptr<jxx::io::ObjectInputStream>& in) override
+                const jxx::Ptr<jxx::io::ObjectInputStream>& in) override
 			{
-
-				if (in == nullptr) {
-					throw jxx::lang::NullPointerException();
-				}
-
-				throw jxx::lang::UnsupportedOperationException();
+                if (in == nullptr) throw jxx::lang::NullPointerException();
+                const auto loadFactor = in->readFloat();
+                const auto count = in->readInt();
+                if (!(loadFactor > 0.0f) || !std::isfinite(loadFactor) ||
+                    count < 0 || count > MAX_SERIALIZED_ENTRIES_) {
+                    throw jxx::io::InvalidObjectException(
+                        jxx::NEW<jxx::lang::String>("Invalid HashMap serialized state"));
+                }
+                map_.clear();
+                loadFactor_ = loadFactor;
+                map_.max_load_factor(static_cast<float>(loadFactor_));
+                map_.reserve(static_cast<std::size_t>(count));
+                entrySetView_ = nullptr;
+                modCount_ = 0;
+                for (jxx::lang::jint index = 0; index < count; ++index) {
+                    const auto keyObject = in->readObject();
+                    const auto valueObject = in->readObject();
+                    jxx::Ptr<K> key;
+                    jxx::Ptr<V> value;
+                    if (keyObject != nullptr) {
+                        key = std::dynamic_pointer_cast<K>(keyObject);
+                        if (key == nullptr) throw jxx::io::InvalidObjectException(
+                            jxx::NEW<jxx::lang::String>("HashMap key has incompatible type"));
+                    }
+                    if (valueObject != nullptr) {
+                        value = std::dynamic_pointer_cast<V>(valueObject);
+                        if (value == nullptr) throw jxx::io::InvalidObjectException(
+                            jxx::NEW<jxx::lang::String>("HashMap value has incompatible type"));
+                    }
+                    map_[key] = value;
+                }
+                modCount_ = 0;
 			}
 
 			virtual void readObjectNoData() override
 			{
-				throw jxx::lang::UnsupportedOperationException();
+                map_.clear();
+                loadFactor_ = DEFAULT_LOAD_FACTOR;
+                map_.max_load_factor(static_cast<float>(loadFactor_));
+                map_.reserve(static_cast<std::size_t>(DEFAULT_INITIAL_CAPACITY));
+                entrySetView_ = nullptr;
+                modCount_ = 0;
 			}
 
 			virtual jxx::lang::jint size() override

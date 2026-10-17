@@ -1,5 +1,9 @@
 #pragma once
 #include "io/jxx.io.SerializableI.h"
+#include "io/jxx.io.InvalidObjectException.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Cloneable.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "util/jxx.util.AbstractSequentialList.h"
@@ -104,8 +108,29 @@ public:
     }
     jxx::lang::ObjectArray toArray() override{auto a=jxx::NEW<jxx::lang::ObjectArrayType>(static_cast<std::uint32_t>(size_));jxx::lang::jint i=0;for(auto n=first_;n;n=n->next)(*a)[i++]=jxx::CAST<jxx::lang::Object>(n->item);return a;}
     jxx::Ptr<jxx::lang::Object> cloneImpl() const override{auto r=jxx::NEW<LinkedList<E>>();for(auto n=first_;n;n=n->next)r->add(n->item);return jxx::CAST<jxx::lang::Object>(r);}
-    void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out) override{if(!out)throw jxx::lang::NullPointerException();throw jxx::lang::UnsupportedOperationException();}
-    void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in) override{if(!in)throw jxx::lang::NullPointerException();throw jxx::lang::UnsupportedOperationException();}
-    void readObjectNoData() override{throw jxx::lang::UnsupportedOperationException();}
+    void writeObject(const jxx::Ptr<jxx::io::ObjectOutputStream>& out) override {
+        if (out == nullptr) throw jxx::lang::NullPointerException();
+        out->writeInt(size_);
+        for (auto node = first_; node != nullptr; node = node->next)
+            out->writeObject(jxx::CAST<jxx::lang::Object>(node->item));
+    }
+    void readObject(const jxx::Ptr<jxx::io::ObjectInputStream>& in) override {
+        if (in == nullptr) throw jxx::lang::NullPointerException();
+        const auto count = in->readInt();
+        if (count < 0 || count > 16 * 1024 * 1024)
+            throw jxx::io::InvalidObjectException(
+                jxx::NEW<jxx::lang::String>("Invalid LinkedList serialized size"));
+        clear();
+        for (jxx::lang::jint index = 0; index < count; ++index) {
+            const auto object = in->readObject();
+            if (object == nullptr) { add(nullptr); continue; }
+            const auto element = std::dynamic_pointer_cast<E>(object);
+            if (element == nullptr) throw jxx::io::InvalidObjectException(
+                jxx::NEW<jxx::lang::String>("LinkedList element has incompatible type"));
+            add(element);
+        }
+        this->modCount = 0;
+    }
+    void readObjectNoData() override { clear(); this->modCount = 0; }
 };
 } // namespace jxx::util

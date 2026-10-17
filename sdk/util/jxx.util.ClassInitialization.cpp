@@ -40,6 +40,9 @@
 #include "util/jxx.util.Date.h"
 #include "util/jxx.util.DoubleSummaryStatistics.h"
 #include "util/jxx.util.EventListener.h"
+#include "util/jxx.util.HashMap.h"
+#include "util/jxx.util.LinkedHashSet.h"
+#include "util/jxx.util.LinkedList.h"
 #include "util/jxx.util.EventObject.h"
 #include "util/jxx.util.Formattable.h"
 #include "util/jxx.util.Formatter.h"
@@ -143,6 +146,21 @@ void initializeClasses()
         registerType<GregorianCalendar>();
         ::jxx::io::serialization::registerSerializableClass<GregorianCalendar>(1);
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<GregorianCalendar, 1U, 2U>();
+        using ErasedHashMap = HashMap<::jxx::lang::Object, ::jxx::lang::Object>;
+        registerType<ErasedHashMap>();
+        ::jxx::io::serialization::registerSerializableClass<ErasedHashMap>(
+            static_cast<::jxx::lang::jlong>(362498820763181265LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedHashMap, 1U, 2U>();
+        using ErasedLinkedList = LinkedList<::jxx::lang::Object>;
+        registerType<ErasedLinkedList>();
+        ::jxx::io::serialization::registerSerializableClass<ErasedLinkedList>(
+            static_cast<::jxx::lang::jlong>(876323262645176354LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedLinkedList, 1U, 2U>();
+        using ErasedLinkedHashSet = LinkedHashSet<::jxx::lang::Object>;
+        registerType<ErasedLinkedHashSet>();
+        ::jxx::io::serialization::registerSerializableClass<ErasedLinkedHashSet>(
+            static_cast<::jxx::lang::jlong>(-2851667679971038690LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedLinkedHashSet, 1U, 2U>();
         registerType<IntStream>();
         ::jxx::io::serialization::registerSerializableClass<IntStream>(1, [] { return IntStream::of(::jxx::NEW<::jxx::lang::IntArrayType>(0)); });
         registerType<IntSummaryStatistics>();
