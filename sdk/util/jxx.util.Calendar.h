@@ -45,6 +45,13 @@ public:
     Calendar();
 
     ::jxx::lang::jint compareTo(const ::jxx::Ptr<Calendar>& other) const override;
+    ::jxx::lang::jbool before(
+        const ::jxx::Ptr<::jxx::lang::Object>& when) const;
+    ::jxx::lang::jbool after(
+        const ::jxx::Ptr<::jxx::lang::Object>& when) const;
+    ::jxx::lang::jbool equals(
+        const ::jxx::Ptr<::jxx::lang::Object>& other) const override;
+    ::jxx::lang::jint hashCode() const override;
 
     void writeObject(
         const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override;

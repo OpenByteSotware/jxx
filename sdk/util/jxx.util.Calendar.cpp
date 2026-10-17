@@ -75,6 +75,33 @@ Calendar::Calendar() {
     return 0;
 }
 
+::jxx::lang::jbool Calendar::before(
+    const ::jxx::Ptr<::jxx::lang::Object>& when) const {
+    const auto calendar = ::jxx::CAST<Calendar>(when);
+    return calendar != nullptr && millis_ < calendar->millis_;
+}
+
+::jxx::lang::jbool Calendar::after(
+    const ::jxx::Ptr<::jxx::lang::Object>& when) const {
+    const auto calendar = ::jxx::CAST<Calendar>(when);
+    return calendar != nullptr && millis_ > calendar->millis_;
+}
+
+::jxx::lang::jbool Calendar::equals(
+    const ::jxx::Ptr<::jxx::lang::Object>& other) const {
+    if (other.get() == this) return true;
+    const auto calendar = ::jxx::CAST<Calendar>(other);
+    if (calendar == nullptr || millis_ != calendar->millis_) return false;
+    if (tz_ == nullptr || calendar->tz_ == nullptr) return tz_ == calendar->tz_;
+    return tz_->equals(::jxx::CAST<::jxx::lang::Object>(calendar->tz_));
+}
+
+::jxx::lang::jint Calendar::hashCode() const {
+    const auto timeHash = static_cast<::jxx::lang::jint>(millis_ ^ (millis_ >> 32));
+    const auto zoneHash = tz_ == nullptr ? 0 : tz_->hashCode();
+    return timeHash ^ zoneHash;
+}
+
 ::jxx::lang::jlong Calendar::getTimeInMillis() const { return millis_; }
 void Calendar::setTimeInMillis(::jxx::lang::jlong millis) { millis_ = millis; }
 
