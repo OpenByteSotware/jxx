@@ -112,6 +112,18 @@ public:
     }
     void readObjectNoData() override { clear(); }
 
+    ::jxx::Ptr<::jxx::lang::Object> clone() const override {
+        return cloneImpl();
+    }
+
+protected:
+    ::jxx::Ptr<::jxx::lang::Object> cloneImpl() const override {
+        auto copy = ::jxx::NEW<IdentityHashMap<K, V>>(
+            static_cast<::jxx::lang::jint>(entries_.size()));
+        copy->entries_ = entries_;
+        return ::jxx::CAST<::jxx::lang::Object>(copy);
+    }
+
 private:
     class EntrySnapshot final : public ::jxx::lang::ClassBase<
         EntrySnapshot, ::jxx::lang::Object, MapEntry<K, V>> {

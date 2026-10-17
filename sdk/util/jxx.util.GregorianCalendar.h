@@ -48,6 +48,7 @@ public:
              ::jxx::lang::jint minute, ::jxx::lang::jint second);
     void add(::jxx::lang::jint field, ::jxx::lang::jint amount);
     void roll(::jxx::lang::jint field, ::jxx::lang::jint amount);
+    void roll(::jxx::lang::jint field, ::jxx::lang::jbool up);
     ::jxx::lang::jint getActualMaximum(
         ::jxx::lang::jint field) const override;
     ::jxx::lang::jint getActualMinimum(

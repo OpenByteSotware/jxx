@@ -162,7 +162,89 @@ void GregorianCalendar::add(
     setLocal_(year, month, day,
               get(HOUR_OF_DAY), get(MINUTE), get(SECOND), get(MILLISECOND));
 }
-void GregorianCalendar::roll(::jxx::lang::jint field,::jxx::lang::jint amount){if(amount==0)return;auto min=getActualMinimum(field),max=getActualMaximum(field),value=get(field),range=max-min+1;value=min+((value-min+amount)%range+range)%range;set(field,value);}
+void GregorianCalendar::roll(
+    ::jxx::lang::jint field,
+    ::jxx::lang::jint amount) {
+
+    if (amount == 0) return;
+
+    const auto wrap = [amount](::jxx::lang::jint value,
+                               ::jxx::lang::jint minimum,
+                               ::jxx::lang::jint maximum) {
+        const auto range = maximum - minimum + 1;
+        auto normalized = (value - minimum + amount) % range;
+        if (normalized < 0) normalized += range;
+        return minimum + normalized;
+    };
+
+    const auto year = get(YEAR);
+    const auto month = get(MONTH);
+    const auto day = get(DAY_OF_MONTH);
+    const auto hour = get(HOUR_OF_DAY);
+    const auto minute = get(MINUTE);
+    const auto second = get(SECOND);
+    const auto millisecond = get(MILLISECOND);
+
+    switch (field) {
+        case YEAR: {
+            const auto rolledYear = wrap(
+                year, getActualMinimum(YEAR), getActualMaximum(YEAR));
+            setLocal_(rolledYear, month,
+                      std::min(day, daysInMonth_(rolledYear, month)),
+                      hour, minute, second, millisecond);
+            return;
+        }
+        case MONTH: {
+            const auto rolledMonth = wrap(month, JANUARY, DECEMBER);
+            setLocal_(year, rolledMonth,
+                      std::min(day, daysInMonth_(year, rolledMonth)),
+                      hour, minute, second, millisecond);
+            return;
+        }
+        case DAY_OF_MONTH: {
+            const auto rolledDay = wrap(
+                day, 1, daysInMonth_(year, month));
+            setLocal_(year, month, rolledDay,
+                      hour, minute, second, millisecond);
+            return;
+        }
+        case HOUR:
+        case HOUR_OF_DAY: {
+            const auto rolledHour = wrap(hour, 0, 23);
+            setLocal_(year, month, day,
+                      rolledHour, minute, second, millisecond);
+            return;
+        }
+        case AM_PM: {
+            const auto half = get(AM_PM);
+            const auto rolledHalf = wrap(half, AM, PM);
+            const auto rolledHour = (hour % 12) + rolledHalf * 12;
+            setLocal_(year, month, day,
+                      rolledHour, minute, second, millisecond);
+            return;
+        }
+        case MINUTE:
+            setLocal_(year, month, day, hour,
+                      wrap(minute, 0, 59), second, millisecond);
+            return;
+        case SECOND:
+            setLocal_(year, month, day, hour,
+                      minute, wrap(second, 0, 59), millisecond);
+            return;
+        case MILLISECOND:
+            setLocal_(year, month, day, hour,
+                      minute, second, wrap(millisecond, 0, 999));
+            return;
+        default:
+            throw ::jxx::lang::IllegalArgumentException();
+    }
+}
+
+void GregorianCalendar::roll(
+    ::jxx::lang::jint field,
+    ::jxx::lang::jbool up) {
+    roll(field, up ? 1 : -1);
+}
 ::jxx::lang::jint GregorianCalendar::getActualMaximum(
     ::jxx::lang::jint field) const {
     switch (field) {
