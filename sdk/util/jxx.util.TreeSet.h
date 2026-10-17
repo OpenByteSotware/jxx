@@ -554,77 +554,17 @@ namespace jxx {
 
             ::jxx::Ptr<Iterator<E>> descendingIterator() override {
                 std::vector<::jxx::Ptr<E>> values;
-                values.reserve(set_.size());
-                for (auto iterator = set_.rbegin(); iterator != set_.rend(); ++iterator)
-                    values.push_back(*iterator);
-                class DescendingIterator final : public Iterator<E> {
-                public:
-                    explicit DescendingIterator(std::vector<::jxx::Ptr<E>> values)
-                        : values_(std::move(values)) {}
-                    ::jxx::lang::jbool hasNext() override { return index_ < values_.size(); }
-                    ::jxx::Ptr<E> next() override {
-                        if (!hasNext()) throw NoSuchElementException();
-                        return values_[index_++];
-                    }
-                    void remove() override { throw ::jxx::lang::UnsupportedOperationException(); }
-                private:
-                    std::vector<::jxx::Ptr<E>> values_;
-                    std::size_t index_ = 0;
-                };
-                return ::jxx::NEW<DescendingIterator>(std::move(values));
+                for (auto it=set_.rbegin(); it!=set_.rend(); ++it) values.push_back(*it);
+                class It final : public Iterator<E> { public: explicit It(std::vector<::jxx::Ptr<E>> v):v_(std::move(v)){} ::jxx::lang::jbool hasNext() override{return i_<v_.size();} ::jxx::Ptr<E> next() override{if(!hasNext())throw NoSuchElementException();return v_[i_++];} void remove() override{throw ::jxx::lang::UnsupportedOperationException();} private: std::vector<::jxx::Ptr<E>> v_;std::size_t i_=0;};
+                return ::jxx::NEW<It>(std::move(values));
             }
-
-            ::jxx::Ptr<NavigableSet<E>> descendingSet() const override {
-                auto result = ::jxx::NEW<TreeSet<E>>(comparator_);
-                for (const auto& element : set_) result->add(element);
-                return ::jxx::CAST<NavigableSet<E>>(result);
-            }
-
-            ::jxx::Ptr<NavigableSet<E>> subSet(
-                const ::jxx::Ptr<E>& fromElement, ::jxx::lang::jbool fromInclusive,
-                const ::jxx::Ptr<E>& toElement, ::jxx::lang::jbool toInclusive) const override {
-                if (!fromElement || !toElement) throw ::jxx::lang::NullPointerException();
-                auto result = ::jxx::NEW<TreeSet<E>>(comparator_);
-                const TreeSetElemLess<E> less(comparator_);
-                for (const auto& element : set_) {
-                    const bool above = fromInclusive ? !less(element, fromElement) : less(fromElement, element);
-                    const bool below = toInclusive ? !less(toElement, element) : less(element, toElement);
-                    if (above && below) result->add(element);
-                }
-                return ::jxx::CAST<NavigableSet<E>>(result);
-            }
-
-            ::jxx::Ptr<NavigableSet<E>> headSet(
-                const ::jxx::Ptr<E>& toElement, ::jxx::lang::jbool inclusive) const override {
-                if (!toElement) throw ::jxx::lang::NullPointerException();
-                auto result = ::jxx::NEW<TreeSet<E>>(comparator_);
-                const TreeSetElemLess<E> less(comparator_);
-                for (const auto& element : set_)
-                    if (inclusive ? !less(toElement, element) : less(element, toElement)) result->add(element);
-                return ::jxx::CAST<NavigableSet<E>>(result);
-            }
-
-            ::jxx::Ptr<NavigableSet<E>> tailSet(
-                const ::jxx::Ptr<E>& fromElement, ::jxx::lang::jbool inclusive) const override {
-                if (!fromElement) throw ::jxx::lang::NullPointerException();
-                auto result = ::jxx::NEW<TreeSet<E>>(comparator_);
-                const TreeSetElemLess<E> less(comparator_);
-                for (const auto& element : set_)
-                    if (inclusive ? !less(element, fromElement) : less(fromElement, element)) result->add(element);
-                return ::jxx::CAST<NavigableSet<E>>(result);
-            }
-
-            ::jxx::Ptr<SortedSet<E>> subSet(
-                const ::jxx::Ptr<E>& fromElement, const ::jxx::Ptr<E>& toElement) const override {
-                return ::jxx::CAST<SortedSet<E>>(subSet(fromElement, true, toElement, false));
-            }
-            ::jxx::Ptr<SortedSet<E>> headSet(const ::jxx::Ptr<E>& toElement) const override {
-                return ::jxx::CAST<SortedSet<E>>(headSet(toElement, false));
-            }
-            ::jxx::Ptr<SortedSet<E>> tailSet(const ::jxx::Ptr<E>& fromElement) const override {
-                return ::jxx::CAST<SortedSet<E>>(tailSet(fromElement, true));
-            }
-
+            ::jxx::Ptr<NavigableSet<E>> descendingSet() const override { auto r=::jxx::NEW<TreeSet<E>>(comparator_); for(const auto&e:set_)r->add(e); return ::jxx::CAST<NavigableSet<E>>(r); }
+            ::jxx::Ptr<NavigableSet<E>> subSet(const ::jxx::Ptr<E>& from,::jxx::lang::jbool fi,const ::jxx::Ptr<E>& to,::jxx::lang::jbool ti) const override { if(!from||!to)throw ::jxx::lang::NullPointerException(); auto r=::jxx::NEW<TreeSet<E>>(comparator_);TreeSetElemLess<E> less(comparator_);for(const auto&e:set_){if((fi?!less(e,from):less(from,e))&&(ti?!less(to,e):less(e,to)))r->add(e);}return ::jxx::CAST<NavigableSet<E>>(r); }
+            ::jxx::Ptr<NavigableSet<E>> headSet(const ::jxx::Ptr<E>& to,::jxx::lang::jbool inc) const override {if(!to)throw ::jxx::lang::NullPointerException();auto r=::jxx::NEW<TreeSet<E>>(comparator_);TreeSetElemLess<E> less(comparator_);for(const auto&e:set_)if(inc?!less(to,e):less(e,to))r->add(e);return ::jxx::CAST<NavigableSet<E>>(r);}
+            ::jxx::Ptr<NavigableSet<E>> tailSet(const ::jxx::Ptr<E>& from,::jxx::lang::jbool inc) const override {if(!from)throw ::jxx::lang::NullPointerException();auto r=::jxx::NEW<TreeSet<E>>(comparator_);TreeSetElemLess<E> less(comparator_);for(const auto&e:set_)if(inc?!less(e,from):less(from,e))r->add(e);return ::jxx::CAST<NavigableSet<E>>(r);}
+            ::jxx::Ptr<SortedSet<E>> subSet(const ::jxx::Ptr<E>& f,const ::jxx::Ptr<E>& t) const override{return ::jxx::CAST<SortedSet<E>>(subSet(f,true,t,false));}
+            ::jxx::Ptr<SortedSet<E>> headSet(const ::jxx::Ptr<E>& t) const override{return ::jxx::CAST<SortedSet<E>>(headSet(t,false));}
+            ::jxx::Ptr<SortedSet<E>> tailSet(const ::jxx::Ptr<E>& f) const override{return ::jxx::CAST<SortedSet<E>>(tailSet(f,true));}
             virtual ::jxx::Ptr<::jxx::lang::Object>
                 clone() const override {
 

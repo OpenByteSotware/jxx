@@ -62,13 +62,6 @@
 #include "security/internal/jxx.security.internal.ClassInitialization.h"
 #include "text/jxx.text.ClassInitialization.h"
 #include "util/jxx.util.ClassInitialization.h"
-#include "util/concurrent/jxx.util.concurrent.ClassInitialization.h"
-#include "util/concurrent/atomic/jxx.util.concurrent.atomic.ClassInitialization.h"
-#include "util/concurrent/locks/jxx.util.concurrent.locks.ClassInitialization.h"
-#include "util/function/jxx.util.function.ClassInitialization.h"
-#include "util/logging/jxx.util.logging.ClassInitialization.h"
-#include "util/regex/jxx.util.regex.ClassInitialization.h"
-#include "util/zip/jxx.util.zip.ClassInitialization.h"
 #include "ext/net/internal.ClassInitialization.h"
 #include "ext/xml/bind/annotation/jxx.ext.xml.bind.annotation.ClassInitialization.h"
 #include "org/w3c/dom/events/jxx.org.w3c.dom.events.ClassInitialization.h"
@@ -100,13 +93,6 @@ void initialize() {
         ::jxx::lang::initializeClasses();
         ::jxx::io::initializeClasses();
         ::jxx::util::initializeClasses();
-        ::jxx::util::concurrent::initializeClasses();
-        ::jxx::util::concurrent::atomic::initializeClasses();
-        ::jxx::util::concurrent::locks::initializeClasses();
-        ::jxx::util::function::initializeClasses();
-        ::jxx::util::logging::initializeClasses();
-        ::jxx::util::regex::initializeClasses();
-        ::jxx::util::zip::initializeClasses();
         ::jxx::math::initializeClasses();
         ::jxx::net::initializeClasses();
         ::jxx::nio::initializeClasses();

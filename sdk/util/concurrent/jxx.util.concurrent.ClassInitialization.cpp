@@ -1,4 +1,6 @@
 #include "util/concurrent/jxx.util.concurrent.ClassInitialization.h"
+#include "util/concurrent/atomic/jxx.util.concurrent.atomic.ClassInitialization.h"
+#include "util/concurrent/locks/jxx.util.concurrent.locks.ClassInitialization.h"
 
 #include <mutex>
 
@@ -106,6 +108,8 @@ void initializeClasses()
         registerType<ThreadLocalRandom>();
         registerType<ThreadPoolExecutor>();
         registerType<TimeoutException>();
+        ::jxx::util::concurrent::atomic::initializeClasses();
+        ::jxx::util::concurrent::locks::initializeClasses();
     });
 }
 
