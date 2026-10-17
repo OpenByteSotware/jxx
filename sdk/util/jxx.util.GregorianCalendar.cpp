@@ -292,6 +292,78 @@ void GregorianCalendar::roll(
 }
 ::jxx::Ptr<::jxx::lang::String> GregorianCalendar::getCalendarType()const{return ::jxx::NEW<::jxx::lang::String>("gregory");}
 
+
+::jxx::lang::jbool GregorianCalendar::isWeekDateSupported() const noexcept {
+    return true;
+}
+
+::jxx::lang::jint GregorianCalendar::getWeekYear() const {
+    const auto year = get(YEAR);
+    const auto month = get(MONTH);
+    const auto week = get(WEEK_OF_YEAR);
+    if (month == JANUARY && week >= 52) return year - 1;
+    if (month == DECEMBER && week == 1) return year + 1;
+    if (week == 0) return year - 1;
+    return year;
+}
+
+void GregorianCalendar::setWeekDate(
+    ::jxx::lang::jint weekYear,
+    ::jxx::lang::jint weekOfYear,
+    ::jxx::lang::jint dayOfWeek) {
+    if (dayOfWeek < SUNDAY || dayOfWeek > SATURDAY || weekOfYear < 1) {
+        throw ::jxx::lang::IllegalArgumentException();
+    }
+    const auto savedHour = get(HOUR_OF_DAY);
+    const auto savedMinute = get(MINUTE);
+    const auto savedSecond = get(SECOND);
+    const auto savedMillisecond = get(MILLISECOND);
+    setLocal_(weekYear, JANUARY, 1,
+              savedHour, savedMinute, savedSecond, savedMillisecond);
+    const auto januaryFirstDay = get(DAY_OF_WEEK);
+    auto offset = (januaryFirstDay - getFirstDayOfWeek()) % 7;
+    if (offset < 0) offset += 7;
+    auto firstWeekStart = 1 - offset;
+    if (7 - offset < getMinimalDaysInFirstWeek()) firstWeekStart += 7;
+    auto dayOffset = (dayOfWeek - getFirstDayOfWeek()) % 7;
+    if (dayOffset < 0) dayOffset += 7;
+    const auto dayOfYear = firstWeekStart +
+        (weekOfYear - 1) * 7 + dayOffset;
+    setLocal_(weekYear, JANUARY, dayOfYear,
+              savedHour, savedMinute, savedSecond, savedMillisecond);
+    if (!isLenient() && getWeekYear() != weekYear) {
+        throw ::jxx::lang::IllegalArgumentException();
+    }
+}
+
+::jxx::lang::jint GregorianCalendar::getWeeksInWeekYear() const {
+    const auto weekYear = getWeekYear();
+    auto probe = ::jxx::NEW<GregorianCalendar>(getTimeZone(), locale_);
+    probe->setFirstDayOfWeek(getFirstDayOfWeek());
+    probe->setMinimalDaysInFirstWeek(getMinimalDaysInFirstWeek());
+    probe->setLenient(true);
+    probe->setWeekDate(weekYear + 1, 1, getFirstDayOfWeek());
+    const auto nextStart = probe->getTimeInMillis();
+    probe->setWeekDate(weekYear, 1, getFirstDayOfWeek());
+    const auto currentStart = probe->getTimeInMillis();
+    return static_cast<::jxx::lang::jint>(
+        (nextStart - currentStart) / (7LL * 86400000LL));
+}
+
+::jxx::Ptr<::jxx::lang::Object> GregorianCalendar::cloneImpl() const {
+    const auto sourceZone = getTimeZone();
+    const auto clonedZone = sourceZone == nullptr
+        ? TimeZone::getDefault()
+        : TimeZone::getTimeZone(sourceZone->getID());
+    auto copy = ::jxx::NEW<GregorianCalendar>(clonedZone, locale_);
+    copy->setTimeInMillis(getTimeInMillis());
+    copy->setLenient(isLenient());
+    copy->setFirstDayOfWeek(getFirstDayOfWeek());
+    copy->setMinimalDaysInFirstWeek(getMinimalDaysInFirstWeek());
+    copy->setGregorianChange(::jxx::NEW<Date>(gregorianChange_->getTime()));
+    return ::jxx::CAST<::jxx::lang::Object>(copy);
+}
+
 void GregorianCalendar::writeObject(
     const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) {
     if (out == nullptr) throw ::jxx::lang::NullPointerException();

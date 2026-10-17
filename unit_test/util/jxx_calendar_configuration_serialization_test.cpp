@@ -7,9 +7,11 @@
 #include "lang/jxx.lang.Object.h"
 #include "util/jxx.util.Calendar.h"
 #include "util/jxx.util.GregorianCalendar.h"
+#include "jxx.initialize.h"
 
 TEST(CalendarConfigurationSerializationParity, RoundTripsConfigurationState)
 {
+    jxx::initialize();
     const auto source = ::jxx::util::Calendar::getInstance();
     ASSERT_NE(::jxx::CAST<::jxx::util::GregorianCalendar>(source), nullptr);
     EXPECT_EQ(source->getClass(), ::jxx::util::GregorianCalendar::Class());
