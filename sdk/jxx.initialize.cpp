@@ -1,5 +1,6 @@
 #include "jxx.initialize.h"
 
+#include "beans/jxx.beans.ClassInitialization.h"
 #include <mutex>
 #include <unordered_set>
 
@@ -117,6 +118,7 @@ void initialize() {
         ::jxx::org::xml::sax::ext::initializeClasses();
         ::jxx::org::xml::sax::helpers::initializeClasses();
         ::jxx::org::xml::sax::internal::initializeClasses();
+        ::jxx::beans::initializeClasses();
         ::com::google::gson::initializeClasses();
         ::com::google::gson::internal::initializeClasses();
         ::com::google::gson::annotations::initializeClasses();

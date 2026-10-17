@@ -31,7 +31,8 @@ TEST(TreeSetSerialization, RoundTripsElementsInSortedOrder) {
     source->add(::jxx::NEW<::jxx::lang::String>("a"));
     auto bytes=::jxx::NEW<::jxx::io::ByteArrayOutputStream>();
     auto output=::jxx::NEW<::jxx::io::ObjectOutputStream>(bytes);
-    output->writeObject(source); output->flush();
+    output->writeObject(source); 
+    output->flush();
     auto input=::jxx::NEW<::jxx::io::ObjectInputStream>(
         ::jxx::NEW<::jxx::io::ByteArrayInputStream>(bytes->toByteArray()));
     auto restored=std::dynamic_pointer_cast<StringTreeSet>(input->readObject());
