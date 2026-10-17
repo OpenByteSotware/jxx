@@ -55,3 +55,173 @@ TEST(Stage77CollectionSerialization, WeakHashMapRoundTripsLiveEntries)
 	auto restored = roundTrip(map); ASSERT_NE(restored, nullptr);
 	EXPECT_EQ(restored->size(), 1);
 }
+
+TEST(Stage77CollectionSerialization, ObjectUpcastAfterRoundTrip)
+{
+	::jxx::initialize();
+
+	auto bytes =
+		::jxx::NEW<::jxx::io::ByteArrayOutputStream>();
+
+	auto out =
+		::jxx::NEW<::jxx::io::ObjectOutputStream>(bytes);
+
+	out->writeObject(
+		::jxx::CAST<::jxx::lang::Object>(
+			::jxx::NEW<::jxx::lang::String>("abc")));
+
+	out->flush();
+
+	auto in =
+		::jxx::NEW<::jxx::io::ObjectInputStream>(
+			::jxx::NEW<::jxx::io::ByteArrayInputStream>(
+				bytes->toByteArray()));
+
+	auto object = in->readObject();
+
+	ASSERT_NE(object, nullptr);
+
+	auto stringValue =
+		std::dynamic_pointer_cast<
+		::jxx::lang::String>(object);
+
+	ASSERT_NE(stringValue, nullptr);
+
+	auto objectValue =
+		std::dynamic_pointer_cast<
+		::jxx::lang::Object>(object);
+
+	ASSERT_NE(objectValue, nullptr);
+}
+
+TEST(Stage77CollectionSerialization,
+	IdentityHashMapEmptyRoundTrip)
+{
+	::jxx::initialize();
+
+	using M =
+		::jxx::util::IdentityHashMap<
+		::jxx::lang::Object,
+		::jxx::lang::Object>;
+
+	auto map = ::jxx::NEW<M>();
+
+	EXPECT_NO_THROW({
+		auto restored = roundTrip(map);
+		ASSERT_NE(restored, nullptr);
+	});
+}
+
+TEST(Stage77CollectionSerialization,
+	IdentityHashMapSingleEntryRoundTrip)
+{
+	::jxx::initialize();
+
+	using M =
+		::jxx::util::IdentityHashMap<
+		::jxx::lang::Object,
+		::jxx::lang::Object>;
+
+	auto map = ::jxx::NEW<M>();
+
+	map->put(
+		::jxx::NEW<::jxx::lang::String>("k"),
+		::jxx::NEW<::jxx::lang::String>("v"));
+
+	auto restored = roundTrip(map);
+
+	ASSERT_NE(restored, nullptr);
+
+	EXPECT_EQ(
+		restored->size(),
+		1);
+}
+
+TEST(Stage77CollectionSerialization,
+	IdentityHashMapSingleEntryRoundTripDebug)
+{
+	::jxx::initialize();
+
+	using M =
+		::jxx::util::IdentityHashMap<
+		::jxx::lang::Object,
+		::jxx::lang::Object>;
+
+	auto map = ::jxx::NEW<M>();
+
+	map->put(
+		::jxx::NEW<::jxx::lang::String>("k"),
+		::jxx::NEW<::jxx::lang::String>("v"));
+
+	try
+	{
+		auto restored = roundTrip(map);
+
+		ASSERT_NE(restored, nullptr);
+
+		EXPECT_EQ(restored->size(), 1);
+	}
+	catch (const std::exception& ex)
+	{
+		FAIL() << "std::exception: " << ex.what();
+	}
+	catch (...)
+	{
+		FAIL() << "non-std exception";
+	}
+}
+
+TEST(Stage77CollectionSerialization,
+	IdentityHashMapWriteOnly)
+{
+	::jxx::initialize();
+
+	using M =
+		::jxx::util::IdentityHashMap<
+		::jxx::lang::Object,
+		::jxx::lang::Object>;
+
+	auto map = ::jxx::NEW<M>();
+
+	map->put(
+		::jxx::NEW<::jxx::lang::String>("k"),
+		::jxx::NEW<::jxx::lang::String>("v"));
+
+	auto bytes =
+		::jxx::NEW<::jxx::io::ByteArrayOutputStream>();
+
+	auto out =
+		::jxx::NEW<::jxx::io::ObjectOutputStream>(bytes);
+
+	EXPECT_NO_THROW(
+		out->writeObject(map));
+
+	EXPECT_NO_THROW(
+		out->flush());
+
+	EXPECT_GT(bytes->size(), 0);
+}
+
+TEST(Stage77CollectionSerialization,
+	IdentityHashMapIteratorSanity)
+{
+	using M =
+		::jxx::util::IdentityHashMap<
+		::jxx::lang::Object,
+		::jxx::lang::Object>;
+
+	auto map = ::jxx::NEW<M>();
+
+	map->put(
+		::jxx::NEW<::jxx::lang::String>("k"),
+		::jxx::NEW<::jxx::lang::String>("v"));
+
+	auto set = map->entrySet();
+
+	auto it = set->iterator();
+
+	ASSERT_TRUE(it->hasNext());
+
+	EXPECT_NO_THROW(
+		it->next());
+}

@@ -1,5 +1,6 @@
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
+#include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.String.h"
 #include "util/jxx.util.Calendar.h"
 #include "util/jxx.util.GregorianCalendar.h"
@@ -149,6 +150,28 @@ void Calendar::setTimeZone(const ::jxx::Ptr<TimeZone>& tz) {
     tz_ = std::move(tz);
 }
 
+void Calendar::setFirstDayOfWeek(::jxx::lang::jint value) {
+    if (value < SUNDAY || value > SATURDAY) {
+        throw ::jxx::lang::IllegalArgumentException();
+    }
+    firstDayOfWeek_ = value;
+}
+
+::jxx::lang::jint Calendar::getFirstDayOfWeek() const noexcept {
+    return firstDayOfWeek_;
+}
+
+void Calendar::setMinimalDaysInFirstWeek(::jxx::lang::jint value) {
+    if (value < 1 || value > 7) {
+        throw ::jxx::lang::IllegalArgumentException();
+    }
+    minimalDaysInFirstWeek_ = value;
+}
+
+::jxx::lang::jint Calendar::getMinimalDaysInFirstWeek() const noexcept {
+    return minimalDaysInFirstWeek_;
+}
+
 ::jxx::lang::jint Calendar::get(::jxx::lang::jint field) const {
     auto tz = getTimeZone();
     ::jxx::lang::jint off = tz ? tz->getOffset(millis_) : 0;
@@ -163,12 +186,28 @@ void Calendar::setTimeZone(const ::jxx::Ptr<TimeZone>& tz) {
     const auto dayOfYear = cumulativeDays[mo - 1] +
         static_cast<::jxx::lang::jint>(da) + ((leap && mo > 2) ? 1 : 0);
     const auto rawOffset = tz ? tz->getRawOffset() : 0;
+    const auto dayOfMonth = static_cast<::jxx::lang::jint>(da);
+    const auto normalizedDow = [](::jxx::lang::jint value) {
+        auto result = value % 7;
+        return result < 0 ? result + 7 : result;
+    };
+    const auto weekNumber = [&](::jxx::lang::jint day,
+                                ::jxx::lang::jint firstDayDow) {
+        const auto offset = normalizedDow(firstDayDow - firstDayOfWeek_);
+        auto firstWeekStart = 1 - offset;
+        if (7 - offset < minimalDaysInFirstWeek_) firstWeekStart += 7;
+        return day < firstWeekStart ? 0 : (day - firstWeekStart) / 7 + 1;
+    };
+    const auto firstDowOfMonth = normalizedDow(dow - ((dayOfMonth - 1) % 7) - 1) + 1;
+    const auto firstDowOfYear = normalizedDow(dow - ((dayOfYear - 1) % 7) - 1) + 1;
 
     switch (field) {
         case ERA: return y <= 0 ? 0 : 1;
         case YEAR: return y <= 0 ? 1 - y : y;
         case MONTH: return static_cast<::jxx::lang::jint>(mo - 1);
-        case DAY_OF_MONTH: return static_cast<::jxx::lang::jint>(da);
+        case WEEK_OF_YEAR: return weekNumber(dayOfYear, firstDowOfYear);
+        case WEEK_OF_MONTH: return weekNumber(dayOfMonth, firstDowOfMonth);
+        case DAY_OF_MONTH: return dayOfMonth;
         case DAY_OF_YEAR: return dayOfYear;
         case DAY_OF_WEEK: return static_cast<::jxx::lang::jint>(dow);
         case DAY_OF_WEEK_IN_MONTH:

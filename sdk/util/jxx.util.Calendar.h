@@ -109,10 +109,16 @@ public:
     void setTimeZone(const ::jxx::Ptr<TimeZone>& tz);
 
     ::jxx::lang::jint get(::jxx::lang::jint field) const;
+    void setFirstDayOfWeek(::jxx::lang::jint value);
+    ::jxx::lang::jint getFirstDayOfWeek() const noexcept;
+    void setMinimalDaysInFirstWeek(::jxx::lang::jint value);
+    ::jxx::lang::jint getMinimalDaysInFirstWeek() const noexcept;
 
 private:
     ::jxx::lang::jlong millis_ = 0;
     ::jxx::Ptr<TimeZone> tz_;
+    ::jxx::lang::jint firstDayOfWeek_ = SUNDAY;
+    ::jxx::lang::jint minimalDaysInFirstWeek_ = 1;
 
     static void civil_from_days(int z, int& y, unsigned& m, unsigned& d);
     static void epoch_to_local_parts(::jxx::lang::jlong epochMillis, ::jxx::lang::jint tzOffsetMillis,
