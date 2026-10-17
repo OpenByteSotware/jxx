@@ -36,8 +36,6 @@ void initializeMaps() {
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedLinkedHashMap, 1U, 2U>();
         using ErasedWeakHashMap = WeakHashMap<::jxx::lang::Object, ::jxx::lang::Object>;
         registerType<ErasedWeakHashMap>();
-        ::jxx::io::serialization::registerSerializableClass<ErasedWeakHashMap>(static_cast<::jxx::lang::jlong>(-5024744406713321676LL));
-        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedWeakHashMap, 1U, 2U>();
         using ErasedTreeSet = TreeSet<::jxx::lang::Object>;
         registerType<ErasedTreeSet>();
         ::jxx::io::serialization::registerSerializableClass<ErasedTreeSet>(static_cast<::jxx::lang::jlong>(-2479143000061671589LL), [] { return ::jxx::NEW<ErasedTreeSet>(); });

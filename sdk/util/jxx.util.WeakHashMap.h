@@ -1,10 +1,6 @@
 #pragma once
 
 #include "lang/jxx.lang.ClassInfo.h"
-#include "io/jxx.io.SerializableI.h"
-#include "io/jxx.io.InvalidObjectException.h"
-#include "io/jxx.io.ObjectInputStream.h"
-#include "io/jxx.io.ObjectOutputStream.h"
 #include "lang/jxx.lang.String.h"
 #include <cstdint>
 
@@ -19,10 +15,10 @@
 namespace jxx::util {
 
 template <typename K, typename V>
-class WeakHashMap final : public ::jxx::lang::ClassBase<WeakHashMap<K, V>, AbstractMap<K, V>, ::jxx::io::SerializableI> {
+class WeakHashMap final : public ::jxx::lang::ClassBase<WeakHashMap<K, V>, AbstractMap<K, V>> {
 public:
     using JxxSuper = AbstractMap<K, V>;
-    using Super = ::jxx::lang::ClassBase<WeakHashMap<K, V>, JxxSuper, ::jxx::io::SerializableI>;
+    using Super = ::jxx::lang::ClassBase<WeakHashMap<K, V>, JxxSuper>;
 
     WeakHashMap() = default;
     explicit WeakHashMap(::jxx::lang::jint initialCapacity)
@@ -117,39 +113,6 @@ public:
         return ::jxx::CAST<Set<MapEntry<K, V>>>(result);
     }
 
-    void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {
-        if (out == nullptr) throw ::jxx::lang::NullPointerException();
-        expunge_();
-        std::vector<std::pair<::jxx::Ptr<K>, ::jxx::Ptr<V>>> snapshot;
-        snapshot.reserve(entries_.size() + (hasNullKey_ ? 1U : 0U));
-        if (hasNullKey_) snapshot.emplace_back(nullptr, nullValue_);
-        for (const auto& entry : entries_) {
-            auto key = entry.key.lock();
-            if (key != nullptr) snapshot.emplace_back(key, entry.value);
-        }
-        out->writeInt(static_cast<::jxx::lang::jint>(snapshot.size()));
-        for (const auto& entry : snapshot) {
-            out->writeObject(::jxx::CAST<::jxx::lang::Object>(entry.first));
-            out->writeObject(::jxx::CAST<::jxx::lang::Object>(entry.second));
-        }
-    }
-    void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {
-        if (in == nullptr) throw ::jxx::lang::NullPointerException();
-        const auto count = in->readInt();
-        if (count < 0 || count > 16 * 1024 * 1024)
-            throw ::jxx::io::InvalidObjectException(::jxx::NEW<::jxx::lang::String>("Invalid serialized map size"));
-        clear();
-        for (::jxx::lang::jint index = 0; index < count; ++index) {
-            const auto keyObject = in->readObject();
-            const auto valueObject = in->readObject();
-            ::jxx::Ptr<K> key;
-            ::jxx::Ptr<V> value;
-            if (keyObject != nullptr) { key = std::dynamic_pointer_cast<K>(keyObject); if (key == nullptr) throw ::jxx::io::InvalidObjectException(::jxx::NEW<::jxx::lang::String>("Incompatible map key")); }
-            if (valueObject != nullptr) { value = std::dynamic_pointer_cast<V>(valueObject); if (value == nullptr) throw ::jxx::io::InvalidObjectException(::jxx::NEW<::jxx::lang::String>("Incompatible map value")); }
-            put(key, value);
-        }
-    }
-    void readObjectNoData() override { clear(); }
 
 private:
     class EntrySnapshot final : public ::jxx::lang::ClassBase<
