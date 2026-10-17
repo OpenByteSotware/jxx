@@ -125,10 +125,76 @@ private:
                 case 'n': value.push_back('\n'); break;
                 case 'r': value.push_back('\r'); break;
                 case 't': value.push_back('\t'); break;
+                case 'u': {
+                    const auto first = parseHexCodeUnit_();
+                    if (first >= 0xD800U && first <= 0xDBFFU) {
+                        if (position_ + 2U > source_.size() ||
+                            source_[position_] != '\\' ||
+                            source_[position_ + 1U] != 'u') {
+                            fail_("Unpaired high surrogate in string escape");
+                        }
+                        position_ += 2U;
+                        const auto second = parseHexCodeUnit_();
+                        if (second < 0xDC00U || second > 0xDFFFU) {
+                            fail_("Invalid low surrogate in string escape");
+                        }
+                        appendUtf8_(value,
+                            0x10000U + ((first - 0xD800U) << 10U) +
+                            (second - 0xDC00U));
+                    } else if (first >= 0xDC00U && first <= 0xDFFFU) {
+                        fail_("Unpaired low surrogate in string escape");
+                    } else {
+                        appendUtf8_(value, first);
+                    }
+                    break;
+                }
                 default: fail_("Unsupported string escape");
             }
         }
         fail_("Unterminated string");
+    }
+
+    unsigned int parseHexCodeUnit_() {
+        if (position_ + 4U > source_.size()) {
+            fail_("Incomplete Unicode escape");
+        }
+        unsigned int result = 0U;
+        for (unsigned int index = 0U; index < 4U; ++index) {
+            const unsigned char current =
+                static_cast<unsigned char>(source_[position_++]);
+            result <<= 4U;
+            if (current >= '0' && current <= '9') {
+                result |= static_cast<unsigned int>(current - '0');
+            } else if (current >= 'a' && current <= 'f') {
+                result |= 10U + static_cast<unsigned int>(current - 'a');
+            } else if (current >= 'A' && current <= 'F') {
+                result |= 10U + static_cast<unsigned int>(current - 'A');
+            } else {
+                fail_("Invalid hexadecimal digit in Unicode escape");
+            }
+        }
+        return result;
+    }
+
+    static void appendUtf8_(std::string& output, unsigned int codePoint) {
+        if (codePoint <= 0x7FU) {
+            output.push_back(static_cast<char>(codePoint));
+        } else if (codePoint <= 0x7FFU) {
+            output.push_back(static_cast<char>(0xC0U | (codePoint >> 6U)));
+            output.push_back(static_cast<char>(0x80U | (codePoint & 0x3FU)));
+        } else if (codePoint <= 0xFFFFU) {
+            output.push_back(static_cast<char>(0xE0U | (codePoint >> 12U)));
+            output.push_back(static_cast<char>(
+                0x80U | ((codePoint >> 6U) & 0x3FU)));
+            output.push_back(static_cast<char>(0x80U | (codePoint & 0x3FU)));
+        } else {
+            output.push_back(static_cast<char>(0xF0U | (codePoint >> 18U)));
+            output.push_back(static_cast<char>(
+                0x80U | ((codePoint >> 12U) & 0x3FU)));
+            output.push_back(static_cast<char>(
+                0x80U | ((codePoint >> 6U) & 0x3FU)));
+            output.push_back(static_cast<char>(0x80U | (codePoint & 0x3FU)));
+        }
     }
 
     void consumeLiteral_(const char* literal) {
