@@ -119,12 +119,18 @@ public:
 
     void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {
         if (out == nullptr) throw ::jxx::lang::NullPointerException();
-        out->writeInt(size());
-        auto iterator = entrySet()->iterator();
-        while (iterator->hasNext()) {
-            const auto entry = iterator->next();
-            out->writeObject(::jxx::CAST<::jxx::lang::Object>(entry->getKey()));
-            out->writeObject(::jxx::CAST<::jxx::lang::Object>(entry->getValue()));
+        expunge_();
+        std::vector<std::pair<::jxx::Ptr<K>, ::jxx::Ptr<V>>> snapshot;
+        snapshot.reserve(entries_.size() + (hasNullKey_ ? 1U : 0U));
+        if (hasNullKey_) snapshot.emplace_back(nullptr, nullValue_);
+        for (const auto& entry : entries_) {
+            auto key = entry.key.lock();
+            if (key != nullptr) snapshot.emplace_back(key, entry.value);
+        }
+        out->writeInt(static_cast<::jxx::lang::jint>(snapshot.size()));
+        for (const auto& entry : snapshot) {
+            out->writeObject(::jxx::CAST<::jxx::lang::Object>(entry.first));
+            out->writeObject(::jxx::CAST<::jxx::lang::Object>(entry.second));
         }
     }
     void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {

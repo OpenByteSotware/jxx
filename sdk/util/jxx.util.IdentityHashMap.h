@@ -87,12 +87,10 @@ public:
 
     void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {
         if (out == nullptr) throw ::jxx::lang::NullPointerException();
-        out->writeInt(size());
-        auto iterator = entrySet()->iterator();
-        while (iterator->hasNext()) {
-            const auto entry = iterator->next();
-            out->writeObject(::jxx::CAST<::jxx::lang::Object>(entry->getKey()));
-            out->writeObject(::jxx::CAST<::jxx::lang::Object>(entry->getValue()));
+        out->writeInt(static_cast<::jxx::lang::jint>(entries_.size()));
+        for (const auto& entry : entries_) {
+            out->writeObject(::jxx::CAST<::jxx::lang::Object>(entry.key));
+            out->writeObject(::jxx::CAST<::jxx::lang::Object>(entry.value));
         }
     }
     void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {
