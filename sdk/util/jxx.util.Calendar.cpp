@@ -157,15 +157,30 @@ void Calendar::setTimeZone(const ::jxx::Ptr<TimeZone>& tz) {
     unsigned mo, da;
     epoch_to_local_parts(millis_, off, y, mo, da, hh, mm, ss, ms, dow);
 
+    static constexpr ::jxx::lang::jint cumulativeDays[12] =
+        {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
+    const auto leap = (y % 4 == 0 && (y % 100 != 0 || y % 400 == 0));
+    const auto dayOfYear = cumulativeDays[mo - 1] +
+        static_cast<::jxx::lang::jint>(da) + ((leap && mo > 2) ? 1 : 0);
+    const auto rawOffset = tz ? tz->getRawOffset() : 0;
+
     switch (field) {
-        case YEAR: return (::jxx::lang::jint)y;
-        case MONTH: return (::jxx::lang::jint)(mo - 1);
-        case DAY_OF_MONTH: return (::jxx::lang::jint)da;
-        case HOUR_OF_DAY: return (::jxx::lang::jint)hh;
-        case MINUTE: return (::jxx::lang::jint)mm;
-        case SECOND: return (::jxx::lang::jint)ss;
-        case MILLISECOND: return (::jxx::lang::jint)ms;
-        case DAY_OF_WEEK: return (::jxx::lang::jint)dow;
+        case ERA: return y <= 0 ? 0 : 1;
+        case YEAR: return y <= 0 ? 1 - y : y;
+        case MONTH: return static_cast<::jxx::lang::jint>(mo - 1);
+        case DAY_OF_MONTH: return static_cast<::jxx::lang::jint>(da);
+        case DAY_OF_YEAR: return dayOfYear;
+        case DAY_OF_WEEK: return static_cast<::jxx::lang::jint>(dow);
+        case DAY_OF_WEEK_IN_MONTH:
+            return (static_cast<::jxx::lang::jint>(da) - 1) / 7 + 1;
+        case AM_PM: return hh < 12 ? AM : PM;
+        case HOUR: return static_cast<::jxx::lang::jint>(hh % 12);
+        case HOUR_OF_DAY: return static_cast<::jxx::lang::jint>(hh);
+        case MINUTE: return static_cast<::jxx::lang::jint>(mm);
+        case SECOND: return static_cast<::jxx::lang::jint>(ss);
+        case MILLISECOND: return static_cast<::jxx::lang::jint>(ms);
+        case ZONE_OFFSET: return rawOffset;
+        case DST_OFFSET: return off - rawOffset;
         default:
             throw ::jxx::lang::IndexOutOfBoundsException(::jxx::NEW<::jxx::lang::String>("Unsupported Calendar field"));
     }

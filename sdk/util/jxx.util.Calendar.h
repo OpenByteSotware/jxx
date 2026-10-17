@@ -32,15 +32,47 @@ public:
         ::jxx::lang::Comparable<Calendar>>;
     using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
     static ::jxx::Ptr<::jxx::lang::ClassAny> Class();
-    // Java 8 field constants (subset)
+    static constexpr ::jxx::lang::jint ERA = 0;
     static constexpr ::jxx::lang::jint YEAR = 1;
-    static constexpr ::jxx::lang::jint MONTH = 2;          // 0-based
+    static constexpr ::jxx::lang::jint MONTH = 2;
+    static constexpr ::jxx::lang::jint WEEK_OF_YEAR = 3;
+    static constexpr ::jxx::lang::jint WEEK_OF_MONTH = 4;
     static constexpr ::jxx::lang::jint DAY_OF_MONTH = 5;
-    static constexpr ::jxx::lang::jint DAY_OF_WEEK = 7;    // 1=Sunday..7=Saturday
+    static constexpr ::jxx::lang::jint DATE = DAY_OF_MONTH;
+    static constexpr ::jxx::lang::jint DAY_OF_YEAR = 6;
+    static constexpr ::jxx::lang::jint DAY_OF_WEEK = 7;
+    static constexpr ::jxx::lang::jint DAY_OF_WEEK_IN_MONTH = 8;
+    static constexpr ::jxx::lang::jint AM_PM = 9;
+    static constexpr ::jxx::lang::jint HOUR = 10;
     static constexpr ::jxx::lang::jint HOUR_OF_DAY = 11;
     static constexpr ::jxx::lang::jint MINUTE = 12;
     static constexpr ::jxx::lang::jint SECOND = 13;
     static constexpr ::jxx::lang::jint MILLISECOND = 14;
+    static constexpr ::jxx::lang::jint ZONE_OFFSET = 15;
+    static constexpr ::jxx::lang::jint DST_OFFSET = 16;
+    static constexpr ::jxx::lang::jint FIELD_COUNT = 17;
+    static constexpr ::jxx::lang::jint SUNDAY = 1;
+    static constexpr ::jxx::lang::jint MONDAY = 2;
+    static constexpr ::jxx::lang::jint TUESDAY = 3;
+    static constexpr ::jxx::lang::jint WEDNESDAY = 4;
+    static constexpr ::jxx::lang::jint THURSDAY = 5;
+    static constexpr ::jxx::lang::jint FRIDAY = 6;
+    static constexpr ::jxx::lang::jint SATURDAY = 7;
+    static constexpr ::jxx::lang::jint JANUARY = 0;
+    static constexpr ::jxx::lang::jint FEBRUARY = 1;
+    static constexpr ::jxx::lang::jint MARCH = 2;
+    static constexpr ::jxx::lang::jint APRIL = 3;
+    static constexpr ::jxx::lang::jint MAY = 4;
+    static constexpr ::jxx::lang::jint JUNE = 5;
+    static constexpr ::jxx::lang::jint JULY = 6;
+    static constexpr ::jxx::lang::jint AUGUST = 7;
+    static constexpr ::jxx::lang::jint SEPTEMBER = 8;
+    static constexpr ::jxx::lang::jint OCTOBER = 9;
+    static constexpr ::jxx::lang::jint NOVEMBER = 10;
+    static constexpr ::jxx::lang::jint DECEMBER = 11;
+    static constexpr ::jxx::lang::jint UNDECIMBER = 12;
+    static constexpr ::jxx::lang::jint AM = 0;
+    static constexpr ::jxx::lang::jint PM = 1;
 
     Calendar();
 
