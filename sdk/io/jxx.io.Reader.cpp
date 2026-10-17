@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cstdint>
 #include "io/jxx.io.Reader.h"
+#include "nio/jxx.nio.CharBuffer.h"
 #include "io/jxx.io.IOException.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
@@ -45,6 +46,20 @@ Reader::Reader(
     if (lock == nullptr) {
         throw ::jxx::lang::NullPointerException();
     }
+}
+
+::jxx::lang::jint Reader::read(
+    const ::jxx::Ptr<::jxx::nio::CharBuffer>& target) {
+    if (target == nullptr) throw ::jxx::lang::NullPointerException();
+    const auto remaining = target->remaining();
+    if (remaining == 0) return 0;
+    auto buffer = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::jchar, 1U>>(
+        static_cast<std::uint32_t>(remaining));
+    const auto count = read(buffer, 0, remaining);
+    if (count > 0) {
+        target->put(buffer, 0, count);
+    }
+    return count;
 }
 
 ::jxx::lang::jint Reader::read() {

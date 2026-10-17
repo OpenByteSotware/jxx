@@ -2,6 +2,7 @@
 
 #include "io/jxx.io.Closeable.h"
 #include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.Readable.h"
 #include "lang/jxx.lang.buildin_array.h"
 #include "lang/jxx_types.h"
 
@@ -11,6 +12,7 @@ class Reader
     : public ::jxx::lang::ClassBase<
           Reader,
           ::jxx::lang::Object,
+          ::jxx::lang::Readable,
           Closeable> {
 public:
     using JxxSuper = ::jxx::lang::Object;
@@ -19,9 +21,13 @@ public:
         ::jxx::lang::ClassBase<
             Reader,
             JxxSuper,
+            ::jxx::lang::Readable,
             Closeable>;
 
     ~Reader() override = default;
+
+    virtual ::jxx::lang::jint read(
+        const ::jxx::Ptr<::jxx::nio::CharBuffer>& target) override;
 
     virtual ::jxx::lang::jint read();
 

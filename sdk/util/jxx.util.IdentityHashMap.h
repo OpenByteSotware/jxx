@@ -1,6 +1,7 @@
 #pragma once
 
 #include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.Cloneable.h"
 #include "io/jxx.io.SerializableI.h"
 #include "io/jxx.io.InvalidObjectException.h"
 #include "io/jxx.io.ObjectInputStream.h"
@@ -16,10 +17,10 @@
 namespace jxx::util {
 
 template <typename K, typename V>
-class IdentityHashMap final : public ::jxx::lang::ClassBase<IdentityHashMap<K, V>, AbstractMap<K, V>, ::jxx::io::SerializableI> {
+class IdentityHashMap final : public ::jxx::lang::ClassBase<IdentityHashMap<K, V>, AbstractMap<K, V>, ::jxx::lang::Cloneable, ::jxx::io::SerializableI> {
 public:
     using JxxSuper = AbstractMap<K, V>;
-    using Super = ::jxx::lang::ClassBase<IdentityHashMap<K, V>, JxxSuper, ::jxx::io::SerializableI>;
+    using Super = ::jxx::lang::ClassBase<IdentityHashMap<K, V>, JxxSuper, ::jxx::lang::Cloneable, ::jxx::io::SerializableI>;
 
     IdentityHashMap() = default;
     explicit IdentityHashMap(::jxx::lang::jint expectedMaximumSize) {

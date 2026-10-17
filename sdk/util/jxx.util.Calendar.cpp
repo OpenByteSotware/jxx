@@ -250,6 +250,9 @@ void Calendar::writeObject(
     const auto zone = getTimeZone();
     out->writeObject(::jxx::CAST<::jxx::lang::Object>(
         zone == nullptr ? nullptr : zone->getID()));
+    out->writeBoolean(lenient_);
+    out->writeInt(firstDayOfWeek_);
+    out->writeInt(minimalDaysInFirstWeek_);
 }
 
 void Calendar::readObject(
@@ -266,13 +269,28 @@ void Calendar::readObject(
         throw ::jxx::io::InvalidObjectException(
             ::jxx::NEW<::jxx::lang::String>("Calendar time zone is unavailable"));
     }
+    const auto lenient = in->readBoolean();
+    const auto firstDayOfWeek = in->readInt();
+    const auto minimalDaysInFirstWeek = in->readInt();
+    if (firstDayOfWeek < SUNDAY || firstDayOfWeek > SATURDAY ||
+        minimalDaysInFirstWeek < 1 || minimalDaysInFirstWeek > 7) {
+        throw ::jxx::io::InvalidObjectException(
+            ::jxx::NEW<::jxx::lang::String>(
+                "Calendar week configuration is invalid"));
+    }
     millis_ = millis;
     tz_ = zone;
+    lenient_ = lenient;
+    firstDayOfWeek_ = firstDayOfWeek;
+    minimalDaysInFirstWeek_ = minimalDaysInFirstWeek;
 }
 
 void Calendar::readObjectNoData() {
     millis_ = 0;
     tz_ = TimeZone::getDefault();
+    lenient_ = true;
+    firstDayOfWeek_ = SUNDAY;
+    minimalDaysInFirstWeek_ = 1;
 }
 
 } // namespace jxx::util
