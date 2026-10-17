@@ -4,8 +4,13 @@
 #include "com/google/gson/jxx.com.google.gson.TypeAdapter.h"
 namespace com::google::gson::internal {
 class TreeTypeAdapter final
-    : public ::jxx::lang::ClassBase<TreeTypeAdapter,::jxx::lang::Object,::com::google::gson::TypeAdapter> {
+    : public ::jxx::lang::ClassBase<
+          TreeTypeAdapter,
+          ::com::google::gson::TypeAdapter> {
 public:
+    using JxxSuper = ::com::google::gson::TypeAdapter;
+    using Super = ::jxx::lang::ClassBase<TreeTypeAdapter, JxxSuper>;
+    using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
  TreeTypeAdapter(const ::jxx::Ptr<::com::google::gson::JsonSerializer>& serializer,
                  const ::jxx::Ptr<::com::google::gson::JsonDeserializer>& deserializer,
                  const ::jxx::Ptr<::jxx::lang::ClassAny>& type,

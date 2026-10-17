@@ -7,15 +7,12 @@
 
 namespace jxx::util {
 
-class GregorianCalendar : public Calendar {
+class GregorianCalendar
+    : public ::jxx::lang::ClassBase<GregorianCalendar, Calendar> {
 public:
-    using Super = Calendar;
-    using JxxClassInfoMarker =
-        ::jxx::lang::ClassInfo<GregorianCalendar, Calendar>;
-
-    static ::jxx::Ptr<::jxx::lang::ClassAny> Class() {
-        return JxxClassInfoMarker::Class();
-    }
+    using JxxSuper = Calendar;
+    using Super = ::jxx::lang::ClassBase<GregorianCalendar, JxxSuper>;
+    using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
 
     static constexpr ::jxx::lang::jint BC = 0;
     static constexpr ::jxx::lang::jint AD = 1;

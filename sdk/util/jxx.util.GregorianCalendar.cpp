@@ -17,7 +17,7 @@ std::int64_t daysFromCivil(int y,unsigned m,unsigned d){y-=m<=2;const int era=(y
 GregorianCalendar::GregorianCalendar():GregorianCalendar(TimeZone::getDefault(),Locale::getDefault()){}
 GregorianCalendar::GregorianCalendar(const ::jxx::Ptr<TimeZone>&z):GregorianCalendar(z,Locale::getDefault()){}
 GregorianCalendar::GregorianCalendar(const ::jxx::Ptr<Locale>&l):GregorianCalendar(TimeZone::getDefault(),l){}
-GregorianCalendar::GregorianCalendar(const ::jxx::Ptr<TimeZone>&z,const ::jxx::Ptr<Locale>&l):Calendar(),locale_(l),gregorianChange_(::jxx::NEW<Date>(-12219292800000LL)){if(!z||!l)throw ::jxx::lang::NullPointerException();setTimeZone(z);setTimeInMillis(nowMillis());}
+GregorianCalendar::GregorianCalendar(const ::jxx::Ptr<TimeZone>&z,const ::jxx::Ptr<Locale>&l):Super(),locale_(l),gregorianChange_(::jxx::NEW<Date>(-12219292800000LL)){if(!z||!l)throw ::jxx::lang::NullPointerException();setTimeZone(z);setTimeInMillis(nowMillis());}
 GregorianCalendar::GregorianCalendar(::jxx::lang::jint y,::jxx::lang::jint m,::jxx::lang::jint d):GregorianCalendar(){setLocal_(y,m,d,0,0,0,0);}
 GregorianCalendar::GregorianCalendar(::jxx::lang::jint y,::jxx::lang::jint m,::jxx::lang::jint d,::jxx::lang::jint h,::jxx::lang::jint min):GregorianCalendar(){setLocal_(y,m,d,h,min,0,0);}
 GregorianCalendar::GregorianCalendar(::jxx::lang::jint y,::jxx::lang::jint m,::jxx::lang::jint d,::jxx::lang::jint h,::jxx::lang::jint min,::jxx::lang::jint s):GregorianCalendar(){setLocal_(y,m,d,h,min,s,0);}

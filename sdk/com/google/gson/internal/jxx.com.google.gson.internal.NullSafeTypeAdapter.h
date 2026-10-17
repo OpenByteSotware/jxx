@@ -4,9 +4,11 @@ namespace com::google::gson::internal {
 class NullSafeTypeAdapter final
     : public ::jxx::lang::ClassBase<
           NullSafeTypeAdapter,
-          ::jxx::lang::Object,
           ::com::google::gson::TypeAdapter> {
 public:
+    using JxxSuper = ::com::google::gson::TypeAdapter;
+    using Super = ::jxx::lang::ClassBase<NullSafeTypeAdapter, JxxSuper>;
+    using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
     explicit NullSafeTypeAdapter(
         const ::jxx::Ptr<::com::google::gson::TypeAdapter>& delegate);
     ::jxx::Ptr<::jxx::lang::Object> fromJsonTree(

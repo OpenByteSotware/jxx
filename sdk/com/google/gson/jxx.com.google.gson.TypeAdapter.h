@@ -15,8 +15,18 @@ namespace com::google::gson {
 class JsonElement;
 
 class TypeAdapter
-    : public ::jxx::lang::InterfaceBase<TypeAdapter> {
+    : public ::jxx::lang::ClassBase<
+          TypeAdapter,
+          ::jxx::lang::Object> {
 public:
+    using JxxSuper = ::jxx::lang::Object;
+    using Super = ::jxx::lang::ClassBase<TypeAdapter, JxxSuper>;
+    using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
+
+    static ::jxx::Ptr<::jxx::lang::ClassAny> Class() {
+        return JxxClassInfoMarker::Class();
+    }
+
     ~TypeAdapter() override = default;
 
     virtual ::jxx::Ptr<::jxx::lang::Object> fromJsonTree(
