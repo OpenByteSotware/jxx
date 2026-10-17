@@ -12,6 +12,9 @@
 #include "lang/jxx.lang.Comparable.h"
 #include "lang/jxx.lang.Cloneable.h"
 #include "io/jxx.io.SerializableI.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "io/jxx.io.InvalidObjectException.h"
 #include "lang/jxx.lang.IllegalStateException.h"
 #include "util/jxx.util.ConcurrentModificationException.h"
 #include "util/jxx.util.NoSuchElementException.h"
@@ -52,9 +55,64 @@ private:
     jxx::Ptr<Set<MapEntry<K, V>>> entrySetView_;
 
 public:
-    void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>&) override { throw ::jxx::lang::UnsupportedOperationException(); }
-    void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>&) override { throw ::jxx::lang::UnsupportedOperationException(); }
-    void readObjectNoData() override { clear(); }
+    void writeObject(
+        const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {
+        if (out == nullptr) {
+            throw ::jxx::lang::NullPointerException();
+        }
+        out->writeObject(::jxx::CAST<::jxx::lang::Object>(comparator_));
+        out->writeInt(size());
+        for (const auto& entry : map_) {
+            out->writeObject(::jxx::CAST<::jxx::lang::Object>(entry.first));
+            out->writeObject(::jxx::CAST<::jxx::lang::Object>(entry.second));
+        }
+    }
+
+    void readObject(
+        const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {
+        if (in == nullptr) {
+            throw ::jxx::lang::NullPointerException();
+        }
+        const auto comparatorObject = in->readObject();
+        const auto restoredComparator = comparatorObject == nullptr
+            ? ::jxx::Ptr<ComparatorSuper<K>>(nullptr)
+            : ::jxx::CAST<ComparatorSuper<K>>(comparatorObject);
+        if (comparatorObject != nullptr && restoredComparator == nullptr) {
+            throw ::jxx::io::InvalidObjectException(
+                ::jxx::NEW<::jxx::lang::String>("Invalid TreeMap comparator"));
+        }
+        const auto count = in->readInt();
+        if (count < 0) {
+            throw ::jxx::io::InvalidObjectException(
+                ::jxx::NEW<::jxx::lang::String>("Negative TreeMap size"));
+        }
+
+        InternalMap restored(KeyLess{restoredComparator});
+        for (::jxx::lang::jint index = 0; index < count; ++index) {
+            const auto key = ::jxx::CAST<K>(in->readObject());
+            const auto valueObject = in->readObject();
+            const auto value = valueObject == nullptr
+                ? ::jxx::Ptr<V>(nullptr)
+                : ::jxx::CAST<V>(valueObject);
+            if (key == nullptr || (valueObject != nullptr && value == nullptr)) {
+                throw ::jxx::io::InvalidObjectException(
+                    ::jxx::NEW<::jxx::lang::String>("Invalid TreeMap entry"));
+            }
+            restored[key] = value;
+        }
+        map_ = std::move(restored);
+        comparator_ = restoredComparator;
+        modCount_ = 0;
+        entrySetView_ = nullptr;
+    }
+
+    void readObjectNoData() override {
+        map_.clear();
+        comparator_ = nullptr;
+        map_ = InternalMap(KeyLess{nullptr});
+        modCount_ = 0;
+        entrySetView_ = nullptr;
+    }
 
     TreeMap()
         : map_(KeyLess{nullptr})
