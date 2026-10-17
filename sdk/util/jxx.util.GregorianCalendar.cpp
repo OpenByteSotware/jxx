@@ -26,7 +26,68 @@ void GregorianCalendar::setGregorianChange(const ::jxx::Ptr<Date>&d){if(!d)throw
 ::jxx::Ptr<Date> GregorianCalendar::getGregorianChange()const{return ::jxx::NEW<Date>(gregorianChange_->getTime());}
 ::jxx::lang::jint GregorianCalendar::daysInMonth_(::jxx::lang::jint y,::jxx::lang::jint m){static const int days[]={31,28,31,30,31,30,31,31,30,31,30,31};if(m<0||m>11)throw ::jxx::lang::IllegalArgumentException();return days[m]+(m==1&&y%4==0&&(y%100!=0||y%400==0));}
 ::jxx::lang::jlong GregorianCalendar::localToEpoch_(::jxx::lang::jint y,::jxx::lang::jint m,::jxx::lang::jint d,::jxx::lang::jint h,::jxx::lang::jint min,::jxx::lang::jint s,::jxx::lang::jint ms,const ::jxx::Ptr<TimeZone>&z){auto local=daysFromCivil(y,m+1,d)*86400000LL+h*3600000LL+min*60000LL+s*1000LL+ms;auto candidate=local-z->getRawOffset();for(int i=0;i<3;++i)candidate=local-z->getOffset(candidate);return candidate;}
-void GregorianCalendar::setLocal_(::jxx::lang::jint y,::jxx::lang::jint m,::jxx::lang::jint d,::jxx::lang::jint h,::jxx::lang::jint min,::jxx::lang::jint s,::jxx::lang::jint ms){if(m<0||m>11||d<1||d>daysInMonth_(y,m)||h<0||h>23||min<0||min>59||s<0||s>59||ms<0||ms>999)throw ::jxx::lang::IllegalArgumentException();setTimeInMillis(localToEpoch_(y,m,d,h,min,s,ms,getTimeZone()));}
+void GregorianCalendar::setLocal_(
+    ::jxx::lang::jint year,
+    ::jxx::lang::jint month,
+    ::jxx::lang::jint day,
+    ::jxx::lang::jint hour,
+    ::jxx::lang::jint minute,
+    ::jxx::lang::jint second,
+    ::jxx::lang::jint millisecond) {
+
+    if (!isLenient()) {
+        if (month < JANUARY || month > DECEMBER ||
+            day < 1 || day > daysInMonth_(year, month) ||
+            hour < 0 || hour > 23 || minute < 0 || minute > 59 ||
+            second < 0 || second > 59 ||
+            millisecond < 0 || millisecond > 999) {
+            throw ::jxx::lang::IllegalArgumentException();
+        }
+        setTimeInMillis(localToEpoch_(
+            year, month, day, hour, minute, second, millisecond,
+            getTimeZone()));
+        return;
+    }
+
+    const auto floorDivide = [](::jxx::lang::jlong value,
+                                ::jxx::lang::jlong divisor) {
+        auto quotient = value / divisor;
+        const auto remainder = value % divisor;
+        if (remainder != 0 && ((remainder < 0) != (divisor < 0))) {
+            --quotient;
+        }
+        return quotient;
+    };
+
+    const auto totalMonths =
+        static_cast<::jxx::lang::jlong>(year) * 12LL + month;
+    const auto normalizedYear = floorDivide(totalMonths, 12LL);
+    const auto normalizedMonth = totalMonths - normalizedYear * 12LL;
+
+    const auto timeOfDay =
+        static_cast<::jxx::lang::jlong>(hour) * 3600000LL +
+        static_cast<::jxx::lang::jlong>(minute) * 60000LL +
+        static_cast<::jxx::lang::jlong>(second) * 1000LL + millisecond;
+    const auto dayCarry = floorDivide(timeOfDay, 86400000LL);
+    const auto normalizedTime = timeOfDay - dayCarry * 86400000LL;
+
+    const auto baseDay = daysFromCivil(
+        static_cast<int>(normalizedYear),
+        static_cast<unsigned>(normalizedMonth + 1), 1U);
+    const auto localMillis =
+        (baseDay + static_cast<::jxx::lang::jlong>(day) - 1LL + dayCarry) *
+            86400000LL +
+        normalizedTime;
+
+    const auto zone = getTimeZone();
+    auto epochMillis = localMillis - zone->getRawOffset();
+    for (int iteration = 0; iteration < 4; ++iteration) {
+        const auto adjusted = localMillis - zone->getOffset(epochMillis);
+        if (adjusted == epochMillis) break;
+        epochMillis = adjusted;
+    }
+    setTimeInMillis(epochMillis);
+}
 void GregorianCalendar::set(::jxx::lang::jint y,::jxx::lang::jint m,::jxx::lang::jint d){setLocal_(y,m,d,get(HOUR_OF_DAY),get(MINUTE),get(SECOND),get(MILLISECOND));}
 void GregorianCalendar::set(::jxx::lang::jint y,::jxx::lang::jint m,::jxx::lang::jint d,::jxx::lang::jint h,::jxx::lang::jint min,::jxx::lang::jint s){setLocal_(y,m,d,h,min,s,0);}
 void GregorianCalendar::set(::jxx::lang::jint field,::jxx::lang::jint value){auto y=get(YEAR),m=get(MONTH),d=get(DAY_OF_MONTH),h=get(HOUR_OF_DAY),min=get(MINUTE),s=get(SECOND),ms=get(MILLISECOND);switch(field){case YEAR:y=value;break;case MONTH:m=value;break;case DAY_OF_MONTH:d=value;break;case HOUR_OF_DAY:h=value;break;case MINUTE:min=value;break;case SECOND:s=value;break;case MILLISECOND:ms=value;break;default:throw ::jxx::lang::IllegalArgumentException();}setLocal_(y,m,d,h,min,s,ms);}
