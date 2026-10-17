@@ -10,6 +10,10 @@
 #include <vector>
 
 #include "io/jxx.io.SerializableI.h"
+#include "io/jxx.io.InvalidObjectException.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "lang/jxx.lang.String.h"
 
 #include "lang/jxx.lang.ClassCastException.h"
 #include "lang/jxx.lang.Cloneable.h"
@@ -62,7 +66,7 @@ namespace jxx {
                 }
 
                 if (comparator_ != nullptr) {
-                    return comparator_->compare(left, right) < 0;
+                    return comparator_->compareSuper(left, right) < 0;
                 }
 
                 auto comparable =
@@ -207,31 +211,32 @@ namespace jxx {
             /*
              * Required by your pure-virtual Serializable interface.
              */
-            virtual void writeObject(
-                const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out)
-                override {
-
-                if (out == nullptr) {
-                    throw ::jxx::lang::NullPointerException();
+            virtual void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {
+                if (out == nullptr) throw ::jxx::lang::NullPointerException();
+                out->writeObject(::jxx::CAST<::jxx::lang::Object>(comparator_));
+                out->writeInt(static_cast<::jxx::lang::jint>(set_.size()));
+                for (const auto& element : set_) out->writeObject(::jxx::CAST<::jxx::lang::Object>(element));
+            }
+            virtual void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {
+                if (in == nullptr) throw ::jxx::lang::NullPointerException();
+                const auto comparatorObject = in->readObject();
+                comparator_ = nullptr;
+                if (comparatorObject != nullptr) {
+                    comparator_ = std::dynamic_pointer_cast<ComparatorSuper<E>>(comparatorObject);
+                    if (comparator_ == nullptr) throw ::jxx::io::InvalidObjectException(::jxx::NEW<::jxx::lang::String>("Invalid TreeSet comparator"));
                 }
-
-                throw ::jxx::lang::UnsupportedOperationException();
-            }
-
-            virtual void readObject(
-                const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in)
-                override {
-
-                if (in == nullptr) {
-                    throw ::jxx::lang::NullPointerException();
+                const auto count = in->readInt();
+                if (count < 0 || count > 16 * 1024 * 1024) throw ::jxx::io::InvalidObjectException(::jxx::NEW<::jxx::lang::String>("Invalid TreeSet size"));
+                InternalSet restored{TreeSetElemLess<E>(comparator_)};
+                for (::jxx::lang::jint index=0; index<count; ++index) {
+                    const auto object=in->readObject();
+                    const auto element=std::dynamic_pointer_cast<E>(object);
+                    if (element==nullptr) throw ::jxx::io::InvalidObjectException(::jxx::NEW<::jxx::lang::String>("Invalid TreeSet element"));
+                    restored.insert(element);
                 }
-
-                throw ::jxx::lang::UnsupportedOperationException();
+                set_=std::move(restored); modCount_=0;
             }
-
-            virtual void readObjectNoData() override {
-                throw ::jxx::lang::UnsupportedOperationException();
-            }
+            virtual void readObjectNoData() override { set_.clear(); comparator_=nullptr; modCount_=0; }
 
             virtual ::jxx::lang::jint size() override {
                 return static_cast<::jxx::lang::jint>(

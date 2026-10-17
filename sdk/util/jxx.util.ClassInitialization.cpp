@@ -40,6 +40,10 @@
 #include "util/jxx.util.Date.h"
 #include "util/jxx.util.DoubleSummaryStatistics.h"
 #include "util/jxx.util.EventListener.h"
+#include "util/jxx.util.IdentityHashMap.h"
+#include "util/jxx.util.LinkedHashMap.h"
+#include "util/jxx.util.TreeSet.h"
+#include "util/jxx.util.WeakHashMap.h"
 #include "util/jxx.util.HashMap.h"
 #include "util/jxx.util.LinkedHashSet.h"
 #include "util/jxx.util.LinkedList.h"
@@ -161,6 +165,22 @@ void initializeClasses()
         ::jxx::io::serialization::registerSerializableClass<ErasedLinkedHashSet>(
             static_cast<::jxx::lang::jlong>(-2851667679971038690LL));
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedLinkedHashSet, 1U, 2U>();
+        using ErasedIdentityHashMap = IdentityHashMap<::jxx::lang::Object, ::jxx::lang::Object>;
+        registerType<ErasedIdentityHashMap>();
+        ::jxx::io::serialization::registerSerializableClass<ErasedIdentityHashMap>(static_cast<::jxx::lang::jlong>(8188218128353913216LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedIdentityHashMap, 1U, 2U>();
+        using ErasedLinkedHashMap = LinkedHashMap<::jxx::lang::Object, ::jxx::lang::Object>;
+        registerType<ErasedLinkedHashMap>();
+        ::jxx::io::serialization::registerSerializableClass<ErasedLinkedHashMap>(static_cast<::jxx::lang::jlong>(3801124242820219131LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedLinkedHashMap, 1U, 2U>();
+        using ErasedWeakHashMap = WeakHashMap<::jxx::lang::Object, ::jxx::lang::Object>;
+        registerType<ErasedWeakHashMap>();
+        ::jxx::io::serialization::registerSerializableClass<ErasedWeakHashMap>(static_cast<::jxx::lang::jlong>(-5024744406713321676LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedWeakHashMap, 1U, 2U>();
+        using ErasedTreeSet = TreeSet<::jxx::lang::Object>;
+        registerType<ErasedTreeSet>();
+        ::jxx::io::serialization::registerSerializableClass<ErasedTreeSet>(static_cast<::jxx::lang::jlong>(-2479143000061671589LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedTreeSet, 1U, 2U>();
         registerType<IntStream>();
         ::jxx::io::serialization::registerSerializableClass<IntStream>(1, [] { return IntStream::of(::jxx::NEW<::jxx::lang::IntArrayType>(0)); });
         registerType<IntSummaryStatistics>();

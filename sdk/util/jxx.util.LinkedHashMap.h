@@ -6,6 +6,10 @@
 #include <vector>
 
 #include "lang/jxx.lang.ClassInfo.h"
+#include "io/jxx.io.InvalidObjectException.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.Object.h"
 #include "util/jxx.util.ConcurrentModificationException.h"
@@ -330,6 +334,31 @@ protected:
     }
 
 public:
+    void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {
+        if (out == nullptr) throw ::jxx::lang::NullPointerException();
+        out->writeFloat(this->loadFactorValue_());
+        out->writeBoolean(accessOrder_);
+        out->writeInt(static_cast<::jxx::lang::jint>(order_.size()));
+        for (const auto& key : order_) {
+            out->writeObject(::jxx::CAST<::jxx::lang::Object>(key));
+            out->writeObject(::jxx::CAST<::jxx::lang::Object>(this->getWithoutAccess_(key)));
+        }
+    }
+    void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {
+        if (in == nullptr) throw ::jxx::lang::NullPointerException();
+        const auto loadFactor=in->readFloat(); accessOrder_=in->readBoolean(); const auto count=in->readInt();
+        if (!(loadFactor>0.0f) || !std::isfinite(loadFactor) || count<0 || count>16*1024*1024)
+            throw ::jxx::io::InvalidObjectException(::jxx::NEW<::jxx::lang::String>("Invalid LinkedHashMap state"));
+        this->HashMap<K,V>::readObjectNoData(); order_.clear(); orderIndex_.clear();
+        for(::jxx::lang::jint index=0; index<count; ++index) {
+            const auto ko=in->readObject(); const auto vo=in->readObject(); ::jxx::Ptr<K> key; ::jxx::Ptr<V> value;
+            if(ko){key=std::dynamic_pointer_cast<K>(ko);if(!key)throw ::jxx::io::InvalidObjectException(::jxx::NEW<::jxx::lang::String>("Invalid LinkedHashMap key"));}
+            if(vo){value=std::dynamic_pointer_cast<V>(vo);if(!value)throw ::jxx::io::InvalidObjectException(::jxx::NEW<::jxx::lang::String>("Invalid LinkedHashMap value"));}
+            this->put(key,value);
+        }
+    }
+    void readObjectNoData() override { this->HashMap<K,V>::readObjectNoData(); order_.clear(); orderIndex_.clear(); accessOrder_=false; }
+
     ::jxx::Ptr<::jxx::lang::Object> clone() const override {
         auto cloned =
             ::jxx::NEW<LinkedHashMap<K, V>>(

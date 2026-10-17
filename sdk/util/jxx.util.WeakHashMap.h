@@ -1,6 +1,11 @@
 #pragma once
 
 #include "lang/jxx.lang.ClassInfo.h"
+#include "io/jxx.io.SerializableI.h"
+#include "io/jxx.io.InvalidObjectException.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "lang/jxx.lang.String.h"
 #include <cstdint>
 
 #include <algorithm>
@@ -14,10 +19,10 @@
 namespace jxx::util {
 
 template <typename K, typename V>
-class WeakHashMap final : public ::jxx::lang::ClassBase<WeakHashMap<K, V>, AbstractMap<K, V>> {
+class WeakHashMap final : public ::jxx::lang::ClassBase<WeakHashMap<K, V>, AbstractMap<K, V>, ::jxx::io::SerializableI> {
 public:
     using JxxSuper = AbstractMap<K, V>;
-    using Super = ::jxx::lang::ClassBase<WeakHashMap<K, V>, JxxSuper>;
+    using Super = ::jxx::lang::ClassBase<WeakHashMap<K, V>, JxxSuper, ::jxx::io::SerializableI>;
 
     WeakHashMap() = default;
     explicit WeakHashMap(::jxx::lang::jint initialCapacity)
@@ -111,6 +116,34 @@ public:
         }
         return ::jxx::CAST<Set<MapEntry<K, V>>>(result);
     }
+
+    void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {
+        if (out == nullptr) throw ::jxx::lang::NullPointerException();
+        out->writeInt(size());
+        auto iterator = entrySet()->iterator();
+        while (iterator->hasNext()) {
+            const auto entry = iterator->next();
+            out->writeObject(::jxx::CAST<::jxx::lang::Object>(entry->getKey()));
+            out->writeObject(::jxx::CAST<::jxx::lang::Object>(entry->getValue()));
+        }
+    }
+    void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {
+        if (in == nullptr) throw ::jxx::lang::NullPointerException();
+        const auto count = in->readInt();
+        if (count < 0 || count > 16 * 1024 * 1024)
+            throw ::jxx::io::InvalidObjectException(::jxx::NEW<::jxx::lang::String>("Invalid serialized map size"));
+        clear();
+        for (::jxx::lang::jint index = 0; index < count; ++index) {
+            const auto keyObject = in->readObject();
+            const auto valueObject = in->readObject();
+            ::jxx::Ptr<K> key;
+            ::jxx::Ptr<V> value;
+            if (keyObject != nullptr) { key = std::dynamic_pointer_cast<K>(keyObject); if (key == nullptr) throw ::jxx::io::InvalidObjectException(::jxx::NEW<::jxx::lang::String>("Incompatible map key")); }
+            if (valueObject != nullptr) { value = std::dynamic_pointer_cast<V>(valueObject); if (value == nullptr) throw ::jxx::io::InvalidObjectException(::jxx::NEW<::jxx::lang::String>("Incompatible map value")); }
+            put(key, value);
+        }
+    }
+    void readObjectNoData() override { clear(); }
 
 private:
     class EntrySnapshot final : public ::jxx::lang::ClassBase<
