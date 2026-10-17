@@ -9,6 +9,7 @@ class String;
 namespace jxx::io {
 
 class File;
+class FileDescriptor;
 
 class FileReader
     : public ::jxx::lang::ClassBase<
@@ -27,6 +28,9 @@ public:
 
     explicit FileReader(
         const ::jxx::Ptr<File>& file);
+
+    explicit FileReader(
+        const ::jxx::Ptr<FileDescriptor>& descriptor);
 
     ~FileReader() override;
 };
