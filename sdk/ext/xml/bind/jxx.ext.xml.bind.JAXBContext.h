@@ -14,10 +14,18 @@ class JAXBContext final
           JAXBContext,
           ::jxx::lang::Object> {
 public:
+    using ClassArray =
+        ::jxx::lang::JxxArray<
+            ::jxx::Ptr<::jxx::lang::ClassAny>,
+            1U>;
+
     using DescriptorArray =
         ::jxx::lang::JxxArray<
             ::jxx::Ptr<metadata::BindingDescriptor>,
             1U>;
+
+    static ::jxx::Ptr<JAXBContext> newInstance(
+        const ::jxx::Ptr<ClassArray>& classesToBeBound);
 
     static ::jxx::Ptr<JAXBContext> newInstance(
         const ::jxx::Ptr<DescriptorArray>& descriptors);
