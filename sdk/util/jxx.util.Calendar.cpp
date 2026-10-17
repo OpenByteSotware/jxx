@@ -2,6 +2,8 @@
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
 #include "lang/jxx.lang.String.h"
 #include "util/jxx.util.Calendar.h"
+#include "util/jxx.util.GregorianCalendar.h"
+#include "util/jxx.util.Locale.h"
 #include "io/jxx.io.InvalidObjectException.h"
 #include "io/jxx.io.ObjectInputStream.h"
 #include "io/jxx.io.ObjectOutputStream.h"
@@ -63,7 +65,33 @@ Calendar::Calendar() {
 }
 
 ::jxx::Ptr<Calendar> Calendar::getInstance() {
-    return ::jxx::NEW<Calendar>();
+    return ::jxx::CAST<Calendar>(::jxx::NEW<GregorianCalendar>());
+}
+
+::jxx::Ptr<Calendar> Calendar::getInstance(
+    const ::jxx::Ptr<TimeZone>& zone) {
+    if (zone == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+    return ::jxx::CAST<Calendar>(::jxx::NEW<GregorianCalendar>(zone));
+}
+
+::jxx::Ptr<Calendar> Calendar::getInstance(
+    const ::jxx::Ptr<Locale>& locale) {
+    if (locale == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+    return ::jxx::CAST<Calendar>(::jxx::NEW<GregorianCalendar>(locale));
+}
+
+::jxx::Ptr<Calendar> Calendar::getInstance(
+    const ::jxx::Ptr<TimeZone>& zone,
+    const ::jxx::Ptr<Locale>& locale) {
+    if (zone == nullptr || locale == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+    return ::jxx::CAST<Calendar>(
+        ::jxx::NEW<GregorianCalendar>(zone, locale));
 }
 
 ::jxx::lang::jint Calendar::compareTo(const ::jxx::Ptr<Calendar>& other) const {

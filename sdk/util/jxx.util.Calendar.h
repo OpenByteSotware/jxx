@@ -59,6 +59,13 @@ public:
         const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override;
     void readObjectNoData() override;
     static ::jxx::Ptr<Calendar> getInstance();
+    static ::jxx::Ptr<Calendar> getInstance(
+        const ::jxx::Ptr<TimeZone>& zone);
+    static ::jxx::Ptr<Calendar> getInstance(
+        const ::jxx::Ptr<Locale>& locale);
+    static ::jxx::Ptr<Calendar> getInstance(
+        const ::jxx::Ptr<TimeZone>& zone,
+        const ::jxx::Ptr<Locale>& locale);
 
     ::jxx::lang::jlong getTimeInMillis() const;
     void setTimeInMillis(::jxx::lang::jlong millis);
