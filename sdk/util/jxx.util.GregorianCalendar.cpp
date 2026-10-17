@@ -91,7 +91,77 @@ void GregorianCalendar::setLocal_(
 void GregorianCalendar::set(::jxx::lang::jint y,::jxx::lang::jint m,::jxx::lang::jint d){setLocal_(y,m,d,get(HOUR_OF_DAY),get(MINUTE),get(SECOND),get(MILLISECOND));}
 void GregorianCalendar::set(::jxx::lang::jint y,::jxx::lang::jint m,::jxx::lang::jint d,::jxx::lang::jint h,::jxx::lang::jint min,::jxx::lang::jint s){setLocal_(y,m,d,h,min,s,0);}
 void GregorianCalendar::set(::jxx::lang::jint field,::jxx::lang::jint value){auto y=get(YEAR),m=get(MONTH),d=get(DAY_OF_MONTH),h=get(HOUR_OF_DAY),min=get(MINUTE),s=get(SECOND),ms=get(MILLISECOND);switch(field){case YEAR:y=value;break;case MONTH:m=value;break;case DAY_OF_MONTH:d=value;break;case HOUR_OF_DAY:h=value;break;case MINUTE:min=value;break;case SECOND:s=value;break;case MILLISECOND:ms=value;break;default:throw ::jxx::lang::IllegalArgumentException();}setLocal_(y,m,d,h,min,s,ms);}
-void GregorianCalendar::add(::jxx::lang::jint field,::jxx::lang::jint amount){if(amount==0)return;if(field==MILLISECOND){setTimeInMillis(getTimeInMillis()+amount);return;}if(field==SECOND){setTimeInMillis(getTimeInMillis()+amount*1000LL);return;}if(field==MINUTE){setTimeInMillis(getTimeInMillis()+amount*60000LL);return;}if(field==HOUR_OF_DAY){setTimeInMillis(getTimeInMillis()+amount*3600000LL);return;}if(field==DAY_OF_MONTH){setTimeInMillis(getTimeInMillis()+amount*86400000LL);return;}auto y=get(YEAR),m=get(MONTH),d=get(DAY_OF_MONTH);if(field==YEAR)y+=amount;else if(field==MONTH){auto total=y*12+m+amount;y=total/12;m=total%12;if(m<0){m+=12;--y;}}else throw ::jxx::lang::IllegalArgumentException();d=std::min(d,daysInMonth_(y,m));setLocal_(y,m,d,get(HOUR_OF_DAY),get(MINUTE),get(SECOND),get(MILLISECOND));}
+void GregorianCalendar::add(
+    ::jxx::lang::jint field,
+    ::jxx::lang::jint amount) {
+
+    if (amount == 0) return;
+
+    switch (field) {
+        case MILLISECOND:
+            setTimeInMillis(getTimeInMillis() + amount);
+            return;
+        case SECOND:
+            setTimeInMillis(getTimeInMillis() +
+                            static_cast<::jxx::lang::jlong>(amount) * 1000LL);
+            return;
+        case MINUTE:
+            setTimeInMillis(getTimeInMillis() +
+                            static_cast<::jxx::lang::jlong>(amount) * 60000LL);
+            return;
+        case HOUR:
+        case HOUR_OF_DAY:
+            setTimeInMillis(getTimeInMillis() +
+                            static_cast<::jxx::lang::jlong>(amount) * 3600000LL);
+            return;
+        case AM_PM:
+            setTimeInMillis(getTimeInMillis() +
+                            static_cast<::jxx::lang::jlong>(amount) * 43200000LL);
+            return;
+        default:
+            break;
+    }
+
+    auto year = get(YEAR);
+    auto month = get(MONTH);
+    auto day = get(DAY_OF_MONTH);
+
+    switch (field) {
+        case YEAR:
+            year += amount;
+            day = std::min(day, daysInMonth_(year, month));
+            break;
+        case MONTH: {
+            const auto totalMonths =
+                static_cast<::jxx::lang::jlong>(year) * 12LL + month + amount;
+            auto quotient = totalMonths / 12LL;
+            auto remainder = totalMonths % 12LL;
+            if (remainder < 0) {
+                remainder += 12LL;
+                --quotient;
+            }
+            year = static_cast<::jxx::lang::jint>(quotient);
+            month = static_cast<::jxx::lang::jint>(remainder);
+            day = std::min(day, daysInMonth_(year, month));
+            break;
+        }
+        case WEEK_OF_YEAR:
+        case WEEK_OF_MONTH:
+        case DAY_OF_WEEK_IN_MONTH:
+            day += amount * 7;
+            break;
+        case DAY_OF_MONTH:
+        case DAY_OF_YEAR:
+        case DAY_OF_WEEK:
+            day += amount;
+            break;
+        default:
+            throw ::jxx::lang::IllegalArgumentException();
+    }
+
+    setLocal_(year, month, day,
+              get(HOUR_OF_DAY), get(MINUTE), get(SECOND), get(MILLISECOND));
+}
 void GregorianCalendar::roll(::jxx::lang::jint field,::jxx::lang::jint amount){if(amount==0)return;auto min=getActualMinimum(field),max=getActualMaximum(field),value=get(field),range=max-min+1;value=min+((value-min+amount)%range+range)%range;set(field,value);}
 ::jxx::lang::jint GregorianCalendar::getActualMaximum(
     ::jxx::lang::jint field) const {
