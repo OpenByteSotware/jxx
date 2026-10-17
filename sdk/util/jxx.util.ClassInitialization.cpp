@@ -31,6 +31,7 @@
 #include "util/concurrent/jxx.util.concurrent.RejectedExecutionException.h"
 #include "util/concurrent/jxx.util.concurrent.TimeoutException.h"
 #include "util/jxx.util.Arrays.h"
+#include "util/jxx.util.ArrayList.h"
 #include "util/jxx.util.Base64.h"
 #include "util/jxx.util.BitSet.h"
 #include "util/jxx.util.Calendar.h"
@@ -116,6 +117,11 @@ void initializeClasses()
             registerType<concurrent::RejectedExecutionException>();
             registerType<concurrent::TimeoutException>();
         registerType<Arrays>();
+        registerType<ArrayList<::jxx::lang::Object>>();
+        ::jxx::io::serialization::registerSerializableClass<
+            ArrayList<::jxx::lang::Object>>(1);
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            ArrayList<::jxx::lang::Object>, 1U, 2U>();
         registerType<Base64>();
         registerType<BitSet>();
         ::jxx::io::serialization::registerSerializableClass<BitSet>(1);

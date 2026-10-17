@@ -3,10 +3,14 @@
 #include <cstdint>
 
 #include "io/jxx.io.SerializableI.h"
+#include "io/jxx.io.InvalidObjectException.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Cloneable.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_array.h"
 #include "util/jxx.util.AbstractList.h"
 #include "util/jxx.util.ComparatorSuper.h"
@@ -606,7 +610,16 @@ public:
         if (output == nullptr) {
             throw jxx::lang::NullPointerException();
         }
-        throw jxx::lang::UnsupportedOperationException();
+
+        const auto expectedModCount = this->modCount;
+        output->writeInt(size_);
+        for (jxx::lang::jint index = 0; index < size_; ++index) {
+            output->writeObject(
+                jxx::CAST<jxx::lang::Object>((*elementData_)(index)));
+        }
+        if (this->modCount != expectedModCount) {
+            throw ConcurrentModificationException();
+        }
     }
 
     void readObject(
@@ -615,11 +628,41 @@ public:
         if (input == nullptr) {
             throw jxx::lang::NullPointerException();
         }
-        throw jxx::lang::UnsupportedOperationException();
+
+        const auto restoredSize = input->readInt();
+        if (restoredSize < 0) {
+            throw jxx::io::InvalidObjectException(
+                jxx::NEW<jxx::lang::String>("Negative ArrayList size"));
+        }
+
+        auto restored = jxx::NEW<jxx::JxxArray<jxx::Ptr<E>, 1U>>(
+            static_cast<std::uint32_t>(
+                initialStorageCapacity_(restoredSize)));
+        for (jxx::lang::jint index = 0;
+             index < restoredSize;
+             ++index) {
+            const auto object = input->readObject();
+            const auto element = object == nullptr
+                ? jxx::Ptr<E>(nullptr)
+                : jxx::CAST<E>(object);
+            if (object != nullptr && element == nullptr) {
+                throw jxx::io::InvalidObjectException(
+                    jxx::NEW<jxx::lang::String>(
+                        "ArrayList element has incompatible type"));
+            }
+            (*restored)(index) = element;
+        }
+
+        elementData_ = restored;
+        size_ = restoredSize;
+        this->modCount = 0;
     }
 
     void readObjectNoData() override {
-        throw jxx::lang::UnsupportedOperationException();
+        elementData_ = jxx::NEW<jxx::JxxArray<jxx::Ptr<E>, 1U>>(
+            static_cast<std::uint32_t>(DEFAULT_CAPACITY));
+        size_ = 0;
+        this->modCount = 0;
     }
 };
 
