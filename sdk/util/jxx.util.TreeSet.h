@@ -24,7 +24,7 @@
 
 #include "util/jxx.util.AbstractSet.h"
 #include "util/jxx.util.Collection.h"
-#include "util/jxx.util.ComparatorSuper.h"
+#include "util/jxx.util.Comparator.h"
 #include "util/jxx.util.ConcurrentModificationException.h"
 #include "util/jxx.util.Iterator.h"
 #include "util/jxx.util.NoSuchElementException.h"
@@ -44,7 +44,7 @@ namespace jxx {
         template <typename E>
         class TreeSetElemLess final {
         private:
-            ::jxx::Ptr<ComparatorSuper<E>> comparator_;
+            ::jxx::Ptr<Comparator<E>> comparator_;
 
         public:
             using JxxSuper = AbstractSet<E>;
@@ -54,7 +54,7 @@ namespace jxx {
                 : comparator_(nullptr) {}
 
             explicit TreeSetElemLess(
-                const ::jxx::Ptr<ComparatorSuper<E>>& comparator)
+                const ::jxx::Ptr<Comparator<E>>& comparator)
                 : comparator_(comparator) {}
 
             bool operator()(
@@ -66,7 +66,7 @@ namespace jxx {
                 }
 
                 if (comparator_ != nullptr) {
-                    return comparator_->compareSuper(left, right) < 0;
+                    return comparator_->compare(left, right) < 0;
                 }
 
                 auto comparable =
@@ -173,7 +173,7 @@ namespace jxx {
                 TreeSetElemLess<E>>;
 
             InternalSet set_;
-            ::jxx::Ptr<ComparatorSuper<E>> comparator_;
+            ::jxx::Ptr<Comparator<E>> comparator_;
             ::jxx::lang::jint modCount_;
 
         private:
@@ -190,7 +190,7 @@ namespace jxx {
                 , modCount_(0) {}
 
             explicit TreeSet(
-                const ::jxx::Ptr<ComparatorSuper<E>>& comparator)
+                const ::jxx::Ptr<Comparator<E>>& comparator)
                 : set_(TreeSetElemLess<E>(comparator))
                 , comparator_(comparator)
                 , modCount_(0) {}
@@ -222,7 +222,7 @@ namespace jxx {
                 const auto comparatorObject = in->readObject();
                 comparator_ = nullptr;
                 if (comparatorObject != nullptr) {
-                    comparator_ = std::dynamic_pointer_cast<ComparatorSuper<E>>(comparatorObject);
+                    comparator_ = std::dynamic_pointer_cast<Comparator<E>>(comparatorObject);
                     if (comparator_ == nullptr) throw ::jxx::io::InvalidObjectException(::jxx::NEW<::jxx::lang::String>("Invalid TreeSet comparator"));
                 }
                 const auto count = in->readInt();
@@ -248,8 +248,8 @@ namespace jxx {
                     set_.empty());
             }
 
-            virtual ::jxx::Ptr<ComparatorSuper<E>>
-                comparator() {
+            virtual ::jxx::Ptr<Comparator<E>>
+                comparator() const override {
 
                 return comparator_;
             }
@@ -437,7 +437,7 @@ namespace jxx {
                 return modified;
             }
 
-            virtual ::jxx::Ptr<E> first() {
+            virtual ::jxx::Ptr<E> first() const override {
                 if (set_.empty()) {
                     throw jxx::util::NoSuchElementException();
                 }
@@ -445,7 +445,7 @@ namespace jxx {
                 return *set_.begin();
             }
 
-            virtual ::jxx::Ptr<E> last() {
+            virtual ::jxx::Ptr<E> last() const override {
                 if (set_.empty()) {
                     throw jxx::util::NoSuchElementException();
                 }
@@ -457,7 +457,7 @@ namespace jxx {
             }
 
             virtual ::jxx::Ptr<E> lower(
-                const ::jxx::Ptr<E>& element) {
+                const ::jxx::Ptr<E>& element) const override {
 
                 if (element == nullptr) {
                     throw ::jxx::lang::NullPointerException();
@@ -475,7 +475,7 @@ namespace jxx {
             }
 
             virtual ::jxx::Ptr<E> floor(
-                const ::jxx::Ptr<E>& element) {
+                const ::jxx::Ptr<E>& element) const override {
 
                 if (element == nullptr) {
                     throw ::jxx::lang::NullPointerException();
@@ -493,7 +493,7 @@ namespace jxx {
             }
 
             virtual ::jxx::Ptr<E> ceiling(
-                const ::jxx::Ptr<E>& element) {
+                const ::jxx::Ptr<E>& element) const override {
 
                 if (element == nullptr) {
                     throw ::jxx::lang::NullPointerException();
@@ -508,7 +508,7 @@ namespace jxx {
             }
 
             virtual ::jxx::Ptr<E> higher(
-                const ::jxx::Ptr<E>& element) {
+                const ::jxx::Ptr<E>& element) const override {
 
                 if (element == nullptr) {
                     throw ::jxx::lang::NullPointerException();
@@ -522,7 +522,7 @@ namespace jxx {
                     : *iterator;
             }
 
-            virtual ::jxx::Ptr<E> pollFirst() {
+            virtual ::jxx::Ptr<E> pollFirst() override {
                 if (set_.empty()) {
                     return nullptr;
                 }
@@ -536,7 +536,7 @@ namespace jxx {
                 return value;
             }
 
-            virtual ::jxx::Ptr<E> pollLast() {
+            virtual ::jxx::Ptr<E> pollLast() override {
                 if (set_.empty()) {
                     return nullptr;
                 }
@@ -552,8 +552,81 @@ namespace jxx {
                 return value;
             }
 
+            ::jxx::Ptr<Iterator<E>> descendingIterator() override {
+                std::vector<::jxx::Ptr<E>> values;
+                values.reserve(set_.size());
+                for (auto iterator = set_.rbegin(); iterator != set_.rend(); ++iterator)
+                    values.push_back(*iterator);
+                class DescendingIterator final : public Iterator<E> {
+                public:
+                    explicit DescendingIterator(std::vector<::jxx::Ptr<E>> values)
+                        : values_(std::move(values)) {}
+                    ::jxx::lang::jbool hasNext() override { return index_ < values_.size(); }
+                    ::jxx::Ptr<E> next() override {
+                        if (!hasNext()) throw NoSuchElementException();
+                        return values_[index_++];
+                    }
+                    void remove() override { throw ::jxx::lang::UnsupportedOperationException(); }
+                private:
+                    std::vector<::jxx::Ptr<E>> values_;
+                    std::size_t index_ = 0;
+                };
+                return ::jxx::NEW<DescendingIterator>(std::move(values));
+            }
+
+            ::jxx::Ptr<NavigableSet<E>> descendingSet() const override {
+                auto result = ::jxx::NEW<TreeSet<E>>(comparator_);
+                for (const auto& element : set_) result->add(element);
+                return ::jxx::CAST<NavigableSet<E>>(result);
+            }
+
+            ::jxx::Ptr<NavigableSet<E>> subSet(
+                const ::jxx::Ptr<E>& fromElement, ::jxx::lang::jbool fromInclusive,
+                const ::jxx::Ptr<E>& toElement, ::jxx::lang::jbool toInclusive) const override {
+                if (!fromElement || !toElement) throw ::jxx::lang::NullPointerException();
+                auto result = ::jxx::NEW<TreeSet<E>>(comparator_);
+                const TreeSetElemLess<E> less(comparator_);
+                for (const auto& element : set_) {
+                    const bool above = fromInclusive ? !less(element, fromElement) : less(fromElement, element);
+                    const bool below = toInclusive ? !less(toElement, element) : less(element, toElement);
+                    if (above && below) result->add(element);
+                }
+                return ::jxx::CAST<NavigableSet<E>>(result);
+            }
+
+            ::jxx::Ptr<NavigableSet<E>> headSet(
+                const ::jxx::Ptr<E>& toElement, ::jxx::lang::jbool inclusive) const override {
+                if (!toElement) throw ::jxx::lang::NullPointerException();
+                auto result = ::jxx::NEW<TreeSet<E>>(comparator_);
+                const TreeSetElemLess<E> less(comparator_);
+                for (const auto& element : set_)
+                    if (inclusive ? !less(toElement, element) : less(element, toElement)) result->add(element);
+                return ::jxx::CAST<NavigableSet<E>>(result);
+            }
+
+            ::jxx::Ptr<NavigableSet<E>> tailSet(
+                const ::jxx::Ptr<E>& fromElement, ::jxx::lang::jbool inclusive) const override {
+                if (!fromElement) throw ::jxx::lang::NullPointerException();
+                auto result = ::jxx::NEW<TreeSet<E>>(comparator_);
+                const TreeSetElemLess<E> less(comparator_);
+                for (const auto& element : set_)
+                    if (inclusive ? !less(element, fromElement) : less(fromElement, element)) result->add(element);
+                return ::jxx::CAST<NavigableSet<E>>(result);
+            }
+
+            ::jxx::Ptr<SortedSet<E>> subSet(
+                const ::jxx::Ptr<E>& fromElement, const ::jxx::Ptr<E>& toElement) const override {
+                return ::jxx::CAST<SortedSet<E>>(subSet(fromElement, true, toElement, false));
+            }
+            ::jxx::Ptr<SortedSet<E>> headSet(const ::jxx::Ptr<E>& toElement) const override {
+                return ::jxx::CAST<SortedSet<E>>(headSet(toElement, false));
+            }
+            ::jxx::Ptr<SortedSet<E>> tailSet(const ::jxx::Ptr<E>& fromElement) const override {
+                return ::jxx::CAST<SortedSet<E>>(tailSet(fromElement, true));
+            }
+
             virtual ::jxx::Ptr<::jxx::lang::Object>
-                clone() {
+                clone() const override {
 
                 auto cloned = ::jxx::NEW<TreeSet<E>>(comparator_);
 
