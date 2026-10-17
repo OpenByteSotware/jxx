@@ -25,6 +25,7 @@ enum class Tag : std::uint8_t {
     NewArray = 0x12,
     NewEnum = 0x13,
     NewClass = 0x14,
+    NewTimeZone = 0x15,
     ClassDescriptor = 0x20,
     ClassDescriptorRef = 0x21,
     EndClassDescriptor = 0x22,

@@ -10,6 +10,7 @@
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.AtomicIntegerArray.h"
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.AtomicLong.h"
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.AtomicLongArray.h"
+#include "util/concurrent/atomic/jxx.util.concurrent.atomic.AtomicReferenceArray.h"
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.DoubleAccumulator.h"
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.DoubleAdder.h"
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.LongAccumulator.h"
@@ -32,6 +33,13 @@ void initializeClasses()
         ::jxx::io::serialization::registerSerializableClass<AtomicLongArray>(
             1,
             [] { return ::jxx::NEW<AtomicLongArray>(0); });
+        using ErasedAtomicReferenceArray = AtomicReferenceArray<::jxx::lang::Object>;
+        (void)ErasedAtomicReferenceArray::Class();
+        ::jxx::io::serialization::registerSerializableClass<ErasedAtomicReferenceArray>(
+            static_cast<::jxx::lang::jlong>(-6209656149925076980LL),
+            [] { return ::jxx::NEW<ErasedAtomicReferenceArray>(0); });
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            ErasedAtomicReferenceArray, 1U, 2U>();
         (void)::jxx::lang::ClassBase<DoubleAccumulator, ::jxx::lang::Number, ::jxx::io::SerializableI>::Class();
         (void)::jxx::lang::ClassBase<DoubleAdder, ::jxx::lang::Number, ::jxx::io::SerializableI>::Class();
         ::jxx::io::serialization::registerSerializableClass<DoubleAdder>(1);

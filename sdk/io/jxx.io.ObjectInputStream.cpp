@@ -11,6 +11,7 @@
 #include "lang/jxx.lang.Class.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_array.h"
+#include "util/jxx.util.TimeZone.h"
 
 namespace jxx::io {
 namespace { using Tag = serialization::Tag; }
@@ -240,6 +241,16 @@ void ObjectInputStream::requireEndArray_() {
         return value;
     }
     if (tag == Tag::NewString) return readString_(readHandle_());
+    if (tag == Tag::NewTimeZone) {
+        const auto handle = readHandle_();
+        const auto idObject = readObject0_();
+        const auto id = std::dynamic_pointer_cast<::jxx::lang::String>(idObject);
+        if (id == nullptr)
+            throw StreamCorruptedException("TimeZone identifier is not a String");
+        auto value = ::jxx::util::TimeZone::getTimeZone(id);
+        registerHandle_(handle, value);
+        return value;
+    }
     if (tag == Tag::NewArray) return readArray_(readHandle_());
     if (tag != Tag::NewObject) throw StreamCorruptedException("Unsupported JXX object stream tag");
     const auto handle = readHandle_();

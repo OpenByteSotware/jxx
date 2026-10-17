@@ -11,6 +11,7 @@
 #include "lang/jxx.lang.EnumValue.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_array.h"
+#include "util/jxx.util.TimeZone.h"
 
 namespace jxx::io {
 namespace { using Tag = serialization::Tag; }
@@ -73,6 +74,12 @@ void ObjectOutputStream::writeObject0_(const ::jxx::Ptr<::jxx::lang::Object>& ob
         return;
     }
     const auto handle = assignHandle_(object);
+    if (const auto timeZone = std::dynamic_pointer_cast<::jxx::util::TimeZone>(object)) {
+        writeByte(static_cast<::jxx::lang::jint>(Tag::NewTimeZone));
+        writeHandle_(handle);
+        writeObject0_(::jxx::CAST<::jxx::lang::Object>(timeZone->getID()));
+        return;
+    }
     if (const auto* codec = serialization::ArrayCodecRegistry::findByType(std::type_index(typeid(*object)))) {
         writeByte(static_cast<::jxx::lang::jint>(Tag::NewArray));
         writeHandle_(handle);

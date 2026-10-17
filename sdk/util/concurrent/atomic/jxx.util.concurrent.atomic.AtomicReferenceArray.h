@@ -1,47 +1,158 @@
 #pragma once
+
 #include <mutex>
 #include <vector>
-#include "io/jxx.io.SerializableI.h"
+
 #include "io/jxx.io.InvalidObjectException.h"
 #include "io/jxx.io.ObjectInputStream.h"
 #include "io/jxx.io.ObjectOutputStream.h"
-#include "lang/jxx.lang.String.h"
+#include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_array.h"
+
 namespace jxx::util::concurrent::atomic {
-template<typename E> class AtomicReferenceArray final:public ::jxx::lang::ClassBase<AtomicReferenceArray<E>,::jxx::lang::Object,::jxx::io::SerializableI>{
-public:using JxxSuper=::jxx::lang::Object;using Super=::jxx::lang::ClassBase<AtomicReferenceArray<E>,JxxSuper,::jxx::io::SerializableI>;using JxxClassInfoMarker=typename Super::JxxClassInfoMarker;static ::jxx::Ptr<::jxx::lang::ClassAny>Class(){return JxxClassInfoMarker::Class();}explicit AtomicReferenceArray(::jxx::lang::jint n):Super(),values_(checked_(n)){}explicit AtomicReferenceArray(const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<E>,1U>>&a):Super(){if(!a)throw ::jxx::lang::NullPointerException();values_.reserve(a->length);for(std::uint32_t i=0;i<a->length;++i)values_.push_back((*a)[i]);}::jxx::lang::jint length()const noexcept{return static_cast<::jxx::lang::jint>(values_.size());}::jxx::Ptr<E>get(::jxx::lang::jint i)const{std::lock_guard<std::mutex>l(mutex_);return values_[index_(i)];}void set(::jxx::lang::jint i,const ::jxx::Ptr<E>&v){std::lock_guard<std::mutex>l(mutex_);values_[index_(i)]=v;}void lazySet(::jxx::lang::jint i,const ::jxx::Ptr<E>&v){set(i,v);}::jxx::Ptr<E>getAndSet(::jxx::lang::jint i,const ::jxx::Ptr<E>&v){std::lock_guard<std::mutex>l(mutex_);auto&x=values_[index_(i)];auto old=x;x=v;return old;}::jxx::lang::jbool compareAndSet(::jxx::lang::jint i,const ::jxx::Ptr<E>&e,const ::jxx::Ptr<E>&u){std::lock_guard<std::mutex>l(mutex_);auto&x=values_[index_(i)];if(x.get()!=e.get())return false;x=u;return true;}::jxx::lang::jbool weakCompareAndSet(::jxx::lang::jint i,const ::jxx::Ptr<E>&e,const ::jxx::Ptr<E>&u){return compareAndSet(i,e,u);}void writeObject(
-    const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) override {
-    if (output == nullptr) throw ::jxx::lang::NullPointerException();
-    std::lock_guard<std::mutex> lock(mutex_);
-    output->writeInt(static_cast<::jxx::lang::jint>(values_.size()));
-    for (const auto& value : values_) {
-        output->writeObject(::jxx::CAST<::jxx::lang::Object>(value));
+
+template<typename E>
+class AtomicReferenceArray final
+    : public ::jxx::lang::ClassBase<
+          AtomicReferenceArray<E>,
+          ::jxx::lang::Object,
+          ::jxx::io::SerializableI> {
+public:
+    using JxxSuper = ::jxx::lang::Object;
+    using Super = ::jxx::lang::ClassBase<
+        AtomicReferenceArray<E>, JxxSuper, ::jxx::io::SerializableI>;
+    using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
+
+    static ::jxx::Ptr<::jxx::lang::ClassAny> Class() {
+        return JxxClassInfoMarker::Class();
     }
-}
-void readObject(
-    const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) override {
-    if (input == nullptr) throw ::jxx::lang::NullPointerException();
-    const auto size = input->readInt();
-    if (size < 0 || size > MAX_SERIALIZED_LENGTH_) {
-        throw ::jxx::io::InvalidObjectException(
-            ::jxx::NEW<::jxx::lang::String>(
-                "Invalid AtomicReferenceArray serialized length"));
+
+    explicit AtomicReferenceArray(::jxx::lang::jint length)
+        : Super(), values_(checkedLength_(length)) {}
+
+    explicit AtomicReferenceArray(
+        const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<E>, 1U>>& array)
+        : Super() {
+        if (array == nullptr) throw ::jxx::lang::NullPointerException();
+        values_.reserve(array->length);
+        for (std::uint32_t index = 0; index < array->length; ++index) {
+            values_.push_back((*array)[index]);
+        }
     }
-    std::vector<::jxx::Ptr<E>> restored;
-    restored.reserve(static_cast<std::size_t>(size));
-    for (::jxx::lang::jint index = 0; index < size; ++index) {
-        restored.push_back(::jxx::CAST<E>(input->readObject()));
+
+    ::jxx::lang::jint length() const noexcept {
+        return static_cast<::jxx::lang::jint>(values_.size());
     }
-    std::lock_guard<std::mutex> lock(mutex_);
-    values_ = std::move(restored);
-}
-void readObjectNoData() override {
-    std::lock_guard<std::mutex> lock(mutex_);
-    values_.clear();
-}
+
+    ::jxx::Ptr<E> get(::jxx::lang::jint index) const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return values_[checkedIndex_(index)];
+    }
+
+    void set(::jxx::lang::jint index, const ::jxx::Ptr<E>& value) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        values_[checkedIndex_(index)] = value;
+    }
+
+    void lazySet(::jxx::lang::jint index, const ::jxx::Ptr<E>& value) {
+        set(index, value);
+    }
+
+    ::jxx::Ptr<E> getAndSet(
+        ::jxx::lang::jint index,
+        const ::jxx::Ptr<E>& value) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto& current = values_[checkedIndex_(index)];
+        auto previous = current;
+        current = value;
+        return previous;
+    }
+
+    ::jxx::lang::jbool compareAndSet(
+        ::jxx::lang::jint index,
+        const ::jxx::Ptr<E>& expected,
+        const ::jxx::Ptr<E>& update) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto& current = values_[checkedIndex_(index)];
+        if (current.get() != expected.get()) return false;
+        current = update;
+        return true;
+    }
+
+    ::jxx::lang::jbool weakCompareAndSet(
+        ::jxx::lang::jint index,
+        const ::jxx::Ptr<E>& expected,
+        const ::jxx::Ptr<E>& update) {
+        return compareAndSet(index, expected, update);
+    }
+
+    void writeObject(
+        const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) override {
+        if (output == nullptr) throw ::jxx::lang::NullPointerException();
+        std::lock_guard<std::mutex> lock(mutex_);
+        output->writeInt(static_cast<::jxx::lang::jint>(values_.size()));
+        for (const auto& value : values_) {
+            output->writeObject(::jxx::CAST<::jxx::lang::Object>(value));
+        }
+    }
+
+    void readObject(
+        const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) override {
+        if (input == nullptr) throw ::jxx::lang::NullPointerException();
+        const auto size = input->readInt();
+        if (size < 0 || size > MAX_SERIALIZED_LENGTH_) {
+            throw ::jxx::io::InvalidObjectException(
+                ::jxx::NEW<::jxx::lang::String>(
+                    "Invalid AtomicReferenceArray serialized length"));
+        }
+
+        std::vector<::jxx::Ptr<E>> restored;
+        restored.reserve(static_cast<std::size_t>(size));
+        for (::jxx::lang::jint index = 0; index < size; ++index) {
+            const auto object = input->readObject();
+            if (object == nullptr) {
+                restored.push_back(nullptr);
+                continue;
+            }
+            const auto value = std::dynamic_pointer_cast<E>(object);
+            if (value == nullptr) {
+                throw ::jxx::io::InvalidObjectException(
+                    ::jxx::NEW<::jxx::lang::String>(
+                        "AtomicReferenceArray element has incompatible type"));
+            }
+            restored.push_back(value);
+        }
+
+        std::lock_guard<std::mutex> lock(mutex_);
+        values_ = std::move(restored);
+    }
+
+    void readObjectNoData() override {
+        std::lock_guard<std::mutex> lock(mutex_);
+        values_.clear();
+    }
+
 private:
-static constexpr ::jxx::lang::jint MAX_SERIALIZED_LENGTH_ = 16 * 1024 * 1024;
-static std::size_t checked_(::jxx::lang::jint n){if(n<0)throw ::jxx::lang::IllegalArgumentException();return static_cast<std::size_t>(n);}std::size_t index_(::jxx::lang::jint i)const{if(i<0||i>=length())throw ::jxx::lang::IndexOutOfBoundsException();return static_cast<std::size_t>(i);}mutable std::mutex mutex_;std::vector<::jxx::Ptr<E>>values_;};}
+    static constexpr ::jxx::lang::jint MAX_SERIALIZED_LENGTH_ =
+        16 * 1024 * 1024;
+
+    static std::size_t checkedLength_(::jxx::lang::jint length) {
+        if (length < 0) throw ::jxx::lang::IllegalArgumentException();
+        return static_cast<std::size_t>(length);
+    }
+
+    std::size_t checkedIndex_(::jxx::lang::jint index) const {
+        if (index < 0 || index >= length())
+            throw ::jxx::lang::IndexOutOfBoundsException();
+        return static_cast<std::size_t>(index);
+    }
+
+    mutable std::mutex mutex_;
+    std::vector<::jxx::Ptr<E>> values_;
+};
+
+} // namespace jxx::util::concurrent::atomic
