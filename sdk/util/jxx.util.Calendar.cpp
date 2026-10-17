@@ -159,6 +159,60 @@ void Calendar::setTimeZone(const ::jxx::Ptr<TimeZone>& tz) {
     tz_ = std::move(tz);
 }
 
+::jxx::lang::jint Calendar::getMinimum(::jxx::lang::jint field) const {
+    switch (field) {
+        case ERA: case YEAR: case MONTH: case WEEK_OF_YEAR:
+        case WEEK_OF_MONTH: case DAY_OF_YEAR: case DAY_OF_WEEK_IN_MONTH:
+        case AM_PM: case HOUR: case HOUR_OF_DAY: case MINUTE:
+        case SECOND: case MILLISECOND: case ZONE_OFFSET: case DST_OFFSET:
+            return 0;
+        case DAY_OF_MONTH: case DAY_OF_WEEK:
+            return 1;
+        default:
+            throw ::jxx::lang::IllegalArgumentException();
+    }
+}
+
+::jxx::lang::jint Calendar::getMaximum(::jxx::lang::jint field) const {
+    switch (field) {
+        case ERA: return 1;
+        case YEAR: return 292278994;
+        case MONTH: return DECEMBER;
+        case WEEK_OF_YEAR: return 53;
+        case WEEK_OF_MONTH: return 6;
+        case DAY_OF_MONTH: return 31;
+        case DAY_OF_YEAR: return 366;
+        case DAY_OF_WEEK: return SATURDAY;
+        case DAY_OF_WEEK_IN_MONTH: return 6;
+        case AM_PM: return PM;
+        case HOUR: return 11;
+        case HOUR_OF_DAY: return 23;
+        case MINUTE: case SECOND: return 59;
+        case MILLISECOND: return 999;
+        case ZONE_OFFSET: return 14 * 60 * 60 * 1000;
+        case DST_OFFSET: return 2 * 60 * 60 * 1000;
+        default:
+            throw ::jxx::lang::IllegalArgumentException();
+    }
+}
+
+::jxx::lang::jint Calendar::getGreatestMinimum(
+    ::jxx::lang::jint field) const {
+    return getMinimum(field);
+}
+
+::jxx::lang::jint Calendar::getLeastMaximum(
+    ::jxx::lang::jint field) const {
+    switch (field) {
+        case WEEK_OF_YEAR: return 52;
+        case WEEK_OF_MONTH: return 4;
+        case DAY_OF_MONTH: return 28;
+        case DAY_OF_YEAR: return 365;
+        case DAY_OF_WEEK_IN_MONTH: return 4;
+        default: return getMaximum(field);
+    }
+}
+
 void Calendar::setFirstDayOfWeek(::jxx::lang::jint value) {
     if (value < SUNDAY || value > SATURDAY) {
         throw ::jxx::lang::IllegalArgumentException();

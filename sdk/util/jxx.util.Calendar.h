@@ -109,6 +109,12 @@ public:
     void setTimeZone(const ::jxx::Ptr<TimeZone>& tz);
 
     ::jxx::lang::jint get(::jxx::lang::jint field) const;
+    virtual ::jxx::lang::jint getMinimum(::jxx::lang::jint field) const;
+    virtual ::jxx::lang::jint getMaximum(::jxx::lang::jint field) const;
+    virtual ::jxx::lang::jint getGreatestMinimum(
+        ::jxx::lang::jint field) const;
+    virtual ::jxx::lang::jint getLeastMaximum(
+        ::jxx::lang::jint field) const;
     void setFirstDayOfWeek(::jxx::lang::jint value);
     ::jxx::lang::jint getFirstDayOfWeek() const noexcept;
     void setMinimalDaysInFirstWeek(::jxx::lang::jint value);
