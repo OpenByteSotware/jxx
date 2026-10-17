@@ -11,6 +11,10 @@
 #include <vector>
 
 #include "io/jxx.io.SerializableI.h"
+#include "io/jxx.io.InvalidObjectException.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.InterruptedException.h"
@@ -201,9 +205,9 @@ public:
         return count;
     }
 
-    void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override { (void)out; }
-    void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override { (void)in; }
-    void readObjectNoData() override {}
+    void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override { if(!out) throw ::jxx::lang::NullPointerException(); std::lock_guard<std::mutex> lock(mutex_); out->writeObject(::jxx::CAST<::jxx::lang::Object>(comparator_)); out->writeInt(static_cast<::jxx::lang::jint>(queue_.size())); for(const auto& e:queue_) out->writeObject(::jxx::CAST<::jxx::lang::Object>(e)); }
+    void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override { if(!in) throw ::jxx::lang::NullPointerException(); const auto comparatorObject=in->readObject(); comparator_=nullptr; if(comparatorObject){ comparator_=std::dynamic_pointer_cast<::jxx::util::Comparator<E>>(comparatorObject); if(!comparator_) throw ::jxx::io::InvalidObjectException(::jxx::NEW<::jxx::lang::String>("Invalid comparator")); } const auto n=in->readInt(); if(n<0||n>16*1024*1024) throw ::jxx::io::InvalidObjectException(::jxx::NEW<::jxx::lang::String>("Invalid serialized queue size")); std::deque<::jxx::Ptr<E>> restored; for(::jxx::lang::jint x=0;x<n;++x){auto o=in->readObject(); auto e=std::dynamic_pointer_cast<E>(o); if(!e) throw ::jxx::io::InvalidObjectException(::jxx::NEW<::jxx::lang::String>("Invalid queue element")); restored.push_back(e);} std::lock_guard<std::mutex> lock(mutex_); queue_=std::move(restored); }
+    void readObjectNoData() override { std::lock_guard<std::mutex> lock(mutex_); queue_.clear(); }
 
 private:
     static void requireElement_(const ::jxx::Ptr<E>& element) {

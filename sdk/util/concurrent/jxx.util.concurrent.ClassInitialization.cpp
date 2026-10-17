@@ -5,6 +5,12 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "io/jxx.io.ArrayCodecRegistry.h"
 #include "io/jxx.io.SerializationClassRegistry.h"
+#include "util/concurrent/jxx.util.concurrent.ConcurrentLinkedQueue.h"
+#include "util/concurrent/jxx.util.concurrent.ConcurrentLinkedDeque.h"
+#include "util/concurrent/jxx.util.concurrent.PriorityBlockingQueue.h"
+#include "util/concurrent/jxx.util.concurrent.DelayQueue.h"
+#include "util/concurrent/jxx.util.concurrent.LinkedTransferQueue.h"
+#include "util/concurrent/jxx.util.concurrent.SynchronousQueue.h"
 #include "util/concurrent/jxx.util.concurrent.CountDownLatch.h"
 #include "util/concurrent/jxx.util.concurrent.CyclicBarrier.h"
 #include "util/concurrent/jxx.util.concurrent.DelegatedExecutorService.h"
@@ -50,6 +56,18 @@ void initializeClasses()
 {
     static std::once_flag flag;
     std::call_once(flag, [] {
+        using ObjectType = ::jxx::lang::Object;
+#define JXX_REGISTER_ERASED_QUEUE(Type) \
+        registerType<Type<ObjectType>>(); \
+        ::jxx::io::serialization::registerSerializableClass<Type<ObjectType>>(1); \
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<Type<ObjectType>, 1U, 2U>();
+        JXX_REGISTER_ERASED_QUEUE(ConcurrentLinkedQueue)
+        JXX_REGISTER_ERASED_QUEUE(ConcurrentLinkedDeque)
+        JXX_REGISTER_ERASED_QUEUE(PriorityBlockingQueue)
+        JXX_REGISTER_ERASED_QUEUE(DelayQueue)
+        JXX_REGISTER_ERASED_QUEUE(LinkedTransferQueue)
+        JXX_REGISTER_ERASED_QUEUE(SynchronousQueue)
+#undef JXX_REGISTER_ERASED_QUEUE
         registerType<CountDownLatch>();
         registerType<CyclicBarrier>();
         registerType<executors_detail::DefaultThreadFactory>();
