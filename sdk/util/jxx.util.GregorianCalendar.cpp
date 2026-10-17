@@ -22,8 +22,17 @@ GregorianCalendar::GregorianCalendar(::jxx::lang::jint y,::jxx::lang::jint m,::j
 GregorianCalendar::GregorianCalendar(::jxx::lang::jint y,::jxx::lang::jint m,::jxx::lang::jint d,::jxx::lang::jint h,::jxx::lang::jint min):GregorianCalendar(){setLocal_(y,m,d,h,min,0,0);}
 GregorianCalendar::GregorianCalendar(::jxx::lang::jint y,::jxx::lang::jint m,::jxx::lang::jint d,::jxx::lang::jint h,::jxx::lang::jint min,::jxx::lang::jint s):GregorianCalendar(){setLocal_(y,m,d,h,min,s,0);}
 ::jxx::lang::jbool GregorianCalendar::isLeapYear(::jxx::lang::jint y)const{return y%4==0&&(y%100!=0||y%400==0);}
-void GregorianCalendar::setGregorianChange(const ::jxx::Ptr<Date>&d){if(!d)throw ::jxx::lang::NullPointerException();gregorianChange_=::jxx::NEW<Date>(d->getTime());}
-::jxx::Ptr<Date> GregorianCalendar::getGregorianChange()const{return ::jxx::NEW<Date>(gregorianChange_->getTime());}
+void GregorianCalendar::setGregorianChange(
+    const ::jxx::Ptr<Date>& date) {
+    if (date == nullptr) throw ::jxx::lang::NullPointerException();
+    gregorianChange_ = ::jxx::NEW<Date>(date->getTime());
+}
+
+::jxx::Ptr<Date> GregorianCalendar::getGregorianChange() const {
+    return gregorianChange_ == nullptr
+        ? nullptr
+        : ::jxx::NEW<Date>(gregorianChange_->getTime());
+}
 ::jxx::lang::jint GregorianCalendar::daysInMonth_(::jxx::lang::jint y,::jxx::lang::jint m){static const int days[]={31,28,31,30,31,30,31,31,30,31,30,31};if(m<0||m>11)throw ::jxx::lang::IllegalArgumentException();return days[m]+(m==1&&y%4==0&&(y%100!=0||y%400==0));}
 ::jxx::lang::jlong GregorianCalendar::localToEpoch_(::jxx::lang::jint y,::jxx::lang::jint m,::jxx::lang::jint d,::jxx::lang::jint h,::jxx::lang::jint min,::jxx::lang::jint s,::jxx::lang::jint ms,const ::jxx::Ptr<TimeZone>&z){auto local=daysFromCivil(y,m+1,d)*86400000LL+h*3600000LL+min*60000LL+s*1000LL+ms;auto candidate=local-z->getRawOffset();for(int i=0;i<3;++i)candidate=local-z->getOffset(candidate);return candidate;}
 void GregorianCalendar::setLocal_(

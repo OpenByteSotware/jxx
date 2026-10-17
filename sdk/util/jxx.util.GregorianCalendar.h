@@ -54,10 +54,19 @@ public:
     ::jxx::lang::jint getActualMinimum(
         ::jxx::lang::jint field) const override;
     ::jxx::Ptr<::jxx::lang::String> getCalendarType() const;
+    ::jxx::lang::jbool isWeekDateSupported() const noexcept;
+    ::jxx::lang::jint getWeekYear() const;
+    void setWeekDate(::jxx::lang::jint weekYear,
+                     ::jxx::lang::jint weekOfYear,
+                     ::jxx::lang::jint dayOfWeek);
+    ::jxx::lang::jint getWeeksInWeekYear() const;
 
     void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override;
     void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override;
     void readObjectNoData() override;
+
+protected:
+    ::jxx::Ptr<::jxx::lang::Object> cloneImpl() const override;
 
 private:
     static ::jxx::lang::jlong localToEpoch_(
