@@ -34,18 +34,63 @@ BufferedReader::BufferedReader(
         static_cast<std::uint32_t>(size));
 }
 
-::jxx::lang::jint BufferedReader::fill() {
-    position_ = 0;
-    count_ = in_->read(
-        buffer_,
-        0,
-        static_cast<::jxx::lang::jint>(buffer_->length));
-    return count_;
+void BufferedReader::ensureOpen_() const {
+    if (in_ == nullptr) {
+        throw IOException();
+    }
+}
+
+::jxx::lang::jint BufferedReader::fill_() {
+    ensureOpen_();
+
+    ::jxx::lang::jint destination = 0;
+    if (markedPosition_ >= 0) {
+        const auto consumedSinceMark = position_ - markedPosition_;
+        if (consumedSinceMark >= readAheadLimit_) {
+            markedPosition_ = -1;
+            readAheadLimit_ = 0;
+        } else {
+            if (readAheadLimit_ >
+                static_cast<::jxx::lang::jint>(buffer_->length)) {
+                auto expanded = ::jxx::NEW<::jxx::lang::CharArrayType>(
+                    static_cast<std::uint32_t>(readAheadLimit_));
+                for (::jxx::lang::jint index = markedPosition_;
+                     index < position_;
+                     ++index) {
+                    (*expanded)[index - markedPosition_] = (*buffer_)[index];
+                }
+                buffer_ = expanded;
+            } else {
+                for (::jxx::lang::jint index = markedPosition_;
+                     index < position_;
+                     ++index) {
+                    (*buffer_)[index - markedPosition_] = (*buffer_)[index];
+                }
+            }
+            destination = consumedSinceMark;
+            position_ = consumedSinceMark;
+            markedPosition_ = 0;
+        }
+    }
+
+    const auto available =
+        static_cast<::jxx::lang::jint>(buffer_->length) - destination;
+    const auto amount = in_->read(buffer_, destination, available);
+    if (amount > 0) {
+        count_ = destination + amount;
+        if (markedPosition_ < 0) {
+            position_ = 0;
+        }
+    } else {
+        count_ = destination;
+    }
+    return amount;
 }
 
 ::jxx::lang::jint BufferedReader::read() {
     return lock->synchronized([&]() -> ::jxx::lang::jint {
-        if (position_ >= count_ && fill() < 0) {
+        ensureOpen_();
+        if (position_ >= count_ && fill_() < 0) {
             return -1;
         }
         return static_cast<::jxx::lang::jint>((*buffer_)[position_++]);
@@ -110,6 +155,7 @@ BufferedReader::BufferedReader(
 
 ::jxx::lang::jlong BufferedReader::skip(::jxx::lang::jlong count) {
     return lock->synchronized([&]() -> ::jxx::lang::jlong {
+        ensureOpen_();
         if (count < 0) {
             throw ::jxx::lang::IllegalArgumentException();
         }
@@ -123,6 +169,7 @@ BufferedReader::BufferedReader(
 
 ::jxx::lang::jbool BufferedReader::ready() {
     return lock->synchronized([&]() -> ::jxx::lang::jbool {
+        ensureOpen_();
         return position_ < count_ || in_->ready();
     });
 }
@@ -133,19 +180,22 @@ BufferedReader::BufferedReader(
 
 void BufferedReader::mark(::jxx::lang::jint readAheadLimit) {
     lock->synchronized([&] {
+        ensureOpen_();
         if (readAheadLimit < 0) {
             throw ::jxx::lang::IllegalArgumentException();
         }
-        mark_ = position_;
+        readAheadLimit_ = readAheadLimit;
+        markedPosition_ = position_;
     });
 }
 
 void BufferedReader::reset() {
     lock->synchronized([&] {
-        if (mark_ < 0) {
+        ensureOpen_();
+        if (markedPosition_ < 0) {
             throw IOException();
         }
-        position_ = mark_;
+        position_ = markedPosition_;
     });
 }
 
@@ -157,6 +207,10 @@ void BufferedReader::close() {
         buffer_.reset();
         in_->close();
         in_.reset();
+        position_ = 0;
+        count_ = 0;
+        markedPosition_ = -1;
+        readAheadLimit_ = 0;
     });
 }
 
