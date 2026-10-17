@@ -7,6 +7,10 @@
 #include "lang/jxx.lang.NullPointerException.h"
 namespace jxx::ext::net::ssl
 {
+	SSLSessionBindingEvent::SSLSessionBindingEvent()
+		: Super(::jxx::NEW<::jxx::lang::Object>()), name_(nullptr)
+	{
+	}
 	SSLSessionBindingEvent::SSLSessionBindingEvent(const ::jxx::Ptr<SSLSession>& s, const ::jxx::Ptr<::jxx::lang::String>& n) :Super(::jxx::CAST<::jxx::lang::Object>(s)), name_(n)
 	{
 		if (s == nullptr)throw ::jxx::lang::IllegalArgumentException(); if (n == nullptr)throw ::jxx::lang::NullPointerException();
@@ -16,6 +20,9 @@ namespace jxx::ext::net::ssl
 	}::jxx::Ptr<SSLSession>SSLSessionBindingEvent::getSession()const
 	{
 		return ::jxx::CAST<SSLSession>(getSource());
+	}::jxx::Ptr<SSLSessionBindingEvent> SSLSessionBindingEvent::createForDeserialization()
+	{
+		return ::jxx::ADOPT(::jxx::Ptr<SSLSessionBindingEvent>(new SSLSessionBindingEvent()));
 	}void SSLSessionBindingEvent::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& o)
 	{
 		if (o == nullptr)throw ::jxx::lang::NullPointerException(); o->writeObject(::jxx::CAST<::jxx::lang::Object>(getSession())); o->writeObject(::jxx::CAST<::jxx::lang::Object>(name_));

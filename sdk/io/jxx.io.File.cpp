@@ -8,6 +8,9 @@
 #include <string>
 #include "io/jxx.io.File.h"
 #include "io/jxx.io.IOException.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "lang/jxx.lang.IllegalStateException.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
@@ -216,6 +219,18 @@ namespace jxx::io
 	} ::jxx::lang::jlong File::getUsableSpace()const
 	{
 		std::error_code e; return static_cast<::jxx::lang::jlong>(fs::space(native(path_), e).available);
+	} void File::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output)
+	{
+		if (output == nullptr) throw ::jxx::lang::NullPointerException();
+		output->writeObject(::jxx::CAST<::jxx::lang::Object>(path_));
+	} void File::readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input)
+	{
+		if (input == nullptr) throw ::jxx::lang::NullPointerException();
+		path_ = ::jxx::CAST<::jxx::lang::String>(input->readObject());
+		if (path_ == nullptr) throw ::jxx::lang::IllegalStateException("invalid serialized file path");
+	} void File::readObjectNoData()
+	{
+		throw ::jxx::lang::IllegalStateException("file requires serialized path data");
 	} ::jxx::lang::jint File::compareTo(const ::jxx::Ptr<File>& o)const
 	{
 		return path_->compareTo(o->path_);

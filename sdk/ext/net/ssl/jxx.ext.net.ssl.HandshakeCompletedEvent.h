@@ -42,7 +42,10 @@ public:
         const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) override;
     void readObjectNoData() override;
 
+    static ::jxx::Ptr<HandshakeCompletedEvent> createForDeserialization();
+
 private:
+    HandshakeCompletedEvent();
     ::jxx::Ptr<SSLSession> session_;
 };
 

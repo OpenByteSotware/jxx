@@ -9,6 +9,11 @@
 
 namespace jxx::ext::net::ssl {
 
+HandshakeCompletedEvent::HandshakeCompletedEvent()
+    : Super(::jxx::NEW<::jxx::lang::Object>())
+    , session_(nullptr) {
+}
+
 HandshakeCompletedEvent::HandshakeCompletedEvent(
     const ::jxx::Ptr<SSLSocket>& socket,
     const ::jxx::Ptr<SSLSession>& session)
@@ -59,6 +64,10 @@ HandshakeCompletedEvent::getPeerPrincipal() const {
     return session_->getPeerPrincipal();
 }
 
+
+::jxx::Ptr<HandshakeCompletedEvent> HandshakeCompletedEvent::createForDeserialization() {
+    return ::jxx::ADOPT(::jxx::Ptr<HandshakeCompletedEvent>(new HandshakeCompletedEvent()));
+}
 
 void HandshakeCompletedEvent::writeObject(
     const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) {

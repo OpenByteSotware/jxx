@@ -256,6 +256,8 @@ void initializeClasses()
         registerType<Runnable>();
         registerType<StrictMath>();
         registerType<String>();
+        ::jxx::io::serialization::registerSerializableClass<String>(
+            static_cast<::jxx::lang::jlong>(-6849794470754667710LL));
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<
             String, 1U, 2U>();
         registerType<StringCaseInsensitiveComparator>();

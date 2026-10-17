@@ -1,4 +1,6 @@
 #include "ext/net/ssl/jxx.ext.net.ssl.ClassInitialization.h"
+#include "io/jxx.io.ArrayCodecRegistry.h"
+#include "io/jxx.io.SerializationClassRegistry.h"
 
 #include <mutex>
 
@@ -63,6 +65,11 @@ void initializeClasses()
         registerType<CertPathTrustManagerParameters>();
         registerType<ExtendedSSLSession>();
         registerType<HandshakeCompletedEvent>();
+        ::jxx::io::serialization::registerSerializableClass<HandshakeCompletedEvent>(
+            1,
+            [] { return HandshakeCompletedEvent::createForDeserialization(); });
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            HandshakeCompletedEvent, 1U, 2U>();
         registerType<HandshakeCompletedListener>();
         registerType<HostnameVerifier>();
         registerType<HttpsURLConnection>();
@@ -99,6 +106,11 @@ void initializeClasses()
         registerType<SNIHostName>();
         registerType<SNIServerName>();
         registerType<SSLSessionBindingEvent>();
+        ::jxx::io::serialization::registerSerializableClass<SSLSessionBindingEvent>(
+            static_cast<::jxx::lang::jlong>(3989172637106345LL),
+            [] { return SSLSessionBindingEvent::createForDeserialization(); });
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            SSLSessionBindingEvent, 1U, 2U>();
         registerType<SSLSessionBindingListener>();
         registerType<TrustManager>();
     });

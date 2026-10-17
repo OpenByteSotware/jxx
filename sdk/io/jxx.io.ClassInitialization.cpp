@@ -1,5 +1,7 @@
 #include <mutex>
 #include "io/jxx.io.ClassInitialization.h"
+#include "io/jxx.io.ArrayCodecRegistry.h"
+#include "io/jxx.io.SerializationClassRegistry.h"
 #include "io/jxx.io.ByteArrayInputStream.h"
 #include "io/jxx.io.ByteArrayOutputStream.h"
 #include "io/jxx.io.BufferedInputStream.h"
@@ -78,7 +80,11 @@ namespace jxx::io
 				  reg<ByteArrayOutputStream>(); 
 				  reg<BufferedInputStream>(); reg<BufferedOutputStream>();
 				  reg<BufferedReader>(); reg<BufferedWriter>(); reg<Console>();
-				  reg<DataInputStream>(); reg<DataOutputStream>(); reg<File>(); 
+				  reg<DataInputStream>(); reg<DataOutputStream>(); reg<File>();
+                  ::jxx::io::serialization::registerSerializableClass<File>(
+                      static_cast<::jxx::lang::jlong>(301077366599181567LL),
+                      [] { return ::jxx::NEW<File>(::jxx::NEW<::jxx::lang::String>()); });
+                  ::jxx::io::serialization::registerClassReferenceArrayCodecs<File, 1U, 2U>(); 
 				  reg<FileInputStream>(); reg<FileOutputStream>(); reg<FileReader>(); 
 				  reg<FileWriter>(); reg<InputStreamReader>(); reg<ObjectInputStream>();
 				  reg<ObjectOutputStream>(); reg<OutputStreamWriter>(); reg<PrintStream>();
