@@ -32,8 +32,42 @@ void GregorianCalendar::set(::jxx::lang::jint y,::jxx::lang::jint m,::jxx::lang:
 void GregorianCalendar::set(::jxx::lang::jint field,::jxx::lang::jint value){auto y=get(YEAR),m=get(MONTH),d=get(DAY_OF_MONTH),h=get(HOUR_OF_DAY),min=get(MINUTE),s=get(SECOND),ms=get(MILLISECOND);switch(field){case YEAR:y=value;break;case MONTH:m=value;break;case DAY_OF_MONTH:d=value;break;case HOUR_OF_DAY:h=value;break;case MINUTE:min=value;break;case SECOND:s=value;break;case MILLISECOND:ms=value;break;default:throw ::jxx::lang::IllegalArgumentException();}setLocal_(y,m,d,h,min,s,ms);}
 void GregorianCalendar::add(::jxx::lang::jint field,::jxx::lang::jint amount){if(amount==0)return;if(field==MILLISECOND){setTimeInMillis(getTimeInMillis()+amount);return;}if(field==SECOND){setTimeInMillis(getTimeInMillis()+amount*1000LL);return;}if(field==MINUTE){setTimeInMillis(getTimeInMillis()+amount*60000LL);return;}if(field==HOUR_OF_DAY){setTimeInMillis(getTimeInMillis()+amount*3600000LL);return;}if(field==DAY_OF_MONTH){setTimeInMillis(getTimeInMillis()+amount*86400000LL);return;}auto y=get(YEAR),m=get(MONTH),d=get(DAY_OF_MONTH);if(field==YEAR)y+=amount;else if(field==MONTH){auto total=y*12+m+amount;y=total/12;m=total%12;if(m<0){m+=12;--y;}}else throw ::jxx::lang::IllegalArgumentException();d=std::min(d,daysInMonth_(y,m));setLocal_(y,m,d,get(HOUR_OF_DAY),get(MINUTE),get(SECOND),get(MILLISECOND));}
 void GregorianCalendar::roll(::jxx::lang::jint field,::jxx::lang::jint amount){if(amount==0)return;auto min=getActualMinimum(field),max=getActualMaximum(field),value=get(field),range=max-min+1;value=min+((value-min+amount)%range+range)%range;set(field,value);}
-::jxx::lang::jint GregorianCalendar::getActualMaximum(::jxx::lang::jint field)const{switch(field){case MONTH:return 11;case DAY_OF_MONTH:return daysInMonth_(get(YEAR),get(MONTH));case HOUR_OF_DAY:return 23;case MINUTE:case SECOND:return 59;case MILLISECOND:return 999;default:throw ::jxx::lang::IllegalArgumentException();}}
-::jxx::lang::jint GregorianCalendar::getActualMinimum(::jxx::lang::jint field)const{switch(field){case MONTH:case HOUR_OF_DAY:case MINUTE:case SECOND:case MILLISECOND:return 0;case DAY_OF_MONTH:return 1;default:throw ::jxx::lang::IllegalArgumentException();}}
+::jxx::lang::jint GregorianCalendar::getActualMaximum(
+    ::jxx::lang::jint field) const {
+    switch (field) {
+        case DAY_OF_MONTH:
+            return daysInMonth_(get(YEAR), get(MONTH));
+        case DAY_OF_YEAR:
+            return isLeapYear(get(YEAR)) ? 366 : 365;
+        case WEEK_OF_MONTH: {
+            const auto lastDay = daysInMonth_(get(YEAR), get(MONTH));
+            const auto saved = get(DAY_OF_MONTH);
+            const_cast<GregorianCalendar*>(this)->set(DAY_OF_MONTH, lastDay);
+            const auto result = get(WEEK_OF_MONTH);
+            const_cast<GregorianCalendar*>(this)->set(DAY_OF_MONTH, saved);
+            return result;
+        }
+        case WEEK_OF_YEAR: {
+            const auto year = get(YEAR);
+            const auto savedMonth = get(MONTH);
+            const auto savedDay = get(DAY_OF_MONTH);
+            const_cast<GregorianCalendar*>(this)->set(year, DECEMBER, 31);
+            auto result = get(WEEK_OF_YEAR);
+            if (result == 0) result = 52;
+            const_cast<GregorianCalendar*>(this)->set(year, savedMonth, savedDay);
+            return result;
+        }
+        case DAY_OF_WEEK_IN_MONTH:
+            return (daysInMonth_(get(YEAR), get(MONTH)) + 6) / 7;
+        default:
+            return Calendar::getMaximum(field);
+    }
+}
+
+::jxx::lang::jint GregorianCalendar::getActualMinimum(
+    ::jxx::lang::jint field) const {
+    return Calendar::getMinimum(field);
+}
 ::jxx::Ptr<::jxx::lang::String> GregorianCalendar::getCalendarType()const{return ::jxx::NEW<::jxx::lang::String>("gregory");}
 
 void GregorianCalendar::writeObject(

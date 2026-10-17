@@ -213,6 +213,16 @@ void Calendar::setTimeZone(const ::jxx::Ptr<TimeZone>& tz) {
     }
 }
 
+::jxx::lang::jint Calendar::getActualMinimum(
+    ::jxx::lang::jint field) const {
+    return getGreatestMinimum(field);
+}
+
+::jxx::lang::jint Calendar::getActualMaximum(
+    ::jxx::lang::jint field) const {
+    return getLeastMaximum(field);
+}
+
 void Calendar::setFirstDayOfWeek(::jxx::lang::jint value) {
     if (value < SUNDAY || value > SATURDAY) {
         throw ::jxx::lang::IllegalArgumentException();

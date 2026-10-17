@@ -48,8 +48,10 @@ public:
              ::jxx::lang::jint minute, ::jxx::lang::jint second);
     void add(::jxx::lang::jint field, ::jxx::lang::jint amount);
     void roll(::jxx::lang::jint field, ::jxx::lang::jint amount);
-    ::jxx::lang::jint getActualMaximum(::jxx::lang::jint field) const;
-    ::jxx::lang::jint getActualMinimum(::jxx::lang::jint field) const;
+    ::jxx::lang::jint getActualMaximum(
+        ::jxx::lang::jint field) const override;
+    ::jxx::lang::jint getActualMinimum(
+        ::jxx::lang::jint field) const override;
     ::jxx::Ptr<::jxx::lang::String> getCalendarType() const;
 
     void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override;

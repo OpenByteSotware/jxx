@@ -115,6 +115,10 @@ public:
         ::jxx::lang::jint field) const;
     virtual ::jxx::lang::jint getLeastMaximum(
         ::jxx::lang::jint field) const;
+    virtual ::jxx::lang::jint getActualMinimum(
+        ::jxx::lang::jint field) const;
+    virtual ::jxx::lang::jint getActualMaximum(
+        ::jxx::lang::jint field) const;
     void setFirstDayOfWeek(::jxx::lang::jint value);
     ::jxx::lang::jint getFirstDayOfWeek() const noexcept;
     void setMinimalDaysInFirstWeek(::jxx::lang::jint value);

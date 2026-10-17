@@ -22,24 +22,28 @@ template <typename E>
 class LinkedHashSet final
     : public ::jxx::lang::ClassBase<
           LinkedHashSet<E>,
-          AbstractSet<E>,
-          ::jxx::lang::Cloneable,
-          ::jxx::io::SerializableI> {
+          HashSet<E>> {
 public:
-    using JxxSuper = AbstractSet<E>;
+    using JxxSuper = HashSet<E>;
+    using Super = ::jxx::lang::ClassBase<LinkedHashSet<E>, JxxSuper>;
+    using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
 
     LinkedHashSet() = default;
-    explicit LinkedHashSet(::jxx::lang::jint initialCapacity) {
+    explicit LinkedHashSet(::jxx::lang::jint initialCapacity)
+        : Super(initialCapacity) {
         if (initialCapacity < 0) throw ::jxx::lang::IllegalArgumentException();
         values_.reserve(static_cast<std::size_t>(initialCapacity));
     }
     LinkedHashSet(::jxx::lang::jint initialCapacity,
                   ::jxx::lang::jfloat loadFactor)
-        : LinkedHashSet(initialCapacity) {
-        if (!(loadFactor > 0.0F)) throw ::jxx::lang::IllegalArgumentException();
+        : Super(initialCapacity, loadFactor) {
+        if (initialCapacity < 0 || !(loadFactor > 0.0F))
+            throw ::jxx::lang::IllegalArgumentException();
+        values_.reserve(static_cast<std::size_t>(initialCapacity));
     }
     explicit LinkedHashSet(
-        const ::jxx::Ptr<wildcard::CollectionExtends<E>>& collection) {
+        const ::jxx::Ptr<wildcard::CollectionExtends<E>>& collection)
+        : Super() {
         if (collection == nullptr) throw ::jxx::lang::NullPointerException();
         this->addAll(collection);
     }
