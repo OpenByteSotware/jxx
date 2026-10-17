@@ -7,6 +7,10 @@
 #include <vector>
 
 #include "io/jxx.io.SerializableI.h"
+#include "io/jxx.io.InvalidObjectException.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "util/jxx.util.AbstractQueue.h"
@@ -104,9 +108,9 @@ public:
         while(!q_.empty()&&count<n){c->add(q_.front());q_.pop_front();++count;}
         if(count)notFull_.notify_all(); return count;
     }
-    void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>&o)override{(void)o;}
-    void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>&i)override{(void)i;}
-    void readObjectNoData()override{}
+    void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) override { if(!output) throw ::jxx::lang::NullPointerException(); std::lock_guard<std::mutex> lock(m_); output->writeInt(capacity_); output->writeInt(static_cast<::jxx::lang::jint>(q_.size())); for(const auto& value:q_) output->writeObject(::jxx::CAST<::jxx::lang::Object>(value)); }
+    void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) override { if(!input) throw ::jxx::lang::NullPointerException(); const auto capacity=input->readInt(); const auto size=input->readInt(); if(capacity<=0||size<0||size>capacity) throw ::jxx::io::InvalidObjectException(::jxx::NEW<::jxx::lang::String>("Invalid LinkedBlockingDeque serialized state")); std::deque<::jxx::Ptr<E>> restored; for(::jxx::lang::jint i=0;i<size;++i){auto value=::jxx::CAST<E>(input->readObject());if(!value)throw ::jxx::io::InvalidObjectException(::jxx::NEW<::jxx::lang::String>("Null deque element"));restored.push_back(value);} {std::lock_guard<std::mutex> lock(m_);capacity_=capacity;q_=std::move(restored);} notEmpty_.notify_all();notFull_.notify_all(); }
+    void readObjectNoData() override { {std::lock_guard<std::mutex> lock(m_);q_.clear();capacity_=1;} notFull_.notify_all(); }
 
 private:
     static void require_(const ::jxx::Ptr<E>&e){if(!e)throw ::jxx::lang::NullPointerException();}
