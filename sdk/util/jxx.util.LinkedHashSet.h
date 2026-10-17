@@ -135,6 +135,10 @@ public:
             ::jxx::CAST<LinkedHashSet<E>>(this->thisPtr()));
     }
 
+    ::jxx::Ptr<::jxx::lang::Object> clone() const override {
+        return cloneImpl();
+    }
+
     ::jxx::lang::ObjectArray toArray() override {
         auto result = ::jxx::NEW<::jxx::lang::ObjectArrayType>(
             static_cast<std::uint32_t>(values_.size()));
