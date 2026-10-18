@@ -1,148 +1,57 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(jxx_gui LANGUAGES CXX)
-
-#
-# C++17 is a hard requirement for JXX GUI.
-#
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-#
-# Required for static/shared library reuse.
-#
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-#
-# Optional build switch.
-#
-option(JXX_BUILD_GUI "Build JXX GUI Library" ON)
-
-if(NOT JXX_BUILD_GUI)
-    return()
+if(JXX_HEADLESS)
+    message(FATAL_ERROR "sdkgui must not be included when JXX_HEADLESS=ON")
 endif()
 
-#
-# Find all source files.
-#
-file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/*.h"
+if(NOT TARGET jxxsdk)
+    message(FATAL_ERROR "sdkgui requires the canonical jxxsdk target")
+endif()
+
+# GUI sources augment jxxsdk so applications always link one JXX runtime and
+# always call only jxx::initialize(). The canonical beans implementation lives
+# in sdk/beans; sdkgui/beans intentionally contains no duplicate sources.
+file(GLOB_RECURSE JXX_GUI_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/awt/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/awt/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/gui/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/gui/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/swing/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/swing/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/jxx.gui.initialize.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/jxx.gui.initialize.h"
 )
 
-#
-# GUI runtime library.
-#
-add_library(jxx_gui ${SRC_FILES})
+target_sources(jxxsdk PRIVATE ${JXX_GUI_SOURCES})
 
-set_target_properties(
-    jxx_gui
-    PROPERTIES
-        LINKER_LANGUAGE CXX
-)
-
-target_compile_definitions(jxx_gui
+target_include_directories(jxxsdk
     PUBLIC
+        "${CMAKE_CURRENT_SOURCE_DIR}"
+)
+
+# Support both CMake's FindwxWidgets module and configurations where the caller
+# has already supplied wxWidgets_LIBRARIES and wxWidgets_INCLUDE_DIRS.
+if(NOT wxWidgets_FOUND)
+    find_package(wxWidgets REQUIRED COMPONENTS base core)
+endif()
+
+if(DEFINED wxWidgets_USE_FILE AND EXISTS "${wxWidgets_USE_FILE}")
+    include("${wxWidgets_USE_FILE}")
+endif()
+
+if(wxWidgets_INCLUDE_DIRS)
+    target_include_directories(jxxsdk PRIVATE ${wxWidgets_INCLUDE_DIRS})
+endif()
+
+if(TARGET wx::base)
+    target_link_libraries(jxxsdk PUBLIC wx::base wx::core)
+else()
+    target_link_libraries(jxxsdk PUBLIC ${wxWidgets_LIBRARIES})
+endif()
+
+target_compile_definitions(jxxsdk
+    PUBLIC
+        JXX_HEADLESS=0
+    PRIVATE
         wxDEBUG_LEVEL=0
 )
-#
-# Core JXX dependency.
-#
-target_link_libraries(
-    jxx_gui
-    PUBLIC
-        jxxsdk
-		${wxWidgets_LIBRARIES}
-)
-
-#
-# Access to JXX runtime headers.
-# Adjust JXX_ROOT if desired.
-#
-target_include_directories(
-    jxx_gui
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/../defines
-        ${CMAKE_CURRENT_SOURCE_DIR}/../lang
-        ${CMAKE_CURRENT_SOURCE_DIR}/../util
-        ${CMAKE_CURRENT_SOURCE_DIR}/../io
-        ${CMAKE_CURRENT_SOURCE_DIR}/../math
-        ${CMAKE_CURRENT_SOURCE_DIR}/../net
-        ${CMAKE_CURRENT_SOURCE_DIR}/../nio
-        ${CMAKE_CURRENT_SOURCE_DIR}/../security
-        ${CMAKE_CURRENT_SOURCE_DIR}/../org
-        ${CMAKE_CURRENT_SOURCE_DIR}/../com
-        ${CMAKE_CURRENT_SOURCE_DIR}/../ext
-		${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/gsl/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/fmt/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/libunicode/src
-        ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/pugixml/src
-		${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/wxWidgets/include
-		${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/wxWidgets/include
-		${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/wxWidgets/build_wx/lib/vc_x64_lib/mswud
-)
-
-#
-# Compile features.
-#
-target_compile_features(
-    jxx_gui
-    PRIVATE
-        cxx_std_17
-)
-
-#
-# Global definitions.
-#
-add_compile_definitions(_HAS_STD_BYTE=0)
-
-option(JXX_WITH_LIBUNICODE
-    "Enable libunicode backend"
-    ON)
-
-#
-# Windows-specific configuration.
-#
-if(WIN32)
-
-    add_compile_definitions(
-        WIN32_LEAN_AND_MEAN
-        _HAS_STD_BYTE=0
-    )
-
-    add_definitions(
-        -DNOMINMAX
-    )
-
-    add_compile_options(
-        /MP
-    )
-
-endif()
-
-#
-# Warning levels.
-#
-if(MSVC)
-
-    target_compile_options(
-        jxx_gui
-        PRIVATE
-            /utf-8
-            /permissive-
-            /W4
-    )
-
-else()
-
-    target_compile_options(
-        jxx_gui
-        PRIVATE
-            -Wall
-            -Wextra
-            -Wpedantic
-    )
-
-endif()

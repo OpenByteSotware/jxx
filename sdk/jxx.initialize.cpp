@@ -1,4 +1,9 @@
 #include "jxx.initialize.h"
+#include "jxx.BuildConfig.h"
+
+#if !JXX_HEADLESS
+#include "jxx.gui.initialize.h"
+#endif
 
 #include "beans/jxx.beans.ClassInitialization.h"
 #include <mutex>
@@ -155,6 +160,9 @@ void initialize() {
         ::jxx::ext::xml::bind::annotation::initializeClasses();
         ::jxx::org::w3c::dom::events::initializeClasses();
         ::jxx::org::w3c::dom::views::initializeClasses();
+#if !JXX_HEADLESS
+        ::jxx::gui::initialize();
+#endif
     });
 }
 

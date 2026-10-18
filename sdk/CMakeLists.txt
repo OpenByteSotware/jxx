@@ -6,6 +6,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+if(NOT DEFINED JXX_HEADLESS)
+    set(JXX_HEADLESS ON)
+endif()
+
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/jxx.BuildConfig.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/generated/jxx.BuildConfig.h"
+    @ONLY
+)
+
 set(ZLIB_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(ZLIB_BUILD_TESTING OFF CACHE BOOL "" FORCE)
 set(ZLIB_BUILD_SHARED OFF CACHE BOOL "" FORCE)
@@ -23,7 +33,12 @@ set_target_properties(jxxsdk PROPERTIES
     LINKER_LANGUAGE CXX
 )
 
-target_compile_features(jxxsdk PRIVATE cxx_std_17)
+target_compile_features(jxxsdk PUBLIC cxx_std_17)
+
+target_compile_definitions(jxxsdk
+    PUBLIC
+        JXX_HEADLESS=$<BOOL:${JXX_HEADLESS}>
+)
 
 target_include_directories(jxxsdk
     PRIVATE
@@ -40,6 +55,7 @@ target_include_directories(jxxsdk
         "${CMAKE_CURRENT_SOURCE_DIR}/ext"
     PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${CMAKE_CURRENT_BINARY_DIR}/generated"
         "${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/gsl/include"
         "${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/fmt/include"
         "${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/libunicode/src"
@@ -75,4 +91,18 @@ else()
         "jxxsdk: unrecognized C++ compiler '${CMAKE_CXX_COMPILER_ID}'. "
         "No compiler-specific warning options were added."
     )
+endif()
+
+if(JXX_HEADLESS)
+    file(GLOB_RECURSE JXX_HEADLESS_CHECK_FILES CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/*.h"
+        "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
+    )
+    foreach(_jxx_source IN LISTS JXX_HEADLESS_CHECK_FILES)
+        file(READ "${_jxx_source}" _jxx_source_text)
+        if(_jxx_source_text MATCHES "#[ \t]*include[ \t]*[<\"]wx/")
+            message(FATAL_ERROR
+                "Headless SDK source includes wxWidgets: ${_jxx_source}")
+        endif()
+    endforeach()
 endif()

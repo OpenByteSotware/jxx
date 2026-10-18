@@ -1,0 +1,9 @@
+#pragma once
+
+#cmakedefine01 JXX_HEADLESS
+
+#if JXX_HEADLESS
+#define JXX_GUI_AVAILABLE 0
+#else
+#define JXX_GUI_AVAILABLE 1
+#endif
