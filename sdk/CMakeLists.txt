@@ -62,7 +62,8 @@ target_include_directories(jxxsdk
         "${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/pugixml/src"
         "${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/openssl/include"
         "${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/zlib"
-)
+        "${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/jpegturbo"
+		)
 
 if(MSVC)
     target_compile_definitions(jxxsdk

@@ -13,6 +13,8 @@ option(JXX_BUILD_APPS "Build JXX applications" OFF)
 
 message(STATUS "JXX_HEADLESS=${JXX_HEADLESS}")
 
+find_package(libjpeg-turbo CONFIG REQUIRED)
+
 # Third-party projects must be declared before JXX targets that consume them.
 foreach(_jxx_thirdparty IN ITEMS gsl fmt libunicode pugixml zlib)
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/${_jxx_thirdparty}/CMakeLists.txt")

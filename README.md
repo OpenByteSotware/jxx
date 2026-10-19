@@ -140,8 +140,7 @@ git submodule add --name libwxwidgets https://github.com/OpenByteSotware/wxWidge
 git submodule add --name libpugixml https://github.com/OpenByteSotware/pugixml 3rdparty/pugixml
 git submodule add --name libopenssl https://github.com/OpenByteSotware/openssl 3rdparty/openssl
 git submodule add --name libzlib https://github.com/OpenByteSotware/zlib 3rdparty/zlib
-
-
+git submodule add --name libjpegturbo https://github.com/OpenByteSotware/libjpeg-turbo.git 3rdparty/jpegturbo
 
 
 Building openssl
@@ -151,7 +150,49 @@ nasm
 VS console window building for x64
 perl Configure VC-WIN64A --prefix=C:\<fullpath>\jxx\3rdparty\openssl --openssl dir=C:\<fullpath>\jxx\3rdparty\openssl\ssl
 
+#building lib jpeg turbo
+#debug
+cmake -S . -B build-vs2026-x64-static -G "Visual Studio 18 2026" -DCMAKE_INSTALL_PREFIX=C:/deps/libjpeg-turbo-3.2.0 -A x64 -DENABLE_SHARED=OFF -DENABLE_STATIC=ON -DWITH_TURBOJPEG=ON -DWITH_SIMD=ON -DWITH_JAVA=OFF -DWITH_TESTS=ON
 
+static vs dynamic
+-DENABLE_SHARED=ON ^
+-DENABLE_STATIC=OFF
+
+
+cmake --build build-vs2026-x64-static --config Release --parallel
+cmake --build build-vs2026-x64-static --config Release --target INSTALL
+
+
+
+build JXX:
+cmake -S . -B build-headless -G "Visual Studio 18 2026" -A x64 -Dgtest_force_shared_crt=ON -DJXX_HEADLESS=ON -DCMAKE_PREFIX_PATH=C:/deps/libjpeg-turbo-3.2.0
+______________________________________________________________________________________________
+#release
+cmake -S . -B build-vs2026-x64-static ^
+  -G "Visual Studio 18 2026" ^
+  -A x64 ^
+  -DCMAKE_INSTALL_PREFIX=C:/deps/libjpeg-turbo-3.2.0 ^
+  -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL ^
+  -DENABLE_SHARED=OFF ^
+  -DENABLE_STATIC=ON ^
+  -DWITH_TURBOJPEG=ON ^
+  -DWITH_SIMD=ON ^
+  -DWITH_JAVA=OFF ^
+  -DWITH_TESTS=ON
+  
+  cmake -S . -B build-vs2026-x64-static ^
+  -G "Visual Studio 18 2026" ^
+  -A x64 ^
+  -DCMAKE_INSTALL_PREFIX=C:/deps/libjpeg-turbo-3.2.0 ^
+  -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL ^
+  -DENABLE_SHARED=OFF ^
+  -DENABLE_STATIC=ON ^
+  -DWITH_TURBOJPEG=ON ^
+  -DWITH_SIMD=ON ^
+  -DWITH_JAVA=OFF ^
+  -DWITH_TESTS=ON
+  
+  ______________________________________________________________________
 
 Array type usage from java int[], boolean[], int[][][]
 
