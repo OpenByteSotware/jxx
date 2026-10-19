@@ -89,6 +89,7 @@ namespace jxx::awt::internal
         ::jxx::Ptr<::jxx::awt::image::BufferedImage> image_;
         ::jxx::Ptr<Color> color_;
         ::jxx::Ptr<Color> background_;
+        ::jxx::Ptr<Composite> composite_;
         ::jxx::Ptr<Font> font_;
         ::jxx::Ptr<Rectangle> clip_;
         ::jxx::lang::jint translateX_ = 0;

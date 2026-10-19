@@ -1,5 +1,6 @@
 #include "awt/internal/jxx.awt.internal.BufferedImageGraphics2D.h"
 
+#include "awt/jxx.awt.AlphaComposite.h"
 #include "awt/jxx.awt.Color.h"
 #include "awt/jxx.awt.Rectangle.h"
 #include "awt/image/jxx.awt.image.BufferedImage.h"
@@ -13,7 +14,7 @@ namespace jxx::awt::internal
     BufferedImageGraphics2D::BufferedImageGraphics2D(
         const ::jxx::Ptr<::jxx::awt::image::BufferedImage>& image)
         : Graphics2D(), image_(image), color_(Color::black),
-          background_(Color::black)
+          background_(Color::black), composite_(AlphaComposite::SrcOver)
     {
         if (image_ != nullptr)
             clip_ = ::jxx::NEW<Rectangle>(0, 0,
@@ -26,6 +27,7 @@ namespace jxx::awt::internal
         result->color_ = color_;
         result->background_ = background_;
         result->font_ = font_;
+        result->composite_ = composite_;
         result->translateX_ = translateX_;
         result->translateY_ = translateY_;
         if (clip_ != nullptr)
@@ -77,7 +79,46 @@ namespace jxx::awt::internal
 
     void BufferedImageGraphics2D::putPixel(::jxx::lang::jint x,
         ::jxx::lang::jint y, ::jxx::lang::jint argb)
-    { if (insideClip(x, y)) image_->setRGB(x, y, argb); }
+    {
+        if (!insideClip(x, y)) return;
+        auto alphaComposite = ::jxx::CAST<::jxx::awt::AlphaComposite>(composite_);
+        const auto rule = alphaComposite == nullptr
+            ? ::jxx::awt::AlphaComposite::SRC_OVER
+            : alphaComposite->getRule();
+        const auto extraAlpha = alphaComposite == nullptr
+            ? 1.0F : alphaComposite->getAlpha();
+        if (rule == ::jxx::awt::AlphaComposite::CLEAR)
+        {
+            image_->setRGB(x, y, 0);
+            return;
+        }
+        auto source = static_cast<std::uint32_t>(argb);
+        auto sourceAlpha = static_cast<int>(((source >> 24U) & 0xffU) * extraAlpha + 0.5F);
+        source = (source & 0x00ffffffU) | (static_cast<std::uint32_t>(sourceAlpha) << 24U);
+        if (rule == ::jxx::awt::AlphaComposite::SRC || sourceAlpha == 255)
+        {
+            image_->setRGB(x, y, static_cast<::jxx::lang::jint>(source));
+            return;
+        }
+        if (rule == ::jxx::awt::AlphaComposite::DST || sourceAlpha == 0) return;
+        const auto destination = static_cast<std::uint32_t>(image_->getRGB(x, y));
+        const auto destinationAlpha = static_cast<int>((destination >> 24U) & 0xffU);
+        const auto inverse = 255 - sourceAlpha;
+        const auto outputAlpha = sourceAlpha + (destinationAlpha * inverse + 127) / 255;
+        if (outputAlpha == 0) { image_->setRGB(x, y, 0); return; }
+        auto channel = [&](int shift) {
+            const auto sourceChannel = static_cast<int>((source >> shift) & 0xffU);
+            const auto destinationChannel = static_cast<int>((destination >> shift) & 0xffU);
+            const auto premultiplied = sourceChannel * sourceAlpha +
+                (destinationChannel * destinationAlpha * inverse + 127) / 255;
+            return (premultiplied + outputAlpha / 2) / outputAlpha;
+        };
+        const auto output = (static_cast<std::uint32_t>(outputAlpha) << 24U) |
+            (static_cast<std::uint32_t>(channel(16)) << 16U) |
+            (static_cast<std::uint32_t>(channel(8)) << 8U) |
+            static_cast<std::uint32_t>(channel(0));
+        image_->setRGB(x, y, static_cast<::jxx::lang::jint>(output));
+    }
 
     void BufferedImageGraphics2D::copyArea(::jxx::lang::jint x,
         ::jxx::lang::jint y, ::jxx::lang::jint width,
@@ -185,7 +226,33 @@ namespace jxx::awt::internal
 
     void BufferedImageGraphics2D::fillPolygon(const IntArray& xPoints,
         const IntArray& yPoints, ::jxx::lang::jint nPoints)
-    { drawPolygon(xPoints, yPoints, nPoints); }
+    {
+        if (!xPoints || !yPoints || nPoints < 3) return;
+        auto minimumY = (*yPoints)[0];
+        auto maximumY = (*yPoints)[0];
+        for (int index = 1; index < nPoints; ++index)
+        {
+            minimumY = std::min(minimumY, (*yPoints)[index]);
+            maximumY = std::max(maximumY, (*yPoints)[index]);
+        }
+        for (int y = minimumY; y <= maximumY; ++y)
+        {
+            std::vector<int> intersections;
+            for (int index = 0; index < nPoints; ++index)
+            {
+                const int next = (index + 1) % nPoints;
+                const int x1 = (*xPoints)[index], y1 = (*yPoints)[index];
+                const int x2 = (*xPoints)[next], y2 = (*yPoints)[next];
+                if ((y1 <= y && y2 > y) || (y2 <= y && y1 > y))
+                    intersections.push_back(x1 +
+                        static_cast<int>((static_cast<long long>(y - y1) * (x2 - x1)) / (y2 - y1)));
+            }
+            std::sort(intersections.begin(), intersections.end());
+            for (std::size_t pair = 0; pair + 1 < intersections.size(); pair += 2)
+                for (int x = intersections[pair]; x <= intersections[pair + 1]; ++x)
+                    putPixel(x + translateX_, y + translateY_, color_->getRGB());
+        }
+    }
     void BufferedImageGraphics2D::drawString(const ::jxx::Ptr<::jxx::lang::String>&, int, int) {}
     void BufferedImageGraphics2D::dispose() { image_ = nullptr; }
 
@@ -210,7 +277,7 @@ namespace jxx::awt::internal
     void BufferedImageGraphics2D::clip(const ::jxx::Ptr<Shape>&) {}
     bool BufferedImageGraphics2D::hit(const ::jxx::Ptr<Rectangle>&, const ::jxx::Ptr<Shape>&, bool) const { return false; }
     ::jxx::Ptr<GraphicsConfiguration> BufferedImageGraphics2D::getDeviceConfiguration() const { return nullptr; }
-    void BufferedImageGraphics2D::setComposite(const ::jxx::Ptr<Composite>&) {}
+    void BufferedImageGraphics2D::setComposite(const ::jxx::Ptr<Composite>& value) { if (value != nullptr) composite_ = value; }
     void BufferedImageGraphics2D::setPaint(const ::jxx::Ptr<Paint>&) {}
     void BufferedImageGraphics2D::setStroke(const ::jxx::Ptr<Stroke>&) {}
     void BufferedImageGraphics2D::setRenderingHints(const ::jxx::Ptr<RenderingHints>&) {}
@@ -223,7 +290,7 @@ namespace jxx::awt::internal
     void BufferedImageGraphics2D::setTransform(const ::jxx::Ptr<::jxx::awt::geom::AffineTransform>&) {}
     ::jxx::Ptr<::jxx::awt::geom::AffineTransform> BufferedImageGraphics2D::getTransform() const { return nullptr; }
     ::jxx::Ptr<Paint> BufferedImageGraphics2D::getPaint() const { return nullptr; }
-    ::jxx::Ptr<Composite> BufferedImageGraphics2D::getComposite() const { return nullptr; }
+    ::jxx::Ptr<Composite> BufferedImageGraphics2D::getComposite() const { return composite_; }
     void BufferedImageGraphics2D::setBackground(const ::jxx::Ptr<Color>& value)
     { if (value != nullptr) background_ = value; }
     ::jxx::Ptr<Color> BufferedImageGraphics2D::getBackground() const { return background_; }
