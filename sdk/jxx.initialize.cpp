@@ -27,6 +27,7 @@
 #include "ext/imageio/jxx.ext.imageio.ClassInitialization.h"
 #include "ext/imageio/stream/jxx.ext.imageio.stream.ClassInitialization.h"
 #include "ext/swing/jxx.ext.swing.ClassInitialization.h"
+#include "ext/sound/sampled/jxx.ext.sound.sampled.ClassInitialization.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.ClassInitialization.h"
 #include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.ClassInitialization.h"
 #include "ext/xml/bind/jxx.ext.xml.bind.ClassInitialization.h"
@@ -145,6 +146,7 @@ void initialize() {
         ::jxx::ext::imageio::initializeClasses();
         ::jxx::ext::imageio::stream::initializeClasses();
         ::jxx::ext::swing::initializeClasses();
+        ::jxx::ext::sound::sampled::initializeClasses();
         ::jxx::ext::crypto::initializeClasses();
         ::jxx::ext::net::ssl::initializeClasses();
         ::jxx::ext::net::ssl::internal::initializeClasses();
