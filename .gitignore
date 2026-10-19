@@ -6,6 +6,7 @@ CmakeCache.txt
 CMakeFiles/
 _deps/
 build/
+build-headless/
 *~
 *.sublime-project
 *.sublime-workspace
