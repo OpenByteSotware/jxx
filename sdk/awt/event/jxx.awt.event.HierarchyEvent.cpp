@@ -28,7 +28,7 @@ namespace jxx::awt::event
 
     ::jxx::Ptr<::jxx::awt::Component> HierarchyEvent::getComponent() const
     {
-        return ::jxx::CAST<::jxx::awt::Component>(source);
+        return ::jxx::CAST<::jxx::awt::Component>(getSource());
     }
 
     ::jxx::Ptr<::jxx::awt::Component> HierarchyEvent::getChanged() const

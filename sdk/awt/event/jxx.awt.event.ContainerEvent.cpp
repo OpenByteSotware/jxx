@@ -17,7 +17,7 @@ namespace jxx::awt::event
 
     ::jxx::Ptr<::jxx::awt::Container> ContainerEvent::getContainer() const
     {
-        return ::jxx::CAST<::jxx::awt::Container>(source);
+        return ::jxx::CAST<::jxx::awt::Container>(getSource());
     }
 
     ::jxx::Ptr<::jxx::awt::Component> ContainerEvent::getChild() const
