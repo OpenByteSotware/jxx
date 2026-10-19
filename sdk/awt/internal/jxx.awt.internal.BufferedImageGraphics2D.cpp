@@ -3,6 +3,8 @@
 #include "awt/jxx.awt.AlphaComposite.h"
 #include "awt/jxx.awt.Color.h"
 #include "awt/jxx.awt.Rectangle.h"
+#include "awt/geom/jxx.awt.geom.AffineTransform.h"
+#include "awt/geom/jxx.awt.geom.Point2D.h"
 #include "awt/image/jxx.awt.image.BufferedImage.h"
 
 #include <algorithm>
@@ -14,7 +16,8 @@ namespace jxx::awt::internal
     BufferedImageGraphics2D::BufferedImageGraphics2D(
         const ::jxx::Ptr<::jxx::awt::image::BufferedImage>& image)
         : Graphics2D(), image_(image), color_(Color::black),
-          background_(Color::black), composite_(AlphaComposite::SrcOver)
+          background_(Color::black), composite_(AlphaComposite::SrcOver),
+          transform_(::jxx::NEW<::jxx::awt::geom::AffineTransform>())
     {
         if (image_ != nullptr)
             clip_ = ::jxx::NEW<Rectangle>(0, 0,
@@ -28,6 +31,7 @@ namespace jxx::awt::internal
         result->background_ = background_;
         result->font_ = font_;
         result->composite_ = composite_;
+        result->transform_ = getTransform();
         result->translateX_ = translateX_;
         result->translateY_ = translateY_;
         if (clip_ != nullptr)
@@ -80,6 +84,15 @@ namespace jxx::awt::internal
     void BufferedImageGraphics2D::putPixel(::jxx::lang::jint x,
         ::jxx::lang::jint y, ::jxx::lang::jint argb)
     {
+        if (transform_ != nullptr && !transform_->isIdentity())
+        {
+            auto sourcePoint = ::jxx::NEW<::jxx::awt::geom::Point2D::Double>(
+                static_cast<::jxx::lang::jdouble>(x),
+                static_cast<::jxx::lang::jdouble>(y));
+            auto destinationPoint = transform_->transform(sourcePoint, nullptr);
+            x = static_cast<::jxx::lang::jint>(std::lround(destinationPoint->getX()));
+            y = static_cast<::jxx::lang::jint>(std::lround(destinationPoint->getY()));
+        }
         if (!insideClip(x, y)) return;
         auto alphaComposite = ::jxx::CAST<::jxx::awt::AlphaComposite>(composite_);
         const auto rule = alphaComposite == nullptr
@@ -282,13 +295,39 @@ namespace jxx::awt::internal
     void BufferedImageGraphics2D::setStroke(const ::jxx::Ptr<Stroke>&) {}
     void BufferedImageGraphics2D::setRenderingHints(const ::jxx::Ptr<RenderingHints>&) {}
     ::jxx::Ptr<RenderingHints> BufferedImageGraphics2D::getRenderingHints() const { return nullptr; }
-    void BufferedImageGraphics2D::rotate(double) {}
-    void BufferedImageGraphics2D::rotate(double, double, double) {}
-    void BufferedImageGraphics2D::scale(double, double) {}
-    void BufferedImageGraphics2D::shear(double, double) {}
-    void BufferedImageGraphics2D::transform(const ::jxx::Ptr<::jxx::awt::geom::AffineTransform>&) {}
-    void BufferedImageGraphics2D::setTransform(const ::jxx::Ptr<::jxx::awt::geom::AffineTransform>&) {}
-    ::jxx::Ptr<::jxx::awt::geom::AffineTransform> BufferedImageGraphics2D::getTransform() const { return nullptr; }
+    void BufferedImageGraphics2D::rotate(double theta)
+    { transform_->rotate(theta); }
+    void BufferedImageGraphics2D::rotate(double theta, double x, double y)
+    { transform_->rotate(theta, x, y); }
+    void BufferedImageGraphics2D::scale(double x, double y)
+    { transform_->scale(x, y); }
+    void BufferedImageGraphics2D::shear(double x, double y)
+    { transform_->shear(x, y); }
+    void BufferedImageGraphics2D::transform(
+        const ::jxx::Ptr<::jxx::awt::geom::AffineTransform>& value)
+    { if (value != nullptr) transform_->concatenate(value); }
+    void BufferedImageGraphics2D::setTransform(
+        const ::jxx::Ptr<::jxx::awt::geom::AffineTransform>& value)
+    {
+        transform_ = value == nullptr
+            ? ::jxx::NEW<::jxx::awt::geom::AffineTransform>()
+            : [&]() {
+                auto matrix = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::jdouble, 1>>(6);
+                value->getMatrix(matrix);
+                return ::jxx::NEW<::jxx::awt::geom::AffineTransform>(
+                    (*matrix)[0], (*matrix)[1], (*matrix)[2],
+                    (*matrix)[3], (*matrix)[4], (*matrix)[5]);
+            }();
+    }
+    ::jxx::Ptr<::jxx::awt::geom::AffineTransform>
+    BufferedImageGraphics2D::getTransform() const
+    {
+        auto matrix = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::jdouble, 1>>(6);
+        transform_->getMatrix(matrix);
+        return ::jxx::NEW<::jxx::awt::geom::AffineTransform>(
+            (*matrix)[0], (*matrix)[1], (*matrix)[2],
+            (*matrix)[3], (*matrix)[4], (*matrix)[5]);
+    }
     ::jxx::Ptr<Paint> BufferedImageGraphics2D::getPaint() const { return nullptr; }
     ::jxx::Ptr<Composite> BufferedImageGraphics2D::getComposite() const { return composite_; }
     void BufferedImageGraphics2D::setBackground(const ::jxx::Ptr<Color>& value)

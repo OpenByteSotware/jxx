@@ -90,6 +90,7 @@ namespace jxx::awt::internal
         ::jxx::Ptr<Color> color_;
         ::jxx::Ptr<Color> background_;
         ::jxx::Ptr<Composite> composite_;
+        ::jxx::Ptr<::jxx::awt::geom::AffineTransform> transform_;
         ::jxx::Ptr<Font> font_;
         ::jxx::Ptr<Rectangle> clip_;
         ::jxx::lang::jint translateX_ = 0;
