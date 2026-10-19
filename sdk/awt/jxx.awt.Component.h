@@ -8,9 +8,10 @@
 #include "awt/jxx.awt.Rectangle.h"
 namespace jxx::awt::event { class ComponentEvent; class ComponentListener; class FocusEvent; class FocusListener; class KeyEvent; class KeyListener; class MouseEvent; class MouseListener; class MouseMotionListener; class MouseWheelEvent; class MouseWheelListener; class HierarchyEvent; class HierarchyListener; class HierarchyBoundsListener; }
 namespace jxx::awt::internal { class ComponentPeer; }
+namespace jxx::awt { class Graphics; }
 namespace jxx::gui::internal { class WxFramePeer; class WxDialogPeer; }
 namespace jxx::awt {
-class Container; class DefaultKeyboardFocusManager;
+class Container; class Graphics; class DefaultKeyboardFocusManager;
 class Component : public ::jxx::lang::ClassBase<Component, ::jxx::lang::Object> {
 public:
  using JxxSuper=::jxx::lang::Object; using Super=::jxx::lang::ClassBase<Component,JxxSuper>; virtual ~Component()=0;
@@ -28,7 +29,7 @@ public:
  virtual void addHierarchyListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyListener>& listener); virtual void removeHierarchyListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyListener>& listener); virtual void addHierarchyBoundsListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyBoundsListener>& listener); virtual void removeHierarchyBoundsListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyBoundsListener>& listener);
  virtual void requestFocus(); virtual ::jxx::lang::jbool isFocusOwner() const; virtual void invalidate(); virtual void validate(); virtual ::jxx::lang::jbool isValid() const;
 protected:
- Component(); virtual void processComponentEvent(const ::jxx::Ptr<::jxx::awt::event::ComponentEvent>& event); virtual void processFocusEvent(const ::jxx::Ptr<::jxx::awt::event::FocusEvent>& event); virtual void processMouseEvent(const ::jxx::Ptr<::jxx::awt::event::MouseEvent>& event); virtual void processMouseWheelEvent(const ::jxx::Ptr<::jxx::awt::event::MouseWheelEvent>& event); virtual void processHierarchyEvent(const ::jxx::Ptr<::jxx::awt::event::HierarchyEvent>& event); virtual void processHierarchyBoundsEvent(const ::jxx::Ptr<::jxx::awt::event::HierarchyEvent>& event); virtual void processKeyEvent(const ::jxx::Ptr<::jxx::awt::event::KeyEvent>& event); virtual void nativeComponentAssigned(); ::jxx::Ptr<::jxx::awt::internal::ComponentPeer> nativeComponent_;
+ Component(); virtual void paint(const ::jxx::Ptr<Graphics>& graphics); virtual void paintAll(const ::jxx::Ptr<Graphics>& graphics); virtual void print(const ::jxx::Ptr<Graphics>& graphics); virtual void printAll(const ::jxx::Ptr<Graphics>& graphics); virtual void processComponentEvent(const ::jxx::Ptr<::jxx::awt::event::ComponentEvent>& event); virtual void processFocusEvent(const ::jxx::Ptr<::jxx::awt::event::FocusEvent>& event); virtual void processMouseEvent(const ::jxx::Ptr<::jxx::awt::event::MouseEvent>& event); virtual void processMouseWheelEvent(const ::jxx::Ptr<::jxx::awt::event::MouseWheelEvent>& event); virtual void processHierarchyEvent(const ::jxx::Ptr<::jxx::awt::event::HierarchyEvent>& event); virtual void processHierarchyBoundsEvent(const ::jxx::Ptr<::jxx::awt::event::HierarchyEvent>& event); virtual void processKeyEvent(const ::jxx::Ptr<::jxx::awt::event::KeyEvent>& event); virtual void nativeComponentAssigned(); ::jxx::Ptr<::jxx::awt::internal::ComponentPeer> nativeComponent_;
 private:
  friend class Container; friend class DefaultKeyboardFocusManager; friend class ::jxx::gui::internal::WxFramePeer; friend class ::jxx::gui::internal::WxDialogPeer;
  void setParentInternal(const ::jxx::Ptr<Container>& parent); void setNativeComponentInternal(const ::jxx::Ptr<::jxx::awt::internal::ComponentPeer>& peer); void fireComponentEvent(::jxx::lang::jint id); void fireHierarchyEvent(::jxx::lang::jint id,const ::jxx::Ptr<Component>& changed,const ::jxx::Ptr<Container>& changedParent,::jxx::lang::jlong flags);

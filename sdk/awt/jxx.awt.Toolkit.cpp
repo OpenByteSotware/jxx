@@ -1,0 +1,6 @@
+#include "awt/jxx.awt.Toolkit.h"
+#include "awt/image/internal/jxx.awt.image.internal.BufferedImageSource.h"
+#include "awt/image/jxx.awt.image.BufferedImage.h"
+#include "awt/image/jxx.awt.image.FilteredImageSource.h"
+#include "awt/image/jxx.awt.image.RGBImageFilter.h"
+namespace jxx::awt{Toolkit::Toolkit():Super(){}::jxx::Ptr<Toolkit> Toolkit::getDefaultToolkit(){static auto value=::jxx::NEW<Toolkit>();return value;}::jxx::Ptr<Image> Toolkit::createImage(const ::jxx::Ptr<::jxx::awt::image::ImageProducer>&p){auto source=std::dynamic_pointer_cast<::jxx::awt::image::internal::BufferedImageSource>(p);if(source)return ::jxx::CAST<Image>(source->image());auto filtered=std::dynamic_pointer_cast<::jxx::awt::image::FilteredImageSource>(p);if(!filtered)return nullptr;auto inner=std::dynamic_pointer_cast<::jxx::awt::image::internal::BufferedImageSource>(filtered->source());auto rgb=::jxx::CAST<::jxx::awt::image::RGBImageFilter>(filtered->filter());if(!inner||!rgb)return nullptr;auto input=inner->image();auto output=::jxx::NEW<::jxx::awt::image::BufferedImage>(input->getWidth(nullptr),input->getHeight(nullptr),::jxx::awt::image::BufferedImage::TYPE_INT_ARGB);for(int y=0;y<input->getHeight(nullptr);++y)for(int x=0;x<input->getWidth(nullptr);++x)output->setRGB(x,y,rgb->filterRGB(x,y,input->getRGB(x,y)));return ::jxx::CAST<Image>(output);}}

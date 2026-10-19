@@ -1,4 +1,5 @@
 #include "awt/jxx.awt.Container.h"
+#include "awt/jxx.awt.Graphics.h"
 
 
 #include <algorithm>
@@ -230,4 +231,5 @@ namespace jxx::awt
         return focusTraversalPolicyProvider_;
     }
 
+void Container::paintAll(const ::jxx::Ptr<Graphics>&g){paint(g);for(const auto&c:components_){if(!c||!c->isVisible())continue;auto child=g?g->create():nullptr;if(child){child->translate(c->getX(),c->getY());c->paintAll(child);child->dispose();}}} void Container::printAll(const ::jxx::Ptr<Graphics>&g){print(g);for(const auto&c:components_){if(!c||!c->isVisible())continue;auto child=g?g->create():nullptr;if(child){child->translate(c->getX(),c->getY());c->printAll(child);child->dispose();}}}
 }

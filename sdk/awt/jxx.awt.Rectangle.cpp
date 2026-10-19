@@ -1,4 +1,5 @@
 #include "awt/jxx.awt.Rectangle.h"
+#include <algorithm>
 #include <cstdint>
 #include <sstream>
 namespace jxx::awt
@@ -45,4 +46,5 @@ namespace jxx::awt
 	{
 		std::ostringstream s; s << "jxx.awt.Rectangle[x=" << x << ",y=" << y << ",width=" << width << ",height=" << height << "]"; return ::jxx::NEW<::jxx::lang::String>(s.str());
 	}
+::jxx::Ptr<Rectangle> Rectangle::intersection(const ::jxx::Ptr<Rectangle>& r) const { if(!r)return ::jxx::NEW<Rectangle>(); const auto nx=std::max(x,r->x),ny=std::max(y,r->y),nr=std::min(x+width,r->x+r->width),nb=std::min(y+height,r->y+r->height); return ::jxx::NEW<Rectangle>(nx,ny,nr-nx,nb-ny);}
 }

@@ -1,4 +1,5 @@
 #include "awt/jxx.awt.Component.h"
+#include "awt/jxx.awt.Graphics.h"
 
 #include <algorithm>
 
@@ -231,4 +232,5 @@ namespace jxx::awt
     void Component::invalidate() { valid_=false; }
     void Component::validate() { valid_=true; }
     ::jxx::lang::jbool Component::isValid() const { return valid_; }
+void Component::paint(const ::jxx::Ptr<Graphics>&){} void Component::paintAll(const ::jxx::Ptr<Graphics>&g){paint(g);} void Component::print(const ::jxx::Ptr<Graphics>&g){paint(g);} void Component::printAll(const ::jxx::Ptr<Graphics>&g){print(g);}
 }
