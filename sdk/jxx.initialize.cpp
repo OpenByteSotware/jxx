@@ -7,6 +7,7 @@
 
 #include "beans/jxx.beans.ClassInitialization.h"
 #include "awt/jxx.awt.ClassInitialization.h"
+#include "awt/image/jxx.awt.image.ClassInitialization.h"
 #include <mutex>
 #include <unordered_set>
 
@@ -127,6 +128,7 @@ void initialize() {
         ::jxx::org::xml::sax::internal::initializeClasses();
         ::jxx::beans::initializeClasses();
         ::jxx::awt::initializeClasses();
+        ::jxx::awt::image::initializeClasses();
         ::com::google::gson::initializeClasses();
         ::com::google::gson::internal::initializeClasses();
         ::com::google::gson::annotations::initializeClasses();

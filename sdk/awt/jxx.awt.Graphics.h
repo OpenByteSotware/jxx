@@ -7,6 +7,7 @@
 
 namespace jxx::awt
 {
+    namespace image { class ImageObserver; }
     class Color;
     class Font;
     class FontMetrics;
@@ -64,6 +65,7 @@ namespace jxx::awt
             const IntArray& yPoints, ::jxx::lang::jint nPoints) = 0;
         virtual void drawString(const ::jxx::Ptr<::jxx::lang::String>& text,
             ::jxx::lang::jint x, ::jxx::lang::jint y) = 0;
+        virtual ::jxx::lang::jbool drawImage(const ::jxx::Ptr<Image>& image, ::jxx::lang::jint x, ::jxx::lang::jint y, const ::jxx::Ptr<::jxx::awt::image::ImageObserver>& observer);
         virtual void dispose() = 0;
         ::jxx::Ptr<::jxx::lang::String> toString() const override;
 
