@@ -5,6 +5,9 @@
 #include "ext/sound/sampled/jxx.ext.sound.sampled.UnsupportedAudioFileException.h"
 #include "io/jxx.io.File.h"
 #include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.Class.h"
 #include <array>
 #include <cstdio>
 #include <fstream>
@@ -44,7 +47,9 @@ TEST(AudioSystemHeadless, ReadsWaveByteLength)
     auto format = ::jxx::ext::sound::sampled::AudioSystem::getAudioFileFormat(file);
     ASSERT_NE(format, nullptr);
     EXPECT_EQ(format->getByteLength(), 48);
-    EXPECT_EQ(format->getTypeName()->utf8(), "WAVE");
+    ASSERT_NE(format->getType(), nullptr);
+    EXPECT_EQ(format->getType()->toString()->utf8(), "WAVE");
+    EXPECT_EQ(format->getType()->getExtension()->utf8(), "wav");
     std::remove(path);
 }
 
