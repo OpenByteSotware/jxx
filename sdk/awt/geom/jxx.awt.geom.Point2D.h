@@ -9,6 +9,8 @@ class Point2D : public ::jxx::lang::ClassBase<Point2D,::jxx::lang::Object> {
 public:
  class Float; class Double;
  using JxxSuper=::jxx::lang::Object; using Super=::jxx::lang::ClassBase<Point2D,JxxSuper>;
+ protected: Point2D();
+ public:
  virtual ::jxx::lang::jdouble getX() const=0; virtual ::jxx::lang::jdouble getY() const=0;
  virtual void setLocation(::jxx::lang::jdouble x,::jxx::lang::jdouble y)=0;
  void setLocation(const ::jxx::Ptr<Point2D>& point);
@@ -24,7 +26,7 @@ public:
 class Point2D::Float : public ::jxx::lang::ClassBase<Point2D::Float,Point2D,::jxx::io::SerializableI> {
 public:
  using JxxSuper=Point2D; using Super=::jxx::lang::ClassBase<Point2D::Float,JxxSuper,::jxx::io::SerializableI>;
- ::jxx::lang::jfloat x=0, y=0; Float()=default; Float(::jxx::lang::jfloat x,::jxx::lang::jfloat y):x(x),y(y){}
+ ::jxx::lang::jfloat x=0, y=0; Float(); Float(::jxx::lang::jfloat x,::jxx::lang::jfloat y);
  ::jxx::lang::jdouble getX() const override{return x;} ::jxx::lang::jdouble getY() const override{return y;}
  void setLocation(::jxx::lang::jdouble nx,::jxx::lang::jdouble ny) override{x=static_cast<::jxx::lang::jfloat>(nx);y=static_cast<::jxx::lang::jfloat>(ny);}
  void setLocation(::jxx::lang::jfloat nx,::jxx::lang::jfloat ny){x=nx;y=ny;}
@@ -33,7 +35,7 @@ public:
 class Point2D::Double : public ::jxx::lang::ClassBase<Point2D::Double,Point2D,::jxx::io::SerializableI> {
 public:
  using JxxSuper=Point2D; using Super=::jxx::lang::ClassBase<Point2D::Double,JxxSuper,::jxx::io::SerializableI>;
- ::jxx::lang::jdouble x=0, y=0; Double()=default; Double(::jxx::lang::jdouble x,::jxx::lang::jdouble y):x(x),y(y){}
+ ::jxx::lang::jdouble x=0, y=0; Double(); Double(::jxx::lang::jdouble x,::jxx::lang::jdouble y);
  ::jxx::lang::jdouble getX() const override{return x;} ::jxx::lang::jdouble getY() const override{return y;}
  void setLocation(::jxx::lang::jdouble nx,::jxx::lang::jdouble ny) override{x=nx;y=ny;}
  ::jxx::Ptr<::jxx::lang::String> toString() const override;

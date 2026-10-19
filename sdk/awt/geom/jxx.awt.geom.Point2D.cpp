@@ -3,6 +3,12 @@
 #include <cstring>
 #include <sstream>
 namespace jxx::awt::geom {
+Point2D::Point2D() : Super() {}
+Point2D::Float::Float() : Super() {}
+Point2D::Float::Float(::jxx::lang::jfloat nx, ::jxx::lang::jfloat ny) : Super(), x(nx), y(ny) {}
+Point2D::Double::Double() : Super() {}
+Point2D::Double::Double(::jxx::lang::jdouble nx, ::jxx::lang::jdouble ny) : Super(), x(nx), y(ny) {}
+
 void Point2D::setLocation(const ::jxx::Ptr<Point2D>& p){if(p)setLocation(p->getX(),p->getY());}
 ::jxx::lang::jdouble Point2D::distanceSq(::jxx::lang::jdouble x1,::jxx::lang::jdouble y1,::jxx::lang::jdouble x2,::jxx::lang::jdouble y2){const auto dx=x1-x2,dy=y1-y2;return dx*dx+dy*dy;}
 ::jxx::lang::jdouble Point2D::distance(::jxx::lang::jdouble x1,::jxx::lang::jdouble y1,::jxx::lang::jdouble x2,::jxx::lang::jdouble y2){return std::sqrt(distanceSq(x1,y1,x2,y2));}

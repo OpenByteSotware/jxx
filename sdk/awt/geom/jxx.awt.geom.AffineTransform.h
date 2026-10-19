@@ -21,10 +21,20 @@ namespace jxx::awt::geom
             ::jxx::lang::jdouble tx,::jxx::lang::jdouble ty);
         static ::jxx::Ptr<AffineTransform> getScaleInstance(
             ::jxx::lang::jdouble sx,::jxx::lang::jdouble sy);
+        static ::jxx::Ptr<AffineTransform> getRotateInstance(::jxx::lang::jdouble theta);
+        static ::jxx::Ptr<AffineTransform> getRotateInstance(::jxx::lang::jdouble theta,::jxx::lang::jdouble anchorx,::jxx::lang::jdouble anchory);
         void setToIdentity();
         ::jxx::lang::jbool isIdentity()const;
         void translate(::jxx::lang::jdouble tx,::jxx::lang::jdouble ty);
         void scale(::jxx::lang::jdouble sx,::jxx::lang::jdouble sy);
+        void rotate(::jxx::lang::jdouble theta);
+        void rotate(::jxx::lang::jdouble theta,::jxx::lang::jdouble anchorx,::jxx::lang::jdouble anchory);
+        void shear(::jxx::lang::jdouble shx,::jxx::lang::jdouble shy);
+        void concatenate(const ::jxx::Ptr<AffineTransform>& transform);
+        void preConcatenate(const ::jxx::Ptr<AffineTransform>& transform);
+        ::jxx::Ptr<AffineTransform> createInverse() const;
+        void invert();
+        void getMatrix(const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::lang::jdouble,1>>& matrix) const;
         ::jxx::lang::jdouble getDeterminant()const;
         ::jxx::Ptr<Point2D> transform(const ::jxx::Ptr<Point2D>& source,
             const ::jxx::Ptr<Point2D>& destination)const;
