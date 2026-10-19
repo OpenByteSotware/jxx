@@ -30,6 +30,20 @@ namespace jxx::awt
 	} ::jxx::lang::jbool Rectangle::contains(::jxx::lang::jint px, ::jxx::lang::jint py) const
 	{
 		return width > 0 && height > 0 && px >= x && py >= y && px < x + width && py < y + height;
+	} ::jxx::lang::jbool Rectangle::contains(const ::jxx::Ptr<Rectangle>& r) const
+	{
+        if (r == nullptr || width < 0 || height < 0 ||
+            r->width < 0 || r->height < 0) return false;
+        const auto left = static_cast<std::int64_t>(x);
+        const auto top = static_cast<std::int64_t>(y);
+        const auto right = left + static_cast<std::int64_t>(width);
+        const auto bottom = top + static_cast<std::int64_t>(height);
+        const auto otherLeft = static_cast<std::int64_t>(r->x);
+        const auto otherTop = static_cast<std::int64_t>(r->y);
+        const auto otherRight = otherLeft + static_cast<std::int64_t>(r->width);
+        const auto otherBottom = otherTop + static_cast<std::int64_t>(r->height);
+        return otherLeft >= left && otherTop >= top &&
+            otherRight <= right && otherBottom <= bottom;
 	} ::jxx::lang::jbool Rectangle::intersects(const ::jxx::Ptr<Rectangle>& r) const
 	{
 		return r && width > 0 && height > 0 && r->width > 0 && r->height > 0 && r->x + r->width > x && r->y + r->height > y && r->x < x + width && r->y < y + height;

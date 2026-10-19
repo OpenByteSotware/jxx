@@ -13,6 +13,7 @@ namespace jxx::awt
 		  void setBounds(::jxx::lang::jint x, ::jxx::lang::jint y, ::jxx::lang::jint width,
 			  ::jxx::lang::jint height); ::jxx::lang::jbool contains(::jxx::lang::jint x, 
 				  ::jxx::lang::jint y) const;
+          ::jxx::lang::jbool contains(const ::jxx::Ptr<Rectangle>& rectangle) const;
 		  ::jxx::lang::jbool intersects(const ::jxx::Ptr<Rectangle>& rectangle) const;
           ::jxx::Ptr<Rectangle> intersection(const ::jxx::Ptr<Rectangle>& rectangle) const;
 		  ::jxx::lang::jbool isEmpty() const;
