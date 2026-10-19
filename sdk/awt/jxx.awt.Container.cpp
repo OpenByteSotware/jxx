@@ -1,6 +1,5 @@
 #include "awt/jxx.awt.Container.h"
 
-#include "awt/jxx.awt.FocusTraversalPolicy.h"
 
 #include <algorithm>
 

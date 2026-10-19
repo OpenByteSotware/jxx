@@ -17,8 +17,7 @@
 #include "awt/event/jxx.awt.event.MouseWheelEvent.h"
 #include "awt/event/jxx.awt.event.MouseWheelListener.h"
 #include "awt/jxx.awt.Container.h"
-#include "awt/jxx.awt.TextComponent.h"
-#include "gui/internal/jxx.gui.internal.NativeComponent.h"
+#include "awt/internal/jxx.awt.internal.ComponentPeer.h"
 #include "lang/jxx.lang.NullPointerException.h"
 
 namespace jxx::awt
@@ -200,7 +199,7 @@ namespace jxx::awt
     void Component::processFocusEvent(const ::jxx::Ptr<::jxx::awt::event::FocusEvent>& event){const auto listeners=focusListeners_;for(const auto& listener:listeners){if(!listener)continue;if(event->getID()==::jxx::awt::event::FocusEvent::FOCUS_GAINED)listener->focusGained(event);else if(event->getID()==::jxx::awt::event::FocusEvent::FOCUS_LOST)listener->focusLost(event);}}
 
     void Component::setNativeComponentInternal(
-        const ::jxx::Ptr<::jxx::gui::internal::NativeComponent>& value)
+        const ::jxx::Ptr<::jxx::awt::internal::ComponentPeer>& value)
     {
         if (nativeComponent_ == value) return;
         if (nativeComponent_ != nullptr) nativeComponent_->destroy();
@@ -226,9 +225,9 @@ namespace jxx::awt
         {
             if (auto owner = self.lock()) owner->processMouseWheelEvent(::jxx::NEW<::jxx::awt::event::MouseWheelEvent>(owner, ::jxx::awt::event::MouseEvent::MOUSE_WHEEL, 0, 0, 0, 0, 0, false, ::jxx::awt::event::MouseWheelEvent::WHEEL_UNIT_SCROLL, amount, rotation, precise));
         });
-        std::weak_ptr<TextComponent> textOwner = ::jxx::CAST<TextComponent>(thisPtr());
-        nativeComponent_->setTextCallback([textOwner](const ::jxx::Ptr<::jxx::lang::String>& text) { if (auto owner = textOwner.lock()) owner->setTextFromNative(text); });
+        nativeComponentAssigned();
     }
+    void Component::nativeComponentAssigned() {}
     void Component::invalidate() { valid_=false; }
     void Component::validate() { valid_=true; }
     ::jxx::lang::jbool Component::isValid() const { return valid_; }

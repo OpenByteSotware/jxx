@@ -2,13 +2,13 @@
 
 #include <functional>
 
-#include "gui/internal/jxx.gui.internal.NativeComponent.h"
+#include "awt/internal/jxx.awt.internal.ComponentPeer.h"
 
 class wxWindow;
 
 namespace jxx::gui::internal
 {
-    class WxComponentPeer final : public NativeComponent
+    class WxComponentPeer final : public ::jxx::awt::internal::ComponentPeer
     {
     public:
         using ActionCallback = std::function<void()>;

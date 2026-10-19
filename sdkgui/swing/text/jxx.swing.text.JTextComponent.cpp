@@ -1,6 +1,6 @@
 #include "swing/text/jxx.swing.text.JTextComponent.h"
 #include <algorithm>
-#include "gui/internal/jxx.gui.internal.NativeComponent.h"
+#include "awt/internal/jxx.awt.internal.ComponentPeer.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 namespace jxx::swing::text
 {

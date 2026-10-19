@@ -1,5 +1,5 @@
 #include "awt/jxx.awt.Label.h"
-#include "gui/internal/jxx.gui.internal.NativeComponent.h"
+#include "awt/internal/jxx.awt.internal.ComponentPeer.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 namespace jxx::awt {
 namespace { ::jxx::Ptr<::jxx::lang::String> emptyText(){return ::jxx::NEW<::jxx::lang::String>("");} }

@@ -5,7 +5,7 @@
 #include "awt/event/jxx.awt.event.ItemEvent.h"
 #include "awt/event/jxx.awt.event.ItemListener.h"
 #include "awt/jxx.awt.CheckboxGroup.h"
-#include "gui/internal/jxx.gui.internal.NativeComponent.h"
+#include "awt/internal/jxx.awt.internal.ComponentPeer.h"
 
 namespace jxx::awt
 {

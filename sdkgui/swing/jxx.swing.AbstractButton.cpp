@@ -4,7 +4,7 @@
 
 #include "awt/event/jxx.awt.event.ActionEvent.h"
 #include "awt/event/jxx.awt.event.ActionListener.h"
-#include "gui/internal/jxx.gui.internal.NativeComponent.h"
+#include "awt/internal/jxx.awt.internal.ComponentPeer.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "swing/jxx.swing.ButtonModel.h"
 #include "swing/jxx.swing.DefaultButtonModel.h"

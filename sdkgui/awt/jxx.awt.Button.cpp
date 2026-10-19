@@ -2,7 +2,7 @@
 #include <algorithm>
 #include "awt/event/jxx.awt.event.ActionEvent.h"
 #include "awt/event/jxx.awt.event.ActionListener.h"
-#include "gui/internal/jxx.gui.internal.NativeComponent.h"
+#include "awt/internal/jxx.awt.internal.ComponentPeer.h"
 namespace jxx::awt {
 namespace { ::jxx::Ptr<::jxx::lang::String> emptyText(){return ::jxx::NEW<::jxx::lang::String>("");} }
 Button::Button():Button(emptyText()){} Button::Button(const ::jxx::Ptr<::jxx::lang::String>& label):label_(label ? label : emptyText()){}
