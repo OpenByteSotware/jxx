@@ -194,6 +194,479 @@ cmake -S . -B build-vs2026-x64-static ^
   
   ______________________________________________________________________
 
+
+
+# Building libjpeg-turbo for JXX on Windows
+
+This document describes how to build and install **libjpeg-turbo 3.2.0** as a standalone dependency for the JXX project on Windows.
+
+The library is built outside the JXX source tree. JXX then locates the installed package through `CMAKE_PREFIX_PATH`.
+
+## Selected configuration
+
+- libjpeg-turbo version: **3.2.0**
+- JXX language standard: **C++17**
+- Target architecture: **x64**
+- Build system: **CMake with Visual Studio 18 2026**
+- Library type: **Static**
+- MSVC runtime:
+  - Release: `/MD`
+  - Debug: `/MDd`
+- TurboJPEG API: **Enabled**
+- SIMD: **Enabled**
+- JNA wrapper: **Disabled**
+
+libjpeg-turbo is implemented in C. The JXX C++17 setting applies to the JXX wrapper and does not need to be passed to libjpeg-turbo.
+
+## Directory layout
+
+The commands in this document assume the following layout:
+
+```text
+C:\deps\
+    src\
+        libjpeg-turbo-3.2.0\
+    libjpeg-turbo-3.2.0\
+```
+
+The source directory is:
+
+```text
+C:\deps\src\libjpeg-turbo-3.2.0
+```
+
+The installation directory is:
+
+```text
+C:\deps\libjpeg-turbo-3.2.0
+```
+
+The build directory will be created under the source tree:
+
+```text
+C:\deps\src\libjpeg-turbo-3.2.0\build-vs2026-x64-static
+```
+
+## Prerequisites
+
+Install and place on `PATH`:
+
+1. Visual Studio 2026 with the Desktop development with C++ workload
+2. CMake
+3. NASM for x64 SIMD support
+
+Open:
+
+```text
+x64 Native Tools Command Prompt for VS 2026
+```
+
+Verify the tools:
+
+```bat
+cl
+cmake --version
+nasm --version
+```
+
+If NASM is installed but not on `PATH`, pass its path during configuration:
+
+```bat
+-DCMAKE_ASM_NASM_COMPILER=C:/nasm/nasm.exe
+```
+
+Use forward slashes in CMake path values.
+
+## Configure libjpeg-turbo
+
+Change to the source directory:
+
+```bat
+cd /d C:\deps\src\libjpeg-turbo-3.2.0
+```
+
+Configure the Visual Studio x64 static-library build:
+
+```bat
+cmake -S . -B build-vs2026-x64-static ^
+  -G "Visual Studio 18 2026" ^
+  -A x64 ^
+  -DCMAKE_INSTALL_PREFIX=C:/deps/libjpeg-turbo-3.2.0 ^
+  "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" ^
+  -DENABLE_SHARED=OFF ^
+  -DENABLE_STATIC=ON ^
+  -DWITH_TURBOJPEG=ON ^
+  -DWITH_SIMD=ON ^
+  -DWITH_JAVA=OFF ^
+  -DWITH_TESTS=ON
+```
+
+The runtime expression selects:
+
+```text
+Release -> /MD
+Debug   -> /MDd
+```
+
+This matches a JXX build that uses the shared MSVC runtime, including GoogleTest configurations using:
+
+```bat
+-Dgtest_force_shared_crt=ON
+```
+
+## Build Release
+
+```bat
+cmake --build build-vs2026-x64-static --config Release --parallel
+```
+
+The build step creates artifacts in the build directory. It does **not** copy files into `C:\deps\libjpeg-turbo-3.2.0`.
+
+## Run the tests
+
+```bat
+ctest --test-dir build-vs2026-x64-static ^
+  -C Release ^
+  --output-on-failure
+```
+
+## Install Release
+
+The install command is required to populate the configured installation prefix:
+
+```bat
+cmake --install build-vs2026-x64-static --config Release
+```
+
+To explicitly override the installation destination during installation:
+
+```bat
+cmake --install build-vs2026-x64-static ^
+  --config Release ^
+  --prefix C:/deps/libjpeg-turbo-3.2.0
+```
+
+The equivalent Visual Studio install-target command is:
+
+```bat
+cmake --build build-vs2026-x64-static ^
+  --config Release ^
+  --target INSTALL
+```
+
+Use one installation method. Running `cmake --install` is the clearest option.
+
+## Verify the installation
+
+Display the cached installation prefix:
+
+```bat
+cmake -N -L build-vs2026-x64-static | findstr CMAKE_INSTALL_PREFIX
+```
+
+Expected result:
+
+```text
+CMAKE_INSTALL_PREFIX:PATH=C:/deps/libjpeg-turbo-3.2.0
+```
+
+Inspect the installed files:
+
+```bat
+dir C:\deps\libjpeg-turbo-3.2.0 /s
+```
+
+The installation should contain directories similar to:
+
+```text
+C:\deps\libjpeg-turbo-3.2.0\
+    bin\
+    include\
+        jconfig.h
+        jerror.h
+        jmorecfg.h
+        jpeglib.h
+        turbojpeg.h
+    lib\
+    share\
+```
+
+The exact installed files can vary according to the selected build options.
+
+## Configure JXX to find libjpeg-turbo
+
+Keep libjpeg-turbo outside the JXX build. Add its installation prefix when configuring JXX.
+
+### JXX headless build
+
+```bat
+cmake -S . -B build-headless ^
+  -G "Visual Studio 18 2026" ^
+  -A x64 ^
+  -Dgtest_force_shared_crt=ON ^
+  -DJXX_HEADLESS=ON ^
+  -DCMAKE_PREFIX_PATH=C:/deps/libjpeg-turbo-3.2.0
+```
+
+### JXX GUI build
+
+```bat
+cmake -S . -B build-gui ^
+  -G "Visual Studio 18 2026" ^
+  -A x64 ^
+  -Dgtest_force_shared_crt=ON ^
+  -DJXX_HEADLESS=OFF ^
+  -DCMAKE_PREFIX_PATH=C:/deps/libjpeg-turbo-3.2.0
+```
+
+If JXX already supplies other entries through `CMAKE_PREFIX_PATH`, use a semicolon-separated list and quote the complete definition:
+
+```bat
+"-DCMAKE_PREFIX_PATH=C:/deps/libjpeg-turbo-3.2.0;C:/path/to/another/package"
+```
+
+## JXX CMake integration
+
+The JXX JPEG backend should locate the installed CMake package instead of hard-coding library paths:
+
+```cmake
+find_package(libjpeg-turbo CONFIG REQUIRED)
+```
+
+Link the selected imported target privately to the JXX ImageIO JPEG implementation:
+
+```cmake
+target_link_libraries(jxx_imageio_jpeg
+    PRIVATE
+        <libjpeg-turbo-imported-target>
+)
+```
+
+Replace `<libjpeg-turbo-imported-target>` with the imported target exported by the installed libjpeg-turbo package. Confirm the target name from the installed CMake package files under the installation prefix.
+
+Keeping the dependency private prevents `turbojpeg.h`, `jpeglib.h`, and native handle types from becoming part of the public JXX API.
+
+## Recommended JXX wrapper boundary
+
+JXX public ImageIO classes should expose JXX types only. Native libjpeg-turbo details should remain in private implementation classes.
+
+A backend can use RAII to own a TurboJPEG handle:
+
+```cpp
+#include <stdexcept>
+#include <turbojpeg.h>
+
+namespace jxx::imageio::jpeg {
+
+class TurboJpegDecompressor final {
+public:
+    TurboJpegDecompressor()
+        : handle_(tj3Init(TJINIT_DECOMPRESS)) {
+        if (handle_ == nullptr) {
+            throw std::runtime_error("Unable to initialize JPEG decoder");
+        }
+    }
+
+    ~TurboJpegDecompressor() {
+        tj3Destroy(handle_);
+    }
+
+    TurboJpegDecompressor(const TurboJpegDecompressor&) = delete;
+    auto operator=(const TurboJpegDecompressor&)
+        -> TurboJpegDecompressor& = delete;
+
+private:
+    tjhandle handle_ = nullptr;
+};
+
+}
+```
+
+For JXX implementation code, translate native failures into the appropriate JXX exceptions rather than exposing `std::runtime_error` through a public JXX API.
+
+## Build Debug artifacts when needed
+
+If JXX Debug builds will link the static dependency, build and install Debug as well:
+
+```bat
+cmake --build build-vs2026-x64-static --config Debug --parallel
+
+ctest --test-dir build-vs2026-x64-static ^
+  -C Debug ^
+  --output-on-failure
+
+cmake --install build-vs2026-x64-static --config Debug
+```
+
+Be careful when installing Release and Debug artifacts into the same prefix. Confirm that the generated package preserves distinct library names or configuration mappings. If it does not, use separate prefixes:
+
+```text
+C:\deps\libjpeg-turbo-3.2.0-release
+C:\deps\libjpeg-turbo-3.2.0-debug
+```
+
+## Optional shared-library build
+
+For a DLL build, use a separate build and installation directory:
+
+```bat
+cmake -S . -B build-vs2026-x64-shared ^
+  -G "Visual Studio 18 2026" ^
+  -A x64 ^
+  -DCMAKE_INSTALL_PREFIX=C:/deps/libjpeg-turbo-3.2.0-shared ^
+  "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" ^
+  -DENABLE_SHARED=ON ^
+  -DENABLE_STATIC=OFF ^
+  -DWITH_TURBOJPEG=ON ^
+  -DWITH_SIMD=ON ^
+  -DWITH_JAVA=OFF ^
+  -DWITH_TESTS=ON
+
+cmake --build build-vs2026-x64-shared --config Release --parallel
+cmake --install build-vs2026-x64-shared --config Release
+```
+
+At runtime, ensure the installed `bin` directory is available:
+
+```bat
+set "PATH=C:\deps\libjpeg-turbo-3.2.0-shared\bin;%PATH%"
+```
+
+The static configuration is recommended initially for JXX because it avoids an additional runtime DLL deployment dependency.
+
+## Clean rebuild
+
+To reset the libjpeg-turbo build without changing the source or installed package:
+
+```bat
+rmdir /s /q build-vs2026-x64-static
+```
+
+Then repeat the configure, build, test, and install steps.
+
+To remove the installed package completely:
+
+```bat
+rmdir /s /q C:\deps\libjpeg-turbo-3.2.0
+```
+
+Only run the removal commands after verifying the paths.
+
+## Troubleshooting
+
+### Nothing is installed under `C:\deps`
+
+`CMAKE_INSTALL_PREFIX` only sets the destination. It does not install files during configuration or a normal build.
+
+Run:
+
+```bat
+cmake --install build-vs2026-x64-static ^
+  --config Release ^
+  --prefix C:/deps/libjpeg-turbo-3.2.0
+```
+
+### The wrong build directory is being installed
+
+Make sure the same `-B` directory is used for configure, build, test, and install:
+
+```text
+build-vs2026-x64-static
+```
+
+Check its cached prefix:
+
+```bat
+cmake -N -L build-vs2026-x64-static | findstr CMAKE_INSTALL_PREFIX
+```
+
+### NASM is not found
+
+Add NASM to `PATH`, or reconfigure with:
+
+```bat
+-DCMAKE_ASM_NASM_COMPILER=C:/nasm/nasm.exe
+```
+
+Delete the old build directory before reconfiguring if CMake cached a failed NASM lookup.
+
+### JXX cannot find the package
+
+Confirm that installation completed and that the prefix contains installed CMake package configuration files. Then configure JXX with:
+
+```bat
+-DCMAKE_PREFIX_PATH=C:/deps/libjpeg-turbo-3.2.0
+```
+
+For detailed package-search diagnostics:
+
+```bat
+cmake -S . -B build-headless ^
+  -DCMAKE_FIND_DEBUG_MODE=ON ^
+  -DCMAKE_PREFIX_PATH=C:/deps/libjpeg-turbo-3.2.0
+```
+
+Add the normal JXX generator and build options to that diagnostic command.
+
+### Runtime-library mismatch
+
+Ensure both JXX and libjpeg-turbo use compatible MSVC runtimes:
+
+```text
+Release -> /MD
+Debug   -> /MDd
+```
+
+Do not mix a dependency built with `/MT` or `/MTd` into a JXX configuration standardized on `/MD` or `/MDd` unless the boundary has been explicitly audited for allocation and runtime-library compatibility.
+
+## Licensing files
+
+Keep the upstream libjpeg-turbo notices with any JXX distribution that contains or links the library. A suggested JXX layout is:
+
+```text
+jxx\
+    LICENSE
+    THIRD_PARTY_NOTICES.md
+    third_party\
+        libjpeg-turbo\
+            LICENSE.md
+            README.ijg
+```
+
+Do not replace the upstream license files with the JXX MIT license. JXX remains MIT-licensed, while libjpeg-turbo remains under its own applicable permissive licenses.
+
+## Quick command summary
+
+```bat
+cd /d C:\deps\src\libjpeg-turbo-3.2.0
+
+cmake -S . -B build-vs2026-x64-static ^
+  -G "Visual Studio 18 2026" ^
+  -A x64 ^
+  -DCMAKE_INSTALL_PREFIX=C:/deps/libjpeg-turbo-3.2.0 ^
+  "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" ^
+  -DENABLE_SHARED=OFF ^
+  -DENABLE_STATIC=ON ^
+  -DWITH_TURBOJPEG=ON ^
+  -DWITH_SIMD=ON ^
+  -DWITH_JAVA=OFF ^
+  -DWITH_TESTS=ON
+
+cmake --build build-vs2026-x64-static --config Release --parallel
+
+ctest --test-dir build-vs2026-x64-static ^
+  -C Release ^
+  --output-on-failure
+
+cmake --install build-vs2026-x64-static ^
+  --config Release ^
+  --prefix C:/deps/libjpeg-turbo-3.2.0
+
+dir C:\deps\libjpeg-turbo-3.2.0 /s
+```
+
+
+________________________________________________________________________
 Array type usage from java int[], boolean[], int[][][]
 
 auto bytes =

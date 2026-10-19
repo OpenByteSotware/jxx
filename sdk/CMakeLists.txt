@@ -40,6 +40,60 @@ target_compile_definitions(jxxsdk
         JXX_HEADLESS=$<BOOL:${JXX_HEADLESS}>
 )
 
+# libjpeg-turbo installation prefix. Expected layout:
+#   <prefix>/include/turbojpeg.h
+#   <prefix>/lib/turbojpeg.lib  (Windows)
+# or the corresponding library on Linux.
+set(JXX_TURBOJPEG_ROOT
+    ""
+    CACHE PATH
+    "Installed libjpeg-turbo prefix"
+)
+
+find_path(JXX_TURBOJPEG_INCLUDE_DIR
+    NAMES
+        turbojpeg.h
+    HINTS
+        "${JXX_TURBOJPEG_ROOT}"
+    PATHS
+        ${CMAKE_PREFIX_PATH}
+    PATH_SUFFIXES
+        include
+)
+
+find_library(JXX_TURBOJPEG_LIBRARY
+    NAMES
+        turbojpeg
+        turbojpeg-static
+    HINTS
+        "${JXX_TURBOJPEG_ROOT}"
+    PATHS
+        ${CMAKE_PREFIX_PATH}
+    PATH_SUFFIXES
+        lib
+        lib64
+)
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(JXXTurboJPEG
+    REQUIRED_VARS
+        JXX_TURBOJPEG_INCLUDE_DIR
+        JXX_TURBOJPEG_LIBRARY
+)
+
+if(NOT TARGET JXX::TurboJPEG)
+    add_library(JXX::TurboJPEG UNKNOWN IMPORTED)
+    set_target_properties(JXX::TurboJPEG PROPERTIES
+        IMPORTED_LOCATION "${JXX_TURBOJPEG_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES "${JXX_TURBOJPEG_INCLUDE_DIR}"
+    )
+endif()
+
+target_link_libraries(jxxsdk
+    PRIVATE
+        JXX::TurboJPEG
+)
+
 target_include_directories(jxxsdk
     PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/defines"
@@ -62,8 +116,10 @@ target_include_directories(jxxsdk
         "${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/pugixml/src"
         "${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/openssl/include"
         "${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/zlib"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/jpegturbo"
-		)
+)
+
+message(STATUS "JXX TurboJPEG include: ${JXX_TURBOJPEG_INCLUDE_DIR}")
+message(STATUS "JXX TurboJPEG library: ${JXX_TURBOJPEG_LIBRARY}")
 
 if(MSVC)
     target_compile_definitions(jxxsdk
