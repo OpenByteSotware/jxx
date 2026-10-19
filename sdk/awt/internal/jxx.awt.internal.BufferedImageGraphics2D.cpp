@@ -283,6 +283,56 @@ namespace jxx::awt::internal
         return true;
     }
 
+    ::jxx::lang::jbool BufferedImageGraphics2D::drawImage(
+        const ::jxx::Ptr<Image>& source, ::jxx::lang::jint x,
+        ::jxx::lang::jint y, ::jxx::lang::jint width,
+        ::jxx::lang::jint height,
+        const ::jxx::Ptr<::jxx::awt::image::ImageObserver>& observer)
+    {
+        auto image = ::jxx::CAST<::jxx::awt::image::BufferedImage>(source);
+        if (image == nullptr || image_ == nullptr) return false;
+        return drawImage(source, x, y, x + width, y + height, 0, 0,
+            image->getWidth(nullptr), image->getHeight(nullptr), observer);
+    }
+
+    ::jxx::lang::jbool BufferedImageGraphics2D::drawImage(
+        const ::jxx::Ptr<Image>& source,
+        ::jxx::lang::jint dx1, ::jxx::lang::jint dy1,
+        ::jxx::lang::jint dx2, ::jxx::lang::jint dy2,
+        ::jxx::lang::jint sx1, ::jxx::lang::jint sy1,
+        ::jxx::lang::jint sx2, ::jxx::lang::jint sy2,
+        const ::jxx::Ptr<::jxx::awt::image::ImageObserver>&)
+    {
+        auto image = ::jxx::CAST<::jxx::awt::image::BufferedImage>(source);
+        if (image == nullptr || image_ == nullptr) return false;
+        const auto destinationWidth = std::abs(dx2 - dx1);
+        const auto destinationHeight = std::abs(dy2 - dy1);
+        const auto sourceWidth = std::abs(sx2 - sx1);
+        const auto sourceHeight = std::abs(sy2 - sy1);
+        if (destinationWidth == 0 || destinationHeight == 0 ||
+            sourceWidth == 0 || sourceHeight == 0) return true;
+        for (::jxx::lang::jint row = 0; row < destinationHeight; ++row)
+        {
+            const auto sourceRow = sy1 + (sy2 >= sy1 ? 1 : -1) *
+                ((row * sourceHeight) / destinationHeight);
+            const auto destinationRow = dy1 + (dy2 >= dy1 ? row : -row);
+            for (::jxx::lang::jint column = 0; column < destinationWidth; ++column)
+            {
+                const auto sourceColumn = sx1 + (sx2 >= sx1 ? 1 : -1) *
+                    ((column * sourceWidth) / destinationWidth);
+                const auto destinationColumn =
+                    dx1 + (dx2 >= dx1 ? column : -column);
+                if (sourceColumn >= 0 && sourceRow >= 0 &&
+                    sourceColumn < image->getWidth(nullptr) &&
+                    sourceRow < image->getHeight(nullptr))
+                    putPixel(destinationColumn + translateX_,
+                        destinationRow + translateY_,
+                        image->getRGB(sourceColumn, sourceRow));
+            }
+        }
+        return true;
+    }
+
     void BufferedImageGraphics2D::draw(const ::jxx::Ptr<Shape>&) {}
     void BufferedImageGraphics2D::fill(const ::jxx::Ptr<Shape>&) {}
     void BufferedImageGraphics2D::drawString(const ::jxx::Ptr<::jxx::lang::String>& text, float x, float y)

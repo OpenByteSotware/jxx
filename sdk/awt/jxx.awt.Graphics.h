@@ -65,7 +65,35 @@ namespace jxx::awt
             const IntArray& yPoints, ::jxx::lang::jint nPoints) = 0;
         virtual void drawString(const ::jxx::Ptr<::jxx::lang::String>& text,
             ::jxx::lang::jint x, ::jxx::lang::jint y) = 0;
-        virtual ::jxx::lang::jbool drawImage(const ::jxx::Ptr<Image>& image, ::jxx::lang::jint x, ::jxx::lang::jint y, const ::jxx::Ptr<::jxx::awt::image::ImageObserver>& observer);
+        virtual ::jxx::lang::jbool drawImage(const ::jxx::Ptr<Image>& image,
+            ::jxx::lang::jint x, ::jxx::lang::jint y,
+            const ::jxx::Ptr<::jxx::awt::image::ImageObserver>& observer);
+        virtual ::jxx::lang::jbool drawImage(const ::jxx::Ptr<Image>& image,
+            ::jxx::lang::jint x, ::jxx::lang::jint y,
+            ::jxx::lang::jint width, ::jxx::lang::jint height,
+            const ::jxx::Ptr<::jxx::awt::image::ImageObserver>& observer);
+        virtual ::jxx::lang::jbool drawImage(const ::jxx::Ptr<Image>& image,
+            ::jxx::lang::jint x, ::jxx::lang::jint y,
+            const ::jxx::Ptr<Color>& background,
+            const ::jxx::Ptr<::jxx::awt::image::ImageObserver>& observer);
+        virtual ::jxx::lang::jbool drawImage(const ::jxx::Ptr<Image>& image,
+            ::jxx::lang::jint x, ::jxx::lang::jint y,
+            ::jxx::lang::jint width, ::jxx::lang::jint height,
+            const ::jxx::Ptr<Color>& background,
+            const ::jxx::Ptr<::jxx::awt::image::ImageObserver>& observer);
+        virtual ::jxx::lang::jbool drawImage(const ::jxx::Ptr<Image>& image,
+            ::jxx::lang::jint dx1, ::jxx::lang::jint dy1,
+            ::jxx::lang::jint dx2, ::jxx::lang::jint dy2,
+            ::jxx::lang::jint sx1, ::jxx::lang::jint sy1,
+            ::jxx::lang::jint sx2, ::jxx::lang::jint sy2,
+            const ::jxx::Ptr<::jxx::awt::image::ImageObserver>& observer);
+        virtual ::jxx::lang::jbool drawImage(const ::jxx::Ptr<Image>& image,
+            ::jxx::lang::jint dx1, ::jxx::lang::jint dy1,
+            ::jxx::lang::jint dx2, ::jxx::lang::jint dy2,
+            ::jxx::lang::jint sx1, ::jxx::lang::jint sy1,
+            ::jxx::lang::jint sx2, ::jxx::lang::jint sy2,
+            const ::jxx::Ptr<Color>& background,
+            const ::jxx::Ptr<::jxx::awt::image::ImageObserver>& observer);
         virtual void dispose() = 0;
         ::jxx::Ptr<::jxx::lang::String> toString() const override;
 
