@@ -1,0 +1,4 @@
+#pragma once
+#include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.Object.h"
+namespace jxx::ext::imageio::stream{class ImageOutputStream;} namespace jxx::ext::imageio{class IIOImage;class ImageWriteParam;class ImageWriter:public ::jxx::lang::ClassBase<ImageWriter,::jxx::lang::Object>{public:using JxxSuper=::jxx::lang::Object;using Super=::jxx::lang::ClassBase<ImageWriter,JxxSuper>;ImageWriter();virtual ~ImageWriter()=default;virtual ::jxx::Ptr<ImageWriteParam> getDefaultWriteParam()=0;virtual void write(const ::jxx::Ptr<::jxx::lang::Object>& streamMetadata,const ::jxx::Ptr<IIOImage>& image,const ::jxx::Ptr<ImageWriteParam>& param)=0;void setOutput(const ::jxx::Ptr<::jxx::lang::Object>& output);::jxx::Ptr<::jxx::lang::Object> getOutput()const{return output_;}virtual void dispose();protected: ::jxx::Ptr<::jxx::lang::Object> output_;};}
