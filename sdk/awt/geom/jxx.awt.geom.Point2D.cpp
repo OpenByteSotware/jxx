@@ -1,4 +1,6 @@
 #include "awt/geom/jxx.awt.geom.Point2D.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 #include <cmath>
 #include <cstring>
 #include <sstream>
@@ -20,4 +22,11 @@ void Point2D::setLocation(const ::jxx::Ptr<Point2D>& p){if(p)setLocation(p->getX
 ::jxx::lang::jint Point2D::hashCode() const{std::uint64_t a=0,b=0;auto x=getX(),y=getY();std::memcpy(&a,&x,8);std::memcpy(&b,&y,8);auto bits=a^(a>>32)^b^(b>>32);return static_cast<::jxx::lang::jint>(bits);}
 ::jxx::Ptr<::jxx::lang::String> Point2D::Float::toString() const{std::ostringstream s;s<<"Point2D.Float["<<x<<", "<<y<<"]";return ::jxx::NEW<::jxx::lang::String>(s.str());}
 ::jxx::Ptr<::jxx::lang::String> Point2D::Double::toString() const{std::ostringstream s;s<<"Point2D.Double["<<x<<", "<<y<<"]";return ::jxx::NEW<::jxx::lang::String>(s.str());}
+
+void Point2D::Float::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out){if(out){out->writeFloat(x);out->writeFloat(y);}}
+void Point2D::Float::readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in){if(in){x=in->readFloat();y=in->readFloat();}}
+void Point2D::Float::readObjectNoData(){x=0;y=0;}
+void Point2D::Double::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out){if(out){out->writeDouble(x);out->writeDouble(y);}}
+void Point2D::Double::readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in){if(in){x=in->readDouble();y=in->readDouble();}}
+void Point2D::Double::readObjectNoData(){x=0;y=0;}
 }

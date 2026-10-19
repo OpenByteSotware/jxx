@@ -4,6 +4,7 @@
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx_types.h"
+namespace jxx::io { class ObjectInputStream; class ObjectOutputStream; }
 namespace jxx::awt::geom {
 class Point2D : public ::jxx::lang::ClassBase<Point2D,::jxx::lang::Object> {
 public:
@@ -31,6 +32,9 @@ public:
  void setLocation(::jxx::lang::jdouble nx,::jxx::lang::jdouble ny) override{x=static_cast<::jxx::lang::jfloat>(nx);y=static_cast<::jxx::lang::jfloat>(ny);}
  void setLocation(::jxx::lang::jfloat nx,::jxx::lang::jfloat ny){x=nx;y=ny;}
  ::jxx::Ptr<::jxx::lang::String> toString() const override;
+ void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override;
+ void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override;
+ void readObjectNoData() override;
 };
 class Point2D::Double : public ::jxx::lang::ClassBase<Point2D::Double,Point2D,::jxx::io::SerializableI> {
 public:
@@ -39,4 +43,7 @@ public:
  ::jxx::lang::jdouble getX() const override{return x;} ::jxx::lang::jdouble getY() const override{return y;}
  void setLocation(::jxx::lang::jdouble nx,::jxx::lang::jdouble ny) override{x=nx;y=ny;}
  ::jxx::Ptr<::jxx::lang::String> toString() const override;
+ void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override;
+ void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override;
+ void readObjectNoData() override;
 }; }
