@@ -15,8 +15,8 @@ TEST(Point2DClassInitialization, NestedConcreteClassesHaveDistinctMetadata)
     ASSERT_NE(floatClass, nullptr);
     ASSERT_NE(doubleClass, nullptr);
     EXPECT_NE(floatClass, doubleClass);
-    EXPECT_EQ(floatClass->getName()->utf8(), "jxx.awt.geom.Point2D$Float");
-    EXPECT_EQ(doubleClass->getName()->utf8(), "jxx.awt.geom.Point2D$Double");
+    EXPECT_EQ(floatClass->getName()->utf8(), "jxx.awt.geom.Point2D.Float");
+    EXPECT_EQ(doubleClass->getName()->utf8(), "jxx.awt.geom.Point2D.Double");
 }
 
 TEST(Point2DSerialization, DoubleRoundTripPreservesCoordinates)
