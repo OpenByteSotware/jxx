@@ -231,5 +231,43 @@ namespace jxx::awt
         return focusTraversalPolicyProvider_;
     }
 
-void Container::paintAll(const ::jxx::Ptr<Graphics>&g){paint(g);for(const auto&c:components_){if(!c||!c->isVisible())continue;auto child=g?g->create():nullptr;if(child){child->translate(c->getX(),c->getY());c->paintAll(child);child->dispose();}}} void Container::printAll(const ::jxx::Ptr<Graphics>&g){print(g);for(const auto&c:components_){if(!c||!c->isVisible())continue;auto child=g?g->create():nullptr;if(child){child->translate(c->getX(),c->getY());c->printAll(child);child->dispose();}}}
+void Container::paintComponents(const ::jxx::Ptr<Graphics>& graphics)
+    {
+        if (graphics == nullptr) return;
+        for (const auto& component : components_)
+        {
+            if (component == nullptr || !component->isVisible()) continue;
+            auto child = graphics->create(component->getX(), component->getY(),
+                component->getWidth(), component->getHeight());
+            if (child == nullptr) continue;
+            component->paintAll(child);
+            child->dispose();
+        }
+    }
+
+    void Container::printComponents(const ::jxx::Ptr<Graphics>& graphics)
+    {
+        if (graphics == nullptr) return;
+        for (const auto& component : components_)
+        {
+            if (component == nullptr || !component->isVisible()) continue;
+            auto child = graphics->create(component->getX(), component->getY(),
+                component->getWidth(), component->getHeight());
+            if (child == nullptr) continue;
+            component->printAll(child);
+            child->dispose();
+        }
+    }
+
+    void Container::paintAll(const ::jxx::Ptr<Graphics>& graphics)
+    {
+        paint(graphics);
+        paintComponents(graphics);
+    }
+
+    void Container::printAll(const ::jxx::Ptr<Graphics>& graphics)
+    {
+        print(graphics);
+        printComponents(graphics);
+    }
 }

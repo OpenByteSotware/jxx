@@ -51,7 +51,11 @@ namespace jxx::awt
         void applyComponentOrientation(
             const ::jxx::Ptr<ComponentOrientation>& orientation) override;
         void validate() override;
-        virtual void doLayout(); void paintAll(const ::jxx::Ptr<Graphics>& graphics) override; void printAll(const ::jxx::Ptr<Graphics>& graphics) override;
+        virtual void doLayout();
+        virtual void paintComponents(const ::jxx::Ptr<Graphics>& graphics);
+        virtual void printComponents(const ::jxx::Ptr<Graphics>& graphics);
+        void paintAll(const ::jxx::Ptr<Graphics>& graphics) override;
+        void printAll(const ::jxx::Ptr<Graphics>& graphics) override;
 
         virtual void setFocusTraversalPolicy(
             const ::jxx::Ptr<FocusTraversalPolicy>& policy);
