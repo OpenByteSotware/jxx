@@ -1,6 +1,12 @@
 #include "awt/geom/jxx.awt.geom.ClassInitialization.h"
 
 #include "awt/geom/jxx.awt.geom.AffineTransform.h"
+#include "awt/geom/jxx.awt.geom.Dimension2D.h"
+#include "awt/geom/jxx.awt.geom.Ellipse2D.h"
+#include "awt/geom/jxx.awt.geom.IllegalPathStateException.h"
+#include "awt/geom/jxx.awt.geom.Line2D.h"
+#include "awt/geom/jxx.awt.geom.Rectangle2D.h"
+#include "awt/geom/jxx.awt.geom.RectangularShape.h"
 #include "awt/geom/jxx.awt.geom.NoninvertibleTransformException.h"
 #include "awt/geom/jxx.awt.geom.Point2D.h"
 #include "io/jxx.io.SerializationClassRegistry.h"
@@ -16,6 +22,15 @@ namespace jxx::awt::geom
         std::call_once(flag, []()
         {
             ::jxx::lang::class_info_detail::registerClassInfo<AffineTransform>();
+            ::jxx::lang::class_info_detail::registerClassInfo<Dimension2D>();
+            ::jxx::lang::class_info_detail::registerClassInfo<Ellipse2D>();
+            ::jxx::lang::class_info_detail::registerClassInfo<Ellipse2D::Double>();
+            (void)IllegalPathStateException::Class();
+            ::jxx::lang::class_info_detail::registerClassInfo<Line2D>();
+            ::jxx::lang::class_info_detail::registerClassInfo<Line2D::Double>();
+            ::jxx::lang::class_info_detail::registerClassInfo<Rectangle2D>();
+            ::jxx::lang::class_info_detail::registerClassInfo<Rectangle2D::Double>();
+            ::jxx::lang::class_info_detail::registerClassInfo<RectangularShape>();
             ::jxx::lang::class_info_detail::registerClassInfo<Point2D>();
             ::jxx::lang::class_info_detail::registerClassInfo<Point2D::Float>();
             ::jxx::lang::class_info_detail::registerClassInfo<Point2D::Double>();
