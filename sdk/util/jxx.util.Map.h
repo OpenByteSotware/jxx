@@ -34,8 +34,8 @@ public:
     virtual ::jxx::lang::jint hashCode() const = 0;
 
     virtual ::jxx::Ptr<V> getOrDefault(const ::jxx::Ptr<::jxx::lang::Object>& key, const ::jxx::Ptr<V>& defaultValue) {
-        ::jxx::Ptr<V> v = get(key);
-        if (v != nullptr || containsKey(key)) return v;
+        ::jxx::Ptr<V> v = get(::jxx::CAST<::jxx::lang::Object>(key));
+        if (v != nullptr || containsKey(::jxx::CAST<::jxx::lang::Object>(key))) return v;
         return defaultValue;
     }
 
@@ -69,10 +69,10 @@ public:
         const ::jxx::Ptr<::jxx::lang::Object>& key,
         const ::jxx::Ptr<::jxx::lang::Object>& value) {
 
-        auto current = get(key);
+        auto current = get(::jxx::CAST<::jxx::lang::Object>(key));
 
         if (current == nullptr) {
-            if (value != nullptr || !containsKey(key)) {
+            if (value != nullptr || !containsKey(::jxx::CAST<::jxx::lang::Object>(key))) {
                 return false;
             }
         }
@@ -87,7 +87,7 @@ public:
             }
         }
 
-        remove(key);
+        remove(::jxx::CAST<::jxx::lang::Object>(key));
         return true;
     }
 
@@ -157,7 +157,7 @@ public:
                 put(key, newValue);
                 return newValue;
             }
-            remove(key);
+            remove(::jxx::CAST<::jxx::lang::Object>(key));
         }
         return nullptr;
     }
@@ -167,7 +167,7 @@ public:
         ::jxx::Ptr<V> oldValue = get(::jxx::CAST<::jxx::lang::Object>(key));
         ::jxx::Ptr<V> newValue = remappingFunction->apply(key, oldValue);
         if (newValue == nullptr) {
-            if (oldValue != nullptr || containsKey(key)) remove(key);
+            if (oldValue != nullptr || containsKey(::jxx::CAST<::jxx::lang::Object>(key))) remove(::jxx::CAST<::jxx::lang::Object>(key));
             return nullptr;
         }
         put(key, newValue);
@@ -179,7 +179,7 @@ public:
         ::jxx::Ptr<V> oldValue = get(::jxx::CAST<::jxx::lang::Object>(key));
         ::jxx::Ptr<V> newValue = (oldValue == nullptr) ? value : remappingFunction->apply(oldValue, value);
         if (newValue == nullptr) {
-            remove(key);
+            remove(::jxx::CAST<::jxx::lang::Object>(key));
             return nullptr;
         }
         put(key, newValue);
