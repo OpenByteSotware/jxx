@@ -12,6 +12,7 @@
 #include "io/jxx.io.DataInputStream.h"
 #include "io/jxx.io.DataOutputStream.h"
 #include "io/jxx.io.File.h"
+#include "io/jxx.io.RandomAccessFile.h"
 #include "io/jxx.io.FileInputStream.h"
 #include "io/jxx.io.FileOutputStream.h"
 #include "io/jxx.io.FileReader.h"
@@ -85,7 +86,7 @@ namespace jxx::io
                       static_cast<::jxx::lang::jlong>(301077366599181567LL),
                       [] { return ::jxx::NEW<File>(::jxx::NEW<::jxx::lang::String>()); });
                   ::jxx::io::serialization::registerClassReferenceArrayCodecs<File, 1U, 2U>(); 
-				  reg<FileInputStream>(); reg<FileOutputStream>(); reg<FileReader>(); 
+				  reg<FileInputStream>(); reg<FileOutputStream>(); reg<FileReader>(); reg<RandomAccessFile>(); 
 				  reg<FileWriter>(); reg<InputStreamReader>(); reg<ObjectInputStream>();
 				  reg<ObjectOutputStream>(); reg<OutputStreamWriter>(); reg<PrintStream>();
 				  reg<PrintWriter>(); reg<PushbackInputStream>(); reg<SequenceInputStream>();
