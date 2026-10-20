@@ -3,6 +3,8 @@
 #include "util/jxx.util.AbstractCollection.h"
 #include "util/jxx.util.List.h"
 
+#include <cstdint>
+
 namespace jxx::util
 {
 
@@ -17,6 +19,37 @@ namespace jxx::util
 
     public:
         virtual ~AbstractList() = default;
+
+        jxx::lang::jbool equals(
+            const jxx::Ptr<jxx::lang::Object>& object) const override
+        {
+            if (object.get() == this) return true;
+            auto other = jxx::CAST<List<E>>(object);
+            if (other == nullptr || this->size() != other->size()) return false;
+            for (jxx::lang::jint index = 0; index < this->size(); ++index) {
+                const auto left = this->get(index);
+                const auto right = other->get(index);
+                if (left == right) continue;
+                if (left == nullptr || right == nullptr) return false;
+                const auto leftObject = jxx::CAST<jxx::lang::Object>(left);
+                const auto rightObject = jxx::CAST<jxx::lang::Object>(right);
+                if (leftObject == nullptr ||
+                    !leftObject->equals(rightObject)) return false;
+            }
+            return true;
+        }
+
+        jxx::lang::jint hashCode() const override
+        {
+            std::uint32_t hash = 1U;
+            for (jxx::lang::jint index = 0; index < this->size(); ++index) {
+                const auto element = this->get(index);
+                const auto object = jxx::CAST<jxx::lang::Object>(element);
+                hash = 31U * hash + static_cast<std::uint32_t>(
+                    object == nullptr ? 0 : object->hashCode());
+            }
+            return static_cast<jxx::lang::jint>(hash);
+        }
 
         /*
          * Preserve the indexed List<E>::add overload.
