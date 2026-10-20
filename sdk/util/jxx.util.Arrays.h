@@ -103,10 +103,13 @@ inline void checkRange(const ::jxx::Ptr<::jxx::lang::JxxArray<T, 1U>>& array,
 }
 
 
+// Internal implementation detail for Arrays::asList().
+// This is not a public source-parity type and must not appear in client APIs,
+// class initialization, or serialization registration.
 template <typename E>
-class ArraysList final : public ::jxx::util::ArrayList<E> {
+class ArraysArrayBackedList final : public ::jxx::util::ArrayList<E> {
 public:
-    explicit ArraysList(
+    explicit ArraysArrayBackedList(
         const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<E>, 1U>>& array)
         : ::jxx::util::ArrayList<E>(0), array_(array) {}
 
@@ -278,7 +281,7 @@ public:
     template <typename T>
     static ::jxx::Ptr<List<T>> asList(const Array<::jxx::Ptr<T>>& array) {
         arrays_detail::checkArray(array);
-        auto result = ::jxx::NEW<arrays_detail::ArraysList<T>>(array);
+        auto result = ::jxx::NEW<arrays_detail::ArraysArrayBackedList<T>>(array);
         return ::jxx::CAST<List<T>>(result);
     }
 
