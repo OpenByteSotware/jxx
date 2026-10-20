@@ -33,6 +33,9 @@ void initializeClasses()
     static std::once_flag flag;
     std::call_once(flag, [] {
         registerType<Authenticator>();
+        registerType<Authenticator::Success>();
+        registerType<Authenticator::Failure>();
+        registerType<Authenticator::Retry>();
         registerType<BasicAuthenticator>();
         registerType<Headers>();
         registerType<HttpExchange>();
@@ -44,6 +47,7 @@ void initializeClasses()
         registerType<HttpsParameters>();
         registerType<HttpsServer>();
         registerType<Filter>();
+        registerType<Filter::Chain>();
         registerType<HttpContext>();
     });
 }

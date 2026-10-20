@@ -12,6 +12,8 @@
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpsParameters.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.DefaultHttpsServer.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.FixedLengthRequestBodySource.h"
+#include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.ReadOnlyList.h"
+#include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.ReadOnlyViews.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.RequestBodyInputStream.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.RequestBodySource.h"
 #include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.ResponseBodyOutputStream.h"
@@ -33,6 +35,14 @@ void initializeClasses()
         (void)DefaultHttpsParameters::JxxClassInfoMarker::Class();
         (void)DefaultHttpsServer::JxxClassInfoMarker::Class();
         (void)FixedLengthRequestBodySource::JxxClassInfoMarker::Class();
+        (void)ReadOnlyListIterator<::jxx::lang::Object>::Class();
+        (void)ReadOnlyList<::jxx::lang::Object>::Class();
+        (void)ReadOnlyIterator<::jxx::lang::Object>::Class();
+        (void)ReadOnlyMapEntry<::jxx::lang::Object, ::jxx::lang::Object>::Class();
+        (void)ReadOnlyEntryIterator<::jxx::lang::Object, ::jxx::lang::Object>::Class();
+        (void)ReadOnlyCollection<::jxx::lang::Object>::Class();
+        (void)ReadOnlySet<::jxx::lang::Object>::Class();
+        (void)ReadOnlyEntrySet<::jxx::lang::Object, ::jxx::lang::Object>::Class();
         (void)RequestBodyInputStream::JxxClassInfoMarker::Class();
         (void)RequestBodySource::JxxClassInfoMarker::Class();
         (void)ResponseBodyOutputStream::JxxClassInfoMarker::Class();
