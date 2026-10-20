@@ -43,11 +43,12 @@ namespace jxx::awt
 		virtual void addHierarchyListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyListener>& listener); virtual void removeHierarchyListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyListener>& listener); virtual void addHierarchyBoundsListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyBoundsListener>& listener); virtual void removeHierarchyBoundsListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyBoundsListener>& listener);
 		virtual void requestFocus(); virtual ::jxx::lang::jbool isFocusOwner() const; virtual void invalidate(); virtual void validate(); virtual ::jxx::lang::jbool isValid() const;
 		virtual void repaint(); virtual void repaint(::jxx::lang::jlong milliseconds); virtual void repaint(::jxx::lang::jint x, ::jxx::lang::jint y, ::jxx::lang::jint width, ::jxx::lang::jint height); virtual void repaint(::jxx::lang::jlong milliseconds, ::jxx::lang::jint x, ::jxx::lang::jint y, ::jxx::lang::jint width, ::jxx::lang::jint height);
-	protected:
-		Component(); virtual void paint(const ::jxx::Ptr<Graphics>& graphics);
-		virtual void paintAll(const ::jxx::Ptr<Graphics>& graphics); 
+		virtual void paint(const ::jxx::Ptr<Graphics>& graphics);
+		virtual void paintAll(const ::jxx::Ptr<Graphics>& graphics);
 		virtual void print(const ::jxx::Ptr<Graphics>& graphics);
-		virtual void printAll(const ::jxx::Ptr<Graphics>& graphics); 
+		virtual void printAll(const ::jxx::Ptr<Graphics>& graphics);
+	protected:
+		Component();
 		virtual void processComponentEvent(const ::jxx::Ptr<::jxx::awt::event::ComponentEvent>& event); 
 		virtual void processFocusEvent(const ::jxx::Ptr<::jxx::awt::event::FocusEvent>& event);
 		virtual void processMouseEvent(const ::jxx::Ptr<::jxx::awt::event::MouseEvent>& event); 
