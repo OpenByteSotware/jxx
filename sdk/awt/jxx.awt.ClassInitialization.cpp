@@ -1,4 +1,12 @@
 #include "awt/jxx.awt.ClassInitialization.h"
+#include "awt/event/jxx.awt.event.ComponentEvent.h"
+#include "awt/event/jxx.awt.event.ContainerEvent.h"
+#include "awt/event/jxx.awt.event.FocusEvent.h"
+#include "awt/event/jxx.awt.event.HierarchyEvent.h"
+#include "awt/event/jxx.awt.event.InputEvent.h"
+#include "awt/event/jxx.awt.event.KeyEvent.h"
+#include "awt/event/jxx.awt.event.MouseEvent.h"
+#include "awt/event/jxx.awt.event.MouseWheelEvent.h"
 #include "awt/jxx.awt.AWTEvent.h"
 #include "awt/jxx.awt.AlphaComposite.h"
 #include "awt/jxx.awt.BasicStroke.h"
@@ -34,6 +42,14 @@ namespace jxx::awt
         std::call_once(flag, []()
         {
             (void)::jxx::awt::AWTEvent::Class();
+            (void)::jxx::awt::event::ComponentEvent::Class();
+            (void)::jxx::awt::event::ContainerEvent::Class();
+            (void)::jxx::awt::event::FocusEvent::Class();
+            (void)::jxx::awt::event::HierarchyEvent::Class();
+            (void)::jxx::awt::event::InputEvent::Class();
+            (void)::jxx::awt::event::KeyEvent::Class();
+            (void)::jxx::awt::event::MouseEvent::Class();
+            (void)::jxx::awt::event::MouseWheelEvent::Class();
             (void)::jxx::awt::AlphaComposite::Class();
             (void)::jxx::awt::BasicStroke::Class();
             (void)::jxx::awt::BufferCapabilities::Class();
