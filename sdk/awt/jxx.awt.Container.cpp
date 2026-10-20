@@ -14,7 +14,20 @@
 namespace jxx::awt
 {
     Container::Container() = default;
-    Container::~Container() { removeAll(); }
+
+    Container::~Container()
+    {
+        // Destruction is not an observable removeAll() operation. At this point
+        // Object::thisPtr() may already be expired, so normal removal must not
+        // create hierarchy/container events whose source is this container.
+        for (auto& component : components_)
+        {
+            if (component == nullptr) continue;
+            component->setNativeComponentInternal(nullptr);
+            component->setParentInternal(nullptr);
+        }
+        components_.clear();
+    }
 
     ::jxx::Ptr<Component> Container::add(
         const ::jxx::Ptr<Component>& component)
