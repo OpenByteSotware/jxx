@@ -178,6 +178,7 @@ void initializeClasses()
             registerType<UnsupportedClassVersionError>();
             registerType<UnsupportedOperationException>();
             registerType<VerifyError>();
+            registerType<Void>();
             (void)Void::TYPE;
             registerType<Boolean>();
             ::jxx::io::serialization::registerSerializableClass<Boolean>(
@@ -192,6 +193,8 @@ void initializeClasses()
             ::jxx::io::serialization::registerClassReferenceArrayCodecs<
                 Byte, 1U, 2U>();
             registerType<Character>();
+            registerType<Character::Subset>();
+            registerType<Character::UnicodeBlock>();
             ::jxx::io::serialization::registerSerializableClass<Character>(
                 1,
                 [] { return ::jxx::NEW<Character>(jchar{0}); });
@@ -244,6 +247,7 @@ void initializeClasses()
             registerType<RuntimePermission>();
             registerType<SecurityManager>();
             registerType<ProcessBuilder>();
+            registerType<ProcessBuilder::Redirect>();
             registerType<Process>();
         registerType<Appendable>();
         registerType<AutoCloseable>();
