@@ -8,6 +8,8 @@
 #include "util/jxx.util.NoSuchElementException.h"
 #include "lang/jxx.lang.Cloneable.h"
 #include "io/jxx.io.SerializableI.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 #include "lang/jxx.lang.Exceptions.h"
 
 namespace jxx {
@@ -47,6 +49,34 @@ public:
     }
 
     virtual ~ArrayDeque() = default;
+
+    void writeObject(
+        const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {
+        if (out == nullptr) return;
+        out->writeInt(size());
+        for (const auto& element : data_) {
+            out->writeObject(::jxx::CAST<::jxx::lang::Object>(element));
+        }
+    }
+
+    void readObject(
+        const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {
+        data_.clear();
+        modCount_ = 0;
+        if (in == nullptr) return;
+        const auto count = in->readInt();
+        if (count < 0) throw ::jxx::lang::IllegalArgumentException();
+        for (::jxx::lang::jint index = 0; index < count; ++index) {
+            auto element = ::jxx::CAST<E>(in->readObject());
+            if (element == nullptr) throw ::jxx::lang::NullPointerException();
+            data_.push_back(element);
+        }
+    }
+
+    void readObjectNoData() override {
+        data_.clear();
+        modCount_ = 0;
+    }
 
     virtual ::jxx::lang::jint size() override {
         return static_cast<::jxx::lang::jint>(data_.size());
