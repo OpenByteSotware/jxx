@@ -527,25 +527,25 @@ protected:
  */
 template <
     typename Derived,
-    typename JxxSuper = Object,
+    typename DirectSuper = Object,
     typename... JxxInterfaces>
 class ClassBase
-    : public JxxSuper
+    : public DirectSuper
     , public ClassInfo<
           Derived,
-          JxxSuper,
+          DirectSuper,
           JxxInterfaces...>
     , public virtual JxxInterfaces... {
 private:
     using Metadata =
         ClassInfo<
             Derived,
-            JxxSuper,
+            DirectSuper,
             JxxInterfaces...>;
 
 public:
     using JxxClassInfoMarker = Metadata;
-    using JxxSuperType = JxxSuper;
+    using JxxSuperType = DirectSuper;
 
     /**
      * Hides Class() functions inherited from the JXX superclass and
@@ -576,7 +576,7 @@ protected:
             int> = 0>
     explicit ClassBase(
         SuperArguments&&... arguments)
-        : JxxSuper(
+        : DirectSuper(
               std::forward<SuperArguments>(arguments)...) {
     }
 };

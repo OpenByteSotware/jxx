@@ -17,7 +17,7 @@
 
 namespace jxx::util {
 
-class Timer final : public ::jxx::lang::ClassBase<Timer, ::jxx::lang::Object> {
+class Timer : public ::jxx::lang::ClassBase<Timer, ::jxx::lang::Object> {
 public:
     using JxxSuper = ::jxx::lang::Object;
     using Super = ::jxx::lang::ClassBase<Timer, JxxSuper>;
