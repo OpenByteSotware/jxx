@@ -58,7 +58,11 @@ namespace jxx::awt
         if (count < 0)
             throw ::jxx::lang::NegativeArraySizeException("npoints");
         for (::jxx::lang::jint index = 0; index < count; ++index)
-            addPoint(in->readInt(), in->readInt());
+        {
+            const auto x = in->readInt();
+            const auto y = in->readInt();
+            addPoint(x, y);
+        }
     }
 
     void Polygon::readObjectNoData()
