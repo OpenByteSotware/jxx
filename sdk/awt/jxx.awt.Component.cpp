@@ -23,229 +23,423 @@
 
 namespace jxx::awt
 {
-    Component::Component() = default;
+	Component::Component() = default;
 
-    Component::~Component()
-    {
-        if (nativeComponent_ != nullptr) nativeComponent_->destroy();
-    }
+	Component::~Component()
+	{
+		if (nativeComponent_ != nullptr) nativeComponent_->destroy();
+	}
 
-    ::jxx::lang::jbool Component::isVisible() const { return visible_; }
+	::jxx::lang::jbool Component::isVisible() const
+	{
+		return visible_;
+	}
 
-    void Component::setVisible(::jxx::lang::jbool value)
-    {
-        if (visible_ == value) return;
-        visible_ = value;
-        if (nativeComponent_ != nullptr) nativeComponent_->setVisible(value);
-        fireComponentEvent(value
-            ? ::jxx::awt::event::ComponentEvent::COMPONENT_SHOWN
-            : ::jxx::awt::event::ComponentEvent::COMPONENT_HIDDEN);
-    }
+	void Component::setVisible(::jxx::lang::jbool value)
+	{
+		if (visible_ == value) return;
+		visible_ = value;
+		if (nativeComponent_ != nullptr) nativeComponent_->setVisible(value);
+		fireComponentEvent(value
+			? ::jxx::awt::event::ComponentEvent::COMPONENT_SHOWN
+			: ::jxx::awt::event::ComponentEvent::COMPONENT_HIDDEN);
+	}
 
-    ::jxx::lang::jbool Component::isEnabled() const { return enabled_; }
-    void Component::setEnabled(::jxx::lang::jbool value) { enabled_=value; if(nativeComponent_) nativeComponent_->setEnabled(value); }
-    void Component::setFocusable(::jxx::lang::jbool value) { focusable_=value; }
-    ::jxx::lang::jbool Component::isFocusable() const { return focusable_; }
-    ::jxx::lang::jbool Component::isFocusTraversable() const { return isFocusable(); }
-    ::jxx::lang::jbool Component::requestFocusInWindow() { if(!focusable_||!visible_||!enabled_) return false; requestFocus(); return isFocusOwner(); }
-    ::jxx::lang::jint Component::getX() const { return x_; }
-    ::jxx::lang::jint Component::getY() const { return y_; }
-    ::jxx::lang::jint Component::getWidth() const { return width_; }
-    ::jxx::lang::jint Component::getHeight() const { return height_; }
-    ::jxx::Ptr<Point> Component::getLocation() const { return ::jxx::NEW<Point>(x_,y_); }
-    void Component::setLocation(const ::jxx::Ptr<Point>& value) { if(value) setLocation(value->x,value->y); }
+	::jxx::lang::jbool Component::isEnabled() const
+	{
+		return enabled_;
+	}
+	void Component::setEnabled(::jxx::lang::jbool value)
+	{
+		enabled_ = value; if (nativeComponent_) nativeComponent_->setEnabled(value);
+	}
+	void Component::setFocusable(::jxx::lang::jbool value)
+	{
+		focusable_ = value;
+	}
+	::jxx::lang::jbool Component::isFocusable() const
+	{
+		return focusable_;
+	}
+	::jxx::lang::jbool Component::isFocusTraversable() const
+	{
+		return isFocusable();
+	}
+	::jxx::lang::jbool Component::requestFocusInWindow()
+	{
+		if (!focusable_ || !visible_ || !enabled_) return false; requestFocus(); return isFocusOwner();
+	}
+	::jxx::lang::jint Component::getX() const
+	{
+		return x_;
+	}
+	::jxx::lang::jint Component::getY() const
+	{
+		return y_;
+	}
+	::jxx::lang::jint Component::getWidth() const
+	{
+		return width_;
+	}
+	::jxx::lang::jint Component::getHeight() const
+	{
+		return height_;
+	}
+	::jxx::Ptr<Point> Component::getLocation() const
+	{
+		return ::jxx::NEW<Point>(x_, y_);
+	}
+	void Component::setLocation(const ::jxx::Ptr<Point>& value)
+	{
+		if (value) setLocation(value->x, value->y);
+	}
 
-    void Component::setLocation(::jxx::lang::jint x, ::jxx::lang::jint y)
-    {
-        if (x_ == x && y_ == y) return;
-        x_=x; y_=y;
-        if(nativeComponent_) nativeComponent_->setBounds(x_,y_,width_,height_);
-        invalidate();
-        fireComponentEvent(::jxx::awt::event::ComponentEvent::COMPONENT_MOVED);
-        if (auto container = ::jxx::CAST<Container>(thisPtr())) container->fireHierarchyBoundsToDescendants(::jxx::awt::event::HierarchyEvent::ANCESTOR_MOVED, ::jxx::CAST<Component>(thisPtr()));
-    }
+	void Component::setLocation(::jxx::lang::jint x, ::jxx::lang::jint y)
+	{
+		if (x_ == x && y_ == y) return;
+		x_ = x; y_ = y;
+		if (nativeComponent_) nativeComponent_->setBounds(x_, y_, width_, height_);
+		invalidate();
+		fireComponentEvent(::jxx::awt::event::ComponentEvent::COMPONENT_MOVED);
+		if (auto container = ::jxx::CAST<Container>(thisPtr())) container->fireHierarchyBoundsToDescendants(::jxx::awt::event::HierarchyEvent::ANCESTOR_MOVED, ::jxx::CAST<Component>(thisPtr()));
+	}
 
-    ::jxx::Ptr<Dimension> Component::getSize() const { return ::jxx::NEW<Dimension>(width_,height_); }
-    void Component::setSize(const ::jxx::Ptr<Dimension>& value) { if(value) setSize(value->width,value->height); }
+	::jxx::Ptr<Dimension> Component::getSize() const
+	{
+		return ::jxx::NEW<Dimension>(width_, height_);
+	}
+	void Component::setSize(const ::jxx::Ptr<Dimension>& value)
+	{
+		if (value) setSize(value->width, value->height);
+	}
 
-    void Component::setSize(::jxx::lang::jint width, ::jxx::lang::jint height)
-    {
-        if (width_ == width && height_ == height) return;
-        width_=width; height_=height;
-        if(nativeComponent_) nativeComponent_->setBounds(x_,y_,width_,height_);
-        invalidate();
-        fireComponentEvent(::jxx::awt::event::ComponentEvent::COMPONENT_RESIZED);
-        if (auto container = ::jxx::CAST<Container>(thisPtr())) container->fireHierarchyBoundsToDescendants(::jxx::awt::event::HierarchyEvent::ANCESTOR_RESIZED, ::jxx::CAST<Component>(thisPtr()));
-    }
+	void Component::setSize(::jxx::lang::jint width, ::jxx::lang::jint height)
+	{
+		if (width_ == width && height_ == height) return;
+		width_ = width; height_ = height;
+		if (nativeComponent_) nativeComponent_->setBounds(x_, y_, width_, height_);
+		invalidate();
+		fireComponentEvent(::jxx::awt::event::ComponentEvent::COMPONENT_RESIZED);
+		if (auto container = ::jxx::CAST<Container>(thisPtr())) container->fireHierarchyBoundsToDescendants(::jxx::awt::event::HierarchyEvent::ANCESTOR_RESIZED, ::jxx::CAST<Component>(thisPtr()));
+	}
 
-    ::jxx::Ptr<Rectangle> Component::getBounds() const { return ::jxx::NEW<Rectangle>(x_,y_,width_,height_); }
-    void Component::setBounds(const ::jxx::Ptr<Rectangle>& value) { if(value) setBounds(value->x,value->y,value->width,value->height); }
+	::jxx::Ptr<Rectangle> Component::getBounds() const
+	{
+		return ::jxx::NEW<Rectangle>(x_, y_, width_, height_);
+	}
+	void Component::setBounds(const ::jxx::Ptr<Rectangle>& value)
+	{
+		if (value) setBounds(value->x, value->y, value->width, value->height);
+	}
 
-    void Component::setBounds(::jxx::lang::jint x, ::jxx::lang::jint y,
-        ::jxx::lang::jint width, ::jxx::lang::jint height)
-    {
-        const auto moved = x_ != x || y_ != y;
-        const auto resized = width_ != width || height_ != height;
-        if (!moved && !resized) return;
-        x_=x; y_=y; width_=width; height_=height;
-        if(nativeComponent_) nativeComponent_->setBounds(x,y,width,height);
-        invalidate();
-        if (moved) fireComponentEvent(::jxx::awt::event::ComponentEvent::COMPONENT_MOVED);
-        if (resized) fireComponentEvent(::jxx::awt::event::ComponentEvent::COMPONENT_RESIZED);
-        if (auto container = ::jxx::CAST<Container>(thisPtr()))
-        {
-            if (moved) container->fireHierarchyBoundsToDescendants(::jxx::awt::event::HierarchyEvent::ANCESTOR_MOVED, ::jxx::CAST<Component>(thisPtr()));
-            if (resized) container->fireHierarchyBoundsToDescendants(::jxx::awt::event::HierarchyEvent::ANCESTOR_RESIZED, ::jxx::CAST<Component>(thisPtr()));
-        }
-    }
+	void Component::setBounds(::jxx::lang::jint x, ::jxx::lang::jint y,
+		::jxx::lang::jint width, ::jxx::lang::jint height)
+	{
+		const auto moved = x_ != x || y_ != y;
+		const auto resized = width_ != width || height_ != height;
+		if (!moved && !resized) return;
+		x_ = x; y_ = y; width_ = width; height_ = height;
+		if (nativeComponent_) nativeComponent_->setBounds(x, y, width, height);
+		invalidate();
+		if (moved) fireComponentEvent(::jxx::awt::event::ComponentEvent::COMPONENT_MOVED);
+		if (resized) fireComponentEvent(::jxx::awt::event::ComponentEvent::COMPONENT_RESIZED);
+		if (auto container = ::jxx::CAST<Container>(thisPtr()))
+		{
+			if (moved) container->fireHierarchyBoundsToDescendants(::jxx::awt::event::HierarchyEvent::ANCESTOR_MOVED, ::jxx::CAST<Component>(thisPtr()));
+			if (resized) container->fireHierarchyBoundsToDescendants(::jxx::awt::event::HierarchyEvent::ANCESTOR_RESIZED, ::jxx::CAST<Component>(thisPtr()));
+		}
+	}
 
-    ::jxx::Ptr<Color> Component::getForeground() const { return foreground_; }
-    void Component::setForeground(const ::jxx::Ptr<Color>& value) { foreground_=value; if(nativeComponent_) nativeComponent_->setForeground(value); }
-    ::jxx::Ptr<Color> Component::getBackground() const { return background_; }
-    void Component::setBackground(const ::jxx::Ptr<Color>& value) { background_=value; if(nativeComponent_) nativeComponent_->setBackground(value); }
-    ::jxx::Ptr<Font> Component::getFont() const { return font_; }
-    void Component::setFont(const ::jxx::Ptr<Font>& value) { font_=value; if(nativeComponent_) nativeComponent_->setFont(value); invalidate(); }
-    ::jxx::Ptr<::jxx::lang::String> Component::getName() const { return name_; }
-    void Component::setName(const ::jxx::Ptr<::jxx::lang::String>& value) { name_=value; }
-    ::jxx::Ptr<Container> Component::getParent() const { return parent_.lock(); }
-    ::jxx::Ptr<ComponentOrientation> Component::getComponentOrientation() const
-    {
-        return componentOrientation_;
-    }
-    void Component::setComponentOrientation(
-        const ::jxx::Ptr<ComponentOrientation>& orientation)
-    {
-        if (orientation == nullptr)
-            throw ::jxx::lang::NullPointerException("orientation");
-        componentOrientation_ = orientation;
-        invalidate();
-    }
-    void Component::applyComponentOrientation(
-        const ::jxx::Ptr<ComponentOrientation>& orientation)
-    {
-        setComponentOrientation(orientation);
-    }
-    void Component::setParentInternal(const ::jxx::Ptr<Container>& value) { parent_=value; }
+	::jxx::Ptr<Color> Component::getForeground() const
+	{
+		return foreground_;
+	}
+	void Component::setForeground(const ::jxx::Ptr<Color>& value)
+	{
+		foreground_ = value; if (nativeComponent_) nativeComponent_->setForeground(value);
+	}
+	::jxx::Ptr<Color> Component::getBackground() const
+	{
+		return background_;
+	}
+	void Component::setBackground(const ::jxx::Ptr<Color>& value)
+	{
+		background_ = value; if (nativeComponent_) nativeComponent_->setBackground(value);
+	}
+	::jxx::Ptr<Font> Component::getFont() const
+	{
+		return font_;
+	}
+	void Component::setFont(const ::jxx::Ptr<Font>& value)
+	{
+		font_ = value; if (nativeComponent_) nativeComponent_->setFont(value); invalidate();
+	}
+	::jxx::Ptr<::jxx::lang::String> Component::getName() const
+	{
+		return name_;
+	}
+	void Component::setName(const ::jxx::Ptr<::jxx::lang::String>& value)
+	{
+		name_ = value;
+	}
+	::jxx::Ptr<Container> Component::getParent() const
+	{
+		return parent_.lock();
+	}
+	::jxx::Ptr<ComponentOrientation> Component::getComponentOrientation() const
+	{
+		return componentOrientation_;
+	}
+	void Component::setComponentOrientation(
+		const ::jxx::Ptr<ComponentOrientation>& orientation)
+	{
+		if (orientation == nullptr)
+			throw ::jxx::lang::NullPointerException("orientation");
+		componentOrientation_ = orientation;
+		invalidate();
+	}
+	void Component::applyComponentOrientation(
+		const ::jxx::Ptr<ComponentOrientation>& orientation)
+	{
+		setComponentOrientation(orientation);
+	}
+	void Component::setParentInternal(const ::jxx::Ptr<Container>& value)
+	{
+		parent_ = value;
+	}
 
-    void Component::addComponentListener(
-        const ::jxx::Ptr<::jxx::awt::event::ComponentListener>& listener)
-    {
-        if (listener != nullptr &&
-            std::find(componentListeners_.begin(), componentListeners_.end(), listener)
-                == componentListeners_.end())
-            componentListeners_.push_back(listener);
-    }
+	void Component::addComponentListener(
+		const ::jxx::Ptr<::jxx::awt::event::ComponentListener>& listener)
+	{
+		if (listener != nullptr &&
+			std::find(componentListeners_.begin(), componentListeners_.end(), listener)
+				== componentListeners_.end())
+			componentListeners_.push_back(listener);
+	}
 
-    void Component::removeComponentListener(
-        const ::jxx::Ptr<::jxx::awt::event::ComponentListener>& listener)
-    {
-        componentListeners_.erase(
-            std::remove(componentListeners_.begin(), componentListeners_.end(), listener),
-            componentListeners_.end());
-    }
+	void Component::removeComponentListener(
+		const ::jxx::Ptr<::jxx::awt::event::ComponentListener>& listener)
+	{
+		componentListeners_.erase(
+			std::remove(componentListeners_.begin(), componentListeners_.end(), listener),
+			componentListeners_.end());
+	}
 
-    void Component::fireComponentEvent(::jxx::lang::jint id)
-    {
-        if (componentListeners_.empty()) return;
-        processComponentEvent(::jxx::NEW<::jxx::awt::event::ComponentEvent>(
-            ::jxx::CAST<Component>(thisPtr()), id));
-    }
+	void Component::fireComponentEvent(::jxx::lang::jint id)
+	{
+		if (componentListeners_.empty()) return;
+		processComponentEvent(::jxx::NEW<::jxx::awt::event::ComponentEvent>(
+			::jxx::CAST<Component>(thisPtr()), id));
+	}
 
-    void Component::processComponentEvent(
-        const ::jxx::Ptr<::jxx::awt::event::ComponentEvent>& event)
-    {
-        if (event == nullptr) return;
-        const auto listeners = componentListeners_;
-        for (const auto& listener : listeners)
-        {
-            if (listener == nullptr) continue;
-            switch (event->getID())
-            {
-                case ::jxx::awt::event::ComponentEvent::COMPONENT_RESIZED:
-                    listener->componentResized(event);
-                    break;
-                case ::jxx::awt::event::ComponentEvent::COMPONENT_MOVED:
-                    listener->componentMoved(event);
-                    break;
-                case ::jxx::awt::event::ComponentEvent::COMPONENT_SHOWN:
-                    listener->componentShown(event);
-                    break;
-                case ::jxx::awt::event::ComponentEvent::COMPONENT_HIDDEN:
-                    listener->componentHidden(event);
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
+	void Component::processComponentEvent(
+		const ::jxx::Ptr<::jxx::awt::event::ComponentEvent>& event)
+	{
+		if (event == nullptr) return;
+		const auto listeners = componentListeners_;
+		for (const auto& listener : listeners)
+		{
+			if (listener == nullptr) continue;
+			switch (event->getID())
+			{
+				case ::jxx::awt::event::ComponentEvent::COMPONENT_RESIZED:
+					listener->componentResized(event);
+					break;
+				case ::jxx::awt::event::ComponentEvent::COMPONENT_MOVED:
+					listener->componentMoved(event);
+					break;
+				case ::jxx::awt::event::ComponentEvent::COMPONENT_SHOWN:
+					listener->componentShown(event);
+					break;
+				case ::jxx::awt::event::ComponentEvent::COMPONENT_HIDDEN:
+					listener->componentHidden(event);
+					break;
+				default:
+					break;
+			}
+		}
+	}
 
-    void Component::addFocusListener(const ::jxx::Ptr<::jxx::awt::event::FocusListener>& listener){if(listener&&std::find(focusListeners_.begin(),focusListeners_.end(),listener)==focusListeners_.end())focusListeners_.push_back(listener);}
-    void Component::removeFocusListener(const ::jxx::Ptr<::jxx::awt::event::FocusListener>& listener){focusListeners_.erase(std::remove(focusListeners_.begin(),focusListeners_.end(),listener),focusListeners_.end());}
-    void Component::addKeyListener(const ::jxx::Ptr<::jxx::awt::event::KeyListener>& listener){if(listener&&std::find(keyListeners_.begin(),keyListeners_.end(),listener)==keyListeners_.end())keyListeners_.push_back(listener);}
-    void Component::removeKeyListener(const ::jxx::Ptr<::jxx::awt::event::KeyListener>& listener){keyListeners_.erase(std::remove(keyListeners_.begin(),keyListeners_.end(),listener),keyListeners_.end());}
-    void Component::processKeyEvent(const ::jxx::Ptr<::jxx::awt::event::KeyEvent>& event){const auto listeners=keyListeners_;for(const auto& listener:listeners){if(!listener)continue;if(event->getID()==::jxx::awt::event::KeyEvent::KEY_TYPED)listener->keyTyped(event);else if(event->getID()==::jxx::awt::event::KeyEvent::KEY_PRESSED)listener->keyPressed(event);else if(event->getID()==::jxx::awt::event::KeyEvent::KEY_RELEASED)listener->keyReleased(event);}}
-    void Component::addMouseListener(const ::jxx::Ptr<::jxx::awt::event::MouseListener>&l){if(l&&std::find(mouseListeners_.begin(),mouseListeners_.end(),l)==mouseListeners_.end())mouseListeners_.push_back(l);} void Component::removeMouseListener(const ::jxx::Ptr<::jxx::awt::event::MouseListener>&l){mouseListeners_.erase(std::remove(mouseListeners_.begin(),mouseListeners_.end(),l),mouseListeners_.end());} void Component::addMouseMotionListener(const ::jxx::Ptr<::jxx::awt::event::MouseMotionListener>&l){if(l&&std::find(mouseMotionListeners_.begin(),mouseMotionListeners_.end(),l)==mouseMotionListeners_.end())mouseMotionListeners_.push_back(l);} void Component::removeMouseMotionListener(const ::jxx::Ptr<::jxx::awt::event::MouseMotionListener>&l){mouseMotionListeners_.erase(std::remove(mouseMotionListeners_.begin(),mouseMotionListeners_.end(),l),mouseMotionListeners_.end());} void Component::processMouseEvent(const ::jxx::Ptr<::jxx::awt::event::MouseEvent>&e){for(const auto&l:mouseListeners_){if(!l)continue;switch(e->getID()){case 500:l->mouseClicked(e);break;case 501:l->mousePressed(e);break;case 502:l->mouseReleased(e);break;case 504:l->mouseEntered(e);break;case 505:l->mouseExited(e);break;}}for(const auto&l:mouseMotionListeners_){if(!l)continue;if(e->getID()==503)l->mouseMoved(e);else if(e->getID()==506)l->mouseDragged(e);}}
-    void Component::addMouseWheelListener(const ::jxx::Ptr<::jxx::awt::event::MouseWheelListener>& listener) { if (listener && std::find(mouseWheelListeners_.begin(), mouseWheelListeners_.end(), listener) == mouseWheelListeners_.end()) mouseWheelListeners_.push_back(listener); }
-    void Component::removeMouseWheelListener(const ::jxx::Ptr<::jxx::awt::event::MouseWheelListener>& listener) { mouseWheelListeners_.erase(std::remove(mouseWheelListeners_.begin(), mouseWheelListeners_.end(), listener), mouseWheelListeners_.end()); }
-    void Component::processMouseWheelEvent(const ::jxx::Ptr<::jxx::awt::event::MouseWheelEvent>& event) { const auto listeners = mouseWheelListeners_; for (const auto& listener : listeners) if (listener) listener->mouseWheelMoved(event); }
-    void Component::addHierarchyListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyListener>& listener){if(listener&&std::find(hierarchyListeners_.begin(),hierarchyListeners_.end(),listener)==hierarchyListeners_.end())hierarchyListeners_.push_back(listener);}
-    void Component::removeHierarchyListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyListener>& listener){hierarchyListeners_.erase(std::remove(hierarchyListeners_.begin(),hierarchyListeners_.end(),listener),hierarchyListeners_.end());}
-    void Component::addHierarchyBoundsListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyBoundsListener>& listener){if(listener&&std::find(hierarchyBoundsListeners_.begin(),hierarchyBoundsListeners_.end(),listener)==hierarchyBoundsListeners_.end())hierarchyBoundsListeners_.push_back(listener);}
-    void Component::removeHierarchyBoundsListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyBoundsListener>& listener){hierarchyBoundsListeners_.erase(std::remove(hierarchyBoundsListeners_.begin(),hierarchyBoundsListeners_.end(),listener),hierarchyBoundsListeners_.end());}
-    void Component::fireHierarchyEvent(::jxx::lang::jint id,const ::jxx::Ptr<Component>& changed,const ::jxx::Ptr<Container>& parent,::jxx::lang::jlong flags){auto event=::jxx::NEW<::jxx::awt::event::HierarchyEvent>(::jxx::CAST<Component>(thisPtr()),id,changed,parent,flags);if(id==::jxx::awt::event::HierarchyEvent::HIERARCHY_CHANGED)processHierarchyEvent(event);else processHierarchyBoundsEvent(event);}
-    void Component::processHierarchyEvent(const ::jxx::Ptr<::jxx::awt::event::HierarchyEvent>& event){const auto listeners=hierarchyListeners_;for(const auto& listener:listeners)if(listener)listener->hierarchyChanged(event);}
-    void Component::processHierarchyBoundsEvent(const ::jxx::Ptr<::jxx::awt::event::HierarchyEvent>& event){const auto listeners=hierarchyBoundsListeners_;for(const auto& listener:listeners)if(listener){if(event->getID()==::jxx::awt::event::HierarchyEvent::ANCESTOR_MOVED)listener->ancestorMoved(event);else if(event->getID()==::jxx::awt::event::HierarchyEvent::ANCESTOR_RESIZED)listener->ancestorResized(event);}}
-    void Component::requestFocus(){if(nativeComponent_)nativeComponent_->requestFocus();}
-    ::jxx::lang::jbool Component::isFocusOwner() const{return nativeComponent_&&nativeComponent_->hasFocus();}
-    void Component::processFocusEvent(const ::jxx::Ptr<::jxx::awt::event::FocusEvent>& event){const auto listeners=focusListeners_;for(const auto& listener:listeners){if(!listener)continue;if(event->getID()==::jxx::awt::event::FocusEvent::FOCUS_GAINED)listener->focusGained(event);else if(event->getID()==::jxx::awt::event::FocusEvent::FOCUS_LOST)listener->focusLost(event);}}
+	void Component::addFocusListener(const ::jxx::Ptr<::jxx::awt::event::FocusListener>& listener)
+	{
+		if (listener && std::find(focusListeners_.begin(), focusListeners_.end(), listener) == focusListeners_.end())focusListeners_.push_back(listener);
+	}
+	void Component::removeFocusListener(const ::jxx::Ptr<::jxx::awt::event::FocusListener>& listener)
+	{
+		focusListeners_.erase(std::remove(focusListeners_.begin(), focusListeners_.end(), listener), focusListeners_.end());
+	}
+	void Component::addKeyListener(const ::jxx::Ptr<::jxx::awt::event::KeyListener>& listener)
+	{
+		if (listener && std::find(keyListeners_.begin(), keyListeners_.end(), listener) == keyListeners_.end())keyListeners_.push_back(listener);
+	}
+	void Component::removeKeyListener(const ::jxx::Ptr<::jxx::awt::event::KeyListener>& listener)
+	{
+		keyListeners_.erase(std::remove(keyListeners_.begin(), keyListeners_.end(), listener), keyListeners_.end());
+	}
+	void Component::processKeyEvent(const ::jxx::Ptr<::jxx::awt::event::KeyEvent>& event)
+	{
+		const auto listeners = keyListeners_; for (const auto& listener : listeners) {
+			if (!listener)continue; if (event->getID() == ::jxx::awt::event::KeyEvent::KEY_TYPED)listener->keyTyped(event); else if (event->getID() == ::jxx::awt::event::KeyEvent::KEY_PRESSED)listener->keyPressed(event); else if (event->getID() == ::jxx::awt::event::KeyEvent::KEY_RELEASED)listener->keyReleased(event);
+		}
+	}
+	void Component::addMouseListener(const ::jxx::Ptr<::jxx::awt::event::MouseListener>& l)
+	{
+		if (l && std::find(mouseListeners_.begin(), mouseListeners_.end(), l) == mouseListeners_.end())mouseListeners_.push_back(l);
+	} void Component::removeMouseListener(const ::jxx::Ptr<::jxx::awt::event::MouseListener>& l)
+	{
+		mouseListeners_.erase(std::remove(mouseListeners_.begin(), mouseListeners_.end(), l), mouseListeners_.end());
+	} void Component::addMouseMotionListener(const ::jxx::Ptr<::jxx::awt::event::MouseMotionListener>& l)
+	{
+		if (l && std::find(mouseMotionListeners_.begin(), mouseMotionListeners_.end(), l) == mouseMotionListeners_.end())mouseMotionListeners_.push_back(l);
+	} void Component::removeMouseMotionListener(const ::jxx::Ptr<::jxx::awt::event::MouseMotionListener>& l)
+	{
+		mouseMotionListeners_.erase(std::remove(mouseMotionListeners_.begin(), mouseMotionListeners_.end(), l), mouseMotionListeners_.end());
+	} void Component::processMouseEvent(const ::jxx::Ptr<::jxx::awt::event::MouseEvent>& e)
+	{
+		for (const auto& l : mouseListeners_) {
+			if (!l)continue; switch (e->getID()) {
+				case 500:l->mouseClicked(e); break; case 501:l->mousePressed(e); break; case 502:l->mouseReleased(e); break; case 504:l->mouseEntered(e); break; case 505:l->mouseExited(e); break;
+			}
+		}for (const auto& l : mouseMotionListeners_) {
+			if (!l)continue; if (e->getID() == 503)l->mouseMoved(e); else if (e->getID() == 506)l->mouseDragged(e);
+		}
+	}
+	void Component::addMouseWheelListener(const ::jxx::Ptr<::jxx::awt::event::MouseWheelListener>& listener)
+	{
+		if (listener && std::find(mouseWheelListeners_.begin(), mouseWheelListeners_.end(), listener) == mouseWheelListeners_.end()) mouseWheelListeners_.push_back(listener);
+	}
+	void Component::removeMouseWheelListener(const ::jxx::Ptr<::jxx::awt::event::MouseWheelListener>& listener)
+	{
+		mouseWheelListeners_.erase(std::remove(mouseWheelListeners_.begin(), mouseWheelListeners_.end(), listener), mouseWheelListeners_.end());
+	}
+	void Component::processMouseWheelEvent(const ::jxx::Ptr<::jxx::awt::event::MouseWheelEvent>& event)
+	{
+		const auto listeners = mouseWheelListeners_; for (const auto& listener : listeners) if (listener) listener->mouseWheelMoved(event);
+	}
+	void Component::addHierarchyListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyListener>& listener)
+	{
+		if (listener && std::find(hierarchyListeners_.begin(), hierarchyListeners_.end(), listener) == hierarchyListeners_.end())hierarchyListeners_.push_back(listener);
+	}
+	void Component::removeHierarchyListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyListener>& listener)
+	{
+		hierarchyListeners_.erase(std::remove(hierarchyListeners_.begin(), hierarchyListeners_.end(), listener), hierarchyListeners_.end());
+	}
+	void Component::addHierarchyBoundsListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyBoundsListener>& listener)
+	{
+		if (listener && std::find(hierarchyBoundsListeners_.begin(), hierarchyBoundsListeners_.end(), listener) == hierarchyBoundsListeners_.end())hierarchyBoundsListeners_.push_back(listener);
+	}
+	void Component::removeHierarchyBoundsListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyBoundsListener>& listener)
+	{
+		hierarchyBoundsListeners_.erase(std::remove(hierarchyBoundsListeners_.begin(), hierarchyBoundsListeners_.end(), listener), hierarchyBoundsListeners_.end());
+	}
+	void Component::fireHierarchyEvent(::jxx::lang::jint id, const ::jxx::Ptr<Component>& changed, const ::jxx::Ptr<Container>& parent, ::jxx::lang::jlong flags)
+	{
+		auto event = ::jxx::NEW<::jxx::awt::event::HierarchyEvent>(::jxx::CAST<Component>(thisPtr()), id, changed, parent, flags); if (id == ::jxx::awt::event::HierarchyEvent::HIERARCHY_CHANGED)processHierarchyEvent(event); else processHierarchyBoundsEvent(event);
+	}
+	void Component::processHierarchyEvent(const ::jxx::Ptr<::jxx::awt::event::HierarchyEvent>& event)
+	{
+		const auto listeners = hierarchyListeners_; for (const auto& listener : listeners)if (listener)listener->hierarchyChanged(event);
+	}
+	void Component::processHierarchyBoundsEvent(const ::jxx::Ptr<::jxx::awt::event::HierarchyEvent>& event)
+	{
+		const auto listeners = hierarchyBoundsListeners_; for (const auto& listener : listeners)if (listener) {
+			if (event->getID() == ::jxx::awt::event::HierarchyEvent::ANCESTOR_MOVED)listener->ancestorMoved(event); else if (event->getID() == ::jxx::awt::event::HierarchyEvent::ANCESTOR_RESIZED)listener->ancestorResized(event);
+		}
+	}
+	void Component::requestFocus()
+	{
+		if (nativeComponent_)nativeComponent_->requestFocus();
+	}
+	::jxx::lang::jbool Component::isFocusOwner() const
+	{
+		return nativeComponent_ && nativeComponent_->hasFocus();
+	}
+	void Component::processFocusEvent(const ::jxx::Ptr<::jxx::awt::event::FocusEvent>& event)
+	{
+		const auto listeners = focusListeners_; for (const auto& listener : listeners) {
+			if (!listener)continue; if (event->getID() == ::jxx::awt::event::FocusEvent::FOCUS_GAINED)listener->focusGained(event); else if (event->getID() == ::jxx::awt::event::FocusEvent::FOCUS_LOST)listener->focusLost(event);
+		}
+	}
 
-    void Component::setNativeComponentInternal(
-        const ::jxx::Ptr<::jxx::awt::internal::ComponentPeer>& value)
-    {
-        if (nativeComponent_ == value) return;
-        if (nativeComponent_ != nullptr) nativeComponent_->destroy();
-        nativeComponent_ = value;
-        if (nativeComponent_ == nullptr) return;
-        nativeComponent_->setBounds(x_,y_,width_,height_);
-        nativeComponent_->setVisible(visible_);
-        nativeComponent_->setEnabled(enabled_);
-        if(foreground_) nativeComponent_->setForeground(foreground_);
-        if(background_) nativeComponent_->setBackground(background_);
-        if(font_) nativeComponent_->setFont(font_);
-        std::weak_ptr<Component> self=::jxx::CAST<Component>(thisPtr());
-        nativeComponent_->setFocusCallback([self](::jxx::lang::jbool gained){if(auto owner=self.lock())owner->processFocusEvent(::jxx::NEW<::jxx::awt::event::FocusEvent>(owner,gained?::jxx::awt::event::FocusEvent::FOCUS_GAINED : ::jxx::awt::event::FocusEvent::FOCUS_LOST));});
-        nativeComponent_->setKeyCallback([self](::jxx::lang::jint id, ::jxx::lang::jint code, ::jxx::lang::jchar character, ::jxx::lang::jint modifiers)
-        {
-            if (auto owner = self.lock()) owner->processKeyEvent(::jxx::NEW<::jxx::awt::event::KeyEvent>(owner, id, 0, modifiers, code, character));
-        });
-        nativeComponent_->setMouseCallback([self](::jxx::lang::jint id, ::jxx::lang::jint x, ::jxx::lang::jint y, ::jxx::lang::jint button, ::jxx::lang::jint clicks, ::jxx::lang::jbool popup)
-        {
-            if (auto owner = self.lock()) owner->processMouseEvent(::jxx::NEW<::jxx::awt::event::MouseEvent>(owner, id, 0, 0, x, y, clicks, popup, button));
-        });
-        nativeComponent_->setMouseWheelCallback([self](::jxx::lang::jint amount, ::jxx::lang::jint rotation, ::jxx::lang::jint, ::jxx::lang::jdouble precise)
-        {
-            if (auto owner = self.lock()) owner->processMouseWheelEvent(::jxx::NEW<::jxx::awt::event::MouseWheelEvent>(owner, ::jxx::awt::event::MouseEvent::MOUSE_WHEEL, 0, 0, 0, 0, 0, false, ::jxx::awt::event::MouseWheelEvent::WHEEL_UNIT_SCROLL, amount, rotation, precise));
-        });
-        nativeComponentAssigned();
-    }
-    void Component::nativeComponentAssigned() {}
-    void Component::invalidate() { valid_=false; }
-    void Component::validate() { valid_=true; }
-    ::jxx::lang::jbool Component::isValid() const { return valid_; }
-void Component::paint(const ::jxx::Ptr<Graphics>&){}
-void Component::paintAll(const ::jxx::Ptr<Graphics>& graphics){paint(graphics);}
-void Component::print(const ::jxx::Ptr<Graphics>& graphics){paint(graphics);}
-void Component::printAll(const ::jxx::Ptr<Graphics>& graphics){print(graphics);}
-void Component::repaint(){repaint(0, 0, 0, width_, height_);}
-void Component::repaint(::jxx::lang::jlong milliseconds){repaint(milliseconds, 0, 0, width_, height_);}
-void Component::repaint(::jxx::lang::jint x, ::jxx::lang::jint y,
-    ::jxx::lang::jint width, ::jxx::lang::jint height)
-{repaint(0, x, y, width, height);}
-void Component::repaint(::jxx::lang::jlong, ::jxx::lang::jint,
-    ::jxx::lang::jint, ::jxx::lang::jint, ::jxx::lang::jint)
+	void Component::setNativeComponentInternal(
+		const ::jxx::Ptr<::jxx::awt::internal::ComponentPeer>& value)
+	{
+		if (nativeComponent_ == value) return;
+		if (nativeComponent_ != nullptr) nativeComponent_->destroy();
+		nativeComponent_ = value;
+		if (nativeComponent_ == nullptr) return;
+		nativeComponent_->setBounds(x_, y_, width_, height_);
+		nativeComponent_->setVisible(visible_);
+		nativeComponent_->setEnabled(enabled_);
+		if (foreground_) nativeComponent_->setForeground(foreground_);
+		if (background_) nativeComponent_->setBackground(background_);
+		if (font_) nativeComponent_->setFont(font_);
+		std::weak_ptr<Component> self = ::jxx::CAST<Component>(thisPtr());
+		nativeComponent_->setFocusCallback([self](::jxx::lang::jbool gained)
 {
-    // Headless components have no native update queue. Their current state is
-    // consumed by paint/print when a cache image is rendered.
-}
+	if (auto owner = self.lock())owner->processFocusEvent(::jxx::NEW<::jxx::awt::event::FocusEvent>(owner, gained ? ::jxx::awt::event::FocusEvent::FOCUS_GAINED : ::jxx::awt::event::FocusEvent::FOCUS_LOST));
+});
+		nativeComponent_->setKeyCallback([self](::jxx::lang::jint id, ::jxx::lang::jint code, ::jxx::lang::jchar character, ::jxx::lang::jint modifiers)
+		{
+			if (auto owner = self.lock()) owner->processKeyEvent(::jxx::NEW<::jxx::awt::event::KeyEvent>(owner, id, 0, modifiers, code, character));
+		});
+		nativeComponent_->setMouseCallback([self](::jxx::lang::jint id, ::jxx::lang::jint x, ::jxx::lang::jint y, ::jxx::lang::jint button, ::jxx::lang::jint clicks, ::jxx::lang::jbool popup)
+		{
+			if (auto owner = self.lock()) owner->processMouseEvent(::jxx::NEW<::jxx::awt::event::MouseEvent>(owner, id, 0, 0, x, y, clicks, popup, button));
+		});
+		nativeComponent_->setMouseWheelCallback([self](::jxx::lang::jint amount, ::jxx::lang::jint rotation, ::jxx::lang::jint, ::jxx::lang::jdouble precise)
+		{
+			if (auto owner = self.lock()) owner->processMouseWheelEvent(::jxx::NEW<::jxx::awt::event::MouseWheelEvent>(owner, ::jxx::awt::event::MouseEvent::MOUSE_WHEEL, 0, 0, 0, 0, 0, false, ::jxx::awt::event::MouseWheelEvent::WHEEL_UNIT_SCROLL, amount, rotation, precise));
+		});
+		nativeComponentAssigned();
+	}
+	void Component::nativeComponentAssigned()
+	{
+	}
+	void Component::invalidate()
+	{
+		valid_ = false;
+	}
+	void Component::validate()
+	{
+		valid_ = true;
+	}
+	::jxx::lang::jbool Component::isValid() const
+	{
+		return valid_;
+	}
+	void Component::paint(const ::jxx::Ptr<Graphics>&)
+	{
+	}
+	void Component::paintAll(const ::jxx::Ptr<Graphics>& graphics)
+	{
+		paint(graphics);
+	}
+	void Component::print(const ::jxx::Ptr<Graphics>& graphics)
+	{
+		paint(graphics);
+	}
+	void Component::printAll(const ::jxx::Ptr<Graphics>& graphics)
+	{
+		print(graphics);
+	}
+	void Component::repaint()
+	{
+		repaint(0, 0, 0, width_, height_);
+	}
+	void Component::repaint(::jxx::lang::jlong milliseconds)
+	{
+		repaint(milliseconds, 0, 0, width_, height_);
+	}
+	void Component::repaint(::jxx::lang::jint x, ::jxx::lang::jint y,
+		::jxx::lang::jint width, ::jxx::lang::jint height)
+	{
+		repaint(0, x, y, width, height);
+	}
+	void Component::repaint(::jxx::lang::jlong, ::jxx::lang::jint,
+		::jxx::lang::jint, ::jxx::lang::jint, ::jxx::lang::jint)
+	{
+		// Headless state is consumed by the next paint or print operation.
+	}
 
 }
