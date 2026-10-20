@@ -225,11 +225,28 @@ public:
     template <typename T>
     static ::jxx::Ptr<List<T>> asList(const Array<::jxx::Ptr<T>>& array) {
         arrays_detail::checkArray(array);
-        auto result = ::jxx::NEW<ArrayList<T>>(static_cast<::jxx::lang::jint>(array->length));
-        for (::jxx::lang::jint index = 0; index < static_cast<::jxx::lang::jint>(array->length); ++index) {
+        auto result = ::jxx::NEW<ArrayList<T>>(
+            static_cast<::jxx::lang::jint>(array->length));
+        for (::jxx::lang::jint index = 0;
+             index < static_cast<::jxx::lang::jint>(array->length); ++index) {
             result->add((*array)[index]);
         }
         return ::jxx::CAST<List<T>>(result);
+    }
+
+    template <typename T, typename... Values,
+        typename = std::enable_if_t<
+            (std::is_convertible_v<Values, ::jxx::Ptr<T>> && ...)>>
+    static ::jxx::Ptr<List<T>> asList(
+        const ::jxx::Ptr<T>& first,
+        const Values&... remaining) {
+        auto array = ::jxx::NEW<::jxx::lang::JxxArray<
+            ::jxx::Ptr<T>, 1U>>(
+                static_cast<::jxx::lang::jint>(1U + sizeof...(remaining)));
+        ::jxx::lang::jint index = 0;
+        (*array)[index++] = first;
+        (((*array)[index++] = static_cast<::jxx::Ptr<T>>(remaining)), ...);
+        return asList<T>(array);
     }
 };
 

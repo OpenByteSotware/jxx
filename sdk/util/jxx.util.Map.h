@@ -152,7 +152,7 @@ public:
                 put(key, newValue);
                 return newValue;
             }
-            remove(key);
+            remove(::jxx::CAST<::jxx::lang::Object>(key));
         }
         return nullptr;
     }
@@ -162,7 +162,8 @@ public:
         ::jxx::Ptr<V> oldValue = get(::jxx::CAST<::jxx::lang::Object>(key));
         ::jxx::Ptr<V> newValue = remappingFunction->apply(key, oldValue);
         if (newValue == nullptr) {
-            if (oldValue != nullptr || containsKey(key)) remove(key);
+            const auto objectKey = ::jxx::CAST<::jxx::lang::Object>(key);
+            if (oldValue != nullptr || containsKey(objectKey)) remove(objectKey);
             return nullptr;
         }
         put(key, newValue);
@@ -174,7 +175,7 @@ public:
         ::jxx::Ptr<V> oldValue = get(::jxx::CAST<::jxx::lang::Object>(key));
         ::jxx::Ptr<V> newValue = (oldValue == nullptr) ? value : remappingFunction->apply(oldValue, value);
         if (newValue == nullptr) {
-            remove(key);
+            remove(::jxx::CAST<::jxx::lang::Object>(key));
             return nullptr;
         }
         put(key, newValue);
