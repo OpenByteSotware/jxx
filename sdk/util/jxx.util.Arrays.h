@@ -97,7 +97,7 @@ inline void checkRange(const ::jxx::Ptr<::jxx::lang::JxxArray<T, 1U>>& array,
                        ::jxx::lang::jint to) {
     checkArray(array);
     if (from > to) throw ::jxx::lang::IllegalArgumentException();
-    if (from < 0 || to > static_cast<::jxx::lang::jint>(array->length)) {
+    if (from < 0 || to > static_cast<::jxx::lang::jint>(array->size())) {
         throw ::jxx::lang::ArrayIndexOutOfBoundsException();
     }
 }
@@ -114,9 +114,9 @@ public:
         : ::jxx::util::ArrayList<E>(0), array_(array) {}
 
     ::jxx::lang::jint size() override {
-        return static_cast<::jxx::lang::jint>(array_->length);
+        return static_cast<::jxx::lang::jint>(array_->size());
     }
-    ::jxx::lang::jbool isEmpty() override { return array_->length == 0U; }
+    ::jxx::lang::jbool isEmpty() override { return array_->size() == 0U; }
     ::jxx::Ptr<E> get(::jxx::lang::jint index) const override {
         checkIndex_(index); return (*array_)[index];
     }
@@ -151,7 +151,7 @@ public:
     }
 private:
     void checkIndex_(::jxx::lang::jint index) const {
-        if (index < 0 || index >= static_cast<::jxx::lang::jint>(array_->length))
+        if (index < 0 || index >= static_cast<::jxx::lang::jint>(array_->size()))
             throw ::jxx::lang::ArrayIndexOutOfBoundsException(index);
     }
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<E>, 1U>> array_;
@@ -171,8 +171,11 @@ public:
         arrays_detail::checkArray(original);
         if (newLength < 0) throw ::jxx::lang::NegativeArraySizeException();
         auto result = ::jxx::NEW<::jxx::lang::JxxArray<T, 1U>>(newLength);
-        const auto count = std::min(newLength, static_cast<::jxx::lang::jint>(original->length));
-        for (::jxx::lang::jint index = 0; index < count; ++index) (*result)[index] = (*original)[index];
+        const auto count = std::min(newLength, static_cast<::jxx::lang::jint>(original->size()));
+        for (::jxx::lang::jint index = 0; index < count; ++index)
+        {
+            (*result)[index] = (*original).at(index);
+        }
         return result;
     }
 
@@ -182,19 +185,19 @@ public:
                                 ::jxx::lang::jint to) {
         arrays_detail::checkArray(original);
         if (from > to) throw ::jxx::lang::IllegalArgumentException();
-        if (from < 0 || from > static_cast<::jxx::lang::jint>(original->length)) {
+        if (from < 0 || from > static_cast<::jxx::lang::jint>(original->size())) {
             throw ::jxx::lang::ArrayIndexOutOfBoundsException();
         }
         auto result = ::jxx::NEW<::jxx::lang::JxxArray<T, 1U>>(to - from);
-        const auto count = std::min(to, static_cast<::jxx::lang::jint>(original->length)) - from;
-        for (::jxx::lang::jint index = 0; index < count; ++index) (*result)[index] = (*original)[from + index];
+        const auto count = std::min(to, static_cast<::jxx::lang::jint>(original->size())) - from;
+        for (::jxx::lang::jint index = 0; index < count; ++index) (*result)[index] = (*original).at(from + index);
         return result;
     }
 
     template <typename T>
     static void fill(const Array<T>& array, const T& value) {
         arrays_detail::checkArray(array);
-        fill(array, 0, static_cast<::jxx::lang::jint>(array->length), value);
+        fill(array, 0, static_cast<::jxx::lang::jint>(array->size()), value);
     }
 
     template <typename T>
@@ -207,9 +210,9 @@ public:
     template <typename T>
     static ::jxx::lang::jbool equals(const Array<T>& left, const Array<T>& right) {
         if (left == right) return true;
-        if (left == nullptr || right == nullptr || left->length != right->length) return false;
-        for (::jxx::lang::jint index = 0; index < static_cast<::jxx::lang::jint>(left->length); ++index) {
-            if (!arrays_detail::equalValue((*left)[index], (*right)[index])) return false;
+        if (left == nullptr || right == nullptr || left->size() != right->size()) return false;
+        for (::jxx::lang::jint index = 0; index < static_cast<::jxx::lang::jint>(left->size()); ++index) {
+            if (!arrays_detail::equalValue((*left).at(index), (*right).at(index))) return false;
         }
         return true;
     }
@@ -218,8 +221,8 @@ public:
     static ::jxx::lang::jint hashCode(const Array<T>& array) {
         if (array == nullptr) return 0;
         ::jxx::lang::jint result = 1;
-        for (::jxx::lang::jint index = 0; index < static_cast<::jxx::lang::jint>(array->length); ++index) {
-            result = 31 * result + arrays_detail::hashValue((*array)[index]);
+        for (::jxx::lang::jint index = 0; index < static_cast<::jxx::lang::jint>(array->size()); ++index) {
+            result = 31 * result + arrays_detail::hashValue((*array)(index));
         }
         return result;
     }
@@ -228,9 +231,9 @@ public:
     static ::jxx::Ptr<::jxx::lang::String> toString(const Array<T>& array) {
         if (array == nullptr) return ::jxx::NEW<::jxx::lang::String>("null");
         std::string result = "[";
-        for (::jxx::lang::jint index = 0; index < static_cast<::jxx::lang::jint>(array->length); ++index) {
+        for (::jxx::lang::jint index = 0; index < static_cast<::jxx::lang::jint>(array->size()); ++index) {
             if (index != 0) result += ", ";
-            result += arrays_detail::textValue((*array)[index]);
+            result += arrays_detail::textValue((*array).at(index));
         }
         result += "]";
         return ::jxx::NEW<::jxx::lang::String>(result);
@@ -239,7 +242,7 @@ public:
     template <typename T>
     static void sort(const Array<T>& array) {
         arrays_detail::checkArray(array);
-        sort(array, 0, static_cast<::jxx::lang::jint>(array->length));
+        sort(array, 0, static_cast<::jxx::lang::jint>(array->size()));
     }
 
     template <typename T>
@@ -267,7 +270,7 @@ public:
     static ::jxx::lang::jint binarySearch(const Array<T>& array, const T& key) {
         arrays_detail::checkArray(array);
         ::jxx::lang::jint low = 0;
-        ::jxx::lang::jint high = static_cast<::jxx::lang::jint>(array->length) - 1;
+        ::jxx::lang::jint high = static_cast<::jxx::lang::jint>(array->size()) - 1;
         while (low <= high) {
             const auto middle = low + ((high - low) >> 1);
             const auto& value = (*array)[middle];

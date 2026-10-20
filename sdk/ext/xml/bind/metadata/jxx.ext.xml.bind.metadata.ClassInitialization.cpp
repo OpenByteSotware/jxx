@@ -5,6 +5,8 @@
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.AdaptedValueConverter.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.AdaptedValueFormatter.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.BindingDescriptor.h"
+#include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.BuiltinConverters.h"
+#include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.BuiltinFormatters.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.ElementWrapperFactory.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.EnumValueConverter.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.EnumValueFormatter.h"
@@ -35,6 +37,16 @@ void initializeClasses()
         (void)AdaptedValueConverter::JxxClassInfoMarker::Class();
         (void)AdaptedValueFormatter::JxxClassInfoMarker::Class();
         (void)BindingDescriptor::JxxClassInfoMarker::Class();
+        (void)StringConverter::Class();
+        (void)IntegerConverter::Class();
+        (void)LongConverter::Class();
+        (void)DoubleConverter::Class();
+        (void)BooleanConverter::Class();
+        (void)StringFormatter::Class();
+        (void)IntegerFormatter::Class();
+        (void)LongFormatter::Class();
+        (void)DoubleFormatter::Class();
+        (void)BooleanFormatter::Class();
         (void)ElementWrapperFactory::JxxClassInfoMarker::Class();
         (void)EnumValueConverter::JxxClassInfoMarker::Class();
         (void)EnumValueFormatter::JxxClassInfoMarker::Class();

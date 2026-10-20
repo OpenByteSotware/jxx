@@ -34,6 +34,15 @@ InputStreamReader::InputStreamReader(
     encoding_ = ::jxx::nio::charset::Charset::forName(charsetName)->name();
 }
 
+InputStreamReader::InputStreamReader(
+    const ::jxx::Ptr<InputStream>& input,
+    const ::jxx::Ptr<::jxx::nio::charset::Charset>& charset)
+    : InputStreamReader(input,
+          charset == nullptr
+              ? ::jxx::Ptr<::jxx::lang::String>{}
+              : charset->name()) {
+}
+
 void InputStreamReader::decodeAll() {
     if (decoded_ != nullptr) {
         return;
