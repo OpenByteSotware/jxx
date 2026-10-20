@@ -25,9 +25,11 @@ namespace jxx::util
         {
             if (object.get() == this) return true;
             auto other = jxx::CAST<List<E>>(object);
-            if (other == nullptr || this->size() != other->size()) return false;
-            for (jxx::lang::jint index = 0; index < this->size(); ++index) {
-                const auto left = this->get(index);
+            auto self = const_cast<AbstractList<E>*>(this);
+            const auto selfSize = self->size();
+            if (other == nullptr || selfSize != other->size()) return false;
+            for (jxx::lang::jint index = 0; index < selfSize; ++index) {
+                const auto left = self->get(index);
                 const auto right = other->get(index);
                 if (left == right) continue;
                 if (left == nullptr || right == nullptr) return false;
@@ -42,8 +44,10 @@ namespace jxx::util
         jxx::lang::jint hashCode() const override
         {
             std::uint32_t hash = 1U;
-            for (jxx::lang::jint index = 0; index < this->size(); ++index) {
-                const auto element = this->get(index);
+            auto self = const_cast<AbstractList<E>*>(this);
+            const auto selfSize = self->size();
+            for (jxx::lang::jint index = 0; index < selfSize; ++index) {
+                const auto element = self->get(index);
                 const auto object = jxx::CAST<jxx::lang::Object>(element);
                 hash = 31U * hash + static_cast<std::uint32_t>(
                     object == nullptr ? 0 : object->hashCode());
