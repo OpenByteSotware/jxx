@@ -59,6 +59,13 @@ void initializeClasses()
             registerType<Key>();
             registerType<KeyManagementException>();
             registerType<KeyStore>();
+            registerType<KeyStore::Entry>();
+            registerType<KeyStore::ProtectionParameter>();
+            registerType<KeyStore::PasswordProtection>();
+            registerType<KeyStore::PrivateKeyEntry>();
+            registerType<KeyStore::SecretKeyEntry>();
+            registerType<KeyStore::TrustedCertificateEntry>();
+            registerType<KeyStore::Builder>();
             registerType<KeyStoreException>();
             registerType<NoSuchAlgorithmException>();
             registerType<NoSuchProviderException>();
