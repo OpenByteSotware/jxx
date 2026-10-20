@@ -2,6 +2,7 @@
 
 #include "security/jxx.security.ClassInitialization.h"
 #include "security/jxx.security.KeyStore.h"
+#include "jxx.initialize.h"
 
 namespace
 {
@@ -16,7 +17,7 @@ namespace
 
     TEST(SecurityClassInitialization, RegistersPublicKeyStoreNestedTypes)
     {
-        ::jxx::security::initializeClasses();
+        ::jxx::initialize();
 
         expectClassMetadata<::jxx::security::KeyStore>();
         expectClassMetadata<::jxx::security::KeyStore::Entry>();

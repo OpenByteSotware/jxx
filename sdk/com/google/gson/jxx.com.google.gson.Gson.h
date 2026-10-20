@@ -68,6 +68,15 @@ public:
 
     ::jxx::Ptr<JsonElement> fromJson(const ::jxx::Ptr<::jxx::io::Reader>& reader) const;
     ::jxx::Ptr<JsonElement> fromJson(const ::jxx::Ptr<::com::google::gson::stream::JsonReader>& reader) const;
+    ::jxx::Ptr<::jxx::lang::Object> fromJson(
+        const ::jxx::Ptr<::jxx::lang::String>& json,
+        const ::jxx::Ptr<::jxx::lang::ClassAny>& classOfT) const;
+    ::jxx::Ptr<::jxx::lang::Object> fromJson(
+        const ::jxx::Ptr<::jxx::io::Reader>& reader,
+        const ::jxx::Ptr<::jxx::lang::ClassAny>& classOfT) const;
+    ::jxx::Ptr<::jxx::lang::Object> fromJson(
+        const ::jxx::Ptr<::com::google::gson::stream::JsonReader>& reader,
+        const ::jxx::Ptr<::jxx::lang::ClassAny>& classOfT) const;
 
     ::jxx::Ptr<::jxx::lang::String> toJson(
         const ::jxx::Ptr<JsonElement>& element) const;

@@ -6,6 +6,7 @@
 #include "com/google/gson/jxx.com.google.gson.JsonObject.h"
 #include "com/google/gson/jxx.com.google.gson.JsonParser.h"
 #include "com/google/gson/jxx.com.google.gson.JsonPrimitive.h"
+#include "com/google/gson/jxx.com.google.gson.JsonSyntaxException.h"
 #include "com/google/gson/jxx.com.google.gson.TypeAdapter.h"
 #include "com/google/gson/jxx.com.google.gson.GsonBuilder.h"
 #include "lang/jxx.lang.NullPointerException.h"
@@ -17,8 +18,73 @@
 #include "com/google/gson/internal/jxx.com.google.gson.internal.GsonContext.h"
 #include "com/google/gson/internal/jxx.com.google.gson.internal.TreeTypeAdapter.h"
 
+#include "com/google/gson/internal/jxx.com.google.gson.internal.LinkedTreeMap.h"
+#include "com/google/gson/jxx.com.google.gson.JsonArray.h"
+#include "com/google/gson/jxx.com.google.gson.JsonNull.h"
+#include "com/google/gson/jxx.com.google.gson.JsonObject.h"
+#include "com/google/gson/jxx.com.google.gson.JsonPrimitive.h"
+#include "com/google/gson/jxx.com.google.gson.JsonSyntaxException.h"
+#include "io/jxx.io.StringReader.h"
+#include "lang/jxx.lang.Boolean.h"
+#include "lang/jxx.lang.Double.h"
+#include "lang/jxx.lang.Long.h"
+#include "util/jxx.util.ArrayList.h"
+
 namespace com::google::gson {
 namespace {
+
+using ErasedLinkedTreeMap =
+    ::com::google::gson::internal::LinkedTreeMap<
+        ::jxx::lang::Object, ::jxx::lang::Object>;
+using ErasedArrayList = ::jxx::util::ArrayList<::jxx::lang::Object>;
+
+::jxx::Ptr<::jxx::lang::Object> materializeUntyped(
+    const ::jxx::Ptr<JsonElement>& element)
+{
+    if (element == nullptr || element->isJsonNull()) return nullptr;
+    if (element->isJsonObject()) {
+        const auto result = ::jxx::NEW<ErasedLinkedTreeMap>();
+        const auto iterator = element->getAsJsonObject()->entrySet()->iterator();
+        while (iterator->hasNext()) {
+            const auto entry = iterator->next();
+            result->put(
+                ::jxx::CAST<::jxx::lang::Object>(entry->getKey()),
+                materializeUntyped(entry->getValue()));
+        }
+        return ::jxx::CAST<::jxx::lang::Object>(result);
+    }
+    if (element->isJsonArray()) {
+        const auto result = ::jxx::NEW<ErasedArrayList>();
+        const auto array = element->getAsJsonArray();
+        for (::jxx::lang::jint index = 0; index < array->size(); ++index) {
+            result->add(materializeUntyped(array->get(index)));
+        }
+        return ::jxx::CAST<::jxx::lang::Object>(result);
+    }
+    const auto primitive = element->getAsJsonPrimitive();
+    if (primitive->isString())
+        return ::jxx::CAST<::jxx::lang::Object>(primitive->getAsString());
+    if (primitive->isBoolean())
+        return ::jxx::CAST<::jxx::lang::Object>(
+            ::jxx::lang::Boolean::valueOf(primitive->getAsBoolean()));
+    const auto lexical = primitive->getAsString()->utf8();
+    if (lexical.find_first_of(".eE") == std::string::npos) {
+        return ::jxx::CAST<::jxx::lang::Object>(
+            ::jxx::lang::Long::valueOf(primitive->getAsLong()));
+    }
+    return ::jxx::CAST<::jxx::lang::Object>(
+        ::jxx::lang::Double::valueOf(primitive->getAsDouble()));
+}
+
+::jxx::lang::jbool requestsLinkedTreeMap(
+    const ::jxx::Ptr<::jxx::lang::ClassAny>& type)
+{
+    if (type == nullptr) return false;
+    const auto requested = type->getName();
+    const auto erased = ErasedLinkedTreeMap::Class()->getName();
+    return requested != nullptr && erased != nullptr && requested->equals(erased);
+}
+
 std::string escapeString(const std::string& value, ::jxx::lang::jbool htmlSafe) {
     std::string result = "\"";
     const char* digits = "0123456789ABCDEF";
@@ -102,6 +168,45 @@ Gson::Gson(
 }
 ::jxx::Ptr<JsonElement> Gson::fromJson(const ::jxx::Ptr<::jxx::io::Reader>& reader) const { if(reader==nullptr) throw ::jxx::lang::NullPointerException(); const auto stream=::jxx::NEW<::com::google::gson::stream::JsonReader>(reader); stream->setLenient(lenient_); return ::com::google::gson::internal::Streams::parse(stream); }
 ::jxx::Ptr<JsonElement> Gson::fromJson(const ::jxx::Ptr<::com::google::gson::stream::JsonReader>& reader) const { if(reader==nullptr) throw ::jxx::lang::NullPointerException(); return ::com::google::gson::internal::Streams::parse(reader); }
+::jxx::Ptr<::jxx::lang::Object> Gson::fromJson(
+    const ::jxx::Ptr<::jxx::lang::String>& json,
+    const ::jxx::Ptr<::jxx::lang::ClassAny>& classOfT) const
+{
+    if (json == nullptr || classOfT == nullptr)
+        throw ::jxx::lang::NullPointerException();
+    const auto reader = ::jxx::NEW<::jxx::io::StringReader>(json);
+    return fromJson(::jxx::CAST<::jxx::io::Reader>(reader), classOfT);
+}
+
+::jxx::Ptr<::jxx::lang::Object> Gson::fromJson(
+    const ::jxx::Ptr<::jxx::io::Reader>& reader,
+    const ::jxx::Ptr<::jxx::lang::ClassAny>& classOfT) const
+{
+    if (reader == nullptr || classOfT == nullptr)
+        throw ::jxx::lang::NullPointerException();
+    const auto stream = newJsonReader(reader);
+    return fromJson(stream, classOfT);
+}
+
+::jxx::Ptr<::jxx::lang::Object> Gson::fromJson(
+    const ::jxx::Ptr<::com::google::gson::stream::JsonReader>& reader,
+    const ::jxx::Ptr<::jxx::lang::ClassAny>& classOfT) const
+{
+    if (reader == nullptr || classOfT == nullptr)
+        throw ::jxx::lang::NullPointerException();
+    const auto tree = fromJson(reader);
+    if (tree == nullptr || tree->isJsonNull()) return nullptr;
+    if (const auto adapter = getAdapter(classOfT))
+        return adapter->fromJsonTree(tree);
+    if (requestsLinkedTreeMap(classOfT)) {
+        if (!tree->isJsonObject())
+            throw JsonSyntaxException(::jxx::NEW<::jxx::lang::String>(
+                "Expected JSON object for LinkedTreeMap"));
+        return materializeUntyped(tree);
+    }
+    return fromJsonTree(tree, classOfT);
+}
+
 
 std::string Gson::formatTree_(
     const ::jxx::Ptr<JsonElement>& element,
