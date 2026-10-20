@@ -8,6 +8,9 @@
 #include <string>
 #include <vector>
 
+#include "io/jxx.io.InvalidObjectException.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 #include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Cloneable.h"
@@ -783,7 +786,16 @@ public:
         if (output == nullptr) {
             throw jxx::lang::NullPointerException();
         }
-        throw jxx::lang::UnsupportedOperationException();
+        this->synchronized([&]() {
+            output->writeInt(capacity_);
+            output->writeInt(capacityIncrement_);
+            output->writeInt(
+                static_cast<jxx::lang::jint>(elements_.size()));
+            for (const auto& element : elements_) {
+                output->writeObject(
+                    jxx::CAST<jxx::lang::Object>(element));
+            }
+        });
     }
 
     void readObject(
@@ -791,7 +803,36 @@ public:
         if (input == nullptr) {
             throw jxx::lang::NullPointerException();
         }
-        throw jxx::lang::UnsupportedOperationException();
+        this->synchronized([&]() {
+            const auto serializedCapacity = input->readInt();
+            const auto serializedIncrement = input->readInt();
+            const auto count = input->readInt();
+            if (serializedCapacity < 0 || serializedIncrement < 0 ||
+                count < 0 || serializedCapacity < count) {
+                throw jxx::io::InvalidObjectException(
+                    "Invalid Vector capacity or size");
+            }
+            std::vector<jxx::Ptr<E>> restored;
+            restored.reserve(static_cast<std::size_t>(count));
+            for (jxx::lang::jint index = 0; index < count; ++index) {
+                const auto object = input->readObject();
+                if (object == nullptr) {
+                    restored.push_back(nullptr);
+                    continue;
+                }
+                const auto element = jxx::CAST<E>(object);
+                if (element == nullptr) {
+                    throw jxx::io::InvalidObjectException(
+                        "Vector element type mismatch");
+                }
+                restored.push_back(element);
+            }
+            elements_ = std::move(restored);
+            capacity_ = serializedCapacity;
+            capacityIncrement_ = serializedIncrement;
+            elements_.reserve(static_cast<std::size_t>(capacity_));
+            this->modCount = 0;
+        });
     }
 
     void readObjectNoData() override {
