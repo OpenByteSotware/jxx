@@ -74,6 +74,7 @@ void initializeClasses()
         registerType<Channel>();
         registerType<ClosedSelectorException>();
         registerType<FileChannel>();
+        registerType<FileChannel::MapMode>();
         registerType<ReadableByteChannel>();
         registerType<SeekableByteChannel>();
         registerType<WritableByteChannel>();
