@@ -1,5 +1,6 @@
 #include "awt/image/jxx.awt.image.ClassInitialization.h"
 #include "awt/image/jxx.awt.image.BufferedImage.h"
+#include "awt/image/jxx.awt.image.ImageObserver.h"
 #include "awt/image/jxx.awt.image.RGBImageFilter.h"
 #include <mutex>
 namespace jxx::awt::image
@@ -8,7 +9,8 @@ namespace jxx::awt::image
 	{
 		static std::once_flag flag; std::call_once(flag, []
 	   {
-				  (void)BufferedImage::Class(); 
+				  (void)ImageObserver::Class();
+                  (void)BufferedImage::Class(); 
 				  (void)RGBImageFilter::Class();
 	   });
 	}

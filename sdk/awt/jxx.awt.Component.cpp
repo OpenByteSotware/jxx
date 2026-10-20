@@ -443,3 +443,83 @@ namespace jxx::awt
 	}
 
 }
+
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+
+namespace jxx::awt {
+
+::jxx::lang::jbool Component::imageUpdate(
+    const ::jxx::Ptr<::jxx::awt::Image>&,
+    ::jxx::lang::jint infoflags,
+    ::jxx::lang::jint,
+    ::jxx::lang::jint,
+    ::jxx::lang::jint,
+    ::jxx::lang::jint)
+{
+    return (infoflags &
+        (::jxx::awt::image::ImageObserver::ALLBITS |
+         ::jxx::awt::image::ImageObserver::ABORT |
+         ::jxx::awt::image::ImageObserver::ERROR)) == 0;
+}
+
+void Component::writeObject(
+    const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out)
+{
+    if (out == nullptr) return;
+    out->writeInt(x_);
+    out->writeInt(y_);
+    out->writeInt(width_);
+    out->writeInt(height_);
+    out->writeBoolean(visible_);
+    out->writeBoolean(enabled_);
+    out->writeBoolean(focusable_);
+    out->writeObject(::jxx::CAST<::jxx::lang::Object>(foreground_));
+    out->writeObject(::jxx::CAST<::jxx::lang::Object>(background_));
+    out->writeObject(::jxx::CAST<::jxx::lang::Object>(font_));
+    out->writeObject(::jxx::CAST<::jxx::lang::Object>(name_));
+    out->writeObject(::jxx::CAST<::jxx::lang::Object>(componentOrientation_));
+}
+
+void Component::readObject(
+    const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in)
+{
+    if (in == nullptr) return;
+    x_ = in->readInt();
+    y_ = in->readInt();
+    width_ = in->readInt();
+    height_ = in->readInt();
+    visible_ = in->readBoolean();
+    enabled_ = in->readBoolean();
+    focusable_ = in->readBoolean();
+    foreground_ = ::jxx::CAST<Color>(in->readObject());
+    background_ = ::jxx::CAST<Color>(in->readObject());
+    font_ = ::jxx::CAST<Font>(in->readObject());
+    name_ = ::jxx::CAST<::jxx::lang::String>(in->readObject());
+    componentOrientation_ =
+        ::jxx::CAST<ComponentOrientation>(in->readObject());
+    valid_ = false;
+    parent_.reset();
+    nativeComponent_.reset();
+}
+
+void Component::readObjectNoData()
+{
+    x_ = 0;
+    y_ = 0;
+    width_ = 0;
+    height_ = 0;
+    visible_ = true;
+    enabled_ = true;
+    focusable_ = true;
+    valid_ = false;
+    foreground_.reset();
+    background_.reset();
+    font_.reset();
+    name_.reset();
+    componentOrientation_ = ComponentOrientation::UNKNOWN;
+    parent_.reset();
+    nativeComponent_.reset();
+}
+
+} // namespace jxx::awt

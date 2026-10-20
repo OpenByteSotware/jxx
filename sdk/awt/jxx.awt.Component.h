@@ -6,6 +6,9 @@
 #include "awt/jxx.awt.Font.h"
 #include "awt/jxx.awt.Point.h"
 #include "awt/jxx.awt.Rectangle.h"
+#include "awt/jxx.awt.MenuContainer.h"
+#include "awt/image/jxx.awt.image.ImageObserver.h"
+#include "io/jxx.io.SerializableI.h"
 namespace jxx::awt::event
 {
 	class ComponentEvent; class ComponentListener; class FocusEvent; class FocusListener; class KeyEvent; class KeyListener; class MouseEvent; class MouseListener; class MouseMotionListener; class MouseWheelEvent; class MouseWheelListener; class HierarchyEvent; class HierarchyListener; class HierarchyBoundsListener;
@@ -25,10 +28,10 @@ namespace jxx::gui::internal
 namespace jxx::awt
 {
 	class Container; class Graphics; class DefaultKeyboardFocusManager;
-	class Component : public ::jxx::lang::ClassBase<Component, ::jxx::lang::Object>
+	class Component : public ::jxx::lang::ClassBase<Component, ::jxx::lang::Object, ::jxx::awt::image::ImageObserver, ::jxx::awt::MenuContainer, ::jxx::io::SerializableI>
 	{
 	public:
-		using JxxSuper = ::jxx::lang::Object; using Super = ::jxx::lang::ClassBase<Component, JxxSuper>; virtual ~Component() = 0;
+		using JxxSuper = ::jxx::lang::Object; using Super = ::jxx::lang::ClassBase<Component, JxxSuper, ::jxx::awt::image::ImageObserver, ::jxx::awt::MenuContainer, ::jxx::io::SerializableI>; virtual ~Component() = 0;
 		virtual ::jxx::lang::jbool isVisible() const; virtual void setVisible(::jxx::lang::jbool visible); virtual ::jxx::lang::jbool isEnabled() const; virtual void setEnabled(::jxx::lang::jbool enabled); virtual void setFocusable(::jxx::lang::jbool focusable); virtual ::jxx::lang::jbool isFocusable() const; virtual ::jxx::lang::jbool isFocusTraversable() const; virtual ::jxx::lang::jbool requestFocusInWindow();
 		virtual ::jxx::lang::jint getX() const; virtual ::jxx::lang::jint getY() const; virtual ::jxx::lang::jint getWidth() const; virtual ::jxx::lang::jint getHeight() const;
 		virtual ::jxx::Ptr<Point> getLocation() const; virtual void setLocation(const ::jxx::Ptr<Point>& point); virtual void setLocation(::jxx::lang::jint x, ::jxx::lang::jint y);
@@ -42,6 +45,10 @@ namespace jxx::awt
 		virtual void addMouseListener(const ::jxx::Ptr<::jxx::awt::event::MouseListener>&); virtual void removeMouseListener(const ::jxx::Ptr<::jxx::awt::event::MouseListener>&); virtual void addMouseMotionListener(const ::jxx::Ptr<::jxx::awt::event::MouseMotionListener>&); virtual void removeMouseMotionListener(const ::jxx::Ptr<::jxx::awt::event::MouseMotionListener>&); virtual void addMouseWheelListener(const ::jxx::Ptr<::jxx::awt::event::MouseWheelListener>& listener); virtual void removeMouseWheelListener(const ::jxx::Ptr<::jxx::awt::event::MouseWheelListener>& listener);
 		virtual void addHierarchyListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyListener>& listener); virtual void removeHierarchyListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyListener>& listener); virtual void addHierarchyBoundsListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyBoundsListener>& listener); virtual void removeHierarchyBoundsListener(const ::jxx::Ptr<::jxx::awt::event::HierarchyBoundsListener>& listener);
 		virtual void requestFocus(); virtual ::jxx::lang::jbool isFocusOwner() const; virtual void invalidate(); virtual void validate(); virtual ::jxx::lang::jbool isValid() const;
+		::jxx::lang::jbool imageUpdate(const ::jxx::Ptr<::jxx::awt::Image>& image, ::jxx::lang::jint infoflags, ::jxx::lang::jint x, ::jxx::lang::jint y, ::jxx::lang::jint width, ::jxx::lang::jint height) override;
+		void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override;
+		void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override;
+		void readObjectNoData() override;
 		virtual void repaint(); virtual void repaint(::jxx::lang::jlong milliseconds); virtual void repaint(::jxx::lang::jint x, ::jxx::lang::jint y, ::jxx::lang::jint width, ::jxx::lang::jint height); virtual void repaint(::jxx::lang::jlong milliseconds, ::jxx::lang::jint x, ::jxx::lang::jint y, ::jxx::lang::jint width, ::jxx::lang::jint height);
 		virtual void paint(const ::jxx::Ptr<Graphics>& graphics);
 		virtual void paintAll(const ::jxx::Ptr<Graphics>& graphics);

@@ -19,6 +19,7 @@
 #include "awt/jxx.awt.Graphics.h"
 #include "awt/jxx.awt.Graphics2D.h"
 #include "awt/jxx.awt.Image.h"
+#include "awt/jxx.awt.MenuContainer.h"
 #include "awt/jxx.awt.ImageCapabilities.h"
 #include "awt/jxx.awt.Insets.h"
 #include "awt/jxx.awt.Point.h"
@@ -62,6 +63,7 @@ namespace jxx::awt
             (void)::jxx::awt::Graphics::Class();
             (void)::jxx::awt::Graphics2D::Class();
             (void)::jxx::awt::Image::Class();
+            (void)::jxx::awt::MenuContainer::Class();
             (void)::jxx::awt::ImageCapabilities::Class();
             (void)::jxx::awt::Insets::Class();
             (void)::jxx::awt::Point::Class();
