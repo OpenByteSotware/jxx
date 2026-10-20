@@ -232,5 +232,20 @@ namespace jxx::awt
     void Component::invalidate() { valid_=false; }
     void Component::validate() { valid_=true; }
     ::jxx::lang::jbool Component::isValid() const { return valid_; }
-void Component::paint(const ::jxx::Ptr<Graphics>&){} void Component::paintAll(const ::jxx::Ptr<Graphics>&g){paint(g);} void Component::print(const ::jxx::Ptr<Graphics>&g){paint(g);} void Component::printAll(const ::jxx::Ptr<Graphics>&g){print(g);}
+void Component::paint(const ::jxx::Ptr<Graphics>&){}
+void Component::paintAll(const ::jxx::Ptr<Graphics>& graphics){paint(graphics);}
+void Component::print(const ::jxx::Ptr<Graphics>& graphics){paint(graphics);}
+void Component::printAll(const ::jxx::Ptr<Graphics>& graphics){print(graphics);}
+void Component::repaint(){repaint(0, 0, 0, width_, height_);}
+void Component::repaint(::jxx::lang::jlong milliseconds){repaint(milliseconds, 0, 0, width_, height_);}
+void Component::repaint(::jxx::lang::jint x, ::jxx::lang::jint y,
+    ::jxx::lang::jint width, ::jxx::lang::jint height)
+{repaint(0, x, y, width, height);}
+void Component::repaint(::jxx::lang::jlong, ::jxx::lang::jint,
+    ::jxx::lang::jint, ::jxx::lang::jint, ::jxx::lang::jint)
+{
+    // Headless components have no native update queue. Their current state is
+    // consumed by paint/print when a cache image is rendered.
+}
+
 }
