@@ -350,6 +350,24 @@ public:
         return static_cast<::jxx::lang::jlong>(size());
     }
 
+    void writeObject(
+        const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        JxxSuper::writeObject(out);
+    }
+
+    void readObject(
+        const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        JxxSuper::readObject(in);
+        validateDeserializedEntries_();
+    }
+
+    void readObjectNoData() override {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        JxxSuper::readObjectNoData();
+    }
+
 private:
     using SnapshotItem = std::pair<::jxx::Ptr<K>, ::jxx::Ptr<V>>;
 
@@ -364,6 +382,20 @@ private:
             result.emplace_back(entry->getKey(), entry->getValue());
         }
         return result;
+    }
+
+    void validateDeserializedEntries_() {
+        auto entries = JxxSuper::entrySet();
+        auto iterator = entries->iterator();
+        while (iterator->hasNext()) {
+            auto entry = iterator->next();
+            if (entry == nullptr || entry->getKey() == nullptr ||
+                entry->getValue() == nullptr) {
+                JxxSuper::clear();
+                throw ::jxx::io::InvalidObjectException(
+                    "ConcurrentHashMap contains null key or value");
+            }
+        }
     }
 
     static void validateSizing_(
