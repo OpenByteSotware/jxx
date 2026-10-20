@@ -4,6 +4,7 @@
 
 #include "awt/jxx.awt.Component.h"
 #include "awt/jxx.awt.LayoutManager.h"
+#include "lang/jxx.lang.buildin_array.h"
 
 namespace jxx::awt::event
 {
@@ -37,7 +38,12 @@ namespace jxx::awt
         virtual void remove(const ::jxx::Ptr<Component>& component);
         virtual void removeAll();
 
+        using ComponentArrayType =
+            ::jxx::JxxArray<::jxx::Ptr<Component>, 1U>;
+        using ComponentArray = ::jxx::Ptr<ComponentArrayType>;
+
         virtual ::jxx::lang::jint getComponentCount() const;
+        virtual ComponentArray getComponents() const;
         virtual ::jxx::Ptr<Component> getComponent(
             ::jxx::lang::jint index) const;
 

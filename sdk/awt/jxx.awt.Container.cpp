@@ -100,6 +100,18 @@ namespace jxx::awt
         return static_cast<::jxx::lang::jint>(components_.size());
     }
 
+    Container::ComponentArray Container::getComponents() const
+    {
+        auto result = ::jxx::NEW<ComponentArrayType>(getComponentCount());
+        for (::jxx::lang::jint index = 0;
+             index < getComponentCount(); ++index)
+        {
+            (*result)(index) =
+                components_[static_cast<std::size_t>(index)];
+        }
+        return result;
+    }
+
     ::jxx::Ptr<Component> Container::getComponent(
         ::jxx::lang::jint index) const
     {
