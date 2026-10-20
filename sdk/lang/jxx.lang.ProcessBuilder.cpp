@@ -36,6 +36,7 @@ extern char** environ;
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.Process.h"
 #include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
+#include "util/jxx.util.List.h"
 #include "lang/jxx.lang.ProcessBuilder.h"
 
 namespace jxx::lang {
@@ -494,6 +495,23 @@ ProcessBuilder::ProcessBuilder(
         command_.push_back(argument->utf8());
     }
 }
+ProcessBuilder::ProcessBuilder(
+    const jxx::Ptr<jxx::util::List<String>>& command)
+    : environment_(currentEnvironment())
+    , inputRedirect_(Redirect::PIPE)
+    , outputRedirect_(Redirect::PIPE)
+    , errorRedirect_(Redirect::PIPE) {
+    if (command == nullptr) throw NullPointerException();
+
+    const auto count = command->size();
+    command_.reserve(static_cast<std::size_t>(count));
+    for (jint index = 0; index < count; ++index) {
+        const auto argument = command->get(index);
+        if (argument == nullptr) throw NullPointerException();
+        command_.push_back(argument->utf8());
+    }
+}
+
 jxx::Ptr<ProcessBuilder> ProcessBuilder::command(
     const jxx::Ptr<JxxArray<jxx::Ptr<String>, 1>>& command) {
     if (command == nullptr) throw NullPointerException();
@@ -511,6 +529,23 @@ jxx::Ptr<ProcessBuilder> ProcessBuilder::command(
     command_ = std::move(replacement);
     return jxx::CAST<ProcessBuilder>(thisPtr());
 }
+jxx::Ptr<ProcessBuilder> ProcessBuilder::command(
+    const jxx::Ptr<jxx::util::List<String>>& command) {
+    if (command == nullptr) throw NullPointerException();
+
+    std::vector<std::string> replacement;
+    const auto count = command->size();
+    replacement.reserve(static_cast<std::size_t>(count));
+    for (jint index = 0; index < count; ++index) {
+        const auto argument = command->get(index);
+        if (argument == nullptr) throw NullPointerException();
+        replacement.push_back(argument->utf8());
+    }
+
+    command_ = std::move(replacement);
+    return jxx::CAST<ProcessBuilder>(thisPtr());
+}
+
 jxx::Ptr<JxxArray<jxx::Ptr<String>,1>> ProcessBuilder::command()const{auto a=jxx::NEW<JxxArray<jxx::Ptr<String>,1>>(command_.size());for(uint32_t i=0;i<a->length;++i)(*a)[i]=jxx::NEW<String>(command_[i]);return a;}
 jxx::Ptr<jxx::io::File> ProcessBuilder::directory()const{return directory_;}
 jxx::Ptr<ProcessBuilder> ProcessBuilder::directory(const jxx::Ptr<jxx::io::File>&d){directory_=d;return jxx::CAST<ProcessBuilder>(thisPtr());}

@@ -8,6 +8,7 @@
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_array.h"
+#include "util/jxx.util.List.h"
 
 namespace jxx::io { class File; }
 namespace jxx::lang {
@@ -40,9 +41,13 @@ public:
 
     explicit ProcessBuilder(
         const jxx::Ptr<JxxArray<jxx::Ptr<String>, 1>>& command);
+    explicit ProcessBuilder(
+        const jxx::Ptr<jxx::util::List<String>>& command);
 
     jxx::Ptr<ProcessBuilder> command(
         const jxx::Ptr<JxxArray<jxx::Ptr<String>, 1>>& command);
+    jxx::Ptr<ProcessBuilder> command(
+        const jxx::Ptr<jxx::util::List<String>>& command);
     jxx::Ptr<JxxArray<jxx::Ptr<String>, 1>> command() const;
 
     jxx::Ptr<jxx::io::File> directory() const;
