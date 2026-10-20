@@ -14,6 +14,7 @@
 #include "lang/jxx.lang.NegativeArraySizeException.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
+#include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.buildin_array.h"
@@ -100,6 +101,58 @@ inline void checkRange(const ::jxx::Ptr<::jxx::lang::JxxArray<T, 1U>>& array,
         throw ::jxx::lang::ArrayIndexOutOfBoundsException();
     }
 }
+
+
+template <typename E>
+class ArraysList final : public ::jxx::util::ArrayList<E> {
+public:
+    explicit ArraysList(
+        const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<E>, 1U>>& array)
+        : ::jxx::util::ArrayList<E>(0), array_(array) {}
+
+    ::jxx::lang::jint size() override {
+        return static_cast<::jxx::lang::jint>(array_->length);
+    }
+    ::jxx::lang::jbool isEmpty() override { return array_->length == 0U; }
+    ::jxx::Ptr<E> get(::jxx::lang::jint index) const override {
+        checkIndex_(index); return (*array_)[index];
+    }
+    ::jxx::Ptr<E> set(::jxx::lang::jint index,
+        const ::jxx::Ptr<E>& element) override {
+        checkIndex_(index); auto old = (*array_)[index];
+        (*array_)[index] = element; return old;
+    }
+    ::jxx::lang::jbool add(const ::jxx::Ptr<E>&) override {
+        throw ::jxx::lang::UnsupportedOperationException();
+    }
+    void add(::jxx::lang::jint, const ::jxx::Ptr<E>&) override {
+        throw ::jxx::lang::UnsupportedOperationException();
+    }
+    ::jxx::Ptr<E> remove(::jxx::lang::jint) override {
+        throw ::jxx::lang::UnsupportedOperationException();
+    }
+    ::jxx::lang::jbool remove(
+        const ::jxx::Ptr<::jxx::lang::Object>&) override {
+        throw ::jxx::lang::UnsupportedOperationException();
+    }
+    void clear() override {
+        throw ::jxx::lang::UnsupportedOperationException();
+    }
+    ::jxx::lang::jbool addAll(
+        const ::jxx::Ptr<::jxx::util::wildcard::CollectionExtends<E>>&) override {
+        throw ::jxx::lang::UnsupportedOperationException();
+    }
+    ::jxx::lang::jbool addAll(::jxx::lang::jint,
+        const ::jxx::Ptr<::jxx::util::wildcard::CollectionExtends<E>>&) override {
+        throw ::jxx::lang::UnsupportedOperationException();
+    }
+private:
+    void checkIndex_(::jxx::lang::jint index) const {
+        if (index < 0 || index >= static_cast<::jxx::lang::jint>(array_->length))
+            throw ::jxx::lang::ArrayIndexOutOfBoundsException(index);
+    }
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<E>, 1U>> array_;
+};
 
 } // namespace arrays_detail
 
@@ -225,12 +278,7 @@ public:
     template <typename T>
     static ::jxx::Ptr<List<T>> asList(const Array<::jxx::Ptr<T>>& array) {
         arrays_detail::checkArray(array);
-        auto result = ::jxx::NEW<ArrayList<T>>(
-            static_cast<::jxx::lang::jint>(array->length));
-        for (::jxx::lang::jint index = 0;
-             index < static_cast<::jxx::lang::jint>(array->length); ++index) {
-            result->add((*array)[index]);
-        }
+        auto result = ::jxx::NEW<arrays_detail::ArraysList<T>>(array);
         return ::jxx::CAST<List<T>>(result);
     }
 
