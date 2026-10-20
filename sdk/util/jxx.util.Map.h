@@ -124,9 +124,14 @@ public:
         return true;
     }
 
-    virtual ::jxx::Ptr<V> replace(const ::jxx::Ptr<K>& key, const ::jxx::Ptr<V>& value) {
-        ::jxx::Ptr<V> cur = get(key);
-        if (cur != nullptr || containsKey(key)) return put(key, value);
+    virtual ::jxx::Ptr<V> replace(
+        const ::jxx::Ptr<K>& key,
+        const ::jxx::Ptr<V>& value) {
+        const auto objectKey = ::jxx::CAST<::jxx::lang::Object>(key);
+        ::jxx::Ptr<V> current = get(objectKey);
+        if (current != nullptr || containsKey(objectKey)) {
+            return put(key, value);
+        }
         return nullptr;
     }
 
@@ -152,7 +157,7 @@ public:
                 put(key, newValue);
                 return newValue;
             }
-            remove(::jxx::CAST<::jxx::lang::Object>(key));
+            remove(key);
         }
         return nullptr;
     }
@@ -162,8 +167,7 @@ public:
         ::jxx::Ptr<V> oldValue = get(::jxx::CAST<::jxx::lang::Object>(key));
         ::jxx::Ptr<V> newValue = remappingFunction->apply(key, oldValue);
         if (newValue == nullptr) {
-            const auto objectKey = ::jxx::CAST<::jxx::lang::Object>(key);
-            if (oldValue != nullptr || containsKey(objectKey)) remove(objectKey);
+            if (oldValue != nullptr || containsKey(key)) remove(key);
             return nullptr;
         }
         put(key, newValue);
@@ -175,7 +179,7 @@ public:
         ::jxx::Ptr<V> oldValue = get(::jxx::CAST<::jxx::lang::Object>(key));
         ::jxx::Ptr<V> newValue = (oldValue == nullptr) ? value : remappingFunction->apply(oldValue, value);
         if (newValue == nullptr) {
-            remove(::jxx::CAST<::jxx::lang::Object>(key));
+            remove(key);
             return nullptr;
         }
         put(key, newValue);
