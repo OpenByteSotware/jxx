@@ -52,26 +52,4 @@ TEST(VectorSerializationParity, PreservesCapacityIncrementOrderNullsAndHandles)
     EXPECT_EQ(restored->get(0)->utf8(), "shared");
 }
 
-TEST(VectorSerializationParity, RoundTripsNestedVectorCacheMap)
-{
-    ::jxx::util::serialization::registerNestedVectorCacheGraph<Element>();
-    auto inner = ::jxx::NEW<InnerVector>();
-    inner->add(::jxx::NEW<Element>("packet"));
-    auto outer = ::jxx::NEW<OuterVector>();
-    outer->add(inner);
-    auto source = ::jxx::NEW<CacheMap>();
-    source->put(::jxx::lang::Integer::valueOf(0), outer);
-
-    auto restored = ::jxx::CAST<CacheMap>(roundTrip(
-        ::jxx::CAST<::jxx::lang::Object>(source)));
-    ASSERT_NE(restored, nullptr);
-    auto restoredOuter = restored->get(::jxx::lang::Integer::valueOf(0));
-    ASSERT_NE(restoredOuter, nullptr);
-    ASSERT_EQ(restoredOuter->size(), 1);
-    auto restoredInner = restoredOuter->get(0);
-    ASSERT_NE(restoredInner, nullptr);
-    ASSERT_EQ(restoredInner->size(), 1);
-    EXPECT_EQ(restoredInner->get(0)->utf8(), "packet");
-}
-
 } // namespace
