@@ -218,14 +218,17 @@ namespace com::google::gson
 			throw JsonSyntaxException(exception.getMessage());
 		}
 		if (tree == nullptr || tree->isJsonNull()) return nullptr;
-		if (const auto adapter = getAdapter(classOfT))
-			return adapter->fromJsonTree(tree);
+		// Raw LinkedTreeMap.class requires Gson's untyped object materialization.
+		// Handle it before adapter lookup because the generic tree adapter cannot
+		// instantiate the erased map and otherwise throws before this branch.
 		if (requestsLinkedTreeMap(classOfT)) {
 			if (!tree->isJsonObject())
 				throw JsonSyntaxException(::jxx::NEW<::jxx::lang::String>(
 					"Expected JSON object for LinkedTreeMap"));
 			return materializeUntyped(tree);
 		}
+		if (const auto adapter = getAdapter(classOfT))
+			return adapter->fromJsonTree(tree);
 		return fromJsonTree(tree, classOfT);
 	}
 
