@@ -101,10 +101,14 @@ TEST(GsonFromJsonClassTest, RejectsNullArguments)
     EXPECT_THROW(gson->fromJson(reader("{}"), nullptr),
                  ::jxx::lang::NullPointerException);
 }
-
 TEST(GsonFromJsonClassTest, RejectsMalformedInput)
 {
-    const auto gson = ::jxx::NEW<::com::google::gson::Gson>();
-    EXPECT_THROW(gson->fromJson(reader("{\"x\":"), ErasedMap::Class()),
-                 ::jxx::lang::RuntimeException);
+    const auto gson =
+        ::jxx::NEW<::com::google::gson::Gson>();
+
+    EXPECT_THROW(
+        gson->fromJson(
+            reader("{\"x\":"),
+            ErasedMap::Class()),
+        ::com::google::gson::JsonSyntaxException);
 }

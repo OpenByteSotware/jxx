@@ -181,37 +181,48 @@ std::string JsonReader::readLiteral_() {
 
 JsonToken JsonReader::peek() {
     ensureOpen_();
-    skipWhitespace_();
+    readAll_();
+
+    auto probe = position_;
+    const auto skipProbeWhitespace = [&]() {
+        while (probe < json_.size() &&
+               std::isspace(static_cast<unsigned char>(json_[probe]))) {
+            ++probe;
+        }
+    };
+    skipProbeWhitespace();
+
     if (!stack_.empty()) {
-        auto& frame = stack_.back();
+        const auto& frame = stack_.back();
         if (frame.scope == Scope::ARRAY) {
-            auto probe = position_;
-            while (probe < json_.size() && std::isspace(static_cast<unsigned char>(json_[probe]))) ++probe;
             if (!frame.first && probe < json_.size() && json_[probe] == ',') {
                 ++probe;
-                while (probe < json_.size() && std::isspace(static_cast<unsigned char>(json_[probe]))) ++probe;
+                skipProbeWhitespace();
             }
-            if (probe < json_.size() && json_[probe] == ']') return JsonToken::END_ARRAY;
-        } else {
-            auto probe = position_;
-            while (probe < json_.size() && std::isspace(static_cast<unsigned char>(json_[probe]))) ++probe;
-            if (frame.expectName) {
-                if (!frame.first && probe < json_.size() && json_[probe] == ',') {
-                    ++probe;
-                    while (probe < json_.size() && std::isspace(static_cast<unsigned char>(json_[probe]))) ++probe;
-                }
-                if (probe < json_.size() && json_[probe] == '}') return JsonToken::END_OBJECT;
-                return JsonToken::NAME;
+            if (probe < json_.size() && json_[probe] == ']')
+                return JsonToken::END_ARRAY;
+        } else if (frame.expectName) {
+            if (!frame.first && probe < json_.size() && json_[probe] == ',') {
+                ++probe;
+                skipProbeWhitespace();
             }
+            if (probe < json_.size() && json_[probe] == '}')
+                return JsonToken::END_OBJECT;
+            return JsonToken::NAME;
         }
     }
-    const auto current = current_();
-    if (current == '\0') return JsonToken::END_DOCUMENT;
+
+    if (probe >= json_.size()) return JsonToken::END_DOCUMENT;
+    const auto current = json_[probe];
     if (current == '{') return JsonToken::BEGIN_OBJECT;
     if (current == '[') return JsonToken::BEGIN_ARRAY;
-    if (current == '"' || (lenient_ && current == '\'')) return JsonToken::STRING;
-    if (json_.compare(position_, 4U, "true") == 0 || json_.compare(position_, 5U, "false") == 0) return JsonToken::BOOLEAN;
-    if (json_.compare(position_, 4U, "null") == 0) return JsonToken::NULL_VALUE;
+    if (current == '"' || (lenient_ && current == '\''))
+        return JsonToken::STRING;
+    if (json_.compare(probe, 4U, "true") == 0 ||
+        json_.compare(probe, 5U, "false") == 0)
+        return JsonToken::BOOLEAN;
+    if (json_.compare(probe, 4U, "null") == 0)
+        return JsonToken::NULL_VALUE;
     return JsonToken::NUMBER;
 }
 
