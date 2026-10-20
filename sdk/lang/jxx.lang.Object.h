@@ -247,14 +247,16 @@ namespace jxx
         {
             total_size_ = 1;
             for (const auto dimension : shape_) {
-                if (dimension == 0) {
-                    throw std::invalid_argument("Dimension size must be > 0");
-                }
                 total_size_ *= dimension;
             }
-            data_ = std::shared_ptr<T>(
-                new T[total_size_](),
-                std::default_delete<T[]>());
+            if (total_size_ == 0) {
+                data_.reset();
+            }
+            else {
+                data_ = std::shared_ptr<T>(
+                    new T[total_size_](),
+                    std::default_delete<T[]>());
+            }
         }
 
         template <typename... Indices>

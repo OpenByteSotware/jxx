@@ -5,7 +5,10 @@
 
 #include "awt/jxx.awt.Rectangle.h"
 #include "awt/geom/jxx.awt.geom.Point2D.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.NegativeArraySizeException.h"
 
 namespace jxx::awt
 {
@@ -34,7 +37,32 @@ namespace jxx::awt
     ::jxx::lang::jbool Polygon::contains(const ::jxx::Ptr<::jxx::awt::geom::Rectangle2D>&)const{return false;}
     ::jxx::Ptr<::jxx::awt::geom::PathIterator> Polygon::getPathIterator(const ::jxx::Ptr<::jxx::awt::geom::AffineTransform>&)const{return nullptr;}
     ::jxx::Ptr<::jxx::awt::geom::PathIterator> Polygon::getPathIterator(const ::jxx::Ptr<::jxx::awt::geom::AffineTransform>&,::jxx::lang::jdouble)const{return nullptr;}
-    void Polygon::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>&){}
-    void Polygon::readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>&){reset();}
-    void Polygon::readObjectNoData(){reset();}
+    void Polygon::writeObject(
+        const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out)
+    {
+        if (out == nullptr) return;
+        out->writeInt(npoints);
+        for (::jxx::lang::jint index = 0; index < npoints; ++index)
+        {
+            out->writeInt((*xpoints)[index]);
+            out->writeInt((*ypoints)[index]);
+        }
+    }
+
+    void Polygon::readObject(
+        const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in)
+    {
+        reset();
+        if (in == nullptr) return;
+        const auto count = in->readInt();
+        if (count < 0)
+            throw ::jxx::lang::NegativeArraySizeException("npoints");
+        for (::jxx::lang::jint index = 0; index < count; ++index)
+            addPoint(in->readInt(), in->readInt());
+    }
+
+    void Polygon::readObjectNoData()
+    {
+        reset();
+    }
 }
