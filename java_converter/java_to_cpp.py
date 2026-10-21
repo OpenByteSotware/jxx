@@ -66,6 +66,7 @@ class Translator:
         self.package=''; self.current_class=''; self.current_return='void'
         self.known_types:Set[str]=set(); self.static_fields:Set[str]=set()
         self.main_owner_names:Set[str]=set()
+        self.main_entries:Dict[str,str]={}
         self.generated_files:List[Path]=[]
 
     @staticmethod
@@ -137,34 +138,18 @@ class Translator:
             primitive=True)
 
     @staticmethod
-    def detect_main_owners(source: str) -> Set[str]:
-        # Lexically associate valid source entry methods with their containing
-        # class. This supplements javalang because post-identifier array
-        # declarators such as `String args []` are not represented consistently.
-        tokens=list(re.finditer(r'\b(class|interface|enum)\s+([A-Za-z_$][\w$]*)|[{}]', source))
-        owners:set[str]=set()
-        stack=[]
-        pending=None
-        for token in tokens:
-            kind=token.group(1)
-            if kind:
-                pending=(kind,token.group(2))
-                continue
-            symbol=token.group(0)
-            if symbol=='{':
-                stack.append(pending)
-                pending=None
-            elif symbol=='}' and stack:
-                stack.pop()
-        # Use balanced class bodies so package-private classes whose names do
-        # not match the source filename are handled correctly.
+    def detect_main_entries(source: str) -> Dict[str,str]:
+        """Return {containing_class: parameter_name} for source entry methods."""
         declaration=re.compile(r'\bclass\s+([A-Za-z_$][\w$]*)[^{}]*\{')
         main_signature=re.compile(
             r'\bpublic\s+(?:(?:final|synchronized|strictfp)\s+)*static\s+'
             r'(?:(?:final|synchronized|strictfp)\s+)*void\s+main\s*\('
-            r'\s*String\s*(?:\[\s*\]\s*[A-Za-z_$][\w$]*|'
-            r'[A-Za-z_$][\w$]*\s*\[\s*\]|\.\.\.\s*[A-Za-z_$][\w$]*)'
+            r'\s*String\s*(?:'
+            r'\[\s*\]\s*(?P<before>[A-Za-z_$][\w$]*)|'
+            r'(?P<after>[A-Za-z_$][\w$]*)\s*\[\s*\]|'
+            r'\.\.\.\s*(?P<varargs>[A-Za-z_$][\w$]*))'
             r'\s*\)')
+        entries:Dict[str,str]={}
         for match in declaration.finditer(source):
             depth=1
             index=match.end()
@@ -173,9 +158,16 @@ class Translator:
                 elif source[index]=='}': depth-=1
                 index+=1
             body=source[match.end():max(match.end(),index-1)]
-            if main_signature.search(body):
-                owners.add(match.group(1))
-        return owners
+            entry=main_signature.search(body)
+            if entry:
+                entries[match.group(1)]=(entry.group('before') or
+                                         entry.group('after') or
+                                         entry.group('varargs'))
+        return entries
+
+    @staticmethod
+    def detect_main_owners(source: str) -> Set[str]:
+        return set(Translator.detect_main_entries(source))
 
     def gather(self,tree):
         self.package=tree.package.name if tree.package else ''
@@ -200,9 +192,6 @@ class Translator:
         if type(m).__name__ != 'MethodDeclaration' or m.name != 'main':
             return False
         if owner_name in self.main_owner_names:
-            # detect_main_owners() already validated the complete source entry
-            # signature. Treat that result as authoritative because javalang
-            # can lose dimensions for the `String args []` spelling.
             return True
         mods=set(getattr(m,'modifiers',None) or [])
         if not {'public','static'}.issubset(mods): return False
@@ -382,7 +371,7 @@ class Translator:
         if ns:o.exit();o.w(f'}} // namespace {ns}')
         return o.text()
 
-    def main_source(self, owner, method, header_inc)->str:
+    def main_source(self, owner_name, parameter_name, header_inc)->str:
         o=Emit()
         o.w(f'#include "{header_inc}"')
         o.w('#include <cstdint>')
@@ -390,9 +379,8 @@ class Translator:
         o.w('#include "lang/jxx.lang.String.h"')
         o.w('#include "lang/jxx.lang.Throwable.h"')
         o.w()
-        parameter_name=method.parameters[0].name
         ns=('jxx::'+self.package.replace('.', '::')) if self.package else ''
-        target=f'::{ns}::{owner.name}' if ns else owner.name
+        target=f'::{ns}::{owner_name}' if ns else owner_name
         o.w('// Native C++ process entry point for this converted source main.')
         o.w('int main(int argc, char** argv) {')
         o.enter();o.w('try {');o.enter()
@@ -414,7 +402,8 @@ class Translator:
         return o.text()
 
     def translate(self,src,out_root,stem):
-        self.main_owner_names=self.detect_main_owners(src)
+        self.main_entries=self.detect_main_entries(src)
+        self.main_owner_names=set(self.main_entries)
         tree=javalang.parse.parse(src);self.gather(tree)
         pkg=tree.package.name if tree.package else ''; rel=Path(*pkg.split('.')) if pkg else Path()
         output_dir=Path(out_root)/rel
@@ -436,36 +425,17 @@ class Translator:
         cp.write_text(self.source(tree,header_inc),encoding='utf-8')
         self.generated_files=[hp,cp]
 
-        # Drive wrapper generation from the lexically validated owner names.
-        # The AST supplies declarations and bodies, but does not decide whether
-        # a source entry point exists.
-        classes_by_name={
-            owner.name:owner for owner in self.class_declarations(tree)
-        }
-        for owner_name in sorted(self.main_owner_names):
-            owner=classes_by_name.get(owner_name)
-            if owner is None:
+        # Wrapper generation is driven entirely by the validated source scan.
+        # It does not depend on javalang retaining the main method in owner.body.
+        parsed_classes={owner.name for owner in self.class_declarations(tree)}
+        for owner_name,parameter_name in sorted(self.main_entries.items()):
+            if owner_name not in parsed_classes:
                 self.diag.append(
-                    f'cannot generate {owner_name}_main.cpp: class declaration '
-                    'was not found in the parsed compilation unit')
-                continue
-            main_methods=[
-                method for method in getattr(owner,'body',None) or []
-                if type(method).__name__=='MethodDeclaration'
-                and getattr(method,'name',None)=='main'
-            ]
-            if not main_methods:
-                self.diag.append(
-                    f'cannot generate {owner_name}_main.cpp: main method '
-                    'was not found in the parsed class body')
-                continue
-            if len(main_methods)>1:
-                self.diag.append(
-                    f'multiple source main methods found in {owner_name}; '
-                    'the first source entry method is used')
+                    f'generating {owner_name}_main.cpp from source detection; '
+                    'the class was not returned by the AST class iterator')
             wrapper=output_dir/f'{owner_name}_main.cpp'
             wrapper.write_text(
-                self.main_source(owner,main_methods[0],header_inc),
+                self.main_source(owner_name,parameter_name,header_inc),
                 encoding='utf-8')
             self.generated_files.append(wrapper)
         return hp,cp
