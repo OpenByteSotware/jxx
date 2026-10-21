@@ -161,8 +161,17 @@ class Translator:
         if len(params) != 1: return False
         param=params[0]
         if self.simple(self.name_of(param.type)) != 'String': return False
-        dims=len(getattr(param.type,'dimensions',None) or []) + len(getattr(param,'dimensions',None) or [])
-        return bool(getattr(param,'varargs',False) or dims == 1)
+        dims=(len(getattr(param.type,'dimensions',None) or []) +
+              len(getattr(param,'dimensions',None) or []))
+        if getattr(param,'varargs',False) or dims == 1:
+            return True
+        # javalang does not consistently retain post-identifier array
+        # declarators in formal parameters. In particular, `String args []`
+        # can be exposed as a String parameter with no dimensions. A public
+        # static void main with exactly one String parameter is treated as the
+        # source entry point so all three accepted spellings generate a native
+        # wrapper: String[] args, String args[], and String... args.
+        return dims == 0
 
     def java_main_arg_type(self) -> str:
         return (
