@@ -1,5 +1,5 @@
 #include "ext/net/jxx.ext.net.SocketFactory.h"
-#include "ext/net/internal.DefaultSocketFactory.h"
+#include "ext/net/internal/internal.DefaultSocketFactory.h"
 #include "net/jxx.net.Socket.h"
 namespace jxx::ext::net {
 

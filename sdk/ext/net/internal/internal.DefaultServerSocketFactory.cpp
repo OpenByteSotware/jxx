@@ -1,4 +1,4 @@
-#include "ext/net/internal.DefaultServerSocketFactory.h"
+#include "ext/net/internal/internal.DefaultServerSocketFactory.h"
 
 #include "net/jxx.net.ServerSocket.h"
 
