@@ -66,6 +66,7 @@ class Translator:
         self.package=''; self.current_class=''; self.current_return='void'
         self.known_types:Set[str]=set(); self.static_fields:Set[str]=set()
         self.main_owner_names:Set[str]=set()
+        self.generated_files:List[Path]=[]
 
     @staticmethod
     def simple(n): return str(n).split('.')[-1]
@@ -199,9 +200,10 @@ class Translator:
         if type(m).__name__ != 'MethodDeclaration' or m.name != 'main':
             return False
         if owner_name in self.main_owner_names:
-            mods=set(getattr(m,'modifiers',None) or [])
-            return {'public','static'}.issubset(mods) and \
-                self.name_of(getattr(m,'return_type',None)) == 'void'
+            # detect_main_owners() already validated the complete source entry
+            # signature. Treat that result as authoritative because javalang
+            # can lose dimensions for the `String args []` spelling.
+            return True
         mods=set(getattr(m,'modifiers',None) or [])
         if not {'public','static'}.issubset(mods): return False
         if self.name_of(getattr(m,'return_type',None)) != 'void': return False
@@ -432,21 +434,40 @@ class Translator:
         hp.write_text(self.header(tree),encoding='utf-8')
         header_inc=os.path.relpath(hp,cp.parent).replace(os.sep,'/')
         cp.write_text(self.source(tree,header_inc),encoding='utf-8')
-        for owner in self.class_declarations(tree):
-            main_methods=[m for m in owner.body or [] if self.is_java_main(m,owner.name)]
-            if not main_methods:
-                continue
-            if len(main_methods) > 1:
+        self.generated_files=[hp,cp]
+
+        # Drive wrapper generation from the lexically validated owner names.
+        # The AST supplies declarations and bodies, but does not decide whether
+        # a source entry point exists.
+        classes_by_name={
+            owner.name:owner for owner in self.class_declarations(tree)
+        }
+        for owner_name in sorted(self.main_owner_names):
+            owner=classes_by_name.get(owner_name)
+            if owner is None:
                 self.diag.append(
-                    f'multiple source main methods found in {owner.name}; '
-                    'the first valid entry signature is used')
-            wrapper=output_dir/f'{owner.name}_main.cpp'
+                    f'cannot generate {owner_name}_main.cpp: class declaration '
+                    'was not found in the parsed compilation unit')
+                continue
+            main_methods=[
+                method for method in getattr(owner,'body',None) or []
+                if type(method).__name__=='MethodDeclaration'
+                and getattr(method,'name',None)=='main'
+            ]
+            if not main_methods:
+                self.diag.append(
+                    f'cannot generate {owner_name}_main.cpp: main method '
+                    'was not found in the parsed class body')
+                continue
+            if len(main_methods)>1:
+                self.diag.append(
+                    f'multiple source main methods found in {owner_name}; '
+                    'the first source entry method is used')
+            wrapper=output_dir/f'{owner_name}_main.cpp'
             wrapper.write_text(
                 self.main_source(owner,main_methods[0],header_inc),
                 encoding='utf-8')
-        found_owners={owner.name for owner in self.class_declarations(tree)}
-        for missing in sorted(self.main_owner_names-found_owners):
-            self.diag.append(f'source main owner {missing} was not present in parsed class declarations')
+            self.generated_files.append(wrapper)
         return hp,cp
 
 def _contains_native_main(source: Path) -> bool:
@@ -558,7 +579,8 @@ def generate_cmake(out_root: str, project: str = 'TranspiledProject',
 def translate_file(path:Path,out_root:str):
     src=path.read_text(encoding='utf-8')
     t=Translator(); h,c=t.translate(src,out_root,path.stem)
-    print(f'Wrote {h}\nWrote {c}')
+    for generated in t.generated_files:
+        print(f'Wrote {generated}')
     for d in t.diag: print(f'{path}: WARNING: {d}',file=sys.stderr)
 
 def main():
