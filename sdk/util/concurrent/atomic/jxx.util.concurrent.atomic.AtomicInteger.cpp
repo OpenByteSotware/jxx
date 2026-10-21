@@ -1,6 +1,9 @@
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.AtomicInteger.h"
 
 #include <string>
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
 namespace jxx::util::concurrent::atomic {
 ::jxx::Ptr<::jxx::lang::ClassAny> AtomicInteger::Class() { return JxxClassInfoMarker::Class(); }
@@ -23,4 +26,24 @@ void AtomicInteger::lazySet(::jxx::lang::jint v) noexcept { value_.store(v,std::
 ::jxx::lang::jfloat AtomicInteger::floatValue() const { return static_cast<::jxx::lang::jfloat>(get()); }
 ::jxx::lang::jdouble AtomicInteger::doubleValue() const { return static_cast<::jxx::lang::jdouble>(get()); }
 ::jxx::Ptr<::jxx::lang::String> AtomicInteger::toString() const { return ::jxx::NEW<::jxx::lang::String>(std::to_string(get())); }
+void AtomicInteger::writeObject(
+    const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) {
+    if (output == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+    output->writeInt(get());
+}
+
+void AtomicInteger::readObject(
+    const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) {
+    if (input == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+    set(input->readInt());
+}
+
+void AtomicInteger::readObjectNoData() {
+    set(0);
+}
+
 } // namespace jxx::util::concurrent::atomic

@@ -1,5 +1,8 @@
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.AtomicBoolean.h"
 
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
 
 namespace jxx::util::concurrent::atomic {
@@ -34,6 +37,26 @@ void AtomicBoolean::lazySet(::jxx::lang::jbool value) noexcept {
 }
 ::jxx::Ptr<::jxx::lang::String> AtomicBoolean::toString() const {
     return ::jxx::NEW<::jxx::lang::String>(get() ? "true" : "false");
+}
+
+void AtomicBoolean::writeObject(
+    const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) {
+    if (output == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+    output->writeBoolean(get());
+}
+
+void AtomicBoolean::readObject(
+    const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) {
+    if (input == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+    set(input->readBoolean());
+}
+
+void AtomicBoolean::readObjectNoData() {
+    set(false);
 }
 
 } // namespace jxx::util::concurrent::atomic

@@ -22,13 +22,28 @@ void initializeClasses()
 {
     static std::once_flag flag;
     std::call_once(flag, [] {
-        (void)::jxx::lang::ClassBase<AtomicBoolean, ::jxx::lang::Object>::Class();
-        (void)::jxx::lang::ClassBase<AtomicInteger, ::jxx::lang::Number>::Class();
+        (void)::jxx::lang::ClassBase<
+            AtomicBoolean, ::jxx::lang::Object, ::jxx::io::SerializableI>::Class();
+        ::jxx::io::serialization::registerSerializableClass<AtomicBoolean>(
+            static_cast<::jxx::lang::jlong>(4654671469794556979LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            AtomicBoolean, 1U, 2U>();
+        (void)::jxx::lang::ClassBase<
+            AtomicInteger, ::jxx::lang::Number, ::jxx::io::SerializableI>::Class();
+        ::jxx::io::serialization::registerSerializableClass<AtomicInteger>(
+            static_cast<::jxx::lang::jlong>(6214790243416807050LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            AtomicInteger, 1U, 2U>();
         (void)::jxx::lang::ClassBase<AtomicIntegerArray, ::jxx::lang::Object, ::jxx::io::SerializableI>::Class();
         ::jxx::io::serialization::registerSerializableClass<AtomicIntegerArray>(
             1,
             [] { return ::jxx::NEW<AtomicIntegerArray>(0); });
-        (void)::jxx::lang::ClassBase<AtomicLong, ::jxx::lang::Number>::Class();
+        (void)::jxx::lang::ClassBase<
+            AtomicLong, ::jxx::lang::Number, ::jxx::io::SerializableI>::Class();
+        ::jxx::io::serialization::registerSerializableClass<AtomicLong>(
+            static_cast<::jxx::lang::jlong>(1927816293512124184LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            AtomicLong, 1U, 2U>();
         (void)::jxx::lang::ClassBase<AtomicLongArray, ::jxx::lang::Object, ::jxx::io::SerializableI>::Class();
         ::jxx::io::serialization::registerSerializableClass<AtomicLongArray>(
             1,

@@ -1,6 +1,9 @@
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.AtomicLong.h"
 
 #include <string>
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
 namespace jxx::util::concurrent::atomic {
 ::jxx::Ptr<::jxx::lang::ClassAny> AtomicLong::Class() { return JxxClassInfoMarker::Class(); }
@@ -23,4 +26,24 @@ void AtomicLong::lazySet(::jxx::lang::jlong v) noexcept { value_.store(v,std::me
 ::jxx::lang::jfloat AtomicLong::floatValue() const { return static_cast<::jxx::lang::jfloat>(get()); }
 ::jxx::lang::jdouble AtomicLong::doubleValue() const { return static_cast<::jxx::lang::jdouble>(get()); }
 ::jxx::Ptr<::jxx::lang::String> AtomicLong::toString() const { return ::jxx::NEW<::jxx::lang::String>(std::to_string(get())); }
+void AtomicLong::writeObject(
+    const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) {
+    if (output == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+    output->writeLong(get());
+}
+
+void AtomicLong::readObject(
+    const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) {
+    if (input == nullptr) {
+        throw ::jxx::lang::NullPointerException();
+    }
+    set(input->readLong());
+}
+
+void AtomicLong::readObjectNoData() {
+    set(0);
+}
+
 } // namespace jxx::util::concurrent::atomic
