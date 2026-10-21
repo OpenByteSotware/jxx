@@ -126,7 +126,11 @@ std::vector<::jxx::Ptr<Node>> select(const ::jxx::Ptr<Node>& context, const std:
     }
     std::vector<::jxx::Ptr<Node>> current{root};
     std::size_t stepIndex = 0U;
-    if (absolute && named(root, steps.front())) stepIndex = 1U;
+    if (!absolute && steps.front() == ".") {
+        stepIndex = 1U;
+    } else if (absolute && named(root, steps.front())) {
+        stepIndex = 1U;
+    }
     for (; stepIndex < steps.size(); ++stepIndex) {
         std::vector<::jxx::Ptr<Node>> next;
         for (const auto& node : current) {
