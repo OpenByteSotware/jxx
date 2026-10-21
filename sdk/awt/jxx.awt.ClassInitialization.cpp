@@ -1,12 +1,5 @@
 #include "awt/jxx.awt.ClassInitialization.h"
-#include "awt/event/jxx.awt.event.ComponentEvent.h"
-#include "awt/event/jxx.awt.event.ContainerEvent.h"
-#include "awt/event/jxx.awt.event.FocusEvent.h"
-#include "awt/event/jxx.awt.event.HierarchyEvent.h"
-#include "awt/event/jxx.awt.event.InputEvent.h"
-#include "awt/event/jxx.awt.event.KeyEvent.h"
-#include "awt/event/jxx.awt.event.MouseEvent.h"
-#include "awt/event/jxx.awt.event.MouseWheelEvent.h"
+#include "awt/event/jxx.awt.event.ClassInitialization.h"
 #include "awt/jxx.awt.AWTEvent.h"
 #include "awt/jxx.awt.AlphaComposite.h"
 #include "awt/jxx.awt.BasicStroke.h"
@@ -32,6 +25,14 @@
 #include "awt/jxx.awt.Container.h"
 #include "awt/jxx.awt.Polygon.h"
 #include "awt/jxx.awt.Toolkit.h"
+#include "awt/jxx.awt.Composite.h"
+#include "awt/jxx.awt.CompositeContext.h"
+#include "awt/jxx.awt.LayoutManager.h"
+#include "awt/jxx.awt.Paint.h"
+#include "awt/jxx.awt.PaintContext.h"
+#include "awt/jxx.awt.Shape.h"
+#include "awt/jxx.awt.Stroke.h"
+#include "awt/jxx.awt.Transparency.h"
 #include "io/jxx.io.ArrayCodecRegistry.h"
 #include "io/jxx.io.SerializationClassRegistry.h"
 
@@ -45,14 +46,6 @@ namespace jxx::awt
         std::call_once(flag, []()
         {
             (void)::jxx::awt::AWTEvent::Class();
-            (void)::jxx::awt::event::ComponentEvent::Class();
-            (void)::jxx::awt::event::ContainerEvent::Class();
-            (void)::jxx::awt::event::FocusEvent::Class();
-            (void)::jxx::awt::event::HierarchyEvent::Class();
-            (void)::jxx::awt::event::InputEvent::Class();
-            (void)::jxx::awt::event::KeyEvent::Class();
-            (void)::jxx::awt::event::MouseEvent::Class();
-            (void)::jxx::awt::event::MouseWheelEvent::Class();
             (void)::jxx::awt::AlphaComposite::Class();
             (void)::jxx::awt::BasicStroke::Class();
             (void)::jxx::awt::BufferCapabilities::Class();
@@ -61,7 +54,10 @@ namespace jxx::awt
             ::jxx::io::serialization::registerSerializableClass<
                 ::jxx::awt::Color>(
                     static_cast<::jxx::lang::jlong>(118526816881161077LL),
-                    [] { return ::jxx::NEW<::jxx::awt::Color>(0); });
+                    []
+ {
+     return ::jxx::NEW<::jxx::awt::Color>(0);
+ });
             ::jxx::io::serialization::registerClassReferenceArrayCodecs<
                 ::jxx::awt::Color, 1U, 2U>();
             (void)::jxx::awt::ComponentOrientation::Class();
@@ -91,6 +87,14 @@ namespace jxx::awt
                     static_cast<::jxx::lang::jlong>(-6460061437900069969LL));
             ::jxx::io::serialization::registerClassReferenceArrayCodecs<
                 ::jxx::awt::Polygon, 1U, 2U>();
+            (void)::jxx::awt::Composite::Class();
+            (void)::jxx::awt::CompositeContext::Class();
+            (void)::jxx::awt::LayoutManager::Class();
+            (void)::jxx::awt::Paint::Class();
+            (void)::jxx::awt::PaintContext::Class();
+            (void)::jxx::awt::Shape::Class();
+            (void)::jxx::awt::Stroke::Class();
+            (void)::jxx::awt::Transparency::Class();
             (void)::jxx::awt::Toolkit::Class();
         });
     }
@@ -98,6 +102,8 @@ namespace jxx::awt
     void initialize()
     {
         initializeClasses();
+        ::jxx::awt::event::initialize();
+        ::jxx::awt::geom::initialize();
         ::jxx::awt::image::initialize();
     }
 }

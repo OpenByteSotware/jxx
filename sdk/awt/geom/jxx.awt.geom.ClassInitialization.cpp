@@ -8,6 +8,7 @@
 #include "awt/geom/jxx.awt.geom.Rectangle2D.h"
 #include "awt/geom/jxx.awt.geom.RectangularShape.h"
 #include "awt/geom/jxx.awt.geom.NoninvertibleTransformException.h"
+#include "awt/geom/jxx.awt.geom.PathIterator.h"
 #include "awt/geom/jxx.awt.geom.Point2D.h"
 #include "io/jxx.io.SerializationClassRegistry.h"
 #include "lang/jxx.lang.ClassInfo.h"
@@ -35,6 +36,7 @@ namespace jxx::awt::geom
             ::jxx::lang::class_info_detail::registerClassInfo<Point2D::Float>();
             ::jxx::lang::class_info_detail::registerClassInfo<Point2D::Double>();
             (void)NoninvertibleTransformException::Class();
+            ::jxx::lang::class_info_detail::registerClassInfo<PathIterator>();
 
             ::jxx::io::serialization::registerSerializableClass<Point2D::Float>(
                 static_cast<::jxx::lang::jlong>(-2870572449815403710LL));
