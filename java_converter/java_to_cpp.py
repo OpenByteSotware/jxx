@@ -186,7 +186,7 @@ class Translator:
         if any(self.is_java_main(m,t.name)
                for t in self.class_declarations(tree)
                for m in getattr(t,'body',None) or []):
-            self.includes.update({'jxx.h','lang/jxx.lang.String.h','lang/jxx.lang.Throwable.h'})
+            self.includes.update({'lang/jxx.lang.System.h','lang/jxx.lang.String.h','lang/jxx.lang.Throwable.h'})
 
     def is_java_main(self, m, owner_name: Optional[str] = None) -> bool:
         if type(m).__name__ != 'MethodDeclaration' or m.name != 'main':
@@ -375,9 +375,10 @@ class Translator:
         o=Emit()
         o.w(f'#include "{header_inc}"')
         o.w('#include <cstdint>')
-        o.w('#include "jxx.h"')
+        o.w('#include "jxx.initialize.h"')
         o.w('#include "lang/jxx.lang.String.h"')
         o.w('#include "lang/jxx.lang.Throwable.h"')
+        o.w('#include "lang/jxx.lang.System.h"')
         o.w()
         ns=('jxx::'+self.package.replace('.', '::')) if self.package else ''
         target=f'::{ns}::{owner_name}' if ns else owner_name
