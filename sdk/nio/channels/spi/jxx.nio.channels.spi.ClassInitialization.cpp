@@ -5,6 +5,7 @@
 #include "nio/channels/spi/jxx.nio.channels.spi.AbstractSelectionKey.h"
 #include "nio/channels/spi/jxx.nio.channels.spi.AbstractSelector.h"
 #include "nio/channels/spi/jxx.nio.channels.spi.SelectorProvider.h"
+#include "nio/channels/spi/internal/jxx.nio.channels.spi.internal.ClassInitialization.h"
 namespace jxx::nio::channels::spi {
 void initializeClasses()
 {
@@ -21,6 +22,7 @@ void initializeClasses()
 void initialize()
 {
     initializeClasses();
+    ::jxx::nio::channels::spi::internal::initialize();
 }
 
 }

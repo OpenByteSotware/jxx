@@ -108,8 +108,6 @@ void initializeClasses()
         registerType<ThreadLocalRandom>();
         registerType<ThreadPoolExecutor>();
         registerType<TimeoutException>();
-        ::jxx::util::concurrent::atomic::initialize();
-        ::jxx::util::concurrent::locks::initialize();
     });
 }
 
@@ -117,6 +115,8 @@ void initializeClasses()
 void initialize()
 {
     initializeClasses();
+    ::jxx::util::concurrent::atomic::initialize();
+    ::jxx::util::concurrent::locks::initialize();
 }
 
 } // namespace jxx::util::concurrent

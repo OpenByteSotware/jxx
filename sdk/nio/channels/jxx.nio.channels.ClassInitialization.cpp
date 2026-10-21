@@ -33,6 +33,7 @@
 #include "nio/channels/jxx.nio.channels.SeekableByteChannel.h"
 #include "nio/channels/jxx.nio.channels.WritableByteChannel.h"
 
+#include "nio/channels/spi/jxx.nio.channels.spi.ClassInitialization.h"
 namespace jxx::nio::channels {
 namespace {
 
@@ -85,6 +86,7 @@ void initializeClasses()
 void initialize()
 {
     initializeClasses();
+    ::jxx::nio::channels::spi::initialize();
 }
 
 } // namespace jxx::nio::channels

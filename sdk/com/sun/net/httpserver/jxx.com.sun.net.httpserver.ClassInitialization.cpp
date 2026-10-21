@@ -17,16 +17,16 @@
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.Filter.h"
 #include "com/sun/net/httpserver/jxx.com.sun.net.httpserver.HttpContext.h"
 
+#include "com/sun/net/httpserver/internal/jxx.com.sun.net.httpserver.internal.ClassInitialization.h"
+#include "com/sun/net/httpserver/spi/jxx.com.sun.net.httpserver.spi.ClassInitialization.h"
 namespace jxx::com::sun::net::httpserver {
-namespace {
+
 
 template <typename T>
 void registerType()
 {
     ::jxx::lang::class_info_detail::registerClassInfo<T>();
 }
-
-} // namespace
 
 void initializeClasses()
 {
@@ -56,6 +56,8 @@ void initializeClasses()
 void initialize()
 {
     initializeClasses();
+    ::jxx::com::sun::net::httpserver::internal::initialize();
+    ::jxx::com::sun::net::httpserver::spi::initialize();
 }
 
 } // namespace jxx::com::sun::net::httpserver

@@ -31,6 +31,12 @@
 #include "org/w3c/dom/jxx.org.w3c.dom.TypeInfo.h"
 #include "org/w3c/dom/jxx.org.w3c.dom.UserDataHandler.h"
 
+#include "org/w3c/dom/bootstrap/jxx.org.w3c.dom.bootstrap.ClassInitialization.h"
+#include "org/w3c/dom/events/jxx.org.w3c.dom.events.ClassInitialization.h"
+#include "org/w3c/dom/internal/jxx.org.w3c.dom.internal.ClassInitialization.h"
+#include "org/w3c/dom/ls/jxx.org.w3c.dom.ls.ClassInitialization.h"
+#include "org/w3c/dom/traversal/jxx.org.w3c.dom.traversal.ClassInitialization.h"
+#include "org/w3c/dom/views/jxx.org.w3c.dom.views.ClassInitialization.h"
 namespace jxx::org::w3c::dom {
 
 void initializeClasses() {
@@ -71,6 +77,12 @@ void initializeClasses() {
 void initialize()
 {
     initializeClasses();
+    ::jxx::org::w3c::dom::bootstrap::initialize();
+    ::jxx::org::w3c::dom::events::initialize();
+    ::jxx::org::w3c::dom::internal::initialize();
+    ::jxx::org::w3c::dom::ls::initialize();
+    ::jxx::org::w3c::dom::traversal::initialize();
+    ::jxx::org::w3c::dom::views::initialize();
 }
 
 } // namespace jxx::org::w3c::dom

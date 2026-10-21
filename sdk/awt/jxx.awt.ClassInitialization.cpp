@@ -1,5 +1,4 @@
 #include "awt/jxx.awt.ClassInitialization.h"
-#include "awt/event/jxx.awt.event.ClassInitialization.h"
 #include "awt/jxx.awt.AWTEvent.h"
 #include "awt/jxx.awt.AlphaComposite.h"
 #include "awt/jxx.awt.BasicStroke.h"
@@ -28,6 +27,8 @@
 
 #include <mutex>
 
+#include "awt/geom/jxx.awt.geom.ClassInitialization.h"
+#include "awt/image/jxx.awt.image.ClassInitialization.h"
 namespace jxx::awt
 {
     void initializeClasses()
@@ -35,7 +36,6 @@ namespace jxx::awt
         static std::once_flag flag;
         std::call_once(flag, []()
         {
-            ::jxx::awt::event::initialize();
             (void)::jxx::awt::AWTEvent::Class();
             (void)::jxx::awt::AlphaComposite::Class();
             (void)::jxx::awt::BasicStroke::Class();
@@ -71,6 +71,7 @@ namespace jxx::awt
 void initialize()
 {
     initializeClasses();
+    ::jxx::awt::image::initialize();
 }
 
 }

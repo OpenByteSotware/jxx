@@ -10,6 +10,9 @@
 #include "ext/xml/transform/jxx.ext.xml.transform.TransformerException.h"
 #include "ext/xml/transform/jxx.ext.xml.transform.TransformerFactory.h"
 
+#include "ext/xml/transform/dom/jxx.ext.xml.transform.dom.ClassInitialization.h"
+#include "ext/xml/transform/internal/jxx.ext.xml.transform.internal.ClassInitialization.h"
+#include "ext/xml/transform/stream/jxx.ext.xml.transform.stream.ClassInitialization.h"
 namespace jxx::ext::xml::transform {
 
 void initializeClasses()
@@ -40,6 +43,9 @@ void initializeClasses()
 void initialize()
 {
     initializeClasses();
+    ::jxx::ext::xml::transform::dom::initialize();
+    ::jxx::ext::xml::transform::internal::initialize();
+    ::jxx::ext::xml::transform::stream::initialize();
 }
 
 } // namespace jxx::ext::xml::transform

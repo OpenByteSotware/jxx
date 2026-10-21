@@ -14,6 +14,7 @@
 #include "org/w3c/dom/ls/jxx.org.w3c.dom.ls.LSSerializer.h"
 #include "org/w3c/dom/ls/jxx.org.w3c.dom.ls.LSSerializerFilter.h"
 
+#include "org/w3c/dom/ls/internal/jxx.org.w3c.dom.ls.internal.ClassInitialization.h"
 namespace jxx::org::w3c::dom::ls {
 
 void initializeClasses()
@@ -38,6 +39,7 @@ void initializeClasses()
 void initialize()
 {
     initializeClasses();
+    ::jxx::org::w3c::dom::ls::internal::initialize();
 }
 
 } // namespace jxx::org::w3c::dom::ls

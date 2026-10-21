@@ -18,17 +18,17 @@ void initializeClasses() {
         class_initialization_detail::initializeDateTime();
         class_initialization_detail::initializeLocaleResources();
         class_initialization_detail::initializeUtilities();
-        ::jxx::util::concurrent::initialize();
-        ::jxx::util::function::initialize();
-        ::jxx::util::logging::initialize();
-        ::jxx::util::regex::initialize();
-        ::jxx::util::zip::initialize();
     });
 }
 
 void initialize()
 {
     initializeClasses();
+    ::jxx::util::concurrent::initialize();
+    ::jxx::util::function::initialize();
+    ::jxx::util::logging::initialize();
+    ::jxx::util::regex::initialize();
+    ::jxx::util::zip::initialize();
 }
 
 }

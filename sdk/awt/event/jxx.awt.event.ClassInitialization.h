@@ -2,6 +2,6 @@
 
 namespace jxx::awt::event
 {
-    void initializeClasses();
-    void initialize();
+void initializeClasses();
+void initialize();
 }

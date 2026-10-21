@@ -4,6 +4,7 @@
 #include "ext/imageio/jxx.ext.imageio.ImageWriter.h"
 #include "ext/imageio/internal/jxx.ext.imageio.internal.JpegImageWriter.h"
 #include <mutex>
+#include "ext/imageio/stream/jxx.ext.imageio.stream.ClassInitialization.h"
 namespace jxx::ext::imageio { 
     void initializeClasses(){ 
         static std::once_flag flag; 
@@ -16,6 +17,7 @@ namespace jxx::ext::imageio {
 void initialize()
 {
     initializeClasses();
+    ::jxx::ext::imageio::stream::initialize();
 }
 
 }

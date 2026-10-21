@@ -9,6 +9,7 @@
 #include "ext/xml/parsers/jxx.ext.xml.parsers.SAXParser.h"
 #include "ext/xml/parsers/jxx.ext.xml.parsers.SAXParserFactory.h"
 
+#include "ext/xml/parsers/internal/jxx.ext.xml.parsers.internal.ClassInitialization.h"
 namespace jxx::ext::xml::parsers {
 
 void initializeClasses() {
@@ -27,6 +28,7 @@ void initializeClasses() {
 void initialize()
 {
     initializeClasses();
+    ::jxx::ext::xml::parsers::internal::initialize();
 }
 
 } // namespace jxx::ext::xml::parsers

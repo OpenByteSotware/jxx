@@ -17,6 +17,9 @@
 #include "nio/jxx.nio.MappedByteBuffer.h"
 #include "nio/jxx.nio.ShortBuffer.h"
 
+#include "nio/channels/jxx.nio.channels.ClassInitialization.h"
+#include "nio/charset/jxx.nio.charset.ClassInitialization.h"
+#include "nio/file/jxx.nio.file.ClassInitialization.h"
 namespace jxx::nio {
 namespace {
 
@@ -52,6 +55,9 @@ void initializeClasses()
 void initialize()
 {
     initializeClasses();
+    ::jxx::nio::channels::initialize();
+    ::jxx::nio::charset::initialize();
+    ::jxx::nio::file::initialize();
 }
 
 } // namespace jxx::nio

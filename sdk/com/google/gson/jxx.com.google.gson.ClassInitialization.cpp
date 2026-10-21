@@ -29,6 +29,10 @@
 #include "com/google/gson/jxx.com.google.gson.LongSerializationPolicy.h"
 #include "com/google/gson/jxx.com.google.gson.ToNumberPolicy.h"
 
+#include "com/google/gson/annotations/jxx.com.google.gson.annotations.ClassInitialization.h"
+#include "com/google/gson/internal/jxx.com.google.gson.internal.ClassInitialization.h"
+#include "com/google/gson/reflect/jxx.com.google.gson.reflect.ClassInitialization.h"
+#include "com/google/gson/stream/jxx.com.google.gson.stream.ClassInitialization.h"
 namespace com::google::gson {
 
 void initializeClasses()
@@ -70,6 +74,10 @@ void initializeClasses()
 void initialize()
 {
     initializeClasses();
+    ::com::google::gson::annotations::initialize();
+    ::com::google::gson::internal::initialize();
+    ::com::google::gson::reflect::initialize();
+    ::com::google::gson::stream::initialize();
 }
 
 } // namespace com::google::gson

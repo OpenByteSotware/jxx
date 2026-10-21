@@ -12,6 +12,9 @@
 #include "ext/xml/bind/jxx.ext.xml.bind.Marshaller.h"
 #include "ext/xml/bind/jxx.ext.xml.bind.Unmarshaller.h"
 
+#include "ext/xml/bind/annotation/jxx.ext.xml.bind.annotation.ClassInitialization.h"
+#include "ext/xml/bind/internal/jxx.ext.xml.bind.internal.ClassInitialization.h"
+#include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.ClassInitialization.h"
 namespace jxx::ext::xml::bind {
 
 void initializeClasses()
@@ -33,6 +36,9 @@ void initializeClasses()
 void initialize()
 {
     initializeClasses();
+    ::jxx::ext::xml::bind::annotation::initialize();
+    ::jxx::ext::xml::bind::internal::initialize();
+    ::jxx::ext::xml::bind::metadata::initialize();
 }
 
 } // namespace jxx::ext::xml::bind

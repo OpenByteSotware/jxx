@@ -5,6 +5,7 @@
 #include "org/w3c/dom/views/jxx.org.w3c.dom.views.AbstractView.h"
 #include "org/w3c/dom/views/jxx.org.w3c.dom.views.DocumentView.h"
 
+#include "org/w3c/dom/views/internal/jxx.org.w3c.dom.views.internal.ClassInitialization.h"
 namespace jxx::org::w3c::dom::views {
 
 void initializeClasses()
@@ -20,6 +21,7 @@ void initializeClasses()
 void initialize()
 {
     initializeClasses();
+    ::jxx::org::w3c::dom::views::internal::initialize();
 }
 
 } // namespace jxx::org::w3c::dom::views

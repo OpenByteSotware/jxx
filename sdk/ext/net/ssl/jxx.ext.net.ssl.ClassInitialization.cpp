@@ -47,6 +47,7 @@
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLSessionBindingListener.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.TrustManager.h"
 
+#include "ext/net/ssl/internal/jxx.ext.net.ssl.internal.ClassInitialization.h"
 namespace jxx::ext::net::ssl {
 namespace {
 
@@ -120,6 +121,7 @@ void initializeClasses()
 void initialize()
 {
     initializeClasses();
+    ::jxx::ext::net::ssl::internal::initialize();
 }
 
 } // namespace jxx::ext::net::ssl

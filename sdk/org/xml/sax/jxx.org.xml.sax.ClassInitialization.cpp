@@ -20,6 +20,9 @@
 #include "org/xml/sax/jxx.org.xml.sax.XMLFilter.h"
 #include "org/xml/sax/jxx.org.xml.sax.XMLReader.h"
 
+#include "org/xml/sax/ext/jxx.org.xml.sax.ext.ClassInitialization.h"
+#include "org/xml/sax/helpers/jxx.org.xml.sax.helpers.ClassInitialization.h"
+#include "org/xml/sax/internal/jxx.org.xml.sax.internal.ClassInitialization.h"
 namespace jxx::org::xml::sax {
 
 void initializeClasses() {
@@ -49,6 +52,9 @@ void initializeClasses() {
 void initialize()
 {
     initializeClasses();
+    ::jxx::org::xml::sax::ext::initialize();
+    ::jxx::org::xml::sax::helpers::initialize();
+    ::jxx::org::xml::sax::internal::initialize();
 }
 
 } // namespace jxx::org::xml::sax

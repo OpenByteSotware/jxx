@@ -27,6 +27,8 @@
 #include "security/jxx.security.UnrecoverableKeyException.h"
 #include "security/jxx.security.SecureRandom.h"
 
+#include "security/cert/jxx.security.cert.ClassInitialization.h"
+#include "security/internal/jxx.security.internal.ClassInitialization.h"
 namespace jxx::security {
 namespace {
 
@@ -84,6 +86,8 @@ void initializeClasses()
 void initialize()
 {
     initializeClasses();
+    ::jxx::security::cert::initialize();
+    ::jxx::security::internal::initialize();
 }
 
 } // namespace jxx::security

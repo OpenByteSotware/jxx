@@ -8,6 +8,7 @@
 #include "ext/xml/xpath/jxx.ext.xml.xpath.XPathExpressionException.h"
 #include "ext/xml/xpath/jxx.ext.xml.xpath.XPathFactory.h"
 
+#include "ext/xml/xpath/internal/jxx.ext.xml.xpath.internal.ClassInitialization.h"
 namespace jxx::ext::xml::xpath {
 
 void initializeClasses()
@@ -32,6 +33,7 @@ void initializeClasses()
 void initialize()
 {
     initializeClasses();
+    ::jxx::ext::xml::xpath::internal::initialize();
 }
 
 } // namespace jxx::ext::xml::xpath

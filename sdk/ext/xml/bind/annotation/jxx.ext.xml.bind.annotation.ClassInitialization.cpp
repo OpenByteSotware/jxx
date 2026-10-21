@@ -19,6 +19,7 @@
 #include "ext/xml/bind/annotation/jxx.ext.xml.bind.annotation.XmlType.h"
 #include "ext/xml/bind/annotation/jxx.ext.xml.bind.annotation.XmlValue.h"
 
+#include "ext/xml/bind/annotation/adapters/jxx.ext.xml.bind.annotation.adapters.ClassInitialization.h"
 namespace jxx::ext::xml::bind::annotation {
 
 void initializeClasses()
@@ -48,6 +49,7 @@ void initializeClasses()
 void initialize()
 {
     initializeClasses();
+    ::jxx::ext::xml::bind::annotation::adapters::initialize();
 }
 
 } // namespace jxx::ext::xml::bind::annotation

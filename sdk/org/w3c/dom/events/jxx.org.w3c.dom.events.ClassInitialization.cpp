@@ -11,6 +11,7 @@
 #include "org/w3c/dom/events/jxx.org.w3c.dom.events.MutationEvent.h"
 #include "org/w3c/dom/events/jxx.org.w3c.dom.events.UIEvent.h"
 
+#include "org/w3c/dom/events/internal/jxx.org.w3c.dom.events.internal.ClassInitialization.h"
 namespace jxx::org::w3c::dom::events {
 
 void initializeClasses()
@@ -32,6 +33,7 @@ void initializeClasses()
 void initialize()
 {
     initializeClasses();
+    ::jxx::org::w3c::dom::events::internal::initialize();
 }
 
 } // namespace jxx::org::w3c::dom::events
