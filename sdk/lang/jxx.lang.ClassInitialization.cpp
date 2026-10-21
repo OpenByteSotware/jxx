@@ -267,6 +267,7 @@ void initializeClasses()
         registerType<StringCaseInsensitiveComparator>();
         registerType<System>();
         registerType<Thread>();
+            registerType<Thread::UncaughtExceptionHandler>();
         registerType<ThreadDeath>();
         });
 }
