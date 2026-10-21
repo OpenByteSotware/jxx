@@ -384,8 +384,12 @@ def _safe_target(source: Path, root: Path) -> str:
 
 
 def generate_cmake_files(out_root: str, project: str = 'TranspiledProject',
-                         support_target: str = 'transpiled') -> Path:
+                         support_target: str = 'transpiled',
+                         jxx_include: Optional[str] = None) -> Path:
     root = Path(out_root)
+    jxx_include_path = (
+        Path(jxx_include).expanduser().resolve().as_posix()
+        if jxx_include else None)
     sources = sorted(root.rglob('*.cpp'))
     mains = [source for source in sources if _contains_native_main(source)]
     support = [source for source in sources if source not in mains]
@@ -412,7 +416,12 @@ def generate_cmake_files(out_root: str, project: str = 'TranspiledProject',
     if support:
         root_lines.append(f'add_library({support_target} STATIC')
         root_lines.extend(f'    {x.relative_to(root).as_posix()}' for x in support)
-        root_lines += [')', f'target_include_directories({support_target} PUBLIC ${{CMAKE_CURRENT_SOURCE_DIR}})', '']
+        root_lines.append(')')
+        root_lines.append(f'target_include_directories({support_target} PUBLIC')
+        root_lines.append('    ${CMAKE_CURRENT_SOURCE_DIR}')
+        if jxx_include_path:
+            root_lines.append(f'    "{jxx_include_path}"')
+        root_lines += [')', '']
 
     main_folders = sorted({source.parent for source in mains})
     for folder in main_folders:
@@ -422,7 +431,11 @@ def generate_cmake_files(out_root: str, project: str = 'TranspiledProject',
     for source in [x for x in mains if x.parent == root]:
         target = names[source]
         root_lines += ['', f'add_executable({target} {source.name})',
-                       f'target_include_directories({target} PRIVATE ${{CMAKE_CURRENT_SOURCE_DIR}})']
+                       f'target_include_directories({target} PRIVATE',
+                       '    ${CMAKE_CURRENT_SOURCE_DIR}']
+        if jxx_include_path:
+            root_lines.append(f'    "{jxx_include_path}"')
+        root_lines.append(')')
         if support:
             root_lines.append(f'target_link_libraries({target} PRIVATE {support_target})')
 
@@ -438,7 +451,11 @@ def generate_cmake_files(out_root: str, project: str = 'TranspiledProject',
         for source in [x for x in mains if x.parent == folder]:
             target = names[source]
             lines += [f'add_executable({target} {source.name})',
-                      f'target_include_directories({target} PRIVATE ${{PROJECT_SOURCE_DIR}})']
+                      f'target_include_directories({target} PRIVATE',
+                      '    ${PROJECT_SOURCE_DIR}']
+            if jxx_include_path:
+                lines.append(f'    "{jxx_include_path}"')
+            lines.append(')')
             if support:
                 lines.append(f'target_link_libraries({target} PRIVATE {support_target})')
             lines.append('')
@@ -447,8 +464,10 @@ def generate_cmake_files(out_root: str, project: str = 'TranspiledProject',
 
 
 def generate_cmake(out_root: str, project: str = 'TranspiledProject',
-                   target: str = 'transpiled') -> str:
-    return generate_cmake_files(out_root, project, target).read_text(encoding='utf-8')
+                   target: str = 'transpiled',
+                   jxx_include: Optional[str] = None) -> str:
+    return generate_cmake_files(
+        out_root, project, target, jxx_include).read_text(encoding='utf-8')
 
 def translate_file(path:Path,out_root:str):
     src=path.read_text(encoding='utf-8')
@@ -464,6 +483,11 @@ def main():
     ap.add_argument('--cmake',action='store_true',help='generate CMakeLists.txt in output root')
     ap.add_argument('--cmake-project',default='TranspiledProject')
     ap.add_argument('--cmake-target',default='transpiled')
+    ap.add_argument(
+        '--jxx-include',
+        help=('JXX SDK root containing package directories such as lang/, io/, '
+              'util/, net/, ext/, com/, and org/. The resolved path is added '
+              'to generated CMake target_include_directories.'))
     a=ap.parse_args()
     if javalang is None: raise SystemExit('Install dependency: pip install javalang')
     if bool(a.input)==bool(a.src_dir): ap.error('provide either input or --dir')
@@ -475,7 +499,8 @@ def main():
     else:
         translate_file(Path(a.input),a.out)
     if a.cmake:
-        cmake = generate_cmake_files(a.out, a.cmake_project, a.cmake_target)
+        cmake = generate_cmake_files(
+            a.out, a.cmake_project, a.cmake_target, a.jxx_include)
         for generated in sorted(Path(a.out).rglob('CMakeLists.txt')):
             print(f'Wrote {generated}')
 if __name__=='__main__': main()
