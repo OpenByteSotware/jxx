@@ -102,10 +102,17 @@ private:
         }
         const auto comparable =
             ::jxx::CAST<::jxx::lang::Comparable<K>>(left);
-        if (comparable == nullptr) {
-            throw ::jxx::lang::ClassCastException();
+        if (comparable != nullptr) {
+            return comparable->compareTo(right);
         }
-        return comparable->compareTo(right);
+        // The erased specialization represents raw LinkedTreeMap usage. Its
+        // runtime keys retain their concrete source types, but C++ cannot cast
+        // Comparable<String> to Comparable<Object>. LinkedTreeMap only needs
+        // equality here because insertion order is maintained by its map base.
+        if constexpr (std::is_same_v<K, ::jxx::lang::Object>) {
+            return left->equals(right) ? 0 : 1;
+        }
+        throw ::jxx::lang::ClassCastException();
     }
 
     ::jxx::Ptr<K> findEquivalentKey_(
