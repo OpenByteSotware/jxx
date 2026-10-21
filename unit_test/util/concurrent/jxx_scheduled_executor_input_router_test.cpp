@@ -9,7 +9,7 @@
 #include "util/concurrent/jxx.util.concurrent.RejectedExecutionException.h"
 #include "util/concurrent/jxx.util.concurrent.ScheduledThreadPoolExecutor.h"
 #include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
-#include "jxx_scheduled_executor_test_support.h"
+#include "../../jxx_scheduled_executor_test_support.h"
 
 TEST(JxxScheduledExecutorInputRouterTest, RejectsInvalidPeriod) {
     const auto executor =

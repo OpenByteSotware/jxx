@@ -41,11 +41,17 @@ void initializeClasses()
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<
             ErasedAtomicReferenceArray, 1U, 2U>();
         (void)::jxx::lang::ClassBase<DoubleAccumulator, ::jxx::lang::Number, ::jxx::io::SerializableI>::Class();
+        ::jxx::io::serialization::registerSerializableClass<DoubleAccumulator>(1, [] {
+            return DoubleAccumulator::createForDeserialization();
+        });
         (void)::jxx::lang::ClassBase<DoubleAdder, ::jxx::lang::Number, ::jxx::io::SerializableI>::Class();
         ::jxx::io::serialization::registerSerializableClass<DoubleAdder>(1);
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<
             DoubleAdder, 1U, 2U>();
         (void)::jxx::lang::ClassBase<LongAccumulator, ::jxx::lang::Number, ::jxx::io::SerializableI>::Class();
+        ::jxx::io::serialization::registerSerializableClass<LongAccumulator>(1, [] {
+            return LongAccumulator::createForDeserialization();
+        });
         (void)::jxx::lang::ClassBase<LongAdder, ::jxx::lang::Number, ::jxx::io::SerializableI>::Class();
         ::jxx::io::serialization::registerSerializableClass<LongAdder>(1);
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<

@@ -13,5 +13,9 @@ public:using JxxSuper=::jxx::lang::Number;using Super=::jxx::lang::ClassBase<Lon
  void accumulate(::jxx::lang::jlong value);::jxx::lang::jlong get()const;void reset();::jxx::lang::jlong getThenReset();
  ::jxx::lang::jint intValue()const override;::jxx::lang::jlong longValue()const override;::jxx::lang::jfloat floatValue()const override;::jxx::lang::jdouble doubleValue()const override;::jxx::Ptr<::jxx::lang::String>toString()const override;
  void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>&)override;void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>&)override;void readObjectNoData()override;
-private:mutable std::mutex mutex_;::jxx::Ptr<::jxx::util::function::LongBinaryOperator> function_;::jxx::lang::jlong identity_;::jxx::lang::jlong value_;};
+private:
+ LongAccumulator();
+ static ::jxx::Ptr<LongAccumulator> createForDeserialization();
+ friend void initializeClasses();
+ mutable std::mutex mutex_;::jxx::Ptr<::jxx::util::function::LongBinaryOperator> function_;::jxx::lang::jlong identity_;::jxx::lang::jlong value_;};
 }

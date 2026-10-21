@@ -297,56 +297,50 @@ class Translator:
         return o.text()
 
     def source(self,tree,header_inc)->str:
-        o=Emit();o.w(f'#include "{header_inc}"');o.w('#include <cstdint>');o.w();ns=('jxx::'+self.package.replace('.', '::')) if self.package else ''
-        java_mains=[]
+        o=Emit();o.w(f'#include "{header_inc}"');o.w();ns=('jxx::'+self.package.replace('.', '::')) if self.package else ''
         if ns:o.w(f'namespace {ns} {{');o.enter()
         for t in tree.types or []:
             if type(t).__name__!='ClassDeclaration':continue
             for m in t.body or []:
                 if type(m).__name__ not in ('MethodDeclaration','ConstructorDeclaration') or getattr(m,'body',None) is None:continue
-                if self.is_java_main(m):
-                    java_mains.append((t, m))
                 o.w(self.sig(m,t.name,True)+' {');o.enter()
                 old=self.current_return
                 self.current_return='void' if type(m).__name__=='ConstructorDeclaration' else self.resolve(m.return_type).value()
                 for statement in m.body or []:self.stmt(statement,o)
                 self.current_return=old;o.exit();o.w('}');o.w()
-        # Close the translated package namespace before emitting the native
-        # process entry point. Standard C++ requires ::main in global scope.
-        if ns:
-            o.exit()
-            o.w(f'}} // namespace {ns}')
-        if java_mains:
-            if len(java_mains) > 1:
-                self.diag.append('multiple Java main methods found; native main uses the first one')
-            owner, method = java_mains[0]
-            parameter_name = method.parameters[0].name
-            target = f'{ns}::{owner.name}' if ns else owner.name
-            o.w()
-            o.w('// Native C++ process entry point. This must remain in global scope.')
-            o.w('int main(int argc, char** argv) {')
-            o.enter()
-            o.w('try {'); o.enter()
-            o.w('::jxx::initialize();')
-            o.w('using JxxString = ::jxx::lang::String;')
-            o.w('using JxxStringArray = ::jxx::JxxArray<::jxx::Ptr<JxxString>, 1U>;')
-            o.w('const auto sourceArgc = argc > 0 ? argc - 1 : 0;')
-            o.w(f'auto {parameter_name} = ::jxx::NEW<JxxStringArray>(static_cast<std::uint32_t>(sourceArgc));')
-            o.w('for (int index = 1; index < argc; ++index) {');o.enter()
-            o.w(f'(*{parameter_name})[static_cast<std::uint32_t>(index - 1)] = ::jxx::NEW<JxxString>(argv[index]);')
-            o.exit();o.w('}')
-            o.w(f'{target}::jxxMain({parameter_name});')
-            o.w('return 0;'); o.exit()
-            o.w('} catch (const ::jxx::lang::Throwable& throwable) {'); o.enter()
-            o.w('throwable.printStackTrace();'); o.w('return 1;'); o.exit(); o.w('}')
-            o.exit();o.w('}')
-        generated = o.text()
-        if java_mains and ns:
-            namespace_close = generated.rfind(f'}} // namespace {ns}')
-            native_main = generated.rfind('int main(int argc, char** argv)')
-            if namespace_close < 0 or native_main <= namespace_close:
-                raise RuntimeError('native C++ main must be emitted after the package namespace closes')
-        return generated
+        if ns:o.exit();o.w(f'}} // namespace {ns}')
+        return o.text()
+
+    def main_source(self, owner, method, header_inc)->str:
+        o=Emit()
+        o.w(f'#include "{header_inc}"')
+        o.w('#include <cstdint>')
+        o.w('#include "jxx.h"')
+        o.w('#include "lang/jxx.lang.String.h"')
+        o.w('#include "lang/jxx.lang.Throwable.h"')
+        o.w()
+        parameter_name=method.parameters[0].name
+        ns=('jxx::'+self.package.replace('.', '::')) if self.package else ''
+        target=f'{ns}::{owner.name}' if ns else owner.name
+        o.w('// Native C++ process entry point for this converted source main.')
+        o.w('int main(int argc, char** argv) {')
+        o.enter();o.w('try {');o.enter()
+        o.w('::jxx::initialize();')
+        o.w('using JxxString = ::jxx::lang::String;')
+        o.w('using JxxStringArray = ::jxx::JxxArray<::jxx::Ptr<JxxString>, 1U>;')
+        o.w('const auto sourceArgc = argc > 0 ? argc - 1 : 0;')
+        o.w(f'auto {parameter_name} = ::jxx::NEW<JxxStringArray>(')
+        o.enter();o.w('static_cast<std::uint32_t>(sourceArgc));');o.exit()
+        o.w('for (int index = 1; index < argc; ++index) {');o.enter()
+        o.w(f'(*{parameter_name})[static_cast<std::uint32_t>(index - 1)] =')
+        o.enter();o.w('::jxx::NEW<JxxString>(argv[index]);');o.exit()
+        o.exit();o.w('}')
+        o.w(f'{target}::jxxMain({parameter_name});')
+        o.w('return 0;');o.exit()
+        o.w('} catch (const ::jxx::lang::Throwable& throwable) {');o.enter()
+        o.w('throwable.printStackTrace();');o.w('return 1;');o.exit();o.w('}')
+        o.exit();o.w('}')
+        return o.text()
 
     def translate(self,src,out_root,stem):
         tree=javalang.parse.parse(src);self.gather(tree)
@@ -366,7 +360,22 @@ class Translator:
                 if hasattr(m,'return_type') and m.return_type is not None:self.resolve(m.return_type)
                 for p in getattr(m,'parameters',None) or []:self.resolve(p.type)
         hp.write_text(self.header(tree),encoding='utf-8')
-        cp.write_text(self.source(tree,os.path.relpath(hp,cp.parent).replace(os.sep,'/')),encoding='utf-8')
+        header_inc=os.path.relpath(hp,cp.parent).replace(os.sep,'/')
+        cp.write_text(self.source(tree,header_inc),encoding='utf-8')
+        for top_level in tree.types or []:
+            if type(top_level).__name__ != 'ClassDeclaration':
+                continue
+            main_methods=[m for m in top_level.body or [] if self.is_java_main(m)]
+            if not main_methods:
+                continue
+            if len(main_methods) > 1:
+                self.diag.append(
+                    f'multiple source main methods found in {top_level.name}; '
+                    'the first valid entry signature is used')
+            wrapper=output_dir/f'{top_level.name}_main.cpp'
+            wrapper.write_text(
+                self.main_source(top_level,main_methods[0],header_inc),
+                encoding='utf-8')
         return hp,cp
 
 def _contains_native_main(source: Path) -> bool:
@@ -392,16 +401,21 @@ def generate_cmake_files(out_root: str, project: str = 'TranspiledProject',
         Path(jxx_include).expanduser().resolve().as_posix()
         if jxx_include else None)
     sources = sorted(root.rglob('*.cpp'))
-    mains = [source for source in sources if _contains_native_main(source)]
+    mains = [source for source in sources
+             if source.name.endswith('_main.cpp') and _contains_native_main(source)]
     support = [source for source in sources if source not in mains]
 
     counts = {}
     for source in mains:
-        counts[source.stem] = counts.get(source.stem, 0) + 1
+        logical_name = source.stem[:-5] if source.stem.endswith('_main') else source.stem
+        counts[logical_name] = counts.get(logical_name, 0) + 1
     names = {}
     used = set()
     for source in mains:
-        name = source.stem if counts[source.stem] == 1 else _safe_target(source, root)
+        logical_name = source.stem[:-5] if source.stem.endswith('_main') else source.stem
+        name = logical_name if counts[logical_name] == 1 else _safe_target(source, root)
+        if name.endswith('_main'):
+            name = name[:-5]
         while name in used:
             name += '_app'
         used.add(name)
@@ -441,14 +455,14 @@ def generate_cmake_files(out_root: str, project: str = 'TranspiledProject',
             root_lines.append(f'target_link_libraries({target} PRIVATE {support_target})')
 
     if not mains:
-        root_lines.append('# No translated Java main method was found.')
+        root_lines.append('# No converted source main method was found.')
     root_file = root / 'CMakeLists.txt'
     root_file.write_text('\n'.join(root_lines) + '\n', encoding='utf-8')
 
     for folder in main_folders:
         if folder == root:
             continue
-        lines = ['# Generated executable targets for translated Java main methods.', '']
+        lines = ['# Generated executable targets for converted source main methods.', '']
         for source in [x for x in mains if x.parent == folder]:
             target = names[source]
             lines += [f'add_executable({target} {source.name})',
