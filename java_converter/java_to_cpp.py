@@ -65,6 +65,7 @@ class Translator:
         self.imports:Dict[str,str]={}; self.includes:Set[str]=set(); self.diag:List[str]=[]
         self.package=''; self.current_class=''; self.current_return='void'
         self.known_types:Set[str]=set(); self.static_fields:Set[str]=set()
+        self.main_owner_names:Set[str]=set()
 
     @staticmethod
     def simple(n): return str(n).split('.')[-1]
@@ -134,6 +135,47 @@ class Translator:
             f'::jxx::Ptr<::jxx::JxxArray<{elem}, {dims}U>>',
             primitive=True)
 
+    @staticmethod
+    def detect_main_owners(source: str) -> Set[str]:
+        # Lexically associate valid source entry methods with their containing
+        # class. This supplements javalang because post-identifier array
+        # declarators such as `String args []` are not represented consistently.
+        tokens=list(re.finditer(r'\b(class|interface|enum)\s+([A-Za-z_$][\w$]*)|[{}]', source))
+        owners:set[str]=set()
+        stack=[]
+        pending=None
+        for token in tokens:
+            kind=token.group(1)
+            if kind:
+                pending=(kind,token.group(2))
+                continue
+            symbol=token.group(0)
+            if symbol=='{':
+                stack.append(pending)
+                pending=None
+            elif symbol=='}' and stack:
+                stack.pop()
+        # Use balanced class bodies so package-private classes whose names do
+        # not match the source filename are handled correctly.
+        declaration=re.compile(r'\bclass\s+([A-Za-z_$][\w$]*)[^{}]*\{')
+        main_signature=re.compile(
+            r'\bpublic\s+(?:(?:final|synchronized|strictfp)\s+)*static\s+'
+            r'(?:(?:final|synchronized|strictfp)\s+)*void\s+main\s*\('
+            r'\s*String\s*(?:\[\s*\]\s*[A-Za-z_$][\w$]*|'
+            r'[A-Za-z_$][\w$]*\s*\[\s*\]|\.\.\.\s*[A-Za-z_$][\w$]*)'
+            r'\s*\)')
+        for match in declaration.finditer(source):
+            depth=1
+            index=match.end()
+            while index < len(source) and depth:
+                if source[index]=='{': depth+=1
+                elif source[index]=='}': depth-=1
+                index+=1
+            body=source[match.end():max(match.end(),index-1)]
+            if main_signature.search(body):
+                owners.add(match.group(1))
+        return owners
+
     def gather(self,tree):
         self.package=tree.package.name if tree.package else ''
         self.known_types.update(t.name for t in tree.types or [])
@@ -148,14 +190,18 @@ class Translator:
             _,inc=self.qmap(p)
             if inc: self.includes.add(inc)
         self.includes.update({'lang/jxx.lang.Object.h','lang/jxx.lang.ClassInfo.h','lang/jxx.lang.JxxArray.h'})
-        if any(self.is_java_main(m)
+        if any(self.is_java_main(m,t.name)
                for t in self.class_declarations(tree)
                for m in getattr(t,'body',None) or []):
             self.includes.update({'jxx.h','lang/jxx.lang.String.h','lang/jxx.lang.Throwable.h'})
 
-    def is_java_main(self, m) -> bool:
+    def is_java_main(self, m, owner_name: Optional[str] = None) -> bool:
         if type(m).__name__ != 'MethodDeclaration' or m.name != 'main':
             return False
+        if owner_name in self.main_owner_names:
+            mods=set(getattr(m,'modifiers',None) or [])
+            return {'public','static'}.issubset(mods) and \
+                self.name_of(getattr(m,'return_type',None)) == 'void'
         mods=set(getattr(m,'modifiers',None) or [])
         if not {'public','static'}.issubset(mods): return False
         if self.name_of(getattr(m,'return_type',None)) != 'void': return False
@@ -196,7 +242,7 @@ class Translator:
 
     def sig(self,m,cname,definition=False):
         ctor=type(m).__name__=='ConstructorDeclaration'
-        if self.is_java_main(m):
+        if self.is_java_main(m,cname):
             qualified = f'{cname}::jxxMain' if definition else 'jxxMain'
             parameter_name = m.parameters[0].name
             return f'void {qualified}(const {self.java_main_arg_type()}& {parameter_name})'
@@ -305,7 +351,7 @@ class Translator:
                         typ=self.resolve(m.type).value(); init=f' = {self.expr(d.initializer)}' if d.initializer is not None else (' = nullptr' if typ.startswith('::jxx::Ptr<') else '')
                         o.w(f'{prefix}{typ} {d.name}{init};')
                 elif n in ('MethodDeclaration','ConstructorDeclaration'):
-                    if self.is_java_main(m):
+                    if self.is_java_main(m,t.name):
                         o.w(f'static {self.sig(m,t.name)};')
                         continue
                     mods=m.modifiers or set()
@@ -366,6 +412,7 @@ class Translator:
         return o.text()
 
     def translate(self,src,out_root,stem):
+        self.main_owner_names=self.detect_main_owners(src)
         tree=javalang.parse.parse(src);self.gather(tree)
         pkg=tree.package.name if tree.package else ''; rel=Path(*pkg.split('.')) if pkg else Path()
         output_dir=Path(out_root)/rel
@@ -386,7 +433,7 @@ class Translator:
         header_inc=os.path.relpath(hp,cp.parent).replace(os.sep,'/')
         cp.write_text(self.source(tree,header_inc),encoding='utf-8')
         for owner in self.class_declarations(tree):
-            main_methods=[m for m in owner.body or [] if self.is_java_main(m)]
+            main_methods=[m for m in owner.body or [] if self.is_java_main(m,owner.name)]
             if not main_methods:
                 continue
             if len(main_methods) > 1:
@@ -397,6 +444,9 @@ class Translator:
             wrapper.write_text(
                 self.main_source(owner,main_methods[0],header_inc),
                 encoding='utf-8')
+        found_owners={owner.name for owner in self.class_declarations(tree)}
+        for missing in sorted(self.main_owner_names-found_owners):
+            self.diag.append(f'source main owner {missing} was not present in parsed class declarations')
         return hp,cp
 
 def _contains_native_main(source: Path) -> bool:
