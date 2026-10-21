@@ -58,6 +58,11 @@ namespace jxx::awt
             (void)::jxx::awt::Color::Class();
             (void)::jxx::awt::ComponentOrientation::Class();
             (void)::jxx::awt::Dimension::Class();
+            ::jxx::io::serialization::registerSerializableClass<
+                ::jxx::awt::Dimension>(
+                    static_cast<::jxx::lang::jlong>(4723952579491349524LL));
+            ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+                ::jxx::awt::Dimension, 1U, 2U>();
             (void)::jxx::awt::Font::Class();
             (void)::jxx::awt::GradientPaint::Class();
             (void)::jxx::awt::Graphics::Class();
