@@ -148,7 +148,9 @@ class Translator:
             _,inc=self.qmap(p)
             if inc: self.includes.add(inc)
         self.includes.update({'lang/jxx.lang.Object.h','lang/jxx.lang.ClassInfo.h','lang/jxx.lang.JxxArray.h'})
-        if any(self.is_java_main(m) for t in tree.types or [] for m in t.body or []):
+        if any(self.is_java_main(m)
+               for t in self.class_declarations(tree)
+               for m in getattr(t,'body',None) or []):
             self.includes.update({'jxx.h','lang/jxx.lang.String.h','lang/jxx.lang.Throwable.h'})
 
     def is_java_main(self, m) -> bool:
@@ -178,6 +180,19 @@ class Translator:
             "::jxx::Ptr<::jxx::JxxArray<"
             "::jxx::Ptr<::jxx::lang::String>, 1U>>"
         )
+    @staticmethod
+    def class_declarations(tree):
+        # javalang exposes every package-level declaration through tree.types,
+        # including package-private classes whose name differs from the source
+        # filename. Prefer filter() when available so member classes are also
+        # discoverable, then fall back to tree.types for test doubles.
+        filter_method=getattr(tree,'filter',None)
+        class_type=getattr(getattr(javalang,'tree',None),'ClassDeclaration',None)
+        if callable(filter_method) and class_type is not None:
+            return [node for _,node in filter_method(class_type)]
+        return [node for node in getattr(tree,'types',None) or []
+                if type(node).__name__=='ClassDeclaration']
+
 
     def sig(self,m,cname,definition=False):
         ctor=type(m).__name__=='ConstructorDeclaration'
@@ -308,8 +323,7 @@ class Translator:
     def source(self,tree,header_inc)->str:
         o=Emit();o.w(f'#include "{header_inc}"');o.w();ns=('jxx::'+self.package.replace('.', '::')) if self.package else ''
         if ns:o.w(f'namespace {ns} {{');o.enter()
-        for t in tree.types or []:
-            if type(t).__name__!='ClassDeclaration':continue
+        for t in self.class_declarations(tree):
             for m in t.body or []:
                 if type(m).__name__ not in ('MethodDeclaration','ConstructorDeclaration') or getattr(m,'body',None) is None:continue
                 o.w(self.sig(m,t.name,True)+' {');o.enter()
@@ -330,7 +344,7 @@ class Translator:
         o.w()
         parameter_name=method.parameters[0].name
         ns=('jxx::'+self.package.replace('.', '::')) if self.package else ''
-        target=f'{ns}::{owner.name}' if ns else owner.name
+        target=f'::{ns}::{owner.name}' if ns else owner.name
         o.w('// Native C++ process entry point for this converted source main.')
         o.w('int main(int argc, char** argv) {')
         o.enter();o.w('try {');o.enter()
@@ -371,19 +385,17 @@ class Translator:
         hp.write_text(self.header(tree),encoding='utf-8')
         header_inc=os.path.relpath(hp,cp.parent).replace(os.sep,'/')
         cp.write_text(self.source(tree,header_inc),encoding='utf-8')
-        for top_level in tree.types or []:
-            if type(top_level).__name__ != 'ClassDeclaration':
-                continue
-            main_methods=[m for m in top_level.body or [] if self.is_java_main(m)]
+        for owner in self.class_declarations(tree):
+            main_methods=[m for m in owner.body or [] if self.is_java_main(m)]
             if not main_methods:
                 continue
             if len(main_methods) > 1:
                 self.diag.append(
-                    f'multiple source main methods found in {top_level.name}; '
+                    f'multiple source main methods found in {owner.name}; '
                     'the first valid entry signature is used')
-            wrapper=output_dir/f'{top_level.name}_main.cpp'
+            wrapper=output_dir/f'{owner.name}_main.cpp'
             wrapper.write_text(
-                self.main_source(top_level,main_methods[0],header_inc),
+                self.main_source(owner,main_methods[0],header_inc),
                 encoding='utf-8')
         return hp,cp
 
