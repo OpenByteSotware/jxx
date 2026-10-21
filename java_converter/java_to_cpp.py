@@ -15,7 +15,7 @@ Focused modernization of the existing AST translator:
 Requires: pip install javalang
 """
 from __future__ import annotations
-import argparse, os, sys
+import argparse, os, re, sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Set, Tuple
@@ -29,7 +29,19 @@ PRIMITIVES={
  'int':'::jxx::lang::jint','long':'::jxx::lang::jlong',
  'float':'::jxx::lang::jfloat','double':'::jxx::lang::jdouble',
  'boolean':'::jxx::lang::jbool','char':'::jxx::lang::jchar','void':'void'}
-UNSUPPORTED=('java.lang.annotation','java.lang.instrument','java.lang.invoke','java.lang.reflect')
+UNSUPPORTED=('java.lang.annotation','java.lang.instrument','java.lang.invoke')
+SPECIAL_TYPES={
+    'java.lang.reflect.InvocationTargetException':'java.lang.InvocationTargetException',
+    'java.util.Map.Entry':'java.util.MapEntry',
+}
+STATIC_ACCESSORS={
+    'java.util.concurrent.TimeUnit':{
+        'NANOSECONDS','MICROSECONDS','MILLISECONDS','SECONDS','MINUTES','HOURS','DAYS'},
+    'javax.xml.xpath.XPathConstants':{'NUMBER','STRING','BOOLEAN','NODESET','NODE'},
+    'javax.xml.transform.OutputKeys':{
+        'METHOD','VERSION','ENCODING','OMIT_XML_DECLARATION','STANDALONE',
+        'DOCTYPE_PUBLIC','DOCTYPE_SYSTEM','CDATA_SECTION_ELEMENTS','INDENT','MEDIA_TYPE'},
+}
 
 @dataclass(frozen=True)
 class CType:
@@ -52,6 +64,7 @@ class Translator:
     def __init__(self):
         self.imports:Dict[str,str]={}; self.includes:Set[str]=set(); self.diag:List[str]=[]
         self.package=''; self.current_class=''; self.current_return='void'
+        self.known_types:Set[str]=set(); self.static_fields:Set[str]=set()
 
     @staticmethod
     def simple(n): return str(n).split('.')[-1]
@@ -81,6 +94,7 @@ class Translator:
         return str(name)
     def qmap(self,name:str)->Tuple[str,Optional[str]]:
         if name in self.imports: name=self.imports[name]
+        name=SPECIAL_TYPES.get(name,name)
         if name=='String': name='java.lang.String'
         if name=='Object': name='java.lang.Object'
         if name=='Class': name='java.lang.ClassAny'
@@ -90,10 +104,10 @@ class Translator:
         typ=p[-1]; pkg=p[:-1]
         if pkg[0]=='java': mapped=pkg[1:]; cpp=['jxx']+mapped; prefix='jxx'
         elif pkg[0]=='javax': mapped=['ext']+pkg[1:]; cpp=['jxx']+mapped; prefix='jxx'
-        else: mapped=pkg; cpp=pkg; prefix=None
+        else: mapped=pkg; cpp=['jxx']+pkg; prefix='jxx'
         raw='::'+'::'.join(cpp+[typ])
         dotted='.'.join(mapped); folder='/'.join(mapped)
-        fn=(f'{prefix}.{dotted}.{typ}.h' if prefix else f'{".".join(pkg+[typ])}.h')
+        fn=f'{prefix}.{dotted}.{typ}.h'
         return raw,(f'{folder}/{fn}' if folder else fn)
 
     def ref_raw(self,t)->str:
@@ -116,13 +130,17 @@ class Translator:
         else: base=CType(self.ref_raw(t))
         if not dims: return base
         elem=base.value() if not base.primitive else base.raw
-        for _ in range(dims): elem=f'::jxx::Ptr<::jxx::lang::JxxArray<{elem}>>'
-        return CType(elem,primitive=True)
+        return CType(
+            f'::jxx::Ptr<::jxx::JxxArray<{elem}, {dims}U>>',
+            primitive=True)
 
     def gather(self,tree):
         self.package=tree.package.name if tree.package else ''
+        self.known_types.update(t.name for t in tree.types or [])
         for imp in tree.imports or []:
             p=imp.path
+            if p.startswith('java.lang.reflect.') and p != 'java.lang.reflect.InvocationTargetException':
+                self.diag.append(f'unsupported reflection type: {p}'); continue
             if any(p==x or p.startswith(x+'.') for x in UNSUPPORTED):
                 self.diag.append(f'unsupported package: {p}'); continue
             if imp.wildcard: continue
@@ -130,30 +148,25 @@ class Translator:
             _,inc=self.qmap(p)
             if inc: self.includes.add(inc)
         self.includes.update({'lang/jxx.lang.Object.h','lang/jxx.lang.ClassInfo.h','lang/jxx.lang.JxxArray.h'})
+        if any(self.is_java_main(m) for t in tree.types or [] for m in t.body or []):
+            self.includes.update({'jxx.h','lang/jxx.lang.String.h','lang/jxx.lang.Throwable.h'})
 
     def is_java_main(self, m) -> bool:
-        if type(m).__name__ != "MethodDeclaration" or m.name != "main":
+        if type(m).__name__ != 'MethodDeclaration' or m.name != 'main':
             return False
-        mods = set(getattr(m, "modifiers", None) or [])
-        if not {"public", "static"}.issubset(mods):
-            return False
-        if self.name_of(getattr(m, "return_type", None)) != "void":
-            return False
-        params = list(getattr(m, "parameters", None) or [])
-        if len(params) != 1:
-            return False
-        param = params[0]
-        if self.simple(self.name_of(param.type)) != "String":
-            return False
-        # javalang represents String[] args, String args[], and String... args
-        # differently across parser/source forms. A public static void main with
-        # exactly one String parameter is treated as the Java entry point so the
-        # converter always emits a native global ::main wrapper.
-        return True
+        mods=set(getattr(m,'modifiers',None) or [])
+        if not {'public','static'}.issubset(mods): return False
+        if self.name_of(getattr(m,'return_type',None)) != 'void': return False
+        params=list(getattr(m,'parameters',None) or [])
+        if len(params) != 1: return False
+        param=params[0]
+        if self.simple(self.name_of(param.type)) != 'String': return False
+        dims=len(getattr(param.type,'dimensions',None) or []) + len(getattr(param,'dimensions',None) or [])
+        return bool(getattr(param,'varargs',False) or dims == 1)
 
     def java_main_arg_type(self) -> str:
         return (
-            "::jxx::Ptr<::jxx::lang::JxxArray<"
+            "::jxx::Ptr<::jxx::JxxArray<"
             "::jxx::Ptr<::jxx::lang::String>, 1U>>"
         )
 
@@ -178,12 +191,25 @@ class Translator:
         if n=='Literal': return 'nullptr' if e.value in (None,'null') else e.value
         if n=='This': return 'this'
         if n=='MemberReference':
-            q=getattr(e,'qualifier',None); base=f'{q}->{e.member}' if q else e.member
+            q=getattr(e,'qualifier',None)
+            if q:
+                fq=self.imports.get(q,q)
+                if e.member in STATIC_ACCESSORS.get(fq,set()): base=f'{self.qmap(fq)[0]}::{e.member}()'
+                elif q in self.imports or (q and q[0].isupper()): base=f'{self.qmap(fq)[0]}::{e.member}'
+                else: base=f'{q}->{e.member}'
+            else: base=e.member
             return ''.join(getattr(e,'prefix_operators',None) or [])+base+''.join(getattr(e,'postfix_operators',None) or [])
         if n=='MethodInvocation':
-            q=getattr(e,'qualifier',None); head=f'{q}->{e.member}' if q else e.member
+            q=getattr(e,'qualifier',None)
+            if q and (q in self.imports or q[0].isupper()): head=f'{self.qmap(self.imports.get(q,q))[0]}::{e.member}'
+            else: head=f'{q}->{e.member}' if q else e.member
             return f'{head}({", ".join(self.expr(x) for x in e.arguments or [])})'
         if n=='ClassCreator': return f'::jxx::NEW<{self.ref_raw(e.type)}>({", ".join(self.expr(x) for x in e.arguments or [])})'
+        if n=='ArrayCreator':
+            rank=len(getattr(e.type,'dimensions',None) or []) + len(getattr(e,'dimensions',None) or [])
+            rank=max(rank,1); elem=self.resolve(e.type).value()
+            dims=[self.expr(x) for x in getattr(e,'dimensions',None) or [] if x is not None]
+            return f'::jxx::NEW<::jxx::JxxArray<{elem}, {rank}U>>({", ".join(dims)})'
         if n=='Cast':
             t=self.resolve(e.type); x=self.expr(e.expression)
             return f'static_cast<{t.raw}>({x})' if t.primitive else f'::jxx::CAST<{t.raw}>({x})'
@@ -230,7 +256,7 @@ class Translator:
     def header(self,tree)->str:
         o=Emit();o.w('#pragma once')
         for x in sorted(self.includes):o.w(f'#include "{x}"')
-        o.w(); ns=self.package.replace('.','::')
+        o.w(); ns=('jxx::'+self.package.replace('.','::')) if self.package else ''
         if ns:o.w(f'namespace {ns} {{');o.enter()
         for t in tree.types or []:
             iface=type(t).__name__=='InterfaceDeclaration'; self.current_class=t.name
@@ -258,15 +284,20 @@ class Translator:
                     if self.is_java_main(m):
                         o.w(f'static {self.sig(m,t.name)};')
                         continue
-                    virt='virtual ' if n=='MethodDeclaration' and ('abstract' in (m.modifiers or set()) or m.body is None) else ''
-                    pure=' = 0' if virt else ''
-                    o.w(f'{virt}{self.sig(m,t.name)}{pure};')
+                    mods=m.modifiers or set()
+                    if n=='MethodDeclaration' and 'static' in mods:
+                        o.w(f'static {self.sig(m,t.name)};')
+                    else:
+                        virt='virtual ' if n=='MethodDeclaration' and ('abstract' in mods or m.body is None) else ''
+                        pure=' = 0' if virt else ''
+                        override=' override' if n=='MethodDeclaration' and 'override' in getattr(m,'annotations',[]) else ''
+                        o.w(f'{virt}{self.sig(m,t.name)}{override}{pure};')
             o.exit();o.w('};');o.w()
         if ns:o.exit();o.w(f'}} // namespace {ns}')
         return o.text()
 
     def source(self,tree,header_inc)->str:
-        o=Emit();o.w(f'#include "{header_inc}"');o.w();ns=self.package.replace('.', '::')
+        o=Emit();o.w(f'#include "{header_inc}"');o.w('#include <cstdint>');o.w();ns=('jxx::'+self.package.replace('.', '::')) if self.package else ''
         java_mains=[]
         if ns:o.w(f'namespace {ns} {{');o.enter()
         for t in tree.types or []:
@@ -293,20 +324,26 @@ class Translator:
             target = f'{ns}::{owner.name}' if ns else owner.name
             o.w()
             o.w('// Native C++ process entry point. This must remain in global scope.')
-            o.w('int main(int argc, char* argv[]) {')
+            o.w('int main(int argc, char** argv) {')
             o.enter()
+            o.w('try {'); o.enter()
+            o.w('::jxx::initialize();')
             o.w('using JxxString = ::jxx::lang::String;')
-            o.w('using JxxStringArray = ::jxx::lang::JxxArray<::jxx::Ptr<JxxString>, 1U>;')
-            o.w(f'auto {parameter_name} = ::jxx::NEW<JxxStringArray>(argc);')
-            o.w('for (int index = 0; index < argc; ++index) {');o.enter()
-            o.w(f'(*{parameter_name})[static_cast<::jxx::lang::jint>(index)] = ::jxx::NEW<JxxString>(argv[index]);')
+            o.w('using JxxStringArray = ::jxx::JxxArray<::jxx::Ptr<JxxString>, 1U>;')
+            o.w('const auto sourceArgc = argc > 0 ? argc - 1 : 0;')
+            o.w(f'auto {parameter_name} = ::jxx::NEW<JxxStringArray>(static_cast<std::uint32_t>(sourceArgc));')
+            o.w('for (int index = 1; index < argc; ++index) {');o.enter()
+            o.w(f'(*{parameter_name})[static_cast<std::uint32_t>(index - 1)] = ::jxx::NEW<JxxString>(argv[index]);')
             o.exit();o.w('}')
             o.w(f'{target}::jxxMain({parameter_name});')
-            o.w('return 0;');o.exit();o.w('}')
+            o.w('return 0;'); o.exit()
+            o.w('} catch (const ::jxx::lang::Throwable& throwable) {'); o.enter()
+            o.w('throwable.printStackTrace();'); o.w('return 1;'); o.exit(); o.w('}')
+            o.exit();o.w('}')
         generated = o.text()
         if java_mains and ns:
             namespace_close = generated.rfind(f'}} // namespace {ns}')
-            native_main = generated.rfind('int main(int argc, char* argv[])')
+            native_main = generated.rfind('int main(int argc, char** argv)')
             if namespace_close < 0 or native_main <= namespace_close:
                 raise RuntimeError('native C++ main must be emitted after the package namespace closes')
         return generated
@@ -315,7 +352,9 @@ class Translator:
         tree=javalang.parse.parse(src);self.gather(tree)
         pkg=tree.package.name if tree.package else ''; rel=Path(*pkg.split('.')) if pkg else Path()
         output_dir=Path(out_root)/rel
-        hp=output_dir/f'{stem}.h';cp=output_dir/f'{stem}.cpp'
+        dotted=pkg
+        file_stem=f'jxx.{dotted}.{stem}' if dotted else f'jxx.{stem}'
+        hp=output_dir/f'{file_stem}.h';cp=output_dir/f'{file_stem}.cpp'
         output_dir.mkdir(parents=True,exist_ok=True)
         # resolve declarations before includes are emitted
         for t in tree.types or []:
@@ -331,10 +370,12 @@ class Translator:
 
 def _contains_native_main(source: Path) -> bool:
     try:
-        return 'int main(int argc, char* argv[])' in source.read_text(encoding='utf-8')
+        text=source.read_text(encoding='utf-8')
     except OSError:
         return False
-
+    return bool(re.search(
+        r'\bint\s+main\s*\(\s*int\s+argc\s*,\s*char\s*(?:\*\*|\*\s*argv\s*\[\s*\])',
+        text))
 
 def _safe_target(source: Path, root: Path) -> str:
     raw = '_'.join(source.relative_to(root).with_suffix('').parts)

@@ -126,7 +126,7 @@ python3 java_to_cpp.py \
 python3 java_to_cpp.py MyFile.java --instanceof-style macro --downcast-style macro
 
 python3 java_to_cpp.py --dir src_java --out outcpp --cmake
-
+python3 java_to_cpp.py --dir ../java_examples --out outcpp --cmake
 
 
 To build 3rd party packages
