@@ -58,6 +58,12 @@ namespace jxx::awt
             (void)::jxx::awt::BufferCapabilities::Class();
             (void)::jxx::awt::BufferCapabilities::FlipContents::Class();
             (void)::jxx::awt::Color::Class();
+            ::jxx::io::serialization::registerSerializableClass<
+                ::jxx::awt::Color>(
+                    static_cast<::jxx::lang::jlong>(118526816881161077LL),
+                    [] { return ::jxx::NEW<::jxx::awt::Color>(0); });
+            ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+                ::jxx::awt::Color, 1U, 2U>();
             (void)::jxx::awt::ComponentOrientation::Class();
             (void)::jxx::awt::Dimension::Class();
             ::jxx::io::serialization::registerSerializableClass<

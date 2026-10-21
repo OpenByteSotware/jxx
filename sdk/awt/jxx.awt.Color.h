@@ -1,13 +1,16 @@
 #pragma once
+#include "awt/jxx.awt.Paint.h"
+#include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx_types.h"
 namespace jxx::awt {
-class Color : public ::jxx::lang::ClassBase<Color, ::jxx::lang::Object> {
+class Color : public ::jxx::lang::ClassBase<
+    Color, ::jxx::lang::Object, Paint, ::jxx::io::SerializableI> {
 public:
     using JxxSuper = ::jxx::lang::Object;
-    using Super = ::jxx::lang::ClassBase<Color, JxxSuper>;
+    using Super = ::jxx::lang::ClassBase<Color, JxxSuper, Paint, ::jxx::io::SerializableI>;
     static ::jxx::Ptr<Color> white; static ::jxx::Ptr<Color> WHITE;
     static ::jxx::Ptr<Color> lightGray; static ::jxx::Ptr<Color> LIGHT_GRAY;
     static ::jxx::Ptr<Color> gray; static ::jxx::Ptr<Color> GRAY;
@@ -27,10 +30,20 @@ public:
     ::jxx::lang::jint getRed() const; ::jxx::lang::jint getGreen() const;
     ::jxx::lang::jint getBlue() const; ::jxx::lang::jint getAlpha() const;
     ::jxx::lang::jint getRGB() const;
+    ::jxx::lang::jint getTransparency() const override;
+    ::jxx::Ptr<PaintContext> createContext(
+        const ::jxx::Ptr<::jxx::awt::image::ColorModel>& colorModel,
+        const ::jxx::Ptr<Rectangle>& deviceBounds,
+        const ::jxx::Ptr<::jxx::awt::geom::Rectangle2D>& userBounds,
+        const ::jxx::Ptr<::jxx::awt::geom::AffineTransform>& transform,
+        const ::jxx::Ptr<RenderingHints>& hints) const override;
     ::jxx::Ptr<Color> brighter() const; ::jxx::Ptr<Color> darker() const;
     ::jxx::lang::jbool equals(const ::jxx::Ptr<::jxx::lang::Object>& object) const override;
     ::jxx::lang::jint hashCode() const override;
     ::jxx::Ptr<::jxx::lang::String> toString() const override;
+    void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override;
+    void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override;
+    void readObjectNoData() override;
 private:
     ::jxx::lang::jint value_;
 };

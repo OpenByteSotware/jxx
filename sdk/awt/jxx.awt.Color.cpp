@@ -2,7 +2,10 @@
 #include <algorithm>
 #include <cstdint>
 #include <sstream>
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.NullPointerException.h"
 namespace jxx::awt
 {
 	namespace
@@ -45,6 +48,21 @@ namespace jxx::awt
 	{
 		return value_;
 	}
+	::jxx::lang::jint Color::getTransparency() const
+	{
+		const auto alpha = getAlpha();
+		return alpha == 255 ? Transparency::OPAQUE
+			: (alpha == 0 ? Transparency::BITMASK : Transparency::TRANSLUCENT);
+	}
+	::jxx::Ptr<PaintContext> Color::createContext(
+		const ::jxx::Ptr<::jxx::awt::image::ColorModel>&,
+		const ::jxx::Ptr<Rectangle>&,
+		const ::jxx::Ptr<::jxx::awt::geom::Rectangle2D>&,
+		const ::jxx::Ptr<::jxx::awt::geom::AffineTransform>&,
+		const ::jxx::Ptr<RenderingHints>&) const
+	{
+		return nullptr;
+	}
 	::jxx::Ptr<Color> Color::brighter() const
 	{
 		constexpr int f = 3; int r = getRed(), g = getGreen(), b = getBlue(); if (r == 0 && g == 0 && b == 0)return ::jxx::NEW<Color>(3, 3, 3, getAlpha()); return ::jxx::NEW<Color>(std::min(255, r * 10 / 7), std::min(255, g * 10 / 7), std::min(255, b * 10 / 7), getAlpha());
@@ -63,6 +81,20 @@ namespace jxx::awt
 	::jxx::Ptr<::jxx::lang::String> Color::toString() const
 	{
 		std::ostringstream s; s << "jxx.awt.Color[r=" << getRed() << ",g=" << getGreen() << ",b=" << getBlue() << "]"; return ::jxx::NEW<::jxx::lang::String>(s.str());
+	}
+	void Color::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out)
+	{
+		if (out == nullptr) throw ::jxx::lang::NullPointerException();
+		out->writeInt(value_);
+	}
+	void Color::readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in)
+	{
+		if (in == nullptr) throw ::jxx::lang::NullPointerException();
+		value_ = in->readInt();
+	}
+	void Color::readObjectNoData()
+	{
+		value_ = static_cast<::jxx::lang::jint>(0xff000000u);
 	}
 	::jxx::Ptr<Color> Color::white = make(255, 255, 255); ::jxx::Ptr<Color> Color::WHITE = Color::white; ::jxx::Ptr<Color> Color::lightGray = make(192, 192, 192); ::jxx::Ptr<Color> Color::LIGHT_GRAY = Color::lightGray; ::jxx::Ptr<Color> Color::gray = make(128, 128, 128); ::jxx::Ptr<Color> Color::GRAY = Color::gray; ::jxx::Ptr<Color> Color::darkGray = make(64, 64, 64); ::jxx::Ptr<Color> Color::DARK_GRAY = Color::darkGray; ::jxx::Ptr<Color> Color::black = make(0, 0, 0); ::jxx::Ptr<Color> Color::BLACK = Color::black; ::jxx::Ptr<Color> Color::red = make(255, 0, 0); ::jxx::Ptr<Color> Color::RED = Color::red; ::jxx::Ptr<Color> Color::pink = make(255, 175, 175); ::jxx::Ptr<Color> Color::PINK = Color::pink; ::jxx::Ptr<Color> Color::orange = make(255, 200, 0); ::jxx::Ptr<Color> Color::ORANGE = Color::orange; ::jxx::Ptr<Color> Color::yellow = make(255, 255, 0); ::jxx::Ptr<Color> Color::YELLOW = Color::yellow; ::jxx::Ptr<Color> Color::green = make(0, 255, 0); ::jxx::Ptr<Color> Color::GREEN = Color::green; ::jxx::Ptr<Color> Color::magenta = make(255, 0, 255); ::jxx::Ptr<Color> Color::MAGENTA = Color::magenta; ::jxx::Ptr<Color> Color::cyan = make(0, 255, 255); ::jxx::Ptr<Color> Color::CYAN = Color::cyan; ::jxx::Ptr<Color> Color::blue = make(0, 0, 255); ::jxx::Ptr<Color> Color::BLUE = Color::blue;
 }
