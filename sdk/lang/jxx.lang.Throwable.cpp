@@ -2,6 +2,9 @@
 #include <iomanip>
 #include <utility>
 #include "lang/jxx.lang.Throwable.h"
+#include "io/jxx.io.PrintStream.h"
+#include "io/jxx.io.PrintWriter.h"
+#include "lang/jxx.lang.System.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.NullPointerException.h"
@@ -306,44 +309,78 @@ namespace jxx::lang
         stack_ = std::move(replacement);
     }
 
-    void Throwable::printStackTrace(
-        std::ostream& output) const
+    void Throwable::printStackTrace() const
     {
-        output << typeName();
+        printStackTrace(System::err);
+    }
 
-        if (message_ != nullptr) {
-            const auto messageText = message_->utf8();
-
-            if (!messageText.empty()) {
-                output << ": " << messageText;
-            }
+    void Throwable::printStackTrace(
+        const ::jxx::Ptr<::jxx::io::PrintStream>& output) const
+    {
+        if (output == nullptr) {
+            throw NullPointerException();
         }
 
-        output << '\n';
+        output->print(toString());
+        output->println();
 
         for (const auto& element : stack_) {
-            output << "\tat ";
-            if (element != nullptr) {
-                output << element->toString()->utf8();
-            }
-            output << '\n';
+            output->print(::jxx::NEW<String>("\tat "));
+            output->println(
+                element != nullptr
+                    ? element->toString()
+                    : ::jxx::NEW<String>("null"));
         }
 
         for (const auto& exception : suppressed_) {
-            output << "Suppressed: ";
-
+            output->print(::jxx::NEW<String>("Suppressed: "));
             if (exception != nullptr) {
                 exception->printStackTrace(output);
             }
             else {
-                output << "null\n";
+                output->println(::jxx::NEW<String>("null"));
             }
         }
 
         if (cause_ != nullptr) {
-            output << "Caused by: ";
+            output->print(::jxx::NEW<String>("Caused by: "));
             cause_->printStackTrace(output);
         }
+    }
+
+    void Throwable::printStackTrace(
+        const ::jxx::Ptr<::jxx::io::PrintWriter>& output) const
+    {
+        if (output == nullptr) {
+            throw NullPointerException();
+        }
+
+        output->print(toString());
+        output->println();
+
+        for (const auto& element : stack_) {
+            output->print(::jxx::NEW<String>("\tat "));
+            output->println(
+                element != nullptr
+                    ? element->toString()
+                    : ::jxx::NEW<String>("null"));
+        }
+
+        for (const auto& exception : suppressed_) {
+            output->print(::jxx::NEW<String>("Suppressed: "));
+            if (exception != nullptr) {
+                exception->printStackTrace(output);
+            }
+            else {
+                output->println(::jxx::NEW<String>("null"));
+            }
+        }
+
+        if (cause_ != nullptr) {
+            output->print(::jxx::NEW<String>("Caused by: "));
+            cause_->printStackTrace(output);
+        }
+        output->flush();
     }
 
     jxx::Ptr<String> Throwable::toString() const

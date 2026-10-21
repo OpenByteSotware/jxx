@@ -410,7 +410,7 @@ void Thread::destroy() {
 }
 
 void Thread::dumpStack() {
-    Throwable("Stack trace").printStackTrace(std::cerr);
+    Throwable("Stack trace").printStackTrace();
 }
 
 ::jxx::lang::jbool Thread::holdsLock(

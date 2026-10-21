@@ -8,7 +8,7 @@
 #include "util/concurrent/jxx.util.concurrent.ExecutionException.h"
 #include "util/concurrent/jxx.util.concurrent.ScheduledThreadPoolExecutor.h"
 #include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
-#include "jxx_scheduled_executor_test_support.h"
+#include "../../jxx_scheduled_executor_test_support.h"
 
 TEST(JxxScheduledExecutorPeriodicFailureTest, FailureCompletesFuture) {
     const auto executor =

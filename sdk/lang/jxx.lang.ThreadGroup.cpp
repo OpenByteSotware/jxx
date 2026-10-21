@@ -160,7 +160,7 @@ void ThreadGroup::uncaughtException(
     std::cerr << "Exception in thread "
               << (thread == nullptr ? std::string("unknown") : thread->getName()->utf8())
               << ": " << throwable->toString()->utf8() << std::endl;
-    throwable->printStackTrace(std::cerr);
+    throwable->printStackTrace();
 }
 jxx::Ptr<String> ThreadGroup::toString() const { std::ostringstream s; s << "ThreadGroup[name=" << name_->utf8() << ",maxpri=" << getMaxPriority() << ']'; return jxx::NEW<String>(s.str()); }
 void ThreadGroup::addThread_(Thread* t) { std::lock_guard<std::recursive_mutex> l(mutex_); if(destroyed_)throw IllegalThreadStateException(); threads_.push_back(t); }

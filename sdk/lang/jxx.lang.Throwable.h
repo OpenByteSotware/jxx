@@ -1,7 +1,6 @@
 #pragma once
 
 #include <exception>
-#include <ostream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -10,6 +9,12 @@
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.StackTrace.h"
 #include "lang/jxx.lang.JxxArray.h"
+
+namespace jxx::io
+{
+    class PrintStream;
+    class PrintWriter;
+}
 
 namespace jxx::lang
 {
@@ -139,8 +144,13 @@ namespace jxx::lang
         void setStackTrace(
             const StackTraceArray& stackTrace);
 
+        void printStackTrace() const;
+
         void printStackTrace(
-            std::ostream& output) const;
+            const ::jxx::Ptr<::jxx::io::PrintStream>& output) const;
+
+        void printStackTrace(
+            const ::jxx::Ptr<::jxx::io::PrintWriter>& output) const;
 
         jxx::Ptr<String> toString()
             const override;

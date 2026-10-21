@@ -6,7 +6,7 @@
 #include "io/jxx.io.ObjectInputStream.h"
 #include "io/jxx.io.ObjectOutputStream.h"
 #include "io/jxx.io.SerializationClassRegistry.h"
-#include "jxx_accumulator_serialization_test_support.h"
+#include "../../../jxx_accumulator_serialization_test_support.h"
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.ClassInitialization.h"
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.DoubleAccumulator.h"
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.LongAccumulator.h"
