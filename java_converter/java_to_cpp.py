@@ -455,12 +455,40 @@ def _safe_target(source: Path, root: Path) -> str:
     return ('_' + name) if name and name[0].isdigit() else (name or 'jxx_app')
 
 
+def normalize_cmake_include_path(jxx_include: str) -> str:
+    """Normalize a JXX include path for generated CMake files.
+
+    Native Windows drive paths are preserved without passing through
+    pathlib.Path.resolve(), which would incorrectly treat them as relative
+    paths when the converter runs under WSL/Linux. WSL /mnt/<drive>/ paths
+    are converted to Visual Studio drive paths. Other paths retain the
+    existing expanduser/resolve behavior.
+    """
+    path = os.fspath(jxx_include)
+
+    # A native Windows absolute path must not be resolved by pathlib while
+    # running on a POSIX host. Preserve its drive-letter spelling and make
+    # separators portable for CMake.
+    if re.match(r'^[A-Za-z]:[\\/]', path):
+        return path.replace('\\', '/')
+
+    # Visual Studio consumes a drive path rather than WSL's /mnt/<drive>/
+    # mount spelling. Use an uppercase drive letter for this conversion.
+    wsl_match = re.match(r'^/mnt/([A-Za-z])(?:/(.*))?$', path.replace('\\', '/'))
+    if wsl_match:
+        drive = wsl_match.group(1).upper()
+        remainder = wsl_match.group(2) or ''
+        return f'{drive}:/{remainder}' if remainder else f'{drive}:/'
+
+    return Path(path).expanduser().resolve().as_posix()
+
+
 def generate_cmake_files(out_root: str, project: str = 'TranspiledProject',
                          support_target: str = 'transpiled',
                          jxx_include: Optional[str] = None) -> Path:
     root = Path(out_root)
     jxx_include_path = (
-        Path(jxx_include).expanduser().resolve().as_posix()
+        normalize_cmake_include_path(jxx_include)
         if jxx_include else None)
     sources = sorted(root.rglob('*.cpp'))
     mains = [source for source in sources
@@ -564,7 +592,7 @@ def main():
     ap.add_argument(
         '--jxx-include',
         help=('JXX SDK root containing package directories such as lang/, io/, '
-              'util/, net/, ext/, com/, and org/. The resolved path is added '
+              'util/, net/, ext/, com/, and org/. The normalized path is added '
               'to generated CMake target_include_directories.'))
     a=ap.parse_args()
     if javalang is None: raise SystemExit('Install dependency: pip install javalang')
