@@ -1,7 +1,7 @@
 #pragma once
 #include "ext/net/ssl/jxx.ext.net.ssl.TrustManager.h"
 #include "lang/jxx.lang.Object.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 namespace jxx::security { class KeyStore; }
 namespace jxx::ext::net::ssl {
 class ManagerFactoryParameters;

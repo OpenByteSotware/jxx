@@ -3,7 +3,7 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.Object.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 namespace jxx::util::concurrent::atomic {
 template<typename V> class AtomicMarkableReference final : public ::jxx::lang::ClassBase<AtomicMarkableReference<V>,::jxx::lang::Object>{
 public:using JxxSuper=::jxx::lang::Object;using Super=::jxx::lang::ClassBase<AtomicMarkableReference<V>,JxxSuper>;using JxxClassInfoMarker=typename Super::JxxClassInfoMarker;static ::jxx::Ptr<::jxx::lang::ClassAny>Class(){return JxxClassInfoMarker::Class();}

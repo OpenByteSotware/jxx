@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "jxx.initialize.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "util/zip/jxx.util.zip.CRC32.h"
 
 TEST(CRC32Parity, WholeArrayAndRangeProduceExpectedChecksum)

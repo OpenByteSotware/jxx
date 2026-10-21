@@ -3,7 +3,7 @@
 #include "lang/jxx.lang.ArrayIndexOutOfBoundsException.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.System.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "util/jxx.util.ArrayList.h"
 #include "util/jxx.util.Arrays.h"
 

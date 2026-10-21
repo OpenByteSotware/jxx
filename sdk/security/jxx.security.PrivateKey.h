@@ -1,7 +1,7 @@
 #pragma once
 #include "security/jxx.security.Key.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 namespace jxx::security {
 class PrivateKey : public ::jxx::lang::InterfaceBase<PrivateKey, Key> {
 public:

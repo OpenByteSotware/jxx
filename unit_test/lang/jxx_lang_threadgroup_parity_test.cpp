@@ -4,7 +4,7 @@
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Thread.h"
 #include "lang/jxx.lang.ThreadGroup.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 
 namespace {
 using ::jxx::lang::IllegalThreadStateException;

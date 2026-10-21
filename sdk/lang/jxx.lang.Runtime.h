@@ -6,7 +6,7 @@
 
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "lang/jxx_types.h"
 
 namespace jxx::io { class File; class InputStream; class OutputStream; }

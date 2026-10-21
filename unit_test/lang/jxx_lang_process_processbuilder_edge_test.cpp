@@ -11,7 +11,7 @@
 #include "lang/jxx.lang.Process.h"
 #include "lang/jxx.lang.ProcessBuilder.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "util/concurrent/jxx.util.concurrent.TimeUnit.h"
 
 namespace

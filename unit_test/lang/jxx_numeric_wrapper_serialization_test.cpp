@@ -14,7 +14,7 @@
 #include "lang/jxx.lang.Integer.h"
 #include "lang/jxx.lang.Long.h"
 #include "lang/jxx.lang.Short.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 
 namespace {
 

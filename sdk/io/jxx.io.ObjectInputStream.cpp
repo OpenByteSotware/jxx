@@ -10,7 +10,7 @@
 #include "io/jxx.io.StreamCorruptedException.h"
 #include "lang/jxx.lang.Class.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "util/jxx.util.TimeZone.h"
 
 namespace jxx::io {

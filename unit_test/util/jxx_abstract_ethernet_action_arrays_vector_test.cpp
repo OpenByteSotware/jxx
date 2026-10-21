@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "util/jxx.util.Arrays.h"
 #include "util/jxx.util.Vector.h"
 

@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 
 struct ssl_ctx_st;
 

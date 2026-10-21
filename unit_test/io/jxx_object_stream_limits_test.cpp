@@ -5,7 +5,7 @@
 #include "io/jxx.io.ObjectOutputStream.h"
 #include "io/jxx.io.StreamCorruptedException.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 
 namespace {
 jxx::lang::ByteArray serialize(const jxx::Ptr<jxx::lang::Object>& value) {

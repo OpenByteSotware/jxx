@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "lang/jxx.lang.ClassInfo.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "lang/jxx_types.h"
 #include "util/jxx.util.Enumeration.h"
 

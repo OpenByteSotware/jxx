@@ -1,7 +1,7 @@
 #pragma once
 
 #include "io/jxx.io.InputStream.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 
 namespace jxx::com::sun::net::httpserver::internal {
 

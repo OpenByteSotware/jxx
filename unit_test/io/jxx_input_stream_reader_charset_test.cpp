@@ -6,7 +6,7 @@
 #include "lang/jxx.lang.NullPointerException.h"
 #include "nio/charset/jxx.nio.charset.Charset.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 
 TEST(InputStreamReaderParity, AcceptsCharsetObject)
 {

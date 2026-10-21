@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "util/jxx.util.NoSuchElementException.h"
 #include "util/jxx.util.UUID.h"
 #include "util/jxx.util.VectorEnumeration.h"

@@ -2,7 +2,7 @@
 
 #include "jxx.initialize.h"
 #include "lang/jxx.lang.System.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 
 TEST(SystemArraycopyParity, CopiesPacketPayloadAndSupportsOverlap)
 {

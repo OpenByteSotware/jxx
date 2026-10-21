@@ -3,7 +3,7 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.MarshallingBinding.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.MixedContentReader.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.LifecycleCallback.h"

@@ -4,7 +4,7 @@
 
 #include "awt/jxx.awt.Component.h"
 #include "awt/jxx.awt.LayoutManager.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 
 namespace jxx::awt::event
 {

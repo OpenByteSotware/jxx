@@ -3,7 +3,7 @@
 #include "lang/jxx.lang.Integer.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.UnsupportedOperationException.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "util/jxx.util.Arrays.h"
 #include "util/jxx.util.HashMap.h"
 #include "util/jxx.util.Iterator.h"

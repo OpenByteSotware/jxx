@@ -4,7 +4,7 @@
 
 #include "awt/jxx.awt.Shape.h"
 #include "io/jxx.io.SerializableI.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 
 namespace jxx::io
 {

@@ -6,7 +6,7 @@
 #include "lang/jxx.lang.Cast.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.StringBuilder.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 
 namespace {
 using StringArray = jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>;

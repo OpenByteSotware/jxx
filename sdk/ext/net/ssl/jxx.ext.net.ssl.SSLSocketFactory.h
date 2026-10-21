@@ -1,6 +1,6 @@
 #pragma once
 #include "ext/net/jxx.ext.net.SocketFactory.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 namespace jxx::io {class InputStream;}
 namespace jxx::ext::net::ssl {
 class SSLSocketFactory:public ::jxx::lang::ClassBase<SSLSocketFactory,::jxx::ext::net::SocketFactory>{public:

@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "awt/jxx.awt.Image.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 
 namespace jxx::awt { class Graphics2D; }
 

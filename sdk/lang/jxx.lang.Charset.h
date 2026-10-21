@@ -2,7 +2,7 @@
 #include "lang/jxx.lang.ClassInfo.h"
 
 #include "jxx_types.h"
-#include "jxx.lang.buildin_array.h"
+#include "jxx.lang.JxxArray.h"
 #include "jxx.lang.Object.h"
 
 namespace jxx::lang {

@@ -3,7 +3,7 @@
 #include <regex>
 #include <string>
 
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.CharSequence.h"
 #include "lang/jxx.lang.ClassInfo.h"

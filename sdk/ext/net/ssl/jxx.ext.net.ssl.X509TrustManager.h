@@ -1,7 +1,7 @@
 #pragma once
 #include "ext/net/ssl/jxx.ext.net.ssl.TrustManager.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 namespace jxx::security::cert { class X509Certificate; }
 namespace jxx::ext::net::ssl {
 class X509TrustManager : public ::jxx::lang::InterfaceBase<X509TrustManager,TrustManager> {

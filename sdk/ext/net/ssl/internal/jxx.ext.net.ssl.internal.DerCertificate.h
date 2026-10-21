@@ -1,7 +1,7 @@
 #pragma once
 
 #include "lang/jxx.lang.ClassInfo.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "security/cert/jxx.security.cert.Certificate.h"
 
 namespace jxx::io {

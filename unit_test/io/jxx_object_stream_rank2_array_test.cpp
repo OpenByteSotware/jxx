@@ -5,7 +5,7 @@
 #include "io/jxx.io.ObjectOutputStream.h"
 #include "lang/jxx.lang.Cast.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "jxx.initialize.h"
 
 TEST(JxxObjectStreamRank2Array, RoundTripsJaggedPrimitiveArrayWithNullAndSharedRows) {

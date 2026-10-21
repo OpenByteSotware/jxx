@@ -2,7 +2,7 @@
 
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 
 namespace jxx::ext::xml::bind::metadata { class BindingDescriptor; }
 namespace jxx::ext::xml::bind { class Unmarshaller; class Marshaller; }

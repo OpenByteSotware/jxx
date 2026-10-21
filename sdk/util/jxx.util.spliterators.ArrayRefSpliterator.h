@@ -1,7 +1,7 @@
 #pragma once
 
 #include "lang/jxx.lang.Object.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.IllegalStateException.h"
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"

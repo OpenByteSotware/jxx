@@ -14,7 +14,7 @@
 #include "io/jxx.io.FileOutputStream.h"
 #include "lang/jxx.lang.IndexOutOfBoundsException.h"
 #include "lang/jxx.lang.ArrayCopyThrow.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 
 namespace jxx::io { class Console; }
 namespace jxx::util { template <typename K, typename V> class Map; }

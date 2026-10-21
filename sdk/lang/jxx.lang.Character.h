@@ -3,7 +3,7 @@
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.Comparable.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Enum.h"

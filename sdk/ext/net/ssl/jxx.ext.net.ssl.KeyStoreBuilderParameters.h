@@ -1,7 +1,7 @@
 #pragma once
 #include "ext/net/ssl/jxx.ext.net.ssl.ManagerFactoryParameters.h"
 #include "lang/jxx.lang.Object.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "security/jxx.security.KeyStore.h"
 namespace jxx::ext::net::ssl {
 class KeyStoreBuilderParameters final : public ::jxx::lang::ClassBase<KeyStoreBuilderParameters, ::jxx::lang::Object, ManagerFactoryParameters> {

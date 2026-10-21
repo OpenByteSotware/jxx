@@ -4,7 +4,7 @@
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Throwable.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "util/jxx.util.ResourceBundle.h"
 #include "util/logging/jxx.util.logging.Level.h"
 namespace jxx::util::logging {

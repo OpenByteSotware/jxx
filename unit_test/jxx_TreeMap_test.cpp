@@ -5,7 +5,7 @@
 #include <vector>
 #include <gtest/gtest.h>
 /*
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "io/jxx.io.Serializable.h"
 #include "lang/jxx.lang.Cloneable.h"
 #include "lang/jxx.lang.Exceptions.h"

@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "net/jxx.net.DatagramSocket.h"
 #include "net/jxx.net.InetAddress.h"
 #include "net/jxx.net.InetSocketAddress.h"

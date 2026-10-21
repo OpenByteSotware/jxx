@@ -9,7 +9,7 @@
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.System.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "util/jxx.util.Arrays.h"
 #include "util/jxx.util.Timer.h"
 #include "util/jxx.util.TimerTask.h"

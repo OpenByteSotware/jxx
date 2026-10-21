@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "lang/jxx.lang.Integer.h"
 #include "lang/jxx.lang.Math.h"
 #include "lang/jxx.lang.Object.h"

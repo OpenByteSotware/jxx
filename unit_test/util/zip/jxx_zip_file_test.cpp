@@ -11,7 +11,7 @@
 #include "io/jxx.io.InputStream.h"
 #include "io/jxx.io.OutputStream.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "util/jxx.util.Enumeration.h"
 #include "util/zip/jxx.util.zip.ZipEntry.h"
 #include "util/zip/jxx.util.zip.ZipException.h"

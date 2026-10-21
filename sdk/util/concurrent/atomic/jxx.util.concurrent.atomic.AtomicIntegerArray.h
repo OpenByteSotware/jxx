@@ -6,7 +6,7 @@
 #include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 
 namespace jxx::util::concurrent::atomic {
 class AtomicIntegerArray final : public ::jxx::lang::ClassBase<AtomicIntegerArray,::jxx::lang::Object,::jxx::io::SerializableI> {

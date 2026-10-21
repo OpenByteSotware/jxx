@@ -3,7 +3,7 @@
 #include "io/jxx.io.SerializableI.h"
 #include "io/jxx.io.InvalidObjectException.h"
 #include "lang/jxx.lang.ClassInfo.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "lang/jxx.lang.CloneNotSupportedException.h"
 #include "lang/jxx.lang.ClassCastException.h"
 #include "lang/jxx.lang.Comparable.h"

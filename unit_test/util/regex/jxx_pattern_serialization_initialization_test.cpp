@@ -7,7 +7,7 @@
 #include "jxx.initialize.h"
 #include "lang/jxx.lang.CharSequence.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "util/regex/jxx.util.regex.Pattern.h"
 #include "util/regex/jxx.util.regex.Matcher.h"
 

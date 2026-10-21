@@ -1,7 +1,7 @@
 #pragma once
 
 #include "io/jxx.io.FilterInputStream.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "lang/jxx_types.h"
 
 namespace jxx::io {

@@ -8,7 +8,7 @@
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.ProcessBuilder.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 
 namespace {
 using ::jxx::lang::IllegalArgumentException;

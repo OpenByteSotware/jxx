@@ -5,7 +5,7 @@
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.Class.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "security/jxx.security.PrivateKey.h"
 #include "util/jxx.util.Date.h"
 #include "ext/crypto/jxx.ext.crypto.SecretKey.h"

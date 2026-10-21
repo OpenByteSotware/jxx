@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "lang/jxx_types.h"
 #include "io/jxx.io.Serializable.h"
 #include "lang/jxx.lang.CharSequence.h"

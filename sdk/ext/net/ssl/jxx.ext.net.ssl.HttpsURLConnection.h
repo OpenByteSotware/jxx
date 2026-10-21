@@ -1,7 +1,7 @@
 #pragma once
 #include "ext/net/ssl/jxx.ext.net.ssl.HostnameVerifier.h"
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLSocketFactory.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "net/jxx.net.HttpURLConnection.h"
 #include "security/cert/jxx.security.cert.Certificate.h"
 #include "security/jxx.security.Principal.h"

@@ -1,7 +1,7 @@
 #pragma once
 #include "io/jxx.io.Flushable.h"
 #include "lang/jxx.lang.ClassInfo.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 namespace jxx::lang { class String; }
 namespace jxx::io { class PrintWriter; class Reader;
 class Console final : public ::jxx::lang::ClassBase<Console,::jxx::lang::Object,Flushable> {

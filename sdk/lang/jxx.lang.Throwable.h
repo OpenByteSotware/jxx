@@ -9,7 +9,7 @@
 #include "lang/jxx.lang.ClassInfoMarker.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.StackTrace.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 
 namespace jxx::lang
 {

@@ -2,7 +2,7 @@
 #include <vector>
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "nio/jxx.nio.ByteBuffer.h"
 #include "io/jxx.io.InputStream.h"
 #include "io/jxx.io.OutputStream.h"

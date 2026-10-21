@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "nio/jxx.nio.ByteOrder.h"
 #include "nio/jxx.nio.IntBuffer.h"
 #include "nio/jxx.nio.LongBuffer.h"

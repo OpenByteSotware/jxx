@@ -8,7 +8,7 @@
 #include "io/jxx.io.ObjectInputStream.h"
 #include "io/jxx.io.ObjectOutputStream.h"
 #include "jxx.initialize.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.DoubleAdder.h"
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.LongAdder.h"
 

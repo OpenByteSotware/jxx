@@ -3,7 +3,7 @@
 #include "lang/jxx.lang.StackTraceElement.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Throwable.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 
 TEST(JxxLangStackTraceElementStage, ExposesFrameProperties) {
     const auto frame = ::jxx::NEW<::jxx::lang::StackTraceElement>(

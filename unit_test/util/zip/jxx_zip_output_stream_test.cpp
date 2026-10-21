@@ -6,7 +6,7 @@
 #include "io/jxx.io.ByteArrayOutputStream.h"
 #include "io/jxx.io.OutputStream.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "util/zip/jxx.util.zip.CRC32.h"
 #include "util/zip/jxx.util.zip.ZipEntry.h"
 #include "util/zip/jxx.util.zip.ZipException.h"

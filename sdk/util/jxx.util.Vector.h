@@ -18,7 +18,7 @@
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "util/jxx.util.AbstractList.h"
 #include "util/jxx.util.ComparatorSuper.h"
 #include "util/jxx.util.ConcurrentModificationException.h"

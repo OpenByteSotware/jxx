@@ -2,7 +2,7 @@
 
 #include "ext/net/ssl/jxx.ext.net.ssl.SSLSocketFactory.h"
 #include "io/jxx.io.ByteArrayInputStream.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 
 namespace {
 

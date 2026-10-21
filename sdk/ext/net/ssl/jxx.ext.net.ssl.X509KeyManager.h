@@ -1,7 +1,7 @@
 #pragma once
 #include "ext/net/ssl/jxx.ext.net.ssl.KeyManager.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 namespace jxx::net { class Socket; }
 namespace jxx::security { class Principal; class PrivateKey; }
 namespace jxx::security::cert { class X509Certificate; }

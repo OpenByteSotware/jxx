@@ -5,7 +5,7 @@
 #include <mutex>
 
 #include "lang/jxx_types.h"
-#include "jxx.lang.buildin_array.h"
+#include "jxx.lang.JxxArray.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "jxx.lang.Object.h"
 #include "jxx.lang.CharSequence.h"

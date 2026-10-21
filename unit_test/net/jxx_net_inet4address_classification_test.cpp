@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "net/jxx.net.InetAddress.h"
 namespace {
 ::jxx::Ptr<::jxx::net::InetAddress> address4(unsigned a,unsigned b,unsigned c,unsigned d){auto x=::jxx::NEW<::jxx::lang::ByteArrayType>(4);(*x)[0]=a;(*x)[1]=b;(*x)[2]=c;(*x)[3]=d;return ::jxx::net::InetAddress::getByAddress(x);}

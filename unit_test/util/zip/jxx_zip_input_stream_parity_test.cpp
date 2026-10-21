@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "io/jxx.io.ByteArrayInputStream.h"
 #include "io/jxx.io.EOFException.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "util/zip/jxx.util.zip.ZipInputStream.h"
 namespace
 {

@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "lang/jxx_types.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "nio/jxx.nio.Buffer.h"
 #include "lang/jxx.lang.String.h"
 

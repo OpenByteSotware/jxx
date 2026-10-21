@@ -2,7 +2,7 @@
 #include "io/jxx.io.Closeable.h"
 #include "io/jxx.io.Flushable.h"
 #include "lang/jxx.lang.ClassInfo.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "lang/jxx_types.h"
 namespace jxx::io {
 class OutputStream : public ::jxx::lang::ClassBase<OutputStream, ::jxx::lang::Object, Closeable, Flushable> {

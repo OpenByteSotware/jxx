@@ -1,7 +1,7 @@
 #pragma once
 
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "net/jxx.net.ServerSocket.h"
 
 namespace jxx::ext::net::ssl {

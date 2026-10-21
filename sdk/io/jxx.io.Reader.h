@@ -3,7 +3,7 @@
 #include "io/jxx.io.Closeable.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Readable.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "lang/jxx_types.h"
 
 namespace jxx::io {

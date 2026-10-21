@@ -6,7 +6,7 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.UnsupportedOperationException.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "util/jxx.util.Collection.h"
 
 namespace jxx::util

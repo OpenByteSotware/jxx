@@ -2,7 +2,7 @@
 #include "ext/xml/bind/annotation/jxx.ext.xml.bind.annotation.XmlElement.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 namespace jxx::ext::xml::bind::annotation {
 class XmlElements final
     : public ::jxx::lang::ClassBase<XmlElements, ::jxx::lang::Object> {

@@ -2,7 +2,7 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Comparable.h"
 #include "io/jxx.io.SerializableI.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 namespace jxx::lang { class String; }
 namespace jxx::io {
 class File final : public ::jxx::lang::ClassBase<File,::jxx::lang::Object,::jxx::lang::Comparable<File>,::jxx::io::SerializableI> {

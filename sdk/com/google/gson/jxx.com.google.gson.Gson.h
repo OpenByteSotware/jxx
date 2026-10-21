@@ -2,7 +2,7 @@
 
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "lang/jxx.lang.Class.h"
 #include "com/google/gson/jxx.com.google.gson.FieldNamingStrategy.h"
 #include "com/google/gson/jxx.com.google.gson.InstanceCreator.h"

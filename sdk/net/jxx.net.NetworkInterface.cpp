@@ -36,7 +36,7 @@
 
 #include "lang/jxx.lang.Exceptions.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 
 #include "net/internal/jxx.net.internal.NetPlatform.h"
 #include "net/jxx.net.Inet4Address.h"

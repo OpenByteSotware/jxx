@@ -6,7 +6,7 @@
 #include "io/jxx.io.ObjectOutputStream.h"
 #include "jxx.initialize.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "util/jxx.util.Calendar.h"
 #include "util/jxx.util.TimeZone.h"
 

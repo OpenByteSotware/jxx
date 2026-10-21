@@ -4,7 +4,7 @@
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.Class.h"
 #include "lang/jxx.lang.String.h"
-#include "lang/jxx.lang.buildin_array.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.ObjectFactory.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.PropertyBinding.h"
 #include "ext/xml/bind/metadata/jxx.ext.xml.bind.metadata.MixedContentWriter.h"
