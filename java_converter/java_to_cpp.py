@@ -352,9 +352,10 @@ class Translator:
         tree=javalang.parse.parse(src);self.gather(tree)
         pkg=tree.package.name if tree.package else ''; rel=Path(*pkg.split('.')) if pkg else Path()
         output_dir=Path(out_root)/rel
-        dotted=pkg
-        file_stem=f'jxx.{dotted}.{stem}' if dotted else f'jxx.{stem}'
-        hp=output_dir/f'{file_stem}.h';cp=output_dir/f'{file_stem}.cpp'
+        # The package directory already provides name separation. Preserve
+        # the source filename so Abstraction.java generates Abstraction.h and
+        # Abstraction.cpp in the replicated package folder.
+        hp=output_dir/f'{stem}.h';cp=output_dir/f'{stem}.cpp'
         output_dir.mkdir(parents=True,exist_ok=True)
         # resolve declarations before includes are emitted
         for t in tree.types or []:
