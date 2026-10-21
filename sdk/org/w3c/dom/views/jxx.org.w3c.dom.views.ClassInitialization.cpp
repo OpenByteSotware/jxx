@@ -16,4 +16,10 @@ void initializeClasses()
     });
 }
 
+
+void initialize()
+{
+    initializeClasses();
+}
+
 } // namespace jxx::org::w3c::dom::views

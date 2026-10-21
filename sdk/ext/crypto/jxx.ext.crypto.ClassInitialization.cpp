@@ -12,4 +12,10 @@ void initializeClasses()
             ::jxx::ext::security::auth::Destroyable>::Class();
     });
 }
+
+void initialize()
+{
+    initializeClasses();
+}
+
 } // namespace jxx::ext::crypto

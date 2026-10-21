@@ -22,4 +22,10 @@ void initializeClasses() {
         (void)::jxx::lang::ClassBase<Locator2Impl, ::jxx::org::xml::sax::helpers::LocatorImpl, Locator2>::Class();
     });
 }
+
+void initialize()
+{
+    initializeClasses();
+}
+
 }

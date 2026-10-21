@@ -12,4 +12,10 @@ void initializeClasses()
             ::jxx::security::Principal>::Class();
     });
 }
+
+void initialize()
+{
+    initializeClasses();
+}
+
 } // namespace jxx::ext::security::auth::x500

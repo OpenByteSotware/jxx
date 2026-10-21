@@ -3,4 +3,6 @@
 namespace jxx::awt
 {
     void initializeClasses();
+void initialize();
+
 }

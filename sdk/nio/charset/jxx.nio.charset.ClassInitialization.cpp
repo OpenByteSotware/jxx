@@ -19,4 +19,10 @@ void initializeClasses()
         (void)::jxx::lang::ClassBase<StandardCharsets, ::jxx::lang::Object>::Class();
     });
 }
+
+void initialize()
+{
+    initializeClasses();
+}
+
 } // namespace jxx::nio::charset

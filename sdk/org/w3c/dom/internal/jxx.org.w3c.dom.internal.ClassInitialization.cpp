@@ -10,4 +10,10 @@ void initializeClasses() {
         (void)::jxx::lang::ClassBase<DOMImplementationSourceImpl, ::jxx::lang::Object, ::jxx::org::w3c::dom::DOMImplementationSource>::Class();
     });
 }
+
+void initialize()
+{
+    initializeClasses();
+}
+
 }

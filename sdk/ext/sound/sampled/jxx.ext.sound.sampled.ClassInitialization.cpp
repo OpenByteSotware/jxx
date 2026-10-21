@@ -17,4 +17,10 @@ namespace jxx::ext::sound::sampled
             (void)UnsupportedAudioFileException::Class();
         });
     }
+
+void initialize()
+{
+    initializeClasses();
+}
+
 }

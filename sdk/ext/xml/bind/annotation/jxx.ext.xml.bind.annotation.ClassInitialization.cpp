@@ -44,4 +44,10 @@ void initializeClasses()
     });
 }
 
+
+void initialize()
+{
+    initializeClasses();
+}
+
 } // namespace jxx::ext::xml::bind::annotation

@@ -1,2 +1,4 @@
 #pragma once
-namespace jxx::org::w3c::dom::ls::internal { void initializeClasses(); }
+namespace jxx::org::w3c::dom::ls::internal { void initializeClasses(); void initialize();
+
+}

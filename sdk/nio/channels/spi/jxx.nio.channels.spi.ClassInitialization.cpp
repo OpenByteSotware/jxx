@@ -17,4 +17,10 @@ void initializeClasses()
         (void)::jxx::lang::ClassBase<SelectorProvider, ::jxx::lang::Object>::Class();
     });
 }
+
+void initialize()
+{
+    initializeClasses();
+}
+
 }

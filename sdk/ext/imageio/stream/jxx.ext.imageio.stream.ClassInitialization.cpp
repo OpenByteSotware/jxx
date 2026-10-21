@@ -7,4 +7,10 @@
 namespace jxx::ext::imageio::stream {
 namespace { template<class T> void reg(){::jxx::lang::class_info_detail::registerClassInfo<T>();} }
 void initializeClasses(){static std::once_flag f;std::call_once(f,[]{reg<ImageInputStream>();reg<ImageOutputStream>();reg<MemoryCacheImageOutputStream>();});}
+
+void initialize()
+{
+    initializeClasses();
+}
+
 }

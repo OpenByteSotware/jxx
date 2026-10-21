@@ -50,4 +50,10 @@ void initializeClasses()
     });
 }
 
+
+void initialize()
+{
+    initializeClasses();
+}
+
 } // namespace jxx::com::sun::net::httpserver::internal

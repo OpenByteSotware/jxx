@@ -11,4 +11,10 @@ void initializeClasses()
         (void)::jxx::lang::ClassBase<NativeSelectorProvider, ::jxx::nio::channels::spi::SelectorProvider>::Class();
     });
 }
+
+void initialize()
+{
+    initializeClasses();
+}
+
 }

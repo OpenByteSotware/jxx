@@ -80,4 +80,10 @@ void initializeClasses()
     });
 }
 
+
+void initialize()
+{
+    initializeClasses();
+}
+
 } // namespace jxx::security

@@ -11,4 +11,10 @@ void initializeClasses()
             ::jxx::lang::Object>::Class();
     });
 }
+
+void initialize()
+{
+    initializeClasses();
+}
+
 } // namespace jxx::org::w3c::dom::bootstrap

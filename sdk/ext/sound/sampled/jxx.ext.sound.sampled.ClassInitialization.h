@@ -1,2 +1,4 @@
 #pragma once
-namespace jxx::ext::sound::sampled { void initializeClasses(); }
+namespace jxx::ext::sound::sampled { void initializeClasses(); void initialize();
+
+}

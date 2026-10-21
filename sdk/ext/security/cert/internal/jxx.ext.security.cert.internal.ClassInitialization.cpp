@@ -16,4 +16,10 @@ void initializeClasses()
     });
 }
 
+
+void initialize()
+{
+    initializeClasses();
+}
+
 } // namespace jxx::ext::security::cert::internal

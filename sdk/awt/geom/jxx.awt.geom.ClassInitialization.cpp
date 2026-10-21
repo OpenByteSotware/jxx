@@ -42,4 +42,10 @@ namespace jxx::awt::geom
                 static_cast<::jxx::lang::jlong>(6150783262733311327LL));
         });
     }
+
+void initialize()
+{
+    initializeClasses();
+}
+
 }

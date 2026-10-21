@@ -1,2 +1,4 @@
 #pragma once
-namespace jxx::ext::imageio { void initializeClasses(); }
+namespace jxx::ext::imageio { void initializeClasses(); void initialize();
+
+}

@@ -12,4 +12,10 @@ namespace jxx::ext::imageio {
         (void)ImageWriteParam::Class(); 
         (void)ImageWriter::Class();
          (void)::jxx::ext::imageio::internal::JpegImageWriter::Class();
-         }); } }
+         }); } 
+void initialize()
+{
+    initializeClasses();
+}
+
+}

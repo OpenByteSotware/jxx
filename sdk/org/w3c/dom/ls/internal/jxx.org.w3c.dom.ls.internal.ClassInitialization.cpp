@@ -18,4 +18,10 @@ void initializeClasses() {
         (void)::jxx::lang::ClassBase<LSSerializerImpl, ::jxx::lang::Object, ::jxx::org::w3c::dom::ls::LSSerializer>::Class();
     });
 }
+
+void initialize()
+{
+    initializeClasses();
+}
+
 }

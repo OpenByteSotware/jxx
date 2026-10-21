@@ -131,4 +131,10 @@ namespace jxx::io
         reg<Writer>();
 	   });
 	}
+
+void initialize()
+{
+    initializeClasses();
+}
+
 }

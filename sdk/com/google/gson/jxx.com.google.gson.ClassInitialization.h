@@ -15,4 +15,6 @@ void initializeLinkedTreeMapClass()
     (void)MapType::Class();
 }
 
+void initialize();
+
 } // namespace com::google::gson

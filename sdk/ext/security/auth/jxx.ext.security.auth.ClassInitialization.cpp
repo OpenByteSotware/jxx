@@ -9,4 +9,10 @@ void initializeClasses()
         (void)::jxx::lang::InterfaceBase<Destroyable>::Class();
     });
 }
+
+void initialize()
+{
+    initializeClasses();
+}
+
 } // namespace jxx::ext::security::auth

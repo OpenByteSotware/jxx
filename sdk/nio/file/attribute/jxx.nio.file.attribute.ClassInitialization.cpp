@@ -12,4 +12,10 @@ void initializeClasses()
             ::jxx::lang::Comparable<FileTime>>::Class();
     });
 }
+
+void initialize()
+{
+    initializeClasses();
+}
+
 } // namespace jxx::nio::file::attribute

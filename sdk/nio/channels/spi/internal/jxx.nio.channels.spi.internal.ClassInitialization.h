@@ -1,2 +1,4 @@
 #pragma once
-namespace jxx::nio::channels::spi::internal { void initializeClasses(); }
+namespace jxx::nio::channels::spi::internal { void initializeClasses(); void initialize();
+
+}

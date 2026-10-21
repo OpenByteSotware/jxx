@@ -20,4 +20,10 @@ namespace jxx::awt::image
 				  (void)RGBImageFilter::Class();
 	   });
 	}
+
+void initialize()
+{
+    initializeClasses();
+}
+
 }

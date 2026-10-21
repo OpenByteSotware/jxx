@@ -1,12 +1,5 @@
 #include "awt/jxx.awt.ClassInitialization.h"
-#include "awt/event/jxx.awt.event.ComponentEvent.h"
-#include "awt/event/jxx.awt.event.ContainerEvent.h"
-#include "awt/event/jxx.awt.event.FocusEvent.h"
-#include "awt/event/jxx.awt.event.HierarchyEvent.h"
-#include "awt/event/jxx.awt.event.InputEvent.h"
-#include "awt/event/jxx.awt.event.KeyEvent.h"
-#include "awt/event/jxx.awt.event.MouseEvent.h"
-#include "awt/event/jxx.awt.event.MouseWheelEvent.h"
+#include "awt/event/jxx.awt.event.ClassInitialization.h"
 #include "awt/jxx.awt.AWTEvent.h"
 #include "awt/jxx.awt.AlphaComposite.h"
 #include "awt/jxx.awt.BasicStroke.h"
@@ -42,15 +35,8 @@ namespace jxx::awt
         static std::once_flag flag;
         std::call_once(flag, []()
         {
+            ::jxx::awt::event::initialize();
             (void)::jxx::awt::AWTEvent::Class();
-            (void)::jxx::awt::event::ComponentEvent::Class();
-            (void)::jxx::awt::event::ContainerEvent::Class();
-            (void)::jxx::awt::event::FocusEvent::Class();
-            (void)::jxx::awt::event::HierarchyEvent::Class();
-            (void)::jxx::awt::event::InputEvent::Class();
-            (void)::jxx::awt::event::KeyEvent::Class();
-            (void)::jxx::awt::event::MouseEvent::Class();
-            (void)::jxx::awt::event::MouseWheelEvent::Class();
             (void)::jxx::awt::AlphaComposite::Class();
             (void)::jxx::awt::BasicStroke::Class();
             (void)::jxx::awt::BufferCapabilities::Class();
@@ -58,11 +44,6 @@ namespace jxx::awt
             (void)::jxx::awt::Color::Class();
             (void)::jxx::awt::ComponentOrientation::Class();
             (void)::jxx::awt::Dimension::Class();
-            ::jxx::io::serialization::registerSerializableClass<
-                ::jxx::awt::Dimension>(
-                    static_cast<::jxx::lang::jlong>(4723952579491349524LL));
-            ::jxx::io::serialization::registerClassReferenceArrayCodecs<
-                ::jxx::awt::Dimension, 1U, 2U>();
             (void)::jxx::awt::Font::Class();
             (void)::jxx::awt::GradientPaint::Class();
             (void)::jxx::awt::Graphics::Class();
@@ -86,4 +67,10 @@ namespace jxx::awt
             (void)::jxx::awt::Toolkit::Class();
         });
     }
+
+void initialize()
+{
+    initializeClasses();
+}
+
 }
