@@ -141,7 +141,12 @@ class Translator:
         root=parts[0]
         mapped=self.qmap(self.imports.get(root,root))[0]
         if len(parts)>1:
-            mapped+='::'+'::'.join(parts[1:])
+            # The root denotes a type, so its first member uses static access.
+            # Any remaining dotted components are object fields held through
+            # JXX shared pointers and therefore use pointer member access.
+            mapped+='::'+parts[1]
+            for field in parts[2:]:
+                mapped+=f'->{field}'
         return mapped
 
     def ref_raw(self,t)->str:
@@ -326,7 +331,12 @@ class Translator:
             return ''.join(getattr(e,'prefix_operators',None) or [])+base+''.join(getattr(e,'postfix_operators',None) or [])
         if n=='MethodInvocation':
             q=getattr(e,'qualifier',None)
-            if q and (q in self.imports or q[0].isupper()): head=f'{self.qualified_static_owner(q)}::{e.member}'
+            if q and (q in self.imports or q[0].isupper()):
+                owner=self.qualified_static_owner(q)
+                # Class.method is static and uses ::. Class.field.method calls
+                # through the field object and must use ->.
+                access='->' if '.' in q else '::'
+                head=f'{owner}{access}{e.member}'
             else: head=f'{q}->{e.member}' if q else e.member
             return f'{head}({", ".join(self.expr(x) for x in e.arguments or [])})'
         if n=='ClassCreator': return f'::jxx::NEW<{self.ref_raw(e.type)}>({", ".join(self.expr(x) for x in e.arguments or [])})'
