@@ -73,6 +73,7 @@ class Translator:
         self.main_entries:Dict[str,str]={}
         self.generated_files:List[Path]=[]
         self.type_parameters:Set[str]=set()
+        self.declared_type_parameters:Set[str]=set()
 
     @staticmethod
     def simple(n): return str(n).split('.')[-1]
@@ -113,7 +114,9 @@ class Translator:
         elif name in self.imports:
             name=self.imports[name]
         elif ('.' not in name and name not in self.known_types and
-              name not in self.type_parameters and len(self.wildcard_imports) == 1):
+              name not in self.type_parameters and
+              name not in self.declared_type_parameters and
+              len(self.wildcard_imports) == 1):
             # Resolve an unqualified type through the single on-demand import.
             # ref_raw() then records the concrete JXX class header.
             name=f'{self.wildcard_imports[0]}.{name}'
@@ -202,6 +205,11 @@ class Translator:
         self.known_types.update(t.name for t in tree.types or [])
         for declaration in self.class_declarations(tree):
             self.known_types.add(declaration.name)
+            self.declared_type_parameters.update(
+                self.type_parameter_names(declaration))
+            for member in getattr(declaration, 'body', None) or []:
+                self.declared_type_parameters.update(
+                    self.type_parameter_names(member))
         for imp in tree.imports or []:
             p=imp.path
             if p.startswith('java.lang.reflect.') and p != 'java.lang.reflect.InvocationTargetException':
