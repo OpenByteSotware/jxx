@@ -163,12 +163,12 @@ class Translator:
     def resolve(self,t,extra_dims=0)->CType:
         if t is None: return CType('void',void=True)
         tn=type(t).__name__; name=self.name_of(t)
-        # A type parameter already denotes the translated C++ template argument.
-        # Do not wrap it in another Ptr, otherwise node<T> becomes node<Ptr<T>>.
-        if name in self.type_parameters:
-            return CType(name, primitive=True)
         dims=len(getattr(t,'dimensions',None) or [])+extra_dims
-        if tn=='BasicType' or name in PRIMITIVES:
+        # A method or class type parameter remains the C++ template argument,
+        # while any source array dimensions are still applied around it.
+        if name in self.type_parameters:
+            base=CType(name,primitive=True)
+        elif tn=='BasicType' or name in PRIMITIVES:
             base=CType(PRIMITIVES.get(name,name),primitive=True,void=(name=='void'))
         else: base=CType(self.ref_raw(t))
         if not dims: return base
@@ -428,6 +428,29 @@ class Translator:
         o.exit(); o.w('};')
         self.type_parameters=previous
 
+    def method_type_parameter_names(self, method)->List[str]:
+        return self.type_parameter_names(method)
+
+    def emit_template_method(self, method, owner_name, o):
+        names=self.method_type_parameter_names(method)
+        previous=set(self.type_parameters)
+        self.type_parameters.update(names)
+        template=self.template_line(names)
+        if template:
+            o.w(template)
+        modifiers=getattr(method,'modifiers',None) or set()
+        prefix='static ' if 'static' in modifiers else ''
+        if getattr(method,'body',None) is None:
+            o.w(f'{prefix}{self.sig(method,owner_name)};')
+        else:
+            o.w(f'{prefix}{self.sig(method,owner_name)} {{');o.enter()
+            old=self.current_return
+            self.current_return=self.resolve(method.return_type,len(getattr(method,'dimensions',None) or [])).value()
+            for statement in method.body or []:
+                self.stmt(statement,o)
+            self.current_return=old;o.exit();o.w('}')
+        self.type_parameters=previous
+
     def header(self,tree)->str:
         o=Emit();o.w('#pragma once')
         for x in sorted(self.includes):o.w(f'#include "{x}"')
@@ -465,6 +488,10 @@ class Translator:
                         typ=self.resolve(m.type).value(); init=f' = {self.expr(d.initializer)}' if d.initializer is not None else (' = nullptr' if typ.startswith('::jxx::Ptr<') else '')
                         o.w(f'{prefix}{typ} {d.name}{init};')
                 elif n in ('MethodDeclaration','ConstructorDeclaration'):
+                    if n=='MethodDeclaration' and self.method_type_parameter_names(m):
+                        # Function templates must be defined in the header.
+                        self.emit_template_method(m,t.name,o)
+                        continue
                     if self.is_java_main(m,t.name):
                         o.w(f'static {self.sig(m,t.name)};')
                         continue
@@ -504,6 +531,8 @@ class Translator:
         for t in self.class_declarations(tree):
             for m in t.body or []:
                 if type(m).__name__ not in ('MethodDeclaration','ConstructorDeclaration') or getattr(m,'body',None) is None:continue
+                if type(m).__name__=='MethodDeclaration' and self.method_type_parameter_names(m):
+                    continue
                 is_constructor=type(m).__name__=='ConstructorDeclaration'
                 initializer,statements=(
                     self.constructor_initializer(m,t.name)
