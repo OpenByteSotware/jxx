@@ -32,7 +32,7 @@ PRIMITIVES={
 UNSUPPORTED=('java.lang.annotation','java.lang.instrument','java.lang.invoke')
 # Names supplied by the implicit language package or by the converter's
 # standard support includes must not be resolved through an on-demand import.
-DEFAULT_LANGUAGE_TYPES={'Object','String','System','JxxArray','Class'}
+DEFAULT_LANGUAGE_TYPES={'Object','String','System','JxxArray','Class','Integer','Character','Boolean','Byte','Short','Long','Float','Double'}
 SPECIAL_TYPES={
     'java.lang.reflect.InvocationTargetException':'java.lang.InvocationTargetException',
     'java.util.Map.Entry':'java.util.MapEntry',
@@ -111,6 +111,7 @@ class Translator:
             elif name=='System': name='java.lang.System'
             elif name=='Class': name='java.lang.ClassAny'
             elif name=='JxxArray': return '::jxx::JxxArray',None
+            else: name=f'java.lang.{name}'
         elif name in self.imports:
             name=self.imports[name]
         elif ('.' not in name and name not in self.known_types and
@@ -356,6 +357,23 @@ class Translator:
         if n=='ArraySelector': return f'({self.expr(e.index)})'
         return str(e)
 
+    def array_initializer_value(self, element_type, expression):
+        value=self.expr(expression)
+        name=self.name_of(element_type)
+        if name in {'Integer','Character','Boolean','Byte','Short','Long','Float','Double'}:
+            raw=self.qmap(name)[0]
+            return f'::jxx::NEW<{raw}>({value})'
+        return value
+
+    def emit_local_array_initializer(self, declaration, declarator, o, dims):
+        array_type=self.resolve(declaration.type,dims).value()
+        element=self.resolve(declaration.type).value()
+        values=list(getattr(declarator.initializer,'initializers',None) or [])
+        o.w(f'{array_type} {declarator.name} = ::jxx::NEW<::jxx::JxxArray<{element}, {dims}U>>({len(values)}U);')
+        for index,value in enumerate(values):
+            converted=self.array_initializer_value(declaration.type,value)
+            o.w(f'(*{declarator.name})({index}U) = {converted};')
+
     def stmt(self,s,o):
         if s is None:return
         n=type(s).__name__
@@ -368,8 +386,12 @@ class Translator:
             if type(x).__name__=='ClassCreator': o.w(f'throw {self.ref_raw(x.type)}({", ".join(self.expr(a) for a in x.arguments or [])});')
             else:o.w(f'throw {self.expr(x)};')
         elif n=='LocalVariableDeclaration':
-            t=self.resolve(s.type)
             for d in s.declarators:
+                dims=len(getattr(d,'dimensions',None) or [])
+                if type(getattr(d,'initializer',None)).__name__=='ArrayInitializer':
+                    self.emit_local_array_initializer(s,d,o,max(dims,1))
+                    continue
+                t=self.resolve(s.type,dims)
                 init=f' = {self.expr(d.initializer)}' if d.initializer is not None else ''
                 const='const ' if 'final' in (s.modifiers or set()) else ''
                 o.w(f'{const}{t.value()} {d.name}{init};')
