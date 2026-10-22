@@ -247,6 +247,26 @@ class Translator:
                for m in getattr(t,'body',None) or []):
             self.includes.update({'lang/jxx.lang.System.h','lang/jxx.lang.String.h','lang/jxx.lang.Throwable.h'})
 
+    def gather_body_type_includes(self, tree):
+        """Resolve body-level declared and constructed types before header output."""
+        filter_method=getattr(tree,'filter',None)
+        tree_module=getattr(javalang,'tree',None)
+        if callable(filter_method) and tree_module is not None:
+            local_type=getattr(tree_module,'LocalVariableDeclaration',None)
+            creator_type=getattr(tree_module,'ClassCreator',None)
+            catch_type=getattr(tree_module,'CatchClauseParameter',None)
+            if local_type is not None:
+                for _,node in filter_method(local_type):
+                    self.resolve(node.type)
+            if creator_type is not None:
+                for _,node in filter_method(creator_type):
+                    self.ref_raw(node.type)
+            if catch_type is not None:
+                for _,node in filter_method(catch_type):
+                    for catch_name in getattr(node,'types',None) or []:
+                        _,include=self.qmap(catch_name)
+                        if include:self.includes.add(include)
+
     def is_java_main(self, m, owner_name: Optional[str] = None) -> bool:
         if type(m).__name__ != 'MethodDeclaration' or m.name != 'main':
             return False
@@ -602,6 +622,9 @@ class Translator:
         self.main_entries=self.detect_main_entries(src)
         self.main_owner_names=set(self.main_entries)
         tree=javalang.parse.parse(src);self.gather(tree)
+        # Header includes must be complete before header() is emitted. Body
+        # translation can discover types such as Scanner, but that is too late.
+        self.gather_body_type_includes(tree)
         pkg=tree.package.name if tree.package else ''; rel=Path(*pkg.split('.')) if pkg else Path()
         output_dir=Path(out_root)/rel
         # The package directory already provides name separation. Preserve
