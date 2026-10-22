@@ -279,7 +279,7 @@ class Translator:
             return f'({self.expr(e.operandl)} {e.operator} {self.expr(e.operandr)})'
         if n=='Assignment': return f'({self.expr(e.expressionl)} {e.type or "="} {self.expr(e.value)})'
         if n=='TernaryExpression': return f'({self.expr(e.condition)} ? {self.expr(e.if_true)} : {self.expr(e.if_false)})'
-        if n=='ArraySelector': return f'[{self.expr(e.index)}]'
+        if n=='ArraySelector': return f'({self.expr(e.index)})'
         return str(e)
 
     def stmt(self,s,o):
@@ -392,7 +392,7 @@ class Translator:
         o.w(f'auto {parameter_name} = ::jxx::NEW<JxxStringArray>(')
         o.enter();o.w('static_cast<std::uint32_t>(sourceArgc));');o.exit()
         o.w('for (int index = 1; index < argc; ++index) {');o.enter()
-        o.w(f'(*{parameter_name})[static_cast<std::uint32_t>(index - 1)] =')
+        o.w(f'(*{parameter_name})(static_cast<std::uint32_t>(index - 1)) =')
         o.enter();o.w('::jxx::NEW<JxxString>(argv[index]);');o.exit()
         o.exit();o.w('}')
         o.w(f'{target}::jxxMain({parameter_name});')
