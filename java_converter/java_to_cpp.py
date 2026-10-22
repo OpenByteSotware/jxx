@@ -136,6 +136,14 @@ class Translator:
         fn=f'{prefix}.{dotted}.{typ}.h'
         return raw,(f'{folder}/{fn}' if folder else fn)
 
+    def qualified_static_owner(self, qualifier:str)->str:
+        parts=qualifier.split('.')
+        root=parts[0]
+        mapped=self.qmap(self.imports.get(root,root))[0]
+        if len(parts)>1:
+            mapped+='::'+'::'.join(parts[1:])
+        return mapped
+
     def ref_raw(self,t)->str:
         name=self.name_of(t); raw,inc=self.qmap(name)
         if inc: self.includes.add(inc)
@@ -312,13 +320,13 @@ class Translator:
             if q:
                 fq=self.imports.get(q,q)
                 if e.member in STATIC_ACCESSORS.get(fq,set()): base=f'{self.qmap(fq)[0]}::{e.member}()'
-                elif q in self.imports or (q and q[0].isupper()): base=f'{self.qmap(fq)[0]}::{e.member}'
+                elif q in self.imports or (q and q[0].isupper()): base=f'{self.qualified_static_owner(q)}::{e.member}'
                 else: base=f'{q}->{e.member}'
             else: base=e.member
             return ''.join(getattr(e,'prefix_operators',None) or [])+base+''.join(getattr(e,'postfix_operators',None) or [])
         if n=='MethodInvocation':
             q=getattr(e,'qualifier',None)
-            if q and (q in self.imports or q[0].isupper()): head=f'{self.qmap(self.imports.get(q,q))[0]}::{e.member}'
+            if q and (q in self.imports or q[0].isupper()): head=f'{self.qualified_static_owner(q)}::{e.member}'
             else: head=f'{q}->{e.member}' if q else e.member
             return f'{head}({", ".join(self.expr(x) for x in e.arguments or [])})'
         if n=='ClassCreator': return f'::jxx::NEW<{self.ref_raw(e.type)}>({", ".join(self.expr(x) for x in e.arguments or [])})'
@@ -469,8 +477,6 @@ class Translator:
             return '',body
         first=body[0]
         invocation=first
-        # javalang may expose this(...) or super(...) directly, or wrap it in
-        # StatementExpression depending on parser/version and source shape.
         if type(first).__name__=='StatementExpression':
             invocation=getattr(first,'expression',None)
         kind=type(invocation).__name__
