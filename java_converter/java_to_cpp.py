@@ -208,7 +208,12 @@ class Translator:
             self.imports[p.split('.')[-1]]=p
             _,inc=self.qmap(p)
             if inc: self.includes.add(inc)
-        self.includes.update({'lang/jxx.lang.Object.h','lang/jxx.lang.ClassInfo.h','lang/jxx.lang.JxxArray.h'})
+        self.includes.update({
+            'lang/jxx.lang.Object.h',
+            'lang/jxx.lang.System.h',
+            'lang/jxx.lang.JxxArray.h',
+            'lang/jxx.lang.ClassInfo.h',
+        })
         if any(self.is_java_main(m,t.name)
                for t in self.class_declarations(tree)
                for m in getattr(t,'body',None) or []):
