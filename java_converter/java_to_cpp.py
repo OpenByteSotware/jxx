@@ -30,6 +30,9 @@ PRIMITIVES={
  'float':'::jxx::lang::jfloat','double':'::jxx::lang::jdouble',
  'boolean':'::jxx::lang::jbool','char':'::jxx::lang::jchar','void':'void'}
 UNSUPPORTED=('java.lang.annotation','java.lang.instrument','java.lang.invoke')
+# Names supplied by the implicit language package or by the converter's
+# standard support includes must not be resolved through an on-demand import.
+DEFAULT_LANGUAGE_TYPES={'Object','String','System','JxxArray','Class'}
 SPECIAL_TYPES={
     'java.lang.reflect.InvocationTargetException':'java.lang.InvocationTargetException',
     'java.util.Map.Entry':'java.util.MapEntry',
@@ -98,7 +101,16 @@ class Translator:
 
         return str(name)
     def qmap(self,name:str)->Tuple[str,Optional[str]]:
-        if name in self.imports:
+        # Resolve implicit language-package types before considering wildcard
+        # imports. Otherwise import java.util.* incorrectly maps String to
+        # ::jxx::util::String and emits util/jxx.util.String.h.
+        if name in DEFAULT_LANGUAGE_TYPES:
+            if name=='String': name='java.lang.String'
+            elif name=='Object': name='java.lang.Object'
+            elif name=='System': name='java.lang.System'
+            elif name=='Class': name='java.lang.ClassAny'
+            elif name=='JxxArray': return '::jxx::JxxArray',None
+        elif name in self.imports:
             name=self.imports[name]
         elif ('.' not in name and name not in self.known_types and
               name not in self.type_parameters and len(self.wildcard_imports) == 1):
