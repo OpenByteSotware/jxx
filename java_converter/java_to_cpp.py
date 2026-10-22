@@ -195,7 +195,13 @@ class Translator:
 
     def gather(self,tree):
         self.package=tree.package.name if tree.package else ''
+        # Collect every type declared by this source, including member/local
+        # classes, before wildcard imports are used to resolve references.
+        # These names live in the generated source/header and must never create
+        # SDK includes such as util/jxx.util.node.h.
         self.known_types.update(t.name for t in tree.types or [])
+        for declaration in self.class_declarations(tree):
+            self.known_types.add(declaration.name)
         for imp in tree.imports or []:
             p=imp.path
             if p.startswith('java.lang.reflect.') and p != 'java.lang.reflect.InvocationTargetException':
