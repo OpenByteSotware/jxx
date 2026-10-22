@@ -295,7 +295,18 @@ class Translator:
         if e is None:return ''
         n=type(e).__name__
         if n=='Literal': return 'nullptr' if e.value in (None,'null') else e.value
-        if n=='This': return 'this'
+        if n=='This':
+            base='this'
+            for selector in getattr(e,'selectors',None) or []:
+                kind=type(selector).__name__
+                if kind=='MemberReference':
+                    base+=f'->{selector.member}'
+                elif kind=='MethodInvocation':
+                    args=', '.join(self.expr(x) for x in selector.arguments or [])
+                    base+=f'->{selector.member}({args})'
+                elif kind=='ArraySelector':
+                    base+=f'({self.expr(selector.index)})'
+            return base
         if n=='MemberReference':
             q=getattr(e,'qualifier',None)
             if q:
@@ -452,16 +463,34 @@ class Translator:
         if ns:o.exit();o.w(f'}} // namespace {ns}')
         return o.text()
 
+    def constructor_initializer(self, constructor, class_name):
+        body=list(getattr(constructor,'body',None) or [])
+        if not body:
+            return '',body
+        first=body[0]
+        kind=type(first).__name__
+        if kind=='ExplicitConstructorInvocation':
+            args=', '.join(self.expr(x) for x in first.arguments or [])
+            return f' : {class_name}({args})',body[1:]
+        if kind=='SuperConstructorInvocation':
+            args=', '.join(self.expr(x) for x in first.arguments or [])
+            return f' : JxxSuper({args})',body[1:]
+        return '',body
+
     def source(self,tree,header_inc)->str:
         o=Emit();o.w(f'#include "{header_inc}"');o.w();ns=('jxx::'+self.package.replace('.', '::')) if self.package else ''
         if ns:o.w(f'namespace {ns} {{');o.enter()
         for t in self.class_declarations(tree):
             for m in t.body or []:
                 if type(m).__name__ not in ('MethodDeclaration','ConstructorDeclaration') or getattr(m,'body',None) is None:continue
-                o.w(self.sig(m,t.name,True)+' {');o.enter()
+                is_constructor=type(m).__name__=='ConstructorDeclaration'
+                initializer,statements=(
+                    self.constructor_initializer(m,t.name)
+                    if is_constructor else ('',list(m.body or [])))
+                o.w(self.sig(m,t.name,True)+initializer+' {');o.enter()
                 old=self.current_return
-                self.current_return='void' if type(m).__name__=='ConstructorDeclaration' else self.resolve(m.return_type).value()
-                for statement in m.body or []:self.stmt(statement,o)
+                self.current_return='void' if is_constructor else self.resolve(m.return_type).value()
+                for statement in statements:self.stmt(statement,o)
                 self.current_return=old;o.exit();o.w('}');o.w()
         if ns:o.exit();o.w(f'}} // namespace {ns}')
         return o.text()
