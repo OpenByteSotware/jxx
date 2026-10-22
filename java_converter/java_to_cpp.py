@@ -68,6 +68,7 @@ class Translator:
         self.main_owner_names:Set[str]=set()
         self.main_entries:Dict[str,str]={}
         self.generated_files:List[Path]=[]
+        self.type_parameters:Set[str]=set()
 
     @staticmethod
     def simple(n): return str(n).split('.')[-1]
@@ -127,6 +128,10 @@ class Translator:
     def resolve(self,t,extra_dims=0)->CType:
         if t is None: return CType('void',void=True)
         tn=type(t).__name__; name=self.name_of(t)
+        # A type parameter already denotes the translated C++ template argument.
+        # Do not wrap it in another Ptr, otherwise node<T> becomes node<Ptr<T>>.
+        if name in self.type_parameters:
+            return CType(name, primitive=True)
         dims=len(getattr(t,'dimensions',None) or [])+extra_dims
         if tn=='BasicType' or name in PRIMITIVES:
             base=CType(PRIMITIVES.get(name,name),primitive=True,void=(name=='void'))
@@ -314,12 +319,56 @@ class Translator:
         elif n=='ContinueStatement':o.w('continue;')
         else:o.w(f'/* TODO unsupported statement: {n} */')
 
+    @staticmethod
+    def type_parameter_names(declaration)->List[str]:
+        return [Translator.name_of(parameter)
+                for parameter in getattr(declaration, 'type_parameters', None) or []]
+
+    @staticmethod
+    def template_line(names:Sequence[str])->str:
+        return ('template <' + ', '.join(f'typename {name}' for name in names) + '>') if names else ''
+
+    def emit_nested_class(self, declaration, o):
+        names=self.type_parameter_names(declaration)
+        previous=set(self.type_parameters)
+        self.type_parameters.update(names)
+        template=self.template_line(names)
+        if template: o.w(template)
+        ext=getattr(declaration,'extends',None)
+        base=self.ref_raw(ext) if ext is not None else '::jxx::lang::Object'
+        impls=getattr(declaration,'implements',None) or []
+        iface_types=[self.ref_raw(i) for i in impls]
+        class_args=', '.join([declaration.name, base] + iface_types)
+        o.w(f'class {declaration.name} : public ::jxx::lang::ClassBase<{class_args}>')
+        o.w('{')
+        # Preserve the source member-class access. It must be declared before
+        # outer fields whose types refer to it.
+        access='private' if 'private' in (getattr(declaration,'modifiers',None) or set()) else 'public'
+        o.w(f'{access}:'); o.enter()
+        o.w(f'using JxxSuper = {base};')
+        o.w(f'using Super = ::jxx::lang::ClassBase<{class_args}>;')
+        for member in getattr(declaration,'body',None) or []:
+            kind=type(member).__name__
+            if kind=='FieldDeclaration':
+                for d in member.declarators:
+                    typ=self.resolve(member.type).value()
+                    init=' = nullptr' if typ.startswith('::jxx::Ptr<') else ''
+                    o.w(f'{typ} {d.name}{init};')
+            elif kind in ('MethodDeclaration','ConstructorDeclaration'):
+                o.w(self.sig(member,declaration.name)+';')
+        o.exit(); o.w('};')
+        self.type_parameters=previous
+
     def header(self,tree)->str:
         o=Emit();o.w('#pragma once')
         for x in sorted(self.includes):o.w(f'#include "{x}"')
         o.w(); ns=('jxx::'+self.package.replace('.','::')) if self.package else ''
         if ns:o.w(f'namespace {ns} {{');o.enter()
         for t in tree.types or []:
+            outer_parameters=self.type_parameter_names(t)
+            self.type_parameters=set(outer_parameters)
+            template=self.template_line(outer_parameters)
+            if template:o.w(template)
             iface=type(t).__name__=='InterfaceDeclaration'; self.current_class=t.name
             if iface:
                 o.w(f'class {t.name} : public ::jxx::lang::InterfaceBase<{t.name}> {{');o.w('public:');o.enter();o.w(f'virtual ~{t.name}() = default;')
@@ -334,6 +383,11 @@ class Translator:
             o.w('{');o.w('public:');o.enter();o.w(f'using JxxSuper = {base};')
             o.w(f'using Super = ::jxx::lang::ClassBase<{class_args}>;')
             o.w(f'using JxxClassInfoMarker = ::jxx::lang::ClassInfo<{class_args}>;')
+            # Emit member classes before fields and methods so types such as
+            # node<T> are complete and visible at their first use.
+            for nested in t.body or []:
+                if type(nested).__name__=='ClassDeclaration':
+                    self.emit_nested_class(nested,o)
             for m in t.body or []:
                 n=type(m).__name__
                 if n=='FieldDeclaration':
@@ -354,6 +408,7 @@ class Translator:
                         override=' override' if n=='MethodDeclaration' and 'override' in getattr(m,'annotations',[]) else ''
                         o.w(f'{virt}{self.sig(m,t.name)}{override}{pure};')
             o.exit();o.w('};');o.w()
+            self.type_parameters=set()
         if ns:o.exit();o.w(f'}} // namespace {ns}')
         return o.text()
 
