@@ -468,12 +468,17 @@ class Translator:
         if not body:
             return '',body
         first=body[0]
-        kind=type(first).__name__
+        invocation=first
+        # javalang may expose this(...) or super(...) directly, or wrap it in
+        # StatementExpression depending on parser/version and source shape.
+        if type(first).__name__=='StatementExpression':
+            invocation=getattr(first,'expression',None)
+        kind=type(invocation).__name__
         if kind=='ExplicitConstructorInvocation':
-            args=', '.join(self.expr(x) for x in first.arguments or [])
+            args=', '.join(self.expr(x) for x in invocation.arguments or [])
             return f' : {class_name}({args})',body[1:]
         if kind=='SuperConstructorInvocation':
-            args=', '.join(self.expr(x) for x in first.arguments or [])
+            args=', '.join(self.expr(x) for x in invocation.arguments or [])
             return f' : JxxSuper({args})',body[1:]
         return '',body
 
