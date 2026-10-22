@@ -62,7 +62,8 @@ class Emit:
 
 class Translator:
     def __init__(self):
-        self.imports:Dict[str,str]={}; self.includes:Set[str]=set(); self.diag:List[str]=[]
+        self.imports:Dict[str,str]={}; self.wildcard_imports:List[str]=[]
+        self.includes:Set[str]=set(); self.diag:List[str]=[]
         self.package=''; self.current_class=''; self.current_return='void'
         self.known_types:Set[str]=set(); self.static_fields:Set[str]=set()
         self.main_owner_names:Set[str]=set()
@@ -97,7 +98,13 @@ class Translator:
 
         return str(name)
     def qmap(self,name:str)->Tuple[str,Optional[str]]:
-        if name in self.imports: name=self.imports[name]
+        if name in self.imports:
+            name=self.imports[name]
+        elif ('.' not in name and name not in self.known_types and
+              name not in self.type_parameters and len(self.wildcard_imports) == 1):
+            # Resolve an unqualified type through the single on-demand import.
+            # ref_raw() then records the concrete JXX class header.
+            name=f'{self.wildcard_imports[0]}.{name}'
         name=SPECIAL_TYPES.get(name,name)
         if name=='String': name='java.lang.String'
         if name=='Object': name='java.lang.Object'
@@ -183,7 +190,9 @@ class Translator:
                 self.diag.append(f'unsupported reflection type: {p}'); continue
             if any(p==x or p.startswith(x+'.') for x in UNSUPPORTED):
                 self.diag.append(f'unsupported package: {p}'); continue
-            if imp.wildcard: continue
+            if imp.wildcard:
+                self.wildcard_imports.append(p)
+                continue
             self.imports[p.split('.')[-1]]=p
             _,inc=self.qmap(p)
             if inc: self.includes.add(inc)
