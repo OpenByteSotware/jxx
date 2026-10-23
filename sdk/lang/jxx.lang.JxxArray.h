@@ -16,6 +16,11 @@
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.Object.h"
 
+namespace jxx {
+    template <typename Target>
+    class GenericArgument;
+}
+
 namespace jxx::lang {
 
     // Forward declaration.
@@ -121,6 +126,21 @@ namespace jxx::lang {
             : JxxArray(array_detail::checkedLength(values.size()),
                 CheckedLengthTag{}) {
             std::copy(values.begin(), values.end(), begin());
+        }
+
+        template <typename U = T,
+            std::enable_if_t<
+                !std::is_arithmetic_v<U> &&
+                !std::is_same_v<U, ::jxx::lang::jchar> &&
+                !std::is_same_v<U, ::jxx::lang::jbyte>,
+                int> = 0>
+        JxxArray(std::initializer_list<::jxx::GenericArgument<U>> values)
+            : JxxArray(array_detail::checkedLength(values.size()),
+                CheckedLengthTag{}) {
+            auto destination = begin();
+            for (const auto& value : values) {
+                *destination++ = value.get();
+            }
         }
 
         explicit JxxArray(const std::vector<T>& values)
