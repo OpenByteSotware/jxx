@@ -319,7 +319,12 @@ class Translator:
         ps=[]
         for p in m.parameters or []:
             extra=(1 if getattr(p,'varargs',False) else 0)+len(getattr(p,'dimensions',None) or [])
-            ps.append(f'{self.resolve(p.type,extra).param()} {p.name}')
+            parameter_type=self.resolve(p.type,extra)
+            if self.name_of(p.type) in self.type_parameters and extra == 0:
+                rendered=f'const {self.name_of(p.type)}&'
+            else:
+                rendered=parameter_type.param()
+            ps.append(f'{rendered} {p.name}')
         qualified=f'{cname}::{m.name}' if definition else m.name
         if ctor: qualified=f'{cname}::{cname}' if definition else cname; return f'{qualified}({", ".join(ps)})'
         ret=self.resolve(m.return_type,len(getattr(m,'dimensions',None) or [])).value()
@@ -463,6 +468,53 @@ class Translator:
             return name
         return f'{name}<' + ', '.join(type_parameters) + '>'
 
+    def generic_conversion_parameters(self, method):
+        converted=[]
+        for index,parameter in enumerate(getattr(method,'parameters',None) or []):
+            dimensions=(len(getattr(parameter,'dimensions',None) or []) +
+                        (1 if getattr(parameter,'varargs',False) else 0) +
+                        len(getattr(parameter.type,'dimensions',None) or []))
+            target=self.name_of(parameter.type)
+            if target in self.type_parameters and dimensions == 0:
+                converted.append((index,parameter,target))
+        return converted
+
+    def emit_generic_conversion_overload(self, method, o):
+        if type(method).__name__!='MethodDeclaration': return
+        converted=self.generic_conversion_parameters(method)
+        if not converted: return
+        source_names=['Source' if len(converted)==1 else f'Source{position}'
+                      for position in range(len(converted))]
+        bindings={index:(parameter,target,source_names[position])
+                  for position,(index,parameter,target) in enumerate(converted)}
+        o.w('template <');o.enter()
+        for source in source_names:o.w(f'typename {source},')
+        o.w('std::enable_if_t<');o.enter()
+        constraints=[]
+        for _,(_,target,source) in bindings.items():
+            constraints += [f'::jxx::is_generic_convertible_v<{target}, {source}&&>',
+                            f'!std::is_same_v<std::decay_t<{source}>, {target}>']
+        for index,constraint in enumerate(constraints):
+            o.w(constraint+(' &&' if index+1<len(constraints) else ','))
+        o.w('int> = 0>');o.exit();o.exit()
+        prefix='static ' if 'static' in (getattr(method,'modifiers',None) or set()) else ''
+        return_type=self.resolve(method.return_type,
+            len(getattr(method,'dimensions',None) or [])).value()
+        parameters=[];arguments=[]
+        for index,parameter in enumerate(method.parameters or []):
+            if index in bindings:
+                _,target,source=bindings[index]
+                parameters.append(f'{source}&& {parameter.name}')
+                arguments.append(f'::jxx::CONVERT<{target}>(std::forward<{source}>({parameter.name}))')
+            else:
+                extra=(1 if getattr(parameter,'varargs',False) else 0)+len(getattr(parameter,'dimensions',None) or [])
+                parameters.append(f'{self.resolve(parameter.type,extra).param()} {parameter.name}')
+                arguments.append(parameter.name)
+        o.w(f'{prefix}{return_type} {method.name}({", ".join(parameters)}) {{');o.enter()
+        invocation=f'{method.name}({", ".join(arguments)})'
+        o.w(f'{invocation};' if return_type=='void' else f'return {invocation};')
+        o.exit();o.w('}')
+
     def emit_inline_member(self, member, owner_name, o):
         kind=type(member).__name__
         is_constructor=kind=='ConstructorDeclaration'
@@ -484,6 +536,7 @@ class Translator:
             self.stmt(statement,o)
         self.current_return=old
         o.exit();o.w('}')
+        self.emit_generic_conversion_overload(member,o)
 
     def emit_nested_class(self, declaration, o):
         names=self.type_parameter_names(declaration)
@@ -542,6 +595,7 @@ class Translator:
 
     def header(self,tree)->str:
         o=Emit();o.w('#pragma once')
+        o.w('#include <type_traits>');o.w('#include <utility>')
         for x in sorted(self.includes):o.w(f'#include "{x}"')
         o.w(); ns=('jxx::'+self.package.replace('.','::')) if self.package else ''
         if ns:o.w(f'namespace {ns} {{');o.enter()
