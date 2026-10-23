@@ -706,7 +706,8 @@ class Translator:
         if ns:o.exit();o.w(f'}} // namespace {ns}')
         return o.text()
 
-    def main_source(self, owner_name, parameter_name, header_inc)->str:
+    def main_source(self, owner_name, parameter_name, header_inc,
+                    owner_type_parameters:Sequence[str]=())->str:
         o=Emit()
         o.w(f'#include "{header_inc}"')
         o.w('#include <cstdint>')
@@ -716,7 +717,13 @@ class Translator:
         o.w('#include "lang/jxx.lang.System.h"')
         o.w()
         ns=('jxx::'+self.package.replace('.', '::')) if self.package else ''
-        target=f'::{ns}::{owner_name}' if ns else owner_name
+        owner_specialization=owner_name
+        if owner_type_parameters:
+            default_type='::jxx::Ptr<::jxx::lang::Object>'
+            owner_specialization=(owner_name + '<' +
+                ', '.join(default_type for _ in owner_type_parameters) + '>')
+        target=(f'::{ns}::{owner_specialization}'
+                if ns else owner_specialization)
         o.w('// Native C++ process entry point for this converted source main.')
         o.w('int main(int argc, char** argv) {')
         o.enter();o.w('try {');o.enter()
@@ -766,7 +773,9 @@ class Translator:
 
         # Wrapper generation is driven entirely by the validated source scan.
         # It does not depend on javalang retaining the main method in owner.body.
-        parsed_classes={owner.name for owner in self.class_declarations(tree)}
+        parsed_declarations={owner.name:owner
+                             for owner in self.class_declarations(tree)}
+        parsed_classes=set(parsed_declarations)
         for owner_name,parameter_name in sorted(self.main_entries.items()):
             if owner_name not in parsed_classes:
                 self.diag.append(
@@ -774,7 +783,10 @@ class Translator:
                     'the class was not returned by the AST class iterator')
             wrapper=output_dir/f'{owner_name}_main.cpp'
             wrapper.write_text(
-                self.main_source(owner_name,parameter_name,header_inc),
+                self.main_source(
+                    owner_name,parameter_name,header_inc,
+                    self.type_parameter_names(parsed_declarations[owner_name])
+                    if owner_name in parsed_declarations else ()),
                 encoding='utf-8')
             self.generated_files.append(wrapper)
         return hp,cp
