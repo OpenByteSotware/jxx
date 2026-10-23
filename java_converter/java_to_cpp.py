@@ -487,32 +487,41 @@ class Translator:
                       for position in range(len(converted))]
         bindings={index:(parameter,target,source_names[position])
                   for position,(index,parameter,target) in enumerate(converted)}
-        o.w('template <');o.enter()
-        for source in source_names:o.w(f'typename {source},')
-        o.w('std::enable_if_t<');o.enter()
         constraints=[]
         for _,(_,target,source) in bindings.items():
-            constraints += [f'::jxx::is_generic_convertible_v<{target}, {source}&&>',
-                            f'!std::is_same_v<std::decay_t<{source}>, {target}>']
-        for index,constraint in enumerate(constraints):
-            o.w(constraint+(' &&' if index+1<len(constraints) else ','))
-        o.w('int> = 0>');o.exit();o.exit()
-        prefix='static ' if 'static' in (getattr(method,'modifiers',None) or set()) else ''
-        return_type=self.resolve(method.return_type,
+            constraints.extend([
+                f'::jxx::is_generic_convertible_v<{target}, {source}&&>',
+                f'!std::is_same_v<std::decay_t<{source}>, {target}>'])
+        o.w('template <' + ', '.join(
+            f'typename {source}' for source in source_names) + '>')
+        prefix='static ' if 'static' in (
+            getattr(method,'modifiers',None) or set()) else ''
+        return_type=self.resolve(
+            method.return_type,
             len(getattr(method,'dimensions',None) or [])).value()
+        enabled_return=(
+            'std::enable_if_t<' + ' && '.join(constraints) +
+            f', {return_type}>')
         parameters=[];arguments=[]
         for index,parameter in enumerate(method.parameters or []):
             if index in bindings:
                 _,target,source=bindings[index]
                 parameters.append(f'{source}&& {parameter.name}')
-                arguments.append(f'::jxx::CONVERT<{target}>(std::forward<{source}>({parameter.name}))')
+                arguments.append(
+                    f'::jxx::CONVERT<{target}>('
+                    f'std::forward<{source}>({parameter.name}))')
             else:
-                extra=(1 if getattr(parameter,'varargs',False) else 0)+len(getattr(parameter,'dimensions',None) or [])
-                parameters.append(f'{self.resolve(parameter.type,extra).param()} {parameter.name}')
+                extra=(1 if getattr(parameter,'varargs',False) else 0)+len(
+                    getattr(parameter,'dimensions',None) or [])
+                parameters.append(
+                    f'{self.resolve(parameter.type,extra).param()} '
+                    f'{parameter.name}')
                 arguments.append(parameter.name)
-        o.w(f'{prefix}{return_type} {method.name}({", ".join(parameters)}) {{');o.enter()
+        o.w(f'{prefix}{enabled_return} {method.name}('
+            f'{", ".join(parameters)}) {{');o.enter()
         invocation=f'{method.name}({", ".join(arguments)})'
-        o.w(f'{invocation};' if return_type=='void' else f'return {invocation};')
+        o.w(f'{invocation};' if return_type=='void'
+            else f'return {invocation};')
         o.exit();o.w('}')
 
     def emit_inline_member(self, member, owner_name, o):
