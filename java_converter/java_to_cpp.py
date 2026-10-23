@@ -360,7 +360,7 @@ class Translator:
                 head=f'{owner}{access}{e.member}'
             else: head=f'{q}->{e.member}' if q else e.member
             return f'{head}({", ".join(self.expr(x) for x in e.arguments or [])})'
-        if n=='ClassCreator': return f'::jxx::NEW<{self.ref_raw(e.type)}>({", ".join(self.expr(x) for x in e.arguments or [])})'
+        if n=='ClassCreator': return self.class_creator_expression(e)
         if n=='ArrayCreator':
             rank=len(getattr(e.type,'dimensions',None) or []) + len(getattr(e,'dimensions',None) or [])
             rank=max(rank,1); elem=self.resolve(e.type).value()
@@ -394,6 +394,20 @@ class Translator:
             converted=self.array_initializer_value(declaration.type,value)
             o.w(f'(*{declarator.name})({index}U) = {converted};')
 
+    def class_creator_expression(self, creator, expected_type=None):
+        allocation_type=creator.type
+        creator_arguments=getattr(creator.type,'arguments',None) or []
+        expected_arguments=(getattr(expected_type,'arguments',None) or []
+                            if expected_type is not None else [])
+        # A diamond creator such as new SinglyLinkedList_Generics<>() carries
+        # no explicit AST arguments. Use the declared target type so NEW gets
+        # the complete C++ specialization.
+        if expected_type is not None and not creator_arguments and expected_arguments:
+            allocation_type=expected_type
+        raw=self.ref_raw(allocation_type)
+        arguments=', '.join(self.expr(x) for x in creator.arguments or [])
+        return f'::jxx::NEW<{raw}>({arguments})'
+
     def stmt(self,s,o):
         if s is None:return
         n=type(s).__name__
@@ -412,7 +426,11 @@ class Translator:
                     self.emit_local_array_initializer(s,d,o,max(dims,1))
                     continue
                 t=self.resolve(s.type,dims)
-                init=f' = {self.expr(d.initializer)}' if d.initializer is not None else ''
+                if type(getattr(d,'initializer',None)).__name__=='ClassCreator':
+                    initial_value=self.class_creator_expression(d.initializer,s.type)
+                else:
+                    initial_value=self.expr(d.initializer) if d.initializer is not None else ''
+                init=f' = {initial_value}' if d.initializer is not None else ''
                 const='const ' if 'final' in (s.modifiers or set()) else ''
                 o.w(f'{const}{t.value()} {d.name}{init};')
         elif n=='IfStatement':
