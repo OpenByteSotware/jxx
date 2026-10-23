@@ -439,6 +439,12 @@ class Translator:
     def template_line(names:Sequence[str])->str:
         return ('template <' + ', '.join(f'typename {name}' for name in names) + '>') if names else ''
 
+    @staticmethod
+    def specialized_class_name(name:str, type_parameters:Sequence[str])->str:
+        if not type_parameters:
+            return name
+        return f'{name}<' + ', '.join(type_parameters) + '>'
+
     def emit_inline_member(self, member, owner_name, o):
         kind=type(member).__name__
         is_constructor=kind=='ConstructorDeclaration'
@@ -471,7 +477,8 @@ class Translator:
         base=self.ref_raw(ext) if ext is not None else '::jxx::lang::Object'
         impls=getattr(declaration,'implements',None) or []
         iface_types=[self.ref_raw(i) for i in impls]
-        class_args=', '.join([declaration.name, base] + iface_types)
+        self_type=self.specialized_class_name(declaration.name,names)
+        class_args=', '.join([self_type, base] + iface_types)
         o.w(f'class {declaration.name} : public ::jxx::lang::ClassBase<{class_args}>')
         o.w('{')
         # Preserve the source member-class access. It must be declared before
@@ -534,7 +541,8 @@ class Translator:
             ext=getattr(t,'extends',None); base=self.ref_raw(ext) if ext is not None else '::jxx::lang::Object'
             impls=getattr(t,'implements',None) or []
             iface_types=[self.ref_raw(i) for i in impls]
-            class_args=', '.join([t.name, base] + iface_types)
+            self_type=self.specialized_class_name(t.name,outer_parameters)
+            class_args=', '.join([self_type, base] + iface_types)
             o.w(f'class {t.name} : public ::jxx::lang::ClassBase<{class_args}>')
             o.w('{');o.w('public:');o.enter();o.w(f'using JxxSuper = {base};')
             o.w(f'using Super = ::jxx::lang::ClassBase<{class_args}>;')
