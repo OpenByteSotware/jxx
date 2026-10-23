@@ -439,6 +439,28 @@ class Translator:
     def template_line(names:Sequence[str])->str:
         return ('template <' + ', '.join(f'typename {name}' for name in names) + '>') if names else ''
 
+    def emit_inline_member(self, member, owner_name, o):
+        kind=type(member).__name__
+        is_constructor=kind=='ConstructorDeclaration'
+        modifiers=getattr(member,'modifiers',None) or set()
+        prefix='static ' if kind=='MethodDeclaration' and 'static' in modifiers else ''
+        body=getattr(member,'body',None)
+        if body is None:
+            virt='virtual ' if kind=='MethodDeclaration' and 'abstract' in modifiers else ''
+            pure=' = 0' if virt else ''
+            o.w(f'{virt}{prefix}{self.sig(member,owner_name)}{pure};')
+            return
+        initializer,statements=(self.constructor_initializer(member,owner_name)
+                                if is_constructor else ('',list(body or [])))
+        o.w(f'{prefix}{self.sig(member,owner_name)}{initializer} {{');o.enter()
+        old=self.current_return
+        self.current_return='void' if is_constructor else self.resolve(
+            member.return_type,len(getattr(member,'dimensions',None) or [])).value()
+        for statement in statements:
+            self.stmt(statement,o)
+        self.current_return=old
+        o.exit();o.w('}')
+
     def emit_nested_class(self, declaration, o):
         names=self.type_parameter_names(declaration)
         previous=set(self.type_parameters)
@@ -466,7 +488,7 @@ class Translator:
                     init=' = nullptr' if typ.startswith('::jxx::Ptr<') else ''
                     o.w(f'{typ} {d.name}{init};')
             elif kind in ('MethodDeclaration','ConstructorDeclaration'):
-                o.w(self.sig(member,declaration.name)+';')
+                self.emit_inline_member(member,declaration.name,o)
         o.exit(); o.w('};')
         self.type_parameters=previous
 
@@ -530,6 +552,12 @@ class Translator:
                         typ=self.resolve(m.type).value(); init=f' = {self.expr(d.initializer)}' if d.initializer is not None else (' = nullptr' if typ.startswith('::jxx::Ptr<') else '')
                         o.w(f'{prefix}{typ} {d.name}{init};')
                 elif n in ('MethodDeclaration','ConstructorDeclaration'):
+                    if outer_parameters:
+                        if n=='MethodDeclaration' and self.method_type_parameter_names(m):
+                            self.emit_template_method(m,t.name,o)
+                        else:
+                            self.emit_inline_member(m,t.name,o)
+                        continue
                     if n=='MethodDeclaration' and self.method_type_parameter_names(m):
                         # Function templates must be defined in the header.
                         self.emit_template_method(m,t.name,o)
@@ -571,6 +599,8 @@ class Translator:
         o=Emit();o.w(f'#include "{header_inc}"');o.w();ns=('jxx::'+self.package.replace('.', '::')) if self.package else ''
         if ns:o.w(f'namespace {ns} {{');o.enter()
         for t in self.class_declarations(tree):
+            if self.type_parameter_names(t):
+                continue
             for m in t.body or []:
                 if type(m).__name__ not in ('MethodDeclaration','ConstructorDeclaration') or getattr(m,'body',None) is None:continue
                 if type(m).__name__=='MethodDeclaration' and self.method_type_parameter_names(m):
