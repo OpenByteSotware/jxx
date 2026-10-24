@@ -78,6 +78,7 @@ class Translator:
         self.generic_constructor_parameters:Dict[str,Dict[int,str]]={}
         self.source_class_bases:Dict[str,str]={}
         self.source_constructor_parameter_types:Dict[str,List[object]]={}
+        self.source_type_index:Dict[str,Tuple[str,str]]={}
 
     @staticmethod
     def simple(n): return str(n).split('.')[-1]
@@ -118,6 +119,9 @@ class Translator:
             else: name=f'java.lang.{name}'
         elif name in self.imports:
             name=self.imports[name]
+        elif name in self.source_type_index and name not in self.known_types:
+            qualified,include=self.source_type_index[name]
+            return qualified,include
         elif ('.' not in name and name not in self.known_types and
               name not in self.type_parameters and
               name not in self.declared_type_parameters and
@@ -1072,9 +1076,32 @@ def generate_cmake(out_root: str, project: str = 'TranspiledProject',
     return generate_cmake_files(
         out_root, project, target, jxx_include).read_text(encoding='utf-8')
 
-def translate_file(path:Path,out_root:str):
+def build_source_type_index(files:Sequence[Path]) -> Dict[str,Tuple[str,str]]:
+    """Map source class names to generated qualified types and headers."""
+    index:Dict[str,Tuple[str,str]]={}
+    package_pattern=re.compile(r'\bpackage\s+([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*;')
+    class_pattern=re.compile(r'\bclass\s+([A-Za-z_$][\w$]*)')
+    for path in files:
+        try:
+            source=path.read_text(encoding='utf-8')
+        except OSError:
+            continue
+        package_match=package_pattern.search(source)
+        package=package_match.group(1) if package_match else ''
+        namespace='::jxx' + (('::'+package.replace('.','::')) if package else '')
+        folder=package.replace('.','/')
+        include=(f'{folder}/{path.stem}.h' if folder else f'{path.stem}.h')
+        for match in class_pattern.finditer(source):
+            name=match.group(1)
+            index[name]=(f'{namespace}::{name}',include)
+    return index
+
+def translate_file(path:Path,out_root:str,
+                   source_type_index:Optional[Dict[str,Tuple[str,str]]]=None):
     src=path.read_text(encoding='utf-8')
-    t=Translator(); h,c=t.translate(src,out_root,path.stem)
+    t=Translator()
+    t.source_type_index=dict(source_type_index or {})
+    h,c=t.translate(src,out_root,path.stem)
     for generated in t.generated_files:
         print(f'Wrote {generated}')
     for d in t.diag: print(f'{path}: WARNING: {d}',file=sys.stderr)
@@ -1099,9 +1126,14 @@ def main():
         source_root=Path(a.src_dir)
         files=sorted(source_root.rglob('*.java'))
         if not files: raise SystemExit(f'No .java files found under {source_root}')
-        for path in files: translate_file(path,a.out)
+        source_type_index=build_source_type_index(files)
+        for path in files:
+            translate_file(path,a.out,source_type_index)
     else:
-        translate_file(Path(a.input),a.out)
+        input_path=Path(a.input)
+        sibling_files=sorted(input_path.parent.glob('*.java'))
+        source_type_index=build_source_type_index(sibling_files)
+        translate_file(input_path,a.out,source_type_index)
     if a.cmake:
         cmake = generate_cmake_files(
             a.out, a.cmake_project, a.cmake_target, a.jxx_include)
