@@ -330,6 +330,22 @@ class Translator:
         ret=self.resolve(m.return_type,len(getattr(m,'dimensions',None) or [])).value()
         return f'{ret} {qualified}({", ".join(ps)})'
 
+    def apply_expression_selectors(self, base, selectors):
+        result=base
+        for selector in selectors or []:
+            kind=type(selector).__name__
+            if kind=='MethodInvocation':
+                arguments=', '.join(self.expr(x)
+                                    for x in selector.arguments or [])
+                result+=f'->{selector.member}({arguments})'
+            elif kind=='MemberReference':
+                result+=f'->{selector.member}'
+            elif kind=='ArraySelector':
+                result+=f'({self.expr(selector.index)})'
+            else:
+                result+=str(selector)
+        return result
+
     def expr(self,e):
         if e is None:return ''
         n=type(e).__name__
@@ -354,6 +370,8 @@ class Translator:
                 elif q in self.imports or (q and q[0].isupper()): base=f'{self.qualified_static_owner(q)}::{e.member}'
                 else: base=f'{q}->{e.member}'
             else: base=e.member
+            base=self.apply_expression_selectors(
+                base,getattr(e,'selectors',None))
             return ''.join(getattr(e,'prefix_operators',None) or [])+base+''.join(getattr(e,'postfix_operators',None) or [])
         if n=='MethodInvocation':
             q=getattr(e,'qualifier',None)
@@ -364,7 +382,9 @@ class Translator:
                 access='->' if '.' in q else '::'
                 head=f'{owner}{access}{e.member}'
             else: head=f'{q}->{e.member}' if q else e.member
-            return f'{head}({", ".join(self.expr(x) for x in e.arguments or [])})'
+            invocation=f'{head}({", ".join(self.expr(x) for x in e.arguments or [])})'
+            return self.apply_expression_selectors(
+                invocation,getattr(e,'selectors',None))
         if n=='ClassCreator': return self.class_creator_expression(e)
         if n=='ArrayCreator':
             rank=len(getattr(e.type,'dimensions',None) or []) + len(getattr(e,'dimensions',None) or [])
