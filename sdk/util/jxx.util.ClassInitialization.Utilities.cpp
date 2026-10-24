@@ -26,6 +26,7 @@
 #include "util/jxx.util.Scanner.h"
 #include "util/jxx.util.SplittableRandom.h"
 #include "util/jxx.util.StringJoiner.h"
+#include "util/jxx.util.StringTokenizer.h"
 #include "util/jxx.util.Timer.h"
 #include "util/jxx.util.TimerTask.h"
 #include "util/jxx.util.UUID.h"
@@ -70,6 +71,7 @@ void initializeUtilities() {
         registerType<Scanner>();
         registerType<SplittableRandom>();
         registerType<StringJoiner>();
+        registerType<StringTokenizer>();
         registerType<Timer>();
         registerType<TimerTask>();
         registerType<UUID>();
