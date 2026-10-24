@@ -414,10 +414,35 @@ class Translator:
         return (f'{self.string_value_expression(left)}->concat('
                 f'{self.string_value_expression(right)})')
 
+    def lambda_parameter_name(self, parameter):
+        return (getattr(parameter,'name',None) or
+                getattr(parameter,'member',None) or
+                str(parameter))
+
+    def lambda_expression(self, expression):
+        parameters=', '.join(
+            f'auto {self.lambda_parameter_name(parameter)}'
+            for parameter in getattr(expression,'parameters',None) or [])
+        body=getattr(expression,'body',None)
+        output=Emit()
+        if isinstance(body,list):
+            for statement in body:
+                self.stmt(statement,output)
+        elif body is not None:
+            # A source expression lambda used by forEach is statement-compatible.
+            # Emit a block and discard any fluent return value such as append().
+            output.w(self.expr(body)+';')
+        lines=output.text().rstrip().splitlines()
+        if not lines:
+            return f'[&]({parameters}) {{}}'
+        rendered='\n'.join('    '+line for line in lines)
+        return f'[&]({parameters}) {{\n{rendered}\n}}'
+
     def expr(self,e):
         if e is None:return ''
         n=type(e).__name__
         if n=='Literal': return 'nullptr' if e.value in (None,'null') else e.value
+        if n=='LambdaExpression': return self.lambda_expression(e)
         if n=='This':
             base='this'
             for selector in getattr(e,'selectors',None) or []:
