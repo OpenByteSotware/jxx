@@ -253,6 +253,7 @@ class Translator:
             'lang/jxx.lang.System.h',
             'lang/jxx.lang.JxxArray.h',
             'lang/jxx.lang.ClassInfo.h',
+            'lang/jxx.lang.GenericConversion.h',
         })
         if any(self.is_java_main(m,t.name)
                for t in self.class_declarations(tree)
