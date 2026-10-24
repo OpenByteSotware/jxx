@@ -548,8 +548,6 @@ class Translator:
             constraints.extend([
                 f'::jxx::is_generic_convertible_v<{target}, {source}&&>',
                 f'!std::is_same_v<std::decay_t<{source}>, {target}>'])
-        o.w('template <' + ', '.join(
-            f'typename {source}' for source in source_names) + '>')
         parameters=[];arguments=[]
         for index,parameter in enumerate(method.parameters or []):
             if index in bindings:
@@ -567,12 +565,18 @@ class Translator:
                 arguments.append(parameter.name)
         condition=' && '.join(constraints)
         if kind=='ConstructorDeclaration':
-            # Constructors cannot use return-type SFINAE. Put enable_if in a
-            # defaulted pointer parameter and delegate to the exact-T ctor.
-            parameters.append(f'std::enable_if_t<{condition}, int>* = nullptr')
+            # Constructors cannot use return-type SFINAE. Keep the condition in
+            # a defaulted type template parameter instead of a function pointer
+            # parameter. This form is accepted consistently by MSVC C++17.
+            template_parameters=[f'typename {source}' for source in source_names]
+            template_parameters.append(
+                f'typename = std::enable_if_t<{condition}>')
+            o.w('template <' + ', '.join(template_parameters) + '>')
             o.w(f'{owner_name}({", ".join(parameters)})')
             o.enter();o.w(f': {owner_name}({", ".join(arguments)}) {{}}');o.exit()
             return
+        o.w('template <' + ', '.join(
+            f'typename {source}' for source in source_names) + '>')
         prefix='static ' if 'static' in (
             getattr(method,'modifiers',None) or set()) else ''
         return_type=self.resolve(
