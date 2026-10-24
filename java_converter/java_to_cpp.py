@@ -125,11 +125,18 @@ class Translator:
             elif name=='Class': name='java.lang.ClassAny'
             elif name=='JxxArray': return '::jxx::JxxArray',None
             else: name=f'java.lang.{name}'
-        elif name in self.imports:
-            name=self.imports[name]
-        elif name in self.source_type_index and name not in self.known_types:
-            qualified,include=self.source_type_index[name]
-            return qualified,include
+        elif name not in self.known_types:
+            # Source-generated classes use source filenames, not JXX SDK
+            # package filenames. Resolve an exact imported source class before
+            # applying the SDK package naming convention.
+            imported_name=self.imports.get(name,name)
+            source_entry=(self.source_type_index.get(imported_name) or
+                          self.source_type_index.get(name))
+            if source_entry is not None:
+                qualified,include=source_entry
+                return qualified,include
+            if name in self.imports:
+                name=imported_name
         elif ('.' not in name and name not in self.known_types and
               name not in self.type_parameters and
               name not in self.declared_type_parameters and
@@ -1157,7 +1164,10 @@ def build_source_type_index(files:Sequence[Path]) -> Dict[str,Tuple[str,str]]:
         include=(f'{folder}/{path.stem}.h' if folder else f'{path.stem}.h')
         for match in class_pattern.finditer(source):
             name=match.group(1)
-            index[name]=(f'{namespace}::{name}',include)
+            entry=(f'{namespace}::{name}',include)
+            index[name]=entry
+            if package:
+                index[f'{package}.{name}']=entry
     return index
 
 def translate_file(path:Path,out_root:str,
