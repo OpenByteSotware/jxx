@@ -32,7 +32,7 @@ PRIMITIVES={
 UNSUPPORTED=('java.lang.annotation','java.lang.instrument','java.lang.invoke')
 # Names supplied by the implicit language package or by the converter's
 # standard support includes must not be resolved through an on-demand import.
-DEFAULT_LANGUAGE_TYPES={'Object','String','System','JxxArray','Class','Integer','Character','Boolean','Byte','Short','Long','Float','Double'}
+DEFAULT_LANGUAGE_TYPES={'Object','String','System','JxxArray','Class','Integer','Character','Boolean','Byte','Short','Long','Float','Double','Throwable','Exception','RuntimeException','Error'}
 SPECIAL_TYPES={
     'java.lang.reflect.InvocationTargetException':'java.lang.InvocationTargetException',
     'java.util.Map.Entry':'java.util.MapEntry',
@@ -909,6 +909,10 @@ class Translator:
                 if hasattr(m,'type'):self.resolve(m.type)
                 if hasattr(m,'return_type') and m.return_type is not None:self.resolve(m.return_type)
                 for p in getattr(m,'parameters',None) or []:self.resolve(p.type)
+                for thrown in getattr(m,'throws',None) or []:
+                    thrown_name=self.name_of(thrown)
+                    _,include=self.qmap(thrown_name)
+                    if include:self.includes.add(include)
         hp.write_text(self.header(tree),encoding='utf-8')
         header_inc=os.path.relpath(hp,cp.parent).replace(os.sep,'/')
         cp.write_text(self.source(tree,header_inc),encoding='utf-8')
