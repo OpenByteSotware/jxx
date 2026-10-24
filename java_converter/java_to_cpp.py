@@ -74,6 +74,8 @@ class Translator:
         self.generated_files:List[Path]=[]
         self.type_parameters:Set[str]=set()
         self.declared_type_parameters:Set[str]=set()
+        self.generic_class_parameters:Dict[str,List[str]]={}
+        self.generic_constructor_parameters:Dict[str,Dict[int,str]]={}
 
     @staticmethod
     def simple(n): return str(n).split('.')[-1]
@@ -219,11 +221,21 @@ class Translator:
         self.known_types.update(t.name for t in tree.types or [])
         for declaration in self.class_declarations(tree):
             self.known_types.add(declaration.name)
-            self.declared_type_parameters.update(
-                self.type_parameter_names(declaration))
+            class_parameters=self.type_parameter_names(declaration)
+            self.declared_type_parameters.update(class_parameters)
+            if class_parameters:
+                self.generic_class_parameters[declaration.name]=class_parameters
+            constructor_positions={}
             for member in getattr(declaration, 'body', None) or []:
                 self.declared_type_parameters.update(
                     self.type_parameter_names(member))
+                if type(member).__name__=='ConstructorDeclaration':
+                    for index,parameter in enumerate(member.parameters or []):
+                        parameter_name=self.name_of(parameter.type)
+                        if parameter_name in class_parameters:
+                            constructor_positions[index]=parameter_name
+            if constructor_positions:
+                self.generic_constructor_parameters[declaration.name]=constructor_positions
         for imp in tree.imports or []:
             p=imp.path
             if p.startswith('java.lang.reflect.') and p != 'java.lang.reflect.InvocationTargetException':
@@ -457,14 +469,30 @@ class Translator:
         creator_arguments=getattr(creator.type,'arguments',None) or []
         expected_arguments=(getattr(expected_type,'arguments',None) or []
                             if expected_type is not None else [])
-        # A diamond creator such as new SinglyLinkedList_Generics<>() carries
-        # no explicit AST arguments. Use the declared target type so NEW gets
-        # the complete C++ specialization.
         if expected_type is not None and not creator_arguments and expected_arguments:
             allocation_type=expected_type
         raw=self.ref_raw(allocation_type)
-        arguments=', '.join(self.expr(x) for x in creator.arguments or [])
-        return f'::jxx::NEW<{raw}>({arguments})'
+        allocation_arguments=getattr(allocation_type,'arguments',None) or []
+        resolved_type_arguments=[]
+        for argument in allocation_arguments:
+            argument_type=getattr(argument,'type',None)
+            resolved_type_arguments.append(
+                self.resolve(argument_type).value() if argument_type is not None
+                else '::jxx::Ptr<::jxx::lang::Object>')
+        class_name=self.name_of(allocation_type)
+        class_parameters=self.generic_class_parameters.get(class_name,[])
+        constructor_positions=self.generic_constructor_parameters.get(class_name,{})
+        converted_arguments=[]
+        for index,argument in enumerate(creator.arguments or []):
+            value=self.expr(argument)
+            parameter_name=constructor_positions.get(index)
+            if parameter_name in class_parameters:
+                target_index=class_parameters.index(parameter_name)
+                if target_index < len(resolved_type_arguments):
+                    target=resolved_type_arguments[target_index]
+                    value=f'::jxx::CONVERT<{target}>({value})'
+            converted_arguments.append(value)
+        return f'::jxx::NEW<{raw}>({", ".join(converted_arguments)})'
 
     def stmt(self,s,o):
         if s is None:return
