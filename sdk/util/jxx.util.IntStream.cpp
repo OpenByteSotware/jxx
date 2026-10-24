@@ -191,16 +191,20 @@ IntStream::IntStream(const ::jxx::lang::IntArray& backing)
 ::jxx::Ptr<IntStream> IntStream::limit(::jxx::lang::jlong maxSize) {
     if (maxSize < 0) throw ::jxx::lang::IllegalArgumentException();
     auto source = takeData_();
+    const auto sourceLength =
+        static_cast<::jxx::lang::jlong>(source->length);
     const auto length = static_cast<std::uint32_t>(
-        std::min<::jxx::lang::jlong>(maxSize, source->length));
+        maxSize < sourceLength ? maxSize : sourceLength);
     return ::jxx::NEW<IntStream>(copyOf_(source, length));
 }
 
 ::jxx::Ptr<IntStream> IntStream::skip(::jxx::lang::jlong countValue) {
     if (countValue < 0) throw ::jxx::lang::IllegalArgumentException();
     auto source = takeData_();
+    const auto sourceLength =
+        static_cast<::jxx::lang::jlong>(source->length);
     const auto start = static_cast<std::uint32_t>(
-        std::min<::jxx::lang::jlong>(countValue, source->length));
+        countValue < sourceLength ? countValue : sourceLength);
     auto values = ::jxx::NEW<::jxx::lang::IntArrayType>(
         source->length - start);
     for (std::uint32_t index = start; index < source->length; ++index) {
@@ -268,7 +272,8 @@ void IntStream::forEachOrdered(
     if (source->length == 0) return OptionalInt::empty();
     auto result = (*source)[0];
     for (std::uint32_t index = 1; index < source->length; ++index) {
-        result = std::min(result, (*source)[index]);
+        const auto value = (*source)[index];
+        if (value < result) result = value;
     }
     return OptionalInt::of(result);
 }
@@ -278,7 +283,8 @@ void IntStream::forEachOrdered(
     if (source->length == 0) return OptionalInt::empty();
     auto result = (*source)[0];
     for (std::uint32_t index = 1; index < source->length; ++index) {
-        result = std::max(result, (*source)[index]);
+        const auto value = (*source)[index];
+        if (value > result) result = value;
     }
     return OptionalInt::of(result);
 }
@@ -393,7 +399,10 @@ void IntStream::ensureUsable_() const {
     std::uint32_t length) {
     auto result = ::jxx::NEW<::jxx::lang::IntArrayType>(length);
     if (source == nullptr) return result;
-    const auto copyLength = std::min(length, source->length);
+    const std::uint32_t sourceLength =
+        static_cast<std::uint32_t>(source->length);
+    const std::uint32_t copyLength =
+        length < sourceLength ? length : sourceLength;
     for (std::uint32_t index = 0; index < copyLength; ++index) {
         (*result)[index] = (*source)[index];
     }
