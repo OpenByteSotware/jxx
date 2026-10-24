@@ -57,7 +57,6 @@ void initializeUtilities() {
                     static_cast<::jxx::lang::jlong>(-2851667679971038690LL));
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedLinkedHashSet, 1U, 2U>();
         registerType<IntStream>();
-        ::jxx::io::serialization::registerSerializableClass<IntStream>(1, [] { return IntStream::of(::jxx::NEW<::jxx::lang::IntArrayType>(0)); });
         registerType<IntSummaryStatistics>();
         registerType<LongSummaryStatistics>();
         registerType<Objects>();

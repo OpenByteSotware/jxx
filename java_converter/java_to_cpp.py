@@ -32,7 +32,7 @@ PRIMITIVES={
 UNSUPPORTED=('java.lang.annotation','java.lang.instrument','java.lang.invoke')
 # Names supplied by the implicit language package or by the converter's
 # standard support includes must not be resolved through an on-demand import.
-DEFAULT_LANGUAGE_TYPES={'Object','String','StringBuilder','System','JxxArray','Class','Integer','Character','Boolean','Byte','Short','Long','Float','Double','Throwable','Exception','RuntimeException','Error'}
+DEFAULT_LANGUAGE_TYPES={'Object','String','StringBuilder','StringBuffer','System','JxxArray','Class','Integer','Character','Boolean','Byte','Short','Long','Float','Double','Throwable','Exception','RuntimeException','Error'}
 SPECIAL_TYPES={
     'java.lang.reflect.InvocationTargetException':'java.lang.InvocationTargetException',
     'java.util.Map.Entry':'java.util.MapEntry',

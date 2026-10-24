@@ -5,8 +5,6 @@
 #include <vector>
 
 #include "util/jxx.util.IntStream.h"
-#include "io/jxx.io.ObjectInputStream.h"
-#include "io/jxx.io.ObjectOutputStream.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
 #include "lang/jxx.lang.IllegalStateException.h"
 #include "lang/jxx.lang.NullPointerException.h"
@@ -359,27 +357,6 @@ void IntStream::forEachOrdered(
     return data_ == nullptr
         ? 0
         : static_cast<::jxx::lang::jint>(data_->length);
-}
-
-void IntStream::writeObject(
-    const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) {
-    if (out == nullptr) throw ::jxx::lang::NullPointerException();
-    out->writeObject(data_);
-}
-
-void IntStream::readObject(
-    const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) {
-    if (in == nullptr) throw ::jxx::lang::NullPointerException();
-    data_ = ::jxx::CAST<::jxx::lang::IntArrayType>(in->readObject());
-    consumed_ = false;
-    if (data_ == nullptr) {
-        data_ = ::jxx::NEW<::jxx::lang::IntArrayType>(0);
-    }
-}
-
-void IntStream::readObjectNoData() {
-    data_ = ::jxx::NEW<::jxx::lang::IntArrayType>(0);
-    consumed_ = false;
 }
 
 void IntStream::ensureUsable_() const {

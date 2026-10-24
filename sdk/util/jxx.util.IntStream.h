@@ -5,7 +5,6 @@
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.JxxArray.h"
 #include "lang/jxx.lang.Object.h"
-#include "io/jxx.io.SerializableI.h"
 
 namespace jxx::io {
 class ObjectInputStream;
@@ -27,8 +26,7 @@ class OptionalInt;
 class IntStream final
     : public ::jxx::lang::ClassBase<
           IntStream,
-          ::jxx::lang::Object,
-          ::jxx::io::SerializableI> {
+          ::jxx::lang::Object> {
 public:
     explicit IntStream(const ::jxx::lang::IntArray& backing);
 
@@ -84,11 +82,6 @@ public:
     // Existing JXX convenience. This does not consume the stream.
     ::jxx::lang::jint size() const noexcept;
 
-    void writeObject(
-        const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override;
-    void readObject(
-        const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override;
-    void readObjectNoData() override;
 
 private:
     IntStream();
