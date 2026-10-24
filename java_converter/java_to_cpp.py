@@ -406,6 +406,18 @@ class Translator:
                 elif kind=='ArraySelector':
                     base+=f'({self.expr(selector.index)})'
             return base
+        if n=='SuperMemberReference':
+            base=f'this->JxxSuper::{e.member}'
+            base=self.apply_expression_selectors(
+                base,getattr(e,'selectors',None))
+            return (''.join(getattr(e,'prefix_operators',None) or [])+
+                    base+
+                    ''.join(getattr(e,'postfix_operators',None) or []))
+        if n=='SuperMethodInvocation':
+            arguments=', '.join(self.expr(x) for x in e.arguments or [])
+            invocation=f'JxxSuper::{e.member}({arguments})'
+            return self.apply_expression_selectors(
+                invocation,getattr(e,'selectors',None))
         if n=='MemberReference':
             q=getattr(e,'qualifier',None)
             if q:
