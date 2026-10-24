@@ -11,7 +11,6 @@
 #include "util/jxx.util.EventObject.h"
 #include "util/jxx.util.Formattable.h"
 #include "util/jxx.util.Formatter.h"
-#include "util/jxx.util.IntStream.h"
 #include "util/jxx.util.IntSummaryStatistics.h"
 #include "util/jxx.util.LinkedHashSet.h"
 #include "util/jxx.util.LinkedList.h"
@@ -56,7 +55,6 @@ void initializeUtilities() {
         ::jxx::io::serialization::registerSerializableClass<ErasedLinkedHashSet>(
                     static_cast<::jxx::lang::jlong>(-2851667679971038690LL));
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedLinkedHashSet, 1U, 2U>();
-        registerType<IntStream>();
         registerType<IntSummaryStatistics>();
         registerType<LongSummaryStatistics>();
         registerType<Objects>();

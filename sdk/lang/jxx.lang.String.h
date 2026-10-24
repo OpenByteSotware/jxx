@@ -28,10 +28,8 @@ namespace jxx::lang {
 
 } // namespace jxx::lang
 
-namespace jxx::util {
-    class IntStream;
-	class Locale;    
-}
+namespace jxx::util { class Locale; }
+namespace jxx::util::stream { class IntStream; }
 
 namespace jxx::lang {
 
@@ -196,8 +194,8 @@ public:
         CharArray toCharArray() const;
 
         // Java 8 streams:
-        jxx::Ptr<jxx::util::IntStream> chars() const;
-        jxx::Ptr<jxx::util::IntStream> codePoints() const;
+        jxx::Ptr<jxx::util::stream::IntStream> chars() const;
+        jxx::Ptr<jxx::util::stream::IntStream> codePoints() const;
 
         jxx::Ptr<String> intern() const;
 

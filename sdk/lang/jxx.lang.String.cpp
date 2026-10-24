@@ -10,7 +10,7 @@
 #include "jxx.lang.IllegalArgumentException.h"
 #include "jxx.lang.StringBuffer.h"
 #include "jxx.lang.StringBuilder.h"
-#include "util/jxx.util.IntStream.h"
+#include "util/stream/jxx.util.stream.IntStream.h"
 #include "util/jxx.util.Formatter.h"
 #include "jxx.lang.Cast.h"
 #include "lang/jxx.lang.Iterable.h"
@@ -661,13 +661,13 @@ namespace jxx::lang {
         return a;
     }
 
-    jxx::Ptr<jxx::util::IntStream> String::chars() const {
+    jxx::Ptr<jxx::util::stream::IntStream> String::chars() const {
         auto a = jxx::NEW<IntArrayType>((std::uint32_t)value_.size());
         for (jint i = 0; i < (jint)value_.size(); ++i) (*a)[i] = (jint)value_[(size_t)i];
-        return jxx::util::IntStream::of(a);
+        return jxx::util::stream::IntStream::of(a);
     }
 
-    jxx::Ptr<jxx::util::IntStream> String::codePoints() const {
+    jxx::Ptr<jxx::util::stream::IntStream> String::codePoints() const {
         std::vector<jint> cps;
         cps.reserve(value_.size());
         for (size_t i = 0; i < value_.size(); ++i) {
@@ -681,7 +681,7 @@ namespace jxx::lang {
         }
         auto a = jxx::NEW<IntArrayType>((std::uint32_t)cps.size());
         for (jint i = 0; i < (jint)cps.size(); ++i) (*a)[i] = cps[(size_t)i];
-        return jxx::util::IntStream::of(a);
+        return jxx::util::stream::IntStream::of(a);
     }
     jxx::Ptr<String> String::intern() const {
         static std::mutex poolMutex;
