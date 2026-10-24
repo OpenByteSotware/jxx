@@ -10,7 +10,7 @@ using ::jxx::lang::String;
 using ::jxx::util::StringTokenizer;
 
 std::string text(const ::jxx::Ptr<String>& value) {
-    return value->toUTF8String();
+    return value->utf8();
 }
 
 TEST(StringTokenizerTest, UsesDefaultDelimiters) {
@@ -48,7 +48,8 @@ TEST(StringTokenizerTest, ChangesDelimitersForNextTokenAndFollowingCalls) {
 }
 
 TEST(StringTokenizerTest, EnumerationMethodsMatchTokenMethods) {
-    auto tokenizer = ::jxx::NEW<StringTokenizer>(::jxx::NEW<String>("one two"));
+    auto tokenizer = ::jxx::NEW<StringTokenizer>(
+        ::jxx::NEW<String>("one two"));
 
     EXPECT_TRUE(tokenizer->hasMoreElements());
     auto first = ::jxx::CAST<String>(tokenizer->nextElement());
@@ -75,6 +76,8 @@ TEST(StringTokenizerTest, PreservesDocumentedNullBehavior) {
 
     auto tokenizer = ::jxx::NEW<StringTokenizer>(
         ::jxx::NEW<String>("value"), ::jxx::Ptr<String>{});
-    EXPECT_THROW(tokenizer->hasMoreTokens(), ::jxx::lang::NullPointerException);
+    EXPECT_THROW(
+        tokenizer->hasMoreTokens(),
+        ::jxx::lang::NullPointerException);
 }
 } // namespace
