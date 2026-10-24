@@ -361,7 +361,9 @@ class Translator:
             elif kind=='MemberReference':
                 result+=f'->{selector.member}'
             elif kind=='ArraySelector':
-                result+=f'({self.expr(selector.index)})'
+                # JxxArray values are held through ::jxx::Ptr. Dereference the
+                # array object before invoking its rank-aware operator().
+                result=f'(*{result})({self.expr(selector.index)})'
             else:
                 result+=str(selector)
         return result
@@ -462,7 +464,8 @@ class Translator:
             if e.operator=='+' and self.is_string_concatenation(e):
                 return self.string_concatenation_expression(e)
             return f'({self.expr(e.operandl)} {e.operator} {self.expr(e.operandr)})'
-        if n=='Assignment': return f'({self.expr(e.expressionl)} {e.type or "="} {self.expr(e.value)})'
+        if n=='Assignment':
+            return f'{self.expr(e.expressionl)} {e.type or "="} {self.expr(e.value)}'
         if n=='TernaryExpression': return f'({self.expr(e.condition)} ? {self.expr(e.if_true)} : {self.expr(e.if_false)})'
         if n=='ArraySelector': return f'({self.expr(e.index)})'
         return str(e)
