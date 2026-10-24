@@ -162,10 +162,21 @@ class Translator:
         name=self.name_of(t); raw,inc=self.qmap(name)
         if inc: self.includes.add(inc)
         args=[]
-        for a in getattr(t,'arguments',None) or []:
+        declared_arguments=getattr(t,'arguments',None) or []
+        for a in declared_arguments:
             at=getattr(a,'type',None)
             if at is None: args.append('::jxx::Ptr<::jxx::lang::Object>')
             else: args.append(self.resolve(at).value())
+        if not args:
+            generic_parameters=self.generic_class_parameters.get(name,[])
+            # A member generic such as node<T> may appear with a diamond or as
+            # a raw source spelling inside its generic owner. When every class
+            # parameter is active in the current template context, preserve
+            # that specialization instead of emitting the invalid C++ node.
+            if (generic_parameters and
+                    all(parameter in self.type_parameters
+                        for parameter in generic_parameters)):
+                args=list(generic_parameters)
         if args: raw += '<'+', '.join(args)+'>'
         return raw
 
