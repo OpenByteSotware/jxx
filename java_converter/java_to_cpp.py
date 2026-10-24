@@ -76,6 +76,8 @@ class Translator:
         self.declared_type_parameters:Set[str]=set()
         self.generic_class_parameters:Dict[str,List[str]]={}
         self.generic_constructor_parameters:Dict[str,Dict[int,str]]={}
+        self.source_class_bases:Dict[str,str]={}
+        self.source_constructor_parameter_types:Dict[str,List[object]]={}
 
     @staticmethod
     def simple(n): return str(n).split('.')[-1]
@@ -225,11 +227,16 @@ class Translator:
             self.declared_type_parameters.update(class_parameters)
             if class_parameters:
                 self.generic_class_parameters[declaration.name]=class_parameters
+            source_base=getattr(declaration,'extends',None)
+            if source_base is not None:
+                self.source_class_bases[declaration.name]=self.name_of(source_base)
             constructor_positions={}
             for member in getattr(declaration, 'body', None) or []:
                 self.declared_type_parameters.update(
                     self.type_parameter_names(member))
                 if type(member).__name__=='ConstructorDeclaration':
+                    self.source_constructor_parameter_types[declaration.name]=[
+                        parameter.type for parameter in member.parameters or []]
                     for index,parameter in enumerate(member.parameters or []):
                         parameter_name=self.name_of(parameter.type)
                         if parameter_name in class_parameters:
@@ -774,6 +781,25 @@ class Translator:
         if ns:o.exit();o.w(f'}} // namespace {ns}')
         return o.text()
 
+    def constructor_argument_expression(self, expression, target_type):
+        target_name=self.name_of(target_type)
+        value=self.expr(expression)
+        if target_name in PRIMITIVES:
+            return value
+        target=self.resolve(target_type).value()
+        return f'::jxx::CONVERT<{target}>({value})'
+
+    def source_constructor_arguments(self, class_name, arguments):
+        parameter_types=self.source_constructor_parameter_types.get(class_name,[])
+        converted=[]
+        for index,argument in enumerate(arguments or []):
+            if index < len(parameter_types):
+                converted.append(self.constructor_argument_expression(
+                    argument,parameter_types[index]))
+            else:
+                converted.append(self.expr(argument))
+        return converted
+
     def constructor_initializer(self, constructor, class_name):
         body=list(getattr(constructor,'body',None) or [])
         if not body:
@@ -784,10 +810,13 @@ class Translator:
             invocation=getattr(first,'expression',None)
         kind=type(invocation).__name__
         if kind=='ExplicitConstructorInvocation':
-            args=', '.join(self.expr(x) for x in invocation.arguments or [])
+            args=', '.join(self.source_constructor_arguments(
+                class_name,invocation.arguments or []))
             return f' : {class_name}({args})',body[1:]
         if kind=='SuperConstructorInvocation':
-            args=', '.join(self.expr(x) for x in invocation.arguments or [])
+            base_name=self.source_class_bases.get(class_name,'')
+            args=', '.join(self.source_constructor_arguments(
+                base_name,invocation.arguments or []))
             return f' : JxxSuper({args})',body[1:]
         return '',body
 
