@@ -37,6 +37,14 @@ SPECIAL_TYPES={
     'java.lang.reflect.InvocationTargetException':'java.lang.InvocationTargetException',
     'java.util.Map.Entry':'java.util.MapEntry',
 }
+METHOD_RESULT_TYPES={
+    # java.lang.String stream-producing methods. String.h may only forward
+    # declare IntStream, but fluent calls such as chars().distinct() require
+    # the complete type in the generated translation unit.
+    'chars':'java.util.IntStream',
+    'codePoints':'java.util.IntStream',
+}
+
 STATIC_ACCESSORS={
     'java.util.concurrent.TimeUnit':{
         'NANOSECONDS','MICROSECONDS','MILLISECONDS','SECONDS','MINUTES','HOURS','DAYS'},
@@ -282,6 +290,14 @@ class Translator:
                for m in getattr(t,'body',None) or []):
             self.includes.update({'lang/jxx.lang.System.h','lang/jxx.lang.String.h','lang/jxx.lang.Throwable.h'})
 
+    def record_method_result_dependency(self, invocation):
+        result_type=METHOD_RESULT_TYPES.get(getattr(invocation,'member',None))
+        if not result_type:
+            return
+        _,include=self.qmap(result_type)
+        if include:
+            self.includes.add(include)
+
     def gather_body_type_includes(self, tree):
         """Resolve body-level declared and constructed types before header output."""
         filter_method=getattr(tree,'filter',None)
@@ -290,6 +306,10 @@ class Translator:
             local_type=getattr(tree_module,'LocalVariableDeclaration',None)
             creator_type=getattr(tree_module,'ClassCreator',None)
             catch_type=getattr(tree_module,'CatchClauseParameter',None)
+            invocation_type=getattr(tree_module,'MethodInvocation',None)
+            if invocation_type is not None:
+                for _,node in filter_method(invocation_type):
+                    self.record_method_result_dependency(node)
             if local_type is not None:
                 for _,node in filter_method(local_type):
                     self.resolve(node.type)
