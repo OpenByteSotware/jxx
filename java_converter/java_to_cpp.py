@@ -509,6 +509,8 @@ class Translator:
         class_name=self.name_of(allocation_type)
         class_parameters=self.generic_class_parameters.get(class_name,[])
         constructor_positions=self.generic_constructor_parameters.get(class_name,{})
+        constructor_parameter_types=self.source_constructor_parameter_types.get(
+            class_name,[])
         converted_arguments=[]
         for index,argument in enumerate(creator.arguments or []):
             value=self.expr(argument)
@@ -518,6 +520,12 @@ class Translator:
                 if target_index < len(resolved_type_arguments):
                     target=resolved_type_arguments[target_index]
                     value=f'::jxx::CONVERT<{target}>({value})'
+            elif index < len(constructor_parameter_types):
+                # Source constructors with concrete reference parameters still
+                # require JXX conversion. For example, const char[] must become
+                # Ptr<String> before it reaches jxx::NEW<T>.
+                value=self.constructor_argument_expression(
+                    argument,constructor_parameter_types[index])
             converted_arguments.append(value)
         return f'::jxx::NEW<{raw}>({", ".join(converted_arguments)})'
 
