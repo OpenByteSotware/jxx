@@ -817,7 +817,11 @@ class Translator:
             base_name=self.source_class_bases.get(class_name,'')
             args=', '.join(self.source_constructor_arguments(
                 base_name,invocation.arguments or []))
-            return f' : JxxSuper({args})',body[1:]
+            # The converted class directly inherits Super, the ClassBase CRTP
+            # specialization. JxxSuper names the source superclass carried by
+            # ClassBase and is not a direct C++ base, so it cannot appear in a
+            # derived constructor's mem-initializer list.
+            return f' : Super({args})',body[1:]
         return '',body
 
     def source(self,tree,header_inc)->str:
