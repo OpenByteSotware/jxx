@@ -346,6 +346,37 @@ class Translator:
                 result+=str(selector)
         return result
 
+    @staticmethod
+    def is_string_literal_expression(expression):
+        return (type(expression).__name__=='Literal' and
+                isinstance(getattr(expression,'value',None),str) and
+                getattr(expression,'value').startswith('"'))
+
+    def is_string_concatenation(self, expression):
+        if self.is_string_literal_expression(expression):
+            return True
+        return (type(expression).__name__=='BinaryOperation' and
+                getattr(expression,'operator',None)=='+' and
+                (self.is_string_concatenation(expression.operandl) or
+                 self.is_string_concatenation(expression.operandr)))
+
+    def string_value_expression(self, expression):
+        if self.is_string_literal_expression(expression):
+            return f'::jxx::NEW<::jxx::lang::String>({self.expr(expression)})'
+        return f'::jxx::lang::String::valueOf({self.expr(expression)})'
+
+    def string_concatenation_expression(self, expression):
+        left=expression.operandl
+        right=expression.operandr
+        if self.is_string_concatenation(left):
+            left_value=(self.string_concatenation_expression(left)
+                        if type(left).__name__=='BinaryOperation'
+                        else self.string_value_expression(left))
+            return f'{left_value}->concat({self.string_value_expression(right)})'
+        # A String on the right still makes the entire + expression a String.
+        return (f'{self.string_value_expression(left)}->concat('
+                f'{self.string_value_expression(right)})')
+
     def expr(self,e):
         if e is None:return ''
         n=type(e).__name__
@@ -396,6 +427,8 @@ class Translator:
             return f'static_cast<{t.raw}>({x})' if t.primitive else f'::jxx::CAST<{t.raw}>({x})'
         if n=='BinaryOperation':
             if e.operator=='instanceof': return f'::jxx::INSTANCEOF<{self.ref_raw(e.operandr)}>({self.expr(e.operandl)})'
+            if e.operator=='+' and self.is_string_concatenation(e):
+                return self.string_concatenation_expression(e)
             return f'({self.expr(e.operandl)} {e.operator} {self.expr(e.operandr)})'
         if n=='Assignment': return f'({self.expr(e.expressionl)} {e.type or "="} {self.expr(e.value)})'
         if n=='TernaryExpression': return f'({self.expr(e.condition)} ? {self.expr(e.if_true)} : {self.expr(e.if_false)})'
