@@ -1,5 +1,8 @@
 #pragma once
 
+#include <type_traits>
+#include <utility>
+
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.IllegalStateException.h"
 #include "lang/jxx.lang.NullPointerException.h"
@@ -24,6 +27,38 @@ public:
 private:
     ::jxx::Ptr<IntConsumer> self_();
 };
+
+namespace int_consumer_detail {
+
+template <typename Callable>
+class CallableIntConsumer final
+    : public ::jxx::lang::ClassBase<
+          CallableIntConsumer<Callable>,
+          ::jxx::lang::Object,
+          IntConsumer> {
+public:
+    template <typename Source>
+    explicit CallableIntConsumer(Source&& callable)
+        : callable_(std::forward<Source>(callable)) {
+    }
+
+    void accept(::jxx::lang::jint value) override {
+        callable_(value);
+    }
+
+private:
+    Callable callable_;
+};
+
+template <typename Callable>
+auto fromCallable(Callable&& callable)
+    -> ::jxx::Ptr<IntConsumer> {
+    using StoredCallable = std::decay_t<Callable>;
+    return ::jxx::NEW<CallableIntConsumer<StoredCallable>>(
+        std::forward<Callable>(callable));
+}
+
+} // namespace int_consumer_detail
 
 class IntConsumerAndThen final
     : public ::jxx::lang::ClassBase<

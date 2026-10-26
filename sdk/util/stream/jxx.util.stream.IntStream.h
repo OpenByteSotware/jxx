@@ -1,9 +1,13 @@
 #pragma once
 
+#include <type_traits>
+#include <utility>
+
 #include "lang/jxx.lang.Integer.h"
 #include "lang/jxx.lang.JxxArray.h"
 #include "lang/jxx_types.h"
 #include "util/stream/jxx.util.stream.BaseStream.h"
+#include "util/function/jxx.util.function.IntConsumer.h"
 
 namespace jxx::util::function { class IntBinaryOperator; class IntConsumer; class IntPredicate; class IntUnaryOperator; }
 namespace jxx::util { class IntSummaryStatistics; class OptionalDouble; class OptionalInt; }
@@ -29,7 +33,31 @@ public:
     virtual ::jxx::Ptr<IntStream> limit(::jxx::lang::jlong maxSize) = 0;
     virtual ::jxx::Ptr<IntStream> skip(::jxx::lang::jlong count) = 0;
     virtual void forEach(const ::jxx::Ptr<::jxx::util::function::IntConsumer>& action) = 0;
+
+    template <typename Callable,
+        std::enable_if_t<
+            std::is_invocable_r_v<void, Callable&, ::jxx::lang::jint> &&
+            !std::is_same_v<std::decay_t<Callable>,
+                ::jxx::Ptr<::jxx::util::function::IntConsumer>>,
+            int> = 0>
+    void forEach(Callable&& action) {
+        forEach(::jxx::util::function::int_consumer_detail::fromCallable(
+            std::forward<Callable>(action)));
+    }
+
     virtual void forEachOrdered(const ::jxx::Ptr<::jxx::util::function::IntConsumer>& action) = 0;
+
+    template <typename Callable,
+        std::enable_if_t<
+            std::is_invocable_r_v<void, Callable&, ::jxx::lang::jint> &&
+            !std::is_same_v<std::decay_t<Callable>,
+                ::jxx::Ptr<::jxx::util::function::IntConsumer>>,
+            int> = 0>
+    void forEachOrdered(Callable&& action) {
+        forEachOrdered(
+            ::jxx::util::function::int_consumer_detail::fromCallable(
+                std::forward<Callable>(action)));
+    }
     virtual ::jxx::lang::IntArray toArray() = 0;
     virtual ::jxx::lang::jint reduce(::jxx::lang::jint identity, const ::jxx::Ptr<::jxx::util::function::IntBinaryOperator>& operation) = 0;
     virtual ::jxx::Ptr<::jxx::util::OptionalInt> reduce(const ::jxx::Ptr<::jxx::util::function::IntBinaryOperator>& operation) = 0;
