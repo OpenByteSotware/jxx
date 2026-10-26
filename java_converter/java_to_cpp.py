@@ -116,6 +116,7 @@ class Translator:
         self.source_method_varargs:Dict[str,Dict[str,bool]]={}
         self.local_variable_types:Dict[str,object]={}
         self.local_array_variables:Set[str]=set()
+        self.local_primitive_rank1_arrays:Set[str]=set()
         self.source_type_index:Dict[str,Tuple[str,str]]={}
 
     @staticmethod
@@ -475,7 +476,22 @@ class Translator:
         ret=self.resolve(m.return_type,len(getattr(m,'dimensions',None) or [])).value()
         return f'{ret} {qualified}({", ".join(ps)})'
 
-    def apply_expression_selectors(self, base, selectors):
+    def is_primitive_rank1_array(self,type_node,extra_dims=0)->bool:
+        rank=len(getattr(type_node,'dimensions',None) or [])+extra_dims
+        return rank==1 and self.name_of(type_node) in PRIMITIVE_ARRAY_ALIASES
+
+    def array_size_expression(self,name:str)->str:
+        if name in self.local_primitive_rank1_arrays:
+            return f'{name}->length'
+        return f'{name}->size()'
+
+    def array_element_expression(self,name:str,index:str)->str:
+        if name in self.local_primitive_rank1_arrays:
+            return f'(*{name})[{index}]'
+        return f'(*{name})({index})'
+
+    def apply_expression_selectors(
+            self,base,selectors,primitive_rank1_array:bool=False):
         result=base
         for selector in selectors or []:
             kind=type(selector).__name__
@@ -486,9 +502,13 @@ class Translator:
             elif kind=='MemberReference':
                 result+=f'->{selector.member}'
             elif kind=='ArraySelector':
-                # JxxArray values are held through ::jxx::Ptr. Dereference the
-                # array object before invoking its rank-aware operator().
-                result=f'(*{result})({self.expr(selector.index)})'
+                index=self.expr(selector.index)
+                if primitive_rank1_array:
+                    result=f'(*{result})[{index}]'
+                else:
+                    result=f'(*{result})({index})'
+                # Only the original rank-1 array uses the primitive alias.
+                primitive_rank1_array=False
             else:
                 result+=str(selector)
         return result
@@ -609,6 +629,7 @@ class Translator:
         self.current_class=owner_name
         self.local_variable_types={}
         self.local_array_variables=set()
+        self.local_primitive_rank1_arrays=set()
         for parameter in getattr(member,'parameters',None) or []:
             self.local_variable_types[parameter.name]=parameter.type
             dimensions=(len(getattr(parameter.type,'dimensions',None) or []) +
@@ -616,6 +637,10 @@ class Translator:
                         (1 if getattr(parameter,'varargs',False) else 0))
             if dimensions > 0:
                 self.local_array_variables.add(parameter.name)
+            if self.is_primitive_rank1_array(parameter.type,
+                    len(getattr(parameter,'dimensions',None) or []) +
+                    (1 if getattr(parameter,'varargs',False) else 0)):
+                self.local_primitive_rank1_arrays.add(parameter.name)
 
     def invocation_owner_name(self,qualifier):
         if not qualifier:
@@ -651,8 +676,12 @@ class Translator:
             f'::jxx::NEW<{concrete}>('
             f'static_cast<::jxx::lang::jint>({len(values)}))')
         if values:
+            primitive_varargs=(
+                self.name_of(vararg_parameter.type) in PRIMITIVE_ARRAY_ALIASES)
             assignments=' '.join(
-                f'(*array)({index}) = {self.expr(value)};'
+                ((f'(*array)[{index}] = {self.expr(value)};')
+                 if primitive_varargs else
+                 (f'(*array)({index}) = {self.expr(value)};'))
                 for index,value in enumerate(values))
             array_expression=(
                 f'([&]() {{ auto array = {array_expression}; '
@@ -695,7 +724,7 @@ class Translator:
                 fq=self.imports.get(q,q)
                 if q in self.local_variable_types:
                     if e.member=='length' and q in self.local_array_variables:
-                        base=f'{q}->size()'
+                        base=self.array_size_expression(q)
                     else:
                         base=f'{q}->{e.member}'
                 elif e.member in STATIC_ACCESSORS.get(fq,set()):
@@ -705,8 +734,10 @@ class Translator:
                 else:
                     base=f'{q}->{e.member}'
             else: base=e.member
+            array_name=(e.member if not q else q)
             base=self.apply_expression_selectors(
-                base,getattr(e,'selectors',None))
+                base,getattr(e,'selectors',None),
+                array_name in self.local_primitive_rank1_arrays)
             return ''.join(getattr(e,'prefix_operators',None) or [])+base+''.join(getattr(e,'postfix_operators',None) or [])
         if n=='MethodInvocation':
             q=getattr(e,'qualifier',None)
@@ -760,7 +791,10 @@ class Translator:
         o.w(f'{array_type} {declarator.name} = ::jxx::NEW<{concrete}>({len(values)}U);')
         for index,value in enumerate(values):
             converted=self.array_initializer_value(declaration.type,value)
-            o.w(f'(*{declarator.name})({index}U) = {converted};')
+            if self.is_primitive_rank1_array(declaration.type,dims):
+                o.w(f'(*{declarator.name})[{index}U] = {converted};')
+            else:
+                o.w(f'(*{declarator.name})({index}U) = {converted};')
 
     def class_creator_expression(self, creator, expected_type=None):
         allocation_type=creator.type
@@ -810,6 +844,8 @@ class Translator:
                 self.local_variable_types[declarator.name]=initializer.type
                 if dimensions > 0:
                     self.local_array_variables.add(declarator.name)
+                if self.is_primitive_rank1_array(initializer.type,dimensions):
+                    self.local_primitive_rank1_arrays.add(declarator.name)
                 value=(self.declaration_initializer_expression(
                     initializer.type,declarator.initializer)
                     if declarator.initializer is not None else '')
@@ -865,6 +901,8 @@ class Translator:
                                   dims)
                 if total_dimensions > 0 or type(getattr(d,'initializer',None)).__name__=='ArrayCreator':
                     self.local_array_variables.add(d.name)
+                if self.is_primitive_rank1_array(s.type,dims):
+                    self.local_primitive_rank1_arrays.add(d.name)
                 if type(getattr(d,'initializer',None)).__name__=='ClassCreator':
                     initial_value=self.class_creator_expression(d.initializer,s.type)
                 else:
@@ -885,12 +923,21 @@ class Translator:
                 iterable=self.expr(control.iterable)
                 index_name=f'jxxIndex_{declarator.name}'
                 self.local_variable_types[declarator.name]=variable.type
+                iterable_name=(getattr(control.iterable,'member',None)
+                               if type(control.iterable).__name__=='MemberReference'
+                               else None)
+                size_expression=(self.array_size_expression(iterable_name)
+                                 if iterable_name else f'{iterable}->size()')
+                element_expression=(self.array_element_expression(
+                                        iterable_name,index_name)
+                                    if iterable_name else
+                                    f'(*{iterable})({index_name})')
                 o.w(f'for (::jxx::lang::jint {index_name} = 0; '
-                    f'{index_name} < {iterable}->size(); ++{index_name}) {{')
+                    f'{index_name} < {size_expression}; ++{index_name}) {{')
                 o.enter()
                 element_type=self.resolve(variable.type).value()
                 o.w(f'{element_type} {declarator.name} = '
-                    f'(*{iterable})({index_name});')
+                    f'{element_expression};')
                 self.stmt(s.body,o)
                 o.exit();o.w('}')
             else:
