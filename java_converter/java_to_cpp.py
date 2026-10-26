@@ -474,13 +474,32 @@ class Translator:
                 isinstance(getattr(expression,'value',None),str) and
                 getattr(expression,'value').startswith('"'))
 
+    def is_string_expression(self, expression):
+        if self.is_string_literal_expression(expression):
+            return True
+        kind=type(expression).__name__
+        if kind=='MemberReference':
+            qualifier=getattr(expression,'qualifier',None)
+            if not qualifier:
+                value_type=self.local_variable_types.get(expression.member)
+                return self.simple(self.name_of(value_type))=='String'
+            field_type=self.assignment_target_type(expression)
+            return self.simple(self.name_of(field_type))=='String'
+        if kind=='MethodInvocation':
+            return expression.member in {
+                'toString','nextLine','next','substring','concat','valueOf'}
+        if kind=='BinaryOperation' and expression.operator=='+':
+            return (self.is_string_expression(expression.operandl) or
+                    self.is_string_expression(expression.operandr))
+        return False
+
     def is_string_concatenation(self, expression):
         if self.is_string_literal_expression(expression):
             return True
         return (type(expression).__name__=='BinaryOperation' and
                 getattr(expression,'operator',None)=='+' and
-                (self.is_string_concatenation(expression.operandl) or
-                 self.is_string_concatenation(expression.operandr)))
+                (self.is_string_expression(expression.operandl) or
+                 self.is_string_expression(expression.operandr)))
 
     def string_value_expression(self, expression):
         if self.is_string_literal_expression(expression):
@@ -589,7 +608,15 @@ class Translator:
         is_varargs=self.source_method_varargs.get(owner,{}).get(
             invocation.member,False)
         if not is_varargs or not parameters:
-            return [self.expr(argument) for argument in arguments]
+            rendered=[self.expr(argument) for argument in arguments]
+            qualifier=getattr(invocation,'qualifier',None)
+            receiver_type=self.local_variable_types.get(qualifier)
+            if (invocation.member=='equals' and
+                    self.simple(self.name_of(receiver_type))=='String' and
+                    arguments and self.is_string_literal_expression(arguments[0])):
+                rendered[0]=(f'::jxx::NEW<::jxx::lang::String>('
+                             f'{self.expr(arguments[0])})')
+            return rendered
         fixed_count=len(parameters)-1
         rendered=[self.expr(argument) for argument in arguments[:fixed_count]]
         vararg_parameter=parameters[-1]
@@ -766,10 +793,18 @@ class Translator:
             return ', '.join(declarations)
         return self.expr(initializer)
 
+    @staticmethod
+    def node_list(value):
+        if value is None:
+            return []
+        if isinstance(value,(list,tuple)):
+            return list(value)
+        return [value]
+
     def traditional_for_statement(self, statement, output):
         control=statement.control
-        initializers=list(getattr(control,'init',None) or [])
-        updates=list(getattr(control,'update',None) or [])
+        initializers=self.node_list(getattr(control,'init',None))
+        updates=self.node_list(getattr(control,'update',None))
         initializer=', '.join(
             self.for_initializer_expression(value) for value in initializers)
         condition=(self.expr(control.condition)
