@@ -16,6 +16,8 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
+#include "math/jxx.math.BigDecimal.h"
+#include "math/jxx.math.BigInteger.h"
 #include "util/jxx.util.InputMismatchException.h"
 #include "util/jxx.util.Iterator.h"
 #include "util/regex/jxx.util.regex.MatchResult.h"
@@ -117,6 +119,15 @@ public:
 
     virtual ::jxx::lang::jbool hasNextDouble();
     virtual ::jxx::lang::jdouble nextDouble();
+
+    virtual ::jxx::lang::jbool hasNextBigInteger();
+    virtual ::jxx::lang::jbool hasNextBigInteger(::jxx::lang::jint radix);
+    virtual ::jxx::Ptr<::jxx::math::BigInteger> nextBigInteger();
+    virtual ::jxx::Ptr<::jxx::math::BigInteger> nextBigInteger(
+        ::jxx::lang::jint radix);
+
+    virtual ::jxx::lang::jbool hasNextBigDecimal();
+    virtual ::jxx::Ptr<::jxx::math::BigDecimal> nextBigDecimal();
 
     virtual ::jxx::Ptr<::jxx::lang::String> findInLine(const ::jxx::Ptr<regex::Pattern>& pattern);
     virtual ::jxx::Ptr<::jxx::lang::String> findInLine(const ::jxx::Ptr<::jxx::lang::String>& pattern);

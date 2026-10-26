@@ -33,14 +33,19 @@ UNSUPPORTED=('java.lang.annotation','java.lang.instrument','java.lang.invoke')
 # Names supplied by the implicit language package or by the converter's
 # standard support includes must not be resolved through an on-demand import.
 DEFAULT_LANGUAGE_TYPES={'Object','String','StringBuilder','StringBuffer','System','JxxArray','Class','Integer','Character','Boolean','Byte','Short','Long','Float','Double','Throwable','Exception','RuntimeException','Error'}
-JAVA_UTIL_TYPES={
-    'Collection','List','ArrayList','LinkedList','Set','HashSet','LinkedHashSet',
-    'SortedSet','TreeSet','Map','HashMap','LinkedHashMap','SortedMap','TreeMap',
-    'Queue','Deque','ArrayDeque','Iterator','ListIterator','Enumeration',
-    'Comparator','Optional','Scanner','StringTokenizer','Vector','Stack',
-    'IntSummaryStatistics','LongSummaryStatistics','DoubleSummaryStatistics',
-    'IntStream','LongStream','DoubleStream','Stream',
+SDK_TYPES_BY_PACKAGE={
+    'java.util': {
+        'Collection','List','ArrayList','LinkedList','Set','HashSet',
+        'LinkedHashSet','SortedSet','TreeSet','Map','HashMap','LinkedHashMap',
+        'SortedMap','TreeMap','Queue','Deque','ArrayDeque','Iterator',
+        'ListIterator','Enumeration','Comparator','Optional','Scanner',
+        'StringTokenizer','Vector','Stack','IntSummaryStatistics',
+        'LongSummaryStatistics','DoubleSummaryStatistics','IntStream',
+        'LongStream','DoubleStream','Stream',
+    },
+    'java.math': {'BigInteger','BigDecimal','MathContext','RoundingMode'},
 }
+JAVA_UTIL_TYPES=SDK_TYPES_BY_PACKAGE['java.util']
 
 SPECIAL_TYPES={
     'java.lang.reflect.InvocationTargetException':'java.lang.InvocationTargetException',
@@ -125,6 +130,16 @@ class Translator:
             )
 
         return str(name)
+    def wildcard_sdk_type(self,name:str)->Optional[str]:
+        matches=[package for package in self.wildcard_imports
+                 if name in SDK_TYPES_BY_PACKAGE.get(package,set())]
+        if len(matches)==1:
+            return f'{matches[0]}.{name}'
+        if len(matches)>1:
+            self.diag.append(
+                f'ambiguous wildcard SDK type {name}: ' + ', '.join(matches))
+        return None
+
     def qmap(self,name:str)->Tuple[str,Optional[str]]:
         # Resolve implicit language-package types before considering wildcard
         # imports. Otherwise import java.util.* incorrectly maps String to
@@ -142,10 +157,13 @@ class Translator:
                 qualified,include=self.source_type_index[imported_name]
                 return qualified,include
             name=imported_name
-        elif name in JAVA_UTIL_TYPES and 'java.util' in self.wildcard_imports:
-            # Known SDK util types must win over raw-name fallback and source
-            # wildcard ambiguity. qmap below derives both namespace and header.
-            name=f'java.util.{name}'
+        elif any(name in SDK_TYPES_BY_PACKAGE.get(package,set())
+                 for package in self.wildcard_imports):
+            # Resolve known SDK classes from all imported wildcard packages,
+            # even when the source imports more than one package on demand.
+            wildcard_name=self.wildcard_sdk_type(name)
+            if wildcard_name is not None:
+                name=wildcard_name
         elif name in self.source_type_index and name not in self.known_types:
             qualified,include=self.source_type_index[name]
             return qualified,include
@@ -559,22 +577,30 @@ class Translator:
             q=getattr(e,'qualifier',None)
             if q:
                 fq=self.imports.get(q,q)
-                if e.member in STATIC_ACCESSORS.get(fq,set()): base=f'{self.qmap(fq)[0]}::{e.member}()'
-                elif q in self.imports or (q and q[0].isupper()): base=f'{self.qualified_static_owner(q)}::{e.member}'
-                else: base=f'{q}->{e.member}'
+                if q in self.local_variable_types:
+                    base=f'{q}->{e.member}'
+                elif e.member in STATIC_ACCESSORS.get(fq,set()):
+                    base=f'{self.qmap(fq)[0]}::{e.member}()'
+                elif q in self.imports or (q and q[0].isupper()):
+                    base=f'{self.qualified_static_owner(q)}::{e.member}'
+                else:
+                    base=f'{q}->{e.member}'
             else: base=e.member
             base=self.apply_expression_selectors(
                 base,getattr(e,'selectors',None))
             return ''.join(getattr(e,'prefix_operators',None) or [])+base+''.join(getattr(e,'postfix_operators',None) or [])
         if n=='MethodInvocation':
             q=getattr(e,'qualifier',None)
-            if q and (q in self.imports or q[0].isupper()):
+            if q in self.local_variable_types:
+                head=f'{q}->{e.member}'
+            elif q and (q in self.imports or q[0].isupper()):
                 owner=self.qualified_static_owner(q)
                 # Class.method is static and uses ::. Class.field.method calls
                 # through the field object and must use ->.
                 access='->' if '.' in q else '::'
                 head=f'{owner}{access}{e.member}'
-            else: head=f'{q}->{e.member}' if q else e.member
+            else:
+                head=f'{q}->{e.member}' if q else e.member
             invocation=f'{head}({", ".join(self.expr(x) for x in e.arguments or [])})'
             return self.apply_expression_selectors(
                 invocation,getattr(e,'selectors',None))

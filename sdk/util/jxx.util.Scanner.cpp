@@ -12,6 +12,7 @@
 #include "util/jxx.util.NoSuchElementException.h"
 #include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "util/jxx.util.Scanner.h"
+
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.StringBuilder.h"
 #include "lang/jxx.lang.NullPointerException.h"
@@ -264,6 +265,81 @@ static ::jxx::Ptr<regex::MatchResult> snapshotForTokenMatch(
 }
 
 } // anonymous namespace
+
+
+namespace {
+
+int scannerDigitValue(char ch) noexcept {
+    if (ch >= '0' && ch <= '9') return ch - '0';
+    if (ch >= 'a' && ch <= 'z') return ch - 'a' + 10;
+    if (ch >= 'A' && ch <= 'Z') return ch - 'A' + 10;
+    return -1;
+}
+
+std::string scannerMultiplyAddDecimal(
+    const std::string& decimal,
+    int multiplier,
+    int addend) {
+    std::string result(decimal);
+    int carry = addend;
+    for (auto index = result.size(); index > 0; --index) {
+        const int value = (result[index - 1] - '0') * multiplier + carry;
+        result[index - 1] = static_cast<char>('0' + (value % 10));
+        carry = value / 10;
+    }
+    while (carry > 0) {
+        result.insert(result.begin(), static_cast<char>('0' + (carry % 10)));
+        carry /= 10;
+    }
+    const auto first = result.find_first_not_of('0');
+    return first == std::string::npos ? std::string("0") : result.substr(first);
+}
+
+bool scannerBigIntegerDecimal(
+    const ::jxx::Ptr<::jxx::lang::String>& token,
+    ::jxx::lang::jint radix,
+    ::jxx::Ptr<::jxx::lang::String>& decimal) {
+    if (token == nullptr || radix < 2 || radix > 36) return false;
+    std::string text;
+    text.reserve(static_cast<std::size_t>(token->length()));
+    for (::jxx::lang::jint index = 0; index < token->length(); ++index) {
+        const auto character = token->charAt(index);
+        if (character > 0x7F) return false;
+        text.push_back(static_cast<char>(character));
+    }
+    if (text.empty()) return false;
+    std::size_t index = 0;
+    bool negative = false;
+    if (text[index] == '+' || text[index] == '-') {
+        negative = text[index] == '-';
+        ++index;
+    }
+    if (index == text.size()) return false;
+
+    std::string value("0");
+    for (; index < text.size(); ++index) {
+        const int digit = scannerDigitValue(text[index]);
+        if (digit < 0 || digit >= radix) return false;
+        value = scannerMultiplyAddDecimal(value, radix, digit);
+    }
+    if (negative && value != "0") value.insert(value.begin(), '-');
+    decimal = ::jxx::NEW<::jxx::lang::String>(value);
+    return true;
+}
+
+bool scannerBigDecimalValue(
+    const ::jxx::Ptr<::jxx::lang::String>& token,
+    ::jxx::Ptr<::jxx::math::BigDecimal>& value) {
+    if (token == nullptr) return false;
+    try {
+        value = ::jxx::NEW<::jxx::math::BigDecimal>(token);
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
+} // namespace
 
 Scanner::Scanner(const ::jxx::Ptr<::jxx::lang::String>& source)
     : source_(source)
@@ -838,6 +914,71 @@ void Scanner::remove() {
         throw InputMismatchException();
     }
     position_ = tokenEnd;
+    clearMatchResult();
+    return value;
+}
+
+::jxx::lang::jbool Scanner::hasNextBigInteger() {
+    return hasNextBigInteger(radix_);
+}
+
+::jxx::lang::jbool Scanner::hasNextBigInteger(::jxx::lang::jint radix) {
+    ensureOpen();
+    if (radix < 2 || radix > 36) {
+        throw ::jxx::lang::IllegalArgumentException();
+    }
+    std::size_t start = 0;
+    std::size_t end = 0;
+    if (!locateNextToken(position_, start, end)) return false;
+    ::jxx::Ptr<::jxx::lang::String> decimal;
+    return scannerBigIntegerDecimal(tokenString(start, end), radix, decimal);
+}
+
+::jxx::Ptr<::jxx::math::BigInteger> Scanner::nextBigInteger() {
+    return nextBigInteger(radix_);
+}
+
+::jxx::Ptr<::jxx::math::BigInteger> Scanner::nextBigInteger(
+    ::jxx::lang::jint radix) {
+    ensureOpen();
+    if (radix < 2 || radix > 36) {
+        throw ::jxx::lang::IllegalArgumentException();
+    }
+    std::size_t start = 0;
+    std::size_t end = 0;
+    if (!locateNextToken(position_, start, end)) {
+        throw ::jxx::util::NoSuchElementException();
+    }
+    ::jxx::Ptr<::jxx::lang::String> decimal;
+    if (!scannerBigIntegerDecimal(tokenString(start, end), radix, decimal)) {
+        throw InputMismatchException();
+    }
+    position_ = end;
+    clearMatchResult();
+    return ::jxx::NEW<::jxx::math::BigInteger>(decimal);
+}
+
+::jxx::lang::jbool Scanner::hasNextBigDecimal() {
+    ensureOpen();
+    std::size_t start = 0;
+    std::size_t end = 0;
+    if (!locateNextToken(position_, start, end)) return false;
+    ::jxx::Ptr<::jxx::math::BigDecimal> value;
+    return scannerBigDecimalValue(tokenString(start, end), value);
+}
+
+::jxx::Ptr<::jxx::math::BigDecimal> Scanner::nextBigDecimal() {
+    ensureOpen();
+    std::size_t start = 0;
+    std::size_t end = 0;
+    if (!locateNextToken(position_, start, end)) {
+        throw ::jxx::util::NoSuchElementException();
+    }
+    ::jxx::Ptr<::jxx::math::BigDecimal> value;
+    if (!scannerBigDecimalValue(tokenString(start, end), value)) {
+        throw InputMismatchException();
+    }
+    position_ = end;
     clearMatchResult();
     return value;
 }
