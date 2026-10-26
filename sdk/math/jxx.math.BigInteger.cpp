@@ -239,7 +239,20 @@ namespace jxx::math
 	}
 	jxx::Ptr<::jxx::JxxArray<jxx::Ptr<BigInteger>, 1U>> BigInteger::divideAndRemainder(const jxx::Ptr<BigInteger>& v) const
 	{
-		if (!v)throw jxx::lang::NullPointerException(); std::string q, r; divMag(digits_, v->digits_, q, r); auto qq = jxx::NEW<BigInteger>(stringFromAscii_(((negative_ != v->negative_) && q != "0" ? "-" : "") + q)); auto rr = jxx::NEW<BigInteger>(stringFromAscii_((negative_ && r != "0" ? "-" : "") + r)); return jxx::NEW<::jxx::JxxArray<jxx::Ptr<BigInteger>, 1U>>(std::initializer_list<jxx::Ptr<BigInteger>>{qq, rr});
+		if (!v) throw jxx::lang::NullPointerException();
+		std::string q;
+		std::string r;
+		divMag(digits_, v->digits_, q, r);
+		const auto quotient = jxx::NEW<BigInteger>(stringFromAscii_(
+			((negative_ != v->negative_) && q != "0" ? "-" : "") + q));
+		const auto remainderValue = jxx::NEW<BigInteger>(stringFromAscii_(
+			(negative_ && r != "0" ? "-" : "") + r));
+		const auto result = jxx::NEW<
+			::jxx::JxxArray<jxx::Ptr<BigInteger>, 1U>>(
+				static_cast<jxx::lang::jint>(2));
+		(*result)(0) = quotient;
+		(*result)(1) = remainderValue;
+		return result;
 	}
 	jxx::Ptr<BigInteger> BigInteger::divide(const jxx::Ptr<BigInteger>& v) const
 	{

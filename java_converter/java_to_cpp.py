@@ -58,6 +58,12 @@ METHOD_RESULT_TYPES={
     'chars':'java.util.IntStream',
     'codePoints':'java.util.IntStream',
 }
+METHOD_CALL_DEPENDENCIES={
+    # IntStream::forEach has an IntConsumer parameter. Generated lambdas are
+    # passed through that source-parity interface, so its complete declaration
+    # must be visible in the generated translation unit.
+    'forEach': ('java.util.function.IntConsumer',),
+}
 
 STATIC_ACCESSORS={
     'java.util.concurrent.TimeUnit':{
@@ -332,13 +338,17 @@ class Translator:
                for m in getattr(t,'body',None) or []):
             self.includes.update({'lang/jxx.lang.System.h','lang/jxx.lang.String.h','lang/jxx.lang.Throwable.h'})
 
-    def record_method_result_dependency(self, invocation):
-        result_type=METHOD_RESULT_TYPES.get(getattr(invocation,'member',None))
-        if not result_type:
-            return
-        _,include=self.qmap(result_type)
-        if include:
-            self.includes.add(include)
+    def record_method_dependencies(self, invocation):
+        member=getattr(invocation,'member',None)
+        result_type=METHOD_RESULT_TYPES.get(member)
+        if result_type:
+            _,include=self.qmap(result_type)
+            if include:
+                self.includes.add(include)
+        for dependency in METHOD_CALL_DEPENDENCIES.get(member,()):
+            _,include=self.qmap(dependency)
+            if include:
+                self.includes.add(include)
 
     def gather_body_type_includes(self, tree):
         """Resolve body-level declared and constructed types before header output."""
@@ -351,7 +361,7 @@ class Translator:
             invocation_type=getattr(tree_module,'MethodInvocation',None)
             if invocation_type is not None:
                 for _,node in filter_method(invocation_type):
-                    self.record_method_result_dependency(node)
+                    self.record_method_dependencies(node)
             if local_type is not None:
                 for _,node in filter_method(local_type):
                     self.resolve(node.type)
