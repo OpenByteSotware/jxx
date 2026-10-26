@@ -135,7 +135,11 @@ class Translator:
             elif name=='JxxArray': return '::jxx::JxxArray',None
             else: name=f'java.lang.{name}'
         elif name in self.imports:
-            name=self.imports[name]
+            imported_name=self.imports[name]
+            if imported_name in self.source_type_index:
+                qualified,include=self.source_type_index[imported_name]
+                return qualified,include
+            name=imported_name
         elif name in JAVA_UTIL_TYPES and 'java.util' in self.wildcard_imports:
             # Known SDK util types must win over raw-name fallback and source
             # wildcard ambiguity. qmap below derives both namespace and header.
@@ -1170,7 +1174,10 @@ def build_source_type_index(files:Sequence[Path]) -> Dict[str,Tuple[str,str]]:
         include=(f'{folder}/{path.stem}.h' if folder else f'{path.stem}.h')
         for match in class_pattern.finditer(source):
             name=match.group(1)
-            index[name]=(f'{namespace}::{name}',include)
+            value=(f'{namespace}::{name}',include)
+            qualified_name=f'{package}.{name}' if package else name
+            index[qualified_name]=value
+            index[name]=value
     return index
 
 def translate_file(path:Path,out_root:str,
