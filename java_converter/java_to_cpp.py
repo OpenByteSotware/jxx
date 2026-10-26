@@ -29,6 +29,11 @@ PRIMITIVES={
  'int':'::jxx::lang::jint','long':'::jxx::lang::jlong',
  'float':'::jxx::lang::jfloat','double':'::jxx::lang::jdouble',
  'boolean':'::jxx::lang::jbool','char':'::jxx::lang::jchar','void':'void'}
+PRIMITIVE_ARRAY_ALIASES={
+    'boolean':'BooleanArray','byte':'ByteArray','char':'CharArray',
+    'short':'ShortArray','int':'IntArray','long':'LongArray',
+    'float':'FloatArray','double':'DoubleArray',
+}
 UNSUPPORTED=('java.lang.annotation','java.lang.instrument','java.lang.invoke')
 # Names supplied by the implicit language package or by the converter's
 # standard support includes must not be resolved through an on-demand import.
@@ -234,6 +239,23 @@ class Translator:
         if args: raw += '<'+', '.join(args)+'>'
         return raw
 
+    @staticmethod
+    def primitive_array_alias(name:str,rank:int,concrete:bool=False)->Optional[str]:
+        if rank != 1 or name not in PRIMITIVE_ARRAY_ALIASES:
+            return None
+        alias=PRIMITIVE_ARRAY_ALIASES[name]
+        if concrete:
+            alias+="Type"
+        return f'::jxx::lang::{alias}'
+
+    def array_concrete_type(self,t,rank:int)->str:
+        name=self.name_of(t)
+        alias=self.primitive_array_alias(name,rank,True)
+        if alias:
+            return alias
+        element=self.resolve(t).value()
+        return f'::jxx::JxxArray<{element}, {rank}U>'
+
     def resolve(self,t,extra_dims=0)->CType:
         if t is None: return CType('void',void=True)
         tn=type(t).__name__; name=self.name_of(t)
@@ -246,6 +268,9 @@ class Translator:
             base=CType(PRIMITIVES.get(name,name),primitive=True,void=(name=='void'))
         else: base=CType(self.ref_raw(t))
         if not dims: return base
+        primitive_alias=self.primitive_array_alias(name,dims)
+        if primitive_alias:
+            return CType(primitive_alias,primitive=True)
         elem=base.value() if not base.primitive else base.raw
         return CType(
             f'::jxx::Ptr<::jxx::JxxArray<{elem}, {dims}U>>',
@@ -620,10 +645,10 @@ class Translator:
         fixed_count=len(parameters)-1
         rendered=[self.expr(argument) for argument in arguments[:fixed_count]]
         vararg_parameter=parameters[-1]
-        element_type=self.resolve(vararg_parameter.type).value()
+        concrete=self.array_concrete_type(vararg_parameter.type,1)
         values=arguments[fixed_count:]
         array_expression=(
-            f'::jxx::NEW<::jxx::JxxArray<{element_type}, 1U>>('
+            f'::jxx::NEW<{concrete}>('
             f'static_cast<::jxx::lang::jint>({len(values)}))')
         if values:
             assignments=' '.join(
@@ -701,9 +726,10 @@ class Translator:
         if n=='ClassCreator': return self.class_creator_expression(e)
         if n=='ArrayCreator':
             rank=len(getattr(e.type,'dimensions',None) or []) + len(getattr(e,'dimensions',None) or [])
-            rank=max(rank,1); elem=self.resolve(e.type).value()
+            rank=max(rank,1)
+            concrete=self.array_concrete_type(e.type,rank)
             dims=[self.expr(x) for x in getattr(e,'dimensions',None) or [] if x is not None]
-            return f'::jxx::NEW<::jxx::JxxArray<{elem}, {rank}U>>({", ".join(dims)})'
+            return f'::jxx::NEW<{concrete}>({", ".join(dims)})'
         if n=='Cast':
             t=self.resolve(e.type); x=self.expr(e.expression)
             return f'static_cast<{t.raw}>({x})' if t.primitive else f'::jxx::CAST<{t.raw}>({x})'
@@ -729,9 +755,9 @@ class Translator:
 
     def emit_local_array_initializer(self, declaration, declarator, o, dims):
         array_type=self.resolve(declaration.type,dims).value()
-        element=self.resolve(declaration.type).value()
+        concrete=self.array_concrete_type(declaration.type,dims)
         values=list(getattr(declarator.initializer,'initializers',None) or [])
-        o.w(f'{array_type} {declarator.name} = ::jxx::NEW<::jxx::JxxArray<{element}, {dims}U>>({len(values)}U);')
+        o.w(f'{array_type} {declarator.name} = ::jxx::NEW<{concrete}>({len(values)}U);')
         for index,value in enumerate(values):
             converted=self.array_initializer_value(declaration.type,value)
             o.w(f'(*{declarator.name})({index}U) = {converted};')
