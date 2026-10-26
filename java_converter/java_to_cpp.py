@@ -490,6 +490,23 @@ class Translator:
             return f'(*{name})[{index}]'
         return f'(*{name})({index})'
 
+    def local_type_name(self,name:str)->str:
+        return self.simple(self.name_of(self.local_variable_types.get(name)))
+
+    def indexed_iterable_element_expression(self,name:str,index:str)->str:
+        if name in self.local_array_variables:
+            return self.array_element_expression(name,index)
+        if self.local_type_name(name) in {
+                'List','ArrayList','LinkedList','Vector','Stack'}:
+            return f'{name}->get({index})'
+        # Fallback for iterable types with indexed source semantics.
+        return f'{name}->get({index})'
+
+    def indexed_iterable_size_expression(self,name:str)->str:
+        if name in self.local_array_variables:
+            return self.array_size_expression(name)
+        return f'{name}->size()'
+
     def apply_expression_selectors(
             self,base,selectors,primitive_rank1_array:bool=False):
         result=base
@@ -926,12 +943,13 @@ class Translator:
                 iterable_name=(getattr(control.iterable,'member',None)
                                if type(control.iterable).__name__=='MemberReference'
                                else None)
-                size_expression=(self.array_size_expression(iterable_name)
+                size_expression=(self.indexed_iterable_size_expression(
+                                    iterable_name)
                                  if iterable_name else f'{iterable}->size()')
-                element_expression=(self.array_element_expression(
+                element_expression=(self.indexed_iterable_element_expression(
                                         iterable_name,index_name)
                                     if iterable_name else
-                                    f'(*{iterable})({index_name})')
+                                    f'{iterable}->get({index_name})')
                 o.w(f'for (::jxx::lang::jint {index_name} = 0; '
                     f'{index_name} < {size_expression}; ++{index_name}) {{')
                 o.enter()
