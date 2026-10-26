@@ -440,9 +440,6 @@ class Translator:
             if self.name_of(p.type) in self.type_parameters and extra == 0:
                 rendered=f'const {self.name_of(p.type)}&'
             elif extra > 0:
-                # Source arrays, including varargs arrays, are reference types.
-                # Pass the JXX shared pointer by const reference; mutating array
-                # elements remains possible through the pointed-to array.
                 rendered=f'const {parameter_type.value()}&'
             else:
                 rendered=parameter_type.param()
@@ -595,10 +592,8 @@ class Translator:
             f'::jxx::NEW<::jxx::JxxArray<{element_type}, 1U>>('
             f'static_cast<::jxx::lang::jint>({len(values)}))')
         if values:
-            # Build and populate the synthetic varargs array in an immediately
-            # invoked lambda so the call remains a single C++ expression.
             assignments=' '.join(
-                f'array->at({index}) = {self.expr(value)};'
+                f'(*array)({index}) = {self.expr(value)};'
                 for index,value in enumerate(values))
             array_expression=(
                 f'([&]() {{ auto array = {array_expression}; '
@@ -782,11 +777,11 @@ class Translator:
                 index_name=f'jxxIndex_{declarator.name}'
                 self.local_variable_types[declarator.name]=variable.type
                 o.w(f'for (::jxx::lang::jint {index_name} = 0; '
-                    f'{index_name} < {iterable}->length; ++{index_name}) {{')
+                    f'{index_name} < {iterable}->size(); ++{index_name}) {{')
                 o.enter()
                 element_type=self.resolve(variable.type).value()
                 o.w(f'{element_type} {declarator.name} = '
-                    f'{iterable}->at({index_name});')
+                    f'(*{iterable})({index_name});')
                 self.stmt(s.body,o)
                 o.exit();o.w('}')
             else:
