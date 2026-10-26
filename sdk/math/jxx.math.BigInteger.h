@@ -3,6 +3,7 @@
 #include "lang/jxx.lang.Number.h"
 #include "lang/jxx.lang.Comparable.h"
 #include "io/jxx.io.SerializableI.h"
+#include "lang/jxx.lang.JxxArray.h"
 
 namespace jxx::math
 {
@@ -23,6 +24,12 @@ namespace jxx::math
 
         BigInteger(jxx::lang::jlong value);
         explicit BigInteger(const jxx::Ptr<jxx::lang::String>& value);
+        BigInteger(const jxx::Ptr<jxx::lang::String>& value,
+                   jxx::lang::jint radix);
+
+        static jxx::Ptr<BigInteger> ZERO;
+        static jxx::Ptr<BigInteger> ONE;
+        static jxx::Ptr<BigInteger> TEN;
 
         static jxx::Ptr<BigInteger> valueOf(jxx::lang::jlong value);
         static jxx::Ptr<BigInteger> parse(const jxx::Ptr<jxx::lang::String>& value);
@@ -32,6 +39,17 @@ namespace jxx::math
         jxx::lang::jint signum() const;
         jxx::Ptr<BigInteger> abs() const;
         jxx::Ptr<BigInteger> negate() const;
+        jxx::Ptr<BigInteger> add(const jxx::Ptr<BigInteger>& val) const;
+        jxx::Ptr<BigInteger> subtract(const jxx::Ptr<BigInteger>& val) const;
+        jxx::Ptr<BigInteger> multiply(const jxx::Ptr<BigInteger>& val) const;
+        jxx::Ptr<BigInteger> divide(const jxx::Ptr<BigInteger>& val) const;
+        jxx::Ptr<BigInteger> remainder(const jxx::Ptr<BigInteger>& val) const;
+        jxx::Ptr<::jxx::JxxArray<jxx::Ptr<BigInteger>, 1U>> divideAndRemainder(
+            const jxx::Ptr<BigInteger>& val) const;
+        jxx::Ptr<BigInteger> pow(jxx::lang::jint exponent) const;
+        jxx::Ptr<BigInteger> gcd(const jxx::Ptr<BigInteger>& val) const;
+        jxx::Ptr<BigInteger> min(const jxx::Ptr<BigInteger>& val) const;
+        jxx::Ptr<BigInteger> max(const jxx::Ptr<BigInteger>& val) const;
 
         jxx::Ptr<jxx::lang::String> toString() const override;
         jxx::Ptr<jxx::lang::String> toString(jxx::lang::jint radix) const;
