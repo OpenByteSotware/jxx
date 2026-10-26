@@ -243,11 +243,13 @@ namespace jxx::math
 	}
 	jxx::Ptr<BigInteger> BigInteger::divide(const jxx::Ptr<BigInteger>& v) const
 	{
-		return (*divideAndRemainder(v))[0];
+		const auto result = divideAndRemainder(v);
+		return (*result)(0);
 	}
 	jxx::Ptr<BigInteger> BigInteger::remainder(const jxx::Ptr<BigInteger>& v) const
 	{
-		return (*divideAndRemainder(v))[1];
+		const auto result = divideAndRemainder(v);
+		return (*result)(1);
 	}
 	jxx::Ptr<BigInteger> BigInteger::pow(jxx::lang::jint e) const
 	{
