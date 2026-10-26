@@ -972,14 +972,19 @@ class Translator:
         o.exit();o.w('}')
         return o.text()
 
-    def translate(self,src,out_root,stem):
+    def translate(self,src,out_root,stem,source_relative_dir:Optional[Path]=None):
         self.main_entries=self.detect_main_entries(src)
         self.main_owner_names=set(self.main_entries)
         tree=javalang.parse.parse(src);self.gather(tree)
         # Header includes must be complete before header() is emitted. Body
         # translation can discover types such as Scanner, but that is too late.
         self.gather_body_type_includes(tree)
-        pkg=tree.package.name if tree.package else ''; rel=Path(*pkg.split('.')) if pkg else Path()
+        pkg=tree.package.name if tree.package else ''
+        # Named packages own their output path. For an unnamed package, retain
+        # the source directory relative to the conversion root so classes in
+        # folders such as Lab_Practice remain colocated and includeable.
+        rel=(Path(*pkg.split('.')) if pkg else
+             Path(source_relative_dir or Path()))
         output_dir=Path(out_root)/rel
         # The package directory already provides name separation. Preserve
         # the source filename so Abstraction.java generates Abstraction.h and
@@ -1157,7 +1162,9 @@ def generate_cmake(out_root: str, project: str = 'TranspiledProject',
     return generate_cmake_files(
         out_root, project, target, jxx_include).read_text(encoding='utf-8')
 
-def build_source_type_index(files:Sequence[Path]) -> Dict[str,Tuple[str,str]]:
+def build_source_type_index(
+        files:Sequence[Path],
+        source_root:Optional[Path]=None) -> Dict[str,Tuple[str,str]]:
     """Map source class names to generated qualified types and headers."""
     index:Dict[str,Tuple[str,str]]={}
     package_pattern=re.compile(r'\bpackage\s+([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*;')
@@ -1167,12 +1174,29 @@ def build_source_type_index(files:Sequence[Path]) -> Dict[str,Tuple[str,str]]:
             source=path.read_text(encoding='utf-8')
         except OSError:
             continue
-        package_match=package_pattern.search(source)
+        # Package declarations inside line or block comments are inert.
+        # Remove comments before indexing so `// package Lab_Practice;` does
+        # not incorrectly create a package namespace or package-derived path.
+        index_source=re.sub(r'/\*.*?\*/|//[^\r\n]*', '', source,
+                            flags=re.DOTALL)
+        package_match=package_pattern.search(index_source)
         package=package_match.group(1) if package_match else ''
         namespace='::jxx' + (('::'+package.replace('.','::')) if package else '')
-        folder=package.replace('.','/')
+        if package:
+            folder=package.replace('.','/')
+        elif source_root is not None:
+            try:
+                relative_parent=path.parent.resolve().relative_to(
+                    source_root.resolve())
+                folder=relative_parent.as_posix()
+                if folder == '.':
+                    folder=''
+            except ValueError:
+                folder=''
+        else:
+            folder=''
         include=(f'{folder}/{path.stem}.h' if folder else f'{path.stem}.h')
-        for match in class_pattern.finditer(source):
+        for match in class_pattern.finditer(index_source):
             name=match.group(1)
             value=(f'{namespace}::{name}',include)
             qualified_name=f'{package}.{name}' if package else name
@@ -1181,11 +1205,19 @@ def build_source_type_index(files:Sequence[Path]) -> Dict[str,Tuple[str,str]]:
     return index
 
 def translate_file(path:Path,out_root:str,
-                   source_type_index:Optional[Dict[str,Tuple[str,str]]]=None):
+                   source_type_index:Optional[Dict[str,Tuple[str,str]]]=None,
+                   source_root:Optional[Path]=None):
     src=path.read_text(encoding='utf-8')
     t=Translator()
     t.source_type_index=dict(source_type_index or {})
-    h,c=t.translate(src,out_root,path.stem)
+    source_relative_dir=Path()
+    if source_root is not None:
+        try:
+            source_relative_dir=path.parent.resolve().relative_to(
+                source_root.resolve())
+        except ValueError:
+            source_relative_dir=Path()
+    h,c=t.translate(src,out_root,path.stem,source_relative_dir)
     for generated in t.generated_files:
         print(f'Wrote {generated}')
     for d in t.diag: print(f'{path}: WARNING: {d}',file=sys.stderr)
@@ -1210,14 +1242,16 @@ def main():
         source_root=Path(a.src_dir)
         files=sorted(source_root.rglob('*.java'))
         if not files: raise SystemExit(f'No .java files found under {source_root}')
-        source_type_index=build_source_type_index(files)
+        source_type_index=build_source_type_index(files,source_root)
         for path in files:
-            translate_file(path,a.out,source_type_index)
+            translate_file(path,a.out,source_type_index,source_root)
     else:
         input_path=Path(a.input)
         sibling_files=sorted(input_path.parent.glob('*.java'))
-        source_type_index=build_source_type_index(sibling_files)
-        translate_file(input_path,a.out,source_type_index)
+        source_type_index=build_source_type_index(
+            sibling_files,input_path.parent)
+        translate_file(
+            input_path,a.out,source_type_index,input_path.parent)
     if a.cmake:
         cmake = generate_cmake_files(
             a.out, a.cmake_project, a.cmake_target, a.jxx_include)
