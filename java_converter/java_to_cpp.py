@@ -110,6 +110,7 @@ class Translator:
         self.source_method_parameters:Dict[str,Dict[str,List[object]]]={}
         self.source_method_varargs:Dict[str,Dict[str,bool]]={}
         self.local_variable_types:Dict[str,object]={}
+        self.local_array_variables:Set[str]=set()
         self.source_type_index:Dict[str,Tuple[str,str]]={}
 
     @staticmethod
@@ -563,8 +564,14 @@ class Translator:
     def begin_member_scope(self,owner_name,member):
         self.current_class=owner_name
         self.local_variable_types={}
+        self.local_array_variables=set()
         for parameter in getattr(member,'parameters',None) or []:
             self.local_variable_types[parameter.name]=parameter.type
+            dimensions=(len(getattr(parameter.type,'dimensions',None) or []) +
+                        len(getattr(parameter,'dimensions',None) or []) +
+                        (1 if getattr(parameter,'varargs',False) else 0))
+            if dimensions > 0:
+                self.local_array_variables.add(parameter.name)
 
     def invocation_owner_name(self,qualifier):
         if not qualifier:
@@ -635,7 +642,10 @@ class Translator:
             if q:
                 fq=self.imports.get(q,q)
                 if q in self.local_variable_types:
-                    base=f'{q}->{e.member}'
+                    if e.member=='length' and q in self.local_array_variables:
+                        base=f'{q}->size()'
+                    else:
+                        base=f'{q}->{e.member}'
                 elif e.member in STATIC_ACCESSORS.get(fq,set()):
                     base=f'{self.qmap(fq)[0]}::{e.member}()'
                 elif q in self.imports or (q and q[0].isupper()):
@@ -737,6 +747,40 @@ class Translator:
             converted_arguments.append(value)
         return f'::jxx::NEW<{raw}>({", ".join(converted_arguments)})'
 
+    def for_initializer_expression(self, initializer):
+        kind=type(initializer).__name__
+        if kind=='VariableDeclaration':
+            declarations=[]
+            for declarator in initializer.declarators or []:
+                dimensions=len(getattr(declarator,'dimensions',None) or [])
+                variable_type=self.resolve(initializer.type,dimensions).value()
+                self.local_variable_types[declarator.name]=initializer.type
+                if dimensions > 0:
+                    self.local_array_variables.add(declarator.name)
+                value=(self.declaration_initializer_expression(
+                    initializer.type,declarator.initializer)
+                    if declarator.initializer is not None else '')
+                declarations.append(
+                    f'{variable_type} {declarator.name}' +
+                    (f' = {value}' if value else ''))
+            return ', '.join(declarations)
+        return self.expr(initializer)
+
+    def traditional_for_statement(self, statement, output):
+        control=statement.control
+        initializers=list(getattr(control,'init',None) or [])
+        updates=list(getattr(control,'update',None) or [])
+        initializer=', '.join(
+            self.for_initializer_expression(value) for value in initializers)
+        condition=(self.expr(control.condition)
+                   if getattr(control,'condition',None) is not None else '')
+        update=', '.join(self.expr(value) for value in updates)
+        output.w(f'for ({initializer}; {condition}; {update}) {{')
+        output.enter()
+        self.stmt(statement.body,output)
+        output.exit()
+        output.w('}')
+
     def stmt(self,s,o):
         if s is None:return
         n=type(s).__name__
@@ -756,6 +800,10 @@ class Translator:
                     continue
                 t=self.resolve(s.type,dims)
                 self.local_variable_types[d.name]=s.type
+                total_dimensions=(len(getattr(s.type,'dimensions',None) or []) +
+                                  dims)
+                if total_dimensions > 0 or type(getattr(d,'initializer',None)).__name__=='ArrayCreator':
+                    self.local_array_variables.add(d.name)
                 if type(getattr(d,'initializer',None)).__name__=='ClassCreator':
                     initial_value=self.class_creator_expression(d.initializer,s.type)
                 else:
@@ -785,7 +833,7 @@ class Translator:
                 self.stmt(s.body,o)
                 o.exit();o.w('}')
             else:
-                o.w('/* TODO unsupported traditional ForStatement */')
+                self.traditional_for_statement(s,o)
         elif n=='WhileStatement':
             o.w(f'while ({self.expr(s.condition)}) {{');o.enter();self.stmt(s.body,o);o.exit();o.w('}')
         elif n=='SynchronizedStatement':
