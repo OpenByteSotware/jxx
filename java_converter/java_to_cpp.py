@@ -95,6 +95,8 @@ class Translator:
         self.generic_constructor_parameters:Dict[str,Dict[int,str]]={}
         self.source_class_bases:Dict[str,str]={}
         self.source_constructor_parameter_types:Dict[str,List[object]]={}
+        self.source_field_types:Dict[str,Dict[str,object]]={}
+        self.local_variable_types:Dict[str,object]={}
         self.source_type_index:Dict[str,Tuple[str,str]]={}
 
     @staticmethod
@@ -270,6 +272,11 @@ class Translator:
             source_base=getattr(declaration,'extends',None)
             if source_base is not None:
                 self.source_class_bases[declaration.name]=self.name_of(source_base)
+            fields=self.source_field_types.setdefault(declaration.name,{})
+            for member in getattr(declaration,'body',None) or []:
+                if type(member).__name__=='FieldDeclaration':
+                    for declarator in member.declarators or []:
+                        fields[declarator.name]=member.type
             constructor_positions={}
             for member in getattr(declaration, 'body', None) or []:
                 self.declared_type_parameters.update(
@@ -475,6 +482,50 @@ class Translator:
         rendered='\n'.join('    '+line for line in lines)
         return f'[&]({parameters}) {{\n{rendered}\n}}'
 
+    def source_field_type(self,class_name,field_name):
+        visited=set()
+        current=self.simple(class_name)
+        while current and current not in visited:
+            visited.add(current)
+            field_type=self.source_field_types.get(current,{}).get(field_name)
+            if field_type is not None:
+                return field_type
+            current=self.simple(self.source_class_bases.get(current,''))
+        return None
+
+    def assignment_target_type(self,target):
+        if type(target).__name__!='MemberReference':
+            return None
+        qualifier=getattr(target,'qualifier',None)
+        if not qualifier:
+            if target.member in self.local_variable_types:
+                return self.local_variable_types[target.member]
+            return self.source_field_type(self.current_class,target.member)
+        if qualifier in {'this','super'}:
+            owner=(self.current_class if qualifier=='this' else
+                   self.source_class_bases.get(self.current_class,''))
+        else:
+            owner_type=self.local_variable_types.get(qualifier)
+            owner=self.name_of(owner_type) if owner_type is not None else ''
+        return self.source_field_type(owner,target.member) if owner else None
+
+    def assignment_value_expression(self,target,value):
+        target_type=self.assignment_target_type(target)
+        if target_type is not None and self.is_string_literal_expression(value):
+            return self.constructor_argument_expression(value,target_type)
+        return self.expr(value)
+
+    def declaration_initializer_expression(self,target_type,initializer):
+        if self.is_string_literal_expression(initializer):
+            return self.constructor_argument_expression(initializer,target_type)
+        return self.expr(initializer)
+
+    def begin_member_scope(self,owner_name,member):
+        self.current_class=owner_name
+        self.local_variable_types={}
+        for parameter in getattr(member,'parameters',None) or []:
+            self.local_variable_types[parameter.name]=parameter.type
+
     def expr(self,e):
         if e is None:return ''
         n=type(e).__name__
@@ -542,7 +593,8 @@ class Translator:
                 return self.string_concatenation_expression(e)
             return f'({self.expr(e.operandl)} {e.operator} {self.expr(e.operandr)})'
         if n=='Assignment':
-            return f'{self.expr(e.expressionl)} {e.type or "="} {self.expr(e.value)}'
+            value=self.assignment_value_expression(e.expressionl,e.value)
+            return f'{self.expr(e.expressionl)} {e.type or "="} {value}'
         if n=='TernaryExpression': return f'({self.expr(e.condition)} ? {self.expr(e.if_true)} : {self.expr(e.if_false)})'
         if n=='ArraySelector': return f'({self.expr(e.index)})'
         return str(e)
@@ -620,10 +672,12 @@ class Translator:
                     self.emit_local_array_initializer(s,d,o,max(dims,1))
                     continue
                 t=self.resolve(s.type,dims)
+                self.local_variable_types[d.name]=s.type
                 if type(getattr(d,'initializer',None)).__name__=='ClassCreator':
                     initial_value=self.class_creator_expression(d.initializer,s.type)
                 else:
-                    initial_value=self.expr(d.initializer) if d.initializer is not None else ''
+                    initial_value=(self.declaration_initializer_expression(
+                        s.type,d.initializer) if d.initializer is not None else '')
                 init=f' = {initial_value}' if d.initializer is not None else ''
                 const='const ' if 'final' in (s.modifiers or set()) else ''
                 o.w(f'{const}{t.value()} {d.name}{init};')
@@ -740,6 +794,7 @@ class Translator:
         initializer,statements=(self.constructor_initializer(member,owner_name)
                                 if is_constructor else ('',list(body or [])))
         o.w(f'{prefix}{self.sig(member,owner_name)}{initializer} {{');o.enter()
+        self.begin_member_scope(owner_name,member)
         old=self.current_return
         self.current_return='void' if is_constructor else self.resolve(
             member.return_type,len(getattr(member,'dimensions',None) or [])).value()
@@ -797,6 +852,7 @@ class Translator:
             o.w(f'{prefix}{self.sig(method,owner_name)};')
         else:
             o.w(f'{prefix}{self.sig(method,owner_name)} {{');o.enter()
+            self.begin_member_scope(owner_name,method)
             old=self.current_return
             self.current_return=self.resolve(method.return_type,len(getattr(method,'dimensions',None) or [])).value()
             for statement in method.body or []:
@@ -840,7 +896,10 @@ class Translator:
                 if n=='FieldDeclaration':
                     mods=m.modifiers or set(); prefix='inline static ' if 'static' in mods else ''
                     for d in m.declarators:
-                        typ=self.resolve(m.type).value(); init=f' = {self.expr(d.initializer)}' if d.initializer is not None else (' = nullptr' if typ.startswith('::jxx::Ptr<') else '')
+                        typ=self.resolve(m.type).value()
+                        init=(f' = {self.declaration_initializer_expression(m.type,d.initializer)}'
+                              if d.initializer is not None else
+                              (' = nullptr' if typ.startswith('::jxx::Ptr<') else ''))
                         o.w(f'{prefix}{typ} {d.name}{init};')
                 elif n in ('MethodDeclaration','ConstructorDeclaration'):
                     if outer_parameters:
@@ -927,6 +986,7 @@ class Translator:
                     self.constructor_initializer(m,t.name)
                     if is_constructor else ('',list(m.body or [])))
                 o.w(self.sig(m,t.name,True)+initializer+' {');o.enter()
+                self.begin_member_scope(t.name,m)
                 old=self.current_return
                 self.current_return='void' if is_constructor else self.resolve(m.return_type).value()
                 for statement in statements:self.stmt(statement,o)
