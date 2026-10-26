@@ -218,6 +218,22 @@ class Translator:
                 mapped+=f'->{field}'
         return mapped
 
+    def template_argument_type(self,t)->str:
+        if t is None:
+            return '::jxx::lang::Object'
+        name=self.name_of(t)
+        dimensions=len(getattr(t,'dimensions',None) or [])
+        if dimensions:
+            return self.resolve(t).value()
+        if name in self.type_parameters:
+            return name
+        if type(t).__name__=='BasicType' or name in PRIMITIVES:
+            return self.resolve(t).value()
+        # JXX generic containers apply reference semantics internally to their
+        # source object type parameter. Pass the raw class/interface type here,
+        # not Ptr<T>, to avoid Ptr<Ptr<T>> in methods such as List<E>::get().
+        return self.ref_raw(t)
+
     def ref_raw(self,t)->str:
         name=self.name_of(t); raw,inc=self.qmap(name)
         if inc: self.includes.add(inc)
@@ -225,8 +241,10 @@ class Translator:
         declared_arguments=getattr(t,'arguments',None) or []
         for a in declared_arguments:
             at=getattr(a,'type',None)
-            if at is None: args.append('::jxx::Ptr<::jxx::lang::Object>')
-            else: args.append(self.resolve(at).value())
+            if at is None:
+                args.append('::jxx::lang::Object')
+            else:
+                args.append(self.template_argument_type(at))
         if not args:
             generic_parameters=self.generic_class_parameters.get(name,[])
             # A member generic such as node<T> may appear with a diamond or as
@@ -826,8 +844,9 @@ class Translator:
         for argument in allocation_arguments:
             argument_type=getattr(argument,'type',None)
             resolved_type_arguments.append(
-                self.resolve(argument_type).value() if argument_type is not None
-                else '::jxx::Ptr<::jxx::lang::Object>')
+                self.template_argument_type(argument_type)
+                if argument_type is not None
+                else '::jxx::lang::Object')
         class_name=self.name_of(allocation_type)
         class_parameters=self.generic_class_parameters.get(class_name,[])
         constructor_positions=self.generic_constructor_parameters.get(class_name,{})
@@ -1282,7 +1301,7 @@ class Translator:
         ns=('jxx::'+self.package.replace('.', '::')) if self.package else ''
         owner_specialization=owner_name
         if owner_type_parameters:
-            default_type='::jxx::Ptr<::jxx::lang::Object>'
+            default_type='::jxx::lang::Object'
             owner_specialization=(owner_name + '<' +
                 ', '.join(default_type for _ in owner_type_parameters) + '>')
         target=(f'::{ns}::{owner_specialization}'
