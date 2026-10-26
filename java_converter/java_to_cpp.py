@@ -107,6 +107,8 @@ class Translator:
         self.source_class_bases:Dict[str,str]={}
         self.source_constructor_parameter_types:Dict[str,List[object]]={}
         self.source_field_types:Dict[str,Dict[str,object]]={}
+        self.source_method_parameters:Dict[str,Dict[str,List[object]]]={}
+        self.source_method_varargs:Dict[str,Dict[str,bool]]={}
         self.local_variable_types:Dict[str,object]={}
         self.source_type_index:Dict[str,Tuple[str,str]]={}
 
@@ -297,10 +299,18 @@ class Translator:
             if source_base is not None:
                 self.source_class_bases[declaration.name]=self.name_of(source_base)
             fields=self.source_field_types.setdefault(declaration.name,{})
+            methods=self.source_method_parameters.setdefault(declaration.name,{})
+            varargs=self.source_method_varargs.setdefault(declaration.name,{})
             for member in getattr(declaration,'body',None) or []:
-                if type(member).__name__=='FieldDeclaration':
+                member_kind=type(member).__name__
+                if member_kind=='FieldDeclaration':
                     for declarator in member.declarators or []:
                         fields[declarator.name]=member.type
+                elif member_kind=='MethodDeclaration':
+                    methods[member.name]=list(member.parameters or [])
+                    varargs[member.name]=bool(
+                        member.parameters and
+                        getattr(member.parameters[-1],'varargs',False))
             constructor_positions={}
             for member in getattr(declaration, 'body', None) or []:
                 self.declared_type_parameters.update(
@@ -429,6 +439,11 @@ class Translator:
             parameter_type=self.resolve(p.type,extra)
             if self.name_of(p.type) in self.type_parameters and extra == 0:
                 rendered=f'const {self.name_of(p.type)}&'
+            elif extra > 0:
+                # Source arrays, including varargs arrays, are reference types.
+                # Pass the JXX shared pointer by const reference; mutating array
+                # elements remains possible through the pointed-to array.
+                rendered=f'const {parameter_type.value()}&'
             else:
                 rendered=parameter_type.param()
             ps.append(f'{rendered} {p.name}')
@@ -442,8 +457,8 @@ class Translator:
         for selector in selectors or []:
             kind=type(selector).__name__
             if kind=='MethodInvocation':
-                arguments=', '.join(self.expr(x)
-                                    for x in selector.arguments or [])
+                arguments=', '.join(
+                    self.method_invocation_arguments(selector))
                 result+=f'->{selector.member}({arguments})'
             elif kind=='MemberReference':
                 result+=f'->{selector.member}'
@@ -554,6 +569,43 @@ class Translator:
         for parameter in getattr(member,'parameters',None) or []:
             self.local_variable_types[parameter.name]=parameter.type
 
+    def invocation_owner_name(self,qualifier):
+        if not qualifier:
+            return self.current_class
+        owner_type=self.local_variable_types.get(qualifier)
+        if owner_type is not None:
+            return self.simple(self.name_of(owner_type))
+        return self.simple(qualifier)
+
+    def method_invocation_arguments(self,invocation):
+        arguments=list(getattr(invocation,'arguments',None) or [])
+        owner=self.invocation_owner_name(getattr(invocation,'qualifier',None))
+        parameters=self.source_method_parameters.get(owner,{}).get(
+            invocation.member,[])
+        is_varargs=self.source_method_varargs.get(owner,{}).get(
+            invocation.member,False)
+        if not is_varargs or not parameters:
+            return [self.expr(argument) for argument in arguments]
+        fixed_count=len(parameters)-1
+        rendered=[self.expr(argument) for argument in arguments[:fixed_count]]
+        vararg_parameter=parameters[-1]
+        element_type=self.resolve(vararg_parameter.type).value()
+        values=arguments[fixed_count:]
+        array_expression=(
+            f'::jxx::NEW<::jxx::JxxArray<{element_type}, 1U>>('
+            f'static_cast<::jxx::lang::jint>({len(values)}))')
+        if values:
+            # Build and populate the synthetic varargs array in an immediately
+            # invoked lambda so the call remains a single C++ expression.
+            assignments=' '.join(
+                f'array->at({index}) = {self.expr(value)};'
+                for index,value in enumerate(values))
+            array_expression=(
+                f'([&]() {{ auto array = {array_expression}; '
+                f'{assignments} return array; }})()')
+        rendered.append(array_expression)
+        return rendered
+
     def expr(self,e):
         if e is None:return ''
         n=type(e).__name__
@@ -611,7 +663,7 @@ class Translator:
                 head=f'{owner}{access}{e.member}'
             else:
                 head=f'{q}->{e.member}' if q else e.member
-            invocation=f'{head}({", ".join(self.expr(x) for x in e.arguments or [])})'
+            invocation=f'{head}({", ".join(self.method_invocation_arguments(e))})'
             return self.apply_expression_selectors(
                 invocation,getattr(e,'selectors',None))
         if n=='ClassCreator': return self.class_creator_expression(e)
@@ -721,6 +773,24 @@ class Translator:
             o.w(f'if ({self.expr(s.condition)}) {{');o.enter();self.stmt(s.then_statement,o);o.exit()
             if s.else_statement is not None:o.w('} else {');o.enter();self.stmt(s.else_statement,o);o.exit()
             o.w('}')
+        elif n=='ForStatement':
+            control=getattr(s,'control',None)
+            if type(control).__name__=='EnhancedForControl':
+                variable=control.var
+                declarator=variable.declarators[0]
+                iterable=self.expr(control.iterable)
+                index_name=f'jxxIndex_{declarator.name}'
+                self.local_variable_types[declarator.name]=variable.type
+                o.w(f'for (::jxx::lang::jint {index_name} = 0; '
+                    f'{index_name} < {iterable}->length; ++{index_name}) {{')
+                o.enter()
+                element_type=self.resolve(variable.type).value()
+                o.w(f'{element_type} {declarator.name} = '
+                    f'{iterable}->at({index_name});')
+                self.stmt(s.body,o)
+                o.exit();o.w('}')
+            else:
+                o.w('/* TODO unsupported traditional ForStatement */')
         elif n=='WhileStatement':
             o.w(f'while ({self.expr(s.condition)}) {{');o.enter();self.stmt(s.body,o);o.exit();o.w('}')
         elif n=='SynchronizedStatement':
