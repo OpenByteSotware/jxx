@@ -2,11 +2,14 @@
 
 #include "io/jxx.io.FilterOutputStream.h"
 #include "lang/jxx_types.h"
+#include "lang/jxx.lang.JxxArray.h"
 
 namespace jxx::lang {
 class Object;
 class String;
 }
+
+namespace jxx::util { class Locale; }
 
 namespace jxx::io {
 
@@ -71,6 +74,28 @@ public:
     void println(::jxx::lang::jlong value);
     void println(::jxx::lang::jfloat value);
     void println(::jxx::lang::jdouble value);
+
+    ::jxx::Ptr<PrintStream> printf(
+        const ::jxx::Ptr<::jxx::lang::String>& format,
+        const ::jxx::Ptr<::jxx::JxxArray<
+            ::jxx::Ptr<::jxx::lang::Object>, 1U>>& args);
+
+    ::jxx::Ptr<PrintStream> printf(
+        const ::jxx::Ptr<::jxx::util::Locale>& locale,
+        const ::jxx::Ptr<::jxx::lang::String>& format,
+        const ::jxx::Ptr<::jxx::JxxArray<
+            ::jxx::Ptr<::jxx::lang::Object>, 1U>>& args);
+
+    ::jxx::Ptr<PrintStream> format(
+        const ::jxx::Ptr<::jxx::lang::String>& format,
+        const ::jxx::Ptr<::jxx::JxxArray<
+            ::jxx::Ptr<::jxx::lang::Object>, 1U>>& args);
+
+    ::jxx::Ptr<PrintStream> format(
+        const ::jxx::Ptr<::jxx::util::Locale>& locale,
+        const ::jxx::Ptr<::jxx::lang::String>& format,
+        const ::jxx::Ptr<::jxx::JxxArray<
+            ::jxx::Ptr<::jxx::lang::Object>, 1U>>& args);
 
 private:
     void ensureOpen_() const;

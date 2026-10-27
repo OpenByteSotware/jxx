@@ -1,5 +1,8 @@
 #include <string>
 #include "io/jxx.io.PrintStream.h"
+
+#include "util/jxx.util.Formatter.h"
+#include "util/jxx.util.Locale.h"
 #include "io/jxx.io.IOException.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
@@ -307,6 +310,49 @@ void PrintStream::println(
     newLine_();
 
     });
+}
+
+
+::jxx::Ptr<PrintStream> PrintStream::printf(
+    const ::jxx::Ptr<::jxx::lang::String>& formatString,
+    const ::jxx::Ptr<::jxx::JxxArray<
+        ::jxx::Ptr<::jxx::lang::Object>, 1U>>& args) {
+    return format(formatString, args);
+}
+
+::jxx::Ptr<PrintStream> PrintStream::printf(
+    const ::jxx::Ptr<::jxx::util::Locale>& locale,
+    const ::jxx::Ptr<::jxx::lang::String>& formatString,
+    const ::jxx::Ptr<::jxx::JxxArray<
+        ::jxx::Ptr<::jxx::lang::Object>, 1U>>& args) {
+    return format(locale, formatString, args);
+}
+
+::jxx::Ptr<PrintStream> PrintStream::format(
+    const ::jxx::Ptr<::jxx::lang::String>& formatString,
+    const ::jxx::Ptr<::jxx::JxxArray<
+        ::jxx::Ptr<::jxx::lang::Object>, 1U>>& args) {
+    return format(nullptr, formatString, args);
+}
+
+::jxx::Ptr<PrintStream> PrintStream::format(
+    const ::jxx::Ptr<::jxx::util::Locale>& locale,
+    const ::jxx::Ptr<::jxx::lang::String>& formatString,
+    const ::jxx::Ptr<::jxx::JxxArray<
+        ::jxx::Ptr<::jxx::lang::Object>, 1U>>& args) {
+    synchronized([&] {
+        ensureOpen_();
+        const auto formatter = locale == nullptr
+            ? ::jxx::NEW<::jxx::util::Formatter>()
+            : ::jxx::NEW<::jxx::util::Formatter>(locale);
+        formatter->format(formatString, args);
+        text_(formatter->toString());
+        if (autoFlush_ && !closed_ && out_ != nullptr) {
+            out_->flush();
+        }
+    });
+
+    return std::dynamic_pointer_cast<PrintStream>(thisPtr());
 }
 
 } // namespace jxx::io
