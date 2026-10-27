@@ -1123,8 +1123,15 @@ class Translator:
 
     @staticmethod
     def enum_constant_names(declaration)->List[str]:
-        return [constant.name
-                for constant in getattr(declaration,'constants',None) or []]
+        # javalang stores enum constants on EnumDeclaration.body.constants,
+        # not directly on EnumDeclaration. Keep the direct fallback for test
+        # doubles and compatibility with alternate AST front ends.
+        body=getattr(declaration,'body',None)
+        constants=(getattr(body,'constants',None)
+                   if body is not None else None)
+        if constants is None:
+            constants=getattr(declaration,'constants',None)
+        return [constant.name for constant in constants or []]
 
     def emit_nested_enum(self,declaration,owner_name,o):
         constants=self.enum_constant_names(declaration)
