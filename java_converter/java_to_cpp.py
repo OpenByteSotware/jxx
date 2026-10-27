@@ -398,7 +398,10 @@ class Translator:
         if any(type(node).__name__=='EnumDeclaration'
                for declaration in self.class_declarations(tree)
                for node in getattr(declaration,'body',None) or []):
-            self.includes.add('lang/jxx.lang.String.h')
+            self.includes.update({
+                'lang/jxx.lang.String.h',
+                'lang/jxx.lang.Enum.h',
+            })
         if any(self.is_java_main(m,t.name)
                for t in self.class_declarations(tree)
                for m in getattr(t,'body',None) or []):
@@ -1135,38 +1138,50 @@ class Translator:
 
     def emit_nested_enum(self,declaration,owner_name,o):
         constants=self.enum_constant_names(declaration)
-        o.w(f'class {declaration.name}')
-        o.w('    : public ::jxx::lang::ClassBase<')
-        o.w(f'          {declaration.name}, ::jxx::lang::Object> {{')
+        enum_name=declaration.name
+        enum_base=f'::jxx::lang::Enum<{enum_name}>'
+        o.w(f'class {enum_name} final : public {enum_base} {{')
         o.w('public:');o.enter()
-        o.w(f'using JxxSuper = ::jxx::lang::Object;')
-        o.w(f'using Super = ::jxx::lang::ClassBase<')
-        o.w(f'    {declaration.name}, JxxSuper>;')
-        o.w(f'explicit {declaration.name}(')
+        o.w(f'using JxxSuper = {enum_base};')
+        o.w(f'explicit {enum_name}(')
         o.w('    const ::jxx::Ptr<::jxx::lang::String>& name,')
         o.w('    ::jxx::lang::jint ordinal)')
-        o.w('    : name_(name), ordinal_(ordinal) {}')
-        o.w('::jxx::Ptr<::jxx::lang::String> name() const { return name_; }')
-        o.w('::jxx::lang::jint ordinal() const noexcept { return ordinal_; }')
-        o.w('::jxx::Ptr<::jxx::lang::String> toString() const override {')
-        o.enter();o.w('return name_;');o.exit();o.w('}')
+        o.w(f'    : JxxSuper(name, ordinal) {{}}')
+        o.w('static ::jxx::Ptr<::jxx::lang::ClassAny> Class() {')
+        o.enter()
+        o.w(f'return ::jxx::lang::ClassInfo<{enum_name}, JxxSuper>::Class();')
+        o.exit();o.w('}')
+        o.w(f'static ::jxx::Ptr<::jxx::JxxArray<')
+        o.w(f'    ::jxx::Ptr<{enum_name}>, 1U>> values() {{')
+        o.enter()
+        o.w(f'auto result = ::jxx::NEW<::jxx::JxxArray<')
+        o.w(f'    ::jxx::Ptr<{enum_name}>, 1U>>(')
+        o.w(f'        static_cast<::jxx::lang::jint>({len(constants)}));')
+        for ordinal,constant in enumerate(constants):
+            o.w(f'(*result)[{ordinal}] = {constant};')
+        o.w('return result;')
+        o.exit();o.w('}')
+        o.w(f'static ::jxx::Ptr<{enum_name}> valueOf(')
+        o.w('    const ::jxx::Ptr<::jxx::lang::String>& name) {')
+        o.enter()
+        o.w(f'return JxxSuper::valueOf(Class(), name);')
+        o.exit();o.w('}')
         for constant in constants:
-            o.w(f'static ::jxx::Ptr<{declaration.name}> {constant};')
-        o.exit();o.w('private:');o.enter()
-        o.w('::jxx::Ptr<::jxx::lang::String> name_;')
-        o.w('::jxx::lang::jint ordinal_;')
+            o.w(f'inline static const ::jxx::Ptr<{enum_name}> {constant} =')
+            o.enter()
+            o.w(f'::jxx::NEW<{enum_name}>(')
+            o.enter()
+            o.w(f'::jxx::NEW<::jxx::lang::String>("{constant}"),')
+            o.w(f'static_cast<::jxx::lang::jint>(')
+            o.w(f'    {constants.index(constant)}));')
+            o.exit();o.exit()
         o.exit();o.w('};')
 
     def emit_nested_enum_definitions(self,declaration,owner_name,o):
-        for ordinal,constant in enumerate(self.enum_constant_names(declaration)):
-            o.w(f'inline ::jxx::Ptr<{owner_name}::{declaration.name}> ')
-            o.w(f'{owner_name}::{declaration.name}::{constant} =')
-            o.enter()
-            o.w(f'::jxx::NEW<{owner_name}::{declaration.name}>(')
-            o.enter()
-            o.w(f'::jxx::NEW<::jxx::lang::String>("{constant}"),')
-            o.w(f'static_cast<::jxx::lang::jint>({ordinal}));')
-            o.exit();o.exit()
+        # Constants are inline static members so nested enum definitions remain
+        # header-only and usable by every converted translation unit.
+        (void := owner_name)
+        (void := declaration)
 
     def emit_nested_class(self, declaration, o):
         names=self.type_parameter_names(declaration)
@@ -1315,7 +1330,6 @@ class Translator:
             for nested in t.body or []:
                 if type(nested).__name__=='EnumDeclaration':
                     self.emit_nested_enum_definitions(nested,t.name,o)
-                    o.w()
             self.type_parameters=set()
         if ns:o.exit();o.w(f'}} // namespace {ns}')
         return o.text()
