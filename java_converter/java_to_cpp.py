@@ -1158,7 +1158,9 @@ class Translator:
         o.w(f'    ::jxx::Ptr<{enum_name}>, 1U>>(')
         o.w(f'        static_cast<::jxx::lang::jint>({len(constants)}));')
         for ordinal,constant in enumerate(constants):
-            o.w(f'(*result)[{ordinal}] = {constant};')
+            # This is the generic JxxArray<T, 1U>, not one of the built-in
+            # primitive array aliases. Generic JxxArray access uses operator().
+            o.w(f'(*result)({ordinal}) = {constant};')
         o.w('return result;')
         o.exit();o.w('}')
         o.w(f'static ::jxx::Ptr<{enum_name}> valueOf(')
