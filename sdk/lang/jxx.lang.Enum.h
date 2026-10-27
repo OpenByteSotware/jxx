@@ -65,7 +65,9 @@ public:
         }
         const auto constants = E::values();
         if (constants != nullptr) {
-            for (std::uint32_t index = 0; index < constants->length; ++index) {
+            for (jxx::lang::jint index = 0;
+                 index < constants->length;
+                 ++index) {
                 const auto& constant = (*constants)[index];
                 if (constant != nullptr && constant->name()->equals(name)) {
                     return constant;
