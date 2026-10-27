@@ -693,17 +693,24 @@ class Translator:
         is_varargs=self.source_method_varargs.get(owner,{}).get(
             invocation.member,False)
         if not is_varargs or not parameters:
-            rendered=[self.expr(argument) for argument in arguments]
-            qualifier=getattr(invocation,'qualifier',None)
-            receiver_type=self.local_variable_types.get(qualifier)
-            if (invocation.member=='equals' and
-                    self.simple(self.name_of(receiver_type))=='String' and
-                    arguments and self.is_string_literal_expression(arguments[0])):
-                rendered[0]=(f'::jxx::NEW<::jxx::lang::String>('
-                             f'{self.expr(arguments[0])})')
+            rendered=[]
+            for argument in arguments:
+                if self.is_string_literal_expression(argument):
+                    # Source string literals are source String objects, not
+                    # native const char*. Materialize them for every method call,
+                    # including generic calls such as List<String>::add.
+                    rendered.append(
+                        f'::jxx::NEW<::jxx::lang::String>('
+                        f'{self.expr(argument)})')
+                else:
+                    rendered.append(self.expr(argument))
             return rendered
         fixed_count=len(parameters)-1
-        rendered=[self.expr(argument) for argument in arguments[:fixed_count]]
+        rendered=[
+            (f'::jxx::NEW<::jxx::lang::String>({self.expr(argument)})'
+             if self.is_string_literal_expression(argument)
+             else self.expr(argument))
+            for argument in arguments[:fixed_count]]
         vararg_parameter=parameters[-1]
         concrete=self.array_concrete_type(vararg_parameter.type,1)
         values=arguments[fixed_count:]
@@ -713,10 +720,15 @@ class Translator:
         if values:
             primitive_varargs=(
                 self.name_of(vararg_parameter.type) in PRIMITIVE_ARRAY_ALIASES)
+            def vararg_value(value):
+                if self.is_string_literal_expression(value):
+                    return (f'::jxx::NEW<::jxx::lang::String>('
+                            f'{self.expr(value)})')
+                return self.expr(value)
             assignments=' '.join(
-                ((f'(*array)[{index}] = {self.expr(value)};')
+                ((f'(*array)[{index}] = {vararg_value(value)};')
                  if primitive_varargs else
-                 (f'(*array)({index}) = {self.expr(value)};'))
+                 (f'(*array)({index}) = {vararg_value(value)};'))
                 for index,value in enumerate(values))
             array_expression=(
                 f'([&]() {{ auto array = {array_expression}; '
