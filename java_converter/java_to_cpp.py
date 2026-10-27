@@ -336,6 +336,11 @@ class Translator:
         # These names live in the generated source/header and must never create
         # SDK includes such as util/jxx.util.node.h.
         self.known_types.update(t.name for t in tree.types or [])
+        enum_type=getattr(getattr(javalang,'tree',None),'EnumDeclaration',None)
+        filter_method=getattr(tree,'filter',None)
+        if enum_type is not None and callable(filter_method):
+            self.known_types.update(
+                declaration.name for _,declaration in filter_method(enum_type))
         for declaration in self.class_declarations(tree):
             self.known_types.add(declaration.name)
             class_parameters=self.type_parameter_names(declaration)
@@ -390,6 +395,10 @@ class Translator:
             'lang/jxx.lang.ClassInfo.h',
             'lang/jxx.lang.GenericConversion.h',
         })
+        if any(type(node).__name__=='EnumDeclaration'
+               for declaration in self.class_declarations(tree)
+               for node in getattr(declaration,'body',None) or []):
+            self.includes.add('lang/jxx.lang.String.h')
         if any(self.is_java_main(m,t.name)
                for t in self.class_declarations(tree)
                for m in getattr(t,'body',None) or []):
@@ -1112,6 +1121,46 @@ class Translator:
         o.exit();o.w('}')
         self.emit_generic_conversion_overload(member,owner_name,o)
 
+    @staticmethod
+    def enum_constant_names(declaration)->List[str]:
+        return [constant.name
+                for constant in getattr(declaration,'constants',None) or []]
+
+    def emit_nested_enum(self,declaration,owner_name,o):
+        constants=self.enum_constant_names(declaration)
+        o.w(f'class {declaration.name}')
+        o.w('    : public ::jxx::lang::ClassBase<')
+        o.w(f'          {declaration.name}, ::jxx::lang::Object> {{')
+        o.w('public:');o.enter()
+        o.w(f'using JxxSuper = ::jxx::lang::Object;')
+        o.w(f'using Super = ::jxx::lang::ClassBase<')
+        o.w(f'    {declaration.name}, JxxSuper>;')
+        o.w(f'explicit {declaration.name}(')
+        o.w('    const ::jxx::Ptr<::jxx::lang::String>& name,')
+        o.w('    ::jxx::lang::jint ordinal)')
+        o.w('    : name_(name), ordinal_(ordinal) {}')
+        o.w('::jxx::Ptr<::jxx::lang::String> name() const { return name_; }')
+        o.w('::jxx::lang::jint ordinal() const noexcept { return ordinal_; }')
+        o.w('::jxx::Ptr<::jxx::lang::String> toString() const override {')
+        o.enter();o.w('return name_;');o.exit();o.w('}')
+        for constant in constants:
+            o.w(f'static ::jxx::Ptr<{declaration.name}> {constant};')
+        o.exit();o.w('private:');o.enter()
+        o.w('::jxx::Ptr<::jxx::lang::String> name_;')
+        o.w('::jxx::lang::jint ordinal_;')
+        o.exit();o.w('};')
+
+    def emit_nested_enum_definitions(self,declaration,owner_name,o):
+        for ordinal,constant in enumerate(self.enum_constant_names(declaration)):
+            o.w(f'inline ::jxx::Ptr<{owner_name}::{declaration.name}> ')
+            o.w(f'{owner_name}::{declaration.name}::{constant} =')
+            o.enter()
+            o.w(f'::jxx::NEW<{owner_name}::{declaration.name}>(')
+            o.enter()
+            o.w(f'::jxx::NEW<::jxx::lang::String>("{constant}"),')
+            o.w(f'static_cast<::jxx::lang::jint>({ordinal}));')
+            o.exit();o.exit()
+
     def emit_nested_class(self, declaration, o):
         names=self.type_parameter_names(declaration)
         previous=set(self.type_parameters)
@@ -1218,8 +1267,11 @@ class Translator:
             # Emit member classes before fields and methods so types such as
             # node<T> are complete and visible at their first use.
             for nested in t.body or []:
-                if type(nested).__name__=='ClassDeclaration':
+                nested_kind=type(nested).__name__
+                if nested_kind=='ClassDeclaration':
                     self.emit_nested_class(nested,o)
+                elif nested_kind=='EnumDeclaration':
+                    self.emit_nested_enum(nested,t.name,o)
             for m in t.body or []:
                 n=type(m).__name__
                 if n=='FieldDeclaration':
@@ -1253,6 +1305,10 @@ class Translator:
                         override=' override' if n=='MethodDeclaration' and 'override' in getattr(m,'annotations',[]) else ''
                         o.w(f'{virt}{self.sig(m,t.name)}{override}{pure};')
             o.exit();o.w('};');o.w()
+            for nested in t.body or []:
+                if type(nested).__name__=='EnumDeclaration':
+                    self.emit_nested_enum_definitions(nested,t.name,o)
+                    o.w()
             self.type_parameters=set()
         if ns:o.exit();o.w(f'}} // namespace {ns}')
         return o.text()
