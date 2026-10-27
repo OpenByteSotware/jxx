@@ -118,6 +118,7 @@ class Translator:
         self.local_array_variables:Set[str]=set()
         self.local_primitive_rank1_arrays:Set[str]=set()
         self.source_type_index:Dict[str,Tuple[str,str]]={}
+        self.active_wildcard_types:Dict[int,str]={}
 
     @staticmethod
     def simple(n): return str(n).split('.')[-1]
@@ -242,7 +243,8 @@ class Translator:
         for a in declared_arguments:
             at=getattr(a,'type',None)
             if at is None:
-                args.append('::jxx::lang::Object')
+                args.append(self.active_wildcard_types.get(
+                    id(a),'::jxx::lang::Object'))
             else:
                 args.append(self.template_argument_type(at))
         if not args:
@@ -1142,11 +1144,31 @@ class Translator:
         o.exit(); o.w('};')
         self.type_parameters=previous
 
+    def method_wildcard_arguments(self,method):
+        return [argument
+                for parameter in getattr(method,'parameters',None) or []
+                for argument in getattr(parameter.type,'arguments',None) or []
+                if getattr(argument,'type',None) is None]
+
+    def method_wildcard_type_names(self,method)->List[str]:
+        return [f'JxxWildcard{index}'
+                for index,_ in enumerate(self.method_wildcard_arguments(method))]
+
+    def activate_method_wildcards(self,method):
+        arguments=self.method_wildcard_arguments(method)
+        names=self.method_wildcard_type_names(method)
+        previous=dict(self.active_wildcard_types)
+        self.active_wildcard_types.update(
+            {id(argument):name for argument,name in zip(arguments,names)})
+        return previous,names
+
     def method_type_parameter_names(self, method)->List[str]:
-        return self.type_parameter_names(method)
+        return (self.type_parameter_names(method) +
+                self.method_wildcard_type_names(method))
 
     def emit_template_method(self, method, owner_name, o):
-        names=self.method_type_parameter_names(method)
+        wildcard_previous,wildcard_names=self.activate_method_wildcards(method)
+        names=self.type_parameter_names(method)+wildcard_names
         previous=set(self.type_parameters)
         self.type_parameters.update(names)
         template=self.template_line(names)
@@ -1165,6 +1187,7 @@ class Translator:
                 self.stmt(statement,o)
             self.current_return=old;o.exit();o.w('}')
         self.type_parameters=previous
+        self.active_wildcard_types=wildcard_previous
 
     def header(self,tree)->str:
         o=Emit();o.w('#pragma once')
