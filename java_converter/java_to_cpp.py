@@ -1696,7 +1696,7 @@ def build_source_type_index(
     """Map source class names to generated qualified types and headers."""
     index:Dict[str,Tuple[str,str]]={}
     package_pattern=re.compile(r'\bpackage\s+([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*;')
-    class_pattern=re.compile(r'\bclass\s+([A-Za-z_$][\w$]*)')
+    type_pattern=re.compile(r'\b(?:class|interface|enum)\s+([A-Za-z_$][\w$]*)')
     for path in files:
         try:
             source=path.read_text(encoding='utf-8')
@@ -1709,7 +1709,7 @@ def build_source_type_index(
                             flags=re.DOTALL)
         package_match=package_pattern.search(index_source)
         package=package_match.group(1) if package_match else ''
-        namespace='::jxx' + (('::'+package.replace('.','::')) if package else '')
+        namespace=('::jxx::'+package.replace('.','::') if package else '::')
         if package:
             folder=package.replace('.','/')
         elif source_root is not None:
@@ -1724,9 +1724,10 @@ def build_source_type_index(
         else:
             folder=''
         include=(f'{folder}/{path.stem}.h' if folder else f'{path.stem}.h')
-        for match in class_pattern.finditer(index_source):
+        for match in type_pattern.finditer(index_source):
             name=match.group(1)
-            value=(f'{namespace}::{name}',include)
+            qualified=(f'{namespace}::{name}' if namespace != '::' else f'::{name}')
+            value=(qualified,include)
             qualified_name=f'{package}.{name}' if package else name
             index[qualified_name]=value
             index[name]=value
