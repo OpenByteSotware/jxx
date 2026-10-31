@@ -6,13 +6,13 @@
 #include "lang/jxx.lang.String.h"
 
 namespace {
-using ObjectArray = ::jxx::JxxArray<
+using ObjectArray = ::jxx::lang::JxxArray<
     ::jxx::Ptr<::jxx::lang::Object>, 1U>;
 
 ::jxx::Ptr<::jxx::lang::String> formatByte(
     ::jxx::lang::jbyte value) {
     auto arguments = ::jxx::NEW<ObjectArray>(1);
-    (*arguments)(0) = ::jxx::NEW<::jxx::lang::Byte>(value);
+    (*arguments)[0] = ::jxx::NEW<::jxx::lang::Byte>(value);
     return ::jxx::lang::String::format(
         ::jxx::NEW<::jxx::lang::String>("%02x-"),
         arguments);
@@ -43,24 +43,24 @@ TEST(DebugHexStringParity, FormatsPrimitiveByteArraySequence) {
 }
 
 TEST(DebugHexStringParity, FormatsBoxedByteArraySequence) {
-    using ByteObjectArray = ::jxx::JxxArray<
+    using ByteObjectArray = ::jxx::lang::JxxArray<
         ::jxx::Ptr<::jxx::lang::Byte>, 1U>;
     auto data = ::jxx::NEW<ByteObjectArray>(5);
-    (*data)(0) = ::jxx::NEW<::jxx::lang::Byte>(
+    (*data)[0] = ::jxx::NEW<::jxx::lang::Byte>(
         static_cast<::jxx::lang::jbyte>(0x00));
-    (*data)(1) = ::jxx::NEW<::jxx::lang::Byte>(
+    (*data)[1] = ::jxx::NEW<::jxx::lang::Byte>(
         static_cast<::jxx::lang::jbyte>(0x0F));
-    (*data)(2) = ::jxx::NEW<::jxx::lang::Byte>(
+    (*data)[2] = ::jxx::NEW<::jxx::lang::Byte>(
         static_cast<::jxx::lang::jbyte>(0x7F));
-    (*data)(3) = ::jxx::NEW<::jxx::lang::Byte>(
+    (*data)[3] = ::jxx::NEW<::jxx::lang::Byte>(
         static_cast<::jxx::lang::jbyte>(0x80));
-    (*data)(4) = ::jxx::NEW<::jxx::lang::Byte>(
+    (*data)[4] = ::jxx::NEW<::jxx::lang::Byte>(
         static_cast<::jxx::lang::jbyte>(0xFF));
 
     std::string result;
     for (::jxx::lang::jint index = 0; index < (*data).size(); ++index) {
         auto arguments = ::jxx::NEW<ObjectArray>(1);
-        (*arguments)(0) = ::jxx::CAST<::jxx::lang::Object>((*data)(index));
+        (*arguments)[0] = ::jxx::CAST<::jxx::lang::Object>((*data)[index]);
         result += ::jxx::lang::String::format(
             ::jxx::NEW<::jxx::lang::String>("%02x-"),
             arguments)->utf8();

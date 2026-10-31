@@ -7,13 +7,13 @@
 #include "lang/jxx.lang.String.h"
 
 TEST(AbstractEthernetActionParity, PercentHUsesIntegerHashInHex) {
-    using ObjectArray = ::jxx::JxxArray<
+    using ObjectArray = ::jxx::lang::JxxArray<
         ::jxx::Ptr<::jxx::lang::Object>, 1U>;
     auto arguments = ::jxx::NEW<ObjectArray>(4);
-    (*arguments)(0) = ::jxx::NEW<::jxx::lang::Integer>(0x01);
-    (*arguments)(1) = ::jxx::NEW<::jxx::lang::Integer>(0x7F);
-    (*arguments)(2) = ::jxx::NEW<::jxx::lang::Integer>(0x80);
-    (*arguments)(3) = ::jxx::NEW<::jxx::lang::Integer>(0xFF);
+    (*arguments)[0] = ::jxx::NEW<::jxx::lang::Integer>(0x01);
+    (*arguments)[1] = ::jxx::NEW<::jxx::lang::Integer>(0x7F);
+    (*arguments)[2] = ::jxx::NEW<::jxx::lang::Integer>(0x80);
+    (*arguments)[3] = ::jxx::NEW<::jxx::lang::Integer>(0xFF);
 
     const auto result = ::jxx::lang::String::format(
         ::jxx::NEW<::jxx::lang::String>("%h %h %h %h"),

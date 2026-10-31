@@ -45,7 +45,7 @@ TEST(CacheCreatorSdkIntegration, ComponentSnapshotSupportsInstanceofStyleFilteri
     ::jxx::lang::jint hidden = 0;
     for (std::size_t index = 0; index < components->size(); ++index)
     {
-        const auto& component = (*components)(index);
+        const auto& component = (*components)[index];
         if (::jxx::CAST<ActionComponent>(component) != nullptr ||
             ::jxx::CAST<HotComponent>(component) != nullptr)
         {

@@ -18,7 +18,7 @@
 namespace {
 
 using RawVector = ::jxx::util::Vector<::jxx::lang::Object>;
-using FormatArguments = ::jxx::JxxArray<
+using FormatArguments = ::jxx::lang::JxxArray<
     ::jxx::Ptr<::jxx::lang::Object>, 1U>;
 
 class AckState final
@@ -136,9 +136,9 @@ TEST(AckManagerSdkIntegration, RetryAckAndLoggingPrimitivesWorkTogether)
     timer->cancel();
 
     auto arguments = ::jxx::NEW<FormatArguments>(2);
-    (*arguments)(0) = ::jxx::CAST<::jxx::lang::Object>(
+    (*arguments)[0] = ::jxx::CAST<::jxx::lang::Object>(
         ::jxx::lang::Integer::toHexString(0x1102));
-    (*arguments)(1) = ::jxx::CAST<::jxx::lang::Object>(
+    (*arguments)[1] = ::jxx::CAST<::jxx::lang::Object>(
         ::jxx::NEW<::jxx::lang::String>("192.0.2.10"));
     auto message = ::jxx::lang::String::format(
         ::jxx::NEW<::jxx::lang::String>("message ID %s (%s)"), arguments);

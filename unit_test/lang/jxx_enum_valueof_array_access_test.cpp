@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-
+#include "lang/jxx.lang.JxxArray.h"
 #include "lang/jxx.lang.Enum.h"
 
 namespace {
@@ -17,9 +17,9 @@ public:
         return ::jxx::lang::ClassInfo<TestEnum, JxxSuper>::Class();
     }
 
-    static ::jxx::Ptr<::jxx::JxxArray<
+    static ::jxx::Ptr<::jxx::lang::JxxArray<
         ::jxx::Ptr<TestEnum>, 1U>> values() {
-        const auto result = ::jxx::NEW<::jxx::JxxArray<
+        const auto result = ::jxx::NEW<::jxx::lang::JxxArray<
             ::jxx::Ptr<TestEnum>, 1U>>(
                 static_cast<::jxx::lang::jint>(2));
         (*result)[0] = FIRST;

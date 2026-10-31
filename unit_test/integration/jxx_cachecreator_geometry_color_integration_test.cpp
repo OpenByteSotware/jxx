@@ -55,7 +55,7 @@ TEST(CacheCreatorSdkIntegration, GeometrySizingAndParentingWorkTogether)
     auto children = panel->getComponents();
     ASSERT_NE(children, nullptr);
     ASSERT_EQ(children->size(), 1U);
-    EXPECT_EQ((*children)(0), component);
+    EXPECT_EQ((*children)[0], component);
 
     panel->remove(component);
     EXPECT_EQ(component->getParent(), nullptr);

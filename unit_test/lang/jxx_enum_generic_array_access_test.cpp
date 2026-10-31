@@ -25,14 +25,14 @@ namespace
         }
 
         static ::jxx::Ptr<
-            ::jxx::JxxArray<::jxx::Ptr<TestEnum>, 1U>> values()
+            ::jxx::lang::JxxArray<::jxx::Ptr<TestEnum>, 1U>> values()
         {
             auto result = ::jxx::NEW<
-                ::jxx::JxxArray<::jxx::Ptr<TestEnum>, 1U>>(
+                ::jxx::lang::JxxArray<::jxx::Ptr<TestEnum>, 1U>>(
                     static_cast<::jxx::lang::jint>(2));
 
-            (*result)(0) = FIRST;
-            (*result)(1) = SECOND;
+            (*result)[0] = FIRST;
+            (*result)[1] = SECOND;
             return result;
         }
 

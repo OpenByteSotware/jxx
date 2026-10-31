@@ -32,10 +32,10 @@ TEST(ContainerParity, GetComponentsReturnsChildrenInZOrder)
     auto children = container->getComponents();
     ASSERT_NE(children, nullptr);
     ASSERT_EQ(children->size(), 2);
-    EXPECT_EQ((*children)(0), first);
-    EXPECT_EQ((*children)(1), second);
-    EXPECT_NE(::jxx::CAST<FirstComponent>((*children)(0)), nullptr);
-    EXPECT_NE(::jxx::CAST<SecondComponent>((*children)(1)), nullptr);
+    EXPECT_EQ((*children)[0], first);
+    EXPECT_EQ((*children)[1], second);
+    EXPECT_NE(::jxx::CAST<FirstComponent>((*children)[0]), nullptr);
+    EXPECT_NE(::jxx::CAST<SecondComponent>((*children)[1]), nullptr);
 }
 
 TEST(ContainerParity, GetComponentsReturnsIndependentSnapshot)
@@ -47,7 +47,7 @@ TEST(ContainerParity, GetComponentsReturnsIndependentSnapshot)
 
     auto snapshot = container->getComponents();
     ASSERT_EQ(snapshot->size(), 1);
-    (*snapshot)(0) = nullptr;
+    (*snapshot)[0] = nullptr;
     EXPECT_EQ(container->getComponentCount(), 1);
     EXPECT_EQ(container->getComponent(0), first);
 

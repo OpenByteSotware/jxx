@@ -87,9 +87,9 @@ TEST(PatternTest, SplitAndQuote) {
     auto parts = pattern->split(S("a,b,c"));
     ASSERT_NE(parts, nullptr);
     ASSERT_EQ(parts->size(), 3);
-    EXPECT_EQ((*parts)(0)->utf8(), "a");
-    EXPECT_EQ((*parts)(1)->utf8(), "b");
-    EXPECT_EQ((*parts)(2)->utf8(), "c");
+    EXPECT_EQ((*parts)[0]->utf8(), "a");
+    EXPECT_EQ((*parts)[1]->utf8(), "b");
+    EXPECT_EQ((*parts)[2]->utf8(), "c");
 
     auto quoted = Pattern::quote(S("a+b?"));
     ASSERT_NE(quoted, nullptr);
