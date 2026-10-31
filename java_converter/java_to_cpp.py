@@ -165,7 +165,7 @@ class Translator:
             elif name=='Object': name='java.lang.Object'
             elif name=='System': name='java.lang.System'
             elif name=='Class': name='java.lang.ClassAny'
-            elif name=='JxxArray': return '::jxx::JxxArray',None
+            elif name=='JxxArray': return '::jxx::lang::JxxArray',None
             else: name=f'java.lang.{name}'
         elif name in self.imports:
             imported_name=self.imports[name]
@@ -275,7 +275,7 @@ class Translator:
         if alias:
             return alias
         element=self.resolve(t).value()
-        return f'::jxx::JxxArray<{element}, {rank}U>'
+        return f'::jxx::lang::JxxArray<{element}, {rank}U>'
 
     def resolve(self,t,extra_dims=0)->CType:
         if t is None: return CType('void',void=True)
@@ -294,7 +294,7 @@ class Translator:
             return CType(primitive_alias,primitive=True)
         elem=base.value() if not base.primitive else base.raw
         return CType(
-            f'::jxx::Ptr<::jxx::JxxArray<{elem}, {dims}U>>',
+            f'::jxx::Ptr<::jxx::lang::JxxArray<{elem}, {dims}U>>',
             primitive=True)
 
     @staticmethod
@@ -469,7 +469,7 @@ class Translator:
 
     def java_main_arg_type(self) -> str:
         return (
-            "::jxx::Ptr<::jxx::JxxArray<"
+            "::jxx::Ptr<::jxx::lang::JxxArray<"
             "::jxx::Ptr<::jxx::lang::String>, 1U>>"
         )
     @staticmethod
@@ -513,14 +513,10 @@ class Translator:
         return rank==1 and self.name_of(type_node) in PRIMITIVE_ARRAY_ALIASES
 
     def array_size_expression(self,name:str)->str:
-        if name in self.local_primitive_rank1_arrays:
-            return f'{name}->length'
-        return f'{name}->size()'
+        return f'{name}->length'
 
     def array_element_expression(self,name:str,index:str)->str:
-        if name in self.local_primitive_rank1_arrays:
-            return f'(*{name})[{index}]'
-        return f'(*{name})({index})'
+        return f'(*{name})[{index}]'
 
     def local_type_name(self,name:str)->str:
         return self.simple(self.name_of(self.local_variable_types.get(name)))
@@ -542,6 +538,7 @@ class Translator:
     def apply_expression_selectors(
             self,base,selectors,primitive_rank1_array:bool=False):
         result=base
+        array_depth=0
         for selector in selectors or []:
             kind=type(selector).__name__
             if kind=='MethodInvocation':
@@ -552,11 +549,14 @@ class Translator:
                 result+=f'->{selector.member}'
             elif kind=='ArraySelector':
                 index=self.expr(selector.index)
-                if primitive_rank1_array:
+                if array_depth == 0:
+                    # A source array expression is Ptr<JxxArray<...>> and must
+                    # be dereferenced once. Higher ranks use recursive RowProxy
+                    # operator[] access and therefore chain brackets directly.
                     result=f'(*{result})[{index}]'
                 else:
-                    result=f'(*{result})({index})'
-                # Only the original rank-1 array uses the primitive alias.
+                    result=f'{result}[{index}]'
+                array_depth+=1
                 primitive_rank1_array=False
             else:
                 result+=str(selector)
@@ -742,7 +742,7 @@ class Translator:
             assignments=' '.join(
                 ((f'(*array)[{index}] = {vararg_value(value)};')
                  if primitive_varargs else
-                 (f'(*array)({index}) = {vararg_value(value)};'))
+                 (f'(*array)[{index}] = {vararg_value(value)};'))
                 for index,value in enumerate(values))
             array_expression=(
                 f'([&]() {{ auto array = {array_expression}; '
@@ -757,6 +757,7 @@ class Translator:
         if n=='LambdaExpression': return self.lambda_expression(e)
         if n=='This':
             base='this'
+            array_depth=0
             for selector in getattr(e,'selectors',None) or []:
                 kind=type(selector).__name__
                 if kind=='MemberReference':
@@ -765,7 +766,10 @@ class Translator:
                     args=', '.join(self.expr(x) for x in selector.arguments or [])
                     base+=f'->{selector.member}({args})'
                 elif kind=='ArraySelector':
-                    base+=f'({self.expr(selector.index)})'
+                    index=self.expr(selector.index)
+                    base=(f'(*{base})[{index}]' if array_depth == 0
+                          else f'{base}[{index}]')
+                    array_depth+=1
             return base
         if n=='SuperMemberReference':
             base=f'this->JxxSuper::{e.member}'
@@ -852,10 +856,7 @@ class Translator:
         o.w(f'{array_type} {declarator.name} = ::jxx::NEW<{concrete}>({len(values)}U);')
         for index,value in enumerate(values):
             converted=self.array_initializer_value(declaration.type,value)
-            if self.is_primitive_rank1_array(declaration.type,dims):
-                o.w(f'(*{declarator.name})[{index}U] = {converted};')
-            else:
-                o.w(f'(*{declarator.name})({index}U) = {converted};')
+            o.w(f'(*{declarator.name})[{index}U] = {converted};')
 
     def class_creator_expression(self, creator, expected_type=None):
         allocation_type=creator.type
@@ -1151,16 +1152,14 @@ class Translator:
         o.enter()
         o.w(f'return ::jxx::lang::ClassInfo<{enum_name}, JxxSuper>::Class();')
         o.exit();o.w('}')
-        o.w(f'static ::jxx::Ptr<::jxx::JxxArray<')
+        o.w(f'static ::jxx::Ptr<::jxx::lang::JxxArray<')
         o.w(f'    ::jxx::Ptr<{enum_name}>, 1U>> values() {{')
         o.enter()
-        o.w(f'auto result = ::jxx::NEW<::jxx::JxxArray<')
+        o.w(f'auto result = ::jxx::NEW<::jxx::lang::JxxArray<')
         o.w(f'    ::jxx::Ptr<{enum_name}>, 1U>>(')
         o.w(f'        static_cast<::jxx::lang::jint>({len(constants)}));')
         for ordinal,constant in enumerate(constants):
-            # This is the generic JxxArray<T, 1U>, not one of the built-in
-            # primitive array aliases. Generic JxxArray access uses operator().
-            o.w(f'(*result)({ordinal}) = {constant};')
+            o.w(f'(*result)[{ordinal}] = {constant};')
         o.w('return result;')
         o.exit();o.w('}')
         o.w(f'static ::jxx::Ptr<{enum_name}> valueOf(')
@@ -1425,12 +1424,12 @@ class Translator:
         o.enter();o.w('try {');o.enter()
         o.w('::jxx::initialize();')
         o.w('using JxxString = ::jxx::lang::String;')
-        o.w('using JxxStringArray = ::jxx::JxxArray<::jxx::Ptr<JxxString>, 1U>;')
+        o.w('using JxxStringArray = ::jxx::lang::JxxArray<::jxx::Ptr<JxxString>, 1U>;')
         o.w('const auto sourceArgc = argc > 0 ? argc - 1 : 0;')
         o.w(f'auto {parameter_name} = ::jxx::NEW<JxxStringArray>(')
         o.enter();o.w('static_cast<std::uint32_t>(sourceArgc));');o.exit()
         o.w('for (int index = 1; index < argc; ++index) {');o.enter()
-        o.w(f'(*{parameter_name})(static_cast<std::uint32_t>(index - 1)) =')
+        o.w(f'(*{parameter_name})[static_cast<::jxx::lang::jint>(index - 1)] =')
         o.enter();o.w('::jxx::NEW<JxxString>(argv[index]);');o.exit()
         o.exit();o.w('}')
         o.w(f'{target}::jxxMain({parameter_name});')
