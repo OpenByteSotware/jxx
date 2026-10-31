@@ -38,7 +38,7 @@ PRIMITIVE_ARRAY_ALIASES={
 UNSUPPORTED=('java.lang.annotation','java.lang.instrument','java.lang.invoke')
 # Names supplied by the implicit language package or by the converter's
 # standard support includes must not be resolved through an on-demand import.
-DEFAULT_LANGUAGE_TYPES={'Object','String','StringBuilder','StringBuffer','System','JxxArray','Class','Integer','Character','Boolean','Byte','Short','Long','Float','Double','Throwable','Exception','RuntimeException','Error'}
+DEFAULT_LANGUAGE_TYPES={'Object','String','StringBuilder','StringBuffer','System','JxxArray','Class','Integer','Character','Boolean','Byte','Short','Long','Float','Double','Math','StrictMath','Throwable','Exception','RuntimeException','Error'}
 SDK_TYPES_BY_PACKAGE={
     'java.util': {
         'Collection','List','ArrayList','LinkedList','Set','HashSet',
@@ -839,9 +839,26 @@ class Translator:
         if n=='Assignment':
             value=self.assignment_value_expression(e.expressionl,e.value)
             return f'{self.expr(e.expressionl)} {e.type or "="} {value}'
-        if n=='TernaryExpression': return f'({self.expr(e.condition)} ? {self.expr(e.if_true)} : {self.expr(e.if_false)})'
+        if n=='TernaryExpression': return self.ternary_expression(e)
         if n=='ArraySelector': return f'({self.expr(e.index)})'
         return str(e)
+
+    def ternary_expression(self, expression):
+        condition=self.expr(expression.condition)
+        true_expression=expression.if_true
+        false_expression=expression.if_false
+        # Source conditional expressions with String operands have String type.
+        # Materialize source literals as JXX String references rather than
+        # emitting native const char* branches.
+        string_result=(self.is_string_expression(true_expression) or
+                       self.is_string_expression(false_expression))
+        if string_result:
+            true_value=self.string_value_expression(true_expression)
+            false_value=self.string_value_expression(false_expression)
+        else:
+            true_value=self.expr(true_expression)
+            false_value=self.expr(false_expression)
+        return f'({condition} ? {true_value} : {false_value})'
 
     def instanceof_expression(self, value_expression, target_type):
         # Evaluate the operand exactly once, preserve null instanceof semantics,
