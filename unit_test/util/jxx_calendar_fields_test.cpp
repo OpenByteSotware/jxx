@@ -27,10 +27,13 @@ TEST(CalendarFieldParity, ExtractsUtcEpochFields)
 
     EXPECT_EQ(calendar->get(::jxx::util::Calendar::ERA), 1);
     EXPECT_EQ(calendar->get(::jxx::util::Calendar::YEAR), 1970);
-    EXPECT_EQ(calendar->get(::jxx::util::Calendar::JANUARY), 0);
+    EXPECT_EQ(
+        calendar->get(::jxx::util::Calendar::MONTH),
+        ::jxx::util::Calendar::JANUARY);
     EXPECT_EQ(calendar->get(::jxx::util::Calendar::DAY_OF_YEAR), 1);
-    EXPECT_EQ(calendar->get(::jxx::util::Calendar::AM_PM),
-              ::jxx::util::Calendar::AM);
+    EXPECT_EQ(
+        calendar->get(::jxx::util::Calendar::AM_PM),
+        ::jxx::util::Calendar::AM);
     EXPECT_EQ(calendar->get(::jxx::util::Calendar::HOUR), 0);
     EXPECT_EQ(calendar->get(::jxx::util::Calendar::ZONE_OFFSET), 0);
     EXPECT_EQ(calendar->get(::jxx::util::Calendar::DST_OFFSET), 0);
