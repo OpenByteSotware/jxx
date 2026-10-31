@@ -9,6 +9,7 @@
 #include "util/jxx.util.IdentityHashMap.h"
 #include "util/jxx.util.LinkedHashMap.h"
 #include "util/jxx.util.WeakHashMap.h"
+#include "io/jxx.io.NotSerializableException.h"
 
 using Object = ::jxx::lang::Object;
 template<typename T> ::jxx::Ptr<T> roundTrip(const ::jxx::Ptr<T>& source)
@@ -399,9 +400,7 @@ TEST(Stage77CollectionSerialization,
 		}
 	}
 }
-
-TEST(Stage77CollectionSerialization,
-	WeakHashMapGetByOriginalKey)
+TEST(Stage77CollectionSerialization, WeakHashMapIsNotSerializable)
 {
 	::jxx::initialize();
 
@@ -410,20 +409,23 @@ TEST(Stage77CollectionSerialization,
 		::jxx::lang::Object,
 		::jxx::lang::Object>;
 
-	auto map = ::jxx::NEW<M>();
+	const auto map = ::jxx::NEW<M>();
 
-	auto key =
+	const auto key =
 		::jxx::NEW<::jxx::lang::String>("key");
 
 	map->put(
 		key,
 		::jxx::NEW<::jxx::lang::String>("value"));
 
-	auto restored = roundTrip(map);
+	const auto bytes =
+		::jxx::NEW<::jxx::io::ByteArrayOutputStream>();
 
-	ASSERT_NE(restored, nullptr);
+	const auto output =
+		::jxx::NEW<::jxx::io::ObjectOutputStream>(bytes);
 
-	EXPECT_NE(
-		restored->get(key),
-		nullptr);
+	EXPECT_THROW(
+		output->writeObject(
+			::jxx::CAST<::jxx::lang::Object>(map)),
+		::jxx::io::NotSerializableException);
 }
