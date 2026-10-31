@@ -408,7 +408,25 @@ class Translator:
                for m in getattr(t,'body',None) or []):
             self.includes.update({'lang/jxx.lang.System.h','lang/jxx.lang.String.h','lang/jxx.lang.Throwable.h'})
 
+    def record_qualified_type_dependency(self, qualifier):
+        if not qualifier:
+            return
+        root=str(qualifier).split('.')[0]
+        # A qualified expression beginning with a source local is instance
+        # access, not a static type dependency.
+        if root in self.local_variable_types:
+            return
+        if (root in self.imports or root in DEFAULT_LANGUAGE_TYPES or
+                root in self.source_type_index or
+                (root and root[0].isupper())):
+            qualified_name=self.imports.get(root,root)
+            _,include=self.qmap(qualified_name)
+            if include:
+                self.includes.add(include)
+
     def record_method_dependencies(self, invocation):
+        self.record_qualified_type_dependency(
+            getattr(invocation,'qualifier',None))
         member=getattr(invocation,'member',None)
         result_type=METHOD_RESULT_TYPES.get(member)
         if result_type:
@@ -429,9 +447,14 @@ class Translator:
             creator_type=getattr(tree_module,'ClassCreator',None)
             catch_type=getattr(tree_module,'CatchClauseParameter',None)
             invocation_type=getattr(tree_module,'MethodInvocation',None)
+            member_reference_type=getattr(tree_module,'MemberReference',None)
             if invocation_type is not None:
                 for _,node in filter_method(invocation_type):
                     self.record_method_dependencies(node)
+            if member_reference_type is not None:
+                for _,node in filter_method(member_reference_type):
+                    self.record_qualified_type_dependency(
+                        getattr(node,'qualifier',None))
             if local_type is not None:
                 for _,node in filter_method(local_type):
                     self.resolve(node.type)
