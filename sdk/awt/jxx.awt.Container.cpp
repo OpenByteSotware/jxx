@@ -106,7 +106,7 @@ namespace jxx::awt
         for (::jxx::lang::jint index = 0;
              index < getComponentCount(); ++index)
         {
-            (*result)(index) =
+            (*result)[index] =
                 components_[static_cast<std::size_t>(index)];
         }
         return result;

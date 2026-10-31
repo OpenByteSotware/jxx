@@ -331,7 +331,7 @@ namespace jxx::net
 
 		auto out = jxx::NEW<jxx::lang::JxxArray<jxx::Ptr<InetAddress>, 1U>>(static_cast<jxx::lang::jint>(addrs.size()));
 		for (std::size_t i = 0; i < addrs.size(); ++i)
-			(*out)(static_cast<jxx::lang::jint>(i)) = addrs[i];
+			(*out)[static_cast<jxx::lang::jint>(i)] = addrs[i];
 		return out;
 	}
 

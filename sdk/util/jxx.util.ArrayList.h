@@ -159,7 +159,7 @@ private:
             }
 
             lastReturned_ = cursor_;
-            return (*owner_->elementData_)(cursor_++);
+            return (*owner_->elementData_)[cursor_++];
         }
 
         jxx::lang::jbool hasPrevious() override {
@@ -174,7 +174,7 @@ private:
 
             --cursor_;
             lastReturned_ = cursor_;
-            return (*owner_->elementData_)(cursor_);
+            return (*owner_->elementData_)[cursor_];
         }
 
         jxx::lang::jint nextIndex() override {
