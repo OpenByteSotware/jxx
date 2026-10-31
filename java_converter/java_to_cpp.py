@@ -445,6 +445,7 @@ class Translator:
         tree_module=getattr(javalang,'tree',None)
         if callable(filter_method) and tree_module is not None:
             local_type=getattr(tree_module,'LocalVariableDeclaration',None)
+            reference_type=getattr(tree_module,'ReferenceType',None)
             creator_type=getattr(tree_module,'ClassCreator',None)
             catch_type=getattr(tree_module,'CatchClauseParameter',None)
             invocation_type=getattr(tree_module,'MethodInvocation',None)
@@ -456,6 +457,15 @@ class Translator:
                 for _,node in filter_method(member_reference_type):
                     self.record_qualified_type_dependency(
                         getattr(node,'qualifier',None))
+            # Source types from the same package or unnamed-package folder
+            # do not require import declarations. Resolve every reference type
+            # before emitting the header so cross-source dependencies such as
+            # SavingAccount and CheckingAccount add their generated headers.
+            if reference_type is not None:
+                for _,node in filter_method(reference_type):
+                    name=self.name_of(node)
+                    if name not in self.known_types:
+                        self.ref_raw(node)
             if local_type is not None:
                 for _,node in filter_method(local_type):
                     self.resolve(node.type)
