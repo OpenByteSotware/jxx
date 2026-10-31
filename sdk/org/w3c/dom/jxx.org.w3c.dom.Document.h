@@ -24,6 +24,9 @@ class Document
     , public virtual ::jxx::org::w3c::dom::events::DocumentEvent
     , public virtual ::jxx::org::w3c::dom::views::DocumentView {
 public:
+    using Super = ::jxx::lang::InterfaceBase<Document, Node>;
+    using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
+
     ~Document() override = default;
 
     virtual ::jxx::Ptr<DocumentType> getDoctype() const = 0;
