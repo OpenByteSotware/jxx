@@ -282,10 +282,11 @@ class Translator:
         if t is None: return CType('void',void=True)
         tn=type(t).__name__; name=self.name_of(t)
         dims=len(getattr(t,'dimensions',None) or [])+extra_dims
-        # A method or class type parameter remains the C++ template argument,
-        # while any source array dimensions are still applied around it.
+        # A source type parameter denotes a reference type. The C++ template
+        # argument is the raw JXX class/interface type, while values of that
+        # parameter use Ptr<T>, matching source reference semantics.
         if name in self.type_parameters:
-            base=CType(name,primitive=True)
+            base=CType(name)
         elif tn=='BasicType' or name in PRIMITIVES:
             base=CType(PRIMITIVES.get(name,name),primitive=True,void=(name=='void'))
         else: base=CType(self.ref_raw(t))
@@ -1099,7 +1100,8 @@ class Translator:
                         len(getattr(parameter.type,'dimensions',None) or []))
             target=self.name_of(parameter.type)
             if target in self.type_parameters and dimensions == 0:
-                converted.append((index,parameter,target))
+                converted.append((
+                    index,parameter,self.resolve(parameter.type).value()))
         return converted
 
     def emit_generic_conversion_overload(self, method, owner_name, o):
