@@ -831,7 +831,8 @@ class Translator:
             t=self.resolve(e.type); x=self.expr(e.expression)
             return f'static_cast<{t.raw}>({x})' if t.primitive else f'::jxx::CAST<{t.raw}>({x})'
         if n=='BinaryOperation':
-            if e.operator=='instanceof': return f'::jxx::INSTANCEOF<{self.ref_raw(e.operandr)}>({self.expr(e.operandl)})'
+            if e.operator=='instanceof':
+                return self.instanceof_expression(e.operandl,e.operandr)
             if e.operator=='+' and self.is_string_concatenation(e):
                 return self.string_concatenation_expression(e)
             return f'({self.expr(e.operandl)} {e.operator} {self.expr(e.operandr)})'
@@ -841,6 +842,23 @@ class Translator:
         if n=='TernaryExpression': return f'({self.expr(e.condition)} ? {self.expr(e.if_true)} : {self.expr(e.if_false)})'
         if n=='ArraySelector': return f'({self.expr(e.index)})'
         return str(e)
+
+    def instanceof_expression(self, value_expression, target_type):
+        # Evaluate the operand exactly once, preserve null instanceof semantics,
+        # and route runtime type testing through Object::instanceOf(ClassAny).
+        # Casting through Object also supports expressions statically typed as
+        # a JXX interface, since interfaces themselves do not inherit Object.
+        value=self.expr(value_expression)
+        target=self.ref_raw(target_type)
+        return (
+            '([&]() -> ::jxx::lang::jbool { '
+            f'const auto jxxInstanceOfValue = {value}; '
+            'if (jxxInstanceOfValue == nullptr) return false; '
+            'const auto jxxInstanceOfObject = '
+            '::jxx::CAST<::jxx::lang::Object>(jxxInstanceOfValue); '
+            'return jxxInstanceOfObject != nullptr && '
+            f'jxxInstanceOfObject->instanceOf({target}::Class()); '
+            '})()')
 
     def array_initializer_value(self, element_type, expression):
         value=self.expr(expression)
