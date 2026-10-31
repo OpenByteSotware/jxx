@@ -19,6 +19,7 @@ import argparse, os, re, sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Set, Tuple
+
 try:
     import javalang
 except Exception:

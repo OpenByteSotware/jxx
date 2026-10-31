@@ -38,12 +38,15 @@ TEST(StringTokenizerTest, ReturnsEachDelimiterAsAToken) {
     EXPECT_EQ("b", text(tokenizer->nextToken()));
 }
 
-TEST(StringTokenizerTest, ChangesDelimitersForNextTokenAndFollowingCalls) {
+TEST(StringTokenizerTest, ChangesDelimitersForNextTokenAndFollowingCalls)
+{
     auto tokenizer = ::jxx::NEW<StringTokenizer>(
-        ::jxx::NEW<String>("a,b;c"), ::jxx::NEW<String>(","));
+        ::jxx::NEW<String>("a,b;c"),
+        ::jxx::NEW<String>(","));
 
     EXPECT_EQ("a", text(tokenizer->nextToken()));
-    EXPECT_EQ("b", text(tokenizer->nextToken(::jxx::NEW<String>(";"))));
+    EXPECT_EQ(",b", text(tokenizer->nextToken(
+        ::jxx::NEW<String>(";"))));
     EXPECT_EQ("c", text(tokenizer->nextToken()));
 }
 

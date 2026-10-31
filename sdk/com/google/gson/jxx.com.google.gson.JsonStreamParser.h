@@ -13,9 +13,18 @@ namespace com::google::gson {
 class JsonElement;
 
 class JsonStreamParser final
-    : public ::jxx::lang::ClassBase<JsonStreamParser, ::jxx::lang::Object>,
-      public ::jxx::util::Iterator<JsonElement> {
+    : public ::jxx::lang::ClassBase<
+          JsonStreamParser,
+          ::jxx::lang::Object,
+          ::jxx::util::Iterator<JsonElement>> {
 public:
+    using JxxSuper = ::jxx::lang::Object;
+    using Super = ::jxx::lang::ClassBase<
+        JsonStreamParser,
+        JxxSuper,
+        ::jxx::util::Iterator<JsonElement>>;
+    using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
+
     explicit JsonStreamParser(
         const ::jxx::Ptr<::jxx::lang::String>& json);
     explicit JsonStreamParser(
