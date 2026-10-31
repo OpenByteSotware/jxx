@@ -119,6 +119,7 @@ class Translator:
         self.local_array_variables:Set[str]=set()
         self.local_primitive_rank1_arrays:Set[str]=set()
         self.source_type_index:Dict[str,Tuple[str,str]]={}
+        self.current_output_relative_dir=Path()
         self.active_wildcard_types:Dict[int,str]={}
 
     @staticmethod
@@ -157,6 +158,15 @@ class Translator:
                 f'ambiguous wildcard SDK type {name}: ' + ', '.join(matches))
         return None
 
+    def source_include_for_current_output(self, include:str)->str:
+        include_path=Path(include)
+        current_dir=Path(self.current_output_relative_dir)
+        # Headers generated beside the current header are included by basename.
+        # Otherwise retain the output-root-relative path used by generated CMake.
+        if include_path.parent == current_dir:
+            return include_path.name
+        return include_path.as_posix()
+
     def qmap(self,name:str)->Tuple[str,Optional[str]]:
         # Resolve implicit language-package types before considering wildcard
         # imports. Otherwise import java.util.* incorrectly maps String to
@@ -172,7 +182,7 @@ class Translator:
             imported_name=self.imports[name]
             if imported_name in self.source_type_index:
                 qualified,include=self.source_type_index[imported_name]
-                return qualified,include
+                return qualified,self.source_include_for_current_output(include)
             name=imported_name
         elif any(name in SDK_TYPES_BY_PACKAGE.get(package,set())
                  for package in self.wildcard_imports):
@@ -183,7 +193,7 @@ class Translator:
                 name=wildcard_name
         elif name in self.source_type_index and name not in self.known_types:
             qualified,include=self.source_type_index[name]
-            return qualified,include
+            return qualified,self.source_include_for_current_output(include)
         elif ('.' not in name and name not in self.known_types and
               name not in self.type_parameters and
               name not in self.declared_type_parameters and
@@ -1513,7 +1523,12 @@ class Translator:
     def translate(self,src,out_root,stem,source_relative_dir:Optional[Path]=None):
         self.main_entries=self.detect_main_entries(src)
         self.main_owner_names=set(self.main_entries)
-        tree=javalang.parse.parse(src);self.gather(tree)
+        tree=javalang.parse.parse(src)
+        package=tree.package.name if tree.package else ''
+        self.current_output_relative_dir=(
+            Path(*package.split('.')) if package else
+            Path(source_relative_dir or Path()))
+        self.gather(tree)
         # Header includes must be complete before header() is emitted. Body
         # translation can discover types such as Scanner, but that is too late.
         self.gather_body_type_includes(tree)

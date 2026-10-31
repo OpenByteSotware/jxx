@@ -47,16 +47,6 @@ TEST(Stage77CollectionSerialization, LinkedHashMapPreservesEncounterOrder)
 	EXPECT_EQ(std::dynamic_pointer_cast<::jxx::lang::String>(it->next()->getKey())->utf8(), "first");
 }
 
-TEST(Stage77CollectionSerialization, WeakHashMapRoundTripsLiveEntries)
-{
-	::jxx::initialize(); 
-	using M = ::jxx::util::WeakHashMap<Object, Object>; 
-	auto map = ::jxx::NEW<M>(); auto key = ::jxx::NEW<::jxx::lang::String>("key"); 
-	map->put(key, ::jxx::NEW<::jxx::lang::String>("value"));
-	auto restored = roundTrip(map); ASSERT_NE(restored, nullptr);
-	EXPECT_EQ(restored->size(), 1);
-}
-
 TEST(Stage77CollectionSerialization, ObjectUpcastAfterRoundTrip)
 {
 	::jxx::initialize();
@@ -311,7 +301,7 @@ TEST(Stage77CollectionSerialization, WeakHashMapIsNotSerializable)
 		},
 		::jxx::io::NotSerializableException);
 }
-TEST(Stage77Collections, WeakHashMapReadsEntryImmediately)
+TEST(Stage77Collections, WeakHashMapReadsEntryImmediately2)
 {
 	::jxx::initialize();
 
@@ -335,8 +325,9 @@ TEST(Stage77Collections, WeakHashMapReadsEntryImmediately)
 	EXPECT_EQ(map->size(), 1);
 	EXPECT_NE(map->get(key), nullptr);
 	EXPECT_NE(map->get(equivalentKey), nullptr);
-}
-TEST(Stage77CollectionSerialization, WeakHashMapRoundTripDiagnostics)
+}TEST(
+	Stage77CollectionSerialization,
+	WeakHashMapSerializationThrowsNotSerializableException)
 {
 	::jxx::initialize();
 
@@ -354,38 +345,14 @@ TEST(Stage77CollectionSerialization, WeakHashMapRoundTripDiagnostics)
 		key,
 		::jxx::NEW<::jxx::lang::String>("value"));
 
-	auto restored = roundTrip(map);
-
-	ASSERT_NE(restored, nullptr);
-
-	const auto count = restored->size();
-
-	std::cout
-		<< "restored size = "
-		<< count
-		<< std::endl;
-
-	auto iterator =
-		restored->entrySet()->iterator();
-
-	while (iterator->hasNext())
-	{
-		auto entry = iterator->next();
-
-		auto stringKey =
-			std::dynamic_pointer_cast<
-			::jxx::lang::String>(
-				entry->getKey());
-
-		if (stringKey)
+	EXPECT_THROW(
 		{
-			std::cout
-				<< "key="
-				<< stringKey->utf8()
-				<< std::endl;
-		}
-	}
+			auto restored = roundTrip(map);
+			(void)restored;
+		},
+		::jxx::io::NotSerializableException);
 }
+
 TEST(Stage77CollectionSerialization, WeakHashMapIsNotSerializable2)
 {
 	::jxx::initialize();
