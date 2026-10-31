@@ -38,7 +38,7 @@ class ArrayList
 private:
     static constexpr jxx::lang::jint DEFAULT_CAPACITY = 10;
 
-    jxx::Ptr<jxx::JxxArray<jxx::Ptr<E>, 1U>> elementData_;
+    jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<E>, 1U>> elementData_;
     jxx::lang::jint size_ = 0;
 
     static jxx::lang::jint initialStorageCapacity_(
@@ -75,11 +75,11 @@ private:
         }
 
         auto replacement =
-            jxx::NEW<jxx::JxxArray<jxx::Ptr<E>, 1U>>(
+            jxx::NEW<jxx::lang::JxxArray<jxx::Ptr<E>, 1U>>(
                 static_cast<std::uint32_t>(newCapacity));
 
         for (jxx::lang::jint index = 0; index < size_; ++index) {
-            (*replacement)(index) = (*elementData_)(index);
+            (*replacement)[index] = (*elementData_)[index];
         }
 
         elementData_ = replacement;
@@ -96,12 +96,12 @@ private:
              offset < elementsToMove;
              ++offset) {
 
-            (*elementData_)(index + offset) =
-                (*elementData_)(index + offset + 1);
+            (*elementData_)[index + offset] =
+                (*elementData_)[index + offset + 1];
         }
 
         --size_;
-        (*elementData_)(size_) = nullptr;
+        (*elementData_)[size_] = nullptr;
         ++this->modCount;
     }
 
@@ -219,7 +219,7 @@ private:
 public:
     ArrayList()
         : elementData_(
-              jxx::NEW<jxx::JxxArray<jxx::Ptr<E>, 1U>>(
+              jxx::NEW<jxx::lang::JxxArray<jxx::Ptr<E>, 1U>>(
                   static_cast<std::uint32_t>(DEFAULT_CAPACITY))) {
     }
 
@@ -231,7 +231,7 @@ public:
         }
 
         elementData_ =
-            jxx::NEW<jxx::JxxArray<jxx::Ptr<E>, 1U>>(
+            jxx::NEW<jxx::lang::JxxArray<jxx::Ptr<E>, 1U>>(
                 static_cast<std::uint32_t>(
                     initialStorageCapacity_(initialCapacity)));
     }
@@ -263,11 +263,11 @@ public:
         }
 
         auto replacement =
-            jxx::NEW<jxx::JxxArray<jxx::Ptr<E>, 1U>>(
+            jxx::NEW<jxx::lang::JxxArray<jxx::Ptr<E>, 1U>>(
                 static_cast<std::uint32_t>(desiredCapacity));
 
         for (jxx::lang::jint index = 0; index < size_; ++index) {
-            (*replacement)(index) = (*elementData_)(index);
+            (*replacement)[index] = (*elementData_)[index];
         }
 
         elementData_ = replacement;
@@ -300,7 +300,7 @@ public:
 
         for (jxx::lang::jint index = 0; index < size_; ++index) {
             const auto candidate =
-                jxx::CAST<jxx::lang::Object>((*elementData_)(index));
+                jxx::CAST<jxx::lang::Object>((*elementData_)[index]);
 
             if (equalsObject_(object, candidate)) {
                 return index;
@@ -314,7 +314,7 @@ public:
 
         for (jxx::lang::jint index = size_ - 1; index >= 0; --index) {
             const auto candidate =
-                jxx::CAST<jxx::lang::Object>((*elementData_)(index));
+                jxx::CAST<jxx::lang::Object>((*elementData_)[index]);
 
             if (equalsObject_(object, candidate)) {
                 return index;
@@ -325,7 +325,7 @@ public:
 
     jxx::Ptr<E> get(jxx::lang::jint index) const override {
         rangeCheck_(index);
-        return (*elementData_)(index);
+        return (*elementData_)[index];
     }
 
     jxx::Ptr<E> set(
@@ -333,14 +333,14 @@ public:
         const jxx::Ptr<E>& element) override {
 
         rangeCheck_(index);
-        const auto oldValue = (*elementData_)(index);
-        (*elementData_)(index) = element;
+        const auto oldValue = (*elementData_)[index];
+        (*elementData_)[index] = element;
         return oldValue;
     }
 
     jxx::lang::jbool add(const jxx::Ptr<E>& element) override {
         ensureCapacityInternal_(size_ + 1);
-        (*elementData_)(size_++) = element;
+        (*elementData_)[size_++] = element;
         ++this->modCount;
         return true;
     }
@@ -356,18 +356,18 @@ public:
              position > index;
              --position) {
 
-            (*elementData_)(position) =
-                (*elementData_)(position - 1);
+            (*elementData_)[position] =
+                (*elementData_)[position - 1];
         }
 
-        (*elementData_)(index) = element;
+        (*elementData_)[index] = element;
         ++size_;
         ++this->modCount;
     }
 
     jxx::Ptr<E> remove(jxx::lang::jint index) override {
         rangeCheck_(index);
-        const auto oldValue = (*elementData_)(index);
+        const auto oldValue = (*elementData_)[index];
         fastRemove_(index);
         return oldValue;
     }
@@ -390,7 +390,7 @@ public:
         }
 
         for (jxx::lang::jint index = 0; index < size_; ++index) {
-            (*elementData_)(index) = nullptr;
+            (*elementData_)[index] = nullptr;
         }
 
         size_ = 0;
@@ -423,15 +423,15 @@ public:
              position >= index;
              --position) {
 
-            (*elementData_)(position + count) =
-                (*elementData_)(position);
+            (*elementData_)[position + count] =
+                (*elementData_)[position];
         }
 
         auto iteratorValue = collection->iteratorExtends();
         auto destination = index;
 
         while (iteratorValue->hasNext()) {
-            (*elementData_)(destination++) = iteratorValue->next();
+            (*elementData_)[destination++] = iteratorValue->next();
         }
 
         size_ += count;
@@ -445,14 +445,14 @@ public:
         jxx::lang::jint writeIndex = 0;
         const auto oldSize = size_;
         for (jxx::lang::jint readIndex = 0; readIndex < oldSize; ++readIndex) {
-            const auto element = (*elementData_)(readIndex);
+            const auto element = (*elementData_)[readIndex];
             if (!filter->test(element)) {
-                (*elementData_)(writeIndex++) = element;
+                (*elementData_)[writeIndex++] = element;
             }
         }
         if (writeIndex == oldSize) return false;
         for (auto index = writeIndex; index < oldSize; ++index) {
-            (*elementData_)(index) = nullptr;
+            (*elementData_)[index] = nullptr;
         }
         size_ = writeIndex;
         ++this->modCount;
@@ -464,7 +464,7 @@ public:
         if (function == nullptr) throw jxx::lang::NullPointerException();
         const auto expectedModCount = this->modCount;
         for (jxx::lang::jint index = 0; index < size_; ++index) {
-            (*elementData_)(index) = function->apply((*elementData_)(index));
+            (*elementData_)[index] = function->apply((*elementData_)[index]);
             if (this->modCount != expectedModCount) {
                 throw jxx::util::ConcurrentModificationException();
             }
@@ -477,7 +477,7 @@ public:
         std::vector<jxx::Ptr<E>> values;
         values.reserve(static_cast<std::size_t>(size_));
         for (jxx::lang::jint index = 0; index < size_; ++index) {
-            values.push_back((*elementData_)(index));
+            values.push_back((*elementData_)[index]);
         }
         std::stable_sort(
             values.begin(), values.end(),
@@ -489,7 +489,7 @@ public:
                 return comparable->compareTo(right) < 0;
             });
         for (jxx::lang::jint index = 0; index < size_; ++index) {
-            (*elementData_)(index) = values[static_cast<std::size_t>(index)];
+            (*elementData_)[index] = values[static_cast<std::size_t>(index)];
         }
         if (this->modCount != expectedModCount) {
             throw jxx::util::ConcurrentModificationException();
@@ -552,7 +552,7 @@ public:
 
         for (jxx::lang::jint index = 0; index < size_; ++index) {
             (*result)[index] =
-                jxx::CAST<jxx::lang::Object>((*elementData_)(index));
+                jxx::CAST<jxx::lang::Object>((*elementData_)[index]);
         }
 
         return result;
@@ -576,8 +576,8 @@ protected:
              position < size_;
              ++position) {
 
-            (*elementData_)(position - count) =
-                (*elementData_)(position);
+            (*elementData_)[position - count] =
+                (*elementData_)[position];
         }
 
         const auto newSize = size_ - count;
@@ -585,7 +585,7 @@ protected:
              position < size_;
              ++position) {
 
-            (*elementData_)(position) = nullptr;
+            (*elementData_)[position] = nullptr;
         }
 
         size_ = newSize;
@@ -596,7 +596,7 @@ protected:
         auto result = jxx::NEW<ArrayList<E>>(size_);
 
         for (jxx::lang::jint index = 0; index < size_; ++index) {
-            result->add((*elementData_)(index));
+            result->add((*elementData_)[index]);
         }
 
         result->modCount = 0;
@@ -615,7 +615,7 @@ public:
         output->writeInt(size_);
         for (jxx::lang::jint index = 0; index < size_; ++index) {
             output->writeObject(
-                jxx::CAST<jxx::lang::Object>((*elementData_)(index)));
+                jxx::CAST<jxx::lang::Object>((*elementData_)[index]));
         }
         if (this->modCount != expectedModCount) {
             throw ConcurrentModificationException();
@@ -635,7 +635,7 @@ public:
                 jxx::NEW<jxx::lang::String>("Negative ArrayList size"));
         }
 
-        auto restored = jxx::NEW<jxx::JxxArray<jxx::Ptr<E>, 1U>>(
+        auto restored = jxx::NEW<jxx::lang::JxxArray<jxx::Ptr<E>, 1U>>(
             static_cast<std::uint32_t>(
                 initialStorageCapacity_(restoredSize)));
         for (jxx::lang::jint index = 0;
@@ -650,7 +650,7 @@ public:
                     jxx::NEW<jxx::lang::String>(
                         "ArrayList element has incompatible type"));
             }
-            (*restored)(index) = element;
+            (*restored)[index] = element;
         }
 
         elementData_ = restored;
@@ -659,7 +659,7 @@ public:
     }
 
     void readObjectNoData() override {
-        elementData_ = jxx::NEW<jxx::JxxArray<jxx::Ptr<E>, 1U>>(
+        elementData_ = jxx::NEW<jxx::lang::JxxArray<jxx::Ptr<E>, 1U>>(
             static_cast<std::uint32_t>(DEFAULT_CAPACITY));
         size_ = 0;
         this->modCount = 0;

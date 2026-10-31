@@ -222,7 +222,7 @@ public:
         if (array == nullptr) return 0;
         ::jxx::lang::jint result = 1;
         for (::jxx::lang::jint index = 0; index < static_cast<::jxx::lang::jint>(array->size()); ++index) {
-            result = 31 * result + arrays_detail::hashValue((*array)(index));
+            result = 31 * result + arrays_detail::hashValue((*array)[index]);
         }
         return result;
     }

@@ -237,7 +237,7 @@ namespace jxx::math
 	{
 		if (!v)throw jxx::lang::NullPointerException(); auto d = mulMag(digits_, v->digits_); return jxx::NEW<BigInteger>(stringFromAscii_(((negative_ != v->negative_) && d != "0" ? "-" : "") + d));
 	}
-	jxx::Ptr<::jxx::JxxArray<jxx::Ptr<BigInteger>, 1U>> BigInteger::divideAndRemainder(const jxx::Ptr<BigInteger>& v) const
+	jxx::Ptr<::jxx::lang::JxxArray<jxx::Ptr<BigInteger>, 1U>> BigInteger::divideAndRemainder(const jxx::Ptr<BigInteger>& v) const
 	{
 		if (!v) throw jxx::lang::NullPointerException();
 		std::string q;
@@ -248,21 +248,21 @@ namespace jxx::math
 		const auto remainderValue = jxx::NEW<BigInteger>(stringFromAscii_(
 			(negative_ && r != "0" ? "-" : "") + r));
 		const auto result = jxx::NEW<
-			::jxx::JxxArray<jxx::Ptr<BigInteger>, 1U>>(
+			::jxx::lang::JxxArray<jxx::Ptr<BigInteger>, 1U>>(
 				static_cast<jxx::lang::jint>(2));
-		(*result)(0) = quotient;
-		(*result)(1) = remainderValue;
+		(*result)[0] = quotient;
+		(*result)[1] = remainderValue;
 		return result;
 	}
 	jxx::Ptr<BigInteger> BigInteger::divide(const jxx::Ptr<BigInteger>& v) const
 	{
 		const auto result = divideAndRemainder(v);
-		return (*result)(0);
+		return (*result)[0];
 	}
 	jxx::Ptr<BigInteger> BigInteger::remainder(const jxx::Ptr<BigInteger>& v) const
 	{
 		const auto result = divideAndRemainder(v);
-		return (*result)(1);
+		return (*result)[1];
 	}
 	jxx::Ptr<BigInteger> BigInteger::pow(jxx::lang::jint e) const
 	{

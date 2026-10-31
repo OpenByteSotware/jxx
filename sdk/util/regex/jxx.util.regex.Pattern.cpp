@@ -62,10 +62,10 @@ static jxx::Ptr<jxx::lang::String> toStringPtr(const jxx::Ptr<jxx::lang::CharSeq
     return asString;
 }
 
-static jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> vectorToStringArray(const std::vector<jxx::Ptr<jxx::lang::String>>& items) {
-    auto arr = jxx::NEW<jxx::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>>(static_cast<jxx::lang::jint>(items.size()));
+static jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> vectorToStringArray(const std::vector<jxx::Ptr<jxx::lang::String>>& items) {
+    auto arr = jxx::NEW<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>>(static_cast<jxx::lang::jint>(items.size()));
     for (jxx::lang::jint i = 0; i < static_cast<jxx::lang::jint>(items.size()); ++i) {
-        (*arr)(i) = items[static_cast<std::size_t>(i)];
+        (*arr)[i] = items[static_cast<std::size_t>(i)];
     }
     return arr;
 }
@@ -119,12 +119,12 @@ jxx::lang::jint Pattern::flags() const {
     return flags_;
 }
 
-jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> Pattern::split(
+jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> Pattern::split(
     const jxx::Ptr<jxx::lang::CharSequence>& input) {
     return split(input, static_cast<jxx::lang::jint>(0));
 }
 
-jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> Pattern::split(
+jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>> Pattern::split(
     const jxx::Ptr<jxx::lang::CharSequence>& input,
     jxx::lang::jint limit) {
     auto src = toStringPtr(input);

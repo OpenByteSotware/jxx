@@ -60,9 +60,9 @@ public:
     ::jxx::Ptr<::jxx::lang::String> pattern() const;
     ::jxx::lang::jint flags() const;
 
-    ::jxx::Ptr<::jxx::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>> split(
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>> split(
         const ::jxx::Ptr<::jxx::lang::CharSequence>& input);
-    ::jxx::Ptr<::jxx::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>> split(
+    ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>> split(
         const ::jxx::Ptr<::jxx::lang::CharSequence>& input,
         ::jxx::lang::jint limit);
 

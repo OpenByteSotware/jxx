@@ -181,7 +181,7 @@ namespace jxx::util
     };
 
     inline std::vector<ArgValue> unboxArgs_(
-        const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>& args)
+        const jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>& args)
     {
         std::vector<ArgValue> out;
 
@@ -193,7 +193,7 @@ namespace jxx::util
 
         for (jxx::lang::jint i = 0; i < n; ++i)
         {
-            const auto& value = (*args)(i);
+            const auto& value = (*args)[i];
 
             ArgValue arg;
             arg.objectValue = value;
@@ -1212,7 +1212,7 @@ namespace jxx::util
 
     jxx::Ptr<Formatter> Formatter::format(
         const jxx::Ptr<jxx::lang::String>& formatString,
-        const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>& args)
+        const jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>& args)
     {
         return format(locale_, formatString, args);
     }
@@ -1220,7 +1220,7 @@ namespace jxx::util
     jxx::Ptr<Formatter> Formatter::format(
         const jxx::Ptr<Locale>& locale,
         const jxx::Ptr<jxx::lang::String>& formatString,
-        const jxx::Ptr<JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>& args)
+        const jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>& args)
     {
         ensureOpen_();
 

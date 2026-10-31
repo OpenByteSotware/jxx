@@ -62,7 +62,7 @@ public:
                                             jxx::lang::jlong defaultValue) const;
 
         jxx::Ptr<jxx::lang::Object> getContent();
-        jxx::Ptr<jxx::lang::Object> getContent(const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Class>, 1U>>& classes);
+        jxx::Ptr<jxx::lang::Object> getContent(const jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::Class>, 1U>>& classes);
 
         virtual jxx::Ptr<jxx::io::InputStream> getInputStream();
         virtual jxx::Ptr<jxx::io::OutputStream> getOutputStream();

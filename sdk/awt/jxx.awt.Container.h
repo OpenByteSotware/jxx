@@ -39,7 +39,7 @@ namespace jxx::awt
         virtual void removeAll();
 
         using ComponentArrayType =
-            ::jxx::JxxArray<::jxx::Ptr<Component>, 1U>;
+            ::jxx::lang::JxxArray<::jxx::Ptr<Component>, 1U>;
         using ComponentArray = ::jxx::Ptr<ComponentArrayType>;
 
         virtual ::jxx::lang::jint getComponentCount() const;

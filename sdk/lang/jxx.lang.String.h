@@ -222,11 +222,11 @@ public:
 
         // Java 8 String.format(...) uses Formatter
         static jxx::Ptr<String> format(const jxx::Ptr<jxx::lang::String>& formatString,
-            const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>& args);
+            const jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>& args);
 
         static jxx::Ptr<jxx::lang::String> format(const jxx::Ptr<jxx::util::Locale>& locale,
             const jxx::Ptr<jxx::lang::String>& formatString,
-            const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>& args);
+            const jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>& args);
         // Java 8 join overloads
         static jxx::Ptr<String> join(
             const jxx::Ptr<CharSequence>& delimiter,

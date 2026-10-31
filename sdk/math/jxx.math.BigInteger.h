@@ -44,7 +44,7 @@ namespace jxx::math
         jxx::Ptr<BigInteger> multiply(const jxx::Ptr<BigInteger>& val) const;
         jxx::Ptr<BigInteger> divide(const jxx::Ptr<BigInteger>& val) const;
         jxx::Ptr<BigInteger> remainder(const jxx::Ptr<BigInteger>& val) const;
-        jxx::Ptr<::jxx::JxxArray<jxx::Ptr<BigInteger>, 1U>> divideAndRemainder(
+        jxx::Ptr<::jxx::lang::JxxArray<jxx::Ptr<BigInteger>, 1U>> divideAndRemainder(
             const jxx::Ptr<BigInteger>& val) const;
         jxx::Ptr<BigInteger> pow(jxx::lang::jint exponent) const;
         jxx::Ptr<BigInteger> gcd(const jxx::Ptr<BigInteger>& val) const;

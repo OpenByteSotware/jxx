@@ -146,7 +146,7 @@ namespace jxx::net
         return h ? h->getContent(jxx::CAST<URLConnection, jxx::lang::Object>(this->thisPtr())) : nullptr;
     }
 
-    jxx::Ptr<jxx::lang::Object> URLConnection::getContent(const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Class>, 1U>>& classes)
+    jxx::Ptr<jxx::lang::Object> URLConnection::getContent(const jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::Class>, 1U>>& classes)
     {
         auto h = getContentHandler_();
         return h ? h->getContent(jxx::CAST<URLConnection, jxx::lang::Object>(this->thisPtr()), classes) : nullptr;

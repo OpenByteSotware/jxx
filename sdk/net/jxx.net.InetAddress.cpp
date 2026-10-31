@@ -278,15 +278,15 @@ namespace jxx::net
 		auto all = getAllByName(host);
 		if (!all || all->size() == 0)
 			throw UnknownHostException("host not found");
-		return (*all)(0);
+		return (*all)[0];
 	}
 
-	jxx::Ptr<jxx::JxxArray<jxx::Ptr<InetAddress>, 1U>> InetAddress::getAllByName(const jxx::Ptr<jxx::lang::String>& host)
+	jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<InetAddress>, 1U>> InetAddress::getAllByName(const jxx::Ptr<jxx::lang::String>& host)
 	{
 		internal::ensureNetworkInitialized();
 		if (host == nullptr || host->length() == 0) {
 			auto values = jxx::NEW<InetAddressArray>(1);
-			(*values)(0) = getLoopbackAddress();
+			(*values)[0] = getLoopbackAddress();
 			return values;
 		}
 
@@ -329,7 +329,7 @@ namespace jxx::net
 		}
 		::freeaddrinfo(result);
 
-		auto out = jxx::NEW<jxx::JxxArray<jxx::Ptr<InetAddress>, 1U>>(static_cast<jxx::lang::jint>(addrs.size()));
+		auto out = jxx::NEW<jxx::lang::JxxArray<jxx::Ptr<InetAddress>, 1U>>(static_cast<jxx::lang::jint>(addrs.size()));
 		for (std::size_t i = 0; i < addrs.size(); ++i)
 			(*out)(static_cast<jxx::lang::jint>(i)) = addrs[i];
 		return out;

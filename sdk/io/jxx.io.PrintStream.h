@@ -77,24 +77,24 @@ public:
 
     ::jxx::Ptr<PrintStream> printf(
         const ::jxx::Ptr<::jxx::lang::String>& format,
-        const ::jxx::Ptr<::jxx::JxxArray<
+        const ::jxx::Ptr<::jxx::lang::JxxArray<
             ::jxx::Ptr<::jxx::lang::Object>, 1U>>& args);
 
     ::jxx::Ptr<PrintStream> printf(
         const ::jxx::Ptr<::jxx::util::Locale>& locale,
         const ::jxx::Ptr<::jxx::lang::String>& format,
-        const ::jxx::Ptr<::jxx::JxxArray<
+        const ::jxx::Ptr<::jxx::lang::JxxArray<
             ::jxx::Ptr<::jxx::lang::Object>, 1U>>& args);
 
     ::jxx::Ptr<PrintStream> format(
         const ::jxx::Ptr<::jxx::lang::String>& format,
-        const ::jxx::Ptr<::jxx::JxxArray<
+        const ::jxx::Ptr<::jxx::lang::JxxArray<
             ::jxx::Ptr<::jxx::lang::Object>, 1U>>& args);
 
     ::jxx::Ptr<PrintStream> format(
         const ::jxx::Ptr<::jxx::util::Locale>& locale,
         const ::jxx::Ptr<::jxx::lang::String>& format,
-        const ::jxx::Ptr<::jxx::JxxArray<
+        const ::jxx::Ptr<::jxx::lang::JxxArray<
             ::jxx::Ptr<::jxx::lang::Object>, 1U>>& args);
 
 private:

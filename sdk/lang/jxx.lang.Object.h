@@ -233,83 +233,7 @@ namespace jxx::lang
 namespace jxx
 {
 
-    template <typename T, jxx::lang::jint N>
-    class JxxArray
-    {
-    public:
-        template <
-            typename... Dims,
-            typename = std::enable_if_t<
-            sizeof...(Dims) == N &&
-            std::conjunction_v<std::is_integral<Dims>...>>>
-            explicit JxxArray(Dims... dimensions)
-            : shape_{ static_cast<std::uint32_t>(dimensions)... }
-        {
-            total_size_ = 1;
-            for (const auto dimension : shape_) {
-                total_size_ *= dimension;
-            }
-            if (total_size_ == 0) {
-                data_.reset();
-            }
-            else {
-                data_ = std::shared_ptr<T>(
-                    new T[total_size_](),
-                    std::default_delete<T[]>());
-            }
-        }
 
-        template <typename... Indices>
-        T& operator()(Indices... indices)
-        {
-            static_assert(sizeof...(Indices) == N, "Invalid number of indices");
-            return data_.get()[flat_index(
-                std::array<std::size_t, N>{
-                static_cast<std::uint32_t>(indices)...})];
-        }
-
-        template <typename... Indices>
-        const T& operator()(Indices... indices) const
-        {
-            static_assert(sizeof...(Indices) == N, "Invalid number of indices");
-            return data_.get()[flat_index(
-                std::array<std::size_t, N>{
-                static_cast<std::uint32_t>(indices)...})];
-        }
-
-        const std::array<std::size_t, N>& shape() const
-        {
-            return shape_;
-        }
-        std::size_t size() const
-        {
-            return total_size_;
-        }
-        std::shared_ptr<T> data() const
-        {
-            return data_;
-        }
-
-    private:
-        std::size_t flat_index(
-            const std::array<std::size_t, N>& indices) const
-        {
-            std::size_t index = 0;
-            std::size_t stride = 1;
-            for (std::size_t dimension = N; dimension-- > 0;) {
-                if (indices[dimension] >= shape_[dimension]) {
-                    throw std::out_of_range("Index out of bounds");
-                }
-                index += indices[dimension] * stride;
-                stride *= shape_[dimension];
-            }
-            return index;
-        }
-
-        std::array<std::size_t, N> shape_{};
-        std::size_t total_size_ = 0;
-        std::shared_ptr<T> data_;
-    };
 
     namespace detail
     {
@@ -343,7 +267,7 @@ namespace jxx
         static_assert(
             !std::is_array_v<T>,
             "jxx::NEW<T> does not accept native C++ array types. "
-            "Use JxxArray<T, Rank>.");
+            "Use jxx::lang::JxxArray<T, Rank>.");
 
         static_assert(
             std::is_constructible_v<T, Args...>,

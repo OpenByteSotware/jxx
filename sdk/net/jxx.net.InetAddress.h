@@ -18,7 +18,7 @@ public:
     using Super = jxx::lang::ClassBase<InetAddress, JxxSuper>;
 
     public:
-        using InetAddressArray = jxx::JxxArray<jxx::Ptr<InetAddress>, 1U>;
+        using InetAddressArray = jxx::lang::JxxArray<jxx::Ptr<InetAddress>, 1U>;
 
     protected:
         InetAddress(const jxx::Ptr<jxx::lang::String>& hostName,

@@ -36,7 +36,7 @@ public:
 
     template <typename E>
     static ::jxx::Ptr<::jxx::util::Spliterator<E>> forArray(
-        const ::jxx::Ptr<JxxArray<::jxx::Ptr<E>, 1U>>& array,
+        const ::jxx::Ptr<jxx::lang::JxxArray<::jxx::Ptr<E>, 1U>>& array,
         ::jxx::lang::jint characteristics = 0,
         const ::jxx::Ptr<::jxx::util::ComparatorSuper<E>>& comparator = nullptr) {
         if (array == nullptr) {

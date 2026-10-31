@@ -315,7 +315,7 @@ void PrintStream::println(
 
 ::jxx::Ptr<PrintStream> PrintStream::printf(
     const ::jxx::Ptr<::jxx::lang::String>& formatString,
-    const ::jxx::Ptr<::jxx::JxxArray<
+    const ::jxx::Ptr<::jxx::lang::JxxArray<
         ::jxx::Ptr<::jxx::lang::Object>, 1U>>& args) {
     return format(formatString, args);
 }
@@ -323,14 +323,14 @@ void PrintStream::println(
 ::jxx::Ptr<PrintStream> PrintStream::printf(
     const ::jxx::Ptr<::jxx::util::Locale>& locale,
     const ::jxx::Ptr<::jxx::lang::String>& formatString,
-    const ::jxx::Ptr<::jxx::JxxArray<
+    const ::jxx::Ptr<::jxx::lang::JxxArray<
         ::jxx::Ptr<::jxx::lang::Object>, 1U>>& args) {
     return format(locale, formatString, args);
 }
 
 ::jxx::Ptr<PrintStream> PrintStream::format(
     const ::jxx::Ptr<::jxx::lang::String>& formatString,
-    const ::jxx::Ptr<::jxx::JxxArray<
+    const ::jxx::Ptr<::jxx::lang::JxxArray<
         ::jxx::Ptr<::jxx::lang::Object>, 1U>>& args) {
     return format(nullptr, formatString, args);
 }
@@ -338,7 +338,7 @@ void PrintStream::println(
 ::jxx::Ptr<PrintStream> PrintStream::format(
     const ::jxx::Ptr<::jxx::util::Locale>& locale,
     const ::jxx::Ptr<::jxx::lang::String>& formatString,
-    const ::jxx::Ptr<::jxx::JxxArray<
+    const ::jxx::Ptr<::jxx::lang::JxxArray<
         ::jxx::Ptr<::jxx::lang::Object>, 1U>>& args) {
     synchronized([&] {
         ensureOpen_();

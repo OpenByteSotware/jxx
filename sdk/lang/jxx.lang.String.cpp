@@ -735,7 +735,7 @@ namespace jxx::lang {
 
    
     jxx::Ptr<String> String::format(const jxx::Ptr<jxx::lang::String>& formatString,
-        const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>& args)
+        const jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>& args)
     {
         auto formatter = jxx::NEW<jxx::util::Formatter>();
         formatter->format(formatString, args);
@@ -744,7 +744,7 @@ namespace jxx::lang {
 
     jxx::Ptr<jxx::lang::String> String::format(const jxx::Ptr<jxx::util::Locale>& locale,
         const jxx::Ptr<jxx::lang::String>& formatString,
-        const jxx::Ptr<jxx::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>& args)
+        const jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::Object>, 1U>>& args)
     {
         auto formatter = jxx::NEW<jxx::util::Formatter>(locale);
         formatter->format(locale, formatString, args);
