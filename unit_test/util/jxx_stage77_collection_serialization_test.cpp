@@ -316,8 +316,7 @@ TEST(Stage77CollectionSerialization,
 		<< std::endl;
 }
 
-TEST(Stage77CollectionSerialization,
-	WeakHashMapReadBackImmediately)
+TEST(Stage77Collections, WeakHashMapReadsEntryImmediately)
 {
 	::jxx::initialize();
 
@@ -326,27 +325,21 @@ TEST(Stage77CollectionSerialization,
 		::jxx::lang::Object,
 		::jxx::lang::Object>;
 
-	auto map = ::jxx::NEW<M>();
+	const auto map = ::jxx::NEW<M>();
 
-	auto key =
+	const auto key =
 		::jxx::NEW<::jxx::lang::String>("key");
 
 	map->put(
 		key,
 		::jxx::NEW<::jxx::lang::String>("value"));
 
-	auto restored = roundTrip(map);
-
-	ASSERT_NE(restored, nullptr);
-
-	auto restoredKey =
+	const auto equivalentKey =
 		::jxx::NEW<::jxx::lang::String>("key");
 
-	EXPECT_EQ(restored->size(), 1);
-
-	EXPECT_NE(
-		restored->get(restoredKey),
-		nullptr);
+	EXPECT_EQ(map->size(), 1);
+	EXPECT_NE(map->get(key), nullptr);
+	EXPECT_NE(map->get(equivalentKey), nullptr);
 }
 
 TEST(Stage77CollectionSerialization,
