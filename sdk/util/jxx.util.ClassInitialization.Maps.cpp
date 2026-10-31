@@ -3,6 +3,7 @@
 #include <mutex>
 
 #include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.String.h"
 #include "io/jxx.io.ArrayCodecRegistry.h"
 #include "io/jxx.io.SerializationClassRegistry.h"
 #include "util/jxx.util.HashMap.h"
@@ -40,6 +41,16 @@ void initializeMaps() {
         registerType<ErasedTreeSet>();
         ::jxx::io::serialization::registerSerializableClass<ErasedTreeSet>(static_cast<::jxx::lang::jlong>(-2479143000061671589LL), [] { return ::jxx::NEW<ErasedTreeSet>(); });
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedTreeSet, 1U, 2U>();
+
+        // Template specializations are distinct runtime types in C++. Register the
+        // String specialization used by source-compatible TreeSet<String> so the
+        // deserialization factory recreates the same concrete JXX type.
+        using StringTreeSet = TreeSet<::jxx::lang::String>;
+        registerType<StringTreeSet>();
+        ::jxx::io::serialization::registerSerializableClass<StringTreeSet>(
+            static_cast<::jxx::lang::jlong>(-2479143000061671589LL),
+            [] { return ::jxx::NEW<StringTreeSet>(); });
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<StringTreeSet, 1U, 2U>();
     });
 }
 }
