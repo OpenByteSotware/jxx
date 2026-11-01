@@ -712,6 +712,13 @@ class Translator:
         target_type=self.assignment_target_type(target)
         if target_type is not None and self.is_string_literal_expression(value):
             return self.constructor_argument_expression(value,target_type)
+        if (target_type is not None and
+                type(value).__name__=='ClassCreator'):
+            target_name=self.name_of(target_type)
+            if target_name not in PRIMITIVES:
+                target_raw=self.ref_raw(target_type)
+                return (f'::jxx::CAST<{target_raw}>('
+                        f'{self.class_creator_expression(value)})')
         return self.expr(value)
 
     def declaration_initializer_expression(self,target_type,initializer):
