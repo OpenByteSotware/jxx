@@ -1186,10 +1186,12 @@ class Translator:
         kind=type(member).__name__
         is_constructor=kind=='ConstructorDeclaration'
         modifiers=getattr(member,'modifiers',None) or set()
-        prefix='static ' if kind=='MethodDeclaration' and 'static' in modifiers else ''
+        is_static=(kind=='MethodDeclaration' and 'static' in modifiers)
+        prefix=('static ' if is_static else
+                ('virtual ' if kind=='MethodDeclaration' else ''))
         body=getattr(member,'body',None)
         if body is None:
-            virt='virtual ' if kind=='MethodDeclaration' and 'abstract' in modifiers else ''
+            virt=''
             pure=' = 0' if virt else ''
             o.w(f'{virt}{prefix}{self.sig(member,owner_name)}{pure};')
             return
@@ -1404,10 +1406,10 @@ class Translator:
                     if n=='MethodDeclaration' and 'static' in mods:
                         o.w(f'static {self.sig(m,t.name)};')
                     else:
-                        virt='virtual ' if n=='MethodDeclaration' and ('abstract' in mods or m.body is None) else ''
-                        pure=' = 0' if virt else ''
-                        override=' override' if n=='MethodDeclaration' and 'override' in getattr(m,'annotations',[]) else ''
-                        o.w(f'{virt}{self.sig(m,t.name)}{override}{pure};')
+                        virt='virtual ' if n=='MethodDeclaration' else ''
+                        pure=(' = 0' if n=='MethodDeclaration' and
+                              ('abstract' in mods or m.body is None) else '')
+                        o.w(f'{virt}{self.sig(m,t.name)}{pure};')
             o.exit();o.w('};');o.w()
             for nested in t.body or []:
                 if type(nested).__name__=='EnumDeclaration':

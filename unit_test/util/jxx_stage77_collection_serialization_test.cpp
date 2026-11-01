@@ -216,43 +216,6 @@ TEST(Stage77CollectionSerialization,
 	EXPECT_NO_THROW(
 		it->next());
 }
-
-TEST(Stage77CollectionSerialization,
-	WeakHashMapWriteOnly)
-{
-	::jxx::initialize();
-
-	using M =
-		::jxx::util::WeakHashMap<
-		::jxx::lang::Object,
-		::jxx::lang::Object>;
-
-	auto map = ::jxx::NEW<M>();
-
-	auto key =
-		::jxx::NEW<::jxx::lang::String>("key");
-
-	map->put(
-		key,
-		::jxx::NEW<::jxx::lang::String>("value"));
-
-	auto bytes =
-		::jxx::NEW<::jxx::io::ByteArrayOutputStream>();
-
-	auto out =
-		::jxx::NEW<::jxx::io::ObjectOutputStream>(bytes);
-
-	EXPECT_NO_THROW(
-		out->writeObject(map));
-
-	EXPECT_NO_THROW(
-		out->flush());
-
-	EXPECT_GT(
-		bytes->size(),
-		0);
-}
-
 TEST(Stage77CollectionSerialization,
 	WeakHashMapWriteOnlySizeCheck)
 {
