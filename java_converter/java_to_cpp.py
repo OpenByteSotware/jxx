@@ -100,7 +100,7 @@ class Emit:
 class Translator:
     def __init__(self):
         self.imports:Dict[str,str]={}; self.wildcard_imports:List[str]=[]
-        self.includes:Set[str]=set(); self.diag:List[str]=[]
+        self.includes:Set[str]=set(); self.source_includes:Set[str]=set(); self.diag:List[str]=[]
         self.package=''; self.current_class=''; self.current_return='void'
         self.known_types:Set[str]=set(); self.static_fields:Set[str]=set()
         self.main_owner_names:Set[str]=set()
@@ -1469,7 +1469,11 @@ class Translator:
         return '',body
 
     def source(self,tree,header_inc)->str:
-        o=Emit();o.w(f'#include "{header_inc}"');o.w();ns=('jxx::'+self.package.replace('.', '::')) if self.package else ''
+        o=Emit();o.w(f'#include "{header_inc}"')
+        for include in sorted(self.source_includes):
+            if include != header_inc:
+                o.w(f'#include "{include}"')
+        o.w();ns=('jxx::'+self.package.replace('.', '::')) if self.package else ''
         if ns:o.w(f'namespace {ns} {{');o.enter()
         for t in self.class_declarations(tree):
             if self.type_parameter_names(t):
@@ -1538,9 +1542,6 @@ class Translator:
             Path(*package.split('.')) if package else
             Path(source_relative_dir or Path()))
         self.gather(tree)
-        # Header includes must be complete before header() is emitted. Body
-        # translation can discover types such as Scanner, but that is too late.
-        self.gather_body_type_includes(tree)
         pkg=tree.package.name if tree.package else ''
         # Named packages own their output path. For an unnamed package, retain
         # the source directory relative to the conversion root so classes in
@@ -1553,7 +1554,9 @@ class Translator:
         # Abstraction.cpp in the replicated package folder.
         hp=output_dir/f'{stem}.h';cp=output_dir/f'{stem}.cpp'
         output_dir.mkdir(parents=True,exist_ok=True)
-        # resolve declarations before includes are emitted
+        # Resolve declaration-level dependencies first. These types must be
+        # complete while the generated header is parsed (bases, interfaces,
+        # fields, returns, and parameters).
         for t in tree.types or []:
             if getattr(t,'extends',None) is not None:self.ref_raw(t.extends)
             for i in getattr(t,'implements',None) or []:self.ref_raw(i)
@@ -1565,6 +1568,13 @@ class Translator:
                     thrown_name=self.name_of(thrown)
                     _,include=self.qmap(thrown_name)
                     if include:self.includes.add(include)
+        header_includes=set(self.includes)
+        # Types used only inside method bodies belong in the implementation
+        # file. Keeping them out of the header prevents same-folder cycles such
+        # as BankAccount.h <-> CheckingAccount.h.
+        self.gather_body_type_includes(tree)
+        self.source_includes=self.includes-header_includes
+        self.includes=header_includes
         hp.write_text(self.header(tree),encoding='utf-8')
         header_inc=os.path.relpath(hp,cp.parent).replace(os.sep,'/')
         cp.write_text(self.source(tree,header_inc),encoding='utf-8')
