@@ -1569,11 +1569,20 @@ class Translator:
                     _,include=self.qmap(thrown_name)
                     if include:self.includes.add(include)
         header_includes=set(self.includes)
-        # Types used only inside method bodies belong in the implementation
-        # file. Keeping them out of the header prevents same-folder cycles such
-        # as BankAccount.h <-> CheckingAccount.h.
+        # Discover method-body dependencies after declaration dependencies are
+        # known. Non-template class bodies are emitted in the .cpp and therefore
+        # keep body-only includes there. Source generic classes are header-only,
+        # so every type used by their inline bodies must be complete in the .h.
         self.gather_body_type_includes(tree)
-        self.source_includes=self.includes-header_includes
+        body_includes=self.includes-header_includes
+        has_header_only_generic=any(
+            self.type_parameter_names(declaration)
+            for declaration in self.class_declarations(tree))
+        if has_header_only_generic:
+            header_includes.update(body_includes)
+            self.source_includes=set()
+        else:
+            self.source_includes=body_includes
         self.includes=header_includes
         hp.write_text(self.header(tree),encoding='utf-8')
         header_inc=os.path.relpath(hp,cp.parent).replace(os.sep,'/')
