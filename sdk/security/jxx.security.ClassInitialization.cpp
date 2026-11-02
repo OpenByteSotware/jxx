@@ -13,6 +13,7 @@
 #include "security/jxx.security.GeneralSecurityException.h"
 #include "security/jxx.security.Guard.h"
 #include "security/jxx.security.Key.h"
+#include "security/jxx.security.KeyException.h"
 #include "security/jxx.security.KeyManagementException.h"
 #include "security/jxx.security.KeyStore.h"
 #include "security/jxx.security.KeyStoreException.h"
@@ -24,6 +25,7 @@
 #include "security/jxx.security.Provider.h"
 #include "security/jxx.security.PublicKey.h"
 #include "security/jxx.security.SecureString.h"
+#include "security/jxx.security.UnrecoverableEntryException.h"
 #include "security/jxx.security.UnrecoverableKeyException.h"
 #include "security/jxx.security.SecureRandom.h"
 
@@ -59,6 +61,7 @@ void initializeClasses()
             registerType<GeneralSecurityException>();
             registerType<Guard>();
             registerType<Key>();
+            registerType<KeyException>();
             registerType<KeyManagementException>();
             registerType<KeyStore>();
             registerType<KeyStore::Entry>();
@@ -77,6 +80,7 @@ void initializeClasses()
             registerType<Provider>();
             registerType<PublicKey>();
             registerType<SecureString>();
+            registerType<UnrecoverableEntryException>();
             registerType<UnrecoverableKeyException>();
         registerType<SecureRandom>();
     });

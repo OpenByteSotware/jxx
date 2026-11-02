@@ -1,15 +1,15 @@
 #pragma once
 #include "lang/jxx.lang.ClassInfo.h"
-#include "security/jxx.security.GeneralSecurityException.h"
+#include "security/jxx.security.KeyException.h"
 
 namespace jxx::security {
 
 class KeyManagementException
     : public ::jxx::lang::ClassBase<
           KeyManagementException,
-          GeneralSecurityException> {
+          KeyException> {
 public:
-    using JxxSuper = GeneralSecurityException;
+    using JxxSuper = KeyException;
     using Super = ::jxx::lang::ClassBase<
         KeyManagementException,
         JxxSuper>;

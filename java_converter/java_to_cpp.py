@@ -1142,9 +1142,15 @@ class Translator:
                 # hierarchy contains multiple Object paths. Construct the
                 # concrete current type through jxx::NEW so ownership metadata is
                 # initialized, then return it through the Object reference type.
+                # Cast through the generated class's direct ClassBase alias.
+                # A direct Rectangle -> Object cast can be ambiguous when the
+                # converted hierarchy exposes more than one Object path. Super
+                # is the unique direct C++ base of the generated class; from
+                # that base, the source superclass path to Object is selected.
                 o.w(
                     f'return ::jxx::CAST<::jxx::lang::Object>('
-                    f'::jxx::NEW<{self.current_class}>(*this));')
+                    f'::jxx::CAST<{self.current_class}::Super>('
+                    f'::jxx::NEW<{self.current_class}>(*this)));')
             else:
                 o.w(f'return {self.expr(s.expression)};')
         elif n=='StatementExpression': o.w(self.expr(s.expression)+';')

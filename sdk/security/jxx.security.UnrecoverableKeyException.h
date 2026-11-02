@@ -1,15 +1,15 @@
 #pragma once
 
-#include "security/jxx.security.GeneralSecurityException.h"
+#include "security/jxx.security.UnrecoverableEntryException.h"
 
 namespace jxx::security {
 
 class UnrecoverableKeyException
     : public ::jxx::lang::ClassBase<
           UnrecoverableKeyException,
-          GeneralSecurityException> {
+          UnrecoverableEntryException> {
 public:
-    using JxxSuper = GeneralSecurityException;
+    using JxxSuper = UnrecoverableEntryException;
     using Super = ::jxx::lang::ClassBase<UnrecoverableKeyException, JxxSuper>;
 
     UnrecoverableKeyException();
