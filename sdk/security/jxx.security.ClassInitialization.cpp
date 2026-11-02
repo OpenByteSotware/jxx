@@ -50,7 +50,7 @@ void initializeClasses()
             registerType<AlgorithmParameters>();
             registerType<BasicPermission>();
             ::jxx::io::serialization::registerSerializableClass<BasicPermission>(
-                1,
+                static_cast<::jxx::lang::jlong>(6279438298436773498LL),
                 [] {
                     return ::jxx::NEW<BasicPermission>(
                         ::jxx::NEW<::jxx::lang::String>("placeholder"));

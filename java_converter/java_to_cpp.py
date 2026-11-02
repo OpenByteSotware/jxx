@@ -1560,7 +1560,8 @@ class Translator:
         (void := owner_name)
         (void := declaration)
 
-    def emit_nested_class(self, declaration, o):
+    def emit_nested_class(self, declaration, owner_name,
+                          owner_type_parameters, o):
         names=self.type_parameter_names(declaration)
         previous=set(self.type_parameters)
         self.type_parameters.update(names)
@@ -1575,6 +1576,13 @@ class Translator:
         # outer fields whose types refer to it.
         access='private' if 'private' in (getattr(declaration,'modifiers',None) or set()) else 'public'
         o.w(f'{access}:'); o.enter()
+        # Source enclosing classes may access private members of their nested
+        # classes. C++ does not grant that access automatically, so declare the
+        # exact enclosing specialization as a friend while preserving the
+        # nested class's source-private API.
+        owner_specialization=self.specialized_class_name(
+            owner_name,owner_type_parameters)
+        o.w(f'friend class {owner_specialization};')
         o.w(f'using JxxSuper = {base};')
         o.w(f'using Super = ::jxx::lang::ClassBase<{class_args}>;')
         for member in getattr(declaration,'body',None) or []:
@@ -1686,7 +1694,8 @@ class Translator:
             for nested in t.body or []:
                 nested_kind=type(nested).__name__
                 if nested_kind=='ClassDeclaration':
-                    self.emit_nested_class(nested,o)
+                    self.emit_nested_class(
+                        nested,t.name,outer_parameters,o)
                 elif nested_kind=='EnumDeclaration':
                     self.emit_nested_enum(nested,t.name,o)
             for m in t.body or []:
