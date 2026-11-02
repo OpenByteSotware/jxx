@@ -1,15 +1,13 @@
 #pragma once
 
-#include "nio/channels/jxx.nio.channels.ReadableByteChannel.h"
-#include "nio/channels/jxx.nio.channels.WritableByteChannel.h"
+#include "nio/channels/jxx.nio.channels.ByteChannel.h"
 
 namespace jxx::nio::channels
 {
     class SeekableByteChannel
         : public jxx::lang::InterfaceBase<
               SeekableByteChannel,
-              ReadableByteChannel,
-              WritableByteChannel>
+              ByteChannel>
     {
     public:
         ~SeekableByteChannel() override = default;

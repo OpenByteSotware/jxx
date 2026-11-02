@@ -52,18 +52,22 @@ void initializeClasses()
         registerType<AlreadyBoundException>();
         registerType<AlreadyConnectedException>();
         registerType<AsynchronousCloseException>();
+        registerType<Channel>();
+        registerType<ReadableByteChannel>();
+        registerType<WritableByteChannel>();
         registerType<ByteChannel>();
+        registerType<InterruptibleChannel>();
+        registerType<NetworkChannel>();
+        registerType<ScatteringByteChannel>();
+        registerType<GatheringByteChannel>();
+        registerType<SeekableByteChannel>();
         registerType<ClosedByInterruptException>();
         registerType<ClosedChannelException>();
         registerType<ConnectionPendingException>();
-        registerType<GatheringByteChannel>();
         registerType<IllegalBlockingModeException>();
-        registerType<InterruptibleChannel>();
-        registerType<NetworkChannel>();
         registerType<NoConnectionPendingException>();
         registerType<NotYetBoundException>();
         registerType<NotYetConnectedException>();
-        registerType<ScatteringByteChannel>();
         registerType<SelectableChannel>();
         registerType<SelectionKey>();
         registerType<Selector>();
@@ -72,13 +76,9 @@ void initializeClasses()
         registerType<UnresolvedAddressException>();
         registerType<UnsupportedAddressTypeException>();
         registerType<CancelledKeyException>();
-        registerType<Channel>();
         registerType<ClosedSelectorException>();
         registerType<FileChannel>();
         registerType<FileChannel::MapMode>();
-        registerType<ReadableByteChannel>();
-        registerType<SeekableByteChannel>();
-        registerType<WritableByteChannel>();
     });
 }
 
