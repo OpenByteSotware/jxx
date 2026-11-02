@@ -119,6 +119,7 @@ class Translator:
         self.local_array_variables:Set[str]=set()
         self.local_primitive_rank1_arrays:Set[str]=set()
         self.source_type_index:Dict[str,Tuple[str,str]]={}
+        self.source_type_kinds:Dict[str,str]={}
         self.current_output_relative_dir=Path()
         self.active_wildcard_types:Dict[int,str]={}
 
@@ -1400,10 +1401,7 @@ class Translator:
         self.type_parameters.update(names)
         template=self.template_line(names)
         if template: o.w(template)
-        ext=getattr(declaration,'extends',None)
-        base=self.ref_raw(ext) if ext is not None else '::jxx::lang::Object'
-        impls=getattr(declaration,'implements',None) or []
-        iface_types=[self.ref_raw(i) for i in impls]
+        base,iface_types=self.class_base_and_interfaces(declaration)
         self_type=self.specialized_class_name(declaration.name,names)
         class_args=', '.join([self_type, base] + iface_types)
         o.w(f'class {declaration.name} : public ::jxx::lang::ClassBase<{class_args}>')
@@ -1471,6 +1469,29 @@ class Translator:
         self.type_parameters=previous
         self.active_wildcard_types=wildcard_previous
 
+    def class_base_and_interfaces(self, declaration):
+        extends=getattr(declaration,'extends',None)
+        implemented=list(getattr(declaration,'implements',None) or [])
+        # Some accepted tutorial inputs use `implements X` even though X is a
+        # source class. Treat a known source class as the superclass when no
+        # explicit extends clause exists. Otherwise ClassBase receives that
+        # class as an interface and creates a second Object inheritance path.
+        if extends is None:
+            class_implements=[item for item in implemented
+                              if self.source_type_kinds.get(
+                                  self.name_of(item))=='class']
+            if len(class_implements)==1:
+                extends=class_implements[0]
+                implemented=[item for item in implemented
+                             if item is not extends]
+                self.diag.append(
+                    f'{declaration.name}: treating implemented source class '
+                    f'{self.name_of(extends)} as the superclass')
+        base=(self.ref_raw(extends) if extends is not None
+              else '::jxx::lang::Object')
+        interfaces=[self.ref_raw(item) for item in implemented]
+        return base,interfaces
+
     def header(self,tree)->str:
         o=Emit();o.w('#pragma once')
         o.w('#include <type_traits>');o.w('#include <utility>')
@@ -1488,9 +1509,7 @@ class Translator:
                 for m in t.body or []:
                     if type(m).__name__=='MethodDeclaration':o.w(f'virtual {self.sig(m,t.name)} = 0;')
                 o.exit();o.w('};');o.w();continue
-            ext=getattr(t,'extends',None); base=self.ref_raw(ext) if ext is not None else '::jxx::lang::Object'
-            impls=getattr(t,'implements',None) or []
-            iface_types=[self.ref_raw(i) for i in impls]
+            base,iface_types=self.class_base_and_interfaces(t)
             self_type=self.specialized_class_name(t.name,outer_parameters)
             class_args=', '.join([self_type, base] + iface_types)
             o.w(f'class {t.name} : public ::jxx::lang::ClassBase<{class_args}>')
@@ -1969,12 +1988,35 @@ def build_source_type_index(
             index[name]=value
     return index
 
+def build_source_type_kinds(files:Sequence[Path]) -> Dict[str,str]:
+    kinds:Dict[str,str]={}
+    package_pattern=re.compile(
+        r'\bpackage\s+([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*;')
+    type_pattern=re.compile(
+        r'\b(class|interface|enum)\s+([A-Za-z_$][\w$]*)')
+    for path in files:
+        try:
+            source=path.read_text(encoding='utf-8')
+        except OSError:
+            continue
+        source=re.sub(r'/\*.*?\*/|//[^\r\n]*','',source,flags=re.DOTALL)
+        package_match=package_pattern.search(source)
+        package=package_match.group(1) if package_match else ''
+        for match in type_pattern.finditer(source):
+            kind,name=match.groups()
+            kinds[name]=kind
+            if package:
+                kinds[f'{package}.{name}']=kind
+    return kinds
+
 def translate_file(path:Path,out_root:str,
                    source_type_index:Optional[Dict[str,Tuple[str,str]]]=None,
-                   source_root:Optional[Path]=None):
+                   source_root:Optional[Path]=None,
+                   source_type_kinds:Optional[Dict[str,str]]=None):
     src=path.read_text(encoding='utf-8')
     t=Translator()
     t.source_type_index=dict(source_type_index or {})
+    t.source_type_kinds=dict(source_type_kinds or {})
     source_relative_dir=Path()
     if source_root is not None:
         try:
@@ -2008,15 +2050,17 @@ def main():
         files=sorted(source_root.rglob('*.java'))
         if not files: raise SystemExit(f'No .java files found under {source_root}')
         source_type_index=build_source_type_index(files,source_root)
+        source_type_kinds=build_source_type_kinds(files)
         for path in files:
-            translate_file(path,a.out,source_type_index,source_root)
+            translate_file(path,a.out,source_type_index,source_root,source_type_kinds)
     else:
         input_path=Path(a.input)
         sibling_files=sorted(input_path.parent.glob('*.java'))
         source_type_index=build_source_type_index(
             sibling_files,input_path.parent)
+        source_type_kinds=build_source_type_kinds(sibling_files)
         translate_file(
-            input_path,a.out,source_type_index,input_path.parent)
+            input_path,a.out,source_type_index,input_path.parent,source_type_kinds)
     if a.cmake:
         cmake = generate_cmake_files(
             a.out, a.cmake_project, a.cmake_target, a.jxx_include)

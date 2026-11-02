@@ -3,6 +3,7 @@
 #include "awt/image/jxx.awt.image.ImageObserver.h"
 #include "awt/image/jxx.awt.image.ColorModel.h"
 #include "awt/image/jxx.awt.image.DirectColorModel.h"
+#include "awt/image/jxx.awt.image.PackedColorModel.h"
 #include "awt/image/jxx.awt.image.ImageFilter.h"
 #include "awt/image/jxx.awt.image.RGBImageFilter.h"
 #include <mutex>
@@ -15,6 +16,7 @@ namespace jxx::awt::image
 				  (void)ImageObserver::Class();                  
 				  (void)BufferedImage::Class();
                   (void)ColorModel::Class();
+                  (void)PackedColorModel::Class();
                   (void)DirectColorModel::Class();
                   (void)ImageFilter::Class();
 				  (void)RGBImageFilter::Class();

@@ -1,2 +1,31 @@
 #include "awt/image/jxx.awt.image.DirectColorModel.h"
-namespace jxx::awt::image { DirectColorModel::DirectColorModel(::jxx::lang::jint b,::jxx::lang::jint r,::jxx::lang::jint g,::jxx::lang::jint bl):DirectColorModel(b,r,g,bl,0){} DirectColorModel::DirectColorModel(::jxx::lang::jint b,::jxx::lang::jint r,::jxx::lang::jint g,::jxx::lang::jint bl,::jxx::lang::jint a):Super(b),rmask_(r),gmask_(g),bmask_(bl),amask_(a){} ::jxx::lang::jint DirectColorModel::component(::jxx::lang::jint p,::jxx::lang::jint m){if(!m)return 0; auto u=static_cast<unsigned>(m),v=static_cast<unsigned>(p)&u; unsigned shift=0;while((u&1u)==0u){u>>=1;v>>=1;++shift;} (void)shift; return static_cast<::jxx::lang::jint>(u==255u?v:(v*255u+(u/2u))/u);} ::jxx::lang::jint DirectColorModel::getRed(::jxx::lang::jint p) const{return component(p,rmask_);} ::jxx::lang::jint DirectColorModel::getGreen(::jxx::lang::jint p) const{return component(p,gmask_);} ::jxx::lang::jint DirectColorModel::getBlue(::jxx::lang::jint p) const{return component(p,bmask_);} ::jxx::lang::jint DirectColorModel::getAlpha(::jxx::lang::jint p) const{return amask_?component(p,amask_):255;} ::jxx::lang::jint DirectColorModel::getRedMask() const{return rmask_;} ::jxx::lang::jint DirectColorModel::getGreenMask() const{return gmask_;} ::jxx::lang::jint DirectColorModel::getBlueMask() const{return bmask_;} ::jxx::lang::jint DirectColorModel::getAlphaMask() const{return amask_;} }
+
+namespace jxx::awt::image {
+
+DirectColorModel::DirectColorModel(
+    ::jxx::lang::jint bits, ::jxx::lang::jint redMask,
+    ::jxx::lang::jint greenMask, ::jxx::lang::jint blueMask)
+    : DirectColorModel(bits, redMask, greenMask, blueMask, 0) {
+}
+
+DirectColorModel::DirectColorModel(
+    ::jxx::lang::jint bits, ::jxx::lang::jint redMask,
+    ::jxx::lang::jint greenMask, ::jxx::lang::jint blueMask,
+    ::jxx::lang::jint alphaMask)
+    : Super(bits, redMask, greenMask, blueMask, alphaMask) {
+}
+
+::jxx::lang::jint DirectColorModel::getRed(::jxx::lang::jint pixel) const {
+    return extractComponent(pixel, redMask_);
+}
+::jxx::lang::jint DirectColorModel::getGreen(::jxx::lang::jint pixel) const {
+    return extractComponent(pixel, greenMask_);
+}
+::jxx::lang::jint DirectColorModel::getBlue(::jxx::lang::jint pixel) const {
+    return extractComponent(pixel, blueMask_);
+}
+::jxx::lang::jint DirectColorModel::getAlpha(::jxx::lang::jint pixel) const {
+    return alphaMask_ == 0 ? 255 : extractComponent(pixel, alphaMask_);
+}
+
+} // namespace jxx::awt::image
