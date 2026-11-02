@@ -337,6 +337,33 @@ class Translator:
                                          entry.group('varargs'))
         return entries
 
+    @classmethod
+    def ast_main_entries(cls, tree) -> Dict[str,str]:
+        """Return source entry methods keyed by their actual AST owner."""
+        entries:Dict[str,str]={}
+        for declaration in cls.class_declarations(tree):
+            for method in getattr(declaration,'body',None) or []:
+                if type(method).__name__!='MethodDeclaration':
+                    continue
+                if getattr(method,'name',None)!='main':
+                    continue
+                modifiers=set(getattr(method,'modifiers',None) or [])
+                if not {'public','static'}.issubset(modifiers):
+                    continue
+                if cls.name_of(getattr(method,'return_type',None))!='void':
+                    continue
+                parameters=list(getattr(method,'parameters',None) or [])
+                if len(parameters)!=1:
+                    continue
+                parameter=parameters[0]
+                if cls.simple(cls.name_of(parameter.type))!='String':
+                    continue
+                # javalang may lose dimensions written after the identifier
+                # (String args[]). A public static void main with one String
+                # parameter is therefore accepted for all source spellings.
+                entries[declaration.name]=parameter.name
+        return entries
+
     @staticmethod
     def detect_main_owners(source: str) -> Set[str]:
         return set(Translator.detect_main_entries(source))
@@ -1534,9 +1561,15 @@ class Translator:
         return o.text()
 
     def translate(self,src,out_root,stem,source_relative_dir:Optional[Path]=None):
-        self.main_entries=self.detect_main_entries(src)
-        self.main_owner_names=set(self.main_entries)
         tree=javalang.parse.parse(src)
+        # Bind wrappers to the class that actually owns main. The earlier
+        # source-only brace scan could associate a later main with the source
+        # filename's first class, producing Final_method_main.cpp that called
+        # Final_method::jxxMain even though test1 owns main.
+        self.main_entries=self.ast_main_entries(tree)
+        if not self.main_entries:
+            self.main_entries=self.detect_main_entries(src)
+        self.main_owner_names=set(self.main_entries)
         package=tree.package.name if tree.package else ''
         self.current_output_relative_dir=(
             Path(*package.split('.')) if package else
