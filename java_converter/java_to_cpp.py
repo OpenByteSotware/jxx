@@ -568,11 +568,20 @@ class Translator:
             return f'void {qualified}(const {self.java_main_arg_type()}& {parameter_name})'
         ps=[]
         for p in m.parameters or []:
-            extra=(1 if getattr(p,'varargs',False) else 0)+len(getattr(p,'dimensions',None) or [])
-            parameter_type=self.resolve(p.type,extra)
-            if self.name_of(p.type) in self.type_parameters and extra == 0:
-                rendered=f'const {self.name_of(p.type)}&'
-            elif extra > 0:
+            declarator_dimensions=(
+                (1 if getattr(p,'varargs',False) else 0) +
+                len(getattr(p,'dimensions',None) or []))
+            type_dimensions=len(getattr(p.type,'dimensions',None) or [])
+            total_dimensions=type_dimensions+declarator_dimensions
+            parameter_type=self.resolve(p.type,declarator_dimensions)
+            # A scalar source type parameter uses reference semantics. An array
+            # of that type parameter must retain its JxxArray wrapper; checking
+            # only declarator dimensions incorrectly turned E[] into const E&
+            # whenever javalang stored [] on the ReferenceType node.
+            if (self.name_of(p.type) in self.type_parameters and
+                    total_dimensions == 0):
+                rendered=f'const ::jxx::Ptr<{self.name_of(p.type)}>&'
+            elif total_dimensions > 0:
                 rendered=f'const {parameter_type.value()}&'
             else:
                 rendered=parameter_type.param()
