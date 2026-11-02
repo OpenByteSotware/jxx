@@ -1624,14 +1624,30 @@ class Translator:
         o.w(f'friend class {owner_specialization};')
         o.w(f'using JxxSuper = {base};')
         o.w(f'using Super = ::jxx::lang::ClassBase<{class_args}>;')
-        for member in getattr(declaration,'body',None) or []:
+        nested_members=list(getattr(declaration,'body',None) or [])
+        # jxx::NEW performs construction in the runtime helper, outside the
+        # enclosing class's friend context. A source-private nested class is
+        # itself inaccessible to clients, so exposing only its constructors
+        # inside that private nested type does not expose a source API. It does
+        # allow jxx::NEW to initialize Object ownership metadata correctly.
+        constructors=[member for member in nested_members
+                      if type(member).__name__=='ConstructorDeclaration']
+        non_constructors=[member for member in nested_members
+                          if type(member).__name__!='ConstructorDeclaration']
+        if constructors:
+            o.exit(); o.w('public:'); o.enter()
+            for constructor in constructors:
+                self.emit_inline_member(
+                    constructor,declaration.name,o)
+            o.exit(); o.w(f'{access}:'); o.enter()
+        for member in non_constructors:
             kind=type(member).__name__
             if kind=='FieldDeclaration':
                 for d in member.declarators:
                     typ=self.resolve(member.type).value()
                     init=' = nullptr' if typ.startswith('::jxx::Ptr<') else ''
                     o.w(f'{typ} {d.name}{init};')
-            elif kind in ('MethodDeclaration','ConstructorDeclaration'):
+            elif kind=='MethodDeclaration':
                 self.emit_inline_member(member,declaration.name,o)
         o.exit(); o.w('};')
         self.type_parameters=previous
