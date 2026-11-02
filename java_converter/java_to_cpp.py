@@ -1092,11 +1092,14 @@ class Translator:
                   not getattr(s.expression,'qualifier',None) and
                   getattr(s.expression,'member',None)=='Object'):
                 # `return Object;` is not a valid source expression. These
-                # tutorial sources use it as shorthand for the root clone path.
-                # Qualify Object explicitly: JxxSuper may itself declare clone()
-                # or inherit it through more than one path, making
-                # JxxSuper::clone ambiguous in MSVC.
-                o.w('return this->::jxx::lang::Object::clone();')
+                # tutorial sources use it as shorthand for a shallow clone.
+                # Calling Object::clone remains ambiguous when the generated
+                # hierarchy contains multiple Object paths. Construct the
+                # concrete current type through jxx::NEW so ownership metadata is
+                # initialized, then return it through the Object reference type.
+                o.w(
+                    f'return ::jxx::CAST<::jxx::lang::Object>('
+                    f'::jxx::NEW<{self.current_class}>(*this));')
             else:
                 o.w(f'return {self.expr(s.expression)};')
         elif n=='StatementExpression': o.w(self.expr(s.expression)+';')
