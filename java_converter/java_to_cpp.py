@@ -1060,11 +1060,28 @@ class Translator:
                             parameters[index].type,argument))
                 elif self.is_string_literal_expression(argument):
                     # Source string literals are source String objects, not
-                    # native const char*. Materialize them for every method call,
-                    # including generic calls such as List<String>::add.
+                    # native const char*. Keep this ahead of parameter-directed
+                    # conversion because a generic parameter such as T or E is
+                    # not a type name available in a non-template caller.
                     rendered.append(
                         f'::jxx::NEW<::jxx::lang::String>('
                         f'{self.expr(argument)})')
+                elif index < len(parameters):
+                    parameter_type=parameters[index].type
+                    parameter_name=self.simple(self.name_of(parameter_type))
+                    argument_name=self.expression_type_name(argument)
+                    # Invocation conversion is required here only for a concrete
+                    # wrapper parameter receiving a primitive expression. Do not
+                    # emit CONVERT<Ptr<T>> or CONVERT<Ptr<E>> from the callee's
+                    # declaration: those type parameters are scoped to the
+                    # generic class/method, not to this calling function. Generic
+                    # forwarding overloads handle those calls instead.
+                    if (parameter_name in WRAPPER_TO_PRIMITIVE and
+                            argument_name in PRIMITIVES):
+                        rendered.append(self.constructor_argument_expression(
+                            argument,parameter_type))
+                    else:
+                        rendered.append(self.expr(argument))
                 else:
                     rendered.append(self.expr(argument))
             return rendered
