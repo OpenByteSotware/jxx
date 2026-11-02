@@ -752,17 +752,25 @@ class Translator:
             return self.constructor_argument_expression(value,target_type)
         if (target_type is not None and
                 type(value).__name__=='ClassCreator'):
-            target_name=self.name_of(target_type)
-            if target_name not in PRIMITIVES:
-                target_raw=self.ref_raw(target_type)
-                return (f'::jxx::CAST<{target_raw}>('
-                        f'{self.class_creator_expression(value)})')
+            # Assignment context supplies diamond/raw generic arguments just as
+            # declaration initialization does. Preserve the concrete creator
+            # type while specializing it from the target type.
+            return self.class_creator_initializer_expression(target_type,value)
         return self.expr(value)
 
     def declaration_initializer_expression(self,target_type,initializer):
         if self.is_string_literal_expression(initializer):
             return self.constructor_argument_expression(initializer,target_type)
-        return self.expr(initializer)
+        value=self.expr(initializer)
+        target_name=self.name_of(target_type)
+        if (target_name in PRIMITIVES and target_name != 'void' and
+                type(initializer).__name__ in {
+                    'MethodInvocation','MemberReference','Cast'}):
+            # Generic methods such as Generic<Integer>::getobj() return the JXX
+            # wrapper reference. Assignment to a primitive source variable must
+            # apply the normal unboxing conversion.
+            return f'::jxx::CONVERT<{PRIMITIVES[target_name]}>({value})'
+        return value
 
     def begin_member_scope(self,owner_name,member):
         self.current_class=owner_name
