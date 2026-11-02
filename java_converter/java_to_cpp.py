@@ -19,6 +19,7 @@ import argparse, os, re, sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Set, Tuple
+from sdk_metadata import SdkMetadataIndex
 
 try:
     import javalang
@@ -128,6 +129,7 @@ class Translator:
         self.source_type_kinds:Dict[str,str]={}
         self.current_output_relative_dir=Path()
         self.active_wildcard_types:Dict[int,str]={}
+        self.sdk_metadata:Optional[SdkMetadataIndex]=None
 
     @staticmethod
     def simple(n): return str(n).split('.')[-1]
@@ -767,19 +769,61 @@ class Translator:
             return self.class_creator_initializer_expression(target_type,value)
         return self.expr(value)
 
+    def sdk_method_metadata(self, invocation):
+        if (self.sdk_metadata is None or
+                type(invocation).__name__!='MethodInvocation'):
+            return None
+        owner=self.invocation_owner_name(
+            getattr(invocation,'qualifier',None))
+        return self.sdk_metadata.lookup(
+            owner,invocation.member,
+            len(getattr(invocation,'arguments',None) or []))
+
+    @staticmethod
+    def wrapper_for_primitive(name):
+        return {
+            'byte':'Byte','short':'Short','int':'Integer','long':'Long',
+            'float':'Float','double':'Double','boolean':'Boolean',
+            'char':'Character'}.get(name,'')
+
+    def expression_requires_unboxing(self,target_name,initializer):
+        if target_name not in PRIMITIVE_UNBOX_METHODS:
+            return False
+        metadata=self.sdk_method_metadata(initializer)
+        if metadata is not None:
+            # SDK headers are authoritative. Primitive-returning methods such as
+            # Scanner::nextLong already produce jlong and must not be unboxed.
+            if metadata.return_kind=='primitive':
+                return False
+            if metadata.return_kind=='reference':
+                pointee=metadata.pointee.split('::')[-1]
+                pointee=pointee.replace('>','').strip()
+                return pointee==self.wrapper_for_primitive(target_name)
+            return False
+        # Source generic methods can return a wrapper through a type parameter.
+        if type(initializer).__name__=='MethodInvocation':
+            qualifier=getattr(initializer,'qualifier',None)
+            owner_type=self.local_variable_types.get(qualifier)
+            owner=self.simple(self.name_of(owner_type))
+            declared=self.source_method_return_types.get(owner,{}).get(
+                initializer.member)
+            declared_name=self.name_of(declared)
+            parameters=self.generic_class_parameters.get(owner,[])
+            arguments=list(getattr(owner_type,'arguments',None) or [])
+            if declared_name in parameters:
+                index=parameters.index(declared_name)
+                if index < len(arguments):
+                    actual=self.name_of(
+                        getattr(arguments[index],'type',None))
+                    return actual==self.wrapper_for_primitive(target_name)
+        return False
+
     def declaration_initializer_expression(self,target_type,initializer):
         if self.is_string_literal_expression(initializer):
             return self.constructor_argument_expression(initializer,target_type)
         value=self.expr(initializer)
         target_name=self.name_of(target_type)
-        if (target_name in PRIMITIVE_UNBOX_METHODS and
-                type(initializer).__name__ in {
-                    'MethodInvocation','MemberReference','Cast'}):
-            # Source unboxing invokes the wrapper's primitive accessor. The JXX
-            # GenericConversion framework boxes primitives and converts native
-            # strings, but it does not define Ptr<Wrapper> -> primitive CONVERT
-            # specializations. For example Generic<Integer>::getobj() returns
-            # Ptr<Integer>, so `int x = ...` must call intValue().
+        if self.expression_requires_unboxing(target_name,initializer):
             accessor=PRIMITIVE_UNBOX_METHODS[target_name]
             return f'({value})->{accessor}()'
         return value
@@ -2123,11 +2167,13 @@ def build_source_type_kinds(files:Sequence[Path]) -> Dict[str,str]:
 def translate_file(path:Path,out_root:str,
                    source_type_index:Optional[Dict[str,Tuple[str,str]]]=None,
                    source_root:Optional[Path]=None,
-                   source_type_kinds:Optional[Dict[str,str]]=None):
+                   source_type_kinds:Optional[Dict[str,str]]=None,
+                   sdk_metadata:Optional[SdkMetadataIndex]=None):
     src=path.read_text(encoding='utf-8')
     t=Translator()
     t.source_type_index=dict(source_type_index or {})
     t.source_type_kinds=dict(source_type_kinds or {})
+    t.sdk_metadata=sdk_metadata
     source_relative_dir=Path()
     if source_root is not None:
         try:
@@ -2156,6 +2202,14 @@ def main():
     a=ap.parse_args()
     if javalang is None: raise SystemExit('Install dependency: pip install javalang')
     if bool(a.input)==bool(a.src_dir): ap.error('provide either input or --dir')
+    sdk_metadata=None
+    if a.jxx_include:
+        try:
+            sdk_metadata=SdkMetadataIndex.scan(a.jxx_include)
+        except ValueError as error:
+            raise SystemExit(str(error))
+        print(f'JXX SDK metadata: scanned {sdk_metadata.headers_scanned} headers; '
+              f'indexed {sdk_metadata.declarations_scanned} method declarations')
     if a.src_dir:
         source_root=Path(a.src_dir)
         files=sorted(source_root.rglob('*.java'))
@@ -2163,7 +2217,7 @@ def main():
         source_type_index=build_source_type_index(files,source_root)
         source_type_kinds=build_source_type_kinds(files)
         for path in files:
-            translate_file(path,a.out,source_type_index,source_root,source_type_kinds)
+            translate_file(path,a.out,source_type_index,source_root,source_type_kinds,sdk_metadata)
     else:
         input_path=Path(a.input)
         sibling_files=sorted(input_path.parent.glob('*.java'))
@@ -2171,7 +2225,7 @@ def main():
             sibling_files,input_path.parent)
         source_type_kinds=build_source_type_kinds(sibling_files)
         translate_file(
-            input_path,a.out,source_type_index,input_path.parent,source_type_kinds)
+            input_path,a.out,source_type_index,input_path.parent,source_type_kinds,sdk_metadata)
     if a.cmake:
         cmake = generate_cmake_files(
             a.out, a.cmake_project, a.cmake_target, a.jxx_include)
