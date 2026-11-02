@@ -5,6 +5,7 @@
 #include "ext/xml/xpath/jxx.ext.xml.xpath.XPath.h"
 #include "ext/xml/xpath/jxx.ext.xml.xpath.XPathConstants.h"
 #include "ext/xml/xpath/jxx.ext.xml.xpath.XPathExpression.h"
+#include "ext/xml/xpath/jxx.ext.xml.xpath.XPathException.h"
 #include "ext/xml/xpath/jxx.ext.xml.xpath.XPathExpressionException.h"
 #include "ext/xml/xpath/jxx.ext.xml.xpath.XPathFactory.h"
 
@@ -20,9 +21,8 @@ void initializeClasses()
             XPathConstants,
             ::jxx::lang::Object>::Class();
         (void)::jxx::lang::InterfaceBase<XPathExpression>::Class();
-        (void)::jxx::lang::ClassBase<
-            XPathExpressionException,
-            ::jxx::lang::Exception>::Class();
+        (void)XPathException::Class();
+        (void)XPathExpressionException::Class();
         (void)::jxx::lang::ClassBase<
             XPathFactory,
             ::jxx::lang::Object>::Class();
