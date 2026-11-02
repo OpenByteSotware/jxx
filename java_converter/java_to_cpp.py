@@ -1054,6 +1054,14 @@ class Translator:
             elif index < len(constructor_parameter_types):
                 value=self.constructor_argument_expression(
                     argument,constructor_parameter_types[index])
+            elif self.is_string_literal_expression(argument):
+                # Constructor metadata is currently gathered from the active
+                # compilation unit. A constructor on a sibling converted type
+                # (for example Item(String,double)) may therefore be unknown
+                # here. Source string literals are still String objects and
+                # must never be passed to NEW as native const char* values.
+                value=(f'::jxx::NEW<::jxx::lang::String>('
+                       f'{self.expr(argument)})')
             converted_arguments.append(value)
         return f'::jxx::NEW<{raw}>({", ".join(converted_arguments)})'
 
