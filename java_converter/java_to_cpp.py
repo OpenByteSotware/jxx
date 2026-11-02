@@ -103,10 +103,17 @@ class Emit:
     def exit(self): self.n=max(0,self.n-1)
     def text(self): return '\n'.join(self.lines)+'\n'
 
+class ConversionFailure(RuntimeError):
+    def __init__(self,message,warnings=0):
+        super().__init__(message)
+        self.warnings=warnings
+
+
 class Translator:
     def __init__(self):
         self.imports:Dict[str,str]={}; self.wildcard_imports:List[str]=[]
         self.includes:Set[str]=set(); self.source_includes:Set[str]=set(); self.diag:List[str]=[]
+        self.errors:List[str]=[]
         self.package=''; self.current_class=''; self.current_method=''; self.current_return='void'
         self.known_types:Set[str]=set(); self.static_fields:Set[str]=set()
         self.main_owner_names:Set[str]=set()
@@ -431,9 +438,9 @@ class Translator:
         for imp in tree.imports or []:
             p=imp.path
             if p.startswith('java.lang.reflect.') and p != 'java.lang.reflect.InvocationTargetException':
-                self.diag.append(f'unsupported reflection type: {p}'); continue
+                self.errors.append(f'unsupported reflection type: {p}'); continue
             if any(p==x or p.startswith(x+'.') for x in UNSUPPORTED):
-                self.diag.append(f'unsupported package: {p}'); continue
+                self.errors.append(f'unsupported package: {p}'); continue
             if imp.wildcard:
                 self.wildcard_imports.append(p)
                 continue
@@ -1378,7 +1385,10 @@ class Translator:
             o.exit();o.w('});')
         elif n=='BreakStatement':o.w('break;')
         elif n=='ContinueStatement':o.w('continue;')
-        else:o.w(f'/* TODO unsupported statement: {n} */')
+        else:
+            message=f'unsupported statement: {n}'
+            self.errors.append(message)
+            o.w(f'/* TODO {message} */')
 
     @staticmethod
     def type_parameter_names(declaration)->List[str]:
@@ -2184,9 +2194,32 @@ def translate_file(path:Path,out_root:str,
     h,c=t.translate(src,out_root,path.stem,source_relative_dir)
     for generated in t.generated_files:
         print(f'Wrote {generated}')
-    for d in t.diag:
-        print(f'{path}: WARNING: {d}',file=sys.stderr)
-    return len(t.diag)
+    warning_count=len(t.diag)
+    for diagnostic in t.diag:
+        print(f'{path}: WARNING: {diagnostic}',file=sys.stderr)
+    hard_errors=list(t.errors)
+    # Defense in depth: no generated TODO marker is permitted to count as a
+    # successful conversion, even if a future emission path forgets to append
+    # a structured Translator error.
+    for generated in t.generated_files:
+        try:
+            generated_text=generated.read_text(encoding='utf-8')
+        except OSError as error:
+            hard_errors.append(f'cannot validate generated file {generated}: {error}')
+            continue
+        todo_lines=[line.strip() for line in generated_text.splitlines()
+                    if 'TODO' in line]
+        for todo in todo_lines:
+            message=f'{generated}: generated unresolved marker: {todo}'
+            if message not in hard_errors:
+                hard_errors.append(message)
+    if hard_errors:
+        for diagnostic in hard_errors:
+            print(f'{path}: ERROR: {diagnostic}',file=sys.stderr)
+        raise ConversionFailure(
+            f'conversion produced {len(hard_errors)} unresolved error(s)',
+            warning_count)
+    return warning_count
 
 def print_conversion_summary(started_at,parsed,successes,errors,warnings):
     elapsed=time.perf_counter()-started_at
@@ -2248,6 +2281,7 @@ def main():
                 successes+=1
             except Exception as error:
                 errors+=1
+                warnings+=getattr(error,'warnings',0)
                 print(f'{path}: ERROR: {type(error).__name__}: {error}',
                       file=sys.stderr)
 

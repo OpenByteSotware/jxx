@@ -16,8 +16,9 @@
 
 namespace channels = ::jxx::nio::channels;
 
-TEST(NioChannelsInheritanceParity, ChannelDirectlyExtendsCloseable) {
+TEST(NioChannelsInheritanceParity, ChannelExtendsCloseableAndAutoCloseableTransitively) {
     static_assert(std::is_base_of_v<::jxx::io::Closeable, channels::Channel>);
+    static_assert(std::is_base_of_v<::jxx::lang::AutoCloseable, ::jxx::io::Closeable>);
     static_assert(std::is_base_of_v<::jxx::lang::AutoCloseable, channels::Channel>);
     SUCCEED();
 }

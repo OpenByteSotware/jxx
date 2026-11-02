@@ -27,7 +27,6 @@
 #include "io/jxx.io.SequenceInputStream.h"
 #include "io/jxx.io.StringReader.h"
 #include "lang/jxx.lang.ClassInfo.h"
-#include "io/jxx.io.AutoCloseable.h"
 #include "io/jxx.io.CharConversionException.h"
 #include "io/jxx.io.Closeable.h"
 #include "io/jxx.io.DataInput.h"
@@ -91,7 +90,6 @@ namespace jxx::io
 				  reg<ObjectOutputStream>(); reg<OutputStreamWriter>(); reg<PrintStream>();
 				  reg<PrintWriter>(); reg<PushbackInputStream>(); reg<SequenceInputStream>();
 				  reg<StringReader>();
-        reg<AutoCloseable>();
         reg<CharConversionException>();
         reg<Closeable>();
         reg<DataInput>();
