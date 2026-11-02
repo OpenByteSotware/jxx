@@ -40,20 +40,6 @@ PRIMITIVE_UNBOX_METHODS={
     'long':'longValue','float':'floatValue','double':'doubleValue',
     'boolean':'booleanValue','char':'charValue',
 }
-WRAPPER_TO_PRIMITIVE={
-    'Byte':'byte','Short':'short','Integer':'int','Long':'long',
-    'Float':'float','Double':'double','Boolean':'boolean','Character':'char',
-}
-SDK_METHOD_RETURN_TYPES={
-    'Scanner': {
-        'nextByte':'byte','nextShort':'short','nextInt':'int',
-        'nextLong':'long','nextFloat':'float','nextDouble':'double',
-        'nextBoolean':'boolean','hasNext':'boolean','hasNextByte':'boolean',
-        'hasNextShort':'boolean','hasNextInt':'boolean','hasNextLong':'boolean',
-        'hasNextFloat':'boolean','hasNextDouble':'boolean','hasNextBoolean':'boolean',
-        'next':'String','nextLine':'String',
-    },
-}
 UNSUPPORTED=('java.lang.annotation','java.lang.instrument','java.lang.invoke')
 # Names supplied by the implicit language package or by the converter's
 # standard support includes must not be resolved through an on-demand import.
@@ -781,57 +767,19 @@ class Translator:
             return self.class_creator_initializer_expression(target_type,value)
         return self.expr(value)
 
-    def expression_source_type_name(self, expression):
-        kind=type(expression).__name__
-        if kind=='MethodInvocation':
-            owner=self.invocation_owner_name(
-                getattr(expression,'qualifier',None))
-            declared=self.source_method_return_types.get(owner,{}).get(
-                expression.member)
-            if declared is not None:
-                return self.name_of(declared)
-            return SDK_METHOD_RETURN_TYPES.get(owner,{}).get(
-                expression.member,'')
-        if kind=='MemberReference':
-            value_type=self.assignment_target_type(expression)
-            return self.name_of(value_type)
-        if kind=='Cast':
-            return self.name_of(expression.type)
-        return ''
-
-    def needs_primitive_unboxing(self, target_name, initializer):
-        if target_name not in PRIMITIVE_UNBOX_METHODS:
-            return False
-        source_name=self.expression_source_type_name(initializer)
-        # Primitive-returning APIs such as Scanner.nextLong() already produce
-        # jlong and must not receive ->longValue(). Only wrapper references are
-        # unboxed. Generic<T> methods infer their wrapper from the qualifier's
-        # concrete type argument when the declared return is the type parameter.
-        if source_name in WRAPPER_TO_PRIMITIVE:
-            return WRAPPER_TO_PRIMITIVE[source_name]==target_name
-        if type(initializer).__name__=='MethodInvocation':
-            qualifier=getattr(initializer,'qualifier',None)
-            owner_type=self.local_variable_types.get(qualifier)
-            arguments=list(getattr(owner_type,'arguments',None) or [])
-            owner=self.simple(self.name_of(owner_type))
-            declared=self.source_method_return_types.get(owner,{}).get(
-                initializer.member)
-            declared_name=self.name_of(declared)
-            parameters=self.generic_class_parameters.get(owner,[])
-            if declared_name in parameters:
-                index=parameters.index(declared_name)
-                if index < len(arguments):
-                    argument_type=getattr(arguments[index],'type',None)
-                    actual=self.name_of(argument_type)
-                    return WRAPPER_TO_PRIMITIVE.get(actual)==target_name
-        return False
-
     def declaration_initializer_expression(self,target_type,initializer):
         if self.is_string_literal_expression(initializer):
             return self.constructor_argument_expression(initializer,target_type)
         value=self.expr(initializer)
         target_name=self.name_of(target_type)
-        if self.needs_primitive_unboxing(target_name,initializer):
+        if (target_name in PRIMITIVE_UNBOX_METHODS and
+                type(initializer).__name__ in {
+                    'MethodInvocation','MemberReference','Cast'}):
+            # Source unboxing invokes the wrapper's primitive accessor. The JXX
+            # GenericConversion framework boxes primitives and converts native
+            # strings, but it does not define Ptr<Wrapper> -> primitive CONVERT
+            # specializations. For example Generic<Integer>::getobj() returns
+            # Ptr<Integer>, so `int x = ...` must call intValue().
             accessor=PRIMITIVE_UNBOX_METHODS[target_name]
             return f'({value})->{accessor}()'
         return value
