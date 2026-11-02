@@ -18,6 +18,11 @@ public:
     GeneralSecurityException();
     explicit GeneralSecurityException(
         const ::jxx::Ptr<::jxx::lang::String>& message);
+    GeneralSecurityException(
+        const ::jxx::Ptr<::jxx::lang::String>& message,
+        const ::jxx::Ptr<::jxx::lang::Throwable>& cause);
+    explicit GeneralSecurityException(
+        const ::jxx::Ptr<::jxx::lang::Throwable>& cause);
     explicit GeneralSecurityException(const char* message);
     ~GeneralSecurityException() override = default;
 

@@ -10,6 +10,17 @@ GeneralSecurityException::GeneralSecurityException(
 }
 
 GeneralSecurityException::GeneralSecurityException(
+    const ::jxx::Ptr<::jxx::lang::String>& message,
+    const ::jxx::Ptr<::jxx::lang::Throwable>& cause)
+    : Super(message, cause) {
+}
+
+GeneralSecurityException::GeneralSecurityException(
+    const ::jxx::Ptr<::jxx::lang::Throwable>& cause)
+    : Super(cause) {
+}
+
+GeneralSecurityException::GeneralSecurityException(
     const char* message)
     : Super(message) {
 }
