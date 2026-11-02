@@ -799,7 +799,80 @@ class Translator:
             return self.simple(self.name_of(owner_type))
         return self.simple(qualifier)
 
+    def boxed_object_expression(self, expression):
+        value=self.expr(expression)
+        kind=type(expression).__name__
+        if self.is_string_literal_expression(expression):
+            boxed=f'::jxx::NEW<::jxx::lang::String>({value})'
+        elif kind=='Cast':
+            name=self.name_of(expression.type)
+            wrapper={
+                'byte':'Byte','short':'Short','int':'Integer','long':'Long',
+                'float':'Float','double':'Double','boolean':'Boolean',
+                'char':'Character'}.get(name)
+            boxed=(f'::jxx::lang::{wrapper}::valueOf({value})'
+                   if wrapper else value)
+        elif kind=='Literal':
+            literal=str(getattr(expression,'value',''))
+            if literal in {'true','false'}:
+                boxed=f'::jxx::lang::Boolean::valueOf({value})'
+            elif literal.startswith("'"):
+                boxed=f'::jxx::lang::Character::valueOf({value})'
+            elif any(ch in literal for ch in '.eE'):
+                boxed=f'::jxx::lang::Double::valueOf({value})'
+            else:
+                boxed=f'::jxx::lang::Integer::valueOf({value})'
+        elif kind=='MemberReference':
+            local_type=self.local_variable_types.get(expression.member)
+            name=self.name_of(local_type)
+            wrapper={
+                'byte':'Byte','short':'Short','int':'Integer','long':'Long',
+                'float':'Float','double':'Double','boolean':'Boolean',
+                'char':'Character'}.get(name)
+            boxed=(f'::jxx::lang::{wrapper}::valueOf({value})'
+                   if wrapper else value)
+        else:
+            boxed=value
+        return (f'::jxx::CAST<::jxx::lang::Object>({boxed})')
+
+    def sdk_object_varargs_arguments(self, invocation):
+        member=getattr(invocation,'member',None)
+        if member not in {'printf','format'}:
+            return None
+        arguments=list(getattr(invocation,'arguments',None) or [])
+        if not arguments:
+            return None
+        locale_first=(len(arguments)>=2 and
+                      self.simple(self.name_of(
+                          self.local_variable_types.get(
+                              getattr(arguments[0],'member',''))))=='Locale')
+        fixed_count=2 if locale_first else 1
+        if len(arguments)<fixed_count:
+            return None
+        rendered=[]
+        for argument in arguments[:fixed_count]:
+            rendered.append(
+                f'::jxx::NEW<::jxx::lang::String>({self.expr(argument)})'
+                if self.is_string_literal_expression(argument)
+                else self.expr(argument))
+        values=arguments[fixed_count:]
+        array_type=('::jxx::lang::JxxArray<'
+                    '::jxx::Ptr<::jxx::lang::Object>, 1U>')
+        array=(f'::jxx::NEW<{array_type}>('
+               f'static_cast<::jxx::lang::jint>({len(values)}))')
+        if values:
+            assignments=' '.join(
+                f'(*array)[{index}] = {self.boxed_object_expression(value)};'
+                for index,value in enumerate(values))
+            array=(f'([&]() {{ auto array = {array}; {assignments} '
+                   'return array; }})()')
+        rendered.append(array)
+        return rendered
+
     def method_invocation_arguments(self,invocation):
+        sdk_varargs=self.sdk_object_varargs_arguments(invocation)
+        if sdk_varargs is not None:
+            return sdk_varargs
         arguments=list(getattr(invocation,'arguments',None) or [])
         owner=self.invocation_owner_name(getattr(invocation,'qualifier',None))
         parameters=self.source_method_parameters.get(owner,{}).get(
