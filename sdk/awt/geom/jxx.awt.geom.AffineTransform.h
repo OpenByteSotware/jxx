@@ -2,17 +2,19 @@
 
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.Cloneable.h"
+#include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.JxxArray.h"
 
 namespace jxx::awt::geom
 {
     class Point2D;
     class AffineTransform : public ::jxx::lang::ClassBase<
-        AffineTransform,::jxx::lang::Object>
+        AffineTransform,::jxx::lang::Object,::jxx::lang::Cloneable,::jxx::io::SerializableI>
     {
     public:
         using JxxSuper=::jxx::lang::Object;
-        using Super=::jxx::lang::ClassBase<AffineTransform,JxxSuper>;
+        using Super=::jxx::lang::ClassBase<AffineTransform,JxxSuper,::jxx::lang::Cloneable,::jxx::io::SerializableI>;
         AffineTransform();
         AffineTransform(::jxx::lang::jdouble m00,::jxx::lang::jdouble m10,
             ::jxx::lang::jdouble m01,::jxx::lang::jdouble m11,
@@ -40,5 +42,11 @@ namespace jxx::awt::geom
             const ::jxx::Ptr<Point2D>& destination)const;
     private:
         ::jxx::lang::jdouble m00_=1,m10_=0,m01_=0,m11_=1,m02_=0,m12_=0;
+        void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) override;
+        void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) override;
+        void readObjectNoData() override;
+
+    protected:
+        ::jxx::Ptr<::jxx::lang::Object> cloneImpl() const override;
     };
 }

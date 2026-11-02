@@ -38,6 +38,8 @@ namespace jxx::awt::geom
             (void)NoninvertibleTransformException::Class();
             ::jxx::lang::class_info_detail::registerClassInfo<PathIterator>();
 
+            ::jxx::io::serialization::registerSerializableClass<AffineTransform>(
+                static_cast<::jxx::lang::jlong>(1330973210523860834LL));
             ::jxx::io::serialization::registerSerializableClass<Point2D::Float>(
                 static_cast<::jxx::lang::jlong>(-2870572449815403710LL));
             ::jxx::io::serialization::registerSerializableClass<Point2D::Double>(

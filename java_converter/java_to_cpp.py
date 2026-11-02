@@ -1051,7 +1051,13 @@ class Translator:
                 target_index=class_parameters.index(parameter_name)
                 if target_index < len(resolved_type_arguments):
                     target=resolved_type_arguments[target_index]
-                    value=f'::jxx::CONVERT<{target}>({value})'
+                    # Source type parameters are reference types in JXX. The
+                    # C++ template argument remains the raw class/interface
+                    # type, but constructor values must be Ptr<T>. Therefore
+                    # primitive arguments box to Ptr<Integer>, and string
+                    # literals convert to Ptr<String>.
+                    target_value=f'::jxx::Ptr<{target}>'
+                    value=f'::jxx::CONVERT<{target_value}>({value})'
             elif index < len(constructor_parameter_types):
                 value=self.constructor_argument_expression(
                     argument,constructor_parameter_types[index])

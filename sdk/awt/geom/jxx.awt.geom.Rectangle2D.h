@@ -1,23 +1,24 @@
 #pragma once
 
-#include "awt/jxx.awt.Shape.h"
+#include "awt/geom/jxx.awt.geom.RectangularShape.h"
 #include "lang/jxx.lang.Object.h"
 
 namespace jxx::awt::geom
 {
-    class Rectangle2D : public ::jxx::lang::ClassBase<Rectangle2D,
-        ::jxx::lang::Object,::jxx::awt::Shape>
+    class Rectangle2D : public ::jxx::lang::ClassBase<Rectangle2D, RectangularShape>
     {
     public:
         class Double;
-        using JxxSuper=::jxx::lang::Object;
-        using Super=::jxx::lang::ClassBase<Rectangle2D,JxxSuper,::jxx::awt::Shape>;
+        using JxxSuper=RectangularShape;
+        using Super=::jxx::lang::ClassBase<Rectangle2D,JxxSuper>;
         virtual ::jxx::lang::jdouble getX()const=0;
         virtual ::jxx::lang::jdouble getY()const=0;
         virtual ::jxx::lang::jdouble getWidth()const=0;
         virtual ::jxx::lang::jdouble getHeight()const=0;
         virtual void setRect(::jxx::lang::jdouble x,::jxx::lang::jdouble y,
             ::jxx::lang::jdouble width,::jxx::lang::jdouble height)=0;
+        void setFrame(::jxx::lang::jdouble x, ::jxx::lang::jdouble y,
+            ::jxx::lang::jdouble width, ::jxx::lang::jdouble height) override;
         ::jxx::lang::jbool isEmpty()const;
         ::jxx::lang::jbool contains(::jxx::lang::jdouble x,::jxx::lang::jdouble y)const override;
         ::jxx::lang::jbool intersects(::jxx::lang::jdouble x,::jxx::lang::jdouble y,::jxx::lang::jdouble w,::jxx::lang::jdouble h)const override;

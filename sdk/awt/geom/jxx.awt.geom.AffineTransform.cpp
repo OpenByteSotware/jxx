@@ -1,4 +1,6 @@
 #include "awt/geom/jxx.awt.geom.AffineTransform.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 #include "awt/geom/jxx.awt.geom.NoninvertibleTransformException.h"
 #include "lang/jxx.lang.String.h"
 #include <cmath>
@@ -120,4 +122,19 @@ namespace jxx::awt::geom
     { const auto det=getDeterminant(); if(std::abs(det)<=1.0e-15)throw NoninvertibleTransformException(::jxx::NEW<::jxx::lang::String>("Determinant is zero")); const auto a=m11_/det,b=-m10_/det,c=-m01_/det,d=m00_/det,e=(m01_*m12_-m11_*m02_)/det,f=(m10_*m02_-m00_*m12_)/det; m00_=a;m10_=b;m01_=c;m11_=d;m02_=e;m12_=f; }
     void AffineTransform::getMatrix(const ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::lang::jdouble,1>>& matrix) const
     { if(!matrix)return; if(matrix->size()>0)(*matrix)[0]=m00_;if(matrix->size()>1)(*matrix)[1]=m10_;if(matrix->size()>2)(*matrix)[2]=m01_;if(matrix->size()>3)(*matrix)[3]=m11_;if(matrix->size()>4)(*matrix)[4]=m02_;if(matrix->size()>5)(*matrix)[5]=m12_; }
+
+void AffineTransform::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) {
+    output->writeDouble(m00); output->writeDouble(m10);
+    output->writeDouble(m01); output->writeDouble(m11);
+    output->writeDouble(m02); output->writeDouble(m12);
+}
+void AffineTransform::readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) {
+    m00 = input->readDouble(); m10 = input->readDouble();
+    m01 = input->readDouble(); m11 = input->readDouble();
+    m02 = input->readDouble(); m12 = input->readDouble();
+}
+void AffineTransform::readObjectNoData() { setToIdentity(); }
+::jxx::Ptr<::jxx::lang::Object> AffineTransform::cloneImpl() const {
+    return ::jxx::NEW<AffineTransform>(*this);
+}
 }
