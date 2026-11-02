@@ -790,8 +790,12 @@ class Translator:
             invocation.member,False)
         if not is_varargs or not parameters:
             rendered=[]
-            for argument in arguments:
-                if self.is_string_literal_expression(argument):
+            for index,argument in enumerate(arguments):
+                if (self.is_this_expression(argument) and
+                        index < len(parameters)):
+                    rendered.append(self.this_ptr_expression(
+                        parameters[index].type))
+                elif self.is_string_literal_expression(argument):
                     # Source string literals are source String objects, not
                     # native const char*. Materialize them for every method call,
                     # including generic calls such as List<String>::add.
@@ -1087,6 +1091,13 @@ class Translator:
         elif n=='ReturnStatement':
             if s.expression is None:
                 o.w('return;')
+            elif self.is_this_expression(s.expression):
+                # Returning the current object shares the existing allocation;
+                # never construct a new shared_ptr directly from raw this.
+                o.w(f'return ::jxx::CAST<{self.current_return[11:-1]}>('
+                    'this->thisPtr());' if
+                    self.current_return.startswith('::jxx::Ptr<') else
+                    'return this->thisPtr();')
             elif (self.current_method=='clone' and
                   type(s.expression).__name__=='MemberReference' and
                   not getattr(s.expression,'qualifier',None) and
@@ -1494,7 +1505,22 @@ class Translator:
         if ns:o.exit();o.w(f'}} // namespace {ns}')
         return o.text()
 
+    @staticmethod
+    def is_this_expression(expression):
+        return type(expression).__name__=='This'
+
+    def this_ptr_expression(self, target_type=None):
+        shared='this->thisPtr()'
+        if target_type is None:
+            return shared
+        target_name=self.name_of(target_type)
+        if target_name in PRIMITIVES:
+            return shared
+        return f'::jxx::CAST<{self.ref_raw(target_type)}>({shared})'
+
     def constructor_argument_expression(self, expression, target_type):
+        if self.is_this_expression(expression):
+            return self.this_ptr_expression(target_type)
         target_name=self.name_of(target_type)
         value=self.expr(expression)
         if target_name in PRIMITIVES:

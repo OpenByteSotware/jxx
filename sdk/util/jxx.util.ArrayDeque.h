@@ -2,7 +2,7 @@
 
 #include <deque>
 
-#include "util/jxx.util.AbstractQueue.h"
+#include "util/jxx.util.AbstractCollection.h"
 #include "util/jxx.util.Deque.h"
 #include "util/jxx.util.ConcurrentModificationException.h"
 #include "util/jxx.util.NoSuchElementException.h"
@@ -19,7 +19,7 @@ template <typename E>
 class ArrayDeque
     : public ::jxx::lang::ClassBase<
           ArrayDeque<E>,
-          AbstractQueue<E>,
+          AbstractCollection<E>,
           Deque<E>,
           ::jxx::lang::Cloneable,
           ::jxx::io::SerializableI> {
@@ -28,13 +28,28 @@ private:
     ::jxx::lang::jint modCount_;
 
 public:
+    using JxxSuper = AbstractCollection<E>;
+    using Super = ::jxx::lang::ClassBase<
+        ArrayDeque<E>,
+        JxxSuper,
+        Deque<E>,
+        ::jxx::lang::Cloneable,
+        ::jxx::io::SerializableI>;
+    using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
+
+    static ::jxx::Ptr<::jxx::lang::ClassAny> Class() {
+        return JxxClassInfoMarker::Class();
+    }
+
     ArrayDeque()
-        : data_()
+        : Super()
+        , data_()
         , modCount_(0) {
     }
 
     explicit ArrayDeque(::jxx::lang::jint numElements)
-        : data_()
+        : Super()
+        , data_()
         , modCount_(0) {
         if (numElements < 0) throw ::jxx::lang::IllegalArgumentException();
         data_.resize(static_cast<std::size_t>(numElements));
@@ -42,7 +57,8 @@ public:
     }
 
     explicit ArrayDeque(const ::jxx::Ptr<wildcard::CollectionExtends<E>>& c)
-        : data_()
+        : Super()
+        , data_()
         , modCount_(0) {
         if (c == nullptr) throw ::jxx::lang::NullPointerException();
         this->addAll(c);
