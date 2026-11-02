@@ -1280,6 +1280,34 @@ class Translator:
         output.exit()
         output.w('}')
 
+    def switch_case_labels(self, case):
+        labels=getattr(case,'case',None)
+        if labels is None:
+            return []
+        if isinstance(labels,(list,tuple)):
+            return list(labels)
+        return [labels]
+
+    def emit_switch_statement(self, statement, output):
+        expression=getattr(statement,'expression',None)
+        output.w(f'switch ({self.expr(expression)}) {{')
+        output.enter()
+        for case in getattr(statement,'cases',None) or []:
+            labels=self.switch_case_labels(case)
+            if labels:
+                # Multiple source labels share the same statement sequence and
+                # therefore intentionally fall through to one generated body.
+                for label in labels:
+                    output.w(f'case {self.expr(label)}:')
+            else:
+                output.w('default:')
+            output.enter()
+            for case_statement in getattr(case,'statements',None) or []:
+                self.stmt(case_statement,output)
+            output.exit()
+        output.exit()
+        output.w('}')
+
     def stmt(self,s,o):
         if s is None:return
         n=type(s).__name__
@@ -1376,6 +1404,8 @@ class Translator:
                 o.exit();o.w('}')
             else:
                 self.traditional_for_statement(s,o)
+        elif n=='SwitchStatement':
+            self.emit_switch_statement(s,o)
         elif n=='WhileStatement':
             o.w(f'while ({self.expr(s.condition)}) {{');o.enter();self.stmt(s.body,o);o.exit();o.w('}')
         elif n=='SynchronizedStatement':
