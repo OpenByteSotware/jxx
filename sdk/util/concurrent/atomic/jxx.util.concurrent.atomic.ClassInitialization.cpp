@@ -10,7 +10,10 @@
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.AtomicIntegerArray.h"
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.AtomicLong.h"
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.AtomicLongArray.h"
+#include "util/concurrent/atomic/jxx.util.concurrent.atomic.AtomicReference.h"
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.AtomicReferenceArray.h"
+#include "util/concurrent/atomic/jxx.util.concurrent.atomic.AtomicMarkableReference.h"
+#include "util/concurrent/atomic/jxx.util.concurrent.atomic.AtomicStampedReference.h"
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.DoubleAccumulator.h"
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.DoubleAdder.h"
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.LongAccumulator.h"
@@ -36,7 +39,7 @@ void initializeClasses()
             AtomicInteger, 1U, 2U>();
         (void)::jxx::lang::ClassBase<AtomicIntegerArray, ::jxx::lang::Object, ::jxx::io::SerializableI>::Class();
         ::jxx::io::serialization::registerSerializableClass<AtomicIntegerArray>(
-            1,
+            static_cast<::jxx::lang::jlong>(2862133569453604235LL),
             [] { return ::jxx::NEW<AtomicIntegerArray>(0); });
         (void)::jxx::lang::ClassBase<
             AtomicLong, ::jxx::lang::Number, ::jxx::io::SerializableI>::Class();
@@ -46,8 +49,15 @@ void initializeClasses()
             AtomicLong, 1U, 2U>();
         (void)::jxx::lang::ClassBase<AtomicLongArray, ::jxx::lang::Object, ::jxx::io::SerializableI>::Class();
         ::jxx::io::serialization::registerSerializableClass<AtomicLongArray>(
-            1,
+            static_cast<::jxx::lang::jlong>(-2308431214976778248LL),
             [] { return ::jxx::NEW<AtomicLongArray>(0); });
+        using ErasedAtomicReference = AtomicReference<::jxx::lang::Object>;
+        (void)ErasedAtomicReference::Class();
+        ::jxx::io::serialization::registerSerializableClass<ErasedAtomicReference>(
+            static_cast<::jxx::lang::jlong>(-1848883965231344442LL));
+        (void)AtomicMarkableReference<::jxx::lang::Object>::Class();
+        (void)AtomicStampedReference<::jxx::lang::Object>::Class();
+
         using ErasedAtomicReferenceArray = AtomicReferenceArray<::jxx::lang::Object>;
         (void)ErasedAtomicReferenceArray::Class();
         ::jxx::io::serialization::registerSerializableClass<ErasedAtomicReferenceArray>(
@@ -56,19 +66,19 @@ void initializeClasses()
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<
             ErasedAtomicReferenceArray, 1U, 2U>();
         (void)::jxx::lang::ClassBase<DoubleAccumulator, ::jxx::lang::Number, ::jxx::io::SerializableI>::Class();
-        ::jxx::io::serialization::registerSerializableClass<DoubleAccumulator>(1, [] {
+        ::jxx::io::serialization::registerSerializableClass<DoubleAccumulator>(static_cast<::jxx::lang::jlong>(7249069246863182397LL), [] {
             return DoubleAccumulator::createForDeserialization();
         });
         (void)::jxx::lang::ClassBase<DoubleAdder, ::jxx::lang::Number, ::jxx::io::SerializableI>::Class();
-        ::jxx::io::serialization::registerSerializableClass<DoubleAdder>(1);
+        ::jxx::io::serialization::registerSerializableClass<DoubleAdder>(static_cast<::jxx::lang::jlong>(7249069246863182397LL));
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<
             DoubleAdder, 1U, 2U>();
         (void)::jxx::lang::ClassBase<LongAccumulator, ::jxx::lang::Number, ::jxx::io::SerializableI>::Class();
-        ::jxx::io::serialization::registerSerializableClass<LongAccumulator>(1, [] {
+        ::jxx::io::serialization::registerSerializableClass<LongAccumulator>(static_cast<::jxx::lang::jlong>(7249069246863182397LL), [] {
             return LongAccumulator::createForDeserialization();
         });
         (void)::jxx::lang::ClassBase<LongAdder, ::jxx::lang::Number, ::jxx::io::SerializableI>::Class();
-        ::jxx::io::serialization::registerSerializableClass<LongAdder>(1);
+        ::jxx::io::serialization::registerSerializableClass<LongAdder>(static_cast<::jxx::lang::jlong>(7249069246863182397LL));
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<
             LongAdder, 1U, 2U>();
     });
