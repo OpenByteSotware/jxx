@@ -339,9 +339,14 @@ class Translator:
 
     @classmethod
     def ast_main_entries(cls, tree) -> Dict[str,str]:
-        """Return source entry methods keyed by their actual AST owner."""
+        """Return source entry methods keyed by their exact top-level owner."""
         entries:Dict[str,str]={}
-        for declaration in cls.class_declarations(tree):
+        # Use compilation-unit declarations directly. tree.filter() also walks
+        # nested classes and supplies path tuples, which is unnecessary for a
+        # native process entry point and can lose the intended top-level owner.
+        for declaration in getattr(tree,'types',None) or []:
+            if type(declaration).__name__!='ClassDeclaration':
+                continue
             for method in getattr(declaration,'body',None) or []:
                 if type(method).__name__!='MethodDeclaration':
                     continue
@@ -358,9 +363,6 @@ class Translator:
                 parameter=parameters[0]
                 if cls.simple(cls.name_of(parameter.type))!='String':
                     continue
-                # javalang may lose dimensions written after the identifier
-                # (String args[]). A public static void main with one String
-                # parameter is therefore accepted for all source spellings.
                 entries[declaration.name]=parameter.name
         return entries
 
@@ -1567,8 +1569,9 @@ class Translator:
         # filename's first class, producing Final_method_main.cpp that called
         # Final_method::jxxMain even though test1 owns main.
         self.main_entries=self.ast_main_entries(tree)
-        if not self.main_entries:
-            self.main_entries=self.detect_main_entries(src)
+        # Parsing succeeded, so the AST is authoritative. Do not fall back to
+        # the filename-oriented source scanner, which can associate test1.main
+        # with an earlier class such as Final_method.
         self.main_owner_names=set(self.main_entries)
         package=tree.package.name if tree.package else ''
         self.current_output_relative_dir=(
@@ -1632,7 +1635,13 @@ class Translator:
                 self.diag.append(
                     f'generating {owner_name}_main.cpp from source detection; '
                     'the class was not returned by the AST class iterator')
-            wrapper=output_dir/f'{owner_name}_main.cpp'
+            # Preserve the source basename for the single executable wrapper
+            # while calling the class that actually owns main. For a source
+            # Final_method.java whose package-private test1 owns main, this is
+            # Final_method_main.cpp calling test1::jxxMain.
+            wrapper_name=(f'{stem}_main.cpp' if len(self.main_entries)==1
+                          else f'{owner_name}_main.cpp')
+            wrapper=output_dir/wrapper_name
             wrapper.write_text(
                 self.main_source(
                     owner_name,parameter_name,header_inc,
