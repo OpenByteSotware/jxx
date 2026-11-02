@@ -35,6 +35,11 @@ PRIMITIVE_ARRAY_ALIASES={
     'short':'ShortArray','int':'IntArray','long':'LongArray',
     'float':'FloatArray','double':'DoubleArray',
 }
+PRIMITIVE_UNBOX_METHODS={
+    'byte':'byteValue','short':'shortValue','int':'intValue',
+    'long':'longValue','float':'floatValue','double':'doubleValue',
+    'boolean':'booleanValue','char':'charValue',
+}
 UNSUPPORTED=('java.lang.annotation','java.lang.instrument','java.lang.invoke')
 # Names supplied by the implicit language package or by the converter's
 # standard support includes must not be resolved through an on-demand import.
@@ -767,13 +772,16 @@ class Translator:
             return self.constructor_argument_expression(initializer,target_type)
         value=self.expr(initializer)
         target_name=self.name_of(target_type)
-        if (target_name in PRIMITIVES and target_name != 'void' and
+        if (target_name in PRIMITIVE_UNBOX_METHODS and
                 type(initializer).__name__ in {
                     'MethodInvocation','MemberReference','Cast'}):
-            # Generic methods such as Generic<Integer>::getobj() return the JXX
-            # wrapper reference. Assignment to a primitive source variable must
-            # apply the normal unboxing conversion.
-            return f'::jxx::CONVERT<{PRIMITIVES[target_name]}>({value})'
+            # Source unboxing invokes the wrapper's primitive accessor. The JXX
+            # GenericConversion framework boxes primitives and converts native
+            # strings, but it does not define Ptr<Wrapper> -> primitive CONVERT
+            # specializations. For example Generic<Integer>::getobj() returns
+            # Ptr<Integer>, so `int x = ...` must call intValue().
+            accessor=PRIMITIVE_UNBOX_METHODS[target_name]
+            return f'({value})->{accessor}()'
         return value
 
     def begin_member_scope(self,owner_name,member):
