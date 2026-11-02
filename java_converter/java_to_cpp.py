@@ -41,6 +41,12 @@ PRIMITIVE_UNBOX_METHODS={
     'long':'longValue','float':'floatValue','double':'doubleValue',
     'boolean':'booleanValue','char':'charValue',
 }
+WRAPPER_TO_PRIMITIVE={
+    'Byte':'byte','Short':'short','Integer':'int','Long':'long',
+    'Float':'float','Double':'double','Boolean':'boolean','Character':'char',
+}
+NUMERIC_PRIMITIVES={'byte','short','char','int','long','float','double'}
+NUMERIC_OPERATORS={'+','-','*','/','%','<','<=','>','>=','==','!='}
 UNSUPPORTED=('java.lang.annotation','java.lang.instrument','java.lang.invoke')
 # Names supplied by the implicit language package or by the converter's
 # standard support includes must not be resolved through an on-demand import.
@@ -669,6 +675,80 @@ class Translator:
                 isinstance(getattr(expression,'value',None),str) and
                 getattr(expression,'value').startswith('"'))
 
+    def expression_type_name(self, expression):
+        kind=type(expression).__name__
+        if kind=='MemberReference':
+            qualifier=getattr(expression,'qualifier',None)
+            if not qualifier:
+                value_type=(self.local_variable_types.get(expression.member) or
+                            self.source_field_type(
+                                self.current_class,expression.member))
+                return self.simple(self.name_of(value_type))
+            return self.simple(self.name_of(
+                self.assignment_target_type(expression)))
+        if kind=='Literal':
+            value=str(getattr(expression,'value',''))
+            if value in {'true','false'}: return 'boolean'
+            if value.startswith("'"): return 'char'
+            if value.lower().endswith('l'): return 'long'
+            if value.lower().endswith('f'): return 'float'
+            if any(ch in value for ch in '.eE'): return 'double'
+            return 'int'
+        if kind=='MethodInvocation':
+            owner=self.invocation_owner_name(
+                getattr(expression,'qualifier',None))
+            declared=self.source_method_return_types.get(owner,{}).get(
+                expression.member)
+            if declared is not None:
+                return self.simple(self.name_of(declared))
+            metadata=self.sdk_method_metadata(expression)
+            if metadata is not None:
+                if metadata.return_kind=='primitive':
+                    return metadata.primitive_name
+                if metadata.return_kind=='reference':
+                    return metadata.pointee.split('::')[-1].replace('>','').strip()
+        if kind=='Cast':
+            return self.simple(self.name_of(expression.type))
+        if kind=='BinaryOperation':
+            left=self.expression_type_name(expression.operandl)
+            right=self.expression_type_name(expression.operandr)
+            if left=='String' or right=='String': return 'String'
+            primitive_left=WRAPPER_TO_PRIMITIVE.get(left,left)
+            primitive_right=WRAPPER_TO_PRIMITIVE.get(right,right)
+            order=['byte','short','char','int','long','float','double']
+            candidates=[name for name in (primitive_left,primitive_right)
+                        if name in order]
+            if candidates:
+                result=max(candidates,key=order.index)
+                return 'int' if result in {'byte','short','char'} else result
+        return ''
+
+    def unboxed_numeric_expression(self, expression):
+        value=self.expr(expression)
+        type_name=self.expression_type_name(expression)
+        primitive=WRAPPER_TO_PRIMITIVE.get(type_name)
+        if primitive in NUMERIC_PRIMITIVES:
+            return f'({value})->{PRIMITIVE_UNBOX_METHODS[primitive]}()'
+        return value
+
+    def numeric_binary_expression(self, expression):
+        left=self.unboxed_numeric_expression(expression.operandl)
+        right=self.unboxed_numeric_expression(expression.operandr)
+        return f'({left} {expression.operator} {right})'
+
+    def return_expression(self, expression):
+        value=self.expr(expression)
+        if not self.current_return.startswith('::jxx::Ptr<'):
+            return value
+        target=self.current_return[len('::jxx::Ptr<'):-1]
+        target_simple=target.split('::')[-1].replace('>','').strip()
+        primitive=WRAPPER_TO_PRIMITIVE.get(target_simple)
+        if (primitive is not None and
+                type(expression).__name__=='BinaryOperation' and
+                expression.operator in NUMERIC_OPERATORS):
+            return f'::jxx::lang::{target_simple}::valueOf({value})'
+        return value
+
     def is_string_expression(self, expression):
         if self.is_string_literal_expression(expression):
             return True
@@ -1112,6 +1192,12 @@ class Translator:
                 return self.instanceof_expression(e.operandl,e.operandr)
             if e.operator=='+' and self.is_string_concatenation(e):
                 return self.string_concatenation_expression(e)
+            left_type=self.expression_type_name(e.operandl)
+            right_type=self.expression_type_name(e.operandr)
+            if (e.operator in NUMERIC_OPERATORS and
+                    (left_type in WRAPPER_TO_PRIMITIVE or
+                     right_type in WRAPPER_TO_PRIMITIVE)):
+                return self.numeric_binary_expression(e)
             return f'({self.expr(e.operandl)} {e.operator} {self.expr(e.operandr)})'
         if n=='Assignment':
             value=self.assignment_value_expression(e.expressionl,e.value)
@@ -1352,7 +1438,7 @@ class Translator:
                     f'::jxx::CAST<{self.current_class}::Super>('
                     f'::jxx::NEW<{self.current_class}>(*this)));')
             else:
-                o.w(f'return {self.expr(s.expression)};')
+                o.w(f'return {self.return_expression(s.expression)};')
         elif n=='StatementExpression': o.w(self.expr(s.expression)+';')
         elif n=='ThrowStatement':
             x=s.expression
