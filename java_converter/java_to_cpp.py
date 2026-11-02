@@ -969,6 +969,15 @@ class Translator:
                         index < len(parameters)):
                     rendered.append(self.this_ptr_expression(
                         parameters[index].type))
+                elif (type(argument).__name__=='ClassCreator' and
+                        index < len(parameters)):
+                    # Invocation context supplies the expected generic type for
+                    # a diamond/raw constructor expression. For example,
+                    # addLast(new Node<>(value)) must allocate Node<T>, not the
+                    # incomplete C++ template Node.
+                    rendered.append(
+                        self.class_creator_initializer_expression(
+                            parameters[index].type,argument))
                 elif self.is_string_literal_expression(argument):
                     # Source string literals are source String objects, not
                     # native const char*. Materialize them for every method call,
