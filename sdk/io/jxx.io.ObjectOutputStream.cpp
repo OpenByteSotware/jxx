@@ -16,12 +16,30 @@
 namespace jxx::io {
 namespace { using Tag = serialization::Tag; }
 
-ObjectOutputStream::ObjectOutputStream(const ::jxx::Ptr<OutputStream>& output) : Super(output) {
+ObjectOutputStream::ObjectOutputStream(const ::jxx::Ptr<OutputStream>& output) : Super() {
     ::jxx::initialize();
+    dataOutput_ = ::jxx::NEW<DataOutputStream>(output);
     writeStreamHeader_();
 }
-ObjectOutputStream::ObjectOutputStream() : Super(::jxx::Ptr<OutputStream>{}) {}
+ObjectOutputStream::ObjectOutputStream() : Super() {}
 ObjectOutputStream::~ObjectOutputStream() = default;
+
+void ObjectOutputStream::write(::jxx::lang::jint v) { dataOutput_->write(v); }
+void ObjectOutputStream::write(const ::jxx::lang::ByteArray& b) { dataOutput_->write(b); }
+void ObjectOutputStream::write(const ::jxx::lang::ByteArray& b, ::jxx::lang::jint o, ::jxx::lang::jint l) { dataOutput_->write(b, o, l); }
+void ObjectOutputStream::flush() { if (dataOutput_ != nullptr) dataOutput_->flush(); }
+void ObjectOutputStream::close() { if (dataOutput_ != nullptr) dataOutput_->close(); }
+void ObjectOutputStream::writeBoolean(::jxx::lang::jbool v) { dataOutput_->writeBoolean(v); }
+void ObjectOutputStream::writeByte(::jxx::lang::jint v) { dataOutput_->writeByte(v); }
+void ObjectOutputStream::writeShort(::jxx::lang::jint v) { dataOutput_->writeShort(v); }
+void ObjectOutputStream::writeChar(::jxx::lang::jint v) { dataOutput_->writeChar(v); }
+void ObjectOutputStream::writeInt(::jxx::lang::jint v) { dataOutput_->writeInt(v); }
+void ObjectOutputStream::writeLong(::jxx::lang::jlong v) { dataOutput_->writeLong(v); }
+void ObjectOutputStream::writeFloat(::jxx::lang::jfloat v) { dataOutput_->writeFloat(v); }
+void ObjectOutputStream::writeDouble(::jxx::lang::jdouble v) { dataOutput_->writeDouble(v); }
+void ObjectOutputStream::writeBytes(const ::jxx::Ptr<::jxx::lang::String>& v) { dataOutput_->writeBytes(v); }
+void ObjectOutputStream::writeChars(const ::jxx::Ptr<::jxx::lang::String>& v) { dataOutput_->writeChars(v); }
+void ObjectOutputStream::writeUTF(const ::jxx::Ptr<::jxx::lang::String>& v) { dataOutput_->writeUTF(v); }
 
 void ObjectOutputStream::writeStreamHeader_() {
     writeInt(static_cast<::jxx::lang::jint>(serialization::STREAM_MAGIC));

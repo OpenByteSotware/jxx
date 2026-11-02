@@ -15,28 +15,28 @@
 
 namespace jxx::io {
 namespace { using Tag = serialization::Tag; }
-ObjectInputStream::ObjectInputStream(const ::jxx::Ptr<InputStream>& input) : Super(input) { ::jxx::initialize(); readStreamHeader_(); }
-ObjectInputStream::ObjectInputStream() : Super(::jxx::Ptr<InputStream>{}) {}
+ObjectInputStream::ObjectInputStream(const ::jxx::Ptr<InputStream>& input) : Super() { ::jxx::initialize(); dataInput_ = ::jxx::NEW<DataInputStream>(input); readStreamHeader_(); }
+ObjectInputStream::ObjectInputStream() : Super() {}
 ObjectInputStream::~ObjectInputStream() = default;
 
 ::jxx::lang::jint ObjectInputStream::read() {
-    return JxxSuper::read();
+    return dataInput_->read();
 }
 ::jxx::lang::jint ObjectInputStream::read(
     const ::jxx::lang::ByteArray& buffer) {
-    return JxxSuper::read(buffer);
+    return dataInput_->read(buffer);
 }
 ::jxx::lang::jint ObjectInputStream::read(
     const ::jxx::lang::ByteArray& buffer,
     ::jxx::lang::jint offset,
     ::jxx::lang::jint length) {
-    return JxxSuper::read(buffer, offset, length);
+    return dataInput_->read(buffer, offset, length);
 }
 ::jxx::lang::jlong ObjectInputStream::skip(::jxx::lang::jlong count) {
-    return JxxSuper::skip(count);
+    return dataInput_->skip(count);
 }
 ::jxx::lang::jint ObjectInputStream::available() {
-    return JxxSuper::available();
+    return dataInput_->available();
 }
 void ObjectInputStream::setLimits(const ObjectInputLimits& limits) {
     if (limits.maxObjects == 0U || limits.maxStringCodeUnits == 0U ||
@@ -278,6 +278,23 @@ void ObjectInputStream::requireEndArray_() {
         throw StreamCorruptedException("Missing JXX object terminator");
     return object;
 }
+void ObjectInputStream::close() { if (dataInput_ != nullptr) dataInput_->close(); }
+void ObjectInputStream::readFully(const ::jxx::lang::ByteArray& b) { dataInput_->readFully(b); }
+void ObjectInputStream::readFully(const ::jxx::lang::ByteArray& b, ::jxx::lang::jint o, ::jxx::lang::jint l) { dataInput_->readFully(b, o, l); }
+::jxx::lang::jint ObjectInputStream::skipBytes(::jxx::lang::jint n) { return dataInput_->skipBytes(n); }
+::jxx::lang::jbool ObjectInputStream::readBoolean() { return dataInput_->readBoolean(); }
+::jxx::lang::jbyte ObjectInputStream::readByte() { return dataInput_->readByte(); }
+::jxx::lang::jint ObjectInputStream::readUnsignedByte() { return dataInput_->readUnsignedByte(); }
+::jxx::lang::jshort ObjectInputStream::readShort() { return dataInput_->readShort(); }
+::jxx::lang::jint ObjectInputStream::readUnsignedShort() { return dataInput_->readUnsignedShort(); }
+::jxx::lang::jchar ObjectInputStream::readChar() { return dataInput_->readChar(); }
+::jxx::lang::jint ObjectInputStream::readInt() { return dataInput_->readInt(); }
+::jxx::lang::jlong ObjectInputStream::readLong() { return dataInput_->readLong(); }
+::jxx::lang::jfloat ObjectInputStream::readFloat() { return dataInput_->readFloat(); }
+::jxx::lang::jdouble ObjectInputStream::readDouble() { return dataInput_->readDouble(); }
+::jxx::Ptr<::jxx::lang::String> ObjectInputStream::readLine() { return dataInput_->readLine(); }
+::jxx::Ptr<::jxx::lang::String> ObjectInputStream::readUTF() { return dataInput_->readUTF(); }
+
 ::jxx::Ptr<::jxx::lang::Object> ObjectInputStream::readObject() {
     return synchronized([&]() -> ::jxx::Ptr<::jxx::lang::Object> { return readObject0_(); });
 }

@@ -1091,12 +1091,12 @@ class Translator:
                   type(s.expression).__name__=='MemberReference' and
                   not getattr(s.expression,'qualifier',None) and
                   getattr(s.expression,'member',None)=='Object'):
-                # `return Object;` is not a valid source expression. A number of
-                # tutorial sources use it as shorthand inside clone(). Preserve
-                # the intended Object.clone shallow-copy path without emitting a
-                # C++ type name as a value. JxxSuper avoids recursive dispatch to
-                # this overriding clone method.
-                o.w('return this->JxxSuper::clone();')
+                # `return Object;` is not a valid source expression. These
+                # tutorial sources use it as shorthand for the root clone path.
+                # Qualify Object explicitly: JxxSuper may itself declare clone()
+                # or inherit it through more than one path, making
+                # JxxSuper::clone ambiguous in MSVC.
+                o.w('return this->::jxx::lang::Object::clone();')
             else:
                 o.w(f'return {self.expr(s.expression)};')
         elif n=='StatementExpression': o.w(self.expr(s.expression)+';')

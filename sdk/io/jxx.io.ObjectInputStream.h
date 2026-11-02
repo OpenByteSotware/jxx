@@ -4,6 +4,7 @@
 #include <string>
 #include <functional>
 #include <unordered_map>
+#include "io/jxx.io.InputStream.h"
 #include "io/jxx.io.DataInputStream.h"
 #include "io/jxx.io.ObjectInput.h"
 
@@ -21,9 +22,9 @@ struct ObjectInputLimits final {
     std::uint32_t maxClassDescriptors = 65536U;
 };
 
-class ObjectInputStream : public ::jxx::lang::ClassBase<ObjectInputStream, DataInputStream, ObjectInput> {
+class ObjectInputStream : public ::jxx::lang::ClassBase<ObjectInputStream, InputStream, ObjectInput> {
 public:
-    using JxxSuper = DataInputStream;
+    using JxxSuper = InputStream;
     using Super = ::jxx::lang::ClassBase<ObjectInputStream, JxxSuper, ObjectInput>;
     explicit ObjectInputStream(const ::jxx::Ptr<InputStream>& input);
     ~ObjectInputStream() override;
@@ -35,6 +36,22 @@ public:
         ::jxx::lang::jint length) override;
     ::jxx::lang::jlong skip(::jxx::lang::jlong count) override;
     ::jxx::lang::jint available() override;
+    void close() override;
+    void readFully(const ::jxx::lang::ByteArray& buffer) override;
+    void readFully(const ::jxx::lang::ByteArray& buffer, ::jxx::lang::jint offset, ::jxx::lang::jint length) override;
+    ::jxx::lang::jint skipBytes(::jxx::lang::jint count) override;
+    ::jxx::lang::jbool readBoolean() override;
+    ::jxx::lang::jbyte readByte() override;
+    ::jxx::lang::jint readUnsignedByte() override;
+    ::jxx::lang::jshort readShort() override;
+    ::jxx::lang::jint readUnsignedShort() override;
+    ::jxx::lang::jchar readChar() override;
+    ::jxx::lang::jint readInt() override;
+    ::jxx::lang::jlong readLong() override;
+    ::jxx::lang::jfloat readFloat() override;
+    ::jxx::lang::jdouble readDouble() override;
+    ::jxx::Ptr<::jxx::lang::String> readLine() override;
+    ::jxx::Ptr<::jxx::lang::String> readUTF() override;
     ::jxx::Ptr<::jxx::lang::Object> readObject() override;
     virtual ::jxx::Ptr<::jxx::lang::Object> readUnshared();
     void setLimits(const ObjectInputLimits& limits);
@@ -66,5 +83,6 @@ private:
     std::uint64_t objectCount_ = 0U;
     std::uint32_t graphDepth_ = 0U;
     ObjectInputClassFilter classFilter_{};
+    ::jxx::Ptr<DataInputStream> dataInput_;
 };
 } // namespace jxx::io
