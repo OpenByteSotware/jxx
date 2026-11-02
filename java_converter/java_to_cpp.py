@@ -842,14 +842,23 @@ class Translator:
         if n=='Literal': return 'nullptr' if e.value in (None,'null') else e.value
         if n=='LambdaExpression': return self.lambda_expression(e)
         if n=='This':
+            selectors=list(getattr(e,'selectors',None) or [])
+            if not selectors:
+                # A bare source `this` is an object reference. Share the
+                # existing JXX ownership block rather than exposing raw `this`.
+                # Value-copy contexts explicitly request `*this` elsewhere.
+                return 'this->thisPtr()'
+            # Qualified access such as this.field or this.method() operates on
+            # the current object and does not transfer a reference.
             base='this'
             array_depth=0
-            for selector in getattr(e,'selectors',None) or []:
+            for selector in selectors:
                 kind=type(selector).__name__
                 if kind=='MemberReference':
                     base+=f'->{selector.member}'
                 elif kind=='MethodInvocation':
-                    args=', '.join(self.expr(x) for x in selector.arguments or [])
+                    args=', '.join(
+                        self.method_invocation_arguments(selector))
                     base+=f'->{selector.member}({args})'
                 elif kind=='ArraySelector':
                     index=self.expr(selector.index)
