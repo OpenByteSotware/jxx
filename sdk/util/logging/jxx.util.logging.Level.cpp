@@ -1,5 +1,7 @@
 #include "util/logging/jxx.util.logging.Level.h"
 #include "lang/jxx.lang.Exceptions.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 namespace jxx::util::logging
 {
 	namespace
@@ -37,5 +39,24 @@ namespace jxx::util::logging
 	::jxx::Ptr<Level> Level::parse(const ::jxx::Ptr<::jxx::lang::String>& n)
 	{
 		if (n == nullptr)throw ::jxx::lang::NullPointerException(); for (auto x : { OFF(),SEVERE(),WARNING(),INFO(),CONFIG(),FINE(),FINER(),FINEST(),ALL() })if (x->getName()->equals(::jxx::CAST<::jxx::lang::Object>(n)))return x; throw ::jxx::lang::IllegalArgumentException();
+	}
+
+	void Level::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output)
+	{
+		output->writeObject(::jxx::CAST<::jxx::lang::Object>(name_));
+		output->writeInt(value_);
+		output->writeObject(::jxx::CAST<::jxx::lang::Object>(bundleName_));
+	}
+	void Level::readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input)
+	{
+		name_ = ::jxx::CAST<::jxx::lang::String>(input->readObject());
+		value_ = input->readInt();
+		bundleName_ = ::jxx::CAST<::jxx::lang::String>(input->readObject());
+	}
+	void Level::readObjectNoData()
+	{
+		name_ = ::jxx::NEW<::jxx::lang::String>("");
+		value_ = 0;
+		bundleName_ = nullptr;
 	}
 } // namespace jxx::util::logging

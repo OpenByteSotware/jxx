@@ -3,6 +3,8 @@
 #include <mutex>
 
 #include "lang/jxx.lang.ClassInfo.h"
+#include "io/jxx.io.SerializationClassRegistry.h"
+#include "lang/jxx.lang.String.h"
 #include "util/logging/jxx.util.logging.ErrorManager.h"
 #include "util/logging/jxx.util.logging.Filter.h"
 #include "util/logging/jxx.util.logging.Formatter.h"
@@ -34,6 +36,9 @@ void initializeClasses()
         registerType<Logger>();
         registerType<SimpleFormatter>();
         registerType<Level>();
+        ::jxx::io::serialization::registerSerializableClass<Level>(
+            static_cast<::jxx::lang::jlong>(-8176160795706313070LL),
+            [] { return ::jxx::NEW<Level>(::jxx::NEW<::jxx::lang::String>(""), 0); });
         registerType<LogRecord>();
     });
 }

@@ -889,7 +889,7 @@ class Translator:
                 f'(*array)[{index}] = {self.boxed_object_expression(value)};'
                 for index,value in enumerate(values))
             array=(f'([&]() {{ auto array = {array}; {assignments} '
-                   'return array; }})()')
+                   'return array; })()')
         rendered.append(array)
         return rendered
 

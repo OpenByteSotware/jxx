@@ -3,9 +3,13 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
+#include "io/jxx.io.SerializableI.h"
 namespace jxx::util::logging {
-class Level : public ::jxx::lang::ClassBase<Level, ::jxx::lang::Object> {
+class Level : public ::jxx::lang::ClassBase<Level, ::jxx::lang::Object, ::jxx::io::SerializableI> {
 public:
+    using JxxSuper = ::jxx::lang::Object;
+    using Super = ::jxx::lang::ClassBase<Level, JxxSuper, ::jxx::io::SerializableI>;
+
     static ::jxx::Ptr<Level> OFF(); static ::jxx::Ptr<Level> SEVERE();
     static ::jxx::Ptr<Level> WARNING(); static ::jxx::Ptr<Level> INFO();
     static ::jxx::Ptr<Level> CONFIG(); static ::jxx::Ptr<Level> FINE();
@@ -18,6 +22,9 @@ public:
     ::jxx::Ptr<::jxx::lang::String> getResourceBundleName() const; ::jxx::lang::jint intValue() const noexcept;
     static ::jxx::Ptr<Level> parse(const ::jxx::Ptr<::jxx::lang::String>& name);
     ::jxx::Ptr<::jxx::lang::String> toString() const override;
+    void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) override;
+    void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) override;
+    void readObjectNoData() override;
     JXX_OBJECT_CLONE(Level)
   
 private: ::jxx::Ptr<::jxx::lang::String> name_; ::jxx::lang::jint value_; ::jxx::Ptr<::jxx::lang::String> bundleName_;
