@@ -976,22 +976,38 @@ class Translator:
             o.w(f'(*{declarator.name})[{index}U] = {converted};')
 
     def class_creator_expression(self, creator, expected_type=None):
-        allocation_type=creator.type
-        creator_arguments=getattr(creator.type,'arguments',None) or []
-        expected_arguments=(getattr(expected_type,'arguments',None) or []
+        creator_type=creator.type
+        creator_arguments=list(getattr(creator_type,'arguments',None) or [])
+        expected_arguments=(list(getattr(expected_type,'arguments',None) or [])
                             if expected_type is not None else [])
-        if expected_type is not None and not creator_arguments and expected_arguments:
-            allocation_type=expected_type
-        raw=self.ref_raw(allocation_type)
-        allocation_arguments=getattr(allocation_type,'arguments',None) or []
+
+        # A diamond expression inherits type arguments from its assignment or
+        # invocation target, but it must retain its concrete allocation class.
+        # For example, List<Object> x = new ArrayList<>() allocates
+        # ArrayList<Object>, never the abstract List<Object> target.
+        raw=self.ref_raw(creator_type)
         resolved_type_arguments=[]
-        for argument in allocation_arguments:
-            argument_type=getattr(argument,'type',None)
-            resolved_type_arguments.append(
-                self.template_argument_type(argument_type)
-                if argument_type is not None
-                else '::jxx::lang::Object')
-        class_name=self.name_of(allocation_type)
+        effective_arguments=(creator_arguments if creator_arguments
+                             else expected_arguments)
+        if not creator_arguments and expected_arguments:
+            base_raw,include=self.qmap(self.name_of(creator_type))
+            if include:
+                self.includes.add(include)
+            resolved_type_arguments=[
+                (self.template_argument_type(getattr(argument,'type',None))
+                 if getattr(argument,'type',None) is not None
+                 else '::jxx::lang::Object')
+                for argument in expected_arguments]
+            raw=base_raw+'<'+', '.join(resolved_type_arguments)+'>'
+        else:
+            for argument in effective_arguments:
+                argument_type=getattr(argument,'type',None)
+                resolved_type_arguments.append(
+                    self.template_argument_type(argument_type)
+                    if argument_type is not None
+                    else '::jxx::lang::Object')
+
+        class_name=self.name_of(creator_type)
         class_parameters=self.generic_class_parameters.get(class_name,[])
         constructor_positions=self.generic_constructor_parameters.get(class_name,{})
         constructor_parameter_types=self.source_constructor_parameter_types.get(
@@ -1006,13 +1022,18 @@ class Translator:
                     target=resolved_type_arguments[target_index]
                     value=f'::jxx::CONVERT<{target}>({value})'
             elif index < len(constructor_parameter_types):
-                # Source constructors with concrete reference parameters still
-                # require JXX conversion. For example, const char[] must become
-                # Ptr<String> before it reaches jxx::NEW<T>.
                 value=self.constructor_argument_expression(
                     argument,constructor_parameter_types[index])
             converted_arguments.append(value)
         return f'::jxx::NEW<{raw}>({", ".join(converted_arguments)})'
+
+    def class_creator_initializer_expression(self, target_type, creator):
+        created=self.class_creator_expression(creator,target_type)
+        target_name=self.name_of(target_type)
+        creator_name=self.name_of(creator.type)
+        if target_name in PRIMITIVES or target_name==creator_name:
+            return created
+        return f'::jxx::CAST<{self.ref_raw(target_type)}>({created})'
 
     def for_initializer_expression(self, initializer):
         kind=type(initializer).__name__
@@ -1098,7 +1119,8 @@ class Translator:
                 if self.is_primitive_rank1_array(s.type,dims):
                     self.local_primitive_rank1_arrays.add(d.name)
                 if type(getattr(d,'initializer',None)).__name__=='ClassCreator':
-                    initial_value=self.class_creator_expression(d.initializer,s.type)
+                    initial_value=self.class_creator_initializer_expression(
+                        s.type,d.initializer)
                 else:
                     initial_value=(self.declaration_initializer_expression(
                         s.type,d.initializer) if d.initializer is not None else '')
