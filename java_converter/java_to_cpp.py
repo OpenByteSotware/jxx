@@ -1524,6 +1524,29 @@ class Translator:
         if ns:o.exit();o.w(f'}} // namespace {ns}')
         return o.text()
 
+    @staticmethod
+    def generated_header_main_entries(header_text: str) -> Dict[str,str]:
+        """Find classes that actually declare generated jxxMain in the header."""
+        entries:Dict[str,str]={}
+        class_pattern=re.compile(r'\bclass\s+([A-Za-z_$][\w$]*)[^;{]*\{')
+        signature_pattern=re.compile(
+            r'\bstatic\s+void\s+jxxMain\s*\([^)]*&\s*'
+            r'([A-Za-z_$][\w$]*)\s*\)')
+        for match in class_pattern.finditer(header_text):
+            depth=1
+            index=match.end()
+            while index < len(header_text) and depth:
+                if header_text[index]=='{':
+                    depth+=1
+                elif header_text[index]=='}':
+                    depth-=1
+                index+=1
+            body=header_text[match.end():max(match.end(),index-1)]
+            signature=signature_pattern.search(body)
+            if signature:
+                entries[match.group(1)]=signature.group(1)
+        return entries
+
     def main_source(self, owner_name, parameter_name, header_inc,
                     owner_type_parameters:Sequence[str]=())->str:
         o=Emit()
@@ -1620,7 +1643,19 @@ class Translator:
         else:
             self.source_includes=body_includes
         self.includes=header_includes
-        hp.write_text(self.header(tree),encoding='utf-8')
+        generated_header=self.header(tree)
+        hp.write_text(generated_header,encoding='utf-8')
+        # The generated header is the final authority for wrapper ownership.
+        # A native wrapper must call the class that actually declares jxxMain,
+        # never the source basename or the first class in the compilation unit.
+        emitted_main_entries=self.generated_header_main_entries(generated_header)
+        if emitted_main_entries != self.main_entries:
+            self.diag.append(
+                'main owner corrected from parsed mapping '
+                f'{self.main_entries} to generated declaration '
+                f'{emitted_main_entries}')
+        self.main_entries=emitted_main_entries
+        self.main_owner_names=set(self.main_entries)
         header_inc=os.path.relpath(hp,cp.parent).replace(os.sep,'/')
         cp.write_text(self.source(tree,header_inc),encoding='utf-8')
         self.generated_files=[hp,cp]
