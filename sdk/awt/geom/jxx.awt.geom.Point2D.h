@@ -2,14 +2,15 @@
 #include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.Cloneable.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx_types.h"
 namespace jxx::io { class ObjectInputStream; class ObjectOutputStream; }
 namespace jxx::awt::geom {
-class Point2D : public ::jxx::lang::ClassBase<Point2D,::jxx::lang::Object> {
+class Point2D : public ::jxx::lang::ClassBase<Point2D,::jxx::lang::Object,::jxx::lang::Cloneable> {
 public:
  class Float; class Double;
- using JxxSuper=::jxx::lang::Object; using Super=::jxx::lang::ClassBase<Point2D,JxxSuper>;
+ using JxxSuper=::jxx::lang::Object; using Super=::jxx::lang::ClassBase<Point2D,JxxSuper,::jxx::lang::Cloneable>;
  protected: Point2D();
  public:
  virtual ::jxx::lang::jdouble getX() const=0; virtual ::jxx::lang::jdouble getY() const=0;

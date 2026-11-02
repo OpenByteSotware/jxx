@@ -2,18 +2,19 @@
 
 #include "awt/jxx.awt.Shape.h"
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.Cloneable.h"
 
 namespace jxx::awt::geom
 {
     class Dimension2D;
 
     class RectangularShape : public ::jxx::lang::ClassBase<
-        RectangularShape, ::jxx::lang::Object, ::jxx::awt::Shape>
+        RectangularShape, ::jxx::lang::Object, ::jxx::awt::Shape, ::jxx::lang::Cloneable>
     {
     public:
         using JxxSuper = ::jxx::lang::Object;
         using Super = ::jxx::lang::ClassBase<RectangularShape,
-            JxxSuper, ::jxx::awt::Shape>;
+            JxxSuper, ::jxx::awt::Shape, ::jxx::lang::Cloneable>;
 
         virtual ::jxx::lang::jdouble getX() const = 0;
         virtual ::jxx::lang::jdouble getY() const = 0;

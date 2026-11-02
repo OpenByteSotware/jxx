@@ -12,6 +12,14 @@ namespace jxx::awt
 			x = point->x; y = point->y;
 		}
 	}
+
+	::jxx::lang::jdouble Point::getX() const { return static_cast<::jxx::lang::jdouble>(x); }
+	::jxx::lang::jdouble Point::getY() const { return static_cast<::jxx::lang::jdouble>(y); }
+	void Point::setLocation(::jxx::lang::jdouble xValue, ::jxx::lang::jdouble yValue)
+	{
+		x = static_cast<::jxx::lang::jint>(xValue);
+		y = static_cast<::jxx::lang::jint>(yValue);
+	}
 	::jxx::Ptr<Point> Point::getLocation() const
 	{
 		return ::jxx::NEW<Point>(x, y);
@@ -44,4 +52,14 @@ namespace jxx::awt
 	{
 		std::ostringstream s; s << "jxx.awt.Point[x=" << x << ",y=" << y << "]"; return ::jxx::NEW<::jxx::lang::String>(s.str());
 	}
+
+	void Point::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output)
+	{
+		output->writeInt(x); output->writeInt(y);
+	}
+	void Point::readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input)
+	{
+		x = input->readInt(); y = input->readInt();
+	}
+	void Point::readObjectNoData() { x = 0; y = 0; }
 }

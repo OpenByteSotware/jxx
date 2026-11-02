@@ -101,7 +101,7 @@ class Translator:
     def __init__(self):
         self.imports:Dict[str,str]={}; self.wildcard_imports:List[str]=[]
         self.includes:Set[str]=set(); self.source_includes:Set[str]=set(); self.diag:List[str]=[]
-        self.package=''; self.current_class=''; self.current_return='void'
+        self.package=''; self.current_class=''; self.current_method=''; self.current_return='void'
         self.known_types:Set[str]=set(); self.static_fields:Set[str]=set()
         self.main_owner_names:Set[str]=set()
         self.main_entries:Dict[str,str]={}
@@ -757,6 +757,7 @@ class Translator:
 
     def begin_member_scope(self,owner_name,member):
         self.current_class=owner_name
+        self.current_method=getattr(member,'name','')
         self.local_variable_types={}
         self.local_array_variables=set()
         self.local_primitive_rank1_arrays=set()
@@ -1062,7 +1063,21 @@ class Translator:
         n=type(s).__name__
         if n=='BlockStatement':
             for x in getattr(s,'statements',None) or []: self.stmt(x,o)
-        elif n=='ReturnStatement': o.w('return;' if s.expression is None else f'return {self.expr(s.expression)};')
+        elif n=='ReturnStatement':
+            if s.expression is None:
+                o.w('return;')
+            elif (self.current_method=='clone' and
+                  type(s.expression).__name__=='MemberReference' and
+                  not getattr(s.expression,'qualifier',None) and
+                  getattr(s.expression,'member',None)=='Object'):
+                # `return Object;` is not a valid source expression. A number of
+                # tutorial sources use it as shorthand inside clone(). Preserve
+                # the intended Object.clone shallow-copy path without emitting a
+                # C++ type name as a value. JxxSuper avoids recursive dispatch to
+                # this overriding clone method.
+                o.w('return this->JxxSuper::clone();')
+            else:
+                o.w(f'return {self.expr(s.expression)};')
         elif n=='StatementExpression': o.w(self.expr(s.expression)+';')
         elif n=='ThrowStatement':
             x=s.expression

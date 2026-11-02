@@ -2,16 +2,17 @@
 
 #include "awt/jxx.awt.Shape.h"
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.Cloneable.h"
 
 namespace jxx::awt::geom
 {
     class Line2D : public ::jxx::lang::ClassBase<Line2D,
-        ::jxx::lang::Object, ::jxx::awt::Shape>
+        ::jxx::lang::Object, ::jxx::awt::Shape, ::jxx::lang::Cloneable>
     {
     public:
         class Double;
         using JxxSuper=::jxx::lang::Object;
-        using Super=::jxx::lang::ClassBase<Line2D,JxxSuper,::jxx::awt::Shape>;
+        using Super=::jxx::lang::ClassBase<Line2D,JxxSuper,::jxx::awt::Shape,::jxx::lang::Cloneable>;
         virtual ::jxx::lang::jdouble getX1()const=0;
         virtual ::jxx::lang::jdouble getY1()const=0;
         virtual ::jxx::lang::jdouble getX2()const=0;
