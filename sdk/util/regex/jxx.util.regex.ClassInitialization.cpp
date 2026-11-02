@@ -30,7 +30,7 @@ void initializeClasses()
         registerType<Matcher>();
         registerType<Pattern>();
         ::jxx::io::serialization::registerSerializableClass<Pattern>(
-            1,
+            static_cast<::jxx::lang::jlong>(5073258162644648461LL),
             [] {
                 return Pattern::compile(
                     ::jxx::NEW<::jxx::lang::String>(""));
