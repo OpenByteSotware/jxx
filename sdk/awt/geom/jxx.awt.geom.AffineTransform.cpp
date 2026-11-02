@@ -124,14 +124,14 @@ namespace jxx::awt::geom
     { if(!matrix)return; if(matrix->size()>0)(*matrix)[0]=m00_;if(matrix->size()>1)(*matrix)[1]=m10_;if(matrix->size()>2)(*matrix)[2]=m01_;if(matrix->size()>3)(*matrix)[3]=m11_;if(matrix->size()>4)(*matrix)[4]=m02_;if(matrix->size()>5)(*matrix)[5]=m12_; }
 
 void AffineTransform::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) {
-    output->writeDouble(m00); output->writeDouble(m10);
-    output->writeDouble(m01); output->writeDouble(m11);
-    output->writeDouble(m02); output->writeDouble(m12);
+    output->writeDouble(m00_); output->writeDouble(m10_);
+    output->writeDouble(m01_); output->writeDouble(m11_);
+    output->writeDouble(m02_); output->writeDouble(m12_);
 }
 void AffineTransform::readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) {
-    m00 = input->readDouble(); m10 = input->readDouble();
-    m01 = input->readDouble(); m11 = input->readDouble();
-    m02 = input->readDouble(); m12 = input->readDouble();
+    m00_ = input->readDouble(); m10_ = input->readDouble();
+    m01_ = input->readDouble(); m11_ = input->readDouble();
+    m02_ = input->readDouble(); m12_ = input->readDouble();
 }
 void AffineTransform::readObjectNoData() { setToIdentity(); }
 ::jxx::Ptr<::jxx::lang::Object> AffineTransform::cloneImpl() const {
