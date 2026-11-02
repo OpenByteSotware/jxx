@@ -114,6 +114,7 @@ class Translator:
         self.source_constructor_parameter_types:Dict[str,List[object]]={}
         self.source_field_types:Dict[str,Dict[str,object]]={}
         self.source_method_parameters:Dict[str,Dict[str,List[object]]]={}
+        self.source_method_return_types:Dict[str,Dict[str,object]]={}
         self.source_method_varargs:Dict[str,Dict[str,bool]]={}
         self.local_variable_types:Dict[str,object]={}
         self.local_array_variables:Set[str]=set()
@@ -394,6 +395,7 @@ class Translator:
                 self.source_class_bases[declaration.name]=self.name_of(source_base)
             fields=self.source_field_types.setdefault(declaration.name,{})
             methods=self.source_method_parameters.setdefault(declaration.name,{})
+            returns=self.source_method_return_types.setdefault(declaration.name,{})
             varargs=self.source_method_varargs.setdefault(declaration.name,{})
             for member in getattr(declaration,'body',None) or []:
                 member_kind=type(member).__name__
@@ -402,6 +404,7 @@ class Translator:
                         fields[declarator.name]=member.type
                 elif member_kind=='MethodDeclaration':
                     methods[member.name]=list(member.parameters or [])
+                    returns[member.name]=member.return_type
                     varargs[member.name]=bool(
                         member.parameters and
                         getattr(member.parameters[-1],'varargs',False))
@@ -831,6 +834,27 @@ class Translator:
                 'char':'Character'}.get(name)
             boxed=(f'::jxx::lang::{wrapper}::valueOf({value})'
                    if wrapper else value)
+        elif kind=='MethodInvocation':
+            owner=self.invocation_owner_name(
+                getattr(expression,'qualifier',None))
+            return_type=self.source_method_return_types.get(owner,{}).get(
+                expression.member)
+            return_name=self.name_of(return_type)
+            wrapper={
+                'byte':'Byte','short':'Short','int':'Integer','long':'Long',
+                'float':'Float','double':'Double','boolean':'Boolean',
+                'char':'Character'}.get(return_name)
+            boxed=(f'::jxx::lang::{wrapper}::valueOf({value})'
+                   if wrapper else value)
+        elif kind=='BinaryOperation':
+            # Arithmetic expressions used as Object varargs have source numeric
+            # type. Preserve floating-point expressions as Double; integral
+            # expressions default to Integer in the absence of a wider operand.
+            rendered=value
+            text=str(rendered)
+            wrapper=('Double' if any(token in text for token in ('.','jdouble'))
+                     else 'Integer')
+            boxed=f'::jxx::lang::{wrapper}::valueOf({value})'
         else:
             boxed=value
         return (f'::jxx::CAST<::jxx::lang::Object>({boxed})')
