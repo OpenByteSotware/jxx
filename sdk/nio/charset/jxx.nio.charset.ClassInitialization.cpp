@@ -11,12 +11,12 @@ void initializeClasses()
 {
     static std::once_flag flag;
     std::call_once(flag, [] {
-        (void)::jxx::lang::ClassBase<Charset, ::jxx::lang::Object>::Class();
-        (void)::jxx::lang::ClassBase<CharsetDecoder, ::jxx::lang::Object>::Class();
-        (void)::jxx::lang::ClassBase<CharsetEncoder, ::jxx::lang::Object>::Class();
-        (void)::jxx::lang::ClassBase<CoderResult, ::jxx::lang::Object>::Class();
-        (void)::jxx::lang::ClassBase<CodingErrorAction, ::jxx::lang::Object>::Class();
-        (void)::jxx::lang::ClassBase<StandardCharsets, ::jxx::lang::Object>::Class();
+        (void)Charset::Class();
+        (void)CharsetDecoder::Class();
+        (void)CharsetEncoder::Class();
+        (void)CoderResult::Class();
+        (void)CodingErrorAction::Class();
+        (void)StandardCharsets::Class();
     });
 }
 

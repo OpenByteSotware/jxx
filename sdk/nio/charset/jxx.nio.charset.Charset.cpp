@@ -4,6 +4,7 @@
 #include "nio/charset/jxx.nio.charset.CharsetDecoder.h"
 #include "nio/charset/jxx.nio.charset.CharsetEncoder.h"
 #include "nio/charset/jxx.nio.charset.Charset.h"
+#include "lang/jxx.lang.NullPointerException.h"
 
 namespace
 {
@@ -88,4 +89,12 @@ namespace jxx::nio::charset
         return o && canonicalName_ && o->canonicalName_ && canonicalName_->equals(o->canonicalName_);
     }
     jxx::lang::jint Charset::hashCode() const { return canonicalName_ ? canonicalName_->hashCode() : 0; }
+
+    jxx::lang::jint Charset::compareTo(const jxx::Ptr<Charset>& other) const
+    {
+        if (other == nullptr) {
+            throw jxx::lang::NullPointerException();
+        }
+        return canonicalName_->compareToIgnoreCase(other->canonicalName_);
+    }
 }

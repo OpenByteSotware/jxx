@@ -7,6 +7,7 @@
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.JxxArray.h"
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.Comparable.h"
 
 namespace jxx::nio
 {
@@ -24,13 +25,13 @@ namespace jxx::nio::charset
     class CharsetDecoder;
     class CharsetEncoder;
 
-    class Charset : public ::jxx::lang::ClassBase<Charset, ::jxx::lang::Object>
+    class Charset : public ::jxx::lang::ClassBase<Charset, ::jxx::lang::Object, ::jxx::lang::Comparable<Charset>>
     
     {
     public:
 
         using JxxSuper = ::jxx::lang::Object;
-        using Super = ::jxx::lang::ClassBase<Charset, JxxSuper>;
+        using Super = ::jxx::lang::ClassBase<Charset, JxxSuper, ::jxx::lang::Comparable<Charset>>;
         Charset(const jxx::Ptr<jxx::lang::String>& canonicalName,
                 const jxx::Ptr<jxx::lang::JxxArray<jxx::Ptr<jxx::lang::String>, 1U>>& aliases);
 
@@ -48,6 +49,7 @@ namespace jxx::nio::charset
         jxx::Ptr<jxx::lang::String> toString() const override;
         jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& other) const override;
         jxx::lang::jint hashCode() const override;
+        jxx::lang::jint compareTo(const jxx::Ptr<Charset>& other) const override;
 
     protected:
         jxx::Ptr<jxx::lang::String> canonicalName_;
