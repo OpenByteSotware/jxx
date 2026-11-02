@@ -11,7 +11,7 @@ namespace jxx::util { class Locale; }
 
 namespace jxx::text {
 
-class DateFormatSymbols final
+class DateFormatSymbols
     : public ::jxx::lang::ClassBase<
           DateFormatSymbols, ::jxx::lang::Object,
           ::jxx::lang::Cloneable, ::jxx::io::SerializableI> {

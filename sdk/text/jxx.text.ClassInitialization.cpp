@@ -19,16 +19,17 @@ void initializeClasses()
 {
     static std::once_flag flag;
     std::call_once(flag, [] {
-        (void)DateFormat::JxxClassInfoMarker::Class();
-        (void)DateFormatSymbols::JxxClassInfoMarker::Class();
-        ::jxx::io::serialization::registerSerializableClass<DateFormatSymbols>(1);
-        (void)DecimalFormat::JxxClassInfoMarker::Class();
-        (void)Format::JxxClassInfoMarker::Class();
-        (void)MessageFormat::JxxClassInfoMarker::Class();
-        (void)NumberFormat::JxxClassInfoMarker::Class();
-        (void)ParseException::JxxClassInfoMarker::Class();
-        (void)ParsePosition::JxxClassInfoMarker::Class();
-        (void)SimpleDateFormat::JxxClassInfoMarker::Class();
+        (void)DateFormat::Class();
+        (void)DateFormatSymbols::Class();
+        ::jxx::io::serialization::registerSerializableClass<DateFormatSymbols>(
+            static_cast<::jxx::lang::jlong>(-5987973545549424702LL));
+        (void)DecimalFormat::Class();
+        (void)Format::Class();
+        (void)MessageFormat::Class();
+        (void)NumberFormat::Class();
+        (void)ParseException::Class();
+        (void)ParsePosition::Class();
+        (void)SimpleDateFormat::Class();
     });
 }
 
