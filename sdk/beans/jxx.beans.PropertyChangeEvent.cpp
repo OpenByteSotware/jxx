@@ -8,7 +8,7 @@ PropertyChangeEvent::PropertyChangeEvent(
     const ::jxx::Ptr<::jxx::lang::String>& propertyName,
     const ::jxx::Ptr<::jxx::lang::Object>& oldValue,
     const ::jxx::Ptr<::jxx::lang::Object>& newValue)
-    : JxxSuper(source), propertyName_(propertyName),
+    : Super(source), propertyName_(propertyName),
       oldValue_(oldValue), newValue_(newValue) {
     if (propertyName_ == nullptr) {
         throw ::jxx::lang::NullPointerException();
