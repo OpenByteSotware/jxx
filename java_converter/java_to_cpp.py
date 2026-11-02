@@ -15,7 +15,7 @@ Focused modernization of the existing AST translator:
 Requires: pip install javalang
 """
 from __future__ import annotations
-import argparse, os, re, sys
+import argparse, os, re, sys, time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Set, Tuple
@@ -2184,9 +2184,25 @@ def translate_file(path:Path,out_root:str,
     h,c=t.translate(src,out_root,path.stem,source_relative_dir)
     for generated in t.generated_files:
         print(f'Wrote {generated}')
-    for d in t.diag: print(f'{path}: WARNING: {d}',file=sys.stderr)
+    for d in t.diag:
+        print(f'{path}: WARNING: {d}',file=sys.stderr)
+    return len(t.diag)
+
+def print_conversion_summary(started_at,parsed,successes,errors,warnings):
+    elapsed=time.perf_counter()-started_at
+    print()
+    print('Conversion summary')
+    print('------------------')
+    print(f'Overall time:       {elapsed:.3f} seconds')
+    print(f'Total files parsed: {parsed}')
+    print(f'Total successes:    {successes}')
+    print(f'Total errors:       {errors}')
+    print(f'Total warnings:     {warnings}')
+
 
 def main():
+    started_at=time.perf_counter()
+    parsed=successes=errors=warnings=0
     ap=argparse.ArgumentParser(description='Java 8 to JXX C++17 translator')
     ap.add_argument('input',nargs='?',help='single Java source file')
     ap.add_argument('--dir',dest='src_dir',help='recursively convert every .java file')
@@ -2203,32 +2219,55 @@ def main():
     if javalang is None: raise SystemExit('Install dependency: pip install javalang')
     if bool(a.input)==bool(a.src_dir): ap.error('provide either input or --dir')
     sdk_metadata=None
-    if a.jxx_include:
-        try:
+    try:
+        if a.jxx_include:
             sdk_metadata=SdkMetadataIndex.scan(a.jxx_include)
-        except ValueError as error:
-            raise SystemExit(str(error))
-        print(f'JXX SDK metadata: scanned {sdk_metadata.headers_scanned} headers; '
-              f'indexed {sdk_metadata.declarations_scanned} method declarations')
-    if a.src_dir:
-        source_root=Path(a.src_dir)
-        files=sorted(source_root.rglob('*.java'))
-        if not files: raise SystemExit(f'No .java files found under {source_root}')
-        source_type_index=build_source_type_index(files,source_root)
-        source_type_kinds=build_source_type_kinds(files)
+            print(f'JXX SDK metadata: scanned {sdk_metadata.headers_scanned} headers; '
+                  f'indexed {sdk_metadata.declarations_scanned} method declarations')
+        if a.src_dir:
+            source_root=Path(a.src_dir)
+            files=sorted(source_root.rglob('*.java'))
+            if not files:
+                raise RuntimeError(f'No .java files found under {source_root}')
+            source_type_index=build_source_type_index(files,source_root)
+            source_type_kinds=build_source_type_kinds(files)
+        else:
+            source_root=Path(a.input).parent
+            files=[Path(a.input)]
+            sibling_files=sorted(source_root.glob('*.java'))
+            source_type_index=build_source_type_index(
+                sibling_files,source_root)
+            source_type_kinds=build_source_type_kinds(sibling_files)
+
         for path in files:
-            translate_file(path,a.out,source_type_index,source_root,source_type_kinds,sdk_metadata)
-    else:
-        input_path=Path(a.input)
-        sibling_files=sorted(input_path.parent.glob('*.java'))
-        source_type_index=build_source_type_index(
-            sibling_files,input_path.parent)
-        source_type_kinds=build_source_type_kinds(sibling_files)
-        translate_file(
-            input_path,a.out,source_type_index,input_path.parent,source_type_kinds,sdk_metadata)
-    if a.cmake:
-        cmake = generate_cmake_files(
-            a.out, a.cmake_project, a.cmake_target, a.jxx_include)
-        for generated in sorted(Path(a.out).rglob('CMakeLists.txt')):
-            print(f'Wrote {generated}')
-if __name__=='__main__': main()
+            parsed+=1
+            try:
+                warnings+=translate_file(
+                    path,a.out,source_type_index,source_root,
+                    source_type_kinds,sdk_metadata)
+                successes+=1
+            except Exception as error:
+                errors+=1
+                print(f'{path}: ERROR: {type(error).__name__}: {error}',
+                      file=sys.stderr)
+
+        if a.cmake:
+            try:
+                generate_cmake_files(
+                    a.out,a.cmake_project,a.cmake_target,a.jxx_include)
+                for generated in sorted(Path(a.out).rglob('CMakeLists.txt')):
+                    print(f'Wrote {generated}')
+            except Exception as error:
+                errors+=1
+                print(f'CMake generation: ERROR: {type(error).__name__}: {error}',
+                      file=sys.stderr)
+    except Exception as error:
+        errors+=1
+        print(f'Conversion setup: ERROR: {type(error).__name__}: {error}',
+              file=sys.stderr)
+    finally:
+        print_conversion_summary(
+            started_at,parsed,successes,errors,warnings)
+    return 0 if errors==0 else 1
+
+if __name__=='__main__': sys.exit(main())
