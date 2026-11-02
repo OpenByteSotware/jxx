@@ -5,7 +5,7 @@
 
 namespace jxx::util::zip {
 
-class CheckedInputStream final
+class CheckedInputStream
     : public ::jxx::lang::ClassBase<CheckedInputStream, ::jxx::io::FilterInputStream> {
 public:
     using JxxSuper = ::jxx::io::FilterInputStream;

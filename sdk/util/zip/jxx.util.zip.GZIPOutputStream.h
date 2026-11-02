@@ -2,7 +2,7 @@
 #include <cstdint>
 #include "util/zip/jxx.util.zip.DeflaterOutputStream.h"
 namespace jxx::util::zip {
-class GZIPOutputStream final : public ::jxx::lang::ClassBase<GZIPOutputStream,DeflaterOutputStream> {
+class GZIPOutputStream : public ::jxx::lang::ClassBase<GZIPOutputStream,DeflaterOutputStream> {
 public:
  using JxxSuper=DeflaterOutputStream;using Super=::jxx::lang::ClassBase<GZIPOutputStream,JxxSuper>;using JxxClassInfoMarker=typename Super::JxxClassInfoMarker;
  explicit GZIPOutputStream(const ::jxx::Ptr<::jxx::io::OutputStream>& output);

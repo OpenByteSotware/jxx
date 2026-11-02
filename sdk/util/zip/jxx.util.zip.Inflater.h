@@ -9,7 +9,7 @@
 namespace jxx::util::zip {
 class DataFormatException;
 
-class Inflater final : public ::jxx::lang::ClassBase<Inflater, ::jxx::lang::Object> {
+class Inflater : public ::jxx::lang::ClassBase<Inflater, ::jxx::lang::Object> {
 public:
     using JxxSuper = ::jxx::lang::Object;
     using Super = ::jxx::lang::ClassBase<Inflater, JxxSuper>;

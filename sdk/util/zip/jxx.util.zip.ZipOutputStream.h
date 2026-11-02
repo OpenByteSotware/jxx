@@ -6,7 +6,7 @@
 namespace jxx::lang { class String; }
 namespace jxx::nio::charset { class Charset; }
 namespace jxx::util::zip { class ZipEntry;
-class ZipOutputStream final : public ::jxx::lang::ClassBase<ZipOutputStream, DeflaterOutputStream> {
+class ZipOutputStream : public ::jxx::lang::ClassBase<ZipOutputStream, DeflaterOutputStream> {
 public:
  using JxxSuper=DeflaterOutputStream; using Super=::jxx::lang::ClassBase<ZipOutputStream,JxxSuper>; using JxxClassInfoMarker=typename Super::JxxClassInfoMarker;
  static constexpr ::jxx::lang::jint STORED=0; static constexpr ::jxx::lang::jint DEFLATED=8;

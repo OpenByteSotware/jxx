@@ -8,7 +8,7 @@
 
 namespace jxx::util::zip {
 
-class Deflater final : public ::jxx::lang::ClassBase<Deflater, ::jxx::lang::Object> {
+class Deflater : public ::jxx::lang::ClassBase<Deflater, ::jxx::lang::Object> {
 public:
     using JxxSuper = ::jxx::lang::Object;
     using Super = ::jxx::lang::ClassBase<Deflater, JxxSuper>;

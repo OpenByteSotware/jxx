@@ -9,7 +9,7 @@ namespace jxx::io { class File; class InputStream; }
 namespace jxx::lang { class String; }
 namespace jxx::nio::charset { class Charset; }
 namespace jxx::util::zip { class ZipEntry;
-class ZipFile final : public ::jxx::lang::ClassBase<ZipFile,::jxx::lang::Object,::jxx::io::Closeable> {
+class ZipFile : public ::jxx::lang::ClassBase<ZipFile,::jxx::lang::Object,::jxx::io::Closeable> {
 public:
  static constexpr ::jxx::lang::jint OPEN_READ=1; static constexpr ::jxx::lang::jint OPEN_DELETE=4;
  using JxxSuper=::jxx::lang::Object;

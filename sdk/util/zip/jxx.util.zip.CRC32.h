@@ -14,7 +14,7 @@ class ByteBuffer;
 
 namespace jxx::util::zip {
 
-class CRC32 final
+class CRC32
     : public ::jxx::lang::ClassBase<
           CRC32,
           ::jxx::lang::Object,

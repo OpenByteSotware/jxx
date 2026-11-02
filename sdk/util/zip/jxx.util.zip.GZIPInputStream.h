@@ -3,7 +3,7 @@
 #include <vector>
 #include "util/zip/jxx.util.zip.InflaterInputStream.h"
 namespace jxx::util::zip {
-class GZIPInputStream final : public ::jxx::lang::ClassBase<GZIPInputStream,InflaterInputStream> {
+class GZIPInputStream : public ::jxx::lang::ClassBase<GZIPInputStream,InflaterInputStream> {
 public:
  using JxxSuper=InflaterInputStream;using Super=::jxx::lang::ClassBase<GZIPInputStream,JxxSuper>;using JxxClassInfoMarker=typename Super::JxxClassInfoMarker;
  explicit GZIPInputStream(const ::jxx::Ptr<::jxx::io::InputStream>& input);

@@ -1,11 +1,12 @@
 #pragma once
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.Cloneable.h"
 #include "lang/jxx.lang.JxxArray.h"
 namespace jxx::lang { class String; }
 namespace jxx::nio::file::attribute { class FileTime; }
 namespace jxx::util::zip {
-class ZipEntry final : public ::jxx::lang::ClassBase<ZipEntry,::jxx::lang::Object> {
+class ZipEntry : public ::jxx::lang::ClassBase<ZipEntry,::jxx::lang::Object,::jxx::lang::Cloneable> {
 public:
  static constexpr ::jxx::lang::jint STORED = 0;
  static constexpr ::jxx::lang::jint DEFLATED = 8;

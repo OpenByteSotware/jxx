@@ -13,7 +13,7 @@ class ByteBuffer;
 
 namespace jxx::util::zip {
 
-class Adler32 final
+class Adler32
     : public ::jxx::lang::ClassBase<Adler32, ::jxx::lang::Object, Checksum> {
 public:
     using JxxSuper = ::jxx::lang::Object;

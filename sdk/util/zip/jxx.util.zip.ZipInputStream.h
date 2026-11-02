@@ -9,7 +9,7 @@ namespace jxx::nio::charset
 namespace jxx::util::zip
 {
 	class ZipEntry;
-	class ZipInputStream final : public ::jxx::lang::ClassBase<ZipInputStream, InflaterInputStream>
+	class ZipInputStream : public ::jxx::lang::ClassBase<ZipInputStream, InflaterInputStream>
 	{
 	public:
 		using JxxSuper = InflaterInputStream; using Super = ::jxx::lang::ClassBase<ZipInputStream, JxxSuper>; using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
