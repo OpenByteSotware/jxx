@@ -516,6 +516,15 @@ class Translator:
             catch_type=getattr(tree_module,'CatchClauseParameter',None)
             invocation_type=getattr(tree_module,'MethodInvocation',None)
             member_reference_type=getattr(tree_module,'MemberReference',None)
+            try_statement_type=getattr(tree_module,'TryStatement',None)
+            # Include the RAII helper before header/source emission is split.
+            # Adding this dependency only while emitting emit_try_statement()
+            # is too late because source() writes its include list first.
+            if try_statement_type is not None:
+                for _,node in filter_method(try_statement_type):
+                    if getattr(node,'finally_block',None) is not None:
+                        self.includes.add('lang/jxx.lang.Finally.h')
+                        break
             if invocation_type is not None:
                 for _,node in filter_method(invocation_type):
                     self.record_method_dependencies(node)
