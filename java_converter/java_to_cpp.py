@@ -50,7 +50,33 @@ NUMERIC_OPERATORS={'+','-','*','/','%','<','<=','>','>=','==','!='}
 UNSUPPORTED=('java.lang.annotation','java.lang.instrument','java.lang.invoke')
 # Names supplied by the implicit language package or by the converter's
 # standard support includes must not be resolved through an on-demand import.
-DEFAULT_LANGUAGE_TYPES={'Object','String','StringBuilder','StringBuffer','System','JxxArray','Class','Integer','Character','Boolean','Byte','Short','Long','Float','Double','Math','StrictMath','Throwable','Exception','RuntimeException','Error'}
+DEFAULT_LANGUAGE_TYPES={
+    'Object','String','StringBuilder','StringBuffer','System','JxxArray',
+    'Class','Integer','Character','Boolean','Byte','Short','Long','Float',
+    'Double','Math','StrictMath','Throwable','Exception','RuntimeException',
+    'Error',
+    # Implicit java.lang throwable types. Catch clauses do not need source
+    # imports, but generated C++ requires the concrete JXX declaration.
+    'ArithmeticException','ArrayIndexOutOfBoundsException',
+    'ArrayStoreException','ClassCastException','ClassNotFoundException',
+    'CloneNotSupportedException','EnumConstantNotPresentException',
+    'IllegalAccessException','IllegalArgumentException',
+    'IllegalMonitorStateException','IllegalStateException',
+    'IllegalThreadStateException','IndexOutOfBoundsException',
+    'InstantiationException','InterruptedException',
+    'NegativeArraySizeException','NoSuchFieldException',
+    'NoSuchMethodException','NullPointerException','NumberFormatException',
+    'ReflectiveOperationException','SecurityException',
+    'StringIndexOutOfBoundsException','TypeNotPresentException',
+    'UnsupportedOperationException','AbstractMethodError','AssertionError',
+    'ClassCircularityError','ClassFormatError','ExceptionInInitializerError',
+    'IllegalAccessError','IncompatibleClassChangeError',
+    'InstantiationError','InternalError','LinkageError',
+    'NoClassDefFoundError','NoSuchFieldError','NoSuchMethodError',
+    'OutOfMemoryError','StackOverflowError','ThreadDeath',
+    'UnknownError','UnsatisfiedLinkError','UnsupportedClassVersionError',
+    'VerifyError','VirtualMachineError'
+}
 SDK_TYPES_BY_PACKAGE={
     'java.util': {
         'Collection','List','ArrayList','LinkedList','Set','HashSet',
