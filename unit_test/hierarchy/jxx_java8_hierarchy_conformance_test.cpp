@@ -2,7 +2,6 @@
 #include <type_traits>
 
 #include "com/google/gson/jxx.com.google.gson.TypeAdapter.h"
-#include "io/jxx.io.AutoCloseable.h"
 #include "io/jxx.io.Closeable.h"
 #include "io/jxx.io.SerializableI.h"
 #include "io/jxx.io.Reader.h"
