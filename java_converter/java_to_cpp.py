@@ -2176,7 +2176,7 @@ def _safe_target(source: Path, root: Path) -> str:
     return ('_' + name) if name and name[0].isdigit() else (name or 'jxx_app')
 
 
-def normalize_cmake_include_path(jxx_include: str) -> str:
+def normalize_cmake_path(path_value: str) -> str:
     """Normalize a JXX include path for generated CMake files.
 
     Native Windows drive paths are preserved without passing through
@@ -2185,7 +2185,7 @@ def normalize_cmake_include_path(jxx_include: str) -> str:
     are converted to Visual Studio drive paths. Other paths retain the
     existing expanduser/resolve behavior.
     """
-    path = os.fspath(jxx_include)
+    path = os.fspath(path_value).strip()
 
     # A native Windows absolute path must not be resolved by pathlib while
     # running on a POSIX host. Preserve its drive-letter spelling and make
@@ -2206,11 +2206,13 @@ def normalize_cmake_include_path(jxx_include: str) -> str:
 
 def generate_cmake_files(out_root: str, project: str = 'TranspiledProject',
                          support_target: str = 'transpiled',
-                         jxx_include: Optional[str] = None) -> Path:
+                         jxx_include: Optional[str] = None,
+                         jxx_library: Optional[str] = None) -> Path:
     root = Path(out_root)
     jxx_include_path = (
-        normalize_cmake_include_path(jxx_include)
+        normalize_cmake_path(jxx_include)
         if jxx_include else None)
+    jxx_library_path = normalize_cmake_path(jxx_library) if jxx_library else None
     sources = sorted(root.rglob('*.cpp'))
     mains = [source for source in sources
              if source.name.endswith('_main.cpp') and _contains_native_main(source)]
@@ -2239,6 +2241,14 @@ def generate_cmake_files(out_root: str, project: str = 'TranspiledProject',
         'set(CMAKE_CXX_STANDARD_REQUIRED ON)',
         'set(CMAKE_CXX_EXTENSIONS OFF)', ''
     ]
+    if jxx_library_path:
+        root_lines += ['add_library(jxx_sdk STATIC IMPORTED GLOBAL)',
+                       'set_target_properties(jxx_sdk PROPERTIES',
+                       f'    IMPORTED_LOCATION "{jxx_library_path}"']
+        if jxx_include_path:
+            root_lines.append(f'    INTERFACE_INCLUDE_DIRECTORIES "{jxx_include_path}"')
+        root_lines += [')', '']
+
     if support:
         root_lines.append(f'add_library({support_target} STATIC')
         root_lines.extend(f'    {x.relative_to(root).as_posix()}' for x in support)
@@ -2248,6 +2258,8 @@ def generate_cmake_files(out_root: str, project: str = 'TranspiledProject',
         if jxx_include_path:
             root_lines.append(f'    "{jxx_include_path}"')
         root_lines += [')', '']
+        if jxx_library_path:
+            root_lines += [f'target_link_libraries({support_target} PUBLIC jxx_sdk)', '']
 
     main_folders = sorted({source.parent for source in mains})
     for folder in main_folders:
@@ -2291,9 +2303,10 @@ def generate_cmake_files(out_root: str, project: str = 'TranspiledProject',
 
 def generate_cmake(out_root: str, project: str = 'TranspiledProject',
                    target: str = 'transpiled',
-                   jxx_include: Optional[str] = None) -> str:
+                   jxx_include: Optional[str] = None,
+                   jxx_library: Optional[str] = None) -> str:
     return generate_cmake_files(
-        out_root, project, target, jxx_include).read_text(encoding='utf-8')
+        out_root, project, target, jxx_include, jxx_library).read_text(encoding='utf-8')
 
 def build_source_type_index(
         files:Sequence[Path],
@@ -2433,6 +2446,7 @@ def main():
         help=('JXX SDK root containing package directories such as lang/, io/, '
               'util/, net/, ext/, com/, and org/. The normalized path is added '
               'to generated CMake target_include_directories.'))
+    ap.add_argument('--jxx-library', help=('Compiled JXX SDK library file; accepts Windows, WSL, or native POSIX paths.'))
     a=ap.parse_args()
     if javalang is None: raise SystemExit('Install dependency: pip install javalang')
     if bool(a.input)==bool(a.src_dir): ap.error('provide either input or --dir')
@@ -2473,7 +2487,8 @@ def main():
         if a.cmake:
             try:
                 generate_cmake_files(
-                    a.out,a.cmake_project,a.cmake_target,a.jxx_include)
+                    a.out,a.cmake_project,a.cmake_target,a.jxx_include,
+                    a.jxx_library)
                 for generated in sorted(Path(a.out).rglob('CMakeLists.txt')):
                     print(f'Wrote {generated}')
             except Exception as error:
