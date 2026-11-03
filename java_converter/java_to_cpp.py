@@ -905,15 +905,26 @@ class Translator:
                     return actual==self.wrapper_for_primitive(target_name)
         return False
 
+    def expression_for_target_type(self, expression, target_type):
+        """Apply source boxing or unboxing for a contextually expected type."""
+        target_name=self.simple(self.name_of(target_type))
+        source_name=self.expression_type_name(expression)
+        value=self.expr(expression)
+        if target_name in PRIMITIVE_UNBOX_METHODS:
+            if WRAPPER_TO_PRIMITIVE.get(source_name) == target_name:
+                return f'({value})->{PRIMITIVE_UNBOX_METHODS[target_name]}()'
+            if self.expression_requires_unboxing(target_name,expression):
+                return f'({value})->{PRIMITIVE_UNBOX_METHODS[target_name]}()'
+            return value
+        if (target_name in WRAPPER_TO_PRIMITIVE and
+                source_name in PRIMITIVES):
+            return self.constructor_argument_expression(expression,target_type)
+        return value
+
     def declaration_initializer_expression(self,target_type,initializer):
         if self.is_string_literal_expression(initializer):
             return self.constructor_argument_expression(initializer,target_type)
-        value=self.expr(initializer)
-        target_name=self.name_of(target_type)
-        if self.expression_requires_unboxing(target_name,initializer):
-            accessor=PRIMITIVE_UNBOX_METHODS[target_name]
-            return f'({value})->{accessor}()'
-        return value
+        return self.expression_for_target_type(initializer,target_type)
 
     def begin_member_scope(self,owner_name,member):
         self.current_class=owner_name
@@ -1076,9 +1087,11 @@ class Translator:
                     # declaration: those type parameters are scoped to the
                     # generic class/method, not to this calling function. Generic
                     # forwarding overloads handle those calls instead.
-                    if (parameter_name in WRAPPER_TO_PRIMITIVE and
-                            argument_name in PRIMITIVES):
-                        rendered.append(self.constructor_argument_expression(
+                    if ((parameter_name in WRAPPER_TO_PRIMITIVE and
+                             argument_name in PRIMITIVES) or
+                            (parameter_name in PRIMITIVES and
+                             argument_name in WRAPPER_TO_PRIMITIVE)):
+                        rendered.append(self.expression_for_target_type(
                             argument,parameter_type))
                     else:
                         rendered.append(self.expr(argument))
