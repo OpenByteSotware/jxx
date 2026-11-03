@@ -6,14 +6,15 @@
 #include "io/jxx.io.OutputStream.h"
 #include "io/jxx.io.DataOutputStream.h"
 #include "io/jxx.io.ObjectOutput.h"
+#include "io/jxx.io.ObjectStreamConstants.h"
 
 namespace jxx::lang { class Object; class String; }
 
 namespace jxx::io {
-class ObjectOutputStream : public ::jxx::lang::ClassBase<ObjectOutputStream, OutputStream, ObjectOutput> {
+class ObjectOutputStream : public ::jxx::lang::ClassBase<ObjectOutputStream, OutputStream, ObjectOutput, ObjectStreamConstants> {
 public:
     using JxxSuper = OutputStream;
-    using Super = ::jxx::lang::ClassBase<ObjectOutputStream, JxxSuper, ObjectOutput>;
+    using Super = ::jxx::lang::ClassBase<ObjectOutputStream, JxxSuper, ObjectOutput, ObjectStreamConstants>;
     explicit ObjectOutputStream(const ::jxx::Ptr<OutputStream>& output);
     ~ObjectOutputStream() override;
     void write(::jxx::lang::jint value) override;

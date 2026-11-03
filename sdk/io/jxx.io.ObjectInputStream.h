@@ -7,6 +7,7 @@
 #include "io/jxx.io.InputStream.h"
 #include "io/jxx.io.DataInputStream.h"
 #include "io/jxx.io.ObjectInput.h"
+#include "io/jxx.io.ObjectStreamConstants.h"
 
 namespace jxx::lang { class Object; class String; }
 namespace jxx::io {
@@ -22,10 +23,10 @@ struct ObjectInputLimits final {
     std::uint32_t maxClassDescriptors = 65536U;
 };
 
-class ObjectInputStream : public ::jxx::lang::ClassBase<ObjectInputStream, InputStream, ObjectInput> {
+class ObjectInputStream : public ::jxx::lang::ClassBase<ObjectInputStream, InputStream, ObjectInput, ObjectStreamConstants> {
 public:
     using JxxSuper = InputStream;
-    using Super = ::jxx::lang::ClassBase<ObjectInputStream, JxxSuper, ObjectInput>;
+    using Super = ::jxx::lang::ClassBase<ObjectInputStream, JxxSuper, ObjectInput, ObjectStreamConstants>;
     explicit ObjectInputStream(const ::jxx::Ptr<InputStream>& input);
     ~ObjectInputStream() override;
     ::jxx::lang::jint read() override;

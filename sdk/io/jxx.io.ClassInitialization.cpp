@@ -20,6 +20,7 @@
 #include "io/jxx.io.InputStreamReader.h"
 #include "io/jxx.io.ObjectInputStream.h"
 #include "io/jxx.io.ObjectOutputStream.h"
+#include "io/jxx.io.ObjectStreamConstants.h"
 #include "io/jxx.io.OutputStreamWriter.h"
 #include "io/jxx.io.PrintStream.h"
 #include "io/jxx.io.PrintWriter.h"
@@ -87,7 +88,7 @@ namespace jxx::io
                   ::jxx::io::serialization::registerClassReferenceArrayCodecs<File, 1U, 2U>(); 
 				  reg<FileInputStream>(); reg<FileOutputStream>(); reg<FileReader>(); reg<RandomAccessFile>(); 
 				  reg<FileWriter>(); reg<InputStreamReader>(); reg<ObjectInputStream>();
-				  reg<ObjectOutputStream>(); reg<OutputStreamWriter>(); reg<PrintStream>();
+				  reg<ObjectOutputStream>(); reg<ObjectStreamConstants>(); reg<OutputStreamWriter>(); reg<PrintStream>();
 				  reg<PrintWriter>(); reg<PushbackInputStream>(); reg<SequenceInputStream>();
 				  reg<StringReader>();
         reg<CharConversionException>();

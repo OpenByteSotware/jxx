@@ -1493,12 +1493,18 @@ class Translator:
             self.errors.append('try statement has neither catch nor finally')
             output.w('/* TODO invalid try statement */')
             return
-        # An outer catch-all makes finally run when the try body or any source
-        # catch throws. The normal path runs the same block exactly once after
-        # the inner try/catch sequence.
         if finally_block is not None:
+            self.source_includes.add('lang/jxx.lang.Finally.h')
+            finally_index=getattr(self,'finally_counter',0)
+            self.finally_counter=finally_index+1
+            guard_name=f'jxxFinally{finally_index}'
             output.w('{')
             output.enter()
+            output.w(f'auto {guard_name} = ::jxx::lang::makeFinally([&]() {{')
+            output.enter()
+            self.emit_statement_sequence(finally_block,output)
+            output.exit()
+            output.w('});')
             output.w('try {')
             output.enter()
         output.w('try {')
@@ -1512,11 +1518,10 @@ class Translator:
             output.exit()
             output.w('} catch (...) {')
             output.enter()
-            self.emit_statement_sequence(finally_block,output)
+            output.w(f'{guard_name}.runAndDismiss();')
             output.w('throw;')
             output.exit()
             output.w('}')
-            self.emit_statement_sequence(finally_block,output)
             output.exit()
             output.w('}')
 
