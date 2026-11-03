@@ -2,6 +2,7 @@
 
 #include "io/jxx.io.Closeable.h"
 #include "io/jxx.io.Flushable.h"
+#include "lang/jxx.lang.Appendable.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.JxxArray.h"
 #include "lang/jxx_types.h"
@@ -19,6 +20,7 @@ class Writer
     : public ::jxx::lang::ClassBase<
           Writer,
           ::jxx::lang::Object,
+          ::jxx::lang::Appendable,
           Closeable,
           Flushable> {
 public:
@@ -28,6 +30,7 @@ public:
         ::jxx::lang::ClassBase<
             Writer,
             JxxSuper,
+            ::jxx::lang::Appendable,
             Closeable,
             Flushable>;
 
@@ -52,16 +55,16 @@ public:
         ::jxx::lang::jint offset,
         ::jxx::lang::jint length);
 
-    virtual ::jxx::Ptr<Writer> append(
-        const ::jxx::Ptr<::jxx::lang::CharSequence>& sequence);
+    virtual ::jxx::Ptr<::jxx::lang::Appendable> append(
+        const ::jxx::Ptr<::jxx::lang::CharSequence>& sequence) override;
 
-    virtual ::jxx::Ptr<Writer> append(
+    virtual ::jxx::Ptr<::jxx::lang::Appendable> append(
         const ::jxx::Ptr<::jxx::lang::CharSequence>& sequence,
         ::jxx::lang::jint start,
-        ::jxx::lang::jint end);
+        ::jxx::lang::jint end) override;
 
-    virtual ::jxx::Ptr<Writer> append(
-        ::jxx::lang::jchar value);
+    virtual ::jxx::Ptr<::jxx::lang::Appendable> append(
+        ::jxx::lang::jchar value) override;
 
     virtual void flush() override = 0;
     virtual void close() override = 0;

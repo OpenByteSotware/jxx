@@ -1,6 +1,7 @@
 #pragma once
 
 #include "io/jxx.io.FilterOutputStream.h"
+#include "lang/jxx.lang.Appendable.h"
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.JxxArray.h"
 
@@ -16,14 +17,16 @@ namespace jxx::io {
 class PrintStream final
     : public ::jxx::lang::ClassBase<
           PrintStream,
-          FilterOutputStream> {
+          FilterOutputStream,
+          ::jxx::lang::Appendable> {
 public:
     using JxxSuper = FilterOutputStream;
 
     using Super =
         ::jxx::lang::ClassBase<
             PrintStream,
-            JxxSuper>;
+            JxxSuper,
+            ::jxx::lang::Appendable>;
 
     explicit PrintStream(
         const ::jxx::Ptr<OutputStream>& output);
@@ -38,6 +41,17 @@ public:
     void close() override;
 
     ::jxx::lang::jbool checkError();
+
+    ::jxx::Ptr<::jxx::lang::Appendable> append(
+        const ::jxx::Ptr<::jxx::lang::CharSequence>& sequence) override;
+
+    ::jxx::Ptr<::jxx::lang::Appendable> append(
+        const ::jxx::Ptr<::jxx::lang::CharSequence>& sequence,
+        ::jxx::lang::jint start,
+        ::jxx::lang::jint end) override;
+
+    ::jxx::Ptr<::jxx::lang::Appendable> append(
+        ::jxx::lang::jchar value) override;
 
     void write(
         ::jxx::lang::jint value) override;

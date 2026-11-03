@@ -1,5 +1,7 @@
 #include <string>
 #include "io/jxx.io.PrintStream.h"
+#include "lang/jxx.lang.CharSequence.h"
+#include "lang/jxx.lang.IndexOutOfBoundsException.h"
 
 #include "util/jxx.util.Formatter.h"
 #include "util/jxx.util.Locale.h"
@@ -153,6 +155,55 @@ void PrintStream::newLine_() {
     }
 
     });
+}
+
+::jxx::Ptr<::jxx::lang::Appendable> PrintStream::append(
+    const ::jxx::Ptr<::jxx::lang::CharSequence>& sequence) {
+
+    synchronized([&] {
+        if (sequence == nullptr) {
+            print(::jxx::NEW<::jxx::lang::String>("null"));
+            return;
+        }
+
+        for (::jxx::lang::jint index = 0;
+             index < sequence->length();
+             ++index) {
+            print(sequence->charAt(index));
+        }
+    });
+
+    return ::jxx::CAST<::jxx::lang::Appendable>(thisPtr());
+}
+
+::jxx::Ptr<::jxx::lang::Appendable> PrintStream::append(
+    const ::jxx::Ptr<::jxx::lang::CharSequence>& sequence,
+    ::jxx::lang::jint start,
+    ::jxx::lang::jint end) {
+
+    const ::jxx::Ptr<::jxx::lang::CharSequence> actual =
+        sequence == nullptr
+            ? ::jxx::NEW<::jxx::lang::String>("null")
+            : sequence;
+
+    if (start < 0 || end < start || end > actual->length()) {
+        throw ::jxx::lang::IndexOutOfBoundsException();
+    }
+
+    synchronized([&] {
+        for (::jxx::lang::jint index = start; index < end; ++index) {
+            print(actual->charAt(index));
+        }
+    });
+
+    return ::jxx::CAST<::jxx::lang::Appendable>(thisPtr());
+}
+
+::jxx::Ptr<::jxx::lang::Appendable> PrintStream::append(
+    ::jxx::lang::jchar value) {
+
+    print(value);
+    return ::jxx::CAST<::jxx::lang::Appendable>(thisPtr());
 }
 
 void PrintStream::print(

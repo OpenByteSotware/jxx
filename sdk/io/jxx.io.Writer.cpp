@@ -121,13 +121,13 @@ void Writer::write(
     });
 }
 
-::jxx::Ptr<Writer> Writer::append(
+::jxx::Ptr<::jxx::lang::Appendable> Writer::append(
     const ::jxx::Ptr<::jxx::lang::CharSequence>& sequence) {
 
-    return lock->synchronized([&]() -> ::jxx::Ptr<Writer> {
+    return lock->synchronized([&]() -> ::jxx::Ptr<::jxx::lang::Appendable> {
         if (sequence == nullptr) {
             write(::jxx::NEW<::jxx::lang::String>("null"));
-            return ::jxx::CAST<Writer>(thisPtr());
+            return ::jxx::CAST<::jxx::lang::Appendable>(thisPtr());
         }
 
         for (::jxx::lang::jint index = 0;
@@ -137,16 +137,16 @@ void Writer::write(
                 sequence->charAt(index)));
         }
 
-        return ::jxx::CAST<Writer>(thisPtr());
+        return ::jxx::CAST<::jxx::lang::Appendable>(thisPtr());
     });
 }
 
-::jxx::Ptr<Writer> Writer::append(
+::jxx::Ptr<::jxx::lang::Appendable> Writer::append(
     const ::jxx::Ptr<::jxx::lang::CharSequence>& sequence,
     ::jxx::lang::jint start,
     ::jxx::lang::jint end) {
 
-    return lock->synchronized([&]() -> ::jxx::Ptr<Writer> {
+    return lock->synchronized([&]() -> ::jxx::Ptr<::jxx::lang::Appendable> {
         if (sequence == nullptr) {
             const auto nullText =
                 ::jxx::NEW<::jxx::lang::String>("null");
@@ -160,7 +160,7 @@ void Writer::write(
                     nullText->charAt(index)));
             }
 
-            return ::jxx::CAST<Writer>(thisPtr());
+            return ::jxx::CAST<::jxx::lang::Appendable>(thisPtr());
         }
 
         checkSequenceBounds(sequence->length(), start, end);
@@ -172,16 +172,16 @@ void Writer::write(
                 sequence->charAt(index)));
         }
 
-        return ::jxx::CAST<Writer>(thisPtr());
+        return ::jxx::CAST<::jxx::lang::Appendable>(thisPtr());
     });
 }
 
-::jxx::Ptr<Writer> Writer::append(
+::jxx::Ptr<::jxx::lang::Appendable> Writer::append(
     ::jxx::lang::jchar value) {
 
-    return lock->synchronized([&]() -> ::jxx::Ptr<Writer> {
+    return lock->synchronized([&]() -> ::jxx::Ptr<::jxx::lang::Appendable> {
         write(static_cast<::jxx::lang::jint>(value));
-        return ::jxx::CAST<Writer>(thisPtr());
+        return ::jxx::CAST<::jxx::lang::Appendable>(thisPtr());
     });
 }
 
