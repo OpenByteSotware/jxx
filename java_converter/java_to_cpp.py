@@ -2246,7 +2246,10 @@ def generate_cmake_files(out_root: str, project: str = 'TranspiledProject',
     if jxx_root_path:
         root_lines += [
             '# Build JXX through its own CMake project so all third-party',
-            '# target dependencies are preserved transitively.',
+            '# target dependencies are preserved transitively. Application',
+            '# projects must not configure the JXX unit-test subtree.',
+            'set(BUILD_TESTING OFF CACHE BOOL "Disable dependency tests" FORCE)',
+            'set(JXX_BUILD_TESTS OFF CACHE BOOL "Disable JXX tests" FORCE)',
             f'add_subdirectory("{jxx_root_path}"',
             '                 "${CMAKE_BINARY_DIR}/jxx"',
             '                 EXCLUDE_FROM_ALL)',

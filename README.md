@@ -130,7 +130,7 @@ python3 java_to_cpp.py --dir ../java_examples --out outcpp --cmake
 python3 java_to_cpp.py --dir ../java_examples --out outcpp --cmake --jxx-include ../sdk
 python3 java_to_cpp.py --dir ../java_examples --out outcpp --cmake --jxx-include c:/projects/SourceCode/git_repos/open_source/jxx/sdk
 python3 java_to_cpp.py --dir ../java_examples --out outcpp --cmake --jxx-include c:/projects/SourceCode/git_repos/open_source/jxx/sdk --jxx-library C:/projects/SourceCode/git_repos/open_source/jxx/build-headless/sdk/Debug/jxxsdk.lib
-
+python3 java_to_cpp.py --dir ../java_examples --out outcpp --cmake --jxx-include c:/projects/SourceCode/git_repos/open_source/jxx/sdk --jxx-root C:/projects/SourceCode/git_repos/open_source/jxx
 
 To build 3rd party packages
 These 3rd party libraries have been modified to support C++17 at a minimum

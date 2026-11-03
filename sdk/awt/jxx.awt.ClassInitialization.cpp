@@ -61,6 +61,15 @@ namespace jxx::awt
             ::jxx::io::serialization::registerClassReferenceArrayCodecs<
                 ::jxx::awt::Color, 1U, 2U>();
             (void)::jxx::awt::ComponentOrientation::Class();
+            ::jxx::io::serialization::registerSerializableClass<
+                ::jxx::awt::ComponentOrientation>(
+                    static_cast<::jxx::lang::jlong>(-4113291392143563828LL),
+                    [] {
+                        return ::jxx::awt::component_orientation_detail::
+                            createSerializationInstance();
+                    });
+            ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+                ::jxx::awt::ComponentOrientation, 1U, 2U>();
             (void)::jxx::awt::Dimension::Class();
             ::jxx::io::serialization::registerSerializableClass<
                 ::jxx::awt::Dimension>(

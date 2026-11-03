@@ -6,6 +6,9 @@
 #include "util/jxx.util.Locale.h"
 #include "util/jxx.util.ResourceBundle.h"
 #include "lang/jxx.lang.String.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
+#include "lang/jxx.lang.NullPointerException.h"
 
 namespace jxx::awt
 {
@@ -19,6 +22,15 @@ namespace jxx::awt
             for (const auto* candidate : languages)
                 if (language == candidate) return true;
             return false;
+        }
+    }
+
+
+    namespace component_orientation_detail {
+        ::jxx::Ptr<ComponentOrientation> createSerializationInstance()
+        {
+            return ::jxx::Ptr<ComponentOrientation>(
+                new ComponentOrientation(true, true));
         }
     }
 
@@ -73,5 +85,28 @@ namespace jxx::awt
         return bundle == nullptr
             ? UNKNOWN
             : getOrientation(bundle->getLocale());
+    }
+
+
+    void ComponentOrientation::writeObject(
+        const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output)
+    {
+        if (output == nullptr) throw ::jxx::lang::NullPointerException();
+        output->writeBoolean(horizontal_);
+        output->writeBoolean(leftToRight_);
+    }
+
+    void ComponentOrientation::readObject(
+        const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input)
+    {
+        if (input == nullptr) throw ::jxx::lang::NullPointerException();
+        horizontal_ = input->readBoolean();
+        leftToRight_ = input->readBoolean();
+    }
+
+    void ComponentOrientation::readObjectNoData()
+    {
+        horizontal_ = true;
+        leftToRight_ = true;
     }
 }
