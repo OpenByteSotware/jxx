@@ -48,6 +48,7 @@ namespace jxx::math
             const jxx::Ptr<BigInteger>& val) const;
         jxx::Ptr<BigInteger> pow(jxx::lang::jint exponent) const;
         jxx::Ptr<BigInteger> gcd(const jxx::Ptr<BigInteger>& val) const;
+        ::jxx::lang::jbool isProbablePrime(::jxx::lang::jint certainty) const;
         jxx::Ptr<BigInteger> min(const jxx::Ptr<BigInteger>& val) const;
         jxx::Ptr<BigInteger> max(const jxx::Ptr<BigInteger>& val) const;
 

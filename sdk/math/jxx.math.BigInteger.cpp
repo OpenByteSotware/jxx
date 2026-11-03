@@ -270,12 +270,125 @@ namespace jxx::math
 			if (e & 1)r = r->multiply(base); e >>= 1; if (e)base = base->multiply(base);
 		}return r;
 	}
+
+    namespace
+    {
+        jxx::Ptr<BigInteger> modularExponentiation_(
+            const jxx::Ptr<BigInteger>& baseValue,
+            const jxx::Ptr<BigInteger>& exponentValue,
+            const jxx::Ptr<BigInteger>& modulus)
+        {
+            const auto two = BigInteger::valueOf(2);
+            auto base = baseValue->remainder(modulus);
+            auto exponent = exponentValue;
+            auto result = BigInteger::ONE;
+
+            while (exponent->signum() > 0) {
+                const auto quotientAndRemainder = exponent->divideAndRemainder(two);
+                if ((*quotientAndRemainder)[1]->signum() != 0) {
+                    result = result->multiply(base)->remainder(modulus);
+                }
+                exponent = (*quotientAndRemainder)[0];
+                if (exponent->signum() > 0) {
+                    base = base->multiply(base)->remainder(modulus);
+                }
+            }
+            return result;
+        }
+    }
+
 	jxx::Ptr<BigInteger> BigInteger::gcd(const jxx::Ptr<BigInteger>& v) const
 	{
 		if (!v)throw jxx::lang::NullPointerException(); auto a = abs(), b = v->abs(); while (b->signum() != 0) {
 			auto r = a->remainder(b); a = b; b = r;
 		}return a;
 	}
+
+    ::jxx::lang::jbool BigInteger::isProbablePrime(
+        ::jxx::lang::jint certainty) const
+    {
+        // The source contract makes non-positive certainty an unconditional
+        // success, even for values that are otherwise known to be composite.
+        if (certainty <= 0) {
+            return true;
+        }
+
+        const auto two = valueOf(2);
+        const auto three = valueOf(3);
+        const auto self = ::jxx::NEW<BigInteger>(toString());
+        if (self->compareTo(two) < 0) {
+            return false;
+        }
+        if (self->compareTo(three) <= 0) {
+            return true;
+        }
+        if (self->remainder(two)->signum() == 0) {
+            return false;
+        }
+
+        // Remove small composites cheaply before running Miller-Rabin.
+        static const ::jxx::lang::jint smallPrimes[] = {
+            3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47
+        };
+        for (const auto prime : smallPrimes) {
+            const auto divisor = valueOf(prime);
+            if (self->compareTo(divisor) == 0) {
+                return true;
+            }
+            if (self->remainder(divisor)->signum() == 0) {
+                return false;
+            }
+        }
+
+        const auto nMinusOne = self->subtract(ONE);
+        auto d = nMinusOne;
+        ::jxx::lang::jint powersOfTwo = 0;
+        while (d->remainder(two)->signum() == 0) {
+            d = d->divide(two);
+            ++powersOfTwo;
+        }
+
+        // Use enough strong Miller-Rabin rounds for the requested certainty.
+        // Split the calculation to avoid overflow when certainty is maximal.
+        const ::jxx::lang::jint rounds =
+            static_cast<::jxx::lang::jint>(certainty / 2 + certainty % 2);
+        static const ::jxx::lang::jint bases[] = {
+            2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37,
+            41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97
+        };
+        const auto baseRange = self->subtract(valueOf(3));
+
+        for (::jxx::lang::jint round = 0; round < rounds; ++round) {
+            auto base = valueOf(bases[static_cast<std::size_t>(round) %
+                                           (sizeof(bases) / sizeof(bases[0]))]);
+            if (base->compareTo(nMinusOne) >= 0) {
+                base = base->remainder(baseRange)->add(two);
+            }
+
+            auto witness = modularExponentiation_(base, d, self);
+            if (witness->compareTo(ONE) == 0 ||
+                witness->compareTo(nMinusOne) == 0) {
+                continue;
+            }
+
+            ::jxx::lang::jbool probablyPrime = false;
+            for (::jxx::lang::jint power = 1; power < powersOfTwo; ++power) {
+                witness = witness->multiply(witness)->remainder(self);
+                if (witness->compareTo(nMinusOne) == 0) {
+                    probablyPrime = true;
+                    break;
+                }
+                if (witness->compareTo(ONE) == 0) {
+                    return false;
+                }
+            }
+            if (!probablyPrime) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 	jxx::Ptr<BigInteger> BigInteger::min(const jxx::Ptr<BigInteger>& v) const
 	{
 		if (!v)throw jxx::lang::NullPointerException(); return compareTo(v) <= 0 ? jxx::NEW<BigInteger>(stringFromAscii_((negative_ ? "-" : "") + digits_)) : v;
