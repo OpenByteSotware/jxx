@@ -2207,12 +2207,14 @@ def normalize_cmake_path(path_value: str) -> str:
 def generate_cmake_files(out_root: str, project: str = 'TranspiledProject',
                          support_target: str = 'transpiled',
                          jxx_include: Optional[str] = None,
-                         jxx_library: Optional[str] = None) -> Path:
+                         jxx_library: Optional[str] = None,
+                         jxx_root: Optional[str] = None) -> Path:
     root = Path(out_root)
     jxx_include_path = (
         normalize_cmake_path(jxx_include)
         if jxx_include else None)
     jxx_library_path = normalize_cmake_path(jxx_library) if jxx_library else None
+    jxx_root_path = normalize_cmake_path(jxx_root) if jxx_root else None
     sources = sorted(root.rglob('*.cpp'))
     mains = [source for source in sources
              if source.name.endswith('_main.cpp') and _contains_native_main(source)]
@@ -2241,7 +2243,20 @@ def generate_cmake_files(out_root: str, project: str = 'TranspiledProject',
         'set(CMAKE_CXX_STANDARD_REQUIRED ON)',
         'set(CMAKE_CXX_EXTENSIONS OFF)', ''
     ]
-    if jxx_library_path:
+    if jxx_root_path:
+        root_lines += [
+            '# Build JXX through its own CMake project so all third-party',
+            '# target dependencies are preserved transitively.',
+            f'add_subdirectory("{jxx_root_path}"',
+            '                 "${CMAKE_BINARY_DIR}/jxx"',
+            '                 EXCLUDE_FROM_ALL)',
+            'if(NOT TARGET jxxsdk)',
+            '    message(FATAL_ERROR "JXX root did not define target jxxsdk")',
+            'endif()',
+            'add_library(jxx_sdk ALIAS jxxsdk)',
+            ''
+        ]
+    elif jxx_library_path:
         root_lines += ['add_library(jxx_sdk STATIC IMPORTED GLOBAL)',
                        'set_target_properties(jxx_sdk PROPERTIES',
                        f'    IMPORTED_LOCATION "{jxx_library_path}"']
@@ -2258,7 +2273,7 @@ def generate_cmake_files(out_root: str, project: str = 'TranspiledProject',
         if jxx_include_path:
             root_lines.append(f'    "{jxx_include_path}"')
         root_lines += [')', '']
-        if jxx_library_path:
+        if jxx_root_path or jxx_library_path:
             root_lines += [f'target_link_libraries({support_target} PUBLIC jxx_sdk)', '']
 
     main_folders = sorted({source.parent for source in mains})
@@ -2304,9 +2319,11 @@ def generate_cmake_files(out_root: str, project: str = 'TranspiledProject',
 def generate_cmake(out_root: str, project: str = 'TranspiledProject',
                    target: str = 'transpiled',
                    jxx_include: Optional[str] = None,
-                   jxx_library: Optional[str] = None) -> str:
+                   jxx_library: Optional[str] = None,
+                   jxx_root: Optional[str] = None) -> str:
     return generate_cmake_files(
-        out_root, project, target, jxx_include, jxx_library).read_text(encoding='utf-8')
+        out_root, project, target, jxx_include, jxx_library,
+        jxx_root).read_text(encoding='utf-8')
 
 def build_source_type_index(
         files:Sequence[Path],
@@ -2447,7 +2464,10 @@ def main():
               'util/, net/, ext/, com/, and org/. The normalized path is added '
               'to generated CMake target_include_directories.'))
     ap.add_argument('--jxx-library', help=('Compiled JXX SDK library file; accepts Windows, WSL, or native POSIX paths.'))
+    ap.add_argument('--jxx-root', help=('JXX project root containing CMakeLists.txt, sdk/, and 3rdparty/. Generated CMake adds this project as a subdirectory so jxxsdk retains all transitive dependencies.'))
     a=ap.parse_args()
+    if a.jxx_root and a.jxx_library:
+        ap.error('--jxx-root and --jxx-library are mutually exclusive')
     if javalang is None: raise SystemExit('Install dependency: pip install javalang')
     if bool(a.input)==bool(a.src_dir): ap.error('provide either input or --dir')
     sdk_metadata=None
@@ -2488,7 +2508,7 @@ def main():
             try:
                 generate_cmake_files(
                     a.out,a.cmake_project,a.cmake_target,a.jxx_include,
-                    a.jxx_library)
+                    a.jxx_library,a.jxx_root)
                 for generated in sorted(Path(a.out).rglob('CMakeLists.txt')):
                     print(f'Wrote {generated}')
             except Exception as error:
