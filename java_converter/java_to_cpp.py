@@ -2028,6 +2028,7 @@ class Translator:
         o.w(f'#include "{header_inc}"')
         o.w('#include <cstdint>')
         o.w('#include "jxx.initialize.h"')
+        o.w('#include "jxx.client.initialize.h"')
         o.w('#include "lang/jxx.lang.String.h"')
         o.w('#include "lang/jxx.lang.Throwable.h"')
         o.w('#include "lang/jxx.lang.System.h"')
@@ -2044,6 +2045,7 @@ class Translator:
         o.w('int main(int argc, char** argv) {')
         o.enter();o.w('try {');o.enter()
         o.w('::jxx::initialize();')
+        o.w('::jxx::client::initialize();')
         o.w('using JxxString = ::jxx::lang::String;')
         o.w('using JxxStringArray = ::jxx::lang::JxxArray<::jxx::Ptr<JxxString>, 1U>;')
         o.w('const auto sourceArgc = argc > 0 ? argc - 1 : 0;')
@@ -2328,6 +2330,41 @@ def generate_cmake(out_root: str, project: str = 'TranspiledProject',
         out_root, project, target, jxx_include, jxx_library,
         jxx_root).read_text(encoding='utf-8')
 
+def collect_client_initialization_types(files:Sequence[Path], source_root:Path) -> List[Tuple[str,str]]:
+    result=[]; seen=set()
+    for path in files:
+        try:
+            tree=javalang.parse.parse(path.read_text(encoding='utf-8'))
+        except Exception:
+            continue
+        package=tree.package.name if tree.package else ''
+        if package:
+            relative_dir=Path(*package.split('.')); namespace='::jxx::'+package.replace('.','::')
+        else:
+            try: relative_dir=path.parent.resolve().relative_to(source_root.resolve())
+            except ValueError: relative_dir=Path()
+            namespace='::'
+        include=(relative_dir/path.with_suffix('.h').name).as_posix()
+        if include.startswith('./'): include=include[2:]
+        for declaration in getattr(tree,'types',None) or []:
+            if type(declaration).__name__ not in {'ClassDeclaration','InterfaceDeclaration'}: continue
+            if getattr(declaration,'type_parameters',None): continue
+            qualified=(f'{namespace}::{declaration.name}' if namespace!='::' else f'::{declaration.name}')
+            if qualified not in seen:
+                seen.add(qualified); result.append((qualified,include))
+    return sorted(result,key=lambda value:value[0])
+
+def generate_client_initializer(out_root:str, client_types:Sequence[Tuple[str,str]]) -> Tuple[Path,Path]:
+    root=Path(out_root); header=root/'jxx.client.initialize.h'; source=root/'jxx.client.initialize.cpp'
+    header.write_text('#pragma once\n\nnamespace jxx::client {\n    void initialize();\n} // namespace jxx::client\n',encoding='utf-8')
+    lines=['#include "jxx.client.initialize.h"']
+    lines.extend(f'#include "{include}"' for include in sorted({include for _,include in client_types}))
+    lines += ['','namespace jxx::client {','    void initialize() {','        static const bool initialized = []() {']
+    lines.extend(f'            (void){qualified}::Class();' for qualified,_ in client_types)
+    lines += ['            return true;','        }();','        (void)initialized;','    }','} // namespace jxx::client','']
+    source.write_text('\n'.join(lines),encoding='utf-8')
+    return header,source
+
 def build_source_type_index(
         files:Sequence[Path],
         source_root:Optional[Path]=None) -> Dict[str,Tuple[str,str]]:
@@ -2507,6 +2544,11 @@ def main():
                 print(f'{path}: ERROR: {type(error).__name__}: {error}',
                       file=sys.stderr)
 
+        if successes:
+            client_types=collect_client_initialization_types(files,source_root)
+            client_header,client_source=generate_client_initializer(a.out,client_types)
+            print(f'Wrote {client_header}')
+            print(f'Wrote {client_source}')
         if a.cmake:
             try:
                 generate_cmake_files(
