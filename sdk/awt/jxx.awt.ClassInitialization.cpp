@@ -77,6 +77,17 @@ namespace jxx::awt
             ::jxx::io::serialization::registerClassReferenceArrayCodecs<
                 ::jxx::awt::Dimension, 1U, 2U>();
             (void)::jxx::awt::Font::Class();
+            ::jxx::io::serialization::registerSerializableClass<
+                ::jxx::awt::Font>(
+                    static_cast<::jxx::lang::jlong>(-4206021311591459213LL),
+                    [] {
+                        return ::jxx::NEW<::jxx::awt::Font>(
+                            ::jxx::NEW<::jxx::lang::String>("Default"),
+                            ::jxx::awt::Font::PLAIN,
+                            12);
+                    });
+            ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+                ::jxx::awt::Font, 1U, 2U>();
             (void)::jxx::awt::GradientPaint::Class();
             (void)::jxx::awt::Graphics::Class();
             (void)::jxx::awt::Graphics2D::Class();

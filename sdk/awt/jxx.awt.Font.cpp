@@ -2,7 +2,11 @@
 #include <cmath>
 #include <functional>
 #include <sstream>
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 #include "lang/jxx.lang.IllegalArgumentException.h"
+#include "io/jxx.io.InvalidObjectException.h"
+#include "lang/jxx.lang.NullPointerException.h"
 namespace jxx::awt
 {		void validStyle(::jxx::lang::jint s)
 		{
@@ -59,4 +63,51 @@ namespace jxx::awt
 	{
 		std::ostringstream s; s << "jxx.awt.Font[family=" << name_->utf8() << ",style=" << style_ << ",size=" << getSize() << "]"; return ::jxx::NEW<::jxx::lang::String>(s.str());
 	}
+
+
+    void Font::writeObject(
+        const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output)
+    {
+        if (output == nullptr) {
+            throw ::jxx::lang::NullPointerException();
+        }
+        output->writeObject(name_);
+        output->writeInt(style_);
+        output->writeFloat(size_);
+    }
+
+    void Font::readObject(
+        const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input)
+    {
+        if (input == nullptr) {
+            throw ::jxx::lang::NullPointerException();
+        }
+        const auto name = ::jxx::CAST<::jxx::lang::String>(input->readObject());
+        const auto style = input->readInt();
+        const auto size = input->readFloat();
+        if (name == nullptr) {
+            throw ::jxx::io::InvalidObjectException(
+                ::jxx::NEW<::jxx::lang::String>("Font name is null"));
+        }
+        try {
+            validStyle(style);
+        } catch (const ::jxx::lang::IllegalArgumentException&) {
+            throw ::jxx::io::InvalidObjectException(
+                ::jxx::NEW<::jxx::lang::String>("Invalid font style"));
+        }
+        if (!std::isfinite(size)) {
+            throw ::jxx::io::InvalidObjectException(
+                ::jxx::NEW<::jxx::lang::String>("Invalid font size"));
+        }
+        name_ = name;
+        style_ = style;
+        size_ = size;
+    }
+
+    void Font::readObjectNoData()
+    {
+        name_ = ::jxx::NEW<::jxx::lang::String>("Default");
+        style_ = PLAIN;
+        size_ = 12.0F;
+    }
 }
