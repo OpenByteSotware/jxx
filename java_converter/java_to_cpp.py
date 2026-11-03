@@ -138,6 +138,7 @@ class Translator:
         self.local_variable_types:Dict[str,object]={}
         self.local_array_variables:Set[str]=set()
         self.local_primitive_rank1_arrays:Set[str]=set()
+        self.catch_reference_variables:Set[str]=set()
         self.source_type_index:Dict[str,Tuple[str,str]]={}
         self.source_type_kinds:Dict[str,str]={}
         self.current_output_relative_dir=Path()
@@ -784,6 +785,12 @@ class Translator:
     def string_value_expression(self, expression):
         if self.is_string_literal_expression(expression):
             return f'::jxx::NEW<::jxx::lang::String>({self.expr(expression)})'
+        if (type(expression).__name__=='MemberReference' and
+                not getattr(expression,'qualifier',None) and
+                expression.member in self.catch_reference_variables):
+            return (f'::jxx::lang::String::valueOf('
+                    f'::jxx::CAST<::jxx::lang::Object>('
+                    f'{expression.member}.thisPtr()))')
         return f'::jxx::lang::String::valueOf({self.expr(expression)})'
 
     def string_concatenation_expression(self, expression):
@@ -937,6 +944,7 @@ class Translator:
         self.local_variable_types={}
         self.local_array_variables=set()
         self.local_primitive_rank1_arrays=set()
+        self.catch_reference_variables=set()
         for parameter in getattr(member,'parameters',None) or []:
             self.local_variable_types[parameter.name]=parameter.type
             dimensions=(len(getattr(parameter.type,'dimensions',None) or []) +
@@ -1438,6 +1446,80 @@ class Translator:
         output.exit()
         output.w('}')
 
+    def emit_statement_sequence(self, statements, output):
+        for statement in statements or []:
+            self.stmt(statement,output)
+
+    def emit_catch_clause(self, clause, output):
+        parameter=clause.parameter
+        catch_types=list(getattr(parameter,'types',None) or [])
+        if not catch_types:
+            catch_types=[self.name_of(getattr(parameter,'type',None))]
+        catch_types=[name for name in catch_types if name]
+        if not catch_types:
+            self.errors.append('catch clause has no exception type')
+            return
+        for catch_name in catch_types:
+            raw,include=self.qmap(catch_name)
+            if include:
+                self.source_includes.add(include)
+            output.w(f'catch (const {raw}& {parameter.name}) {{')
+            output.enter()
+            previous_type=self.local_variable_types.get(parameter.name)
+            was_catch_reference=parameter.name in self.catch_reference_variables
+            self.local_variable_types[parameter.name]=(
+                getattr(parameter,'type',None) or catch_name)
+            self.catch_reference_variables.add(parameter.name)
+            self.emit_statement_sequence(getattr(clause,'block',None),output)
+            if previous_type is None:
+                self.local_variable_types.pop(parameter.name,None)
+            else:
+                self.local_variable_types[parameter.name]=previous_type
+            if not was_catch_reference:
+                self.catch_reference_variables.discard(parameter.name)
+            output.exit()
+            output.w('}')
+
+    def emit_try_statement(self, statement, output):
+        resources=list(getattr(statement,'resources',None) or [])
+        if resources:
+            self.errors.append('try-with-resources is not yet supported')
+            output.w('/* TODO unsupported try-with-resources */')
+            return
+        catches=list(getattr(statement,'catches',None) or [])
+        finally_block=getattr(statement,'finally_block',None)
+        try_block=getattr(statement,'block',None) or []
+        if not catches and finally_block is None:
+            self.errors.append('try statement has neither catch nor finally')
+            output.w('/* TODO invalid try statement */')
+            return
+        # An outer catch-all makes finally run when the try body or any source
+        # catch throws. The normal path runs the same block exactly once after
+        # the inner try/catch sequence.
+        if finally_block is not None:
+            output.w('{')
+            output.enter()
+            output.w('try {')
+            output.enter()
+        output.w('try {')
+        output.enter()
+        self.emit_statement_sequence(try_block,output)
+        output.exit()
+        output.w('}')
+        for clause in catches:
+            self.emit_catch_clause(clause,output)
+        if finally_block is not None:
+            output.exit()
+            output.w('} catch (...) {')
+            output.enter()
+            self.emit_statement_sequence(finally_block,output)
+            output.w('throw;')
+            output.exit()
+            output.w('}')
+            self.emit_statement_sequence(finally_block,output)
+            output.exit()
+            output.w('}')
+
     def stmt(self,s,o):
         if s is None:return
         n=type(s).__name__
@@ -1502,6 +1584,8 @@ class Translator:
                 init=f' = {initial_value}' if d.initializer is not None else ''
                 const='const ' if 'final' in (s.modifiers or set()) else ''
                 o.w(f'{const}{t.value()} {d.name}{init};')
+        elif n=='TryStatement':
+            self.emit_try_statement(s,o)
         elif n=='IfStatement':
             o.w(f'if ({self.expr(s.condition)}) {{');o.enter();self.stmt(s.then_statement,o);o.exit()
             if s.else_statement is not None:o.w('} else {');o.enter();self.stmt(s.else_statement,o);o.exit()
