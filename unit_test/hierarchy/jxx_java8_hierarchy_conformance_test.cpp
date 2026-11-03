@@ -77,9 +77,12 @@ TEST(Java8HierarchyConformance, ReaderAndTypeAdapterKinds) {
         ::com::google::gson::TypeAdapter>));
 }
 
-TEST(Java8HierarchyConformance, CloseableExtendsAutoCloseable) {
-    EXPECT_TRUE((std::is_base_of_v<::jxx::io::AutoCloseable,
-                                   ::jxx::io::Closeable>));
+TEST(Java8HierarchyConformance, CloseableExtendsAutoCloseable)
+{
+    EXPECT_TRUE((
+        std::is_base_of_v<
+        ::jxx::lang::AutoCloseable,
+        ::jxx::io::Closeable>));
 }
 
 // These are disabled until the confirmed hierarchy gaps are corrected.
