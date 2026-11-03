@@ -232,6 +232,34 @@ target_link_libraries(
 		zlibstatic
 )
 
+# all_tests uses the Windows OpenSSL DLL import libraries through jxxsdk.
+# Copy the runtime DLLs before POST_BUILD discovery launches all_tests.exe.
+if(WIN32)
+    set(JXX_OPENSSL_RUNTIME_DLLS
+        "${JXX_OPENSSL_ROOT}/libcrypto-1_1-x64.dll"
+        "${JXX_OPENSSL_ROOT}/libssl-1_1-x64.dll"
+    )
+
+    foreach(_jxx_openssl_dll IN LISTS JXX_OPENSSL_RUNTIME_DLLS)
+        if(NOT EXISTS "${_jxx_openssl_dll}")
+            message(FATAL_ERROR
+                "Required OpenSSL runtime DLL does not exist: ${_jxx_openssl_dll}"
+            )
+        endif()
+    endforeach()
+
+    add_custom_command(
+        TARGET all_tests
+        POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+            ${JXX_OPENSSL_RUNTIME_DLLS}
+            "$<TARGET_FILE_DIR:all_tests>"
+        COMMAND_EXPAND_LISTS
+        VERBATIM
+        COMMENT "Copying OpenSSL runtime DLLs for all_tests"
+    )
+endif()
+
 include(GoogleTest)
 
 gtest_discover_tests(

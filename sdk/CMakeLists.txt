@@ -27,7 +27,9 @@ file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/*.h"
 )
 
-add_library(jxxsdk ${SRC_FILES})
+# Keep the JXX SDK itself static on both Windows and Linux. Its PUBLIC link
+# interface propagates the native libraries needed by final executables.
+add_library(jxxsdk STATIC ${SRC_FILES})
 
 set_target_properties(jxxsdk PROPERTIES
     LINKER_LANGUAGE CXX
@@ -39,6 +41,59 @@ target_compile_definitions(jxxsdk
     PUBLIC
         JXX_HEADLESS=$<BOOL:${JXX_HEADLESS}>
 )
+
+# OpenSSL integration:
+# - Windows uses the vendored DLLs and their import libraries.
+# - Linux and other Unix-like targets use the installed shared OpenSSL package.
+if(WIN32)
+    set(JXX_OPENSSL_ROOT
+        "${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/openssl"
+        CACHE PATH
+        "JXX vendored OpenSSL root"
+    )
+
+    set(JXX_OPENSSL_INCLUDE_DIR "${JXX_OPENSSL_ROOT}/include")
+    set(JXX_OPENSSL_CRYPTO_IMPLIB "${JXX_OPENSSL_ROOT}/libcrypto.lib")
+    set(JXX_OPENSSL_CRYPTO_DLL "${JXX_OPENSSL_ROOT}/libcrypto-1_1-x64.dll")
+    set(JXX_OPENSSL_SSL_IMPLIB "${JXX_OPENSSL_ROOT}/libssl.lib")
+    set(JXX_OPENSSL_SSL_DLL "${JXX_OPENSSL_ROOT}/libssl-1_1-x64.dll")
+
+    foreach(_jxx_openssl_path IN ITEMS
+            "${JXX_OPENSSL_INCLUDE_DIR}"
+            "${JXX_OPENSSL_CRYPTO_IMPLIB}"
+            "${JXX_OPENSSL_CRYPTO_DLL}"
+            "${JXX_OPENSSL_SSL_IMPLIB}"
+            "${JXX_OPENSSL_SSL_DLL}")
+        if(NOT EXISTS "${_jxx_openssl_path}")
+            message(FATAL_ERROR
+                "Required vendored OpenSSL path does not exist: "
+                "${_jxx_openssl_path}"
+            )
+        endif()
+    endforeach()
+
+    if(NOT TARGET OpenSSL::Crypto)
+        add_library(OpenSSL::Crypto SHARED IMPORTED GLOBAL)
+        set_target_properties(OpenSSL::Crypto PROPERTIES
+            IMPORTED_IMPLIB "${JXX_OPENSSL_CRYPTO_IMPLIB}"
+            IMPORTED_LOCATION "${JXX_OPENSSL_CRYPTO_DLL}"
+            INTERFACE_INCLUDE_DIRECTORIES "${JXX_OPENSSL_INCLUDE_DIR}"
+        )
+    endif()
+
+    if(NOT TARGET OpenSSL::SSL)
+        add_library(OpenSSL::SSL SHARED IMPORTED GLOBAL)
+        set_target_properties(OpenSSL::SSL PROPERTIES
+            IMPORTED_IMPLIB "${JXX_OPENSSL_SSL_IMPLIB}"
+            IMPORTED_LOCATION "${JXX_OPENSSL_SSL_DLL}"
+            INTERFACE_INCLUDE_DIRECTORIES "${JXX_OPENSSL_INCLUDE_DIR}"
+            INTERFACE_LINK_LIBRARIES "OpenSSL::Crypto"
+        )
+    endif()
+else()
+    set(OPENSSL_USE_STATIC_LIBS FALSE)
+    find_package(OpenSSL REQUIRED COMPONENTS SSL Crypto)
+endif()
 
 # libjpeg-turbo installation prefix. Expected layout:
 #   <prefix>/include/turbojpeg.h
@@ -89,9 +144,32 @@ if(NOT TARGET JXX::TurboJPEG)
     )
 endif()
 
+# These targets are expected to be created by the JXX root CMake project before
+# sdk/ is added. Fail during configuration rather than at final executable link.
+set(JXX_REQUIRED_DEPENDENCY_TARGETS
+    fmt::fmt
+    Microsoft.GSL::GSL
+    unicode::unicode
+    pugixml::pugixml
+    zlibstatic
+    OpenSSL::SSL
+    OpenSSL::Crypto
+    JXX::TurboJPEG
+)
+
+foreach(_jxx_dependency IN LISTS JXX_REQUIRED_DEPENDENCY_TARGETS)
+    if(NOT TARGET ${_jxx_dependency})
+        message(FATAL_ERROR
+            "Required JXX dependency target is unavailable: ${_jxx_dependency}"
+        )
+    endif()
+endforeach()
+
+# PUBLIC is intentional. jxxsdk is static, so final executables must receive
+# the complete third-party link interface.
 target_link_libraries(jxxsdk
-    PRIVATE
-        JXX::TurboJPEG
+    PUBLIC
+        ${JXX_REQUIRED_DEPENDENCY_TARGETS}
 )
 
 target_include_directories(jxxsdk
@@ -120,6 +198,13 @@ target_include_directories(jxxsdk
 
 message(STATUS "JXX TurboJPEG include: ${JXX_TURBOJPEG_INCLUDE_DIR}")
 message(STATUS "JXX TurboJPEG library: ${JXX_TURBOJPEG_LIBRARY}")
+if(WIN32)
+    message(STATUS "JXX OpenSSL crypto import library: ${JXX_OPENSSL_CRYPTO_IMPLIB}")
+    message(STATUS "JXX OpenSSL SSL import library: ${JXX_OPENSSL_SSL_IMPLIB}")
+else()
+    message(STATUS "JXX OpenSSL crypto library: ${OPENSSL_CRYPTO_LIBRARY}")
+    message(STATUS "JXX OpenSSL SSL library: ${OPENSSL_SSL_LIBRARY}")
+endif()
 
 if(MSVC)
     target_compile_definitions(jxxsdk
