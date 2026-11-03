@@ -6,7 +6,7 @@
 namespace jxx::awt
 {
     class BufferCapabilities :
-        public ::jxx::lang::ClassBase<BufferCapabilities, ::jxx::lang::Object>
+        public ::jxx::lang::ClassBase<BufferCapabilities, ::jxx::lang::Object, ::jxx::lang::Cloneable>
     {
     public:
         class FlipContents :
@@ -30,7 +30,7 @@ namespace jxx::awt
         };
 
         using JxxSuper = ::jxx::lang::Object;
-        using Super = ::jxx::lang::ClassBase<BufferCapabilities, JxxSuper>;
+        using Super = ::jxx::lang::ClassBase<BufferCapabilities, JxxSuper, ::jxx::lang::Cloneable>;
 
         BufferCapabilities(
             const ::jxx::Ptr<ImageCapabilities>& frontCapabilities,

@@ -75,7 +75,17 @@ namespace jxx::awt
             (void)::jxx::awt::MenuContainer::Class();
             (void)::jxx::awt::ImageCapabilities::Class();
             (void)::jxx::awt::Insets::Class();
+            ::jxx::io::serialization::registerSerializableClass<
+                ::jxx::awt::Insets>(
+                    static_cast<::jxx::lang::jlong>(-2272572637695466749LL));
+            ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+                ::jxx::awt::Insets, 1U, 2U>();
             (void)::jxx::awt::Point::Class();
+            ::jxx::io::serialization::registerSerializableClass<
+                ::jxx::awt::Point>(
+                    static_cast<::jxx::lang::jlong>(-5276940640259749850LL));
+            ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+                ::jxx::awt::Point, 1U, 2U>();
             (void)::jxx::awt::Rectangle::Class();
             (void)::jxx::awt::RenderingHints::Class();
             (void)::jxx::awt::RenderingHints::Key::Class();

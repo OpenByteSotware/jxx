@@ -377,7 +377,9 @@ class Translator:
                 modifiers=set(getattr(method,'modifiers',None) or [])
                 if not {'public','static'}.issubset(modifiers):
                     continue
-                if cls.name_of(getattr(method,'return_type',None))!='void':
+                # javalang represents a source void return type as None.
+                return_type=getattr(method,'return_type',None)
+                if return_type is not None and cls.name_of(return_type)!='void':
                     continue
                 parameters=list(getattr(method,'parameters',None) or [])
                 if len(parameters)!=1:
@@ -548,7 +550,10 @@ class Translator:
             return True
         mods=set(getattr(m,'modifiers',None) or [])
         if not {'public','static'}.issubset(mods): return False
-        if self.name_of(getattr(m,'return_type',None)) != 'void': return False
+        # javalang represents a source void return type as None.
+        return_type=getattr(m,'return_type',None)
+        if return_type is not None and self.name_of(return_type) != 'void':
+            return False
         params=list(getattr(m,'parameters',None) or [])
         if len(params) != 1: return False
         param=params[0]
