@@ -82,14 +82,12 @@ namespace jxx::jdk8::lang {
                 }
             });
             try {
-                try {
-                    ::jxx::lang::System::setProperty(key, ::jxx::NEW<::jxx::lang::String>("0x20"));
-                    EXPECT_EQ(::jxx::lang::Long::valueOf(32L), ::jxx::lang::Long::getLong(key));
-                    ::jxx::lang::System::clearProperty(key);
-                    EXPECT_EQ(::jxx::lang::Long::getLong(key), nullptr);
-                    EXPECT_EQ(::jxx::lang::Long::valueOf(7L), ::jxx::lang::Long::getLong(key, 7L));
-                    EXPECT_EQ(::jxx::lang::Long::valueOf(9L), ::jxx::lang::Long::getLong(key, ::jxx::lang::Long::valueOf(9L)));
-                }
+                ::jxx::lang::System::setProperty(key, ::jxx::NEW<::jxx::lang::String>("0x20"));
+                EXPECT_EQ(::jxx::lang::Long::valueOf(32L), ::jxx::lang::Long::getLong(key));
+                ::jxx::lang::System::clearProperty(key);
+                EXPECT_EQ(::jxx::lang::Long::getLong(key), nullptr);
+                EXPECT_EQ(::jxx::lang::Long::valueOf(7L), ::jxx::lang::Long::getLong(key, 7L));
+                EXPECT_EQ(::jxx::lang::Long::valueOf(9L), ::jxx::lang::Long::getLong(key, ::jxx::lang::Long::valueOf(9L)));
             } catch (...) {
                 jxxFinally0.runAndDismiss();
                 throw;

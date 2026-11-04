@@ -83,14 +83,12 @@ namespace jxx::jdk8::lang {
                 }
             });
             try {
-                try {
-                    ::jxx::lang::System::setProperty(key, ::jxx::NEW<::jxx::lang::String>("0x20"));
-                    EXPECT_EQ(::jxx::lang::Integer::valueOf(32), ::jxx::lang::Integer::getInteger(key));
-                    ::jxx::lang::System::clearProperty(key);
-                    EXPECT_EQ(::jxx::lang::Integer::getInteger(key), nullptr);
-                    EXPECT_EQ(::jxx::lang::Integer::valueOf(7), ::jxx::lang::Integer::getInteger(key, 7));
-                    EXPECT_EQ(::jxx::lang::Integer::valueOf(9), ::jxx::lang::Integer::getInteger(key, ::jxx::lang::Integer::valueOf(9)));
-                }
+                ::jxx::lang::System::setProperty(key, ::jxx::NEW<::jxx::lang::String>("0x20"));
+                EXPECT_EQ(::jxx::lang::Integer::valueOf(32), ::jxx::lang::Integer::getInteger(key));
+                ::jxx::lang::System::clearProperty(key);
+                EXPECT_EQ(::jxx::lang::Integer::getInteger(key), nullptr);
+                EXPECT_EQ(::jxx::lang::Integer::valueOf(7), ::jxx::lang::Integer::getInteger(key, 7));
+                EXPECT_EQ(::jxx::lang::Integer::valueOf(9), ::jxx::lang::Integer::getInteger(key, ::jxx::lang::Integer::valueOf(9)));
             } catch (...) {
                 jxxFinally0.runAndDismiss();
                 throw;

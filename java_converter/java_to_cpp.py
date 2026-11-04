@@ -1751,13 +1751,21 @@ class Translator:
             output.w('});')
             output.w('try {')
             output.enter()
-        output.w('try {')
-        output.enter()
-        self.emit_statement_sequence(try_block,output)
-        output.exit()
-        output.w('}')
-        for clause in catches:
-            self.emit_catch_clause(clause,output)
+        # C++ requires every try statement to be followed by at least one
+        # catch handler. A source try/finally has no source catch, so the outer
+        # catch-all used to control the RAII guard is the only C++ try needed.
+        # When source catches exist, retain the inner try/catch sequence inside
+        # that outer guard-protection try.
+        if catches:
+            output.w('try {')
+            output.enter()
+            self.emit_statement_sequence(try_block,output)
+            output.exit()
+            output.w('}')
+            for clause in catches:
+                self.emit_catch_clause(clause,output)
+        else:
+            self.emit_statement_sequence(try_block,output)
         if finally_block is not None:
             output.exit()
             output.w('} catch (...) {')

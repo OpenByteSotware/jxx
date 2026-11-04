@@ -78,14 +78,12 @@ namespace jxx::jdk8::lang {
                 }
             });
             try {
-                try {
-                    ::jxx::lang::System::setProperty(key, ::jxx::NEW<::jxx::lang::String>("TrUe"));
-                    EXPECT_TRUE(::jxx::lang::Boolean::getBoolean(key));
-                    ::jxx::lang::System::setProperty(key, ::jxx::NEW<::jxx::lang::String>("false"));
-                    EXPECT_FALSE(::jxx::lang::Boolean::getBoolean(key));
-                    ::jxx::lang::System::clearProperty(key);
-                    EXPECT_FALSE(::jxx::lang::Boolean::getBoolean(key));
-                }
+                ::jxx::lang::System::setProperty(key, ::jxx::NEW<::jxx::lang::String>("TrUe"));
+                EXPECT_TRUE(::jxx::lang::Boolean::getBoolean(key));
+                ::jxx::lang::System::setProperty(key, ::jxx::NEW<::jxx::lang::String>("false"));
+                EXPECT_FALSE(::jxx::lang::Boolean::getBoolean(key));
+                ::jxx::lang::System::clearProperty(key);
+                EXPECT_FALSE(::jxx::lang::Boolean::getBoolean(key));
             } catch (...) {
                 jxxFinally0.runAndDismiss();
                 throw;
