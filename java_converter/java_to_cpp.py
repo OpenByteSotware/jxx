@@ -170,6 +170,10 @@ class Translator:
         self.current_output_relative_dir=Path()
         self.active_wildcard_types:Dict[int,str]={}
         self.sdk_metadata:Optional[SdkMetadataIndex]=None
+        self.anonymous_classes:Dict[int,dict]={}
+        self.anonymous_class_order:List[dict]=[]
+        self.active_anonymous_captures:Set[str]=set()
+        self.active_anonymous_captures:Set[str]=set()
 
     @staticmethod
     def simple(n): return str(n).split('.')[-1]
@@ -460,8 +464,117 @@ class Translator:
     def detect_main_owners(source: str) -> Set[str]:
         return set(Translator.detect_main_entries(source))
 
+    def collect_anonymous_classes(self,tree):
+        """Index anonymous interface implementations and their captured locals."""
+        creator_type=getattr(getattr(javalang,'tree',None),'ClassCreator',None)
+        member_type=getattr(getattr(javalang,'tree',None),'MemberReference',None)
+        invocation_type=getattr(getattr(javalang,'tree',None),'MethodInvocation',None)
+        local_type=getattr(getattr(javalang,'tree',None),'LocalVariableDeclaration',None)
+        if creator_type is None:
+            return
+        counter=0
+        for declaration in self.class_declarations(tree):
+            for method in getattr(declaration,'body',None) or []:
+                if type(method).__name__!='MethodDeclaration':
+                    continue
+                locals_by_name={p.name:p.type for p in getattr(method,'parameters',None) or []}
+                filter_method=getattr(method,'filter',None)
+                if callable(filter_method) and local_type is not None:
+                    for _,local in filter_method(local_type):
+                        for declarator in local.declarators or []:
+                            locals_by_name[declarator.name]=local.type
+                if not callable(filter_method):
+                    continue
+                for _,creator in filter_method(creator_type):
+                    body=list(getattr(creator,'body',None) or [])
+                    if not body:
+                        continue
+                    interface_name=self.name_of(creator.type)
+                    raw_interface,include=self.qmap(interface_name)
+                    if include:
+                        self.includes.add(include)
+                    referenced=[]
+                    for member in body:
+                        member_filter=getattr(member,'filter',None)
+                        if not callable(member_filter):
+                            continue
+                        if member_type is not None:
+                            for _,reference in member_filter(member_type):
+                                qualifier=getattr(reference,'qualifier',None)
+                                candidate=qualifier or reference.member
+                                if (candidate in locals_by_name and
+                                        candidate not in referenced):
+                                    referenced.append(candidate)
+                        if invocation_type is not None:
+                            for _,invocation in member_filter(invocation_type):
+                                qualifier=getattr(invocation,'qualifier',None)
+                                root=(str(qualifier).split('.')[0]
+                                      if qualifier else '')
+                                if (root in locals_by_name and
+                                        root not in referenced):
+                                    referenced.append(root)
+                    captures=[(name,locals_by_name[name]) for name in referenced]
+                    metadata={
+                        'id':id(creator),
+                        'name':f'JxxAnonymous{interface_name}{counter}',
+                        'owner':declaration.name,
+                        'interface_name':interface_name,
+                        'interface_raw':raw_interface,
+                        'body':body,
+                        'captures':captures,
+                    }
+                    counter+=1
+                    self.anonymous_classes[id(creator)]=metadata
+                    self.anonymous_class_order.append(metadata)
+
+    def emit_anonymous_class(self,metadata,o):
+        name=metadata['name']; interface_raw=metadata['interface_raw']
+        class_args=f'{name}, ::jxx::lang::Object, {interface_raw}'
+        o.w(f'class {name} final : public ::jxx::lang::ClassBase<{class_args}> {{')
+        o.w('public:');o.enter()
+        o.w(f'using JxxSuper = ::jxx::lang::Object;')
+        o.w(f'using Super = ::jxx::lang::ClassBase<{class_args}>;')
+        parameters=[]
+        for capture_name,capture_type in metadata['captures']:
+            parameters.append(f'{self.resolve(capture_type).param()} {capture_name}')
+        o.w(f'explicit {name}({", ".join(parameters)})')
+        if metadata['captures']:
+            initializers=', '.join(f'{capture_name}_({capture_name})'
+                                   for capture_name,_ in metadata['captures'])
+            o.w(f'    : {initializers} {{}}')
+        else:
+            o.w('    = default;')
+        previous_class=self.current_class
+        for member in metadata['body']:
+            if type(member).__name__!='MethodDeclaration':
+                self.errors.append(
+                    f'unsupported anonymous class member: {type(member).__name__}')
+                continue
+            modifiers=getattr(member,'modifiers',None) or set()
+            prefix='static ' if 'static' in modifiers else 'virtual '
+            o.w(f'{prefix}{self.sig(member,name)} override {{');o.enter()
+            self.begin_member_scope(name,member)
+            for capture_name,capture_type in metadata['captures']:
+                self.local_variable_types[capture_name]=capture_type
+            old_return=self.current_return
+            previous_captures=set(self.active_anonymous_captures)
+            self.active_anonymous_captures={n for n,_ in metadata['captures']}
+            self.current_return=self.resolve(member.return_type).value()
+            for statement in member.body or []:
+                self.stmt(statement,o)
+            self.current_return=old_return
+            self.active_anonymous_captures=previous_captures
+            o.exit();o.w('}')
+        self.current_class=previous_class
+        if metadata['captures']:
+            o.exit();o.w('private:');o.enter()
+            for capture_name,capture_type in metadata['captures']:
+                o.w(f'{self.resolve(capture_type).value()} {capture_name}_;')
+        o.exit();o.w('};');o.w()
+
     def gather(self,tree):
         self.package=tree.package.name if tree.package else ''
+        self.collect_anonymous_classes(tree)
         # Collect every type declared by this source, including member/local
         # classes, before wildcard imports are used to resolve references.
         # These names live in the generated source/header and must never create
@@ -1262,18 +1375,21 @@ class Translator:
             q=getattr(e,'qualifier',None)
             if q:
                 fq=self.imports.get(q,q)
+                rendered_q=(f'{q}_' if q in self.active_anonymous_captures else q)
                 if q in self.local_variable_types:
                     if e.member=='length' and q in self.local_array_variables:
-                        base=self.array_size_expression(q)
+                        base=self.array_size_expression(rendered_q)
                     else:
-                        base=f'{q}->{e.member}'
+                        base=f'{rendered_q}->{e.member}'
                 elif e.member in STATIC_ACCESSORS.get(fq,set()):
                     base=f'{self.qmap(fq)[0]}::{e.member}()'
                 elif q in self.imports or (q and q[0].isupper()):
                     base=f'{self.qualified_static_owner(q)}::{e.member}'
                 else:
                     base=f'{q}->{e.member}'
-            else: base=e.member
+            else:
+                base=(f'{e.member}_' if e.member in self.active_anonymous_captures
+                      else e.member)
             array_name=(e.member if not q else q)
             base=self.apply_expression_selectors(
                 base,getattr(e,'selectors',None),
@@ -1281,8 +1397,9 @@ class Translator:
             return ''.join(getattr(e,'prefix_operators',None) or [])+base+''.join(getattr(e,'postfix_operators',None) or [])
         if n=='MethodInvocation':
             q=getattr(e,'qualifier',None)
+            rendered_q=(f'{q}_' if q in self.active_anonymous_captures else q)
             if q in self.local_variable_types:
-                head=f'{q}->{e.member}'
+                head=f'{rendered_q}->{e.member}'
             elif q and (q in self.imports or q[0].isupper()):
                 owner=self.qualified_static_owner(q)
                 # Class.method is static and uses ::. Class.field.method calls
@@ -1375,6 +1492,11 @@ class Translator:
             o.w(f'(*{declarator.name})[{index}U] = {converted};')
 
     def class_creator_expression(self, creator, expected_type=None):
+        anonymous=self.anonymous_classes.get(id(creator))
+        if anonymous is not None:
+            arguments=', '.join(name for name,_ in anonymous['captures'])
+            created=f'::jxx::NEW<{anonymous["name"]}>({arguments})'
+            return f'::jxx::CAST<{anonymous["interface_raw"]}>({created})'
         creator_type=creator.type
         creator_arguments=list(getattr(creator_type,'arguments',None) or [])
         expected_arguments=(list(getattr(expected_type,'arguments',None) or [])
@@ -2148,6 +2270,8 @@ class Translator:
                 o.w(f'#include "{include}"')
         o.w();ns=('jxx::'+self.package.replace('.', '::')) if self.package else ''
         if ns:o.w(f'namespace {ns} {{');o.enter()
+        for anonymous in self.anonymous_class_order:
+            self.emit_anonymous_class(anonymous,o)
         for t in self.class_declarations(tree):
             if self.type_parameter_names(t):
                 continue
@@ -2163,7 +2287,21 @@ class Translator:
                 self.begin_member_scope(t.name,m)
                 old=self.current_return
                 self.current_return='void' if is_constructor else self.resolve(m.return_type).value()
-                for statement in statements:self.stmt(statement,o)
+                synchronized_method=(
+                    type(m).__name__=='MethodDeclaration' and
+                    'synchronized' in (getattr(m,'modifiers',None) or set()))
+                if synchronized_method:
+                    if self.current_return=='void':
+                        o.w('this->synchronized([&]() {');o.enter()
+                        for statement in statements:self.stmt(statement,o)
+                        o.exit();o.w('});')
+                    else:
+                        o.w(f'return this->synchronized([&]() -> {self.current_return} {{')
+                        o.enter()
+                        for statement in statements:self.stmt(statement,o)
+                        o.exit();o.w('});')
+                else:
+                    for statement in statements:self.stmt(statement,o)
                 self.current_return=old;o.exit();o.w('}');o.w()
         if ns:o.exit();o.w(f'}} // namespace {ns}')
         return o.text()
