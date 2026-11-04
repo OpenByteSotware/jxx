@@ -2375,12 +2375,15 @@ class Translator:
         return entries
 
     def main_source(self, owner_name, parameter_name, header_inc,
-                    owner_type_parameters:Sequence[str]=())->str:
+                    owner_type_parameters:Sequence[str]=(),
+                    client_initializer_header:str='',
+                    client_initializer_function:str='')->str:
         o=Emit()
         o.w(f'#include "{header_inc}"')
         o.w('#include <cstdint>')
         o.w('#include "jxx.initialize.h"')
-        o.w('#include "jxx.client.initialize.h"')
+        if client_initializer_header:
+            o.w(f'#include "{client_initializer_header}"')
         o.w('#include "lang/jxx.lang.String.h"')
         o.w('#include "lang/jxx.lang.Throwable.h"')
         o.w('#include "lang/jxx.lang.System.h"')
@@ -2397,7 +2400,8 @@ class Translator:
         o.w('int main(int argc, char** argv) {')
         o.enter();o.w('try {');o.enter()
         o.w('::jxx::initialize();')
-        o.w('::jxx::client::initialize();')
+        if client_initializer_function:
+            o.w(f'{client_initializer_function}();')
         o.w('using JxxString = ::jxx::lang::String;')
         o.w('using JxxStringArray = ::jxx::lang::JxxArray<::jxx::Ptr<JxxString>, 1U>;')
         o.w('const auto sourceArgc = argc > 0 ? argc - 1 : 0;')
@@ -2506,11 +2510,17 @@ class Translator:
             wrapper_name=(f'{stem}_main.cpp' if len(self.main_entries)==1
                           else f'{owner_name}_main.cpp')
             wrapper=output_dir/wrapper_name
+            initializer_stem=Path(wrapper_name).stem.replace('_main','')
+            initializer_header=f'{initializer_stem}.client.initialize.h'
+            initializer_function=(
+                '::jxx::client::initialize_' +
+                re.sub(r'[^A-Za-z0-9_]', '_', initializer_stem))
             wrapper.write_text(
                 self.main_source(
                     owner_name,parameter_name,header_inc,
                     self.type_parameter_names(parsed_declarations[owner_name])
-                    if owner_name in parsed_declarations else ()),
+                    if owner_name in parsed_declarations else (),
+                    initializer_header,initializer_function),
                 encoding='utf-8')
             self.generated_files.append(wrapper)
         return hp,cp
@@ -2682,40 +2692,104 @@ def generate_cmake(out_root: str, project: str = 'TranspiledProject',
         out_root, project, target, jxx_include, jxx_library,
         jxx_root).read_text(encoding='utf-8')
 
-def collect_client_initialization_types(files:Sequence[Path], source_root:Path) -> List[Tuple[str,str]]:
-    result=[]; seen=set()
+def collect_source_initialization_catalog(
+        files:Sequence[Path], source_root:Path):
+    """Return generated-header to public non-template source types."""
+    catalog={}
     for path in files:
         try:
             tree=javalang.parse.parse(path.read_text(encoding='utf-8'))
         except Exception:
             continue
         package=tree.package.name if tree.package else ''
-        if package:
-            relative_dir=Path(*package.split('.')); namespace='::jxx::'+package.replace('.','::')
-        else:
-            try: relative_dir=path.parent.resolve().relative_to(source_root.resolve())
-            except ValueError: relative_dir=Path()
-            namespace='::'
+        relative_dir=(Path(*package.split('.')) if package else
+                      path.parent.resolve().relative_to(source_root.resolve()))
         include=(relative_dir/path.with_suffix('.h').name).as_posix()
-        if include.startswith('./'): include=include[2:]
+        if include.startswith('./'):
+            include=include[2:]
+        namespace=('::jxx::'+package.replace('.','::') if package else '::')
+        entries=[]
         for declaration in getattr(tree,'types',None) or []:
-            if type(declaration).__name__ not in {'ClassDeclaration','InterfaceDeclaration'}: continue
-            if getattr(declaration,'type_parameters',None): continue
-            qualified=(f'{namespace}::{declaration.name}' if namespace!='::' else f'::{declaration.name}')
-            if qualified not in seen:
-                seen.add(qualified); result.append((qualified,include))
-    return sorted(result,key=lambda value:value[0])
+            if type(declaration).__name__ not in {
+                    'ClassDeclaration','InterfaceDeclaration'}:
+                continue
+            if getattr(declaration,'type_parameters',None):
+                continue
+            qualified=(f'{namespace}::{declaration.name}'
+                       if namespace!='::' else f'::{declaration.name}')
+            entries.append(qualified)
+        if entries:
+            catalog[include]=sorted(set(entries))
+    return catalog
 
-def generate_client_initializer(out_root:str, client_types:Sequence[Tuple[str,str]]) -> Tuple[Path,Path]:
-    root=Path(out_root); header=root/'jxx.client.initialize.h'; source=root/'jxx.client.initialize.cpp'
-    header.write_text('#pragma once\n\nnamespace jxx::client {\n    void initialize();\n} // namespace jxx::client\n',encoding='utf-8')
-    lines=['#include "jxx.client.initialize.h"']
-    lines.extend(f'#include "{include}"' for include in sorted({include for _,include in client_types}))
-    lines += ['','namespace jxx::client {','    void initialize() {','        static const bool initialized = []() {']
-    lines.extend(f'            (void){qualified}::Class();' for qualified,_ in client_types)
-    lines += ['            return true;','        }();','        (void)initialized;','    }','} // namespace jxx::client','']
-    source.write_text('\n'.join(lines),encoding='utf-8')
-    return header,source
+
+def _generated_source_includes(path:Path):
+    try:
+        text=path.read_text(encoding='utf-8')
+    except OSError:
+        return set()
+    return set(re.findall(r'^#include\s+"([^"]+)"',text,re.MULTILINE))
+
+
+def generate_per_main_client_initializers(out_root:str, catalog):
+    """Generate one small transitive client initializer per native main."""
+    root=Path(out_root)
+    generated_headers=set(catalog)
+    # Associate every generated header with dependencies from both its header
+    # and implementation. This captures declaration and method-body source use.
+    dependency_graph={header:set() for header in generated_headers}
+    for header in generated_headers:
+        header_path=root/header
+        cpp_path=header_path.with_suffix('.cpp')
+        includes=_generated_source_includes(header_path)
+        if cpp_path.is_file():
+            includes.update(_generated_source_includes(cpp_path))
+        dependency_graph[header].update(
+            include for include in includes if include in generated_headers)
+
+    created=[]
+    for wrapper in sorted(root.rglob('*_main.cpp')):
+        includes=_generated_source_includes(wrapper)
+        roots=sorted(include for include in includes
+                     if include in generated_headers)
+        reachable=set()
+        pending=list(roots)
+        while pending:
+            header=pending.pop()
+            if header in reachable:
+                continue
+            reachable.add(header)
+            pending.extend(dependency_graph.get(header,()))
+        initializer_stem=wrapper.stem[:-5] if wrapper.stem.endswith('_main') else wrapper.stem
+        safe=re.sub(r'[^A-Za-z0-9_]', '_', initializer_stem)
+        header_path=wrapper.parent/f'{initializer_stem}.client.initialize.h'
+        source_path=wrapper.parent/f'{initializer_stem}.client.initialize.cpp'
+        function=f'initialize_{safe}'
+        header_path.write_text(
+            '#pragma once\n\nnamespace jxx::client {\n'
+            f'    void {function}();\n'
+            '} // namespace jxx::client\n',encoding='utf-8')
+        relative_initializer_header=header_path.name
+        lines=[f'#include "{relative_initializer_header}"']
+        lines.extend(f'#include "{header}"' for header in sorted(reachable))
+        types=sorted({qualified for header in reachable
+                      for qualified in catalog.get(header,())})
+        lines += ['', 'namespace jxx::client {', f'    void {function}() {{',
+                  '        static const bool initialized = []() {']
+        lines.extend(f'            (void){qualified}::Class();'
+                     for qualified in types)
+        lines += ['            return true;', '        }();',
+                  '        (void)initialized;', '    }',
+                  '} // namespace jxx::client', '']
+        source_path.write_text('\n'.join(lines),encoding='utf-8')
+        created.extend([header_path,source_path])
+    # Remove obsolete monolithic initializer from earlier conversion runs.
+    for obsolete in (root/'jxx.client.initialize.h',
+                     root/'jxx.client.initialize.cpp'):
+        if obsolete.exists():
+            obsolete.unlink()
+    return created
+
 
 def build_source_type_index(
         files:Sequence[Path],
@@ -2898,10 +2972,11 @@ def main():
                       file=sys.stderr)
 
         if successes:
-            client_types=collect_client_initialization_types(files,source_root)
-            client_header,client_source=generate_client_initializer(a.out,client_types)
-            print(f'Wrote {client_header}')
-            print(f'Wrote {client_source}')
+            initialization_catalog=collect_source_initialization_catalog(
+                files,source_root)
+            for generated in generate_per_main_client_initializers(
+                    a.out,initialization_catalog):
+                print(f'Wrote {generated}')
         if a.cmake:
             try:
                 generate_cmake_files(
