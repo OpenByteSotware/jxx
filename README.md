@@ -132,6 +132,15 @@ python3 java_to_cpp.py --dir ../java_examples --out outcpp --cmake --jxx-include
 python3 java_to_cpp.py --dir ../java_examples --out outcpp --cmake --jxx-include c:/projects/SourceCode/git_repos/open_source/jxx/sdk --jxx-library C:/projects/SourceCode/git_repos/open_source/jxx/build-headless/sdk/Debug/jxxsdk.lib
 python3 java_to_cpp.py --dir ../java_examples --out outcpp --cmake --jxx-include c:/projects/SourceCode/git_repos/open_source/jxx/sdk --jxx-root C:/projects/SourceCode/git_repos/open_source/jxx
 
+for converting test framework unit test from java to c++ with jxx and googletest use the below:
+--test-framework none  (not using framework, same as not adding this parameter)
+--test-framework junit4 (junit 4 tests)
+--test-framework junit5 (junit 5 tests)
+--test-framework testng (testng unit tests)
+--test-framework auto (figure it out in the converter, may work well/may not)
+
+python3 java_to_cpp.py --dir ../java_examples --out outcpp --cmake --jxx-include c:/projects/SourceCode/git_repos/open_source/jxx/sdk --jxx-root C:/projects/SourceCode/git_repos/open_source/jxx --test-framework testng
+
 To build 3rd party packages
 These 3rd party libraries have been modified to support C++17 at a minimum
 

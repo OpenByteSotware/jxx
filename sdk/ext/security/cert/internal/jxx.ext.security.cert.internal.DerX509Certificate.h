@@ -14,6 +14,13 @@ public:
 
     explicit DerX509Certificate(const ::jxx::lang::ByteArray& encoded);
     ::jxx::lang::ByteArray getEncoded() const override;
+    void verify(
+        const ::jxx::Ptr<::jxx::security::PublicKey>& key) const override;
+    void verify(
+        const ::jxx::Ptr<::jxx::security::PublicKey>& key,
+        const ::jxx::Ptr<::jxx::lang::String>& signatureProvider) const override;
+    ::jxx::Ptr<::jxx::security::PublicKey> getPublicKey() const override;
+    ::jxx::Ptr<::jxx::lang::String> toString() const override;
 
 private:
     ::jxx::lang::ByteArray encoded_;
