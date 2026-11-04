@@ -173,6 +173,7 @@ class Translator:
         self.anonymous_classes:Dict[int,dict]={}
         self.anonymous_class_order:List[dict]=[]
         self.active_anonymous_captures:Set[str]=set()
+        self.test_framework='none'
 
     @staticmethod
     def simple(n): return str(n).split('.')[-1]
@@ -1328,6 +1329,47 @@ class Translator:
         rendered.append(array_expression)
         return rendered
 
+    def test_assertion_expression(self, invocation):
+        if self.test_framework=='none' or type(invocation).__name__!='MethodInvocation':
+            return None
+        member=invocation.member
+        arguments=list(getattr(invocation,'arguments',None) or [])
+        # Both JUnit and TestNG accept an optional assertion message, but their
+        # argument ordering differs. Keep stage-one mappings deterministic.
+        message=None
+        if self.test_framework in {'junit4','junit5'} and arguments and self.is_string_literal_expression(arguments[0]):
+            message=arguments.pop(0)
+        elif self.test_framework=='testng' and len(arguments)>2 and self.is_string_literal_expression(arguments[-1]):
+            message=arguments.pop()
+        macro=None
+        if member in {'assertTrue','assertFalse'} and len(arguments)==1:
+            macro=('EXPECT_TRUE' if member=='assertTrue' else 'EXPECT_FALSE')
+            rendered=f'{macro}({self.expr(arguments[0])})'
+        elif member in {'assertNull','assertNotNull'} and len(arguments)==1:
+            macro=('EXPECT_EQ' if member=='assertNull' else 'EXPECT_NE')
+            rendered=f'{macro}({self.expr(arguments[0])}, nullptr)'
+        elif member in {'assertSame','assertNotSame'} and len(arguments)==2:
+            macro=('EXPECT_EQ' if member=='assertSame' else 'EXPECT_NE')
+            rendered=(f'{macro}({self.expr(arguments[0])}.get(), '
+                      f'{self.expr(arguments[1])}.get())')
+        elif member in {'assertEquals','assertNotEquals'} and len(arguments) in {2,3}:
+            if len(arguments)==3:
+                rendered=(f'EXPECT_NEAR({self.expr(arguments[0])}, '
+                          f'{self.expr(arguments[1])}, {self.expr(arguments[2])})')
+            else:
+                macro=('EXPECT_EQ' if member=='assertEquals' else 'EXPECT_NE')
+                rendered=f'{macro}({self.expr(arguments[0])}, {self.expr(arguments[1])})'
+        elif member=='fail' and len(arguments)<=1:
+            rendered='FAIL()'
+            if arguments:
+                rendered+=f' << {self.expr(arguments[0])}'
+            return rendered
+        else:
+            return None
+        if message is not None:
+            rendered+=f' << {self.expr(message)}'
+        return rendered
+
     def expr(self,e):
         if e is None:return ''
         n=type(e).__name__
@@ -1395,6 +1437,9 @@ class Translator:
                 array_name in self.local_primitive_rank1_arrays)
             return ''.join(getattr(e,'prefix_operators',None) or [])+base+''.join(getattr(e,'postfix_operators',None) or [])
         if n=='MethodInvocation':
+            test_assertion=self.test_assertion_expression(e)
+            if test_assertion is not None:
+                return test_assertion
             q=getattr(e,'qualifier',None)
             rendered_q=(f'{q}_' if q in self.active_anonymous_captures else q)
             if q in self.local_variable_types:
@@ -2525,6 +2570,143 @@ class Translator:
             self.generated_files.append(wrapper)
         return hp,cp
 
+def annotation_simple_names(node):
+    return {str(getattr(annotation,'name','')).split('.')[-1]
+            for annotation in getattr(node,'annotations',None) or []}
+
+
+def detect_test_framework(tree):
+    imports={imp.path for imp in getattr(tree,'imports',None) or []}
+    if any(name.startswith('org.testng.') for name in imports):
+        return 'testng'
+    if any(name.startswith('org.junit.jupiter.') for name in imports):
+        return 'junit5'
+    if any(name.startswith('org.junit.') for name in imports):
+        return 'junit4'
+    return 'none'
+
+
+def _test_method_roles(framework, declaration):
+    class_annotations=annotation_simple_names(declaration)
+    class_test=(framework=='testng' and 'Test' in class_annotations)
+    tests=[]; before=[]; after=[]; before_class=[]; after_class=[]; ignored=set()
+    for member in getattr(declaration,'body',None) or []:
+        if type(member).__name__!='MethodDeclaration':
+            continue
+        annotations=annotation_simple_names(member)
+        is_test=('Test' in annotations or
+                 (class_test and 'public' in (member.modifiers or set()) and
+                  not annotations.intersection({'BeforeMethod','AfterMethod',
+                                                'BeforeClass','AfterClass'})))
+        if is_test: tests.append(member)
+        if annotations.intersection({'Before','BeforeEach','BeforeMethod'}): before.append(member)
+        if annotations.intersection({'After','AfterEach','AfterMethod'}): after.append(member)
+        if annotations.intersection({'BeforeClass','BeforeAll'}): before_class.append(member)
+        if annotations.intersection({'AfterClass','AfterAll'}): after_class.append(member)
+        if annotations.intersection({'Ignore','Disabled'}): ignored.add(member.name)
+    return tests,before,after,before_class,after_class,ignored
+
+
+def _gtest_name(name):
+    cleaned=re.sub(r'[^A-Za-z0-9_]', '_', name)
+    return cleaned[:1].upper()+cleaned[1:] if cleaned else 'Unnamed'
+
+
+def generate_google_test(path:Path, out_root:str, source_root:Path,
+                         framework:str, source_type_index, source_type_kinds,
+                         sdk_metadata, strict_tests:bool=False):
+    source=path.read_text(encoding='utf-8')
+    tree=javalang.parse.parse(source)
+    detected=detect_test_framework(tree)
+    active=detected if framework=='auto' else framework
+    if active=='none':
+        raise ConversionFailure(f'no supported test framework detected in {path}')
+    if framework!='auto' and detected not in {'none',framework}:
+        raise ConversionFailure(
+            f'{path} imports {detected}, but --test-framework is {framework}')
+    translator=Translator()
+    translator.test_framework=active
+    translator.source_type_index=dict(source_type_index or {})
+    translator.source_type_kinds=dict(source_type_kinds or {})
+    translator.sdk_metadata=sdk_metadata
+    translator.main_entries={}; translator.main_owner_names=set()
+    package=tree.package.name if tree.package else ''
+    relative_dir=Path(*package.split('.')) if package else path.parent.resolve().relative_to(source_root.resolve())
+    translator.current_output_relative_dir=relative_dir
+    translator.gather(tree)
+    translator.gather_body_type_includes(tree)
+    output_dir=Path(out_root)/'unit_test'/relative_dir
+    output_dir.mkdir(parents=True,exist_ok=True)
+    output=output_dir/f'jxx_{path.stem.lower()}_test.cpp'
+    o=Emit();o.w('#include <gtest/gtest.h>')
+    for include in sorted(translator.includes | translator.source_includes):
+        o.w(f'#include "{include}"')
+    # Include the converted production declaration when it exists.
+    production_header=(relative_dir/f'{path.stem}.h').as_posix()
+    o.w(f'#include "{production_header}"');o.w()
+    namespace=('jxx::'+package.replace('.','::')) if package else ''
+    if namespace: o.w(f'namespace {namespace} {{');o.enter()
+    generated=0
+    for declaration in getattr(tree,'types',None) or []:
+        if type(declaration).__name__!='ClassDeclaration':
+            continue
+        tests,before,after,before_class,after_class,ignored=_test_method_roles(active,declaration)
+        if not tests:
+            continue
+        fields=[member for member in declaration.body or []
+                if type(member).__name__=='FieldDeclaration']
+        helpers=[member for member in declaration.body or []
+                 if type(member).__name__=='MethodDeclaration' and
+                 member not in tests+before+after+before_class+after_class]
+        use_fixture=bool(fields or before or after or before_class or after_class or helpers)
+        fixture=declaration.name
+        if use_fixture:
+            o.w(f'class {fixture} : public ::testing::Test {{');o.w('protected:');o.enter()
+            for field in fields:
+                for declarator in field.declarators or []:
+                    translator.current_class=declaration.name
+                    typ=translator.resolve(field.type).value()
+                    init=(' = '+translator.declaration_initializer_expression(
+                          field.type,declarator.initializer)
+                          if declarator.initializer is not None else
+                          (' = nullptr' if typ.startswith('::jxx::Ptr<') else ''))
+                    o.w(f'{typ} {declarator.name}{init};')
+            for lifecycle,name in ((before,'SetUp'),(after,'TearDown')):
+                if lifecycle:
+                    o.w(f'void {name}() override {{');o.enter()
+                    translator.begin_member_scope(declaration.name,lifecycle[0])
+                    translator.test_framework=active
+                    for statement in lifecycle[0].body or []: translator.stmt(statement,o)
+                    o.exit();o.w('}')
+            for lifecycle,name in ((before_class,'SetUpTestSuite'),
+                                   (after_class,'TearDownTestSuite')):
+                if lifecycle:
+                    o.w(f'static void {name}() {{');o.enter()
+                    translator.begin_member_scope(declaration.name,lifecycle[0])
+                    translator.test_framework=active
+                    for statement in lifecycle[0].body or []: translator.stmt(statement,o)
+                    o.exit();o.w('}')
+            o.exit();o.w('};');o.w()
+        for method in tests:
+            prefix='DISABLED_' if method.name in ignored else ''
+            macro='TEST_F' if use_fixture else 'TEST'
+            o.w(f'{macro}({fixture}, {prefix}{_gtest_name(method.name)}) {{');o.enter()
+            translator.begin_member_scope(declaration.name,method)
+            translator.test_framework=active
+            translator.current_return='void'
+            for field in fields:
+                for declarator in field.declarators or []:
+                    translator.local_variable_types[declarator.name]=field.type
+            for statement in method.body or []: translator.stmt(statement,o)
+            o.exit();o.w('}');o.w();generated+=1
+    if namespace: o.exit();o.w(f'}} // namespace {namespace}')
+    if generated==0:
+        raise ConversionFailure(f'no tests found in {path}')
+    if strict_tests and translator.errors:
+        raise ConversionFailure('; '.join(translator.errors))
+    output.write_text(o.text(),encoding='utf-8')
+    return output,translator
+
 def _contains_native_main(source: Path) -> bool:
     try:
         text=source.read_text(encoding='utf-8')
@@ -2582,7 +2764,12 @@ def generate_cmake_files(out_root: str, project: str = 'TranspiledProject',
     sources = sorted(root.rglob('*.cpp'))
     mains = [source for source in sources
              if source.name.endswith('_main.cpp') and _contains_native_main(source)]
-    support = [source for source in sources if source not in mains]
+    test_sources=[source for source in sources
+                  if source.name.startswith('jxx_') and
+                     source.name.endswith('_test.cpp') and
+                     'unit_test' in source.parts]
+    support = [source for source in sources
+               if source not in mains and source not in test_sources]
 
     counts = {}
     for source in mains:
@@ -2659,8 +2846,30 @@ def generate_cmake_files(out_root: str, project: str = 'TranspiledProject',
         if support:
             root_lines.append(f'target_link_libraries({target} PRIVATE {support_target})')
 
-    if not mains:
-        root_lines.append('# No converted source main method was found.')
+    if test_sources:
+        root_lines += ['', 'include(CTest)', 'enable_testing()',
+                       'find_package(GTest CONFIG REQUIRED)',
+                       'add_executable(converted_tests']
+        root_lines.extend(
+            f'    {source.relative_to(root).as_posix()}'
+            for source in test_sources)
+        root_lines += [')',
+                       'target_include_directories(converted_tests PRIVATE',
+                       '    ${CMAKE_CURRENT_SOURCE_DIR}']
+        if jxx_include_path:
+            root_lines.append(f'    "{jxx_include_path}"')
+        root_lines += [')',
+                       'target_link_libraries(converted_tests PRIVATE',
+                       f'    {support_target}',
+                       '    GTest::gtest_main',
+                       ')',
+                       'include(GoogleTest)',
+                       'gtest_discover_tests(converted_tests',
+                       '    DISCOVERY_MODE POST_BUILD',
+                       '    DISCOVERY_TIMEOUT 60',
+                       ')']
+    if not mains and not test_sources:
+        root_lines.append('# No converted source main method or tests were found.')
     root_file = root / 'CMakeLists.txt'
     root_file.write_text('\n'.join(root_lines) + '\n', encoding='utf-8')
 
@@ -2931,6 +3140,14 @@ def main():
               'to generated CMake target_include_directories.'))
     ap.add_argument('--jxx-library', help=('Compiled JXX SDK library file; accepts Windows, WSL, or native POSIX paths.'))
     ap.add_argument('--jxx-root', help=('JXX project root containing CMakeLists.txt, sdk/, and 3rdparty/. Generated CMake adds this project as a subdirectory so jxxsdk retains all transitive dependencies.'))
+    ap.add_argument(
+        '--test-framework',
+        choices=('none','auto','junit4','junit5','testng'),
+        default='none',
+        help=('Convert test sources to GoogleTest. Omit or use none for normal '
+              'source/main conversion.'))
+    ap.add_argument('--strict-tests',action='store_true',
+                    help='Fail test conversion on unsupported test constructs.')
     a=ap.parse_args()
     if a.jxx_root and a.jxx_library:
         ap.error('--jxx-root and --jxx-library are mutually exclusive')
@@ -2961,9 +3178,17 @@ def main():
         for path in files:
             parsed+=1
             try:
-                warnings+=translate_file(
-                    path,a.out,source_type_index,source_root,
-                    source_type_kinds,sdk_metadata)
+                if a.test_framework=='none':
+                    warnings+=translate_file(
+                        path,a.out,source_type_index,source_root,
+                        source_type_kinds,sdk_metadata)
+                else:
+                    generated,translator=generate_google_test(
+                        path,a.out,source_root,a.test_framework,
+                        source_type_index,source_type_kinds,sdk_metadata,
+                        a.strict_tests)
+                    print(f'Wrote {generated}')
+                    warnings+=len(translator.diag)
                 successes+=1
             except Exception as error:
                 errors+=1
@@ -2971,7 +3196,7 @@ def main():
                 print(f'{path}: ERROR: {type(error).__name__}: {error}',
                       file=sys.stderr)
 
-        if successes:
+        if successes and a.test_framework=='none':
             initialization_catalog=collect_source_initialization_catalog(
                 files,source_root)
             for generated in generate_per_main_client_initializers(
