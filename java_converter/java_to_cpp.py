@@ -173,7 +173,6 @@ class Translator:
         self.anonymous_classes:Dict[int,dict]={}
         self.anonymous_class_order:List[dict]=[]
         self.active_anonymous_captures:Set[str]=set()
-        self.active_anonymous_captures:Set[str]=set()
 
     @staticmethod
     def simple(n): return str(n).split('.')[-1]
@@ -1721,6 +1720,44 @@ class Translator:
             output.exit()
             output.w('}')
 
+    def statement_guarantees_return(self, statement):
+        if statement is None:
+            return False
+        kind=type(statement).__name__
+        if kind in {'ReturnStatement','ThrowStatement'}:
+            return True
+        if kind=='BlockStatement':
+            return self.statement_sequence_guarantees_return(
+                getattr(statement,'statements',None) or [])
+        if kind=='IfStatement':
+            else_statement=getattr(statement,'else_statement',None)
+            return (else_statement is not None and
+                    self.statement_guarantees_return(
+                        getattr(statement,'then_statement',None)) and
+                    self.statement_guarantees_return(else_statement))
+        if kind=='SynchronizedStatement':
+            return self.statement_sequence_guarantees_return(
+                getattr(statement,'block',None) or [])
+        if kind=='TryStatement':
+            finally_block=getattr(statement,'finally_block',None)
+            if (finally_block and
+                    self.statement_sequence_guarantees_return(finally_block)):
+                return True
+            catches=list(getattr(statement,'catches',None) or [])
+            return (bool(catches) and
+                    self.statement_sequence_guarantees_return(
+                        getattr(statement,'block',None) or []) and
+                    all(self.statement_sequence_guarantees_return(
+                        getattr(clause,'block',None) or [])
+                        for clause in catches))
+        return False
+
+    def statement_sequence_guarantees_return(self, statements):
+        for statement in statements or []:
+            if self.statement_guarantees_return(statement):
+                return True
+        return False
+
     def stmt(self,s,o):
         if s is None:return
         n=type(s).__name__
@@ -1830,8 +1867,16 @@ class Translator:
             o.exit()
             o.w(f'}} while ({self.expr(s.condition)});')
         elif n=='SynchronizedStatement':
-            lock=self.expr(getattr(s,'lock',None) or getattr(s,'expression',None)); body=getattr(s,'block',None) or []
-            o.w(f'{lock}->synchronized([&]() {{');o.enter()
+            lock=self.expr(getattr(s,'lock',None) or getattr(s,'expression',None))
+            body=getattr(s,'block',None) or []
+            returns_value=(self.current_return!='void' and
+                           self.statement_sequence_guarantees_return(body))
+            if returns_value:
+                o.w(f'return {lock}->synchronized([&]() -> '
+                    f'{self.current_return} {{')
+            else:
+                o.w(f'{lock}->synchronized([&]() {{')
+            o.enter()
             for x in body:self.stmt(x,o)
             o.exit();o.w('});')
         elif n=='BreakStatement':o.w('break;')
