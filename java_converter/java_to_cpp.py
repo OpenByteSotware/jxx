@@ -198,14 +198,36 @@ class Translator:
 
         return str(name)
     def wildcard_sdk_type(self,name:str)->Optional[str]:
+        if self.sdk_metadata is not None:
+            resolved,matches=self.sdk_metadata.resolve_wildcard_type(
+                self.wildcard_imports,name)
+            if resolved is not None:
+                return resolved.source_name
+            if len(matches)>1:
+                self.errors.append(
+                    f'ambiguous wildcard SDK type {name}: ' +
+                    ', '.join(entry.source_name for entry in matches))
+                return None
         matches=[package for package in self.wildcard_imports
                  if name in SDK_TYPES_BY_PACKAGE.get(package,set())]
         if len(matches)==1:
             return f'{matches[0]}.{name}'
         if len(matches)>1:
-            self.diag.append(
+            self.errors.append(
                 f'ambiguous wildcard SDK type {name}: ' + ', '.join(matches))
         return None
+
+    def sdk_type_mapping(self,name:str):
+        if self.sdk_metadata is None:
+            return None
+        metadata=None
+        if '.' in name:
+            metadata=self.sdk_metadata.resolve_type(name)
+        else:
+            metadata=self.sdk_metadata.resolve_implicit_lang(name)
+        if metadata is None:
+            return None
+        return metadata.cpp_type,metadata.include_path
 
     def source_include_for_current_output(self, include:str)->str:
         include_path=Path(include)
@@ -217,6 +239,21 @@ class Translator:
         return include_path.as_posix()
 
     def qmap(self,name:str)->Tuple[str,Optional[str]]:
+        if name in self.source_type_index and name not in self.known_types:
+            qualified,include=self.source_type_index[name]
+            return qualified,self.source_include_for_current_output(include)
+        if name in self.imports:
+            imported_name=self.imports[name]
+            if imported_name in self.source_type_index:
+                qualified,include=self.source_type_index[imported_name]
+                return qualified,self.source_include_for_current_output(include)
+            mapping=self.sdk_type_mapping(imported_name)
+            if mapping is not None:
+                return mapping
+            name=imported_name
+        mapping=self.sdk_type_mapping(name)
+        if mapping is not None:
+            return mapping
         # Resolve implicit language-package types before considering wildcard
         # imports. Otherwise import java.util.* incorrectly maps String to
         # ::jxx::util::String and emits util/jxx.util.String.h.
@@ -233,8 +270,10 @@ class Translator:
                 qualified,include=self.source_type_index[imported_name]
                 return qualified,self.source_include_for_current_output(include)
             name=imported_name
-        elif any(name in SDK_TYPES_BY_PACKAGE.get(package,set())
-                 for package in self.wildcard_imports):
+        elif self.wildcard_imports and (
+                self.sdk_metadata is not None or
+                any(name in SDK_TYPES_BY_PACKAGE.get(package,set())
+                    for package in self.wildcard_imports)):
             # Resolve known SDK classes from all imported wildcard packages,
             # even when the source imports more than one package on demand.
             wildcard_name=self.wildcard_sdk_type(name)
@@ -2645,7 +2684,8 @@ def main():
         if a.jxx_include:
             sdk_metadata=SdkMetadataIndex.scan(a.jxx_include)
             print(f'JXX SDK metadata: scanned {sdk_metadata.headers_scanned} headers; '
-                  f'indexed {sdk_metadata.declarations_scanned} method declarations')
+                  f'indexed {sdk_metadata.declarations_scanned} method declarations; '  
+                  f'indexed {sdk_metadata.types_scanned} SDK types')
         if a.src_dir:
             source_root=Path(a.src_dir)
             files=sorted(source_root.rglob('*.java'))

@@ -11,13 +11,22 @@ import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 _JXX_PRIMITIVES = {
     'jbyte': 'byte', 'jshort': 'short', 'jint': 'int', 'jlong': 'long',
     'jfloat': 'float', 'jdouble': 'double', 'jbool': 'boolean',
     'jboolean': 'boolean', 'jchar': 'char',
 }
+
+
+@dataclass(frozen=True)
+class TypeMetadata:
+    source_name: str
+    simple_name: str
+    cpp_type: str
+    include_path: str
+    package_name: str
 
 @dataclass(frozen=True)
 class MethodMetadata:
@@ -48,8 +57,12 @@ def normalize_sdk_include_root(include_root) -> Path:
 class SdkMetadataIndex:
     def __init__(self) -> None:
         self.methods: Dict[str, Dict[str, List[MethodMetadata]]] = {}
+        self.types: Dict[str, TypeMetadata] = {}
+        self.types_by_simple: Dict[str, List[TypeMetadata]] = {}
+        self.types_by_package: Dict[str, Dict[str, TypeMetadata]] = {}
         self.headers_scanned = 0
         self.declarations_scanned = 0
+        self.types_scanned = 0
         self.include_root: Optional[Path] = None
 
     @classmethod
@@ -64,6 +77,61 @@ class SdkMetadataIndex:
         for header in sorted(root.rglob('*.h')):
             index._scan_header(header)
         return index
+
+    @staticmethod
+    def _source_package_from_include(include_path: str) -> Optional[str]:
+        path=Path(include_path)
+        name=path.name
+        match=re.match(r'^jxx\.(.+)\.([A-Za-z_]\w*)\.h$',name)
+        if not match:
+            return None
+        mapped_package=match.group(1)
+        # JXX ext is the package-directory mapping for source javax.* APIs.
+        if mapped_package=='ext':
+            return 'javax'
+        if mapped_package.startswith('ext.'):
+            return 'javax.'+mapped_package[len('ext.'):]
+        return 'java.'+mapped_package
+
+    def _index_type_header(self, path: Path) -> None:
+        if self.include_root is None:
+            return
+        include_path=path.relative_to(self.include_root).as_posix()
+        package=self._source_package_from_include(include_path)
+        if package is None:
+            return
+        filename=path.name
+        simple=filename[:-2].split('.')[-1]
+        # Headers following public package naming are authoritative. Internal
+        # helpers normally use internal package paths and therefore remain
+        # addressable only through their exact source-style package.
+        mapped=package
+        if mapped.startswith('javax.'):
+            cpp_package='ext::'+mapped[len('javax.'):].replace('.','::')
+        elif mapped=='javax':
+            cpp_package='ext'
+        else:
+            cpp_package=mapped[len('java.'):].replace('.','::')
+        cpp_type=f'::jxx::{cpp_package}::{simple}'
+        source_name=f'{package}.{simple}'
+        metadata=TypeMetadata(source_name,simple,cpp_type,include_path,package)
+        self.types[source_name]=metadata
+        self.types_by_simple.setdefault(simple,[]).append(metadata)
+        self.types_by_package.setdefault(package,{})[simple]=metadata
+        self.types_scanned+=1
+
+    def resolve_type(self, source_name: str) -> Optional[TypeMetadata]:
+        return self.types.get(source_name)
+
+    def resolve_implicit_lang(self, simple_name: str) -> Optional[TypeMetadata]:
+        return self.types_by_package.get('java.lang',{}).get(simple_name)
+
+    def resolve_wildcard_type(self, packages, simple_name: str) \
+            -> Tuple[Optional[TypeMetadata], List[TypeMetadata]]:
+        matches=[self.types_by_package.get(package,{}).get(simple_name)
+                 for package in packages]
+        matches=[entry for entry in matches if entry is not None]
+        return (matches[0] if len(matches)==1 else None, matches)
 
     def lookup(self, owner: str, method: str,
                argument_count: Optional[int] = None) -> Optional[MethodMetadata]:
@@ -98,6 +166,7 @@ class SdkMetadataIndex:
         except OSError:
             return
         self.headers_scanned += 1
+        self._index_type_header(path)
         text = re.sub(r'/\*.*?\*/|//[^\r\n]*', ' ', text, flags=re.DOTALL)
         namespace = self._namespace(text)
         class_pattern = re.compile(
