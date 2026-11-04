@@ -2639,6 +2639,72 @@ def discover_converted_production_types(out_root):
     return result
 
 
+def emit_google_test_support_class(translator, declaration, output):
+    """Emit a test-contained member class as a file-local JXX concrete type."""
+    name=declaration.name
+    previous_class=translator.current_class
+    previous_parameters=set(translator.type_parameters)
+    translator.current_class=name
+    translator.type_parameters=set(translator.type_parameter_names(declaration))
+    if translator.type_parameters:
+        output.w(translator.template_line(
+            translator.type_parameter_names(declaration)))
+    base,interfaces=translator.class_base_and_interfaces(declaration)
+    self_type=translator.specialized_class_name(
+        name,translator.type_parameter_names(declaration))
+    class_args=', '.join([self_type,base]+interfaces)
+    output.w(
+        f'class {name} final : public '
+        f'::jxx::lang::ClassBase<{class_args}> {{')
+    output.w('public:');output.enter()
+    output.w(f'using JxxSuper = {base};')
+    output.w(f'using Super = ::jxx::lang::ClassBase<{class_args}>;')
+    output.w(f'using JxxClassInfoMarker = '
+             f'::jxx::lang::ClassInfo<{class_args}>;')
+
+    members=list(getattr(declaration,'body',None) or [])
+    constructors=[member for member in members
+                  if type(member).__name__=='ConstructorDeclaration']
+    methods=[member for member in members
+             if type(member).__name__=='MethodDeclaration']
+    fields=[member for member in members
+            if type(member).__name__=='FieldDeclaration']
+
+    # jxx::NEW constructs outside the test class, so constructors must be
+    # publicly accessible. With no declared constructor, the generated class
+    # receives an implicit public default constructor.
+    for constructor in constructors:
+        translator.emit_inline_member(constructor,name,output)
+    for method in methods:
+        translator.emit_inline_member(method,name,output)
+
+    if fields:
+        output.exit();output.w('private:');output.enter()
+        for field in fields:
+            modifiers=getattr(field,'modifiers',None) or set()
+            prefix='inline static ' if 'static' in modifiers else ''
+            for declarator in field.declarators or []:
+                value_type=translator.resolve(field.type).value()
+                if declarator.initializer is not None:
+                    initializer=(
+                        ' = '+translator.declaration_initializer_expression(
+                            field.type,declarator.initializer))
+                elif value_type.startswith('::jxx::Ptr<'):
+                    initializer=' = nullptr'
+                else:
+                    initializer=''
+                output.w(
+                    f'{prefix}{value_type} {declarator.name}{initializer};')
+    output.exit();output.w('};');output.w()
+    translator.current_class=previous_class
+    translator.type_parameters=previous_parameters
+
+
+def test_contained_support_classes(test_declaration):
+    return [member for member in getattr(test_declaration,'body',None) or []
+            if type(member).__name__=='ClassDeclaration']
+
+
 def generate_google_test(path:Path, out_root:str, source_root:Path,
                          framework:str, source_type_index, source_type_kinds,
                          sdk_metadata, strict_tests:bool=False):
@@ -2686,12 +2752,22 @@ def generate_google_test(path:Path, out_root:str, source_root:Path,
     o.w()
     namespace=('jxx::'+package.replace('.','::')) if package else ''
     if namespace: o.w(f'namespace {namespace} {{');o.enter()
-    # Anonymous source classes used in test bodies, such as Runnable, must be
-    # emitted in the test translation unit before the TEST body constructs them.
+    # Test-contained classes are source implementation classes, not GoogleTest
+    # fixtures. Emit them first as file-local JXX classes so anonymous helpers
+    # and TEST bodies can capture and construct them.
+    top_level_tests=[declaration for declaration in
+                     getattr(tree,'types',None) or []
+                     if type(declaration).__name__=='ClassDeclaration']
+    for test_declaration in top_level_tests:
+        for support_class in test_contained_support_classes(test_declaration):
+            emit_google_test_support_class(translator,support_class,o)
+
+    # Anonymous source classes used in test bodies, such as Runnable, depend on
+    # the test-contained support classes above and therefore follow them.
     for anonymous in translator.anonymous_class_order:
         translator.emit_anonymous_class(anonymous,o)
     generated=0
-    for declaration in getattr(tree,'types',None) or []:
+    for declaration in top_level_tests:
         if type(declaration).__name__!='ClassDeclaration':
             continue
         tests,before,after,before_class,after_class,ignored=_test_method_roles(active,declaration)

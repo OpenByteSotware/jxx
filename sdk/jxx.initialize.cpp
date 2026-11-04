@@ -9,6 +9,7 @@
 #include "lang/jxx.lang.System.h"
 #include "lang/jxx.lang.ClassInitialization.h"
 #include "lang/ref/jxx.lang.ref.ClassInitialization.h"
+#include "lang/management/jxx.lang.management.ClassInitialization.h"
 #include "awt/jxx.awt.ClassInitialization.h"
 #include "beans/jxx.beans.ClassInitialization.h"
 #include "com/jxx.com.ClassInitialization.h"
@@ -49,6 +50,7 @@ void initialize() {
         ::jxx::lang::initialize();
         ::jxx::lang::initializeClasses();
         ::jxx::lang::ref::initialize();
+        ::jxx::lang::management::initialize();
         ::jxx::awt::initialize();
         ::jxx::beans::initialize();
         ::com::initialize();
