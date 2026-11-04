@@ -1,6 +1,8 @@
 #pragma once
 #include "lang/jxx.lang.ClassInfo.h"
 #include "util/jxx.util.EventObject.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 
 namespace jxx::awt {
 class AWTEvent : public ::jxx::lang::ClassBase<AWTEvent, ::jxx::util::EventObject> {
@@ -12,6 +14,9 @@ public:
  ::jxx::lang::jint getID() const;
  ::jxx::lang::jbool isConsumed() const;
  ::jxx::Ptr<::jxx::lang::String> toString() const override;
+ void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) override;
+ void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) override;
+ void readObjectNoData() override;
 protected:
  void consume(); virtual ::jxx::Ptr<::jxx::lang::String> paramString() const;
  ::jxx::lang::jint id; ::jxx::lang::jbool consumed;

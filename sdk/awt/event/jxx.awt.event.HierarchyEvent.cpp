@@ -2,6 +2,8 @@
 
 #include <sstream>
 
+#include "lang/jxx.lang.NullPointerException.h"
+
 namespace jxx::awt::event
 {
     HierarchyEvent::HierarchyEvent(
@@ -56,4 +58,7 @@ namespace jxx::awt::event
         out << name << ",changeFlags=" << changeFlags_;
         return ::jxx::NEW<::jxx::lang::String>(out.str());
     }
+    void HierarchyEvent::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output){if(output==nullptr)throw ::jxx::lang::NullPointerException();JxxSuper::writeObject(output);output->writeObject(::jxx::CAST<::jxx::lang::Object>(changed_));output->writeObject(::jxx::CAST<::jxx::lang::Object>(changedParent_));output->writeLong(changeFlags_);}
+    void HierarchyEvent::readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input){if(input==nullptr)throw ::jxx::lang::NullPointerException();JxxSuper::readObject(input);changed_=::jxx::CAST<::jxx::awt::Component>(input->readObject());changedParent_=::jxx::CAST<::jxx::awt::Container>(input->readObject());changeFlags_=input->readLong();}
+    void HierarchyEvent::readObjectNoData(){JxxSuper::readObjectNoData();changed_=nullptr;changedParent_=nullptr;changeFlags_=0;}
 }

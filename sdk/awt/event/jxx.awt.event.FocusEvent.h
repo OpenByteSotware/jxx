@@ -13,6 +13,9 @@ public:
  FocusEvent(const ::jxx::Ptr<::jxx::awt::Component>& source,::jxx::lang::jint id,::jxx::lang::jbool temporary,const ::jxx::Ptr<::jxx::awt::Component>& opposite);
  ::jxx::lang::jbool isTemporary() const;
  ::jxx::Ptr<::jxx::awt::Component> getOppositeComponent() const;
+ void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) override;
+ void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) override;
+ void readObjectNoData() override;
 protected: ::jxx::Ptr<::jxx::lang::String> paramString() const override;
 private: ::jxx::lang::jbool temporary_; std::weak_ptr<::jxx::awt::Component> opposite_;
 }; }

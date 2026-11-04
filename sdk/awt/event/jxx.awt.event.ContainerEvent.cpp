@@ -4,6 +4,8 @@
 
 #include "awt/jxx.awt.Container.h"
 
+#include "lang/jxx.lang.NullPointerException.h"
+
 namespace jxx::awt::event
 {
     ContainerEvent::ContainerEvent(
@@ -36,4 +38,7 @@ namespace jxx::awt::event
         if (child_ != nullptr) out << child_->toString()->utf8();
         return ::jxx::NEW<::jxx::lang::String>(out.str());
     }
+    void ContainerEvent::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output){if(output==nullptr)throw ::jxx::lang::NullPointerException();JxxSuper::writeObject(output);output->writeObject(::jxx::CAST<::jxx::lang::Object>(child_));}
+    void ContainerEvent::readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input){if(input==nullptr)throw ::jxx::lang::NullPointerException();JxxSuper::readObject(input);child_=::jxx::CAST<::jxx::awt::Component>(input->readObject());}
+    void ContainerEvent::readObjectNoData(){JxxSuper::readObjectNoData();child_=nullptr;}
 }

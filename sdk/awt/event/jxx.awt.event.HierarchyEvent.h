@@ -41,6 +41,10 @@ namespace jxx::awt::event
         ::jxx::Ptr<::jxx::awt::Container> getChangedParent() const;
         ::jxx::lang::jlong getChangeFlags() const;
 
+        void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) override;
+        void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) override;
+        void readObjectNoData() override;
+
     protected:
         ::jxx::Ptr<::jxx::lang::String> paramString() const override;
 

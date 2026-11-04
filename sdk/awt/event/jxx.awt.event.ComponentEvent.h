@@ -8,5 +8,8 @@ public:
  static constexpr ::jxx::lang::jint COMPONENT_FIRST=100,COMPONENT_MOVED=100,COMPONENT_RESIZED=101,COMPONENT_SHOWN=102,COMPONENT_HIDDEN=103,COMPONENT_LAST=103;
  ComponentEvent(const ::jxx::Ptr<::jxx::awt::Component>& source,::jxx::lang::jint id);
  ::jxx::Ptr<::jxx::awt::Component> getComponent() const;
+ void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) override;
+ void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) override;
+ void readObjectNoData() override;
 protected: ::jxx::Ptr<::jxx::lang::String> paramString() const override;
 }; }

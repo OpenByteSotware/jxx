@@ -46,6 +46,15 @@ namespace jxx::awt
         std::call_once(flag, []()
         {
             (void)::jxx::awt::AWTEvent::Class();
+            ::jxx::io::serialization::registerSerializableClass<
+                ::jxx::awt::AWTEvent>(
+                    static_cast<::jxx::lang::jlong>(-1825314779160409405LL),
+                    [] {
+                        return ::jxx::NEW<::jxx::awt::AWTEvent>(
+                            ::jxx::NEW<::jxx::lang::Object>(), 0);
+                    });
+            ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+                ::jxx::awt::AWTEvent, 1U, 2U>();
             (void)::jxx::awt::AlphaComposite::Class();
             (void)::jxx::awt::BasicStroke::Class();
             (void)::jxx::awt::BufferCapabilities::Class();
