@@ -8,6 +8,7 @@
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.System.h"
+#include "util/jxx.util.Objects.h"
 
 namespace jxx::jdk8::lang {
     TEST(LongTest, ConstantsAreDocumented) {
@@ -15,7 +16,7 @@ namespace jxx::jdk8::lang {
         EXPECT_EQ(::jxx::lang::Long::MAX_VALUE, 9223372036854775807L);
         EXPECT_EQ(64, ::jxx::lang::Long::SIZE);
         EXPECT_EQ(8, ::jxx::lang::Long::BYTES);
-        EXPECT_EQ(ClassReference(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], type=BasicType(dimensions=[], name=long)), ::jxx::lang::Long::TYPE);
+        EXPECT_EQ(::jxx::lang::Long::Class(), ::jxx::lang::Long::TYPE);
     }
 
     TEST(LongTest, ConstructorsAndNumberConversionsWork) {
@@ -33,8 +34,8 @@ namespace jxx::jdk8::lang {
         EXPECT_EQ(123L, ::jxx::lang::Long::parseLong(::jxx::NEW<::jxx::lang::String>("123")));
         EXPECT_EQ(255L, ::jxx::lang::Long::parseLong(::jxx::NEW<::jxx::lang::String>("ff"), 16));
         EXPECT_EQ(10L, ::jxx::lang::Long::parseLong(::jxx::NEW<::jxx::lang::String>("-1010"), 2));
-        EXPECT_EQ(123L, ::jxx::lang::Long::valueOf(::jxx::NEW<::jxx::lang::String>("123"))->longValue());
-        EXPECT_EQ(255L, ::jxx::lang::Long::valueOf(::jxx::NEW<::jxx::lang::String>("ff"), 16)->longValue());
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(123L), ::jxx::lang::String::valueOf(::jxx::lang::Long::valueOf(::jxx::NEW<::jxx::lang::String>("123"))->longValue())));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(255L), ::jxx::lang::String::valueOf(::jxx::lang::Long::valueOf(::jxx::NEW<::jxx::lang::String>("ff"), 16)->longValue())));
         EXPECT_EQ(16L, ::jxx::lang::Long::decode(::jxx::NEW<::jxx::lang::String>("0x10"))->longValue());
         EXPECT_EQ(8L, ::jxx::lang::Long::decode(::jxx::NEW<::jxx::lang::String>("010"))->longValue());
     }
@@ -46,23 +47,23 @@ namespace jxx::jdk8::lang {
     TEST(LongTest, UnsignedParsingAndFormattingWork) {
         EXPECT_EQ(1L, ::jxx::lang::Long::parseUnsignedLong(::jxx::NEW<::jxx::lang::String>("18446744073709551615")));
         EXPECT_EQ(1L, ::jxx::lang::Long::parseUnsignedLong(::jxx::NEW<::jxx::lang::String>("ffffffffffffffff"), 16));
-        assertEquals(::jxx::NEW<::jxx::lang::String>("18446744073709551615"), ::jxx::lang::Long::toUnsignedString(1L));
-        assertEquals(::jxx::NEW<::jxx::lang::String>("ffffffffffffffff"), ::jxx::lang::Long::toUnsignedString(1L, 16));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("18446744073709551615"), ::jxx::lang::String::valueOf(::jxx::lang::Long::toUnsignedString(1L))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("ffffffffffffffff"), ::jxx::lang::String::valueOf(::jxx::lang::Long::toUnsignedString(1L, 16))));
     }
 
     TEST(LongTest, FormattingSupportsCommonRadices) {
-        assertEquals(::jxx::NEW<::jxx::lang::String>("123"), ::jxx::lang::Long::toString(123L));
-        assertEquals(::jxx::NEW<::jxx::lang::String>("ff"), ::jxx::lang::Long::toString(255L, 16));
-        assertEquals(::jxx::NEW<::jxx::lang::String>("ff"), ::jxx::lang::Long::toHexString(255L));
-        assertEquals(::jxx::NEW<::jxx::lang::String>("377"), ::jxx::lang::Long::toOctalString(255L));
-        assertEquals(::jxx::NEW<::jxx::lang::String>("11111111"), ::jxx::lang::Long::toBinaryString(255L));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("123"), ::jxx::lang::String::valueOf(::jxx::lang::Long::toString(123L))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("ff"), ::jxx::lang::String::valueOf(::jxx::lang::Long::toString(255L, 16))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("ff"), ::jxx::lang::String::valueOf(::jxx::lang::Long::toHexString(255L))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("377"), ::jxx::lang::String::valueOf(::jxx::lang::Long::toOctalString(255L))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("11111111"), ::jxx::lang::String::valueOf(::jxx::lang::Long::toBinaryString(255L))));
     }
 
     TEST(LongTest, EqualityHashAndComparisonWork) {
         ::jxx::Ptr<::jxx::lang::Long> value = ::jxx::lang::Long::valueOf(12L);
-        assertEquals(::jxx::NEW<::jxx::lang::String>("12"), value->toString());
-        EXPECT_EQ(value, ::jxx::lang::Long::valueOf(12L));
-        EXPECT_NE(value, ::jxx::lang::Long::valueOf(13L));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("12"), ::jxx::lang::String::valueOf(value->toString())));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(value), ::jxx::lang::String::valueOf(::jxx::lang::Long::valueOf(12L))));
+        EXPECT_FALSE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(value), ::jxx::lang::String::valueOf(::jxx::lang::Long::valueOf(13L))));
         EXPECT_EQ(12, value->hashCode());
         EXPECT_EQ(12, ::jxx::lang::Long::hashCode(12L));
         EXPECT_TRUE((value->compareTo(::jxx::lang::Long::valueOf(13L)) < 0));
@@ -83,11 +84,11 @@ namespace jxx::jdk8::lang {
             });
             try {
                 ::jxx::lang::System::setProperty(key, ::jxx::NEW<::jxx::lang::String>("0x20"));
-                EXPECT_EQ(::jxx::lang::Long::valueOf(32L), ::jxx::lang::Long::getLong(key));
+                EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Long::valueOf(32L)), ::jxx::lang::String::valueOf(::jxx::lang::Long::getLong(key))));
                 ::jxx::lang::System::clearProperty(key);
                 EXPECT_EQ(::jxx::lang::Long::getLong(key), nullptr);
-                EXPECT_EQ(::jxx::lang::Long::valueOf(7L), ::jxx::lang::Long::getLong(key, 7L));
-                EXPECT_EQ(::jxx::lang::Long::valueOf(9L), ::jxx::lang::Long::getLong(key, ::jxx::lang::Long::valueOf(9L)));
+                EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Long::valueOf(7L)), ::jxx::lang::String::valueOf(::jxx::lang::Long::getLong(key, 7L))));
+                EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Long::valueOf(9L)), ::jxx::lang::String::valueOf(::jxx::lang::Long::getLong(key, ::jxx::lang::Long::valueOf(9L)))));
             } catch (...) {
                 jxxFinally0.runAndDismiss();
                 throw;

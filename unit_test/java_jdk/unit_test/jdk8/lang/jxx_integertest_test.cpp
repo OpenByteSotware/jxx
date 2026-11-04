@@ -8,6 +8,7 @@
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.System.h"
+#include "util/jxx.util.Objects.h"
 
 namespace jxx::jdk8::lang {
     TEST(IntegerTest, ConstantsAreDocumented) {
@@ -15,7 +16,7 @@ namespace jxx::jdk8::lang {
         EXPECT_EQ(2147483647, ::jxx::lang::Integer::MAX_VALUE);
         EXPECT_EQ(32, ::jxx::lang::Integer::SIZE);
         EXPECT_EQ(4, ::jxx::lang::Integer::BYTES);
-        EXPECT_EQ(ClassReference(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], type=BasicType(dimensions=[], name=int)), ::jxx::lang::Integer::TYPE);
+        EXPECT_EQ(::jxx::lang::Integer::Class(), ::jxx::lang::Integer::TYPE);
     }
 
     TEST(IntegerTest, ConstructorsAndNumberConversionsWork) {
@@ -33,8 +34,8 @@ namespace jxx::jdk8::lang {
         EXPECT_EQ(123, ::jxx::lang::Integer::parseInt(::jxx::NEW<::jxx::lang::String>("123")));
         EXPECT_EQ(255, ::jxx::lang::Integer::parseInt(::jxx::NEW<::jxx::lang::String>("ff"), 16));
         EXPECT_EQ(10, ::jxx::lang::Integer::parseInt(::jxx::NEW<::jxx::lang::String>("-1010"), 2));
-        EXPECT_EQ(123, ::jxx::lang::Integer::valueOf(::jxx::NEW<::jxx::lang::String>("123"))->intValue());
-        EXPECT_EQ(255, ::jxx::lang::Integer::valueOf(::jxx::NEW<::jxx::lang::String>("ff"), 16)->intValue());
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(123), ::jxx::lang::String::valueOf(::jxx::lang::Integer::valueOf(::jxx::NEW<::jxx::lang::String>("123"))->intValue())));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(255), ::jxx::lang::String::valueOf(::jxx::lang::Integer::valueOf(::jxx::NEW<::jxx::lang::String>("ff"), 16)->intValue())));
         EXPECT_EQ(16, ::jxx::lang::Integer::decode(::jxx::NEW<::jxx::lang::String>("0x10"))->intValue());
         EXPECT_EQ(8, ::jxx::lang::Integer::decode(::jxx::NEW<::jxx::lang::String>("010"))->intValue());
         EXPECT_EQ(16, ::jxx::lang::Integer::decode(::jxx::NEW<::jxx::lang::String>("-#10"))->intValue());
@@ -47,23 +48,23 @@ namespace jxx::jdk8::lang {
     TEST(IntegerTest, UnsignedParsingAndFormattingWork) {
         EXPECT_EQ(1, ::jxx::lang::Integer::parseUnsignedInt(::jxx::NEW<::jxx::lang::String>("4294967295")));
         EXPECT_EQ(1, ::jxx::lang::Integer::parseUnsignedInt(::jxx::NEW<::jxx::lang::String>("ffffffff"), 16));
-        assertEquals(::jxx::NEW<::jxx::lang::String>("4294967295"), ::jxx::lang::Integer::toUnsignedString(1));
-        assertEquals(::jxx::NEW<::jxx::lang::String>("ffffffff"), ::jxx::lang::Integer::toUnsignedString(1, 16));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("4294967295"), ::jxx::lang::String::valueOf(::jxx::lang::Integer::toUnsignedString(1))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("ffffffff"), ::jxx::lang::String::valueOf(::jxx::lang::Integer::toUnsignedString(1, 16))));
     }
 
     TEST(IntegerTest, FormattingSupportsCommonRadices) {
-        assertEquals(::jxx::NEW<::jxx::lang::String>("123"), ::jxx::lang::Integer::toString(123));
-        assertEquals(::jxx::NEW<::jxx::lang::String>("ff"), ::jxx::lang::Integer::toString(255, 16));
-        assertEquals(::jxx::NEW<::jxx::lang::String>("ff"), ::jxx::lang::Integer::toHexString(255));
-        assertEquals(::jxx::NEW<::jxx::lang::String>("377"), ::jxx::lang::Integer::toOctalString(255));
-        assertEquals(::jxx::NEW<::jxx::lang::String>("11111111"), ::jxx::lang::Integer::toBinaryString(255));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("123"), ::jxx::lang::String::valueOf(::jxx::lang::Integer::toString(123))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("ff"), ::jxx::lang::String::valueOf(::jxx::lang::Integer::toString(255, 16))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("ff"), ::jxx::lang::String::valueOf(::jxx::lang::Integer::toHexString(255))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("377"), ::jxx::lang::String::valueOf(::jxx::lang::Integer::toOctalString(255))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("11111111"), ::jxx::lang::String::valueOf(::jxx::lang::Integer::toBinaryString(255))));
     }
 
     TEST(IntegerTest, EqualityHashAndComparisonWork) {
         ::jxx::Ptr<::jxx::lang::Integer> value = ::jxx::lang::Integer::valueOf(12);
-        assertEquals(::jxx::NEW<::jxx::lang::String>("12"), value->toString());
-        EXPECT_EQ(value, ::jxx::lang::Integer::valueOf(12));
-        EXPECT_NE(value, ::jxx::lang::Integer::valueOf(13));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("12"), ::jxx::lang::String::valueOf(value->toString())));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(value), ::jxx::lang::String::valueOf(::jxx::lang::Integer::valueOf(12))));
+        EXPECT_FALSE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(value), ::jxx::lang::String::valueOf(::jxx::lang::Integer::valueOf(13))));
         EXPECT_EQ(12, value->hashCode());
         EXPECT_EQ(12, ::jxx::lang::Integer::hashCode(12));
         EXPECT_TRUE((value->compareTo(::jxx::lang::Integer::valueOf(13)) < 0));
@@ -84,11 +85,11 @@ namespace jxx::jdk8::lang {
             });
             try {
                 ::jxx::lang::System::setProperty(key, ::jxx::NEW<::jxx::lang::String>("0x20"));
-                EXPECT_EQ(::jxx::lang::Integer::valueOf(32), ::jxx::lang::Integer::getInteger(key));
+                EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Integer::valueOf(32)), ::jxx::lang::String::valueOf(::jxx::lang::Integer::getInteger(key))));
                 ::jxx::lang::System::clearProperty(key);
                 EXPECT_EQ(::jxx::lang::Integer::getInteger(key), nullptr);
-                EXPECT_EQ(::jxx::lang::Integer::valueOf(7), ::jxx::lang::Integer::getInteger(key, 7));
-                EXPECT_EQ(::jxx::lang::Integer::valueOf(9), ::jxx::lang::Integer::getInteger(key, ::jxx::lang::Integer::valueOf(9)));
+                EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Integer::valueOf(7)), ::jxx::lang::String::valueOf(::jxx::lang::Integer::getInteger(key, 7))));
+                EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Integer::valueOf(9)), ::jxx::lang::String::valueOf(::jxx::lang::Integer::getInteger(key, ::jxx::lang::Integer::valueOf(9)))));
             } catch (...) {
                 jxxFinally0.runAndDismiss();
                 throw;

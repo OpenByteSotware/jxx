@@ -322,7 +322,10 @@ class Translator:
             # The root denotes a type, so its first member uses static access.
             # Any remaining dotted components are object fields held through
             # JXX shared pointers and therefore use pointer member access.
-            mapped+='::'+parts[1]
+            first_member=parts[1]
+            if root=='Boolean' and first_member in BOOLEAN_STATIC_CONSTANTS:
+                first_member=BOOLEAN_STATIC_CONSTANTS[first_member]
+            mapped+='::'+first_member
             for field in parts[2:]:
                 mapped+=f'->{field}'
         return mapped
@@ -721,6 +724,10 @@ class Translator:
             if invocation_type is not None:
                 for _,node in filter_method(invocation_type):
                     self.record_method_dependencies(node)
+                    if (self.test_framework!='none' and
+                            getattr(node,'member',None) in
+                            {'assertEquals','assertNotEquals'}):
+                        self.includes.add('util/jxx.util.Objects.h')
             if member_reference_type is not None:
                 for _,node in filter_method(member_reference_type):
                     self.record_qualified_type_dependency(
@@ -1349,14 +1356,20 @@ class Translator:
             return None
         member=invocation.member
         arguments=list(getattr(invocation,'arguments',None) or [])
-        # Both JUnit and TestNG accept an optional assertion message, but their
-        # argument ordering differs. Keep stage-one mappings deterministic.
         message=None
-        if self.test_framework in {'junit4','junit5'} and arguments and self.is_string_literal_expression(arguments[0]):
+        junit_message=(
+            self.test_framework in {'junit4','junit5'} and arguments and
+            self.is_string_literal_expression(arguments[0]) and
+            ((member in {'assertTrue','assertFalse','assertNull','assertNotNull'}
+              and len(arguments)==2) or
+             (member in {'assertEquals','assertNotEquals','assertSame','assertNotSame'}
+              and len(arguments)>=3) or
+             (member=='fail' and len(arguments)==1)))
+        if junit_message:
             message=arguments.pop(0)
-        elif self.test_framework=='testng' and len(arguments)>2 and self.is_string_literal_expression(arguments[-1]):
+        elif (self.test_framework=='testng' and len(arguments)>2 and
+              self.is_string_literal_expression(arguments[-1])):
             message=arguments.pop()
-        macro=None
         if member in {'assertTrue','assertFalse'} and len(arguments)==1:
             macro=('EXPECT_TRUE' if member=='assertTrue' else 'EXPECT_FALSE')
             rendered=f'{macro}({self.expr(arguments[0])})'
@@ -1371,6 +1384,15 @@ class Translator:
             if len(arguments)==3:
                 rendered=(f'EXPECT_NEAR({self.expr(arguments[0])}, '
                           f'{self.expr(arguments[1])}, {self.expr(arguments[2])})')
+            elif (self.is_string_expression(arguments[0]) or
+                  self.is_string_expression(arguments[1])):
+                self.includes.add('util/jxx.util.Objects.h')
+                expected=self.string_value_expression(arguments[0])
+                actual=self.string_value_expression(arguments[1])
+                comparison=(f'::jxx::util::Objects::equals('
+                            f'{expected}, {actual})')
+                macro=('EXPECT_TRUE' if member=='assertEquals' else 'EXPECT_FALSE')
+                rendered=f'{macro}({comparison})'
             else:
                 macro=('EXPECT_EQ' if member=='assertEquals' else 'EXPECT_NE')
                 rendered=f'{macro}({self.expr(arguments[0])}, {self.expr(arguments[1])})'

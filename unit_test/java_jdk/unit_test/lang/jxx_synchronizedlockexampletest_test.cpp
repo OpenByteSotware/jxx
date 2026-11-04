@@ -6,6 +6,7 @@
 #include "lang/jxx.lang.Runnable.h"
 #include "lang/jxx.lang.System.h"
 #include "lang/jxx.lang.Thread.h"
+#include "util/jxx.util.Objects.h"
 
 class SynchronizedLockExample final : public ::jxx::lang::ClassBase<SynchronizedLockExample, ::jxx::lang::Object> {
 public:

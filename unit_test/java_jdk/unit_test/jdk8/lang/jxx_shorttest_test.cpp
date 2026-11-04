@@ -6,6 +6,7 @@
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.Short.h"
 #include "lang/jxx.lang.System.h"
+#include "util/jxx.util.Objects.h"
 
 namespace jxx::jdk8::lang {
     TEST(ShortTest, ConstantsAreDocumented) {
@@ -13,7 +14,7 @@ namespace jxx::jdk8::lang {
         EXPECT_EQ(32767, ::jxx::lang::Short::MAX_VALUE);
         EXPECT_EQ(16, ::jxx::lang::Short::SIZE);
         EXPECT_EQ(2, ::jxx::lang::Short::BYTES);
-        EXPECT_EQ(ClassReference(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], type=BasicType(dimensions=[], name=short)), ::jxx::lang::Short::TYPE);
+        EXPECT_EQ(::jxx::lang::Short::Class(), ::jxx::lang::Short::TYPE);
     }
 
     TEST(ShortTest, ConstructorsAndNumberConversionsWork) {
@@ -38,18 +39,18 @@ namespace jxx::jdk8::lang {
     }
 
     TEST(ShortTest, ValueOfAndDecodeWork) {
-        EXPECT_EQ(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(10)), ::jxx::lang::Short::valueOf(::jxx::NEW<::jxx::lang::String>("10")));
-        EXPECT_EQ(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(15)), ::jxx::lang::Short::valueOf(::jxx::NEW<::jxx::lang::String>("f"), 16));
-        EXPECT_EQ(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(16)), ::jxx::lang::Short::decode(::jxx::NEW<::jxx::lang::String>("0x10")));
-        EXPECT_EQ(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(8)), ::jxx::lang::Short::decode(::jxx::NEW<::jxx::lang::String>("010")));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(10))), ::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(::jxx::NEW<::jxx::lang::String>("10")))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(15))), ::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(::jxx::NEW<::jxx::lang::String>("f"), 16))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(16))), ::jxx::lang::String::valueOf(::jxx::lang::Short::decode(::jxx::NEW<::jxx::lang::String>("0x10")))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(8))), ::jxx::lang::String::valueOf(::jxx::lang::Short::decode(::jxx::NEW<::jxx::lang::String>("010")))));
     }
 
     TEST(ShortTest, StringEqualityHashAndComparisonWork) {
         ::jxx::Ptr<::jxx::lang::Short> value = ::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(1200));
-        assertEquals(::jxx::NEW<::jxx::lang::String>("1200"), value->toString());
-        assertEquals(::jxx::NEW<::jxx::lang::String>("1200"), ::jxx::lang::Short::toString(static_cast<::jxx::lang::jshort>(1200)));
-        EXPECT_EQ(value, ::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(1200)));
-        EXPECT_NE(value, ::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(1201)));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("1200"), ::jxx::lang::String::valueOf(value->toString())));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("1200"), ::jxx::lang::String::valueOf(::jxx::lang::Short::toString(static_cast<::jxx::lang::jshort>(1200)))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(value), ::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(1200)))));
+        EXPECT_FALSE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(value), ::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(1201)))));
         EXPECT_EQ(1200, value->hashCode());
         EXPECT_EQ(1200, ::jxx::lang::Short::hashCode(static_cast<::jxx::lang::jshort>(1200)));
         EXPECT_TRUE((value->compareTo(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(1201))) < 0));

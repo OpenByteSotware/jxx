@@ -7,6 +7,7 @@
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.System.h"
+#include "util/jxx.util.Objects.h"
 
 namespace jxx::jdk8::lang {
     TEST(BooleanTest, ConstructorsAndPrimitiveValue) {
@@ -20,7 +21,7 @@ namespace jxx::jdk8::lang {
     TEST(BooleanTest, ConstantsHaveDocumentedValues) {
         EXPECT_EQ(::jxx::lang::Boolean::TRUE_.get(), ::jxx::lang::Boolean::valueOf(true).get());
         EXPECT_EQ(::jxx::lang::Boolean::FALSE_.get(), ::jxx::lang::Boolean::valueOf(false).get());
-        EXPECT_EQ(ClassReference(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], type=BasicType(dimensions=[], name=boolean)), ::jxx::lang::Boolean::TYPE);
+        EXPECT_EQ(::jxx::lang::Boolean::Class(), ::jxx::lang::Boolean::TYPE);
     }
 
     TEST(BooleanTest, ParseBooleanRecognizesOnlyTrueIgnoringCase) {
@@ -39,20 +40,20 @@ namespace jxx::jdk8::lang {
     }
 
     TEST(BooleanTest, StringConversionsUseLowercaseWords) {
-        assertEquals(::jxx::NEW<::jxx::lang::String>("true"), ::jxx::lang::Boolean::toString(true));
-        assertEquals(::jxx::NEW<::jxx::lang::String>("false"), ::jxx::lang::Boolean::toString(false));
-        assertEquals(::jxx::NEW<::jxx::lang::String>("true"), ::jxx::lang::Boolean::TRUE->toString());
-        assertEquals(::jxx::NEW<::jxx::lang::String>("false"), ::jxx::lang::Boolean::FALSE->toString());
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("true"), ::jxx::lang::String::valueOf(::jxx::lang::Boolean::toString(true))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("false"), ::jxx::lang::String::valueOf(::jxx::lang::Boolean::toString(false))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("true"), ::jxx::lang::String::valueOf(::jxx::lang::Boolean::TRUE_->toString())));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("false"), ::jxx::lang::String::valueOf(::jxx::lang::Boolean::FALSE_->toString())));
     }
 
     TEST(BooleanTest, EqualityHashAndComparisonFollowBooleanOrdering) {
         EXPECT_EQ(::jxx::lang::Boolean::TRUE_, ::jxx::NEW<::jxx::lang::Boolean>(true));
         EXPECT_NE(::jxx::lang::Boolean::TRUE_, ::jxx::lang::Boolean::FALSE_);
-        EXPECT_EQ(1231, ::jxx::lang::Boolean::TRUE->hashCode());
-        EXPECT_EQ(1237, ::jxx::lang::Boolean::FALSE->hashCode());
+        EXPECT_EQ(1231, ::jxx::lang::Boolean::TRUE_->hashCode());
+        EXPECT_EQ(1237, ::jxx::lang::Boolean::FALSE_->hashCode());
         EXPECT_EQ(1231, ::jxx::lang::Boolean::hashCode(true));
         EXPECT_EQ(1237, ::jxx::lang::Boolean::hashCode(false));
-        EXPECT_TRUE((::jxx::lang::Boolean::FALSE->compareTo(::jxx::lang::Boolean::TRUE_) < 0));
+        EXPECT_TRUE((::jxx::lang::Boolean::FALSE_->compareTo(::jxx::lang::Boolean::TRUE_) < 0));
         EXPECT_TRUE((::jxx::lang::Boolean::compare(false, true) < 0));
         EXPECT_EQ(0, ::jxx::lang::Boolean::compare(true, true));
     }
