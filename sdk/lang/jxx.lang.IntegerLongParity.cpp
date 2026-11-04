@@ -99,6 +99,7 @@ U reverseBits(U value) noexcept {
 jint Integer::parseUnsignedInt(const ::jxx::Ptr<String>& value) { return parseUnsignedInt(value, 10); }
 jint Integer::parseUnsignedInt(const ::jxx::Ptr<String>& value, jint radix) { return static_cast<jint>(parseUnsigned<std::uint32_t>(value, radix)); }
 jint Integer::compareUnsigned(jint a, jint b) noexcept { const auto x=static_cast<std::uint32_t>(a), y=static_cast<std::uint32_t>(b); return x<y?-1:x>y?1:0; }
+jlong Integer::toUnsignedLong(jint value) noexcept { return static_cast<jlong>(static_cast<std::uint64_t>(static_cast<std::uint32_t>(value))); }
 jint Integer::divideUnsigned(jint a, jint b) { const auto y=static_cast<std::uint32_t>(b); if(y==0)throw ArithmeticException("/ by zero"); return static_cast<jint>(static_cast<std::uint32_t>(a)/y); }
 jint Integer::remainderUnsigned(jint a, jint b) { const auto y=static_cast<std::uint32_t>(b); if(y==0)throw ArithmeticException("/ by zero"); return static_cast<jint>(static_cast<std::uint32_t>(a)%y); }
 jint Integer::highestOneBit(jint v) noexcept { auto x=static_cast<std::uint32_t>(v); if(!x)return 0; return static_cast<jint>(std::uint32_t{1}<<(31-leadingZeros(x))); }

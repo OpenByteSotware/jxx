@@ -48,6 +48,7 @@ public:
     static ::jxx::lang::jint parseUnsignedInt(const ::jxx::Ptr<String>& value);
     static ::jxx::lang::jint parseUnsignedInt(const ::jxx::Ptr<String>& value, ::jxx::lang::jint radix);
     static ::jxx::lang::jint compareUnsigned(::jxx::lang::jint left, ::jxx::lang::jint right) noexcept;
+    static ::jxx::lang::jlong toUnsignedLong(::jxx::lang::jint value) noexcept;
     static ::jxx::lang::jint divideUnsigned(::jxx::lang::jint dividend, ::jxx::lang::jint divisor);
     static ::jxx::lang::jint remainderUnsigned(::jxx::lang::jint dividend, ::jxx::lang::jint divisor);
     static ::jxx::lang::jint highestOneBit(::jxx::lang::jint value) noexcept;
