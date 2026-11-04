@@ -109,6 +109,9 @@ METHOD_CALL_DEPENDENCIES={
     'forEach': ('java.util.function.IntConsumer',),
 }
 
+# JXX suffixes source Boolean constants to avoid Windows TRUE/FALSE macros.
+BOOLEAN_STATIC_CONSTANTS={'TRUE':'TRUE_','FALSE':'FALSE_'}
+
 STATIC_ACCESSORS={
     'java.util.concurrent.TimeUnit':{
         'NANOSECONDS','MICROSECONDS','MILLISECONDS','SECONDS','MINUTES','HOURS','DAYS'},
@@ -174,6 +177,7 @@ class Translator:
         self.anonymous_class_order:List[dict]=[]
         self.active_anonymous_captures:Set[str]=set()
         self.test_framework='none'
+        self.static_imports:Dict[str,str]={}
 
     @staticmethod
     def simple(n): return str(n).split('.')[-1]
@@ -632,6 +636,12 @@ class Translator:
                 self.errors.append(f'unsupported reflection type: {p}'); continue
             if any(p==x or p.startswith(x+'.') for x in UNSUPPORTED):
                 self.errors.append(f'unsupported package: {p}'); continue
+            if getattr(imp,'static',False):
+                if imp.wildcard:
+                    self.static_imports['*']=p
+                else:
+                    self.static_imports[p.split('.')[-1]]=p
+                continue
             if imp.wildcard:
                 self.wildcard_imports.append(p)
                 continue
@@ -1421,6 +1431,12 @@ class Translator:
             if q:
                 fq=self.imports.get(q,q)
                 rendered_q=(f'{q}_' if q in self.active_anonymous_captures else q)
+                boolean_owner=(q=='Boolean' or fq=='java.lang.Boolean')
+                if boolean_owner and e.member in BOOLEAN_STATIC_CONSTANTS:
+                    base=(f'::jxx::lang::Boolean::'
+                          f'{BOOLEAN_STATIC_CONSTANTS[e.member]}')
+                    return self.apply_expression_selectors(
+                        base,getattr(e,'selectors',None))
                 if q in self.local_variable_types:
                     if e.member=='length' and q in self.local_array_variables:
                         base=self.array_size_expression(rendered_q)
@@ -1433,8 +1449,17 @@ class Translator:
                 else:
                     base=f'{q}->{e.member}'
             else:
-                base=(f'{e.member}_' if e.member in self.active_anonymous_captures
-                      else e.member)
+                static_boolean=(
+                    self.static_imports.get(e.member)==
+                        f'java.lang.Boolean.{e.member}' or
+                    self.static_imports.get('*')=='java.lang.Boolean')
+                if e.member in BOOLEAN_STATIC_CONSTANTS and static_boolean:
+                    base=(f'::jxx::lang::Boolean::'
+                          f'{BOOLEAN_STATIC_CONSTANTS[e.member]}')
+                else:
+                    base=(f'{e.member}_'
+                          if e.member in self.active_anonymous_captures
+                          else e.member)
             array_name=(e.member if not q else q)
             base=self.apply_expression_selectors(
                 base,getattr(e,'selectors',None),
