@@ -15,7 +15,7 @@ namespace jxx::jdk8::lang {
         EXPECT_FALSE((::jxx::NEW<::jxx::lang::Boolean>(false))->booleanValue());
         EXPECT_TRUE((::jxx::NEW<::jxx::lang::Boolean>(::jxx::NEW<::jxx::lang::String>("TrUe")))->booleanValue());
         EXPECT_FALSE((::jxx::NEW<::jxx::lang::Boolean>(::jxx::NEW<::jxx::lang::String>("yes")))->booleanValue());
-        EXPECT_FALSE((::jxx::NEW<::jxx::lang::Boolean>(::jxx::CAST<::jxx::lang::String>(nullptr)))->booleanValue());
+        EXPECT_FALSE((::jxx::NEW<::jxx::lang::Boolean>(::jxx::Ptr<::jxx::lang::String>{}))->booleanValue());
     }
 
     TEST(BooleanTest, ConstantsHaveDocumentedValues) {
@@ -36,7 +36,7 @@ namespace jxx::jdk8::lang {
         EXPECT_EQ(::jxx::lang::Boolean::TRUE_.get(), ::jxx::lang::Boolean::valueOf(::jxx::NEW<::jxx::lang::String>("true")).get());
         EXPECT_EQ(::jxx::lang::Boolean::TRUE_.get(), ::jxx::lang::Boolean::valueOf(::jxx::NEW<::jxx::lang::String>("TrUe")).get());
         EXPECT_EQ(::jxx::lang::Boolean::FALSE_.get(), ::jxx::lang::Boolean::valueOf(::jxx::NEW<::jxx::lang::String>("anything")).get());
-        EXPECT_EQ(::jxx::lang::Boolean::FALSE_.get(), ::jxx::lang::Boolean::valueOf(::jxx::CAST<::jxx::lang::String>(nullptr)).get());
+        EXPECT_EQ(::jxx::lang::Boolean::FALSE_.get(), ::jxx::lang::Boolean::valueOf(::jxx::Ptr<::jxx::lang::String>{}).get());
     }
 
     TEST(BooleanTest, StringConversionsUseLowercaseWords) {

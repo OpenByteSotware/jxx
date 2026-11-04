@@ -1553,8 +1553,17 @@ class Translator:
             dims=[self.expr(x) for x in getattr(e,'dimensions',None) or [] if x is not None]
             return f'::jxx::NEW<{concrete}>({", ".join(dims)})'
         if n=='Cast':
-            t=self.resolve(e.type); x=self.expr(e.expression)
-            return f'static_cast<{t.raw}>({x})' if t.primitive else f'::jxx::CAST<{t.raw}>({x})'
+            t=self.resolve(e.type)
+            # A source cast of null to a reference type establishes only the
+            # compile-time reference type. jxx::CAST cannot deduce its source
+            # shared_ptr type from raw nullptr, so emit a typed empty JXX Ptr.
+            if (not t.primitive and
+                    type(e.expression).__name__=='Literal' and
+                    getattr(e.expression,'value',None) in (None,'null')):
+                return f'::jxx::Ptr<{t.raw}>{{}}'
+            x=self.expr(e.expression)
+            return (f'static_cast<{t.raw}>({x})' if t.primitive
+                    else f'::jxx::CAST<{t.raw}>({x})')
         if n=='BinaryOperation':
             if e.operator=='instanceof':
                 return self.instanceof_expression(e.operandl,e.operandr)
