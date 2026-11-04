@@ -1662,6 +1662,12 @@ class Translator:
             self.emit_switch_statement(s,o)
         elif n=='WhileStatement':
             o.w(f'while ({self.expr(s.condition)}) {{');o.enter();self.stmt(s.body,o);o.exit();o.w('}')
+        elif n=='DoStatement':
+            o.w('do {')
+            o.enter()
+            self.stmt(s.body,o)
+            o.exit()
+            o.w(f'}} while ({self.expr(s.condition)});')
         elif n=='SynchronizedStatement':
             lock=self.expr(getattr(s,'lock',None) or getattr(s,'expression',None)); body=getattr(s,'block',None) or []
             o.w(f'{lock}->synchronized([&]() {{');o.enter()
