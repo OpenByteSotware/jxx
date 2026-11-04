@@ -10,11 +10,11 @@
 
 namespace jxx::jdk8::lang {
     TEST(ShortTest, ConstantsAreDocumented) {
-        EXPECT_EQ(32768, ::jxx::lang::Short::MIN_VALUE);
+        EXPECT_EQ(-32768, ::jxx::lang::Short::MIN_VALUE);
         EXPECT_EQ(32767, ::jxx::lang::Short::MAX_VALUE);
         EXPECT_EQ(16, ::jxx::lang::Short::SIZE);
         EXPECT_EQ(2, ::jxx::lang::Short::BYTES);
-        EXPECT_EQ(::jxx::lang::Short::Class(), ::jxx::lang::Short::TYPE);
+        EXPECT_EQ(::jxx::lang::Short::TYPE, ::jxx::lang::Short::TYPE);
     }
 
     TEST(ShortTest, ConstructorsAndNumberConversionsWork) {
@@ -25,7 +25,7 @@ namespace jxx::jdk8::lang {
         EXPECT_EQ(static_cast<::jxx::lang::jlong>(12345), value->longValue());
         EXPECT_NEAR(static_cast<::jxx::lang::jfloat>(12345.0), value->floatValue(), static_cast<::jxx::lang::jfloat>(0.0));
         EXPECT_NEAR(static_cast<::jxx::lang::jdouble>(12345.0), value->doubleValue(), static_cast<::jxx::lang::jdouble>(0.0));
-        EXPECT_EQ(static_cast<::jxx::lang::jshort>(12), (::jxx::NEW<::jxx::lang::Short>(::jxx::NEW<::jxx::lang::String>("-12")))->shortValue());
+        EXPECT_EQ(static_cast<::jxx::lang::jshort>(-12), (::jxx::NEW<::jxx::lang::Short>(::jxx::NEW<::jxx::lang::String>("-12")))->shortValue());
     }
 
     TEST(ShortTest, ParsingSupportsDecimalAndRadix) {
@@ -62,8 +62,8 @@ namespace jxx::jdk8::lang {
     }
 
     TEST(ShortTest, UnsignedConversionsZeroExtend) {
-        EXPECT_EQ(65535, ::jxx::lang::Short::toUnsignedInt(static_cast<::jxx::lang::jshort>(1)));
-        EXPECT_EQ(static_cast<::jxx::lang::jlong>(65535), ::jxx::lang::Short::toUnsignedLong(static_cast<::jxx::lang::jshort>(1)));
+        EXPECT_EQ(65535, ::jxx::lang::Short::toUnsignedInt(static_cast<::jxx::lang::jshort>(-1)));
+        EXPECT_EQ(static_cast<::jxx::lang::jlong>(65535), ::jxx::lang::Short::toUnsignedLong(static_cast<::jxx::lang::jshort>(-1)));
         EXPECT_EQ(32768, ::jxx::lang::Short::toUnsignedInt(::jxx::lang::Short::MIN_VALUE));
     }
 

@@ -1413,9 +1413,10 @@ class Translator:
         source_name=self.name_of(source_type)
         if source_name in PRIMITIVE_TO_WRAPPER:
             raw,include=self.qmap(PRIMITIVE_TO_WRAPPER[source_name])
-        else:
-            raw=self.ref_raw(source_type);include=None
-        if include:self.includes.add(include)
+            if include:
+                self.includes.add(include)
+            return f'{raw}::TYPE'
+        raw=self.ref_raw(source_type)
         return f'{raw}::Class()'
 
     @staticmethod
@@ -1438,9 +1439,11 @@ class Translator:
         n=type(e).__name__
         if n=='ClassReference': return self.class_literal_expression(e)
         if n=='Literal':
-            if e.value in (None,'null'):
-                return 'nullptr'
-            return self.java_numeric_literal_expression(e.value)
+            rendered=('nullptr' if e.value in (None,'null')
+                      else self.java_numeric_literal_expression(e.value))
+            return (''.join(getattr(e,'prefix_operators',None) or [])+
+                    rendered+
+                    ''.join(getattr(e,'postfix_operators',None) or []))
         if n=='LambdaExpression': return self.lambda_expression(e)
         if n=='This':
             selectors=list(getattr(e,'selectors',None) or [])

@@ -12,11 +12,11 @@
 
 namespace jxx::jdk8::lang {
     TEST(LongTest, ConstantsAreDocumented) {
-        EXPECT_EQ(::jxx::lang::Long::MIN_VALUE, (static_cast<::jxx::lang::jlong>(9223372036854775807) - static_cast<::jxx::lang::jlong>(1)));
+        EXPECT_EQ(::jxx::lang::Long::MIN_VALUE, (-static_cast<::jxx::lang::jlong>(9223372036854775807) - static_cast<::jxx::lang::jlong>(1)));
         EXPECT_EQ(::jxx::lang::Long::MAX_VALUE, static_cast<::jxx::lang::jlong>(9223372036854775807));
         EXPECT_EQ(64, ::jxx::lang::Long::SIZE);
         EXPECT_EQ(8, ::jxx::lang::Long::BYTES);
-        EXPECT_EQ(::jxx::lang::Long::Class(), ::jxx::lang::Long::TYPE);
+        EXPECT_EQ(::jxx::lang::Long::TYPE, ::jxx::lang::Long::TYPE);
     }
 
     TEST(LongTest, ConstructorsAndNumberConversionsWork) {
@@ -33,7 +33,7 @@ namespace jxx::jdk8::lang {
     TEST(LongTest, ParsingValueOfAndDecodeWork) {
         EXPECT_EQ(static_cast<::jxx::lang::jlong>(123), ::jxx::lang::Long::parseLong(::jxx::NEW<::jxx::lang::String>("123")));
         EXPECT_EQ(static_cast<::jxx::lang::jlong>(255), ::jxx::lang::Long::parseLong(::jxx::NEW<::jxx::lang::String>("ff"), 16));
-        EXPECT_EQ(static_cast<::jxx::lang::jlong>(10), ::jxx::lang::Long::parseLong(::jxx::NEW<::jxx::lang::String>("-1010"), 2));
+        EXPECT_EQ(-static_cast<::jxx::lang::jlong>(10), ::jxx::lang::Long::parseLong(::jxx::NEW<::jxx::lang::String>("-1010"), 2));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(static_cast<::jxx::lang::jlong>(123)), ::jxx::lang::String::valueOf(::jxx::lang::Long::valueOf(::jxx::NEW<::jxx::lang::String>("123"))->longValue())));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(static_cast<::jxx::lang::jlong>(255)), ::jxx::lang::String::valueOf(::jxx::lang::Long::valueOf(::jxx::NEW<::jxx::lang::String>("ff"), 16)->longValue())));
         EXPECT_EQ(static_cast<::jxx::lang::jlong>(16), ::jxx::lang::Long::decode(::jxx::NEW<::jxx::lang::String>("0x10"))->longValue());
@@ -45,10 +45,10 @@ namespace jxx::jdk8::lang {
     }
 
     TEST(LongTest, UnsignedParsingAndFormattingWork) {
-        EXPECT_EQ(static_cast<::jxx::lang::jlong>(1), ::jxx::lang::Long::parseUnsignedLong(::jxx::NEW<::jxx::lang::String>("18446744073709551615")));
-        EXPECT_EQ(static_cast<::jxx::lang::jlong>(1), ::jxx::lang::Long::parseUnsignedLong(::jxx::NEW<::jxx::lang::String>("ffffffffffffffff"), 16));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("18446744073709551615"), ::jxx::lang::String::valueOf(::jxx::lang::Long::toUnsignedString(static_cast<::jxx::lang::jlong>(1)))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("ffffffffffffffff"), ::jxx::lang::String::valueOf(::jxx::lang::Long::toUnsignedString(static_cast<::jxx::lang::jlong>(1), 16))));
+        EXPECT_EQ(-static_cast<::jxx::lang::jlong>(1), ::jxx::lang::Long::parseUnsignedLong(::jxx::NEW<::jxx::lang::String>("18446744073709551615")));
+        EXPECT_EQ(-static_cast<::jxx::lang::jlong>(1), ::jxx::lang::Long::parseUnsignedLong(::jxx::NEW<::jxx::lang::String>("ffffffffffffffff"), 16));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("18446744073709551615"), ::jxx::lang::String::valueOf(::jxx::lang::Long::toUnsignedString(-static_cast<::jxx::lang::jlong>(1)))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("ffffffffffffffff"), ::jxx::lang::String::valueOf(::jxx::lang::Long::toUnsignedString(-static_cast<::jxx::lang::jlong>(1), 16))));
     }
 
     TEST(LongTest, FormattingSupportsCommonRadices) {
@@ -68,7 +68,7 @@ namespace jxx::jdk8::lang {
         EXPECT_EQ(12, ::jxx::lang::Long::hashCode(static_cast<::jxx::lang::jlong>(12)));
         EXPECT_TRUE((value->compareTo(::jxx::lang::Long::valueOf(static_cast<::jxx::lang::jlong>(13))) < 0));
         EXPECT_EQ(0, ::jxx::lang::Long::compare(static_cast<::jxx::lang::jlong>(12), static_cast<::jxx::lang::jlong>(12)));
-        EXPECT_TRUE((::jxx::lang::Long::compareUnsigned(static_cast<::jxx::lang::jlong>(1), static_cast<::jxx::lang::jlong>(0)) > 0));
+        EXPECT_TRUE((::jxx::lang::Long::compareUnsigned(-static_cast<::jxx::lang::jlong>(1), static_cast<::jxx::lang::jlong>(0)) > 0));
     }
 
     TEST(LongTest, SystemPropertyAccessUsesDefault) {
@@ -107,14 +107,14 @@ namespace jxx::jdk8::lang {
         EXPECT_EQ(static_cast<::jxx::lang::jlong>(0x23456789ABCDEF01), ::jxx::lang::Long::rotateLeft(static_cast<::jxx::lang::jlong>(0x123456789ABCDEF0), 4));
         EXPECT_EQ(static_cast<::jxx::lang::jlong>(0x0123456789ABCDEF), ::jxx::lang::Long::rotateRight(static_cast<::jxx::lang::jlong>(0x123456789ABCDEF0), 4));
         EXPECT_EQ(static_cast<::jxx::lang::jlong>(0x0807060504030201), ::jxx::lang::Long::reverseBytes(static_cast<::jxx::lang::jlong>(0x0102030405060708)));
-        EXPECT_EQ(1, ::jxx::lang::Long::signum(static_cast<::jxx::lang::jlong>(100)));
+        EXPECT_EQ(-1, ::jxx::lang::Long::signum(-static_cast<::jxx::lang::jlong>(100)));
         EXPECT_EQ(0, ::jxx::lang::Long::signum(static_cast<::jxx::lang::jlong>(0)));
         EXPECT_EQ(1, ::jxx::lang::Long::signum(static_cast<::jxx::lang::jlong>(100)));
     }
 
     TEST(LongTest, UnsignedArithmeticTreatsBitsAsUnsigned) {
-        EXPECT_EQ(::jxx::lang::Long::MAX_VALUE, ::jxx::lang::Long::divideUnsigned(static_cast<::jxx::lang::jlong>(1), static_cast<::jxx::lang::jlong>(2)));
-        EXPECT_EQ(static_cast<::jxx::lang::jlong>(1), ::jxx::lang::Long::remainderUnsigned(static_cast<::jxx::lang::jlong>(1), static_cast<::jxx::lang::jlong>(2)));
+        EXPECT_EQ(::jxx::lang::Long::MAX_VALUE, ::jxx::lang::Long::divideUnsigned(-static_cast<::jxx::lang::jlong>(1), static_cast<::jxx::lang::jlong>(2)));
+        EXPECT_EQ(static_cast<::jxx::lang::jlong>(1), ::jxx::lang::Long::remainderUnsigned(-static_cast<::jxx::lang::jlong>(1), static_cast<::jxx::lang::jlong>(2)));
     }
 
     TEST(LongTest, ArithmeticHelpersWork) {

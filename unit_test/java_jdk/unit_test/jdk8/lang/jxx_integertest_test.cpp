@@ -12,11 +12,11 @@
 
 namespace jxx::jdk8::lang {
     TEST(IntegerTest, ConstantsAreDocumented) {
-        EXPECT_EQ(2147483648, ::jxx::lang::Integer::MIN_VALUE);
+        EXPECT_EQ(-2147483648, ::jxx::lang::Integer::MIN_VALUE);
         EXPECT_EQ(2147483647, ::jxx::lang::Integer::MAX_VALUE);
         EXPECT_EQ(32, ::jxx::lang::Integer::SIZE);
         EXPECT_EQ(4, ::jxx::lang::Integer::BYTES);
-        EXPECT_EQ(::jxx::lang::Integer::Class(), ::jxx::lang::Integer::TYPE);
+        EXPECT_EQ(::jxx::lang::Integer::TYPE, ::jxx::lang::Integer::TYPE);
     }
 
     TEST(IntegerTest, ConstructorsAndNumberConversionsWork) {
@@ -33,12 +33,12 @@ namespace jxx::jdk8::lang {
     TEST(IntegerTest, ParsingValueOfAndDecodeWork) {
         EXPECT_EQ(123, ::jxx::lang::Integer::parseInt(::jxx::NEW<::jxx::lang::String>("123")));
         EXPECT_EQ(255, ::jxx::lang::Integer::parseInt(::jxx::NEW<::jxx::lang::String>("ff"), 16));
-        EXPECT_EQ(10, ::jxx::lang::Integer::parseInt(::jxx::NEW<::jxx::lang::String>("-1010"), 2));
+        EXPECT_EQ(-10, ::jxx::lang::Integer::parseInt(::jxx::NEW<::jxx::lang::String>("-1010"), 2));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(123), ::jxx::lang::String::valueOf(::jxx::lang::Integer::valueOf(::jxx::NEW<::jxx::lang::String>("123"))->intValue())));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(255), ::jxx::lang::String::valueOf(::jxx::lang::Integer::valueOf(::jxx::NEW<::jxx::lang::String>("ff"), 16)->intValue())));
         EXPECT_EQ(16, ::jxx::lang::Integer::decode(::jxx::NEW<::jxx::lang::String>("0x10"))->intValue());
         EXPECT_EQ(8, ::jxx::lang::Integer::decode(::jxx::NEW<::jxx::lang::String>("010"))->intValue());
-        EXPECT_EQ(16, ::jxx::lang::Integer::decode(::jxx::NEW<::jxx::lang::String>("-#10"))->intValue());
+        EXPECT_EQ(-16, ::jxx::lang::Integer::decode(::jxx::NEW<::jxx::lang::String>("-#10"))->intValue());
     }
 
     TEST(IntegerTest, ParseIntRejectsOverflow) {
@@ -46,10 +46,10 @@ namespace jxx::jdk8::lang {
     }
 
     TEST(IntegerTest, UnsignedParsingAndFormattingWork) {
-        EXPECT_EQ(1, ::jxx::lang::Integer::parseUnsignedInt(::jxx::NEW<::jxx::lang::String>("4294967295")));
-        EXPECT_EQ(1, ::jxx::lang::Integer::parseUnsignedInt(::jxx::NEW<::jxx::lang::String>("ffffffff"), 16));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("4294967295"), ::jxx::lang::String::valueOf(::jxx::lang::Integer::toUnsignedString(1))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("ffffffff"), ::jxx::lang::String::valueOf(::jxx::lang::Integer::toUnsignedString(1, 16))));
+        EXPECT_EQ(-1, ::jxx::lang::Integer::parseUnsignedInt(::jxx::NEW<::jxx::lang::String>("4294967295")));
+        EXPECT_EQ(-1, ::jxx::lang::Integer::parseUnsignedInt(::jxx::NEW<::jxx::lang::String>("ffffffff"), 16));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("4294967295"), ::jxx::lang::String::valueOf(::jxx::lang::Integer::toUnsignedString(-1))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("ffffffff"), ::jxx::lang::String::valueOf(::jxx::lang::Integer::toUnsignedString(-1, 16))));
     }
 
     TEST(IntegerTest, FormattingSupportsCommonRadices) {
@@ -69,7 +69,7 @@ namespace jxx::jdk8::lang {
         EXPECT_EQ(12, ::jxx::lang::Integer::hashCode(12));
         EXPECT_TRUE((value->compareTo(::jxx::lang::Integer::valueOf(13)) < 0));
         EXPECT_EQ(0, ::jxx::lang::Integer::compare(12, 12));
-        EXPECT_TRUE((::jxx::lang::Integer::compareUnsigned(1, 0) > 0));
+        EXPECT_TRUE((::jxx::lang::Integer::compareUnsigned(-1, 0) > 0));
     }
 
     TEST(IntegerTest, SystemPropertyAccessUsesDefaultAndRadixPrefixes) {
@@ -109,15 +109,15 @@ namespace jxx::jdk8::lang {
         EXPECT_EQ(0x81234567, ::jxx::lang::Integer::rotateRight(0x12345678, 4));
         EXPECT_EQ(0x78563412, ::jxx::lang::Integer::reverseBytes(0x12345678));
         EXPECT_EQ(0x1E6A2C48, ::jxx::lang::Integer::reverse(0x12345678));
-        EXPECT_EQ(1, ::jxx::lang::Integer::signum(100));
+        EXPECT_EQ(-1, ::jxx::lang::Integer::signum(-100));
         EXPECT_EQ(0, ::jxx::lang::Integer::signum(0));
         EXPECT_EQ(1, ::jxx::lang::Integer::signum(100));
     }
 
     TEST(IntegerTest, UnsignedArithmeticTreatsBitsAsUnsigned) {
-        EXPECT_EQ(2147483647, ::jxx::lang::Integer::divideUnsigned(1, 2));
-        EXPECT_EQ(1, ::jxx::lang::Integer::remainderUnsigned(1, 2));
-        EXPECT_EQ(static_cast<::jxx::lang::jlong>(4294967295), ::jxx::lang::Integer::toUnsignedLong(1));
+        EXPECT_EQ(2147483647, ::jxx::lang::Integer::divideUnsigned(-1, 2));
+        EXPECT_EQ(1, ::jxx::lang::Integer::remainderUnsigned(-1, 2));
+        EXPECT_EQ(static_cast<::jxx::lang::jlong>(4294967295), ::jxx::lang::Integer::toUnsignedLong(-1));
     }
 
     TEST(IntegerTest, ArithmeticHelpersWork) {

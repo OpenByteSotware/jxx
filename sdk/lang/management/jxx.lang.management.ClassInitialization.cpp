@@ -1,6 +1,13 @@
 #include "lang/management/jxx.lang.management.ClassInitialization.h"
 
 #include <mutex>
+#include "lang/management/jxx.lang.management.BufferPoolMXBean.h"
+#include "lang/management/jxx.lang.management.MemoryManagerMXBean.h"
+#include "lang/management/jxx.lang.management.GarbageCollectorMXBean.h"
+#include "lang/management/jxx.lang.management.MemoryMXBean.h"
+#include "lang/management/jxx.lang.management.MemoryPoolMXBean.h"
+#include "lang/management/jxx.lang.management.PlatformLoggingMXBean.h"
+
 
 #include "lang/management/jxx.lang.management.LockInfo.h"
 #include "lang/management/jxx.lang.management.PlatformManagedObject.h"
@@ -20,6 +27,13 @@ namespace jxx::lang::management {
 void initializeClasses() {
     static std::once_flag flag;
     std::call_once(flag, [] {
+        (void)BufferPoolMXBean::Class();
+        (void)MemoryManagerMXBean::Class();
+        (void)GarbageCollectorMXBean::Class();
+        (void)MemoryMXBean::Class();
+        (void)MemoryPoolMXBean::Class();
+        (void)PlatformLoggingMXBean::Class();
+
         (void)PlatformManagedObject::Class();
         (void)ClassLoadingMXBean::Class();
         (void)CompilationMXBean::Class();

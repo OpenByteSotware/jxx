@@ -21,7 +21,7 @@ namespace jxx::jdk8::lang {
     TEST(BooleanTest, ConstantsHaveDocumentedValues) {
         EXPECT_EQ(::jxx::lang::Boolean::TRUE_.get(), ::jxx::lang::Boolean::valueOf(true).get());
         EXPECT_EQ(::jxx::lang::Boolean::FALSE_.get(), ::jxx::lang::Boolean::valueOf(false).get());
-        EXPECT_EQ(::jxx::lang::Boolean::Class(), ::jxx::lang::Boolean::TYPE);
+        EXPECT_EQ(::jxx::lang::Boolean::TYPE, ::jxx::lang::Boolean::TYPE);
     }
 
     TEST(BooleanTest, ParseBooleanRecognizesOnlyTrueIgnoringCase) {
