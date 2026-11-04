@@ -1352,6 +1352,45 @@ class Translator:
         rendered.append(array_expression)
         return rendered
 
+    def is_reference_assertion_expression(self, expression):
+        """Return whether a test operand has source reference semantics."""
+        kind=type(expression).__name__
+        if kind in {'ClassCreator','ClassReference','ArrayCreator'}:
+            return True
+        if kind=='Literal':
+            return getattr(expression,'value',None) in (None,'null') or \
+                   self.is_string_literal_expression(expression)
+        if kind=='Cast':
+            return not self.resolve(expression.type).primitive
+        if kind=='MemberReference':
+            qualifier=getattr(expression,'qualifier',None)
+            member=getattr(expression,'member','')
+            if qualifier in {'Boolean','Byte','Short','Integer','Long',
+                             'Float','Double','Character'} and member in {
+                                 'TRUE','FALSE','TRUE_','FALSE_','TYPE'}:
+                return True
+            type_name=self.expression_type_name(expression)
+            return (type_name in DEFAULT_LANGUAGE_TYPES or
+                    type_name in WRAPPER_TO_PRIMITIVE or
+                    type_name in {'String','Object','Class','ClassAny'})
+        if kind=='MethodInvocation':
+            metadata=self.sdk_method_metadata(expression)
+            if metadata is not None:
+                return metadata.return_kind=='reference'
+            owner=self.invocation_owner_name(
+                getattr(expression,'qualifier',None))
+            declared=self.source_method_return_types.get(owner,{}).get(
+                expression.member)
+            if declared is not None:
+                return not self.resolve(declared).primitive
+            # Common source/JXX factories and object methods.
+            return expression.member in {
+                'valueOf','toString','getClass','clone','getProperty'}
+        if kind=='TernaryExpression':
+            return (self.is_reference_assertion_expression(expression.if_true) or
+                    self.is_reference_assertion_expression(expression.if_false))
+        return False
+
     def test_assertion_expression(self, invocation):
         if self.test_framework=='none' or type(invocation).__name__!='MethodInvocation':
             return None
@@ -1385,11 +1424,15 @@ class Translator:
             if len(arguments)==3:
                 rendered=(f'EXPECT_NEAR({self.expr(arguments[0])}, '
                           f'{self.expr(arguments[1])}, {self.expr(arguments[2])})')
-            elif (self.is_string_expression(arguments[0]) or
-                  self.is_string_expression(arguments[1])):
+            elif (self.is_reference_assertion_expression(arguments[0]) or
+                  self.is_reference_assertion_expression(arguments[1])):
                 self.includes.add('util/jxx.util.Objects.h')
-                expected=self.string_value_expression(arguments[0])
-                actual=self.string_value_expression(arguments[1])
+                expected=(self.string_value_expression(arguments[0])
+                          if self.is_string_expression(arguments[0])
+                          else self.expr(arguments[0]))
+                actual=(self.string_value_expression(arguments[1])
+                        if self.is_string_expression(arguments[1])
+                        else self.expr(arguments[1]))
                 comparison=(f'::jxx::util::Objects::equals('
                             f'{expected}, {actual})')
                 macro=('EXPECT_TRUE' if member=='assertEquals' else 'EXPECT_FALSE')

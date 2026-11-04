@@ -14,7 +14,7 @@ namespace jxx::jdk8::lang {
         EXPECT_EQ(32767, ::jxx::lang::Short::MAX_VALUE);
         EXPECT_EQ(16, ::jxx::lang::Short::SIZE);
         EXPECT_EQ(2, ::jxx::lang::Short::BYTES);
-        EXPECT_EQ(::jxx::lang::Short::TYPE, ::jxx::lang::Short::TYPE);
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Short::TYPE, ::jxx::lang::Short::TYPE));
     }
 
     TEST(ShortTest, ConstructorsAndNumberConversionsWork) {
@@ -25,7 +25,7 @@ namespace jxx::jdk8::lang {
         EXPECT_EQ(static_cast<::jxx::lang::jlong>(12345), value->longValue());
         EXPECT_NEAR(static_cast<::jxx::lang::jfloat>(12345.0), value->floatValue(), static_cast<::jxx::lang::jfloat>(0.0));
         EXPECT_NEAR(static_cast<::jxx::lang::jdouble>(12345.0), value->doubleValue(), static_cast<::jxx::lang::jdouble>(0.0));
-        EXPECT_EQ(static_cast<::jxx::lang::jshort>(-12), (::jxx::NEW<::jxx::lang::Short>(::jxx::NEW<::jxx::lang::String>("-12")))->shortValue());
+        EXPECT_TRUE(::jxx::util::Objects::equals(static_cast<::jxx::lang::jshort>(-12), (::jxx::NEW<::jxx::lang::Short>(::jxx::NEW<::jxx::lang::String>("-12")))->shortValue()));
     }
 
     TEST(ShortTest, ParsingSupportsDecimalAndRadix) {
@@ -41,16 +41,16 @@ namespace jxx::jdk8::lang {
     TEST(ShortTest, ValueOfAndDecodeWork) {
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(10))), ::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(::jxx::NEW<::jxx::lang::String>("10")))));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(15))), ::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(::jxx::NEW<::jxx::lang::String>("f"), 16))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(16))), ::jxx::lang::String::valueOf(::jxx::lang::Short::decode(::jxx::NEW<::jxx::lang::String>("0x10")))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(8))), ::jxx::lang::String::valueOf(::jxx::lang::Short::decode(::jxx::NEW<::jxx::lang::String>("010")))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(16))), ::jxx::lang::Short::decode(::jxx::NEW<::jxx::lang::String>("0x10"))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(8))), ::jxx::lang::Short::decode(::jxx::NEW<::jxx::lang::String>("010"))));
     }
 
     TEST(ShortTest, StringEqualityHashAndComparisonWork) {
         ::jxx::Ptr<::jxx::lang::Short> value = ::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(1200));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("1200"), ::jxx::lang::String::valueOf(value->toString())));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("1200"), ::jxx::lang::String::valueOf(::jxx::lang::Short::toString(static_cast<::jxx::lang::jshort>(1200)))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(value), ::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(1200)))));
-        EXPECT_FALSE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(value), ::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(1201)))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(value, ::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(1200)))));
+        EXPECT_FALSE(::jxx::util::Objects::equals(value, ::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(1201)))));
         EXPECT_EQ(1200, value->hashCode());
         EXPECT_EQ(1200, ::jxx::lang::Short::hashCode(static_cast<::jxx::lang::jshort>(1200)));
         EXPECT_TRUE((value->compareTo(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(1201))) < 0));

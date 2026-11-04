@@ -21,7 +21,7 @@ namespace jxx::jdk8::lang {
     TEST(BooleanTest, ConstantsHaveDocumentedValues) {
         EXPECT_EQ(::jxx::lang::Boolean::TRUE_.get(), ::jxx::lang::Boolean::valueOf(true).get());
         EXPECT_EQ(::jxx::lang::Boolean::FALSE_.get(), ::jxx::lang::Boolean::valueOf(false).get());
-        EXPECT_EQ(::jxx::lang::Boolean::TYPE, ::jxx::lang::Boolean::TYPE);
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Boolean::TYPE, ::jxx::lang::Boolean::TYPE));
     }
 
     TEST(BooleanTest, ParseBooleanRecognizesOnlyTrueIgnoringCase) {
@@ -47,8 +47,8 @@ namespace jxx::jdk8::lang {
     }
 
     TEST(BooleanTest, EqualityHashAndComparisonFollowBooleanOrdering) {
-        EXPECT_EQ(::jxx::lang::Boolean::TRUE_, ::jxx::NEW<::jxx::lang::Boolean>(true));
-        EXPECT_NE(::jxx::lang::Boolean::TRUE_, ::jxx::lang::Boolean::FALSE_);
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Boolean::TRUE_, ::jxx::NEW<::jxx::lang::Boolean>(true)));
+        EXPECT_FALSE(::jxx::util::Objects::equals(::jxx::lang::Boolean::TRUE_, ::jxx::lang::Boolean::FALSE_));
         EXPECT_EQ(1231, ::jxx::lang::Boolean::TRUE_->hashCode());
         EXPECT_EQ(1237, ::jxx::lang::Boolean::FALSE_->hashCode());
         EXPECT_EQ(1231, ::jxx::lang::Boolean::hashCode(true));
