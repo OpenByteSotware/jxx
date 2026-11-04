@@ -4,6 +4,37 @@ import org.junit.Test;
 
 public class SynchronizedLockExampleTest {
 
+    /*
+     * Class under test, contained entirely within this test file.
+     */
+    private static class SynchronizedLockExample {
+
+        private int counter = 0;
+        private final Object counterLock = new Object();
+
+        public void increment() {
+            synchronized (counterLock) {
+                counter++;
+            }
+        }
+
+        public void add(int amount) {
+            if (amount <= 0) {
+                return;
+            }
+
+            synchronized (counterLock) {
+                counter += amount;
+            }
+        }
+
+        public int getCounter() {
+            synchronized (counterLock) {
+                return counter;
+            }
+        }
+    }
+
     @Test
     public void twoThreadsShouldProduceCountOf2020()
             throws InterruptedException {

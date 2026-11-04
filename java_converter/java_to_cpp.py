@@ -624,6 +624,10 @@ class Translator:
                 self.generic_constructor_parameters[declaration.name]=constructor_positions
         for imp in tree.imports or []:
             p=imp.path
+            if self.test_framework!='none' and (
+                    p.startswith('org.junit.') or
+                    p.startswith('org.testng.')):
+                continue
             if p.startswith('java.lang.reflect.') and p != 'java.lang.reflect.InvocationTargetException':
                 self.errors.append(f'unsupported reflection type: {p}'); continue
             if any(p==x or p.startswith(x+'.') for x in UNSUPPORTED):
@@ -2612,6 +2616,29 @@ def _gtest_name(name):
     return cleaned[:1].upper()+cleaned[1:] if cleaned else 'Unnamed'
 
 
+def discover_converted_production_types(out_root):
+    """Index existing generated production headers outside unit_test/."""
+    root=Path(out_root)
+    result={}
+    class_pattern=re.compile(r'\bclass\s+([A-Za-z_$][\w$]*)\b')
+    namespace_pattern=re.compile(r'\bnamespace\s+([A-Za-z_]\w*(?:::\w+)*)\s*\{')
+    for header in root.rglob('*.h'):
+        if 'unit_test' in header.relative_to(root).parts:
+            continue
+        try:
+            text=header.read_text(encoding='utf-8')
+        except OSError:
+            continue
+        namespace_match=namespace_pattern.search(text)
+        namespace=namespace_match.group(1) if namespace_match else ''
+        include=header.relative_to(root).as_posix()
+        for match in class_pattern.finditer(text):
+            name=match.group(1)
+            qualified=f'::{namespace}::{name}' if namespace else f'::{name}'
+            result.setdefault(name,(qualified,include))
+    return result
+
+
 def generate_google_test(path:Path, out_root:str, source_root:Path,
                          framework:str, source_type_index, source_type_kinds,
                          sdk_metadata, strict_tests:bool=False):
@@ -2627,6 +2654,10 @@ def generate_google_test(path:Path, out_root:str, source_root:Path,
     translator=Translator()
     translator.test_framework=active
     translator.source_type_index=dict(source_type_index or {})
+    # Tests commonly live in a separate source tree. Reuse production headers
+    # already converted under --out so test-only conversion resolves them.
+    translator.source_type_index.update(
+        discover_converted_production_types(out_root))
     translator.source_type_kinds=dict(source_type_kinds or {})
     translator.sdk_metadata=sdk_metadata
     translator.main_entries={}; translator.main_owner_names=set()
@@ -2641,11 +2672,24 @@ def generate_google_test(path:Path, out_root:str, source_root:Path,
     o=Emit();o.w('#include <gtest/gtest.h>')
     for include in sorted(translator.includes | translator.source_includes):
         o.w(f'#include "{include}"')
-    # Include the converted production declaration when it exists.
-    production_header=(relative_dir/f'{path.stem}.h').as_posix()
-    o.w(f'#include "{production_header}"');o.w()
+    # Test classes are translated directly to TEST/TEST_F and therefore
+    # do not have a generated production header of their own.
+    production_headers=sorted({include for _,include in
+        translator.source_type_index.values()
+        if (Path(out_root)/include).is_file() and 'unit_test' not in Path(include).parts})
+    referenced_names={translator.name_of(node)
+        for _,node in tree.filter(javalang.tree.ReferenceType)}
+    for include in production_headers:
+        if any(Path(include).stem==name or Path(include).stem.endswith(name)
+               for name in referenced_names):
+            o.w(f'#include "{include}"')
+    o.w()
     namespace=('jxx::'+package.replace('.','::')) if package else ''
     if namespace: o.w(f'namespace {namespace} {{');o.enter()
+    # Anonymous source classes used in test bodies, such as Runnable, must be
+    # emitted in the test translation unit before the TEST body constructs them.
+    for anonymous in translator.anonymous_class_order:
+        translator.emit_anonymous_class(anonymous,o)
     generated=0
     for declaration in getattr(tree,'types',None) or []:
         if type(declaration).__name__!='ClassDeclaration':
