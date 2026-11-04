@@ -54,7 +54,7 @@ DEFAULT_LANGUAGE_TYPES={
     'Object','String','StringBuilder','StringBuffer','System','JxxArray',
     'Class','Integer','Character','Boolean','Byte','Short','Long','Float',
     'Double','Math','StrictMath','Throwable','Exception','RuntimeException',
-    'Error',
+    'Error','Thread','Runnable',
     # Implicit java.lang throwable types. Catch clauses do not need source
     # imports, but generated C++ requires the concrete JXX declaration.
     'ArithmeticException','ArrayIndexOutOfBoundsException',
