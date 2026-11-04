@@ -21,13 +21,14 @@ void initializeDateTime() {
     static std::once_flag flag;
     std::call_once(flag, [] {
         registerType<Calendar>();
-        ::jxx::io::serialization::registerSerializableClass<Calendar>(1);
+        ::jxx::io::serialization::registerSerializableClass<Calendar>(static_cast<::jxx::lang::jlong>(-1807547505821590642LL));
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<
                     Calendar, 1U, 2U>();
         registerType<Date>();
-        ::jxx::io::serialization::registerSerializableClass<Date>(1);
+        ::jxx::io::serialization::registerSerializableClass<Date>(static_cast<::jxx::lang::jlong>(7523967970034938905LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<Date, 1U, 2U>();
         registerType<GregorianCalendar>();
-        ::jxx::io::serialization::registerSerializableClass<GregorianCalendar>(1);
+        ::jxx::io::serialization::registerSerializableClass<GregorianCalendar>(static_cast<::jxx::lang::jlong>(-8125100834729963327LL));
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<GregorianCalendar, 1U, 2U>();
         registerType<SimpleTimeZone>();
         registerType<TimeZone>();

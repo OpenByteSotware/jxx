@@ -42,7 +42,8 @@ void initializeUtilities() {
         registerType<DoubleSummaryStatistics>();
         registerType<EventListener>();
         registerType<EventObject>();
-        ::jxx::io::serialization::registerSerializableClass<EventObject>(1, [] { return ::jxx::NEW<EventObject>(::jxx::NEW<::jxx::lang::Object>()); });
+        ::jxx::io::serialization::registerSerializableClass<EventObject>(static_cast<::jxx::lang::jlong>(5516075349620653480LL), [] { return ::jxx::NEW<EventObject>(::jxx::NEW<::jxx::lang::Object>()); });
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<EventObject, 1U, 2U>();
         registerType<Formattable>();
         registerType<Formatter>();
         using ErasedLinkedList = LinkedList<::jxx::lang::Object>;
@@ -64,7 +65,8 @@ void initializeUtilities() {
         registerType<OptionalInt>();
         registerType<OptionalLong>();
         registerType<Random>();
-        ::jxx::io::serialization::registerSerializableClass<Random>(1);
+        ::jxx::io::serialization::registerSerializableClass<Random>(static_cast<::jxx::lang::jlong>(3905348978240129619LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<Random, 1U, 2U>();
         registerType<Scanner>();
         registerType<SplittableRandom>();
         registerType<StringJoiner>();
@@ -72,9 +74,10 @@ void initializeUtilities() {
         registerType<Timer>();
         registerType<TimerTask>();
         registerType<UUID>();
-        ::jxx::io::serialization::registerSerializableClass<UUID>(1, [] {
+        ::jxx::io::serialization::registerSerializableClass<UUID>(static_cast<::jxx::lang::jlong>(-4856846361193249489LL), [] {
                     return ::jxx::NEW<UUID>(0, 0);
                 });
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<UUID, 1U, 2U>();
     });
 }
 }

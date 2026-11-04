@@ -35,7 +35,8 @@ void initializeCollections() {
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<
                     ArrayList<::jxx::lang::Object>, 1U, 2U>();
         registerType<BitSet>();
-        ::jxx::io::serialization::registerSerializableClass<BitSet>(1);
+        ::jxx::io::serialization::registerSerializableClass<BitSet>(static_cast<::jxx::lang::jlong>(7997698588986878753LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<BitSet, 1U, 2U>();
         registerType<Collections>();
         registerType<RandomAccess>();
         registerType<Spliterators>();

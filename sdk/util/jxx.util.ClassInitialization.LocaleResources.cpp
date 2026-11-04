@@ -22,12 +22,14 @@ void initializeLocaleResources() {
     static std::once_flag flag;
     std::call_once(flag, [] {
         registerType<Currency>();
-        ::jxx::io::serialization::registerSerializableClass<Currency>(1, [] { return ::jxx::NEW<Currency>(::jxx::NEW<::jxx::lang::String>("XXX"), ::jxx::NEW<::jxx::lang::String>("XXX"), 999, 2); });
+        ::jxx::io::serialization::registerSerializableClass<Currency>(static_cast<::jxx::lang::jlong>(-158308464356906721LL), [] { return ::jxx::NEW<Currency>(::jxx::NEW<::jxx::lang::String>("XXX"), ::jxx::NEW<::jxx::lang::String>("XXX"), 999, 2); });
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<Currency, 1U, 2U>();
         registerType<ListResourceBundle>();
         registerType<Locale>();
-        ::jxx::io::serialization::registerSerializableClass<Locale>(1, [] {
+        ::jxx::io::serialization::registerSerializableClass<Locale>(static_cast<::jxx::lang::jlong>(9149081749638150636LL), [] {
                     return ::jxx::NEW<Locale>(::jxx::NEW<::jxx::lang::String>(""));
                 });
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<Locale, 1U, 2U>();
         registerType<LocaleBuilder>();
         registerType<PluralRules>();
         registerType<PropertyResourceBundle>();
