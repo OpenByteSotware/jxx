@@ -41,6 +41,7 @@ PRIMITIVE_UNBOX_METHODS={
     'long':'longValue','float':'floatValue','double':'doubleValue',
     'boolean':'booleanValue','char':'charValue',
 }
+PRIMITIVE_TO_WRAPPER={'byte':'Byte','short':'Short','int':'Integer','long':'Long','float':'Float','double':'Double','boolean':'Boolean','char':'Character','void':'Void'}
 WRAPPER_TO_PRIMITIVE={
     'Byte':'byte','Short':'short','Integer':'int','Long':'long',
     'Float':'float','Double':'double','Boolean':'boolean','Character':'char',
@@ -54,7 +55,7 @@ DEFAULT_LANGUAGE_TYPES={
     'Object','String','StringBuilder','StringBuffer','System','JxxArray',
     'Class','Integer','Character','Boolean','Byte','Short','Long','Float',
     'Double','Math','StrictMath','Throwable','Exception','RuntimeException',
-    'Error','Thread','Runnable',
+    'Error','Thread','Runnable','Void',
     # Implicit java.lang throwable types. Catch clauses do not need source
     # imports, but generated C++ requires the concrete JXX declaration.
     'ArithmeticException','ArrayIndexOutOfBoundsException',
@@ -1384,9 +1385,20 @@ class Translator:
             rendered+=f' << {self.expr(message)}'
         return rendered
 
+    def class_literal_expression(self, expression):
+        source_type=getattr(expression,'type',None)
+        source_name=self.name_of(source_type)
+        if source_name in PRIMITIVE_TO_WRAPPER:
+            raw,include=self.qmap(PRIMITIVE_TO_WRAPPER[source_name])
+        else:
+            raw=self.ref_raw(source_type);include=None
+        if include:self.includes.add(include)
+        return f'{raw}::Class()'
+
     def expr(self,e):
         if e is None:return ''
         n=type(e).__name__
+        if n=='ClassReference': return self.class_literal_expression(e)
         if n=='Literal': return 'nullptr' if e.value in (None,'null') else e.value
         if n=='LambdaExpression': return self.lambda_expression(e)
         if n=='This':
