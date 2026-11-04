@@ -130,7 +130,9 @@ python3 java_to_cpp.py --dir ../java_examples --out outcpp --cmake
 python3 java_to_cpp.py --dir ../java_examples --out outcpp --cmake --jxx-include ../sdk
 python3 java_to_cpp.py --dir ../java_examples --out outcpp --cmake --jxx-include c:/projects/SourceCode/git_repos/open_source/jxx/sdk
 python3 java_to_cpp.py --dir ../java_examples --out outcpp --cmake --jxx-include c:/projects/SourceCode/git_repos/open_source/jxx/sdk --jxx-library C:/projects/SourceCode/git_repos/open_source/jxx/build-headless/sdk/Debug/jxxsdk.lib
-python3 java_to_cpp.py --dir ../java_examples --out outcpp --cmake --jxx-include c:/projects/SourceCode/git_repos/open_source/jxx/sdk --jxx-root C:/projects/SourceCode/git_repos/open_source/jxx
+python3 java_to_cpp.py --dir ../java_examples --test-framework testng --out outcpp --cmake --jxx-include c:/projects/SourceCode/git_repos/open_source/jxx/sdk --jxx-root C:/projects/SourceCode/git_repos/open_source/jxx
+
+python3 java_to_cpp.py --dir ../java_jdk_unit_tests --test-framework junit4 --out ../unit_test/java_jdk --cmake --jxx-include c:/projects/SourceCode/git_repos/open_source/jxx/sdk --jxx-root C:/projects/SourceCode/git_repos/open_source/jxx
 
 for converting test framework unit test from java to c++ with jxx and googletest use the below:
 --test-framework none  (not using framework, same as not adding this parameter)
