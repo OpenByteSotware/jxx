@@ -1355,7 +1355,22 @@ class Translator:
     def is_reference_assertion_expression(self, expression):
         """Return whether a test operand has source reference semantics."""
         kind=type(expression).__name__
-        if kind in {'ClassCreator','ClassReference','ArrayCreator'}:
+        if kind=='ClassCreator':
+            # A constructed reference can end in a selector that returns a
+            # primitive, for example new Short("-12").shortValue(). The
+            # assertion applies to the terminal expression type, not to the
+            # type of the receiver on which that selector was invoked.
+            selectors=list(getattr(expression,'selectors',None) or [])
+            if selectors:
+                terminal=selectors[-1]
+                if type(terminal).__name__=='MethodInvocation':
+                    if terminal.member in set(PRIMITIVE_UNBOX_METHODS.values()):
+                        return False
+                    metadata=self.sdk_method_metadata(terminal)
+                    if metadata is not None:
+                        return metadata.return_kind=='reference'
+            return True
+        if kind in {'ClassReference','ArrayCreator'}:
             return True
         if kind=='Literal':
             return getattr(expression,'value',None) in (None,'null') or \
