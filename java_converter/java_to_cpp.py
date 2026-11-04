@@ -1459,7 +1459,10 @@ class Translator:
             invocation=f'{head}({", ".join(self.method_invocation_arguments(e))})'
             return self.apply_expression_selectors(
                 invocation,getattr(e,'selectors',None))
-        if n=='ClassCreator': return self.class_creator_expression(e)
+        if n=='ClassCreator':
+            created=self.class_creator_expression(e)
+            return self.apply_expression_selectors(
+                created,getattr(e,'selectors',None))
         if n=='ArrayCreator':
             rank=len(getattr(e.type,'dimensions',None) or []) + len(getattr(e,'dimensions',None) or [])
             rank=max(rank,1)

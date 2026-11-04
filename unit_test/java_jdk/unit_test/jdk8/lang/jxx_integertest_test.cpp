@@ -26,7 +26,7 @@ namespace jxx::jdk8::lang {
         EXPECT_EQ(258L, value->longValue());
         EXPECT_NEAR(258.0f, value->floatValue(), 0.0f);
         EXPECT_NEAR(258.0d, value->doubleValue(), 0.0d);
-        EXPECT_EQ(42, ::jxx::NEW<::jxx::lang::Integer>(::jxx::NEW<::jxx::lang::String>("42")));
+        EXPECT_EQ(42, ::jxx::NEW<::jxx::lang::Integer>(::jxx::NEW<::jxx::lang::String>("42"))->intValue());
     }
 
     TEST(IntegerTest, ParsingValueOfAndDecodeWork) {

@@ -24,7 +24,7 @@ namespace jxx::jdk8::lang {
         EXPECT_EQ(127L, value->longValue());
         EXPECT_NEAR(127.0f, value->floatValue(), 0.0f);
         EXPECT_NEAR(127.0d, value->doubleValue(), 0.0d);
-        EXPECT_EQ(static_cast<::jxx::lang::jbyte>(12), ::jxx::NEW<::jxx::lang::Byte>(::jxx::NEW<::jxx::lang::String>("-12")));
+        EXPECT_EQ(static_cast<::jxx::lang::jbyte>(12), ::jxx::NEW<::jxx::lang::Byte>(::jxx::NEW<::jxx::lang::String>("-12"))->byteValue());
     }
 
     TEST(ByteTest, ParsingSupportsDecimalAndRadix) {
