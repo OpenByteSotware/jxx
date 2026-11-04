@@ -22,9 +22,9 @@ namespace jxx::jdk8::lang {
         EXPECT_EQ(static_cast<::jxx::lang::jbyte>(57), value->byteValue());
         EXPECT_EQ(static_cast<::jxx::lang::jshort>(12345), value->shortValue());
         EXPECT_EQ(12345, value->intValue());
-        EXPECT_EQ(12345L, value->longValue());
-        EXPECT_NEAR(12345.0f, value->floatValue(), 0.0f);
-        EXPECT_NEAR(12345.0d, value->doubleValue(), 0.0d);
+        EXPECT_EQ(static_cast<::jxx::lang::jlong>(12345), value->longValue());
+        EXPECT_NEAR(static_cast<::jxx::lang::jfloat>(12345.0), value->floatValue(), static_cast<::jxx::lang::jfloat>(0.0));
+        EXPECT_NEAR(static_cast<::jxx::lang::jdouble>(12345.0), value->doubleValue(), static_cast<::jxx::lang::jdouble>(0.0));
         EXPECT_EQ(static_cast<::jxx::lang::jshort>(12), ::jxx::NEW<::jxx::lang::Short>(::jxx::NEW<::jxx::lang::String>("-12"))->shortValue());
     }
 
@@ -63,7 +63,7 @@ namespace jxx::jdk8::lang {
 
     TEST(ShortTest, UnsignedConversionsZeroExtend) {
         EXPECT_EQ(65535, ::jxx::lang::Short::toUnsignedInt(static_cast<::jxx::lang::jshort>(1)));
-        EXPECT_EQ(65535L, ::jxx::lang::Short::toUnsignedLong(static_cast<::jxx::lang::jshort>(1)));
+        EXPECT_EQ(static_cast<::jxx::lang::jlong>(65535), ::jxx::lang::Short::toUnsignedLong(static_cast<::jxx::lang::jshort>(1)));
         EXPECT_EQ(32768, ::jxx::lang::Short::toUnsignedInt(::jxx::lang::Short::MIN_VALUE));
     }
 

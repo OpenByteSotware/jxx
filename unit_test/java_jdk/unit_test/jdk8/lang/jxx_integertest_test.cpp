@@ -24,9 +24,9 @@ namespace jxx::jdk8::lang {
         EXPECT_EQ(static_cast<::jxx::lang::jbyte>(2), value->byteValue());
         EXPECT_EQ(static_cast<::jxx::lang::jshort>(258), value->shortValue());
         EXPECT_EQ(258, value->intValue());
-        EXPECT_EQ(258L, value->longValue());
-        EXPECT_NEAR(258.0f, value->floatValue(), 0.0f);
-        EXPECT_NEAR(258.0d, value->doubleValue(), 0.0d);
+        EXPECT_EQ(static_cast<::jxx::lang::jlong>(258), value->longValue());
+        EXPECT_NEAR(static_cast<::jxx::lang::jfloat>(258.0), value->floatValue(), static_cast<::jxx::lang::jfloat>(0.0));
+        EXPECT_NEAR(static_cast<::jxx::lang::jdouble>(258.0), value->doubleValue(), static_cast<::jxx::lang::jdouble>(0.0));
         EXPECT_EQ(42, ::jxx::NEW<::jxx::lang::Integer>(::jxx::NEW<::jxx::lang::String>("42"))->intValue());
     }
 
@@ -117,7 +117,7 @@ namespace jxx::jdk8::lang {
     TEST(IntegerTest, UnsignedArithmeticTreatsBitsAsUnsigned) {
         EXPECT_EQ(2147483647, ::jxx::lang::Integer::divideUnsigned(1, 2));
         EXPECT_EQ(1, ::jxx::lang::Integer::remainderUnsigned(1, 2));
-        EXPECT_EQ(4294967295L, ::jxx::lang::Integer::toUnsignedLong(1));
+        EXPECT_EQ(static_cast<::jxx::lang::jlong>(4294967295), ::jxx::lang::Integer::toUnsignedLong(1));
     }
 
     TEST(IntegerTest, ArithmeticHelpersWork) {

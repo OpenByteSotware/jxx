@@ -907,6 +907,7 @@ class Translator:
             if value.startswith("'"): return 'char'
             if value.lower().endswith('l'): return 'long'
             if value.lower().endswith('f'): return 'float'
+            if value.lower().endswith('d'): return 'double'
             if any(ch in value for ch in '.eE'): return 'double'
             return 'int'
         if kind=='MethodInvocation':
@@ -1417,11 +1418,29 @@ class Translator:
         if include:self.includes.add(include)
         return f'{raw}::Class()'
 
+    @staticmethod
+    def java_numeric_literal_expression(value):
+        text=str(value)
+        lower=text.lower()
+        if lower.endswith('d'):
+            return (f'static_cast<::jxx::lang::jdouble>('
+                    f'{text[:-1]})')
+        if lower.endswith('f'):
+            return (f'static_cast<::jxx::lang::jfloat>('
+                    f'{text[:-1]})')
+        if lower.endswith('l'):
+            return (f'static_cast<::jxx::lang::jlong>('
+                    f'{text[:-1]})')
+        return text
+
     def expr(self,e):
         if e is None:return ''
         n=type(e).__name__
         if n=='ClassReference': return self.class_literal_expression(e)
-        if n=='Literal': return 'nullptr' if e.value in (None,'null') else e.value
+        if n=='Literal':
+            if e.value in (None,'null'):
+                return 'nullptr'
+            return self.java_numeric_literal_expression(e.value)
         if n=='LambdaExpression': return self.lambda_expression(e)
         if n=='This':
             selectors=list(getattr(e,'selectors',None) or [])
