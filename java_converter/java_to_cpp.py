@@ -1539,8 +1539,13 @@ class Translator:
                 invocation,getattr(e,'selectors',None))
         if n=='ClassCreator':
             created=self.class_creator_expression(e)
-            return self.apply_expression_selectors(
-                created,getattr(e,'selectors',None))
+            selectors=getattr(e,'selectors',None)
+            # Bind selectors to the completed allocation expression, never to
+            # the final constructor argument. This is required for expressions
+            # such as new Boolean((String) null).booleanValue().
+            if selectors:
+                created=f'({created})'
+            return self.apply_expression_selectors(created,selectors)
         if n=='ArrayCreator':
             rank=len(getattr(e.type,'dimensions',None) or []) + len(getattr(e,'dimensions',None) or [])
             rank=max(rank,1)

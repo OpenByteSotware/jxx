@@ -25,7 +25,7 @@ namespace jxx::jdk8::lang {
         EXPECT_EQ(static_cast<::jxx::lang::jlong>(12345), value->longValue());
         EXPECT_NEAR(static_cast<::jxx::lang::jfloat>(12345.0), value->floatValue(), static_cast<::jxx::lang::jfloat>(0.0));
         EXPECT_NEAR(static_cast<::jxx::lang::jdouble>(12345.0), value->doubleValue(), static_cast<::jxx::lang::jdouble>(0.0));
-        EXPECT_EQ(static_cast<::jxx::lang::jshort>(12), ::jxx::NEW<::jxx::lang::Short>(::jxx::NEW<::jxx::lang::String>("-12"))->shortValue());
+        EXPECT_EQ(static_cast<::jxx::lang::jshort>(12), (::jxx::NEW<::jxx::lang::Short>(::jxx::NEW<::jxx::lang::String>("-12")))->shortValue());
     }
 
     TEST(ShortTest, ParsingSupportsDecimalAndRadix) {

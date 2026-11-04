@@ -3,6 +3,10 @@
 #include <mutex>
 
 #include "lang/management/jxx.lang.management.LockInfo.h"
+#include "lang/management/jxx.lang.management.PlatformManagedObject.h"
+#include "lang/management/jxx.lang.management.ClassLoadingMXBean.h"
+#include "lang/management/jxx.lang.management.CompilationMXBean.h"
+#include "lang/management/jxx.lang.management.OperatingSystemMXBean.h"
 #include "lang/management/jxx.lang.management.ManagementPermission.h"
 #include "lang/management/jxx.lang.management.MemoryNotificationInfo.h"
 #include "lang/management/jxx.lang.management.ThreadInfo.h"
@@ -16,6 +20,10 @@ namespace jxx::lang::management {
 void initializeClasses() {
     static std::once_flag flag;
     std::call_once(flag, [] {
+        (void)PlatformManagedObject::Class();
+        (void)ClassLoadingMXBean::Class();
+        (void)CompilationMXBean::Class();
+        (void)OperatingSystemMXBean::Class();
         (void)LockInfo::Class();
         (void)ManagementPermission::Class();
         ::jxx::io::serialization::registerSerializableClass<ManagementPermission>(

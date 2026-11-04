@@ -11,11 +11,11 @@
 
 namespace jxx::jdk8::lang {
     TEST(BooleanTest, ConstructorsAndPrimitiveValue) {
-        EXPECT_TRUE(::jxx::NEW<::jxx::lang::Boolean>(true)->booleanValue());
-        EXPECT_FALSE(::jxx::NEW<::jxx::lang::Boolean>(false)->booleanValue());
-        EXPECT_TRUE(::jxx::NEW<::jxx::lang::Boolean>(::jxx::NEW<::jxx::lang::String>("TrUe"))->booleanValue());
-        EXPECT_FALSE(::jxx::NEW<::jxx::lang::Boolean>(::jxx::NEW<::jxx::lang::String>("yes"))->booleanValue());
-        EXPECT_FALSE(::jxx::NEW<::jxx::lang::Boolean>(::jxx::CAST<::jxx::lang::String>(nullptr))->booleanValue());
+        EXPECT_TRUE((::jxx::NEW<::jxx::lang::Boolean>(true))->booleanValue());
+        EXPECT_FALSE((::jxx::NEW<::jxx::lang::Boolean>(false))->booleanValue());
+        EXPECT_TRUE((::jxx::NEW<::jxx::lang::Boolean>(::jxx::NEW<::jxx::lang::String>("TrUe")))->booleanValue());
+        EXPECT_FALSE((::jxx::NEW<::jxx::lang::Boolean>(::jxx::NEW<::jxx::lang::String>("yes")))->booleanValue());
+        EXPECT_FALSE((::jxx::NEW<::jxx::lang::Boolean>(::jxx::CAST<::jxx::lang::String>(nullptr)))->booleanValue());
     }
 
     TEST(BooleanTest, ConstantsHaveDocumentedValues) {

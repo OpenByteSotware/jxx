@@ -27,7 +27,7 @@ namespace jxx::jdk8::lang {
         EXPECT_EQ(static_cast<::jxx::lang::jlong>(258), value->longValue());
         EXPECT_NEAR(static_cast<::jxx::lang::jfloat>(258.0), value->floatValue(), static_cast<::jxx::lang::jfloat>(0.0));
         EXPECT_NEAR(static_cast<::jxx::lang::jdouble>(258.0), value->doubleValue(), static_cast<::jxx::lang::jdouble>(0.0));
-        EXPECT_EQ(42, ::jxx::NEW<::jxx::lang::Integer>(::jxx::NEW<::jxx::lang::String>("42"))->intValue());
+        EXPECT_EQ(42, (::jxx::NEW<::jxx::lang::Integer>(::jxx::NEW<::jxx::lang::String>("42")))->intValue());
     }
 
     TEST(IntegerTest, ParsingValueOfAndDecodeWork) {
