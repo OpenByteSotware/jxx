@@ -845,6 +845,28 @@ class Translator:
     def local_type_name(self,name:str)->str:
         return self.simple(self.name_of(self.local_variable_types.get(name)))
 
+    def generic_type_argument_node(self, type_node, index=0):
+        arguments=list(getattr(type_node,'arguments',None) or [])
+        if index >= len(arguments):
+            return None
+        return getattr(arguments[index],'type',None)
+
+    def enhanced_for_element_expression(self, variable_type, iterable_name,
+                                        element_expression):
+        target_name=self.simple(self.name_of(variable_type))
+        if target_name not in PRIMITIVE_UNBOX_METHODS:
+            return element_expression
+        if not iterable_name:
+            return element_expression
+        iterable_type=self.local_variable_types.get(iterable_name)
+        source_type=self.generic_type_argument_node(iterable_type)
+        source_name=self.simple(self.name_of(source_type))
+        expected_wrapper=PRIMITIVE_TO_WRAPPER.get(target_name)
+        if source_name==expected_wrapper:
+            return (f'({element_expression})->'
+                    f'{PRIMITIVE_UNBOX_METHODS[target_name]}()')
+        return element_expression
+
     def indexed_iterable_element_expression(self,name:str,index:str)->str:
         if name in self.local_array_variables:
             return self.array_element_expression(name,index)
@@ -2323,6 +2345,8 @@ class Translator:
                     f'{index_name} < {size_expression}; ++{index_name}) {{')
                 o.enter()
                 element_type=self.resolve(variable.type).value()
+                element_expression=self.enhanced_for_element_expression(
+                    variable.type,iterable_name,element_expression)
                 o.w(f'{element_type} {declarator.name} = '
                     f'{element_expression};')
                 self.stmt(s.body,o)
