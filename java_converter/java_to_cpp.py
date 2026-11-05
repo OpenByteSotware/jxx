@@ -1659,6 +1659,25 @@ class Translator:
         return f'{raw}::Class()'
 
     @staticmethod
+    def cpp_string_literal_expression(value):
+        text=str(value)
+        if len(text)<2 or not (text.startswith('"') and text.endswith('"')):
+            return text
+        body=text[1:-1]
+        out=[]
+        i=0
+        while i < len(body):
+            ch=body[i]
+            if ch=='\\' and i+1 < len(body):
+                out.append(ch+body[i+1])
+                i+=2
+                continue
+            escapes={'\n':r'\n','\r':r'\r','\t':r'\t','\b':r'\b','\f':r'\f','"':r'\"'}
+            out.append(escapes.get(ch, f'\\x{ord(ch):02x}' if ord(ch)<32 or ord(ch)==127 else ch))
+            i+=1
+        return '"'+''.join(out)+'"'
+
+    @staticmethod
     def java_numeric_literal_expression(value):
         text=str(value)
         lower=text.lower()
@@ -1696,8 +1715,12 @@ class Translator:
         n=type(e).__name__
         if n=='ClassReference': return self.class_literal_expression(e)
         if n=='Literal':
-            rendered=('nullptr' if e.value in (None,'null')
-                      else self.java_numeric_literal_expression(e.value))
+            if e.value in (None,'null'):
+                rendered='nullptr'
+            elif self.is_string_literal_expression(e):
+                rendered=self.cpp_string_literal_expression(e.value)
+            else:
+                rendered=self.java_numeric_literal_expression(e.value)
             return (''.join(getattr(e,'prefix_operators',None) or [])+
                     rendered+
                     ''.join(getattr(e,'postfix_operators',None) or []))

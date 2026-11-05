@@ -12,8 +12,7 @@
 
 namespace jxx::jdk8::util {
     TEST(StringTokenizerTest, DefaultWhitespaceTokenizationWorks) {
-        ::jxx::Ptr<::jxx::util::StringTokenizer> t = ::jxx::NEW<::jxx::util::StringTokenizer>(::jxx::NEW<::jxx::lang::String>(" one	two
-three "));
+        ::jxx::Ptr<::jxx::util::StringTokenizer> t = ::jxx::NEW<::jxx::util::StringTokenizer>(::jxx::NEW<::jxx::lang::String>(" one\ttwo\nthree "));
         EXPECT_EQ(3, t->countTokens());
         EXPECT_TRUE(t->hasMoreTokens());
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("one"), t->nextToken()));
