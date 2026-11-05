@@ -1,3 +1,4 @@
+#include <sstream>
 #include <memory>
 #include <algorithm>
 #include <cctype>
@@ -1577,5 +1578,14 @@ namespace jxx::lang
     {
         value_ = 0;
     }
+
+    jbool Character::isAlphabetic(jint codePoint) noexcept { const jint t=getType(codePoint); return isLetter(codePoint)||t==LETTER_NUMBER; }
+    jbool Character::isIdeographic(jint c) noexcept { return (c>=0x3400&&c<=0x4DBF)||(c>=0x4E00&&c<=0x9FFF)||(c>=0xF900&&c<=0xFAFF)||(c>=0x20000&&c<=0x2FA1F); }
+    jbool Character::isUnicodeIdentifierStart(jint c) noexcept { const jint t=getType(c); return isLetter(c)||t==LETTER_NUMBER||t==CURRENCY_SYMBOL||t==CONNECTOR_PUNCTUATION; }
+    jbool Character::isUnicodeIdentifierPart(jint c) noexcept { const jint t=getType(c); return isUnicodeIdentifierStart(c)||isDigit(c)||t==NON_SPACING_MARK||t==COMBINING_SPACING_MARK||isIdentifierIgnorable(c); }
+    jbool Character::isIdentifierIgnorable(jint c) noexcept { return (c>=0&&c<=8)||(c>=14&&c<=27)||(c>=0x7F&&c<=0x9F)||getType(c)==FORMAT; }
+    jbyte Character::getDirectionality(jint c) noexcept { if(!isValidCodePoint(c)||!isDefined(c)) return static_cast<jbyte>(-1); if(c>=0x0590&&c<=0x05FF)return 1; if(c>=0x0600&&c<=0x08FF)return 2; if(isWhitespace(c))return 12; return 0; }
+    jxx::Ptr<String> Character::getName(jint c) { if(!isValidCodePoint(c)||!isDefined(c))return nullptr; std::ostringstream o; o<<"U+"<<std::uppercase<<std::hex<<c; return jxx::NEW<String>(o.str()); }
+
 
 }

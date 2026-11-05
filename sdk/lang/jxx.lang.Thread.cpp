@@ -19,6 +19,12 @@
 #include "lang/jxx.lang.UnsupportedOperationException.h"
 #include "lang/jxx.lang.Throwable.h"
 #include "lang/jxx.lang.Thread.h"
+#include "lang/jxx.lang.ClassLoader.h"
+#include "lang/jxx.lang.SecurityManager.h"
+#include "lang/jxx.lang.StackTraceElement.h"
+#include "lang/jxx.lang.System.h"
+#include "util/jxx.util.HashMap.h"
+
 
 namespace jxx::lang {
 
@@ -31,6 +37,7 @@ struct Thread::NativeState {
 
     jxx::Ptr<Runnable> target;
     jxx::Ptr<String> name;
+    jxx::Ptr<ClassLoader> contextClassLoader;
 
     std::atomic<jbool> started{false};
     std::atomic<jbool> running{false};
@@ -344,6 +351,53 @@ jxx::Ptr<Thread> Thread::currentThread() {
 
     currentThread_ = adoptedCurrentThread_;
     return adoptedCurrentThread_;
+}
+
+jint Thread::activeCount() {
+    const auto group = currentThread()->getThreadGroup();
+    return group == nullptr ? 1 : group->activeCount();
+}
+
+jint Thread::enumerate(const jxx::Ptr<JxxArray<jxx::Ptr<Thread>, 1U>>& threads) {
+    if (threads == nullptr) throw NullPointerException();
+    const auto group = currentThread()->getThreadGroup();
+    if (group == nullptr) {
+        if (threads->length > 0) { (*threads)[0] = currentThread(); return 1; }
+        return 0;
+    }
+    return group->enumerate(threads);
+}
+
+void Thread::checkAccess() const {
+    const auto manager = System::getSecurityManager();
+    if (manager != nullptr) manager->checkAccess(jxx::CAST<Thread>(const_cast<Thread*>(this)->thisPtr()));
+}
+
+jxx::Ptr<ClassLoader> Thread::getContextClassLoader() const {
+    std::lock_guard<std::mutex> lock(state_->mutex);
+    return state_->contextClassLoader;
+}
+
+void Thread::setContextClassLoader(const jxx::Ptr<ClassLoader>& loader) {
+    checkAccess();
+    std::lock_guard<std::mutex> lock(state_->mutex);
+    state_->contextClassLoader = loader;
+}
+
+jxx::Ptr<JxxArray<jxx::Ptr<StackTraceElement>, 1U>> Thread::getStackTrace() const {
+    return jxx::NEW<JxxArray<jxx::Ptr<StackTraceElement>, 1U>>(0);
+}
+
+jxx::Ptr<jxx::util::Map<Thread, JxxArray<jxx::Ptr<StackTraceElement>, 1U>>> Thread::getAllStackTraces() {
+    auto result = jxx::NEW<jxx::util::HashMap<Thread, JxxArray<jxx::Ptr<StackTraceElement>, 1U>>>();
+    const jint count = activeCount();
+    auto threads = jxx::NEW<JxxArray<jxx::Ptr<Thread>, 1U>>(count);
+    const jint found = enumerate(threads);
+    for (jint i = 0; i < found; ++i) {
+        const auto thread = (*threads)[i];
+        if (thread != nullptr) result->put(thread, thread->getStackTrace());
+    }
+    return result;
 }
 
 jlong Thread::getId() const {

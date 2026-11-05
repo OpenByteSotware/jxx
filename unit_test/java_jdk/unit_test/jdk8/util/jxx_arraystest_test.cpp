@@ -82,7 +82,7 @@ namespace jxx::jdk8::util {
     }
 
     TEST(ArraysTest, FillCopyAndRangeCopyWork) {
-        ::jxx::lang::IntArray a = ::jxx::NEW<::jxx::lang::IntArrayType>(4);
+        auto a = ::jxx::NEW<::jxx::lang::IntArrayType>(4);
         ::jxx::util::Arrays::fill(a, 7);
         assertArrayEquals(::jxx::NEW<::jxx::lang::IntArrayType>(), a);
         ::jxx::util::Arrays::fill(a, 1, 3, 9);
@@ -103,7 +103,7 @@ namespace jxx::jdk8::util {
     }
 
     TEST(ArraysTest, SetAllParallelSetAllAndPrefixWork) {
-        ::jxx::lang::IntArray a = ::jxx::NEW<::jxx::lang::IntArrayType>(4);
+        auto a = ::jxx::NEW<::jxx::lang::IntArrayType>(4);
         ::jxx::util::Arrays::setAll(a, [&](auto i) {
     (i * 2);
 });

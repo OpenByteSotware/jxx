@@ -7,6 +7,7 @@
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.Runnable.h"
 #include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "lang/jxx_types.h"
 
 namespace jxx::util::concurrent::locks {
@@ -17,6 +18,12 @@ namespace jxx::lang {
 
 class ThreadGroup;
 class Throwable;
+class ClassLoader;
+class StackTraceElement;
+
+} // namespace jxx::lang
+namespace jxx::util { template <typename K, typename V> class Map; }
+namespace jxx::lang {
 
 class Thread
     : public jxx::lang::ClassBase<
@@ -114,6 +121,13 @@ public:
     static void yield();
 
     static jxx::Ptr<Thread> currentThread();
+    static jint activeCount();
+    static jint enumerate(const jxx::Ptr<JxxArray<jxx::Ptr<Thread>, 1U>>& threads);
+    void checkAccess() const;
+    jxx::Ptr<ClassLoader> getContextClassLoader() const;
+    void setContextClassLoader(const jxx::Ptr<ClassLoader>& loader);
+    jxx::Ptr<JxxArray<jxx::Ptr<StackTraceElement>, 1U>> getStackTrace() const;
+    static jxx::Ptr<jxx::util::Map<Thread, JxxArray<jxx::Ptr<StackTraceElement>, 1U>>> getAllStackTraces();
 
     jlong getId() const;
     jxx::Ptr<ThreadGroup> getThreadGroup() const;

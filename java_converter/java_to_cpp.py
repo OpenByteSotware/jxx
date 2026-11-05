@@ -1673,6 +1673,24 @@ class Translator:
                     f'{text[:-1]})')
         return text
 
+    def array_creator_expression(self, creator, expected_type=None,
+                                 extra_declarator_dims=0):
+        creator_rank=(len(getattr(creator.type,'dimensions',None) or []) +
+                      len(getattr(creator,'dimensions',None) or []))
+        expected_rank=0
+        if expected_type is not None:
+            expected_rank=(len(getattr(expected_type,'dimensions',None) or []) +
+                           extra_declarator_dims)
+        # javalang may represent only explicitly sized dimensions on the
+        # ArrayCreator. The declared source type remains authoritative for
+        # trailing unsized dimensions, such as int[][] a = new int[3][].
+        rank=max(creator_rank,expected_rank,1)
+        concrete=self.array_concrete_type(creator.type,rank)
+        dimensions=[self.expr(value)
+                    for value in getattr(creator,'dimensions',None) or []
+                    if value is not None]
+        return f'::jxx::NEW<{concrete}>({", ".join(dimensions)})'
+
     def expr(self,e):
         if e is None:return ''
         n=type(e).__name__
@@ -1793,11 +1811,7 @@ class Translator:
                 created=f'({created})'
             return self.apply_expression_selectors(created,selectors)
         if n=='ArrayCreator':
-            rank=len(getattr(e.type,'dimensions',None) or []) + len(getattr(e,'dimensions',None) or [])
-            rank=max(rank,1)
-            concrete=self.array_concrete_type(e.type,rank)
-            dims=[self.expr(x) for x in getattr(e,'dimensions',None) or [] if x is not None]
-            return f'::jxx::NEW<{concrete}>({", ".join(dims)})'
+            return self.array_creator_expression(e)
         if n=='Cast':
             t=self.resolve(e.type)
             # A source cast of null to a reference type establishes only the
@@ -2211,15 +2225,22 @@ class Translator:
                     self.local_array_variables.add(d.name)
                 if self.is_primitive_rank1_array(s.type,dims):
                     self.local_primitive_rank1_arrays.add(d.name)
-                if type(getattr(d,'initializer',None)).__name__=='ClassCreator':
+                initializer=getattr(d,'initializer',None)
+                initializer_kind=type(initializer).__name__
+                if initializer_kind=='ClassCreator':
                     initial_value=self.class_creator_initializer_expression(
-                        s.type,d.initializer)
+                        s.type,initializer)
+                elif initializer_kind=='ArrayCreator':
+                    initial_value=self.array_creator_expression(
+                        initializer,s.type,dims)
                 else:
                     initial_value=(self.declaration_initializer_expression(
-                        s.type,d.initializer) if d.initializer is not None else '')
-                init=f' = {initial_value}' if d.initializer is not None else ''
+                        s.type,initializer) if initializer is not None else '')
+                init=f' = {initial_value}' if initializer is not None else ''
                 const='const ' if 'final' in (s.modifiers or set()) else ''
-                o.w(f'{const}{t.value()} {d.name}{init};')
+                declaration_type=('auto' if initializer_kind=='ArrayCreator'
+                                  else t.value())
+                o.w(f'{const}{declaration_type} {d.name}{init};')
         elif n=='TryStatement':
             self.emit_try_statement(s,o)
         elif n=='IfStatement':

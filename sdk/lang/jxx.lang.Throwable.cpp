@@ -224,6 +224,11 @@ namespace jxx::lang
         return message_;
     }
 
+    jxx::Ptr<String> Throwable::getLocalizedMessage() const
+    {
+        return getMessage();
+    }
+
     jxx::Ptr<Throwable> Throwable::getCause() const
     {
         return cause_;

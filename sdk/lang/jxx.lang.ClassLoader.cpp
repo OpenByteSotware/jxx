@@ -425,6 +425,13 @@ namespace jxx::lang {
         return result;
     }
 
+void ClassLoader::setSigners(const jxx::Ptr<ClassAny>& clazz,
+    const jxx::Ptr<JxxArray<jxx::Ptr<Object>, 1U>>& signers) {
+    if (clazz == nullptr) throw NullPointerException();
+    (void)signers;
+}
+
+
 } // namespace jxx::lang
 
 

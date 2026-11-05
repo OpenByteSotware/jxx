@@ -3,6 +3,7 @@
 
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.Class.h"
 #include "lang/jxx.lang.Package.h"
@@ -88,6 +89,8 @@ protected:
 
     // Link/resolve hook (no-op in JXX)
     virtual void resolveClass(const jxx::Ptr<ClassAny>& c);
+    virtual void setSigners(const jxx::Ptr<ClassAny>& clazz,
+        const jxx::Ptr<JxxArray<jxx::Ptr<Object>, 1U>>& signers);
 
     // Cache lookup (per loader)
     virtual jxx::Ptr<ClassAny> findLoadedClass(const jxx::Ptr<String>& name);

@@ -486,6 +486,13 @@ namespace jxx::lang
         static jbool isISOControl(jint codePoint) noexcept;
         static jbool isDefined(jint codePoint) noexcept;
         static jbool isMirrored(jint codePoint) noexcept;
+        static jbool isAlphabetic(jint codePoint) noexcept;
+        static jbool isIdeographic(jint codePoint) noexcept;
+        static jbool isUnicodeIdentifierStart(jint codePoint) noexcept;
+        static jbool isUnicodeIdentifierPart(jint codePoint) noexcept;
+        static jbool isIdentifierIgnorable(jint codePoint) noexcept;
+        static jbyte getDirectionality(jint codePoint) noexcept;
+        static jxx::Ptr<String> getName(jint codePoint);
 
         static jint getType(jint codePoint) noexcept;
         static jint getNumericValue(jint codePoint) noexcept;

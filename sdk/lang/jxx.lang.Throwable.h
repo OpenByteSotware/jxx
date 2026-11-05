@@ -118,6 +118,7 @@ namespace jxx::lang
         ~Throwable() override = default;
 
         const jxx::Ptr<String>& getMessage() const;
+        virtual jxx::Ptr<String> getLocalizedMessage() const;
 
         jxx::Ptr<Throwable> getCause() const;
 
