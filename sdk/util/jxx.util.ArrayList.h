@@ -132,7 +132,7 @@ private:
         }
 
     public:
-    using Collection<E>::toArray;
+    
         ArrayListIterator(
             const jxx::Ptr<ArrayList<E>>& owner,
             jxx::lang::jint index)
@@ -218,6 +218,8 @@ private:
     };
 
 public:
+    using Collection<E>::toArray;
+
     ArrayList()
         : elementData_(
               jxx::NEW<jxx::lang::JxxArray<jxx::Ptr<E>, 1U>>(
