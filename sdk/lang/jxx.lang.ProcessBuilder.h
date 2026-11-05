@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.Enum.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.JxxArray.h"
@@ -18,21 +19,37 @@ class ProcessBuilder final : public ClassBase<ProcessBuilder, Object> {
 public:
     class Redirect final : public ClassBase<Redirect, Object> {
     public:
-        enum class Type { PIPE, INHERIT, READ, WRITE, APPEND };
+        class Type final : public ClassBase<Type, Enum<Type>> {
+        public:
+            using JxxSuper = Enum<Type>;
+            using Super = ClassBase<Type, JxxSuper>;
+
+            static const jxx::Ptr<Type> PIPE;
+            static const jxx::Ptr<Type> INHERIT;
+            static const jxx::Ptr<Type> READ;
+            static const jxx::Ptr<Type> WRITE;
+            static const jxx::Ptr<Type> APPEND;
+
+            static jxx::Ptr<JxxArray<jxx::Ptr<Type>, 1U>> values();
+            static jxx::Ptr<Type> valueOf(const jxx::Ptr<String>& name);
+
+            Type(const jxx::Ptr<String>& name, jint ordinal);
+        };
+
         static jxx::Ptr<Redirect> PIPE;
         static jxx::Ptr<Redirect> INHERIT;
         static jxx::Ptr<Redirect> from(const jxx::Ptr<jxx::io::File>& file);
         static jxx::Ptr<Redirect> to(const jxx::Ptr<jxx::io::File>& file);
         static jxx::Ptr<Redirect> appendTo(const jxx::Ptr<jxx::io::File>& file);
-        Type type() const;
+        jxx::Ptr<Type> type() const;
         jxx::Ptr<jxx::io::File> file() const;
         jbool equals(const jxx::Ptr<Object>& other) const override;
         jint hashCode() const override;
     public:
-        Redirect(Type type, const jxx::Ptr<jxx::io::File>& file);
+        Redirect(const jxx::Ptr<Type>& type, const jxx::Ptr<jxx::io::File>& file);
 
     private:
-        Type type_;
+        jxx::Ptr<Type> type_;
         jxx::Ptr<jxx::io::File> file_;
     };
 

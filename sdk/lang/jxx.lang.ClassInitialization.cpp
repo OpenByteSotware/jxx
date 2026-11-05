@@ -195,6 +195,7 @@ void initializeClasses()
             registerType<Character>();
             registerType<Character::Subset>();
             registerType<Character::UnicodeBlock>();
+            registerType<Character::UnicodeScript>();
             ::jxx::io::serialization::registerSerializableClass<Character>(
                 1,
                 [] { return ::jxx::NEW<Character>(jchar{0}); });
@@ -248,6 +249,7 @@ void initializeClasses()
             registerType<SecurityManager>();
             registerType<ProcessBuilder>();
             registerType<ProcessBuilder::Redirect>();
+            registerType<ProcessBuilder::Redirect::Type>();
             registerType<Process>();
         registerType<Appendable>();
         registerType<AutoCloseable>();

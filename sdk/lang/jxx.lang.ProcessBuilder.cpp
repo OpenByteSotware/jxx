@@ -40,6 +40,48 @@ extern char** environ;
 #include "lang/jxx.lang.ProcessBuilder.h"
 
 namespace jxx::lang {
+
+ProcessBuilder::Redirect::Type::Type(
+    const jxx::Ptr<String>& name,
+    jint ordinal)
+    : Super(name, ordinal) {}
+
+const jxx::Ptr<ProcessBuilder::Redirect::Type>
+    ProcessBuilder::Redirect::Type::PIPE =
+        jxx::NEW<ProcessBuilder::Redirect::Type>(
+            jxx::NEW<String>("PIPE"), 0);
+const jxx::Ptr<ProcessBuilder::Redirect::Type>
+    ProcessBuilder::Redirect::Type::INHERIT =
+        jxx::NEW<ProcessBuilder::Redirect::Type>(
+            jxx::NEW<String>("INHERIT"), 1);
+const jxx::Ptr<ProcessBuilder::Redirect::Type>
+    ProcessBuilder::Redirect::Type::READ =
+        jxx::NEW<ProcessBuilder::Redirect::Type>(
+            jxx::NEW<String>("READ"), 2);
+const jxx::Ptr<ProcessBuilder::Redirect::Type>
+    ProcessBuilder::Redirect::Type::WRITE =
+        jxx::NEW<ProcessBuilder::Redirect::Type>(
+            jxx::NEW<String>("WRITE"), 3);
+const jxx::Ptr<ProcessBuilder::Redirect::Type>
+    ProcessBuilder::Redirect::Type::APPEND =
+        jxx::NEW<ProcessBuilder::Redirect::Type>(
+            jxx::NEW<String>("APPEND"), 4);
+
+jxx::Ptr<JxxArray<jxx::Ptr<ProcessBuilder::Redirect::Type>, 1U>>
+ProcessBuilder::Redirect::Type::values() {
+    auto result = jxx::NEW<JxxArray<jxx::Ptr<Type>, 1U>>(5);
+    (*result)[0] = PIPE;
+    (*result)[1] = INHERIT;
+    (*result)[2] = READ;
+    (*result)[3] = WRITE;
+    (*result)[4] = APPEND;
+    return result;
+}
+
+jxx::Ptr<ProcessBuilder::Redirect::Type>
+ProcessBuilder::Redirect::Type::valueOf(const jxx::Ptr<String>& name) {
+    return JxxSuper::valueOf(ProcessBuilder::Redirect::Type::Class(), name);
+}
 namespace {
 #ifdef _WIN32
 using NativeHandle=HANDLE;
@@ -464,7 +506,7 @@ std::unordered_map<std::string,std::string> currentEnvironment(){std::unordered_
  return result;}
 }
 
-ProcessBuilder::Redirect::Redirect(Type type, const jxx::Ptr<jxx::io::File>& file)
+ProcessBuilder::Redirect::Redirect(const jxx::Ptr<Type>& type, const jxx::Ptr<jxx::io::File>& file)
     : type_(type), file_(file) {}
 jxx::Ptr<ProcessBuilder::Redirect> ProcessBuilder::Redirect::PIPE =
     jxx::NEW<Redirect>(Type::PIPE, nullptr);
@@ -473,10 +515,10 @@ jxx::Ptr<ProcessBuilder::Redirect> ProcessBuilder::Redirect::INHERIT =
 jxx::Ptr<ProcessBuilder::Redirect> ProcessBuilder::Redirect::from(const jxx::Ptr<jxx::io::File>& file){if(!file)throw NullPointerException();return jxx::NEW<Redirect>(Type::READ,file);}
 jxx::Ptr<ProcessBuilder::Redirect> ProcessBuilder::Redirect::to(const jxx::Ptr<jxx::io::File>& file){if(!file)throw NullPointerException();return jxx::NEW<Redirect>(Type::WRITE,file);}
 jxx::Ptr<ProcessBuilder::Redirect> ProcessBuilder::Redirect::appendTo(const jxx::Ptr<jxx::io::File>& file){if(!file)throw NullPointerException();return jxx::NEW<Redirect>(Type::APPEND,file);}
-ProcessBuilder::Redirect::Type ProcessBuilder::Redirect::type()const{return type_;}
+jxx::Ptr<ProcessBuilder::Redirect::Type> ProcessBuilder::Redirect::type() const { return type_; }
 jxx::Ptr<jxx::io::File> ProcessBuilder::Redirect::file()const{return file_;}
 jbool ProcessBuilder::Redirect::equals(const jxx::Ptr<Object>& other) const {auto value=jxx::CAST<Redirect>(other);if(value==nullptr||type_!=value->type_)return false;if(file_==nullptr||value->file_==nullptr)return file_==value->file_;return file_->getPath()->equals(value->file_->getPath());}
-jint ProcessBuilder::Redirect::hashCode() const {return static_cast<jint>(type_)*31+(file_==nullptr?0:file_->getPath()->hashCode());}
+jint ProcessBuilder::Redirect::hashCode() const {return type_->hashCode()*31+(file_==nullptr?0:file_->getPath()->hashCode());}
 
 ProcessBuilder::ProcessBuilder(
     const jxx::Ptr<JxxArray<jxx::Ptr<String>, 1>>& command)
@@ -652,7 +694,7 @@ jxx::Ptr<Process> ProcessBuilder::start(){
  if(pid==0){
    const int startupFd=startupWrite.get();
    auto fail=[&](int error){const int saved=error;ssize_t written;do{written=::write(startupFd,&saved,sizeof(saved));}while(written<0&&errno==EINTR);_exit(127);};
-   auto redirect=[&](Redirect::Type type,const char* path,int standardFd,int pipeFd,bool input){
+   auto redirect=[&](const jxx::Ptr<Redirect::Type>& type,const char* path,int standardFd,int pipeFd,bool input){
      if(type==Redirect::Type::INHERIT)return;
      int source=pipeFd;
      if(type!=Redirect::Type::PIPE){const int flags=input?O_RDONLY:(O_WRONLY|O_CREAT|(type==Redirect::Type::APPEND?O_APPEND:O_TRUNC));source=::open(path,flags,0666);if(source<0)fail(errno);}
