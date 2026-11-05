@@ -2776,6 +2776,44 @@ def annotation_simple_names(node):
             for annotation in getattr(node,'annotations',None) or []}
 
 
+def annotation_named_value(annotation, name):
+    """Return a named element from a normal source annotation."""
+    element=getattr(annotation,'element',None)
+    if element is None:
+        return None
+    pairs=element if isinstance(element,(list,tuple)) else [element]
+    for pair in pairs:
+        if getattr(pair,'name',None)==name:
+            return getattr(pair,'value',None)
+    return None
+
+
+def junit4_expected_exception(method):
+    """Return the exception type from @Test(expected = X.class)."""
+    for annotation in getattr(method,'annotations',None) or []:
+        if str(getattr(annotation,'name','')).split('.')[-1]!='Test':
+            continue
+        value=annotation_named_value(annotation,'expected')
+        if value is None:
+            return None
+        exception_type=getattr(value,'type',None)
+        if exception_type is None:
+            return None
+        exception_name=Translator.name_of(exception_type)
+        if exception_name in {'None','Test.None'}:
+            return None
+        return exception_type
+    return None
+
+
+def resolve_junit4_expected_exception(translator, method):
+    exception_type=junit4_expected_exception(method)
+    if exception_type is None:
+        return None
+    raw=translator.ref_raw(exception_type)
+    return raw
+
+
 def detect_test_framework(tree):
     imports={imp.path for imp in getattr(tree,'imports',None) or []}
     if any(name.startswith('org.testng.') for name in imports):
@@ -2929,6 +2967,15 @@ def generate_google_test(path:Path, out_root:str, source_root:Path,
     translator.current_output_relative_dir=relative_dir
     translator.gather(tree)
     translator.gather_body_type_includes(tree)
+    expected_exceptions={}
+    if active=='junit4':
+        for declaration in getattr(tree,'types',None) or []:
+            for member in getattr(declaration,'body',None) or []:
+                if type(member).__name__=='MethodDeclaration':
+                    expected=resolve_junit4_expected_exception(
+                        translator,member)
+                    if expected is not None:
+                        expected_exceptions[id(member)]=expected
     output_dir=Path(out_root)/'unit_test'/relative_dir
     output_dir.mkdir(parents=True,exist_ok=True)
     output=output_dir/f'jxx_{path.stem.lower()}_test.cpp'
@@ -3014,7 +3061,17 @@ def generate_google_test(path:Path, out_root:str, source_root:Path,
             for field in fields:
                 for declarator in field.declarators or []:
                     translator.local_variable_types[declarator.name]=field.type
-            for statement in method.body or []: translator.stmt(statement,o)
+            expected_exception=expected_exceptions.get(id(method))
+            if expected_exception is not None:
+                o.w('EXPECT_THROW(')
+                o.enter();o.w('{');o.enter()
+                for statement in method.body or []:
+                    translator.stmt(statement,o)
+                o.exit();o.w('},')
+                o.w(f'{expected_exception});');o.exit()
+            else:
+                for statement in method.body or []:
+                    translator.stmt(statement,o)
             o.exit();o.w('}');o.w();generated+=1
     if namespace: o.exit();o.w(f'}} // namespace {namespace}')
     if generated==0:
