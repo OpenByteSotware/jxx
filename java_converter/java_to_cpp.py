@@ -186,27 +186,17 @@ class Translator:
 
     @staticmethod
     def name_of(t):
-        if t is None:
-            return ""
-
-        if isinstance(t, str):
-            return t
-
-        name = getattr(t, "name", None)
-
-        if name is None:
-            return str(t)
-
-        if isinstance(name, str):
-            return name
-
-        if isinstance(name, (list, tuple)):
-            return ".".join(
-                Translator.name_of(x)
-                for x in name
-            )
-
-        return str(name)
+        if t is None: return ''
+        if isinstance(t,str): return t
+        name=getattr(t,'name',None)
+        if name is None: return str(t)
+        name=('.'.join(Translator.name_of(x) for x in name)
+              if isinstance(name,(list,tuple)) else str(name))
+        sub=getattr(t,'sub_type',None)
+        if sub is not None:
+            sub_name=Translator.name_of(sub)
+            if sub_name: name=f'{name}.{sub_name}'
+        return name
     def wildcard_sdk_type(self,name:str)->Optional[str]:
         if self.sdk_metadata is not None:
             resolved,matches=self.sdk_metadata.resolve_wildcard_type(
@@ -249,6 +239,7 @@ class Translator:
         return include_path.as_posix()
 
     def qmap(self,name:str)->Tuple[str,Optional[str]]:
+        name=SPECIAL_TYPES.get(name,name)
         if name in self.source_type_index and name not in self.known_types:
             qualified,include=self.source_type_index[name]
             return qualified,self.source_include_for_current_output(include)
@@ -348,10 +339,17 @@ class Translator:
         return self.ref_raw(t)
 
     def ref_raw(self,t)->str:
-        name=self.name_of(t); raw,inc=self.qmap(name)
+        name=self.name_of(t)
+        if name=='Map.Entry':
+            raw,inc=self.qmap('java.util.MapEntry')
+        else:
+            raw,inc=self.qmap(name)
         if inc: self.includes.add(inc)
         args=[]
-        declared_arguments=getattr(t,'arguments',None) or []
+        argument_owner=t
+        while getattr(argument_owner,'sub_type',None) is not None:
+            argument_owner=argument_owner.sub_type
+        declared_arguments=getattr(argument_owner,'arguments',None) or []
         for a in declared_arguments:
             at=getattr(a,'type',None)
             if at is None:
@@ -386,7 +384,7 @@ class Translator:
         alias=self.primitive_array_alias(name,rank,True)
         if alias:
             return alias
-        element=self.resolve(t).value()
+        element=(PRIMITIVES[name] if name in PRIMITIVES else self.ref_raw(t))
         return f'::jxx::lang::JxxArray<{element}, {rank}U>'
 
     def resolve(self,t,extra_dims=0)->CType:
@@ -1557,6 +1555,8 @@ class Translator:
             return not self.resolve(expression.type).primitive
         if kind=='MemberReference':
             qualifier=getattr(expression,'qualifier',None)
+            if not qualifier and expression.member in self.local_variable_types:
+                return not self.resolve(self.local_variable_types[expression.member]).primitive
             member=getattr(expression,'member','')
             if qualifier in {'Boolean','Byte','Short','Integer','Long',
                              'Float','Double','Character'} and member in {
@@ -1694,12 +1694,14 @@ class Translator:
 
     def array_creator_expression(self, creator, expected_type=None,
                                  extra_declarator_dims=0):
-        creator_rank=(len(getattr(creator.type,'dimensions',None) or []) +
-                      len(getattr(creator,'dimensions',None) or []))
+        creator_rank=max(
+            len(getattr(creator.type,'dimensions',None) or []),
+            len(getattr(creator,'dimensions',None) or []))
         expected_rank=0
         if expected_type is not None:
-            expected_rank=(len(getattr(expected_type,'dimensions',None) or []) +
-                           extra_declarator_dims)
+            expected_rank=max(
+                len(getattr(expected_type,'dimensions',None) or []),
+                extra_declarator_dims)
         # javalang may represent only explicitly sized dimensions on the
         # ArrayCreator. The declared source type remains authoritative for
         # trailing unsized dimensions, such as int[][] a = new int[3][].

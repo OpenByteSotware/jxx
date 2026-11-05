@@ -16,7 +16,7 @@
 #include "util/jxx.util.Arrays.h"
 #include "util/jxx.util.HashMap.h"
 #include "util/jxx.util.HashSet.h"
-#include "util/jxx.util.Map.h"
+#include "util/jxx.util.MapEntry.h"
 #include "util/jxx.util.Objects.h"
 
 namespace {
@@ -53,7 +53,7 @@ namespace jxx::jdk8::util {
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::util::HashSet<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("b"))), m->keySet()));
         EXPECT_TRUE(m->values()->containsAll(::jxx::util::Arrays::asList(1, 2)));
         for (::jxx::lang::jint jxxIndex_e = 0; jxxIndex_e < m->entrySet()->size(); ++jxxIndex_e) {
-            ::jxx::Ptr<::jxx::util::Map> e = m->entrySet()->get(jxxIndex_e);
+            ::jxx::Ptr<::jxx::util::MapEntry<::jxx::lang::String, ::jxx::lang::Integer>> e = m->entrySet()->get(jxxIndex_e);
             if (e->getKey()->equals(::jxx::NEW<::jxx::lang::String>("a"))) {
                 e->setValue(9);
             }
@@ -67,10 +67,10 @@ namespace jxx::jdk8::util {
         ::jxx::Ptr<::jxx::util::HashMap<::jxx::lang::String, ::jxx::lang::Integer>> a = ::jxx::NEW<::jxx::util::HashMap<::jxx::lang::String, ::jxx::lang::Integer>>();
         a->put(::jxx::NEW<::jxx::lang::String>("x"), 1);
         ::jxx::Ptr<::jxx::util::HashMap<::jxx::lang::String, ::jxx::lang::Integer>> b = ::jxx::NEW<::jxx::util::HashMap<::jxx::lang::String, ::jxx::lang::Integer>>(a);
-        EXPECT_EQ(a, b);
+        EXPECT_TRUE(::jxx::util::Objects::equals(a, b));
         EXPECT_EQ(a->hashCode(), b->hashCode());
         ::jxx::Ptr<::jxx::util::HashMap<::jxx::lang::String, ::jxx::lang::Integer>> c = ::jxx::CAST<::jxx::util::HashMap<::jxx::lang::String, ::jxx::lang::Integer>>(a->clone());
-        EXPECT_EQ(a, c);
+        EXPECT_TRUE(::jxx::util::Objects::equals(a, c));
         EXPECT_NE(a.get(), c.get());
         c->clear();
         EXPECT_TRUE(c->isEmpty());

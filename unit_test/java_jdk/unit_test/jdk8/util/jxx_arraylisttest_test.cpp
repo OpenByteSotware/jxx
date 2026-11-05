@@ -36,7 +36,7 @@ namespace jxx::jdk8::util {
         EXPECT_TRUE(x->isEmpty());
         EXPECT_TRUE(x->add(::jxx::NEW<::jxx::lang::String>("a")));
         x->add(0, ::jxx::NEW<::jxx::lang::String>("z"));
-        EXPECT_EQ(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("z"), ::jxx::NEW<::jxx::lang::String>("a")), x);
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("z"), ::jxx::NEW<::jxx::lang::String>("a")), x));
         EXPECT_EQ(2, x->size());
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("a"), x->get(1)));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("a"), x->set(1, ::jxx::NEW<::jxx::lang::String>("b"))));
@@ -53,7 +53,7 @@ namespace jxx::jdk8::util {
         EXPECT_TRUE(x->containsAll(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("b"))));
         x->addAll(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("d"), ::jxx::NEW<::jxx::lang::String>("e")));
         x->addAll(1, ::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("x"), ::jxx::NEW<::jxx::lang::String>("y")));
-        EXPECT_EQ(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("x"), ::jxx::NEW<::jxx::lang::String>("y"), ::jxx::NEW<::jxx::lang::String>("b"), ::jxx::NEW<::jxx::lang::String>("d"), ::jxx::NEW<::jxx::lang::String>("e")), x);
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("x"), ::jxx::NEW<::jxx::lang::String>("y"), ::jxx::NEW<::jxx::lang::String>("b"), ::jxx::NEW<::jxx::lang::String>("d"), ::jxx::NEW<::jxx::lang::String>("e")), x));
     }
 
     TEST(ArrayListTest, BulkAndArrayOperations) {
@@ -61,9 +61,9 @@ namespace jxx::jdk8::util {
         EXPECT_TRUE(x->removeAll(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("b"), ::jxx::NEW<::jxx::lang::String>("z"))));
         EXPECT_TRUE(x->retainAll(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("z"))));
         ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Object>, 1U>> a = x->toArray();
-        assertArrayEquals(::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Object>, 1U>>(), a);
-        ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>> s = x->toArray(::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>>(0));
-        assertArrayEquals(::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>>(), s);
+        assertArrayEquals(::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::Object, 1U>>(), a);
+        ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>> s = x->toArray(::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::String, 1U>>(0));
+        assertArrayEquals(::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::String, 1U>>(), s);
         x->clear();
         EXPECT_TRUE(x->isEmpty());
     }
@@ -81,7 +81,7 @@ namespace jxx::jdk8::util {
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Integer::valueOf(2), ::jxx::lang::String::valueOf(it->next())));
         EXPECT_EQ(::jxx::util::Arrays::asList(2, 3), x->subList(1, 3));
         ::jxx::Ptr<::jxx::util::ArrayList<::jxx::lang::Integer>> copy = ::jxx::CAST<::jxx::util::ArrayList<::jxx::lang::Integer>>(x->clone());
-        EXPECT_EQ(x, copy);
+        EXPECT_TRUE(::jxx::util::Objects::equals(x, copy));
         EXPECT_NE(x.get(), copy.get());
     }
 
@@ -94,7 +94,7 @@ namespace jxx::jdk8::util {
     (n * 2);
 });
         x->sort(nullptr);
-        EXPECT_EQ(::jxx::util::Arrays::asList(4, 6), x);
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::util::Arrays::asList(4, 6), x));
         ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::lang::jint, 2U>> sum = ::jxx::NEW<::jxx::lang::IntArrayType>(1U);
         (*sum)[0U] = 0;
         x->forEach([&](auto n) {

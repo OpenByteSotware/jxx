@@ -59,10 +59,10 @@ namespace jxx::jdk8::util {
         }
         EXPECT_EQ(6, sum);
         EXPECT_EQ(3, s->toArray()->length);
-        ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Integer>, 1U>> a = s->toArray(::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Integer>, 1U>>(0));
+        ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Integer>, 1U>> a = s->toArray(::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::Integer, 1U>>(0));
         EXPECT_EQ(3, a->length);
         ::jxx::Ptr<::jxx::util::HashSet<::jxx::lang::Integer>> c = ::jxx::CAST<::jxx::util::HashSet<::jxx::lang::Integer>>(s->clone());
-        EXPECT_EQ(s, c);
+        EXPECT_TRUE(::jxx::util::Objects::equals(s, c));
         EXPECT_NE(s.get(), c.get());
         EXPECT_NE(s->spliterator(), nullptr);
         s->clear();
