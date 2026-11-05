@@ -132,6 +132,7 @@ private:
         }
 
     public:
+    using Collection<E>::toArray;
         ArrayListIterator(
             const jxx::Ptr<ArrayList<E>>& owner,
             jxx::lang::jint index)
