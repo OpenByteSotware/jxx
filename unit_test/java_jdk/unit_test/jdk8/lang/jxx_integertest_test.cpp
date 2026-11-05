@@ -42,7 +42,11 @@ namespace jxx::jdk8::lang {
     }
 
     TEST(IntegerTest, ParseIntRejectsOverflow) {
-        ::jxx::lang::Integer::parseInt(::jxx::NEW<::jxx::lang::String>("2147483648"));
+        EXPECT_THROW(
+            {
+                ::jxx::lang::Integer::parseInt(::jxx::NEW<::jxx::lang::String>("2147483648"));
+            },
+            ::jxx::lang::NumberFormatException);
     }
 
     TEST(IntegerTest, UnsignedParsingAndFormattingWork) {

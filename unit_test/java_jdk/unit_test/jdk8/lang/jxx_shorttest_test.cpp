@@ -35,7 +35,11 @@ namespace jxx::jdk8::lang {
     }
 
     TEST(ShortTest, ParsingRejectsOverflow) {
-        ::jxx::lang::Short::parseShort(::jxx::NEW<::jxx::lang::String>("32768"));
+        EXPECT_THROW(
+            {
+                ::jxx::lang::Short::parseShort(::jxx::NEW<::jxx::lang::String>("32768"));
+            },
+            ::jxx::lang::NumberFormatException);
     }
 
     TEST(ShortTest, ValueOfAndDecodeWork) {

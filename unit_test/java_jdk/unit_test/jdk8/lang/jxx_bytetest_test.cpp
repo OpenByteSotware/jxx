@@ -36,7 +36,11 @@ namespace jxx::jdk8::lang {
     }
 
     TEST(ByteTest, ParsingRejectsOverflow) {
-        ::jxx::lang::Byte::parseByte(::jxx::NEW<::jxx::lang::String>("128"));
+        EXPECT_THROW(
+            {
+                ::jxx::lang::Byte::parseByte(::jxx::NEW<::jxx::lang::String>("128"));
+            },
+            ::jxx::lang::NumberFormatException);
     }
 
     TEST(ByteTest, ValueOfAndDecodeWork) {

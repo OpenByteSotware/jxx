@@ -41,7 +41,11 @@ namespace jxx::jdk8::lang {
     }
 
     TEST(LongTest, ParseLongRejectsOverflow) {
-        ::jxx::lang::Long::parseLong(::jxx::NEW<::jxx::lang::String>("9223372036854775808"));
+        EXPECT_THROW(
+            {
+                ::jxx::lang::Long::parseLong(::jxx::NEW<::jxx::lang::String>("9223372036854775808"));
+            },
+            ::jxx::lang::NumberFormatException);
     }
 
     TEST(LongTest, UnsignedParsingAndFormattingWork) {
