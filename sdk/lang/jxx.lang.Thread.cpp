@@ -28,6 +28,37 @@
 
 namespace jxx::lang {
 
+Thread::State::State(const jxx::Ptr<String>& name, jint ordinal)
+    : Super(name, ordinal) {}
+
+const jxx::Ptr<Thread::State> Thread::State::NEW =
+    jxx::NEW<Thread::State>(jxx::NEW<String>("NEW"), 0);
+const jxx::Ptr<Thread::State> Thread::State::RUNNABLE =
+    jxx::NEW<Thread::State>(jxx::NEW<String>("RUNNABLE"), 1);
+const jxx::Ptr<Thread::State> Thread::State::BLOCKED =
+    jxx::NEW<Thread::State>(jxx::NEW<String>("BLOCKED"), 2);
+const jxx::Ptr<Thread::State> Thread::State::WAITING =
+    jxx::NEW<Thread::State>(jxx::NEW<String>("WAITING"), 3);
+const jxx::Ptr<Thread::State> Thread::State::TIMED_WAITING =
+    jxx::NEW<Thread::State>(jxx::NEW<String>("TIMED_WAITING"), 4);
+const jxx::Ptr<Thread::State> Thread::State::TERMINATED =
+    jxx::NEW<Thread::State>(jxx::NEW<String>("TERMINATED"), 5);
+
+jxx::Ptr<JxxArray<jxx::Ptr<Thread::State>, 1U>> Thread::State::values() {
+    auto result = jxx::NEW<JxxArray<jxx::Ptr<State>, 1U>>(6);
+    (*result)[0] = NEW;
+    (*result)[1] = RUNNABLE;
+    (*result)[2] = BLOCKED;
+    (*result)[3] = WAITING;
+    (*result)[4] = TIMED_WAITING;
+    (*result)[5] = TERMINATED;
+    return result;
+}
+
+jxx::Ptr<Thread::State> Thread::State::valueOf(const jxx::Ptr<String>& name) {
+    return JxxSuper::valueOf(Thread::State::Class(), name);
+}
+
 struct Thread::NativeState {
     mutable std::mutex mutex;
     std::condition_variable finishedCondition;
@@ -525,7 +556,7 @@ void Thread::dispatchUncaughtException_(
     }
 }
 
-Thread::State Thread::getState() const {
+jxx::Ptr<Thread::State> Thread::getState() const {
     if (!state_->started.load()) {
         return State::NEW;
     }

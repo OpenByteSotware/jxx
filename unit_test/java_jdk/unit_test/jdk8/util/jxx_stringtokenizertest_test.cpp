@@ -33,7 +33,7 @@ namespace jxx::jdk8::util {
     TEST(StringTokenizerTest, NextTokenMayChangeDelimiters) {
         ::jxx::Ptr<::jxx::util::StringTokenizer> t = ::jxx::NEW<::jxx::util::StringTokenizer>(::jxx::NEW<::jxx::lang::String>("a,b;c"), ::jxx::NEW<::jxx::lang::String>(","));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("a"), t->nextToken()));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("b"), t->nextToken(::jxx::NEW<::jxx::lang::String>(";"))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>(",b"), t->nextToken(::jxx::NEW<::jxx::lang::String>(";"))));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("c"), t->nextToken()));
     }
 

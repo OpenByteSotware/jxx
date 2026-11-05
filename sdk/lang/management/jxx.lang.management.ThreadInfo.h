@@ -19,7 +19,7 @@ public:
 
     ::jxx::lang::jlong getThreadId() const;
     ::jxx::Ptr<::jxx::lang::String> getThreadName() const;
-    ::jxx::lang::Thread::State getThreadState() const;
+    ::jxx::Ptr<::jxx::lang::Thread::State> getThreadState() const;
     ::jxx::lang::jlong getBlockedTime() const;
     ::jxx::lang::jlong getBlockedCount() const;
     ::jxx::lang::jlong getWaitedTime() const;
@@ -44,7 +44,7 @@ private:
     ThreadInfo();
     ::jxx::lang::jlong threadId_ = 0;
     ::jxx::Ptr<::jxx::lang::String> threadName_;
-    ::jxx::lang::Thread::State threadState_ =
+    ::jxx::Ptr<::jxx::lang::Thread::State> threadState_ =
         ::jxx::lang::Thread::State::TERMINATED;
     ::jxx::lang::jlong blockedTime_ = -1;
     ::jxx::lang::jlong blockedCount_ = 0;

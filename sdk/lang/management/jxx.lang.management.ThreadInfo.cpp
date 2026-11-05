@@ -15,7 +15,7 @@ ThreadInfo::ThreadInfo()
           ::jxx::Ptr<LockInfo>, 1U>>(0)) {}
 ::jxx::lang::jlong ThreadInfo::getThreadId() const { return threadId_; }
 ::jxx::Ptr<::jxx::lang::String> ThreadInfo::getThreadName() const { return threadName_; }
-::jxx::lang::Thread::State ThreadInfo::getThreadState() const { return threadState_; }
+::jxx::Ptr<::jxx::lang::Thread::State> ThreadInfo::getThreadState() const { return threadState_; }
 ::jxx::lang::jlong ThreadInfo::getBlockedTime() const { return blockedTime_; }
 ::jxx::lang::jlong ThreadInfo::getBlockedCount() const { return blockedCount_; }
 ::jxx::lang::jlong ThreadInfo::getWaitedTime() const { return waitedTime_; }

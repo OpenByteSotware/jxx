@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "lang/jxx.lang.ClassInfo.h"
+#include "lang/jxx.lang.Enum.h"
 #include "lang/jxx.lang.Object.h"
 #include "lang/jxx.lang.Runnable.h"
 #include "lang/jxx.lang.String.h"
@@ -42,13 +43,23 @@ public:
     static constexpr jint NORM_PRIORITY = 5;
     static constexpr jint MAX_PRIORITY = 10;
 
-    enum class State : jint {
-        NEW,
-        RUNNABLE,
-        BLOCKED,
-        WAITING,
-        TIMED_WAITING,
-        TERMINATED
+    class State final
+        : public jxx::lang::ClassBase<State, jxx::lang::Enum<State>> {
+    public:
+        using JxxSuper = jxx::lang::Enum<State>;
+        using Super = jxx::lang::ClassBase<State, JxxSuper>;
+
+        static const jxx::Ptr<State> NEW;
+        static const jxx::Ptr<State> RUNNABLE;
+        static const jxx::Ptr<State> BLOCKED;
+        static const jxx::Ptr<State> WAITING;
+        static const jxx::Ptr<State> TIMED_WAITING;
+        static const jxx::Ptr<State> TERMINATED;
+
+        static jxx::Ptr<JxxArray<jxx::Ptr<State>, 1U>> values();
+        static jxx::Ptr<State> valueOf(const jxx::Ptr<String>& name);
+
+        State(const jxx::Ptr<String>& name, jint ordinal);
     };
 
     class UncaughtExceptionHandler
@@ -141,7 +152,7 @@ public:
     jbool isDaemon() const;
     void setDaemon(jbool daemon);
 
-    State getState() const;
+    jxx::Ptr<State> getState() const;
 
     static void setDefaultUncaughtExceptionHandler(
         const jxx::Ptr<UncaughtExceptionHandler>& handler);
