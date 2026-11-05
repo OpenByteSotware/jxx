@@ -965,6 +965,21 @@ class Translator:
             return f'::jxx::lang::{target_simple}::valueOf({value})'
         return value
 
+    def terminal_selector_return_kind(self, expression):
+        """Return primitive/reference for the terminal method selector."""
+        selectors=list(getattr(expression,'selectors',None) or [])
+        if not selectors:
+            return None
+        terminal=selectors[-1]
+        if type(terminal).__name__!='MethodInvocation':
+            return None
+        if terminal.member in set(PRIMITIVE_UNBOX_METHODS.values()):
+            return 'primitive'
+        metadata=self.sdk_method_metadata(terminal)
+        if metadata is not None:
+            return metadata.return_kind
+        return None
+
     def is_string_expression(self, expression):
         if self.is_string_literal_expression(expression):
             return True
@@ -977,8 +992,29 @@ class Translator:
             field_type=self.assignment_target_type(expression)
             return self.simple(self.name_of(field_type))=='String'
         if kind=='MethodInvocation':
+            terminal_kind=self.terminal_selector_return_kind(expression)
+            if terminal_kind=='primitive':
+                return False
+            metadata=self.sdk_method_metadata(expression)
+            if metadata is not None:
+                if metadata.return_kind!='reference':
+                    return False
+                pointee=metadata.pointee.split('::')[-1]
+                pointee=pointee.replace('>','').strip()
+                return pointee=='String'
+            owner=self.invocation_owner_name(
+                getattr(expression,'qualifier',None))
+            declared=self.source_method_return_types.get(owner,{}).get(
+                expression.member)
+            if declared is not None:
+                return self.simple(self.name_of(declared))=='String'
+            # Without metadata, only intrinsically String-returning methods
+            # are safe to classify by name. valueOf is String only on String.
+            qualifier=getattr(expression,'qualifier',None)
+            if expression.member=='valueOf':
+                return self.simple(qualifier)=='String'
             return expression.member in {
-                'toString','nextLine','next','substring','concat','valueOf'}
+                'toString','nextLine','next','substring','concat'}
         if kind=='BinaryOperation' and expression.operator=='+':
             return (self.is_string_expression(expression.operandl) or
                     self.is_string_expression(expression.operandr))
@@ -1360,15 +1396,9 @@ class Translator:
             # primitive, for example new Short("-12").shortValue(). The
             # assertion applies to the terminal expression type, not to the
             # type of the receiver on which that selector was invoked.
-            selectors=list(getattr(expression,'selectors',None) or [])
-            if selectors:
-                terminal=selectors[-1]
-                if type(terminal).__name__=='MethodInvocation':
-                    if terminal.member in set(PRIMITIVE_UNBOX_METHODS.values()):
-                        return False
-                    metadata=self.sdk_method_metadata(terminal)
-                    if metadata is not None:
-                        return metadata.return_kind=='reference'
+            terminal_kind=self.terminal_selector_return_kind(expression)
+            if terminal_kind is not None:
+                return terminal_kind=='reference'
             return True
         if kind in {'ClassReference','ArrayCreator'}:
             return True
@@ -1389,6 +1419,9 @@ class Translator:
                     type_name in WRAPPER_TO_PRIMITIVE or
                     type_name in {'String','Object','Class','ClassAny'})
         if kind=='MethodInvocation':
+            terminal_kind=self.terminal_selector_return_kind(expression)
+            if terminal_kind is not None:
+                return terminal_kind=='reference'
             metadata=self.sdk_method_metadata(expression)
             if metadata is not None:
                 return metadata.return_kind=='reference'

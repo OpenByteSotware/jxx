@@ -39,18 +39,18 @@ namespace jxx::jdk8::lang {
     }
 
     TEST(ShortTest, ValueOfAndDecodeWork) {
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(10))), ::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(::jxx::NEW<::jxx::lang::String>("10")))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(15))), ::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(::jxx::NEW<::jxx::lang::String>("f"), 16))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(16))), ::jxx::lang::Short::decode(::jxx::NEW<::jxx::lang::String>("0x10"))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(8))), ::jxx::lang::Short::decode(::jxx::NEW<::jxx::lang::String>("010"))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(10)), ::jxx::lang::Short::valueOf(::jxx::NEW<::jxx::lang::String>("10"))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(15)), ::jxx::lang::Short::valueOf(::jxx::NEW<::jxx::lang::String>("f"), 16)));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(16)), ::jxx::lang::Short::decode(::jxx::NEW<::jxx::lang::String>("0x10"))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(8)), ::jxx::lang::Short::decode(::jxx::NEW<::jxx::lang::String>("010"))));
     }
 
     TEST(ShortTest, StringEqualityHashAndComparisonWork) {
         ::jxx::Ptr<::jxx::lang::Short> value = ::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(1200));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("1200"), ::jxx::lang::String::valueOf(value->toString())));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("1200"), ::jxx::lang::String::valueOf(::jxx::lang::Short::toString(static_cast<::jxx::lang::jshort>(1200)))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(value, ::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(1200)))));
-        EXPECT_FALSE(::jxx::util::Objects::equals(value, ::jxx::lang::String::valueOf(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(1201)))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(value, ::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(1200))));
+        EXPECT_FALSE(::jxx::util::Objects::equals(value, ::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(1201))));
         EXPECT_EQ(1200, value->hashCode());
         EXPECT_EQ(1200, ::jxx::lang::Short::hashCode(static_cast<::jxx::lang::jshort>(1200)));
         EXPECT_TRUE((value->compareTo(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(1201))) < 0));

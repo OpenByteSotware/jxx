@@ -34,8 +34,8 @@ namespace jxx::jdk8::lang {
         EXPECT_EQ(static_cast<::jxx::lang::jlong>(123), ::jxx::lang::Long::parseLong(::jxx::NEW<::jxx::lang::String>("123")));
         EXPECT_EQ(static_cast<::jxx::lang::jlong>(255), ::jxx::lang::Long::parseLong(::jxx::NEW<::jxx::lang::String>("ff"), 16));
         EXPECT_EQ(-static_cast<::jxx::lang::jlong>(10), ::jxx::lang::Long::parseLong(::jxx::NEW<::jxx::lang::String>("-1010"), 2));
-        EXPECT_TRUE(::jxx::util::Objects::equals(static_cast<::jxx::lang::jlong>(123), ::jxx::lang::String::valueOf(::jxx::lang::Long::valueOf(::jxx::NEW<::jxx::lang::String>("123"))->longValue())));
-        EXPECT_TRUE(::jxx::util::Objects::equals(static_cast<::jxx::lang::jlong>(255), ::jxx::lang::String::valueOf(::jxx::lang::Long::valueOf(::jxx::NEW<::jxx::lang::String>("ff"), 16)->longValue())));
+        EXPECT_EQ(static_cast<::jxx::lang::jlong>(123), ::jxx::lang::Long::valueOf(::jxx::NEW<::jxx::lang::String>("123"))->longValue());
+        EXPECT_EQ(static_cast<::jxx::lang::jlong>(255), ::jxx::lang::Long::valueOf(::jxx::NEW<::jxx::lang::String>("ff"), 16)->longValue());
         EXPECT_EQ(static_cast<::jxx::lang::jlong>(16), ::jxx::lang::Long::decode(::jxx::NEW<::jxx::lang::String>("0x10"))->longValue());
         EXPECT_EQ(static_cast<::jxx::lang::jlong>(8), ::jxx::lang::Long::decode(::jxx::NEW<::jxx::lang::String>("010"))->longValue());
     }
@@ -62,8 +62,8 @@ namespace jxx::jdk8::lang {
     TEST(LongTest, EqualityHashAndComparisonWork) {
         ::jxx::Ptr<::jxx::lang::Long> value = ::jxx::lang::Long::valueOf(static_cast<::jxx::lang::jlong>(12));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("12"), ::jxx::lang::String::valueOf(value->toString())));
-        EXPECT_TRUE(::jxx::util::Objects::equals(value, ::jxx::lang::String::valueOf(::jxx::lang::Long::valueOf(static_cast<::jxx::lang::jlong>(12)))));
-        EXPECT_FALSE(::jxx::util::Objects::equals(value, ::jxx::lang::String::valueOf(::jxx::lang::Long::valueOf(static_cast<::jxx::lang::jlong>(13)))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(value, ::jxx::lang::Long::valueOf(static_cast<::jxx::lang::jlong>(12))));
+        EXPECT_FALSE(::jxx::util::Objects::equals(value, ::jxx::lang::Long::valueOf(static_cast<::jxx::lang::jlong>(13))));
         EXPECT_EQ(12, value->hashCode());
         EXPECT_EQ(12, ::jxx::lang::Long::hashCode(static_cast<::jxx::lang::jlong>(12)));
         EXPECT_TRUE((value->compareTo(::jxx::lang::Long::valueOf(static_cast<::jxx::lang::jlong>(13))) < 0));
@@ -84,11 +84,11 @@ namespace jxx::jdk8::lang {
             });
             try {
                 ::jxx::lang::System::setProperty(key, ::jxx::NEW<::jxx::lang::String>("0x20"));
-                EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Long::valueOf(static_cast<::jxx::lang::jlong>(32))), ::jxx::lang::Long::getLong(key)));
+                EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Long::valueOf(static_cast<::jxx::lang::jlong>(32)), ::jxx::lang::Long::getLong(key)));
                 ::jxx::lang::System::clearProperty(key);
                 EXPECT_EQ(::jxx::lang::Long::getLong(key), nullptr);
-                EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Long::valueOf(static_cast<::jxx::lang::jlong>(7))), ::jxx::lang::Long::getLong(key, static_cast<::jxx::lang::jlong>(7))));
-                EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Long::valueOf(static_cast<::jxx::lang::jlong>(9))), ::jxx::lang::Long::getLong(key, ::jxx::lang::Long::valueOf(static_cast<::jxx::lang::jlong>(9)))));
+                EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Long::valueOf(static_cast<::jxx::lang::jlong>(7)), ::jxx::lang::Long::getLong(key, static_cast<::jxx::lang::jlong>(7))));
+                EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Long::valueOf(static_cast<::jxx::lang::jlong>(9)), ::jxx::lang::Long::getLong(key, ::jxx::lang::Long::valueOf(static_cast<::jxx::lang::jlong>(9)))));
             } catch (...) {
                 jxxFinally0.runAndDismiss();
                 throw;

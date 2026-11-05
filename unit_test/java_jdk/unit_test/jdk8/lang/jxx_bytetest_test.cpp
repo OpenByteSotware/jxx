@@ -40,19 +40,19 @@ namespace jxx::jdk8::lang {
     }
 
     TEST(ByteTest, ValueOfAndDecodeWork) {
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(10))), ::jxx::lang::String::valueOf(::jxx::lang::Byte::valueOf(::jxx::NEW<::jxx::lang::String>("10")))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(15))), ::jxx::lang::String::valueOf(::jxx::lang::Byte::valueOf(::jxx::NEW<::jxx::lang::String>("f"), 16))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(16))), ::jxx::lang::Byte::decode(::jxx::NEW<::jxx::lang::String>("0x10"))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(8))), ::jxx::lang::Byte::decode(::jxx::NEW<::jxx::lang::String>("010"))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::String::valueOf(::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(-16))), ::jxx::lang::Byte::decode(::jxx::NEW<::jxx::lang::String>("-0X10"))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(10)), ::jxx::lang::Byte::valueOf(::jxx::NEW<::jxx::lang::String>("10"))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(15)), ::jxx::lang::Byte::valueOf(::jxx::NEW<::jxx::lang::String>("f"), 16)));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(16)), ::jxx::lang::Byte::decode(::jxx::NEW<::jxx::lang::String>("0x10"))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(8)), ::jxx::lang::Byte::decode(::jxx::NEW<::jxx::lang::String>("010"))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(-16)), ::jxx::lang::Byte::decode(::jxx::NEW<::jxx::lang::String>("-0X10"))));
     }
 
     TEST(ByteTest, StringEqualityHashAndComparisonWork) {
         ::jxx::Ptr<::jxx::lang::Byte> value = ::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(12));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("12"), ::jxx::lang::String::valueOf(value->toString())));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("12"), ::jxx::lang::String::valueOf(::jxx::lang::Byte::toString(static_cast<::jxx::lang::jbyte>(12)))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(value, ::jxx::lang::String::valueOf(::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(12)))));
-        EXPECT_FALSE(::jxx::util::Objects::equals(value, ::jxx::lang::String::valueOf(::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(13)))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(value, ::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(12))));
+        EXPECT_FALSE(::jxx::util::Objects::equals(value, ::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(13))));
         EXPECT_EQ(12, value->hashCode());
         EXPECT_EQ(12, ::jxx::lang::Byte::hashCode(static_cast<::jxx::lang::jbyte>(12)));
         EXPECT_TRUE((value->compareTo(::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(13))) < 0));
