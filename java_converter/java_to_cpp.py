@@ -179,6 +179,7 @@ class Translator:
         self.active_anonymous_captures:Set[str]=set()
         self.test_framework='none'
         self.static_imports:Dict[str,str]={}
+        self.uses_functional_adapters=False
 
     @staticmethod
     def simple(n): return str(n).split('.')[-1]
@@ -1051,6 +1052,94 @@ class Translator:
         return (f'{self.string_value_expression(left)}->concat('
                 f'{self.string_value_expression(right)})')
 
+    def local_generic_argument_raw(self, variable_name, index=0):
+        declared=self.local_variable_types.get(variable_name)
+        arguments=list(getattr(declared,'arguments',None) or [])
+        if index < len(arguments):
+            argument_type=getattr(arguments[index],'type',None)
+            if argument_type is not None:
+                return self.template_argument_type(argument_type)
+        return '::jxx::lang::Object'
+
+    def functional_lambda_body(self, expression, parameter_name, parameter_raw,
+                               return_raw=None, returns_void=False):
+        previous=self.local_variable_types.get(parameter_name)
+        parameter_type=type('JxxSyntheticType',(),{'name':parameter_raw.split('::')[-1],
+                                                    'arguments':[], 'dimensions':[]})()
+        self.local_variable_types[parameter_name]=parameter_type
+        body=getattr(expression,'body',None)
+        output=Emit()
+        if isinstance(body,list):
+            for statement in body:
+                self.stmt(statement,output)
+        elif body is not None:
+            value=self.expr(body)
+            if returns_void:
+                output.w(value+';')
+            elif return_raw is not None:
+                simple=return_raw.split('::')[-1].split('<')[0]
+                primitive=WRAPPER_TO_PRIMITIVE.get(simple)
+                if primitive and self.expression_type_name(body) in PRIMITIVES:
+                    value=f'::jxx::lang::{simple}::valueOf({value})'
+                output.w(f'return {value};')
+            else:
+                output.w(f'return {value};')
+        if previous is None:
+            self.local_variable_types.pop(parameter_name,None)
+        else:
+            self.local_variable_types[parameter_name]=previous
+        lines=output.text().rstrip().splitlines()
+        rendered='\n'.join('    '+line for line in lines)
+        return '{\n'+rendered+'\n}'
+
+    def optional_functional_argument(self, invocation, argument):
+        qualifier=getattr(invocation,'qualifier',None)
+        if qualifier not in self.local_variable_types:
+            return None
+        if self.simple(self.name_of(self.local_variable_types[qualifier]))!='Optional':
+            return None
+        member=invocation.member
+        if member not in {'ifPresent','filter','map','flatMap','orElseGet','orElseThrow'}:
+            return None
+        if type(argument).__name__ not in {'LambdaExpression','MethodReference'}:
+            return None
+        self.uses_functional_adapters=True
+        source_raw=self.local_generic_argument_raw(qualifier)
+        if member in {'ifPresent','filter'}:
+            parameter=(getattr(argument,'parameters',None) or [None])[0]
+            name=self.lambda_parameter_name(parameter) if parameter is not None else 'value'
+            body=self.functional_lambda_body(argument,name,source_raw,
+                    returns_void=(member=='ifPresent'))
+            maker='jxxMakeConsumer' if member=='ifPresent' else 'jxxMakePredicate'
+            return f'{maker}<{source_raw}>([&](const ::jxx::Ptr<{source_raw}>& {name}) {body})'
+        if member in {'orElseGet','orElseThrow'}:
+            result_raw=(source_raw if member=='orElseGet'
+                        else '::jxx::lang::IllegalStateException')
+            body=self.functional_lambda_body(argument,'',source_raw,result_raw)
+            return f'jxxMakeSupplier<{result_raw}>([&]() {body})'
+        # map/flatMap
+        parameter=(getattr(argument,'parameters',None) or [None])[0]
+        name=self.lambda_parameter_name(parameter) if parameter is not None else 'value'
+        if type(argument).__name__=='MethodReference':
+            method=getattr(argument,'method',None)
+            method_name=getattr(method,'member',None) or str(method)
+            if method_name=='length':
+                result_raw='::jxx::lang::Integer'
+                body='{ return ::jxx::lang::Integer::valueOf(value->length()); }'
+                name='value'
+            else:
+                return None
+        else:
+            body_node=getattr(argument,'body',None)
+            if member=='flatMap':
+                result_raw=f'::jxx::util::Optional<{source_raw}>'
+            else:
+                inferred=self.expression_type_name(body_node)
+                result_raw=self.qmap(PRIMITIVE_TO_WRAPPER.get(inferred,inferred or 'Object'))[0]
+            body=self.functional_lambda_body(argument,name,source_raw,result_raw)
+        return (f'jxxMakeFunction<{source_raw}, {result_raw}>('
+                f'[&](const ::jxx::Ptr<{source_raw}>& {name}) {body})')
+
     def lambda_parameter_name(self, parameter):
         return (getattr(parameter,'name',None) or
                 getattr(parameter,'member',None) or
@@ -1315,7 +1404,11 @@ class Translator:
         if not is_varargs or not parameters:
             rendered=[]
             for index,argument in enumerate(arguments):
-                if (self.is_this_expression(argument) and
+                optional_functional=self.optional_functional_argument(
+                    invocation,argument)
+                if optional_functional is not None:
+                    rendered.append(optional_functional)
+                elif (self.is_this_expression(argument) and
                         index < len(parameters)):
                     rendered.append(self.this_ptr_expression(
                         parameters[index].type))
@@ -2967,6 +3060,15 @@ def generate_google_test(path:Path, out_root:str, source_root:Path,
     translator.current_output_relative_dir=relative_dir
     translator.gather(tree)
     translator.gather_body_type_includes(tree)
+    if any(type(node).__name__ in {'LambdaExpression','MethodReference'}
+           for _,node in tree):
+        translator.includes.update({
+            'util/function/jxx.util.function.Consumer.h',
+            'util/function/jxx.util.function.Predicate.h',
+            'util/function/jxx.util.function.Function.h',
+            'util/function/jxx.util.function.Supplier.h',
+        })
+        translator.uses_functional_adapters=True
     expected_exceptions={}
     if active=='junit4':
         for declaration in getattr(tree,'types',None) or []:
@@ -2979,7 +3081,7 @@ def generate_google_test(path:Path, out_root:str, source_root:Path,
     output_dir=Path(out_root)/'unit_test'/relative_dir
     output_dir.mkdir(parents=True,exist_ok=True)
     output=output_dir/f'jxx_{path.stem.lower()}_test.cpp'
-    o=Emit();o.w('#include <gtest/gtest.h>')
+    o=Emit();o.w('#include <gtest/gtest.h>');o.w('#include <type_traits>');o.w('#include <utility>')
     for include in sorted(translator.includes | translator.source_includes):
         o.w(f'#include "{include}"')
     # Test classes are translated directly to TEST/TEST_F and therefore
@@ -2994,6 +3096,18 @@ def generate_google_test(path:Path, out_root:str, source_root:Path,
                for name in referenced_names):
             o.w(f'#include "{include}"')
     o.w()
+    if translator.uses_functional_adapters:
+        o.w('namespace {')
+        o.w('template<typename T, typename F> class JxxLambdaConsumer final : public ::jxx::lang::ClassBase<JxxLambdaConsumer<T,F>, ::jxx::lang::Object, ::jxx::util::function::Consumer<T>> { public: explicit JxxLambdaConsumer(F f):f_(std::move(f)){} void accept(const ::jxx::Ptr<T>& v) override { f_(v); } private: F f_; };')
+        o.w('template<typename T, typename F> auto jxxMakeConsumer(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::Consumer<T>>(::jxx::NEW<JxxLambdaConsumer<T,D>>(std::forward<F>(f))); }')
+        o.w('template<typename T, typename F> class JxxLambdaPredicate final : public ::jxx::lang::ClassBase<JxxLambdaPredicate<T,F>, ::jxx::lang::Object, ::jxx::util::function::Predicate<T>> { public: explicit JxxLambdaPredicate(F f):f_(std::move(f)){} ::jxx::lang::jbool test(const ::jxx::Ptr<T>& v) override { return f_(v); } private: F f_; };')
+        o.w('template<typename T, typename F> auto jxxMakePredicate(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::Predicate<T>>(::jxx::NEW<JxxLambdaPredicate<T,D>>(std::forward<F>(f))); }')
+        o.w('template<typename T, typename R, typename F> class JxxLambdaFunction final : public ::jxx::lang::ClassBase<JxxLambdaFunction<T,R,F>, ::jxx::lang::Object, ::jxx::util::function::Function<T,R>> { public: explicit JxxLambdaFunction(F f):f_(std::move(f)){} ::jxx::Ptr<R> apply(const ::jxx::Ptr<T>& v) override { return f_(v); } private: F f_; };')
+        o.w('template<typename T, typename R, typename F> auto jxxMakeFunction(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::Function<T,R>>(::jxx::NEW<JxxLambdaFunction<T,R,D>>(std::forward<F>(f))); }')
+        o.w('template<typename T, typename F> class JxxLambdaSupplier final : public ::jxx::lang::ClassBase<JxxLambdaSupplier<T,F>, ::jxx::lang::Object, ::jxx::util::function::Supplier<T>> { public: explicit JxxLambdaSupplier(F f):f_(std::move(f)){} ::jxx::Ptr<T> get() override { return f_(); } private: F f_; };')
+        o.w('template<typename T, typename F> auto jxxMakeSupplier(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::Supplier<T>>(::jxx::NEW<JxxLambdaSupplier<T,D>>(std::forward<F>(f))); }')
+        o.w('} // namespace')
+        o.w()
     namespace=('jxx::'+package.replace('.','::')) if package else ''
     if namespace: o.w(f'namespace {namespace} {{');o.enter()
     # Test-contained classes are source implementation classes, not GoogleTest
