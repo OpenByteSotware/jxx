@@ -724,10 +724,12 @@ class Translator:
             if invocation_type is not None:
                 for _,node in filter_method(invocation_type):
                     self.record_method_dependencies(node)
-                    if (self.test_framework!='none' and
-                            getattr(node,'member',None) in
-                            {'assertEquals','assertNotEquals'}):
-                        self.includes.add('util/jxx.util.Objects.h')
+                    if self.test_framework!='none':
+                        assertion=getattr(node,'member',None)
+                        if assertion in {'assertEquals','assertNotEquals'}:
+                            self.includes.add('util/jxx.util.Objects.h')
+                        if assertion in {'assertArrayEquals','assertArrayNotEquals'}:
+                            self.includes.add('util/jxx.util.Arrays.h')
             if member_reference_type is not None:
                 for _,node in filter_method(member_reference_type):
                     self.record_qualified_type_dependency(
@@ -1588,11 +1590,35 @@ class Translator:
                     self.is_reference_assertion_expression(expression.if_false))
         return False
 
+    def array_assertion_expression(self, member, arguments):
+        if member not in {'assertArrayEquals','assertArrayNotEquals'}:
+            return None
+        values=list(arguments)
+        message=None
+        if (self.test_framework in {'junit4','junit5'} and len(values)>=3 and
+                self.is_string_literal_expression(values[0])):
+            message=values.pop(0)
+        if len(values)!=2:
+            return None
+        expected=self.expr(values[0])
+        actual=self.expr(values[1])
+        comparison=f'::jxx::util::Arrays::equals({expected}, {actual})'
+        macro=('EXPECT_TRUE' if member=='assertArrayEquals'
+               else 'EXPECT_FALSE')
+        rendered=f'{macro}({comparison})'
+        if message is not None:
+            rendered+=f' << {self.expr(message)}'
+        self.includes.add('util/jxx.util.Arrays.h')
+        return rendered
+
     def test_assertion_expression(self, invocation):
         if self.test_framework=='none' or type(invocation).__name__!='MethodInvocation':
             return None
         member=invocation.member
         arguments=list(getattr(invocation,'arguments',None) or [])
+        array_assertion=self.array_assertion_expression(member,arguments)
+        if array_assertion is not None:
+            return array_assertion
         message=None
         junit_message=(
             self.test_framework in {'junit4','junit5'} and arguments and
