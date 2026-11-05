@@ -61,9 +61,9 @@ namespace jxx::jdk8::util {
         EXPECT_TRUE(x->removeAll(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("b"), ::jxx::NEW<::jxx::lang::String>("z"))));
         EXPECT_TRUE(x->retainAll(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("z"))));
         ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Object>, 1U>> a = x->toArray();
-        assertArrayEquals(::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::Object, 1U>>(), a);
-        ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>> s = x->toArray(::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::String, 1U>>(0));
-        assertArrayEquals(::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::String, 1U>>(), s);
+        assertArrayEquals(::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Object>, 1U>>(), a);
+        ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>> s = x->toArray(::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>>(0));
+        assertArrayEquals(::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>>(), s);
         x->clear();
         EXPECT_TRUE(x->isEmpty());
     }
@@ -95,7 +95,7 @@ namespace jxx::jdk8::util {
 });
         x->sort(nullptr);
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::util::Arrays::asList(4, 6), x));
-        ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::lang::jint, 2U>> sum = ::jxx::NEW<::jxx::lang::IntArrayType>(1U);
+        const auto sum = ::jxx::NEW<::jxx::lang::IntArrayType>(1U);
         (*sum)[0U] = 0;
         x->forEach([&](auto n) {
     (*sum)[0] += n;

@@ -384,7 +384,8 @@ class Translator:
         alias=self.primitive_array_alias(name,rank,True)
         if alias:
             return alias
-        element=(PRIMITIVES[name] if name in PRIMITIVES else self.ref_raw(t))
+        element=(PRIMITIVES[name] if name in PRIMITIVES
+                 else f'::jxx::Ptr<{self.ref_raw(t)}>')
         return f'::jxx::lang::JxxArray<{element}, {rank}U>'
 
     def resolve(self,t,extra_dims=0)->CType:
@@ -1905,16 +1906,18 @@ class Translator:
     def array_initializer_value(self, element_type, expression):
         value=self.expr(expression)
         name=self.name_of(element_type)
+        if self.is_string_literal_expression(expression):
+            return f'::jxx::NEW<::jxx::lang::String>({value})'
         if name in {'Integer','Character','Boolean','Byte','Short','Long','Float','Double'}:
             raw=self.qmap(name)[0]
             return f'::jxx::NEW<{raw}>({value})'
         return value
 
     def emit_local_array_initializer(self, declaration, declarator, o, dims):
-        array_type=self.resolve(declaration.type,dims).value()
         concrete=self.array_concrete_type(declaration.type,dims)
         values=list(getattr(declarator.initializer,'initializers',None) or [])
-        o.w(f'{array_type} {declarator.name} = ::jxx::NEW<{concrete}>({len(values)}U);')
+        const='const ' if 'final' in (getattr(declaration,'modifiers',None) or set()) else ''
+        o.w(f'{const}auto {declarator.name} = ::jxx::NEW<{concrete}>({len(values)}U);')
         for index,value in enumerate(values):
             converted=self.array_initializer_value(declaration.type,value)
             o.w(f'(*{declarator.name})[{index}U] = {converted};')

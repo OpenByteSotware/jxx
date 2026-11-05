@@ -59,7 +59,7 @@ namespace jxx::jdk8::util {
         }
         EXPECT_EQ(6, sum);
         EXPECT_EQ(3, s->toArray()->length);
-        ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Integer>, 1U>> a = s->toArray(::jxx::NEW<::jxx::lang::JxxArray<::jxx::lang::Integer, 1U>>(0));
+        ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Integer>, 1U>> a = s->toArray(::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Integer>, 1U>>(0));
         EXPECT_EQ(3, a->length);
         ::jxx::Ptr<::jxx::util::HashSet<::jxx::lang::Integer>> c = ::jxx::CAST<::jxx::util::HashSet<::jxx::lang::Integer>>(s->clone());
         EXPECT_TRUE(::jxx::util::Objects::equals(s, c));
@@ -74,7 +74,7 @@ namespace jxx::jdk8::util {
         EXPECT_TRUE(s->removeIf([&](auto n) {
     ((n % 2) == 0);
 }));
-        ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::lang::jint, 2U>> sum = ::jxx::NEW<::jxx::lang::IntArrayType>(1U);
+        const auto sum = ::jxx::NEW<::jxx::lang::IntArrayType>(1U);
         (*sum)[0U] = 0;
         s->forEach([&](auto n) {
     (*sum)[0] += n;

@@ -99,7 +99,7 @@ namespace jxx::jdk8::util {
     (v * 2);
 });
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Integer::valueOf(14), m->get(::jxx::NEW<::jxx::lang::String>("c"))));
-        ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::lang::jint, 2U>> sum = ::jxx::NEW<::jxx::lang::IntArrayType>(1U);
+        const auto sum = ::jxx::NEW<::jxx::lang::IntArrayType>(1U);
         (*sum)[0U] = 0;
         m->forEach([&](auto k, auto v) {
     (*sum)[0] += v;
