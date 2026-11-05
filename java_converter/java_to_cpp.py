@@ -1268,7 +1268,62 @@ class Translator:
             return self.constructor_argument_expression(expression,target_type)
         return value
 
+    def optional_type_argument_from_type(self, type_node):
+        if self.simple(self.name_of(type_node))!='Optional':
+            return None
+        arguments=list(getattr(type_node,'arguments',None) or [])
+        if not arguments:
+            return None
+        argument_type=getattr(arguments[0],'type',None)
+        return (self.template_argument_type(argument_type)
+                if argument_type is not None else '::jxx::lang::Object')
+
+    def inferred_optional_type_argument(self, invocation, expected_type=None):
+        expected=self.optional_type_argument_from_type(expected_type)
+        if expected is not None:
+            return expected
+        arguments=list(getattr(invocation,'arguments',None) or [])
+        if arguments:
+            value=arguments[0]
+            if (type(value).__name__=='Literal' and
+                    getattr(value,'value',None) in (None,'null')):
+                return '::jxx::lang::Object'
+            if self.is_string_literal_expression(value):
+                return '::jxx::lang::String'
+            source=self.expression_type_name(value)
+            if source in PRIMITIVE_TO_WRAPPER:
+                return f'::jxx::lang::{PRIMITIVE_TO_WRAPPER[source]}'
+            if source and source not in PRIMITIVES:
+                return self.qmap(source)[0]
+        return '::jxx::lang::Object'
+
+    def optional_static_invocation_expression(self, invocation, expected_type=None):
+        if type(invocation).__name__!='MethodInvocation':
+            return None
+        qualifier=getattr(invocation,'qualifier',None)
+        if self.simple(qualifier)!='Optional' or invocation.member not in {
+                'empty','of','ofNullable'}:
+            return None
+        argument_raw=self.inferred_optional_type_argument(invocation,expected_type)
+        owner=f'::jxx::util::Optional<{argument_raw}>'
+        converted=[]
+        for argument in getattr(invocation,'arguments',None) or []:
+            if self.is_string_literal_expression(argument):
+                converted.append(f'::jxx::NEW<::jxx::lang::String>({self.expr(argument)})')
+            elif (type(argument).__name__=='Literal' and
+                  getattr(argument,'value',None) in (None,'null')):
+                converted.append(f'::jxx::Ptr<{argument_raw}>{{}}')
+            elif self.expression_type_name(argument) in PRIMITIVES:
+                primitive=self.expression_type_name(argument)
+                converted.append(f'::jxx::lang::{PRIMITIVE_TO_WRAPPER[primitive]}::valueOf({self.expr(argument)})')
+            else:
+                converted.append(self.expr(argument))
+        return f'{owner}::{invocation.member}({", ".join(converted)})'
+
     def declaration_initializer_expression(self,target_type,initializer):
+        optional=self.optional_static_invocation_expression(initializer,target_type)
+        if optional is not None:
+            return optional
         if self.is_string_literal_expression(initializer):
             return self.constructor_argument_expression(initializer,target_type)
         return self.expression_for_target_type(initializer,target_type)
@@ -1710,6 +1765,10 @@ class Translator:
             if test_assertion is not None:
                 return test_assertion
             q=getattr(e,'qualifier',None)
+            optional_static=self.optional_static_invocation_expression(e)
+            if optional_static is not None:
+                return self.apply_expression_selectors(
+                    optional_static,getattr(e,'selectors',None))
             rendered_q=(f'{q}_' if q in self.active_anonymous_captures else q)
             if q in self.local_variable_types:
                 head=f'{rendered_q}->{e.member}'

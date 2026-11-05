@@ -1,4 +1,6 @@
 #include <gtest/gtest.h>
+#include <type_traits>
+#include <utility>
 #include "lang/jxx.lang.Byte.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.GenericConversion.h"

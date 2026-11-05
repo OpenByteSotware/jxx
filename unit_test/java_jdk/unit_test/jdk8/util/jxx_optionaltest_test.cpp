@@ -1,4 +1,6 @@
 #include <gtest/gtest.h>
+#include <type_traits>
+#include <utility>
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.GenericConversion.h"
 #include "lang/jxx.lang.IllegalStateException.h"
@@ -8,25 +10,40 @@
 #include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.System.h"
 #include "util/concurrent/atomic/jxx.util.concurrent.atomic.AtomicBoolean.h"
+#include "util/function/jxx.util.function.Consumer.h"
+#include "util/function/jxx.util.function.Function.h"
+#include "util/function/jxx.util.function.Predicate.h"
+#include "util/function/jxx.util.function.Supplier.h"
 #include "util/jxx.util.NoSuchElementException.h"
 #include "util/jxx.util.Objects.h"
 #include "util/jxx.util.Optional.h"
 
+namespace {
+template<typename T, typename F> class JxxLambdaConsumer final : public ::jxx::lang::ClassBase<JxxLambdaConsumer<T,F>, ::jxx::lang::Object, ::jxx::util::function::Consumer<T>> { public: explicit JxxLambdaConsumer(F f):f_(std::move(f)){} void accept(const ::jxx::Ptr<T>& v) override { f_(v); } private: F f_; };
+template<typename T, typename F> auto jxxMakeConsumer(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::Consumer<T>>(::jxx::NEW<JxxLambdaConsumer<T,D>>(std::forward<F>(f))); }
+template<typename T, typename F> class JxxLambdaPredicate final : public ::jxx::lang::ClassBase<JxxLambdaPredicate<T,F>, ::jxx::lang::Object, ::jxx::util::function::Predicate<T>> { public: explicit JxxLambdaPredicate(F f):f_(std::move(f)){} ::jxx::lang::jbool test(const ::jxx::Ptr<T>& v) override { return f_(v); } private: F f_; };
+template<typename T, typename F> auto jxxMakePredicate(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::Predicate<T>>(::jxx::NEW<JxxLambdaPredicate<T,D>>(std::forward<F>(f))); }
+template<typename T, typename R, typename F> class JxxLambdaFunction final : public ::jxx::lang::ClassBase<JxxLambdaFunction<T,R,F>, ::jxx::lang::Object, ::jxx::util::function::Function<T,R>> { public: explicit JxxLambdaFunction(F f):f_(std::move(f)){} ::jxx::Ptr<R> apply(const ::jxx::Ptr<T>& v) override { return f_(v); } private: F f_; };
+template<typename T, typename R, typename F> auto jxxMakeFunction(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::Function<T,R>>(::jxx::NEW<JxxLambdaFunction<T,R,D>>(std::forward<F>(f))); }
+template<typename T, typename F> class JxxLambdaSupplier final : public ::jxx::lang::ClassBase<JxxLambdaSupplier<T,F>, ::jxx::lang::Object, ::jxx::util::function::Supplier<T>> { public: explicit JxxLambdaSupplier(F f):f_(std::move(f)){} ::jxx::Ptr<T> get() override { return f_(); } private: F f_; };
+template<typename T, typename F> auto jxxMakeSupplier(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::Supplier<T>>(::jxx::NEW<JxxLambdaSupplier<T,D>>(std::forward<F>(f))); }
+} // namespace
+
 namespace jxx::jdk8::util {
     TEST(OptionalTest, CreationPresenceAndAccessWork) {
-        ::jxx::Ptr<::jxx::util::Optional<::jxx::lang::String>> e = ::jxx::util::Optional::empty();
+        ::jxx::Ptr<::jxx::util::Optional<::jxx::lang::String>> e = ::jxx::util::Optional<::jxx::lang::String>::empty();
         EXPECT_FALSE(e->isPresent());
-        ::jxx::Ptr<::jxx::util::Optional<::jxx::lang::String>> p = ::jxx::util::Optional::of(::jxx::NEW<::jxx::lang::String>("x"));
+        ::jxx::Ptr<::jxx::util::Optional<::jxx::lang::String>> p = ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x"));
         EXPECT_TRUE(p->isPresent());
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("x"), p->get()));
-        EXPECT_FALSE(::jxx::util::Optional::ofNullable(nullptr)->isPresent());
-        EXPECT_EQ(::jxx::util::Optional::of(::jxx::NEW<::jxx::lang::String>("x")), ::jxx::util::Optional::ofNullable(::jxx::NEW<::jxx::lang::String>("x")));
+        EXPECT_FALSE(::jxx::util::Optional<::jxx::lang::Object>::ofNullable(::jxx::Ptr<::jxx::lang::Object>{})->isPresent());
+        EXPECT_EQ(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x")), ::jxx::util::Optional<::jxx::lang::String>::ofNullable(::jxx::NEW<::jxx::lang::String>("x")));
     }
 
     TEST(OptionalTest, OfRejectsNull) {
         EXPECT_THROW(
             {
-                ::jxx::util::Optional::of(nullptr);
+                ::jxx::util::Optional<::jxx::lang::Object>::of(::jxx::Ptr<::jxx::lang::Object>{});
             },
             ::jxx::lang::NullPointerException);
     }
@@ -34,43 +51,43 @@ namespace jxx::jdk8::util {
     TEST(OptionalTest, GetRejectsEmpty) {
         EXPECT_THROW(
             {
-                ::jxx::util::Optional::empty()->get();
+                ::jxx::util::Optional<::jxx::lang::Object>::empty()->get();
             },
             ::jxx::util::NoSuchElementException);
     }
 
     TEST(OptionalTest, ConditionalAndTransformingOperationsWork) {
-        ::jxx::Ptr<::jxx::util::Optional<::jxx::lang::String>> p = ::jxx::util::Optional::of(::jxx::NEW<::jxx::lang::String>("abc"));
-        EXPECT_EQ(::jxx::util::Optional::of(::jxx::NEW<::jxx::lang::String>("abc")), p->filter([&](auto v) {
-    (v->length() == 3);
-}));
-        EXPECT_EQ(::jxx::util::Optional::empty(), p->filter([&](auto v) {
-    false;
-}));
-        EXPECT_EQ(::jxx::util::Optional::of(3), p->map(MethodReference(expression=MemberReference(member=String, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), method=MemberReference(member=length, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), type_arguments=[])));
-        EXPECT_EQ(::jxx::util::Optional::of(::jxx::NEW<::jxx::lang::String>("ABC")), p->flatMap([&](auto v) {
-    ::jxx::util::Optional::of(v->toUpperCase());
-}));
+        ::jxx::Ptr<::jxx::util::Optional<::jxx::lang::String>> p = ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("abc"));
+        EXPECT_EQ(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("abc")), p->filter(jxxMakePredicate<::jxx::lang::String>([&](const ::jxx::Ptr<::jxx::lang::String>& v) {
+    return (v->length() == 3);
+})));
+        EXPECT_EQ(::jxx::util::Optional<::jxx::lang::Object>::empty(), p->filter(jxxMakePredicate<::jxx::lang::String>([&](const ::jxx::Ptr<::jxx::lang::String>& v) {
+    return false;
+})));
+        EXPECT_EQ(::jxx::util::Optional<::jxx::lang::Integer>::of(::jxx::lang::Integer::valueOf(3)), p->map(jxxMakeFunction<::jxx::lang::String, ::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::String>& value) { return ::jxx::lang::Integer::valueOf(value->length()); })));
+        EXPECT_EQ(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("ABC")), p->flatMap(jxxMakeFunction<::jxx::lang::String, ::jxx::util::Optional<::jxx::lang::String>>([&](const ::jxx::Ptr<::jxx::lang::String>& v) {
+    return ::jxx::util::Optional<::jxx::lang::Object>::of(v->toUpperCase());
+})));
         ::jxx::Ptr<::jxx::util::concurrent::atomic::AtomicBoolean> called = ::jxx::NEW<::jxx::util::concurrent::atomic::AtomicBoolean>(false);
-        p->ifPresent([&](auto v) {
+        p->ifPresent(jxxMakeConsumer<::jxx::lang::String>([&](const ::jxx::Ptr<::jxx::lang::String>& v) {
     called->set(true);
-});
+}));
         EXPECT_TRUE(called->get());
     }
 
     TEST(OptionalTest, FallbackOperationsWork) {
-        ::jxx::Ptr<::jxx::util::Optional<::jxx::lang::String>> e = ::jxx::util::Optional::empty();
+        ::jxx::Ptr<::jxx::util::Optional<::jxx::lang::String>> e = ::jxx::util::Optional<::jxx::lang::String>::empty();
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("d"), e->orElse(::jxx::NEW<::jxx::lang::String>("d"))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("s"), e->orElseGet([&]() {
-    "s";
-})));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("x"), ::jxx::util::Optional::of(::jxx::NEW<::jxx::lang::String>("x"))->orElse(::jxx::NEW<::jxx::lang::String>("d"))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("s"), e->orElseGet(jxxMakeSupplier<::jxx::lang::String>([&]() {
+    return "s";
+}))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("x"), ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x"))->orElse(::jxx::NEW<::jxx::lang::String>("d"))));
     }
 
     TEST(OptionalTest, OrElseThrowUsesSupplier) {
         EXPECT_THROW(
             {
-                ::jxx::util::Optional::empty()->orElseThrow([&]() {
+                ::jxx::util::Optional<::jxx::lang::Object>::empty()->orElseThrow([&]() {
     ::jxx::NEW<::jxx::lang::IllegalStateException>(::jxx::NEW<::jxx::lang::String>("missing"));
 });
             },
@@ -78,12 +95,12 @@ namespace jxx::jdk8::util {
     }
 
     TEST(OptionalTest, EqualityHashAndStringWork) {
-        EXPECT_EQ(::jxx::util::Optional::empty(), ::jxx::util::Optional::empty());
-        EXPECT_EQ(::jxx::util::Optional::of(::jxx::NEW<::jxx::lang::String>("x")), ::jxx::util::Optional::of(::jxx::NEW<::jxx::lang::String>("x")));
-        EXPECT_NE(::jxx::util::Optional::of(::jxx::NEW<::jxx::lang::String>("x")), ::jxx::util::Optional::of(::jxx::NEW<::jxx::lang::String>("y")));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("x"), ::jxx::util::Optional::of(::jxx::NEW<::jxx::lang::String>("x"))->hashCode()));
-        EXPECT_EQ(0, ::jxx::util::Optional::empty()->hashCode());
-        EXPECT_TRUE(::jxx::util::Optional::of(::jxx::NEW<::jxx::lang::String>("x"))->toString()->contains(::jxx::NEW<::jxx::lang::String>("x")));
+        EXPECT_EQ(::jxx::util::Optional<::jxx::lang::Object>::empty(), ::jxx::util::Optional<::jxx::lang::Object>::empty());
+        EXPECT_EQ(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x")), ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x")));
+        EXPECT_NE(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x")), ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("y")));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("x"), ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x"))->hashCode()));
+        EXPECT_EQ(0, ::jxx::util::Optional<::jxx::lang::Object>::empty()->hashCode());
+        EXPECT_TRUE(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x"))->toString()->contains(::jxx::NEW<::jxx::lang::String>("x")));
     }
 
 } // namespace jxx::jdk8::util
