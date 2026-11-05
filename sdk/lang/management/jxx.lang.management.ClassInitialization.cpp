@@ -1,6 +1,9 @@
 #include "lang/management/jxx.lang.management.ClassInitialization.h"
 
 #include <mutex>
+#include "lang/management/jxx.lang.management.RuntimeMXBean.h"
+#include "lang/management/jxx.lang.management.ThreadMXBean.h"
+#include "lang/management/jxx.lang.management.ManagementFactory.h"
 #include "lang/management/jxx.lang.management.BufferPoolMXBean.h"
 #include "lang/management/jxx.lang.management.MemoryManagerMXBean.h"
 #include "lang/management/jxx.lang.management.GarbageCollectorMXBean.h"
@@ -27,6 +30,9 @@ namespace jxx::lang::management {
 void initializeClasses() {
     static std::once_flag flag;
     std::call_once(flag, [] {
+        (void)RuntimeMXBean::Class();
+        (void)ThreadMXBean::Class();
+        (void)ManagementFactory::Class();
         (void)BufferPoolMXBean::Class();
         (void)MemoryManagerMXBean::Class();
         (void)GarbageCollectorMXBean::Class();
