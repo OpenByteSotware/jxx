@@ -1,0 +1,3 @@
+#pragma once
+#include "util/zip/jxx.util.zip.ZipInputStream.h"
+namespace jxx::util::jar {class Manifest;class JarEntry;class JarInputStream:public ::jxx::lang::ClassBase<JarInputStream,::jxx::util::zip::ZipInputStream>{public:using JxxSuper=::jxx::util::zip::ZipInputStream;using Super=::jxx::lang::ClassBase<JarInputStream,JxxSuper>;explicit JarInputStream(const ::jxx::Ptr<::jxx::io::InputStream>&);JarInputStream(const ::jxx::Ptr<::jxx::io::InputStream>&,::jxx::lang::jbool);::jxx::Ptr<Manifest> getManifest()const;::jxx::Ptr<JarEntry> getNextJarEntry();::jxx::Ptr<::jxx::util::zip::ZipEntry> getNextEntry();private: ::jxx::Ptr<Manifest> manifest_;};}

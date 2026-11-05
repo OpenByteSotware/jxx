@@ -1,0 +1,4 @@
+#pragma once
+#include "util/zip/jxx.util.zip.ZipFile.h"
+#include "util/jar/jxx.util.jar.JarEntry.h"
+namespace jxx::util::jar {class Manifest;class JarFile:public ::jxx::lang::ClassBase<JarFile,::jxx::util::zip::ZipFile>{public:using JxxSuper=::jxx::util::zip::ZipFile;using Super=::jxx::lang::ClassBase<JarFile,JxxSuper>;static ::jxx::Ptr<::jxx::lang::String> MANIFEST_NAME;explicit JarFile(const ::jxx::Ptr<::jxx::lang::String>&);explicit JarFile(const ::jxx::Ptr<::jxx::io::File>&);JarFile(const ::jxx::Ptr<::jxx::io::File>&,::jxx::lang::jbool);JarFile(const ::jxx::Ptr<::jxx::io::File>&,::jxx::lang::jbool,::jxx::lang::jint);::jxx::Ptr<Manifest> getManifest();::jxx::Ptr<JarEntry> getJarEntry(const ::jxx::Ptr<::jxx::lang::String>&)const;::jxx::Ptr<::jxx::util::Enumeration<JarEntry>> entries();};}

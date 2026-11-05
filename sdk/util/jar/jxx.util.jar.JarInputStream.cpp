@@ -1,0 +1,3 @@
+#include "util/jar/jxx.util.jar.JarInputStream.h"
+#include "util/jar/jxx.util.jar.JarEntry.h"
+namespace jxx::util::jar {JarInputStream::JarInputStream(const ::jxx::Ptr<::jxx::io::InputStream>&i):Super(i){}JarInputStream::JarInputStream(const ::jxx::Ptr<::jxx::io::InputStream>&i,::jxx::lang::jbool):Super(i){}::jxx::Ptr<Manifest> JarInputStream::getManifest()const{return manifest_;}::jxx::Ptr<JarEntry> JarInputStream::getNextJarEntry(){auto e=JxxSuper::getNextEntry();return e?::jxx::NEW<JarEntry>(e):nullptr;}::jxx::Ptr<::jxx::util::zip::ZipEntry> JarInputStream::getNextEntry(){return ::jxx::CAST<::jxx::util::zip::ZipEntry>(getNextJarEntry());}}

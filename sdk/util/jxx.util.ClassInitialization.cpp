@@ -5,6 +5,7 @@
 #include "util/logging/jxx.util.logging.ClassInitialization.h"
 #include "util/regex/jxx.util.regex.ClassInitialization.h"
 #include "util/zip/jxx.util.zip.ClassInitialization.h"
+#include "util/jar/jxx.util.jar.ClassInitialization.h"
 #include "util/stream/jxx.util.stream.ClassInitialization.h"
 
 #include <mutex>
@@ -31,6 +32,7 @@ void initialize()
     ::jxx::util::regex::initialize();
     ::jxx::util::stream::initialize();
     ::jxx::util::zip::initialize();
+    ::jxx::util::jar::initialize();
 }
 
 }
