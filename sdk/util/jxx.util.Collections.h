@@ -16,12 +16,39 @@
 #include "util/jxx.util.Collection.h"
 #include "util/jxx.util.Enumeration.h"
 #include "util/jxx.util.ArrayList.h"
+#include "util/jxx.util.Comparator.h"
 #include "util/jxx.util.ComparatorSuper.h"
 #include "util/jxx.util.List.h"
 #include "util/jxx.util.NoSuchElementException.h"
 #include "util/jxx.util.Random.h"
 
 namespace jxx::util {
+
+    namespace collections_detail {
+
+        template <typename T>
+        class ReverseNaturalComparator final
+            : public ::jxx::lang::ClassBase<
+                  ReverseNaturalComparator<T>,
+                  ::jxx::lang::Object,
+                  ::jxx::util::Comparator<T>> {
+        public:
+        ::jxx::lang::jint compare(
+                const ::jxx::Ptr<T>& first,
+                const ::jxx::Ptr<T>& second) const override {
+                if (first == nullptr || second == nullptr) {
+                    throw ::jxx::lang::NullPointerException();
+                }
+                auto comparable =
+                    ::jxx::CAST<::jxx::lang::Comparable<T>>(second);
+                if (comparable == nullptr) {
+                    throw ::jxx::lang::ClassCastException();
+                }
+                return comparable->compareTo(first);
+            }
+        };
+
+    } // namespace collections_detail
 
     /**
      * Core Java 8 jxx.util.Collections algorithms for JXX/C++17.
@@ -114,6 +141,16 @@ namespace jxx::util {
 
     public:
         virtual ~Collections() = default;
+
+        template <typename T>
+        static ::jxx::Ptr<::jxx::util::Comparator<T>> reverseOrder() {
+            static const auto comparator =
+                ::jxx::CAST<::jxx::util::Comparator<T>>(
+                    ::jxx::NEW<
+                        ::jxx::util::collections_detail::
+                            ReverseNaturalComparator<T>>());
+            return comparator;
+        }
 
         template <typename T>
         static void reverse(const ::jxx::Ptr<List<T>>& list) {
