@@ -14,6 +14,7 @@
 #include "util/function/jxx.util.function.IntConsumer.h"
 #include "util/function/jxx.util.function.Predicate.h"
 #include "util/function/jxx.util.function.Supplier.h"
+#include "util/function/jxx.util.function.UnaryOperator.h"
 #include "util/jxx.util.ArrayList.h"
 #include "util/jxx.util.Arrays.h"
 #include "util/jxx.util.ListIterator.h"
@@ -26,6 +27,8 @@ template<typename T, typename F> class JxxLambdaPredicate final : public ::jxx::
 template<typename T, typename F> auto jxxMakePredicate(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::Predicate<T>>(::jxx::NEW<JxxLambdaPredicate<T,D>>(std::forward<F>(f))); }
 template<typename T, typename R, typename F> class JxxLambdaFunction final : public ::jxx::lang::ClassBase<JxxLambdaFunction<T,R,F>, ::jxx::lang::Object, ::jxx::util::function::Function<T,R>> { public: explicit JxxLambdaFunction(F f):f_(std::move(f)){} ::jxx::Ptr<R> apply(const ::jxx::Ptr<T>& v) override { return f_(v); } private: F f_; };
 template<typename T, typename R, typename F> auto jxxMakeFunction(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::Function<T,R>>(::jxx::NEW<JxxLambdaFunction<T,R,D>>(std::forward<F>(f))); }
+template<typename T, typename F> class JxxLambdaUnaryOperator final : public ::jxx::lang::ClassBase<JxxLambdaUnaryOperator<T,F>, ::jxx::lang::Object, ::jxx::util::function::UnaryOperator<T>> { public: explicit JxxLambdaUnaryOperator(F f):f_(std::move(f)){} ::jxx::Ptr<T> apply(const ::jxx::Ptr<T>& v) override { return f_(v); } private: F f_; };
+template<typename T, typename F> auto jxxMakeUnaryOperator(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::UnaryOperator<T>>(::jxx::NEW<JxxLambdaUnaryOperator<T,D>>(std::forward<F>(f))); }
 template<typename T, typename F> class JxxLambdaSupplier final : public ::jxx::lang::ClassBase<JxxLambdaSupplier<T,F>, ::jxx::lang::Object, ::jxx::util::function::Supplier<T>> { public: explicit JxxLambdaSupplier(F f):f_(std::move(f)){} ::jxx::Ptr<T> get() override { return f_(); } private: F f_; };
 template<typename T, typename F> auto jxxMakeSupplier(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::Supplier<T>>(::jxx::NEW<JxxLambdaSupplier<T,D>>(std::forward<F>(f))); }
 } // namespace
@@ -73,7 +76,7 @@ namespace jxx::jdk8::util {
         ::jxx::lang::jint sum = 0;
         for (::jxx::lang::jint jxxIndex_n = 0; jxxIndex_n < x->size(); ++jxxIndex_n) {
             ::jxx::Ptr<::jxx::lang::Integer> n = x->get(jxxIndex_n);
-            sum += n;
+            sum += (n)->intValue();
         }
         EXPECT_EQ(6, sum);
         ::jxx::Ptr<::jxx::util::ListIterator<::jxx::lang::Integer>> it = x->listIterator(1);
@@ -87,19 +90,19 @@ namespace jxx::jdk8::util {
 
     TEST(ArrayListTest, Java8Operations) {
         ::jxx::Ptr<::jxx::util::ArrayList<::jxx::lang::Integer>> x = ::jxx::NEW<::jxx::util::ArrayList<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(3, 1, 2));
-        x->removeIf([&](auto n) {
-    (n == 1);
-});
-        x->replaceAll([&](auto n) {
-    (n * 2);
-});
+        x->removeIf(jxxMakePredicate<::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::Integer>& n) {
+    return ((n)->intValue() == 1);
+}));
+        x->replaceAll(jxxMakeUnaryOperator<::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::Integer>& n) {
+    return ::jxx::lang::Integer::valueOf(((n)->intValue() * 2));
+}));
         x->sort(nullptr);
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::util::Arrays::asList(4, 6), x));
         const auto sum = ::jxx::NEW<::jxx::lang::IntArrayType>(1U);
         (*sum)[0U] = 0;
-        x->forEach([&](auto n) {
-    (*sum)[0] += n;
-});
+        x->forEach(jxxMakeConsumer<::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::Integer>& n) {
+    (*sum)[0] += (n)->intValue();
+}));
         EXPECT_EQ(10, (*sum)[0]);
         EXPECT_NE(x->spliterator(), nullptr);
     }

@@ -1115,6 +1115,44 @@ class Translator:
         rendered='\n'.join('    '+line for line in lines)
         return '{\n'+rendered+'\n}'
 
+    def collection_functional_argument(self, invocation, argument):
+        qualifier=getattr(invocation,'qualifier',None)
+        if qualifier not in self.local_variable_types:
+            return None
+        if type(argument).__name__ not in {'LambdaExpression','MethodReference'}:
+            return None
+        member=invocation.member
+        if member not in {'removeIf','replaceAll','forEach'}:
+            return None
+        owner_name=self.simple(self.name_of(
+            self.local_variable_types.get(qualifier)))
+        if owner_name not in {
+                'Collection','List','ArrayList','LinkedList','Vector','Stack',
+                'Set','HashSet','LinkedHashSet','SortedSet','TreeSet',
+                'Queue','Deque','ArrayDeque'}:
+            return None
+        parameters=list(getattr(argument,'parameters',None) or [])
+        if len(parameters)!=1:
+            return None
+        self.uses_functional_adapters=True
+        element_raw=self.local_generic_argument_raw(qualifier)
+        name=self.lambda_parameter_name(parameters[0])
+        parameter=f'const ::jxx::Ptr<{element_raw}>& {name}'
+        if member=='removeIf':
+            body=self.functional_lambda_body(
+                argument,name,element_raw,return_raw=None,returns_void=False)
+            return (f'jxxMakePredicate<{element_raw}>('
+                    f'[&]({parameter}) {body})')
+        if member=='forEach':
+            body=self.functional_lambda_body(
+                argument,name,element_raw,returns_void=True)
+            return (f'jxxMakeConsumer<{element_raw}>('
+                    f'[&]({parameter}) {body})')
+        body=self.functional_lambda_body(
+            argument,name,element_raw,return_raw=element_raw)
+        return (f'jxxMakeUnaryOperator<{element_raw}>('
+                f'[&]({parameter}) {body})')
+
     def optional_functional_argument(self, invocation, argument):
         qualifier=getattr(invocation,'qualifier',None)
         if qualifier not in self.local_variable_types:
@@ -1482,9 +1520,13 @@ class Translator:
         if not is_varargs or not parameters:
             rendered=[]
             for index,argument in enumerate(arguments):
+                collection_functional=self.collection_functional_argument(
+                    invocation,argument)
                 optional_functional=self.optional_functional_argument(
                     invocation,argument)
-                if optional_functional is not None:
+                if collection_functional is not None:
+                    rendered.append(collection_functional)
+                elif optional_functional is not None:
                     rendered.append(optional_functional)
                 elif (self.is_this_expression(argument) and
                         index < len(parameters)):
@@ -1911,8 +1953,16 @@ class Translator:
                 return self.numeric_binary_expression(e)
             return f'({self.expr(e.operandl)} {e.operator} {self.expr(e.operandr)})'
         if n=='Assignment':
+            assignment_operator=e.type or '='
             value=self.assignment_value_expression(e.expressionl,e.value)
-            return f'{self.expr(e.expressionl)} {e.type or "="} {value}'
+            if assignment_operator!='=':
+                source_name=self.expression_type_name(e.value)
+                primitive=WRAPPER_TO_PRIMITIVE.get(source_name)
+                if primitive in PRIMITIVE_UNBOX_METHODS:
+                    value=(f'({value})->'
+                           f'{PRIMITIVE_UNBOX_METHODS[primitive]}()')
+            return (f'{self.expr(e.expressionl)} '
+                    f'{assignment_operator} {value}')
         if n=='TernaryExpression': return self.ternary_expression(e)
         if n=='ArraySelector': return f'({self.expr(e.index)})'
         return str(e)
@@ -3225,6 +3275,7 @@ def generate_google_test(path:Path, out_root:str, source_root:Path,
             'util/function/jxx.util.function.Predicate.h',
             'util/function/jxx.util.function.Function.h',
             'util/function/jxx.util.function.Supplier.h',
+            'util/function/jxx.util.function.UnaryOperator.h',
         })
         translator.uses_functional_adapters=True
     expected_exceptions={}
@@ -3262,6 +3313,8 @@ def generate_google_test(path:Path, out_root:str, source_root:Path,
         o.w('template<typename T, typename F> auto jxxMakePredicate(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::Predicate<T>>(::jxx::NEW<JxxLambdaPredicate<T,D>>(std::forward<F>(f))); }')
         o.w('template<typename T, typename R, typename F> class JxxLambdaFunction final : public ::jxx::lang::ClassBase<JxxLambdaFunction<T,R,F>, ::jxx::lang::Object, ::jxx::util::function::Function<T,R>> { public: explicit JxxLambdaFunction(F f):f_(std::move(f)){} ::jxx::Ptr<R> apply(const ::jxx::Ptr<T>& v) override { return f_(v); } private: F f_; };')
         o.w('template<typename T, typename R, typename F> auto jxxMakeFunction(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::Function<T,R>>(::jxx::NEW<JxxLambdaFunction<T,R,D>>(std::forward<F>(f))); }')
+        o.w('template<typename T, typename F> class JxxLambdaUnaryOperator final : public ::jxx::lang::ClassBase<JxxLambdaUnaryOperator<T,F>, ::jxx::lang::Object, ::jxx::util::function::UnaryOperator<T>> { public: explicit JxxLambdaUnaryOperator(F f):f_(std::move(f)){} ::jxx::Ptr<T> apply(const ::jxx::Ptr<T>& v) override { return f_(v); } private: F f_; };')
+        o.w('template<typename T, typename F> auto jxxMakeUnaryOperator(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::UnaryOperator<T>>(::jxx::NEW<JxxLambdaUnaryOperator<T,D>>(std::forward<F>(f))); }')
         o.w('template<typename T, typename F> class JxxLambdaSupplier final : public ::jxx::lang::ClassBase<JxxLambdaSupplier<T,F>, ::jxx::lang::Object, ::jxx::util::function::Supplier<T>> { public: explicit JxxLambdaSupplier(F f):f_(std::move(f)){} ::jxx::Ptr<T> get() override { return f_(); } private: F f_; };')
         o.w('template<typename T, typename F> auto jxxMakeSupplier(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::Supplier<T>>(::jxx::NEW<JxxLambdaSupplier<T,D>>(std::forward<F>(f))); }')
         o.w('} // namespace')

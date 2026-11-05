@@ -13,6 +13,7 @@
 #include "util/function/jxx.util.function.IntConsumer.h"
 #include "util/function/jxx.util.function.Predicate.h"
 #include "util/function/jxx.util.function.Supplier.h"
+#include "util/function/jxx.util.function.UnaryOperator.h"
 #include "util/jxx.util.Arrays.h"
 #include "util/jxx.util.HashSet.h"
 #include "util/jxx.util.Objects.h"
@@ -24,6 +25,8 @@ template<typename T, typename F> class JxxLambdaPredicate final : public ::jxx::
 template<typename T, typename F> auto jxxMakePredicate(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::Predicate<T>>(::jxx::NEW<JxxLambdaPredicate<T,D>>(std::forward<F>(f))); }
 template<typename T, typename R, typename F> class JxxLambdaFunction final : public ::jxx::lang::ClassBase<JxxLambdaFunction<T,R,F>, ::jxx::lang::Object, ::jxx::util::function::Function<T,R>> { public: explicit JxxLambdaFunction(F f):f_(std::move(f)){} ::jxx::Ptr<R> apply(const ::jxx::Ptr<T>& v) override { return f_(v); } private: F f_; };
 template<typename T, typename R, typename F> auto jxxMakeFunction(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::Function<T,R>>(::jxx::NEW<JxxLambdaFunction<T,R,D>>(std::forward<F>(f))); }
+template<typename T, typename F> class JxxLambdaUnaryOperator final : public ::jxx::lang::ClassBase<JxxLambdaUnaryOperator<T,F>, ::jxx::lang::Object, ::jxx::util::function::UnaryOperator<T>> { public: explicit JxxLambdaUnaryOperator(F f):f_(std::move(f)){} ::jxx::Ptr<T> apply(const ::jxx::Ptr<T>& v) override { return f_(v); } private: F f_; };
+template<typename T, typename F> auto jxxMakeUnaryOperator(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::UnaryOperator<T>>(::jxx::NEW<JxxLambdaUnaryOperator<T,D>>(std::forward<F>(f))); }
 template<typename T, typename F> class JxxLambdaSupplier final : public ::jxx::lang::ClassBase<JxxLambdaSupplier<T,F>, ::jxx::lang::Object, ::jxx::util::function::Supplier<T>> { public: explicit JxxLambdaSupplier(F f):f_(std::move(f)){} ::jxx::Ptr<T> get() override { return f_(); } private: F f_; };
 template<typename T, typename F> auto jxxMakeSupplier(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::Supplier<T>>(::jxx::NEW<JxxLambdaSupplier<T,D>>(std::forward<F>(f))); }
 } // namespace
@@ -55,7 +58,7 @@ namespace jxx::jdk8::util {
         ::jxx::lang::jint sum = 0;
         for (::jxx::lang::jint jxxIndex_n = 0; jxxIndex_n < s->size(); ++jxxIndex_n) {
             ::jxx::Ptr<::jxx::lang::Integer> n = s->get(jxxIndex_n);
-            sum += n;
+            sum += (n)->intValue();
         }
         EXPECT_EQ(6, sum);
         EXPECT_EQ(3, s->toArray()->length);
@@ -71,14 +74,14 @@ namespace jxx::jdk8::util {
 
     TEST(HashSetTest, RemoveIfAndForEachWork) {
         ::jxx::Ptr<::jxx::util::HashSet<::jxx::lang::Integer>> s = ::jxx::NEW<::jxx::util::HashSet<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(1, 2, 3, 4));
-        EXPECT_TRUE(s->removeIf([&](auto n) {
-    ((n % 2) == 0);
-}));
+        EXPECT_TRUE(s->removeIf(jxxMakePredicate<::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::Integer>& n) {
+    return (((n)->intValue() % 2) == 0);
+})));
         const auto sum = ::jxx::NEW<::jxx::lang::IntArrayType>(1U);
         (*sum)[0U] = 0;
-        s->forEach([&](auto n) {
-    (*sum)[0] += n;
-});
+        s->forEach(jxxMakeConsumer<::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::Integer>& n) {
+    (*sum)[0] += (n)->intValue();
+}));
         EXPECT_EQ(4, (*sum)[0]);
     }
 
