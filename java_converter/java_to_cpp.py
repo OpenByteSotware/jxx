@@ -2398,6 +2398,11 @@ class Translator:
                     self.is_string_literal_expression(value)):
                 rendered=(f'::jxx::NEW<::jxx::lang::String>('
                           f'{rendered})')
+            elif element_name=='Object':
+                # Object[] initializers require source boxing/reference
+                # conversion. A String literal is a String object, not native
+                # const char*, and must be stored through Ptr<Object>.
+                rendered=self.boxed_object_expression(value)
             elif element_name in PRIMITIVE_TO_WRAPPER:
                 rendered=self.expr(value)
             assignments.append(

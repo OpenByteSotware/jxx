@@ -77,7 +77,7 @@ namespace jxx::jdk8::util {
         EXPECT_TRUE(x->removeAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("b"), ::jxx::NEW<::jxx::lang::String>("z")))))));
         EXPECT_TRUE(x->retainAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("z")))))));
         ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Object>, 1U>> a = x->toArray();
-        EXPECT_TRUE(::jxx::util::Arrays::equals(([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Object>, 1U>>(1U); (*jxxArray)[0U] = "a"; return jxxArray; })(), a));
+        EXPECT_TRUE(::jxx::util::Arrays::equals(([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Object>, 1U>>(1U); (*jxxArray)[0U] = ::jxx::CAST<::jxx::lang::Object>(::jxx::NEW<::jxx::lang::String>("a")); return jxxArray; })(), a));
         ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>> s = x->toArray(::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>>(0));
         EXPECT_TRUE(::jxx::util::Arrays::equals(([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>>(1U); (*jxxArray)[0U] = ::jxx::NEW<::jxx::lang::String>("a"); return jxxArray; })(), s));
         x->clear();
