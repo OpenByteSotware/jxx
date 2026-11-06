@@ -49,7 +49,7 @@ namespace jxx::jdk8::util {
         (*a)[1U] = 1;
         (*a)[2U] = 2;
         ::jxx::util::Arrays::sort(a);
-        EXPECT_TRUE(::jxx::util::Arrays::equals(::jxx::NEW<::jxx::lang::IntArrayType>(), a));
+        EXPECT_TRUE(::jxx::util::Arrays::equals(([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::IntArrayType>(3U); (*jxxArray)[0U] = 1; (*jxxArray)[1U] = 2; (*jxxArray)[2U] = 3; return jxxArray; })(), a));
         auto b = ::jxx::NEW<::jxx::lang::IntArrayType>(5U);
         (*b)[0U] = 5;
         (*b)[1U] = 4;
@@ -57,13 +57,13 @@ namespace jxx::jdk8::util {
         (*b)[3U] = 2;
         (*b)[4U] = 1;
         ::jxx::util::Arrays::parallelSort(b, 1, 4);
-        EXPECT_TRUE(::jxx::util::Arrays::equals(::jxx::NEW<::jxx::lang::IntArrayType>(), b));
+        EXPECT_TRUE(::jxx::util::Arrays::equals(([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::IntArrayType>(5U); (*jxxArray)[0U] = 5; (*jxxArray)[1U] = 2; (*jxxArray)[2U] = 3; (*jxxArray)[3U] = 4; (*jxxArray)[4U] = 1; return jxxArray; })(), b));
         auto s = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>>(3U);
         (*s)[0U] = ::jxx::NEW<::jxx::lang::String>("b");
         (*s)[1U] = ::jxx::NEW<::jxx::lang::String>("a");
         (*s)[2U] = ::jxx::NEW<::jxx::lang::String>("c");
         ::jxx::util::Arrays::sort(s, ::jxx::util::Collections::reverseOrder<::jxx::lang::String>());
-        EXPECT_TRUE(::jxx::util::Arrays::equals(::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>>(), s));
+        EXPECT_TRUE(::jxx::util::Arrays::equals(([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>>(3U); (*jxxArray)[0U] = ::jxx::NEW<::jxx::lang::String>("c"); (*jxxArray)[1U] = ::jxx::NEW<::jxx::lang::String>("b"); (*jxxArray)[2U] = ::jxx::NEW<::jxx::lang::String>("a"); return jxxArray; })(), s));
     }
 
     TEST(ArraysTest, BinarySearchFindsValuesAndInsertionPoints) {
@@ -87,11 +87,11 @@ namespace jxx::jdk8::util {
         EXPECT_TRUE(::jxx::util::Arrays::equals(a, b));
         EXPECT_EQ(::jxx::util::Arrays::hashCode(a), ::jxx::util::Arrays::hashCode(b));
         auto x = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Object>, 1U>>(2U);
-        (*x)[0U] = ::jxx::NEW<::jxx::lang::IntArrayType>();
-        (*x)[1U] = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>>();
+        (*x)[0U] = ([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::IntArrayType>(2U); (*jxxArray)[0U] = 1; (*jxxArray)[1U] = 2; return jxxArray; })();
+        (*x)[1U] = ([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>>(1U); (*jxxArray)[0U] = ::jxx::NEW<::jxx::lang::String>("a"); return jxxArray; })();
         auto y = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Object>, 1U>>(2U);
-        (*y)[0U] = ::jxx::NEW<::jxx::lang::IntArrayType>();
-        (*y)[1U] = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>>();
+        (*y)[0U] = ([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::IntArrayType>(2U); (*jxxArray)[0U] = 1; (*jxxArray)[1U] = 2; return jxxArray; })();
+        (*y)[1U] = ([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>>(1U); (*jxxArray)[0U] = ::jxx::NEW<::jxx::lang::String>("a"); return jxxArray; })();
         EXPECT_TRUE(::jxx::util::Arrays::deepEquals(x, y));
         EXPECT_EQ(::jxx::util::Arrays::deepHashCode(x), ::jxx::util::Arrays::deepHashCode(y));
     }
@@ -99,11 +99,11 @@ namespace jxx::jdk8::util {
     TEST(ArraysTest, FillCopyAndRangeCopyWork) {
         auto a = ::jxx::NEW<::jxx::lang::IntArrayType>(4);
         ::jxx::util::Arrays::fill(a, 7);
-        EXPECT_TRUE(::jxx::util::Arrays::equals(::jxx::NEW<::jxx::lang::IntArrayType>(), a));
+        EXPECT_TRUE(::jxx::util::Arrays::equals(([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::IntArrayType>(4U); (*jxxArray)[0U] = 7; (*jxxArray)[1U] = 7; (*jxxArray)[2U] = 7; (*jxxArray)[3U] = 7; return jxxArray; })(), a));
         ::jxx::util::Arrays::fill(a, 1, 3, 9);
-        EXPECT_TRUE(::jxx::util::Arrays::equals(::jxx::NEW<::jxx::lang::IntArrayType>(), a));
-        EXPECT_TRUE(::jxx::util::Arrays::equals(::jxx::NEW<::jxx::lang::IntArrayType>(), ::jxx::util::Arrays::copyOf(a, 6)));
-        EXPECT_TRUE(::jxx::util::Arrays::equals(::jxx::NEW<::jxx::lang::IntArrayType>(), ::jxx::util::Arrays::copyOfRange(a, 1, 3)));
+        EXPECT_TRUE(::jxx::util::Arrays::equals(([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::IntArrayType>(4U); (*jxxArray)[0U] = 7; (*jxxArray)[1U] = 9; (*jxxArray)[2U] = 9; (*jxxArray)[3U] = 7; return jxxArray; })(), a));
+        EXPECT_TRUE(::jxx::util::Arrays::equals(([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::IntArrayType>(6U); (*jxxArray)[0U] = 7; (*jxxArray)[1U] = 9; (*jxxArray)[2U] = 9; (*jxxArray)[3U] = 7; (*jxxArray)[4U] = 0; (*jxxArray)[5U] = 0; return jxxArray; })(), ::jxx::util::Arrays::copyOf(a, 6)));
+        EXPECT_TRUE(::jxx::util::Arrays::equals(([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::IntArrayType>(2U); (*jxxArray)[0U] = 9; (*jxxArray)[1U] = 9; return jxxArray; })(), ::jxx::util::Arrays::copyOfRange(a, 1, 3)));
     }
 
     TEST(ArraysTest, ListAndStringRepresentationsWork) {
@@ -113,24 +113,24 @@ namespace jxx::jdk8::util {
         ::jxx::Ptr<::jxx::util::List<::jxx::lang::String>> list = ::jxx::util::Arrays::asList(a);
         list->set(0, ::jxx::NEW<::jxx::lang::String>("x"));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("x"), ::jxx::lang::String::valueOf((*a)[0])));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("[1, 2]"), ::jxx::lang::String::valueOf(::jxx::util::Arrays::toString(::jxx::NEW<::jxx::lang::IntArrayType>()))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("[[1, 2]]"), ::jxx::util::Arrays::deepToString(::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Object>, 1U>>())));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("[1, 2]"), ::jxx::lang::String::valueOf(::jxx::util::Arrays::toString(([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::IntArrayType>(2U); (*jxxArray)[0U] = 1; (*jxxArray)[1U] = 2; return jxxArray; })()))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("[[1, 2]]"), ::jxx::util::Arrays::deepToString(([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Object>, 1U>>(1U); (*jxxArray)[0U] = ([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::IntArrayType>(2U); (*jxxArray)[0U] = 1; (*jxxArray)[1U] = 2; return jxxArray; })(); return jxxArray; })())));
     }
 
     TEST(ArraysTest, SetAllParallelSetAllAndPrefixWork) {
         auto a = ::jxx::NEW<::jxx::lang::IntArrayType>(4);
         ::jxx::util::Arrays::setAll(a, jxxMakeIntUnaryOperator([&](::jxx::lang::jint i) { return (i * 2); }));
-        EXPECT_TRUE(::jxx::util::Arrays::equals(::jxx::NEW<::jxx::lang::IntArrayType>(), a));
+        EXPECT_TRUE(::jxx::util::Arrays::equals(([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::IntArrayType>(4U); (*jxxArray)[0U] = 0; (*jxxArray)[1U] = 2; (*jxxArray)[2U] = 4; (*jxxArray)[3U] = 6; return jxxArray; })(), a));
         ::jxx::util::Arrays::parallelSetAll(a, jxxMakeIntUnaryOperator([&](::jxx::lang::jint i) { return (i + 1); }));
-        EXPECT_TRUE(::jxx::util::Arrays::equals(::jxx::NEW<::jxx::lang::IntArrayType>(), a));
+        EXPECT_TRUE(::jxx::util::Arrays::equals(([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::IntArrayType>(4U); (*jxxArray)[0U] = 1; (*jxxArray)[1U] = 2; (*jxxArray)[2U] = 3; (*jxxArray)[3U] = 4; return jxxArray; })(), a));
         ::jxx::util::Arrays::parallelPrefix(a, jxxMakeIntBinaryOperator([&](::jxx::lang::jint x, ::jxx::lang::jint y) { return (x + y); }));
-        EXPECT_TRUE(::jxx::util::Arrays::equals(::jxx::NEW<::jxx::lang::IntArrayType>(), a));
+        EXPECT_TRUE(::jxx::util::Arrays::equals(([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::IntArrayType>(4U); (*jxxArray)[0U] = 1; (*jxxArray)[1U] = 3; (*jxxArray)[2U] = 6; (*jxxArray)[3U] = 10; return jxxArray; })(), a));
     }
 
     TEST(ArraysTest, StreamsCoverFullAndPartialRanges) {
-        EXPECT_EQ(6, ::jxx::util::Arrays::stream(::jxx::NEW<::jxx::lang::IntArrayType>())->sum());
-        EXPECT_EQ(5, ::jxx::util::Arrays::stream(::jxx::NEW<::jxx::lang::IntArrayType>(), 1, 3)->sum());
-        EXPECT_NE(::jxx::util::Arrays::spliterator(::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>>()), nullptr);
+        EXPECT_EQ(6, ::jxx::util::Arrays::stream(([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::IntArrayType>(3U); (*jxxArray)[0U] = 1; (*jxxArray)[1U] = 2; (*jxxArray)[2U] = 3; return jxxArray; })())->sum());
+        EXPECT_EQ(5, ::jxx::util::Arrays::stream(([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::IntArrayType>(4U); (*jxxArray)[0U] = 1; (*jxxArray)[1U] = 2; (*jxxArray)[2U] = 3; (*jxxArray)[3U] = 4; return jxxArray; })(), 1, 3)->sum());
+        EXPECT_NE(::jxx::util::Arrays::spliterator(([&]() { auto jxxArray = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>>(1U); (*jxxArray)[0U] = ::jxx::NEW<::jxx::lang::String>("a"); return jxxArray; })()), nullptr);
     }
 
 } // namespace jxx::jdk8::util
