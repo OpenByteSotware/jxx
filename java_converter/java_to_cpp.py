@@ -898,7 +898,7 @@ class Translator:
     def selector_string_argument(self, selector, argument, index):
         if index != 0 or not self.is_string_literal_expression(argument):
             return None
-        methods={'contains','contentEquals','startsWith','endsWith','concat','equalsIgnoreCase','compareTo','compareToIgnoreCase','indexOf','lastIndexOf','replace','replaceFirst','replaceAll','matches','split'}
+        methods={'equals','contains','contentEquals','startsWith','endsWith','concat','equalsIgnoreCase','compareTo','compareToIgnoreCase','indexOf','lastIndexOf','replace','replaceFirst','replaceAll','matches','split'}
         if selector.member not in methods:
             return None
         return f'::jxx::NEW<::jxx::lang::String>({self.expr(argument)})'
@@ -1789,6 +1789,30 @@ class Translator:
             return value_raw
         return None
 
+    def map_view_object_argument(self, invocation, argument, index):
+        if index != 0 or not self.is_string_literal_expression(argument):
+            return None
+        if invocation.member not in {'remove','contains'}:
+            return None
+        qualifier=getattr(invocation,'qualifier',None)
+        if type(qualifier).__name__!='MethodInvocation':
+            return None
+        view_member=getattr(qualifier,'member',None)
+        if view_member not in {'keySet','values'}:
+            return None
+        map_types=self.map_generic_raw_types(
+            getattr(qualifier,'qualifier',None))
+        if map_types is None:
+            return None
+        key_raw,value_raw=map_types
+        target_raw=(key_raw if view_member=='keySet' else value_raw)
+        if target_raw=='::jxx::lang::String':
+            value=f'::jxx::NEW<::jxx::lang::String>({self.expr(argument)})'
+            # Collection.remove/contains use Object in the source-compatible
+            # erased signature. Cast the String reference to Object explicitly.
+            return f'::jxx::CAST<::jxx::lang::Object>({value})'
+        return self.boxed_expression_for_raw(argument,target_raw)
+
     def collection_wildcard_argument(self, invocation, argument, index):
         qualifier=getattr(invocation,'qualifier',None)
         owner_type=self.local_variable_types.get(qualifier)
@@ -1885,6 +1909,8 @@ class Translator:
             rendered=[]
             for index,argument in enumerate(arguments):
                 reverse_order=self.specialized_reverse_order_argument(invocation,argument,index)
+                map_view_object=self.map_view_object_argument(
+                    invocation,argument,index)
                 map_entry_boxed=self.map_entry_boxed_argument(invocation,argument,index)
                 primitive_array_functional=self.primitive_array_functional_argument(invocation,argument,index)
                 arrays_as_list=self.arrays_as_list_argument(invocation,argument)
@@ -1901,6 +1927,8 @@ class Translator:
                     invocation,argument,index)
                 if reverse_order is not None:
                     rendered.append(reverse_order)
+                elif map_view_object is not None:
+                    rendered.append(map_view_object)
                 elif map_entry_boxed is not None:
                     rendered.append(map_entry_boxed)
                 elif primitive_array_functional is not None:
