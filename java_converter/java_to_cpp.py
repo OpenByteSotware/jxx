@@ -1166,6 +1166,46 @@ class Translator:
                 return self.template_argument_type(argument_type)
         return '::jxx::lang::Object'
 
+    def expression_for_expected_raw(self, expression, expected_raw):
+        # Propagate target typing into generic Optional factory calls. This is
+        # required for flatMap lambdas because Optional<T> specializations are
+        # invariant C++ template types.
+        if (type(expression).__name__=='MethodInvocation' and
+                expected_raw.startswith('::jxx::util::Optional<')):
+            optional_raw=self.optional_static_invocation_expression_for_raw(
+                expression,expected_raw)
+            if optional_raw is not None:
+                return optional_raw
+        return self.expr(expression)
+
+    def optional_static_invocation_expression_for_raw(
+            self, invocation, expected_raw):
+        if (type(invocation).__name__!='MethodInvocation' or
+                self.simple(getattr(invocation,'qualifier',None))!='Optional' or
+                invocation.member not in {'empty','of','ofNullable'}):
+            return None
+        prefix='::jxx::util::Optional<'
+        if not (expected_raw.startswith(prefix) and expected_raw.endswith('>')):
+            return None
+        argument_raw=expected_raw[len(prefix):-1]
+        converted=[]
+        for argument in getattr(invocation,'arguments',None) or []:
+            if self.is_string_literal_expression(argument):
+                converted.append(
+                    f'::jxx::NEW<::jxx::lang::String>({self.expr(argument)})')
+            elif (type(argument).__name__=='Literal' and
+                  getattr(argument,'value',None) in (None,'null')):
+                converted.append(f'::jxx::Ptr<{argument_raw}>{{}}')
+            elif self.expression_type_name(argument) in PRIMITIVES:
+                primitive=self.expression_type_name(argument)
+                converted.append(
+                    f'::jxx::lang::{PRIMITIVE_TO_WRAPPER[primitive]}::valueOf('
+                    f'{self.expr(argument)})')
+            else:
+                converted.append(self.expr(argument))
+        return (f'{expected_raw}::{invocation.member}('
+                f'{", ".join(converted)})')
+
     def functional_lambda_body(self, expression, parameter_name, parameter_raw,
                                return_raw=None, returns_void=False):
         previous=self.local_variable_types.get(parameter_name)
@@ -1178,7 +1218,8 @@ class Translator:
             for statement in body:
                 self.stmt(statement,output)
         elif body is not None:
-            value=self.expr(body)
+            value=(self.expression_for_expected_raw(body,return_raw)
+                   if return_raw is not None else self.expr(body))
             if returns_void:
                 output.w(value+';')
             elif return_raw is not None:

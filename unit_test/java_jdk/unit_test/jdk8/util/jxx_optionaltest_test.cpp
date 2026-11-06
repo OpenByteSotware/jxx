@@ -81,7 +81,7 @@ namespace jxx::jdk8::util {
 })));
         EXPECT_EQ(::jxx::util::Optional<::jxx::lang::Integer>::of(::jxx::lang::Integer::valueOf(3)), p->map(jxxMakeFunction<::jxx::lang::String, ::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::String>& value) { return ::jxx::lang::Integer::valueOf(value->length()); })));
         EXPECT_EQ(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("ABC")), p->flatMap(jxxMakeFunction<::jxx::lang::String, ::jxx::util::Optional<::jxx::lang::String>>([&](const ::jxx::Ptr<::jxx::lang::String>& v) {
-    return ::jxx::util::Optional<::jxx::lang::Object>::of(v->toUpperCase());
+    return ::jxx::util::Optional<::jxx::lang::String>::of(v->toUpperCase());
 })));
         ::jxx::Ptr<::jxx::util::concurrent::atomic::AtomicBoolean> called = ::jxx::NEW<::jxx::util::concurrent::atomic::AtomicBoolean>(false);
         p->ifPresent(jxxMakeConsumer<::jxx::lang::String>([&](const ::jxx::Ptr<::jxx::lang::String>& v) {
