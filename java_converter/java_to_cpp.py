@@ -1119,6 +1119,22 @@ class Translator:
         rendered='\n'.join('    '+line for line in lines)
         return '{\n'+rendered+'\n}'
 
+    def primitive_array_functional_argument(self, invocation, argument, index):
+        if self.simple(getattr(invocation,'qualifier',None))!='Arrays' or type(argument).__name__!='LambdaExpression': return None
+        params=list(getattr(argument,'parameters',None) or [])
+        if invocation.member in {'setAll','parallelSetAll'} and index==1 and len(params)==1:
+            n=self.lambda_parameter_name(params[0]); value=self.expr(argument.body)
+            return f'jxxMakeIntUnaryOperator([&](::jxx::lang::jint {n}) {{ return {value}; }})'
+        if invocation.member=='parallelPrefix' and index==1 and len(params)==2:
+            names=[self.lambda_parameter_name(x) for x in params]; value=self.expr(argument.body)
+            return f'jxxMakeIntBinaryOperator([&](::jxx::lang::jint {names[0]}, ::jxx::lang::jint {names[1]}) {{ return {value}; }})'
+        return None
+
+    def arrays_as_list_argument(self, invocation, argument):
+        if self.simple(getattr(invocation,'qualifier',None))!='Arrays' or invocation.member!='asList': return None
+        primitive=self.expression_type_name(argument); wrapper=PRIMITIVE_TO_WRAPPER.get(primitive)
+        return f'::jxx::lang::{wrapper}::valueOf({self.expr(argument)})' if wrapper else None
+
     def map_generic_raw_types(self, qualifier):
         declared=self.local_variable_types.get(qualifier)
         arguments=list(getattr(declared,'arguments',None) or [])
@@ -1673,6 +1689,8 @@ class Translator:
         if not is_varargs or not parameters:
             rendered=[]
             for index,argument in enumerate(arguments):
+                primitive_array_functional=self.primitive_array_functional_argument(invocation,argument,index)
+                arrays_as_list=self.arrays_as_list_argument(invocation,argument)
                 map_functional=self.map_functional_argument(
                     invocation,argument,index)
                 map_boxed=self.map_boxed_argument(invocation,argument,index)
@@ -1682,7 +1700,11 @@ class Translator:
                     invocation,argument)
                 optional_functional=self.optional_functional_argument(
                     invocation,argument)
-                if map_functional is not None:
+                if primitive_array_functional is not None:
+                    rendered.append(primitive_array_functional)
+                elif arrays_as_list is not None:
+                    rendered.append(arrays_as_list)
+                elif map_functional is not None:
                     rendered.append(map_functional)
                 elif map_boxed is not None:
                     rendered.append(map_boxed)
@@ -3442,6 +3464,8 @@ def generate_google_test(path:Path, out_root:str, source_root:Path,
             'util/function/jxx.util.function.UnaryOperator.h',
             'util/function/jxx.util.function.BiFunction.h',
             'util/function/jxx.util.function.BiConsumer.h',
+            'util/function/jxx.util.function.IntUnaryOperator.h',
+            'util/function/jxx.util.function.IntBinaryOperator.h',
         })
         translator.uses_functional_adapters=True
     expected_exceptions={}
@@ -3485,6 +3509,10 @@ def generate_google_test(path:Path, out_root:str, source_root:Path,
         o.w('template<typename T, typename U, typename R, typename F> auto jxxMakeBiFunction(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::BiFunction<T,U,R>>(::jxx::NEW<JxxLambdaBiFunction<T,U,R,D>>(std::forward<F>(f))); }')
         o.w('template<typename T, typename U, typename F> class JxxLambdaBiConsumer final : public ::jxx::lang::ClassBase<JxxLambdaBiConsumer<T,U,F>, ::jxx::lang::Object, ::jxx::util::function::BiConsumer<T,U>> { public: explicit JxxLambdaBiConsumer(F f):f_(std::move(f)){} void accept(const ::jxx::Ptr<T>& a,const ::jxx::Ptr<U>& b) override { f_(a,b); } private: F f_; };')
         o.w('template<typename T, typename U, typename F> auto jxxMakeBiConsumer(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::BiConsumer<T,U>>(::jxx::NEW<JxxLambdaBiConsumer<T,U,D>>(std::forward<F>(f))); }')
+        o.w('template<typename F> class JxxLambdaIntUnaryOperator final : public ::jxx::lang::ClassBase<JxxLambdaIntUnaryOperator<F>, ::jxx::lang::Object, ::jxx::util::function::IntUnaryOperator> { public: explicit JxxLambdaIntUnaryOperator(F f):f_(std::move(f)){} ::jxx::lang::jint applyAsInt(::jxx::lang::jint v) override { return f_(v); } private: F f_; };')
+        o.w('template<typename F> auto jxxMakeIntUnaryOperator(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::IntUnaryOperator>(::jxx::NEW<JxxLambdaIntUnaryOperator<D>>(std::forward<F>(f))); }')
+        o.w('template<typename F> class JxxLambdaIntBinaryOperator final : public ::jxx::lang::ClassBase<JxxLambdaIntBinaryOperator<F>, ::jxx::lang::Object, ::jxx::util::function::IntBinaryOperator> { public: explicit JxxLambdaIntBinaryOperator(F f):f_(std::move(f)){} ::jxx::lang::jint applyAsInt(::jxx::lang::jint a, ::jxx::lang::jint b) override { return f_(a,b); } private: F f_; };')
+        o.w('template<typename F> auto jxxMakeIntBinaryOperator(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::IntBinaryOperator>(::jxx::NEW<JxxLambdaIntBinaryOperator<D>>(std::forward<F>(f))); }')
         o.w('template<typename T, typename F> class JxxLambdaSupplier final : public ::jxx::lang::ClassBase<JxxLambdaSupplier<T,F>, ::jxx::lang::Object, ::jxx::util::function::Supplier<T>> { public: explicit JxxLambdaSupplier(F f):f_(std::move(f)){} ::jxx::Ptr<T> get() override { return f_(); } private: F f_; };')
         o.w('template<typename T, typename F> auto jxxMakeSupplier(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::Supplier<T>>(::jxx::NEW<JxxLambdaSupplier<T,D>>(std::forward<F>(f))); }')
         o.w('} // namespace')
