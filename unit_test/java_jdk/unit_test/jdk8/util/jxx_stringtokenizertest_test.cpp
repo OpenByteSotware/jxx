@@ -15,26 +15,26 @@ namespace jxx::jdk8::util {
         ::jxx::Ptr<::jxx::util::StringTokenizer> t = ::jxx::NEW<::jxx::util::StringTokenizer>(::jxx::NEW<::jxx::lang::String>(" one\ttwo\nthree "));
         EXPECT_EQ(3, t->countTokens());
         EXPECT_TRUE(t->hasMoreTokens());
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("one"), t->nextToken()));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("two"), t->nextToken()));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("three"), t->nextElement()));
+        EXPECT_EQ("one", t->nextToken());
+        EXPECT_EQ("two", t->nextToken());
+        EXPECT_EQ("three", t->nextElement());
         EXPECT_FALSE(t->hasMoreElements());
     }
 
     TEST(StringTokenizerTest, CustomDelimitersCanBeReturned) {
         ::jxx::Ptr<::jxx::util::StringTokenizer> t = ::jxx::NEW<::jxx::util::StringTokenizer>(::jxx::NEW<::jxx::lang::String>("a,b;c"), ::jxx::NEW<::jxx::lang::String>(",;"), true);
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("a"), t->nextToken()));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>(","), t->nextToken()));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("b"), t->nextToken()));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>(";"), t->nextToken()));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("c"), t->nextToken()));
+        EXPECT_EQ("a", t->nextToken());
+        EXPECT_EQ(",", t->nextToken());
+        EXPECT_EQ("b", t->nextToken());
+        EXPECT_EQ(";", t->nextToken());
+        EXPECT_EQ("c", t->nextToken());
     }
 
     TEST(StringTokenizerTest, NextTokenMayChangeDelimiters) {
         ::jxx::Ptr<::jxx::util::StringTokenizer> t = ::jxx::NEW<::jxx::util::StringTokenizer>(::jxx::NEW<::jxx::lang::String>("a,b;c"), ::jxx::NEW<::jxx::lang::String>(","));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("a"), t->nextToken()));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>(",b"), t->nextToken(::jxx::NEW<::jxx::lang::String>(";"))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("c"), t->nextToken()));
+        EXPECT_EQ("a", t->nextToken());
+        EXPECT_EQ(",b", t->nextToken(::jxx::NEW<::jxx::lang::String>(";")));
+        EXPECT_EQ("c", t->nextToken());
     }
 
     TEST(StringTokenizerTest, ExhaustionThrows) {

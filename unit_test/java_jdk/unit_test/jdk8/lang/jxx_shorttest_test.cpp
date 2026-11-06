@@ -47,8 +47,8 @@ namespace jxx::jdk8::lang {
     TEST(ShortTest, ValueOfAndDecodeWork) {
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(10)), ::jxx::lang::Short::valueOf(::jxx::NEW<::jxx::lang::String>("10"))));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(15)), ::jxx::lang::Short::valueOf(::jxx::NEW<::jxx::lang::String>("f"), 16)));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(16)), ::jxx::lang::Short::decode(::jxx::NEW<::jxx::lang::String>("0x10"))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(8)), ::jxx::lang::Short::decode(::jxx::NEW<::jxx::lang::String>("010"))));
+        EXPECT_EQ(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(16)), ::jxx::lang::Short::decode(::jxx::NEW<::jxx::lang::String>("0x10")));
+        EXPECT_EQ(::jxx::lang::Short::valueOf(static_cast<::jxx::lang::jshort>(8)), ::jxx::lang::Short::decode(::jxx::NEW<::jxx::lang::String>("010")));
     }
 
     TEST(ShortTest, StringEqualityHashAndComparisonWork) {

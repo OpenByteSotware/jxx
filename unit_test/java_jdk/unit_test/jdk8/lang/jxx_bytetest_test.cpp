@@ -48,9 +48,9 @@ namespace jxx::jdk8::lang {
     TEST(ByteTest, ValueOfAndDecodeWork) {
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(10)), ::jxx::lang::Byte::valueOf(::jxx::NEW<::jxx::lang::String>("10"))));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(15)), ::jxx::lang::Byte::valueOf(::jxx::NEW<::jxx::lang::String>("f"), 16)));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(16)), ::jxx::lang::Byte::decode(::jxx::NEW<::jxx::lang::String>("0x10"))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(8)), ::jxx::lang::Byte::decode(::jxx::NEW<::jxx::lang::String>("010"))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(-16)), ::jxx::lang::Byte::decode(::jxx::NEW<::jxx::lang::String>("-0X10"))));
+        EXPECT_EQ(::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(16)), ::jxx::lang::Byte::decode(::jxx::NEW<::jxx::lang::String>("0x10")));
+        EXPECT_EQ(::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(8)), ::jxx::lang::Byte::decode(::jxx::NEW<::jxx::lang::String>("010")));
+        EXPECT_EQ(::jxx::lang::Byte::valueOf(static_cast<::jxx::lang::jbyte>(-16)), ::jxx::lang::Byte::decode(::jxx::NEW<::jxx::lang::String>("-0X10")));
     }
 
     TEST(ByteTest, StringEqualityHashAndComparisonWork) {

@@ -51,14 +51,14 @@ namespace jxx::jdk8::util {
         ::jxx::Ptr<::jxx::util::HashMap<::jxx::lang::String, ::jxx::lang::Integer>> m = ::jxx::NEW<::jxx::util::HashMap<::jxx::lang::String, ::jxx::lang::Integer>>();
         EXPECT_TRUE(m->isEmpty());
         EXPECT_EQ(m->put(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::lang::Integer::valueOf(1)), nullptr);
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Integer::valueOf(1), m->put(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::lang::Integer::valueOf(2))));
+        EXPECT_EQ(::jxx::lang::Integer::valueOf(1), m->put(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::lang::Integer::valueOf(2)));
         m->put(nullptr, ::jxx::lang::Integer::valueOf(3));
         m->put(::jxx::NEW<::jxx::lang::String>("nullValue"), nullptr);
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Integer::valueOf(2), m->get(::jxx::NEW<::jxx::lang::String>("a"))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Integer::valueOf(3), m->get(nullptr)));
+        EXPECT_EQ(::jxx::lang::Integer::valueOf(2), m->get(::jxx::NEW<::jxx::lang::String>("a")));
+        EXPECT_EQ(::jxx::lang::Integer::valueOf(3), m->get(nullptr));
         EXPECT_TRUE(m->containsKey(::jxx::NEW<::jxx::lang::String>("nullValue")));
         EXPECT_TRUE(m->containsValue(nullptr));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Integer::valueOf(2), m->remove(::jxx::NEW<::jxx::lang::String>("a"))));
+        EXPECT_EQ(::jxx::lang::Integer::valueOf(2), m->remove(::jxx::NEW<::jxx::lang::String>("a")));
         EXPECT_FALSE(m->containsKey(::jxx::NEW<::jxx::lang::String>("a")));
     }
 
@@ -66,7 +66,7 @@ namespace jxx::jdk8::util {
         ::jxx::Ptr<::jxx::util::HashMap<::jxx::lang::String, ::jxx::lang::Integer>> m = ::jxx::NEW<::jxx::util::HashMap<::jxx::lang::String, ::jxx::lang::Integer>>();
         m->put(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::lang::Integer::valueOf(1));
         m->put(::jxx::NEW<::jxx::lang::String>("b"), ::jxx::lang::Integer::valueOf(2));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::util::HashSet<::jxx::lang::String>>(::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::String>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::String, ::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("b")))))), m->keySet()));
+        EXPECT_EQ(::jxx::NEW<::jxx::util::HashSet<::jxx::lang::String>>(::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::String>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::String, ::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("b")))))), m->keySet());
         EXPECT_TRUE(m->values()->containsAll(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2))));
         for (::jxx::lang::jint jxxIndex_e = 0; jxxIndex_e < m->entrySet()->size(); ++jxxIndex_e) {
             ::jxx::Ptr<::jxx::util::MapEntry<::jxx::lang::String, ::jxx::lang::Integer>> e = m->entrySet()->get(jxxIndex_e);
@@ -74,7 +74,7 @@ namespace jxx::jdk8::util {
                 e->setValue(::jxx::lang::Integer::valueOf(9));
             }
         }
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Integer::valueOf(9), m->get(::jxx::NEW<::jxx::lang::String>("a"))));
+        EXPECT_EQ(::jxx::lang::Integer::valueOf(9), m->get(::jxx::NEW<::jxx::lang::String>("a")));
         m->keySet()->remove(::jxx::NEW<::jxx::lang::String>("b"));
         EXPECT_FALSE(m->containsKey(::jxx::NEW<::jxx::lang::String>("b")));
     }
@@ -94,27 +94,27 @@ namespace jxx::jdk8::util {
 
     TEST(HashMapTest, Java8MapOperations) {
         ::jxx::Ptr<::jxx::util::HashMap<::jxx::lang::String, ::jxx::lang::Integer>> m = ::jxx::NEW<::jxx::util::HashMap<::jxx::lang::String, ::jxx::lang::Integer>>();
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Integer::valueOf(1), m->putIfAbsent(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::lang::Integer::valueOf(1))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Integer::valueOf(1), m->getOrDefault(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::lang::Integer::valueOf(9))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Integer::valueOf(9), m->getOrDefault(::jxx::NEW<::jxx::lang::String>("x"), ::jxx::lang::Integer::valueOf(9))));
+        EXPECT_EQ(::jxx::lang::Integer::valueOf(1), m->putIfAbsent(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::lang::Integer::valueOf(1)));
+        EXPECT_EQ(::jxx::lang::Integer::valueOf(1), m->getOrDefault(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::lang::Integer::valueOf(9)));
+        EXPECT_EQ(::jxx::lang::Integer::valueOf(9), m->getOrDefault(::jxx::NEW<::jxx::lang::String>("x"), ::jxx::lang::Integer::valueOf(9)));
         EXPECT_TRUE(m->replace(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2)));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Integer::valueOf(2), m->replace(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::lang::Integer::valueOf(3))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Integer::valueOf(4), m->computeIfAbsent(::jxx::NEW<::jxx::lang::String>("b"), jxxMakeFunction<::jxx::lang::String, ::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::String>& k) {
+        EXPECT_EQ(::jxx::lang::Integer::valueOf(2), m->replace(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::lang::Integer::valueOf(3)));
+        EXPECT_EQ(::jxx::lang::Integer::valueOf(4), m->computeIfAbsent(::jxx::NEW<::jxx::lang::String>("b"), jxxMakeFunction<::jxx::lang::String, ::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::String>& k) {
     return ::jxx::lang::Integer::valueOf(4);
-}))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Integer::valueOf(5), m->computeIfPresent(::jxx::NEW<::jxx::lang::String>("b"), jxxMakeBiFunction<::jxx::lang::String, ::jxx::lang::Integer, ::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::String>& k, const ::jxx::Ptr<::jxx::lang::Integer>& v) {
+})));
+        EXPECT_EQ(::jxx::lang::Integer::valueOf(5), m->computeIfPresent(::jxx::NEW<::jxx::lang::String>("b"), jxxMakeBiFunction<::jxx::lang::String, ::jxx::lang::Integer, ::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::String>& k, const ::jxx::Ptr<::jxx::lang::Integer>& v) {
     return ::jxx::lang::Integer::valueOf(((v)->intValue() + 1));
-}))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Integer::valueOf(1), m->compute(::jxx::NEW<::jxx::lang::String>("c"), jxxMakeBiFunction<::jxx::lang::String, ::jxx::lang::Integer, ::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::String>& k, const ::jxx::Ptr<::jxx::lang::Integer>& v) {
+})));
+        EXPECT_EQ(::jxx::lang::Integer::valueOf(1), m->compute(::jxx::NEW<::jxx::lang::String>("c"), jxxMakeBiFunction<::jxx::lang::String, ::jxx::lang::Integer, ::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::String>& k, const ::jxx::Ptr<::jxx::lang::Integer>& v) {
     return ::jxx::lang::Integer::valueOf(1);
-}))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Integer::valueOf(7), m->merge(::jxx::NEW<::jxx::lang::String>("c"), ::jxx::lang::Integer::valueOf(6), jxxMakeBiFunction<::jxx::lang::Integer, ::jxx::lang::Integer, ::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::Integer>& x, const ::jxx::Ptr<::jxx::lang::Integer>& y) {
+})));
+        EXPECT_EQ(::jxx::lang::Integer::valueOf(7), m->merge(::jxx::NEW<::jxx::lang::String>("c"), ::jxx::lang::Integer::valueOf(6), jxxMakeBiFunction<::jxx::lang::Integer, ::jxx::lang::Integer, ::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::Integer>& x, const ::jxx::Ptr<::jxx::lang::Integer>& y) {
     return ::jxx::lang::Integer::valueOf(((x)->intValue() + (y)->intValue()));
-}))));
+})));
         m->replaceAll(jxxMakeBiFunction<::jxx::lang::String, ::jxx::lang::Integer, ::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::String>& k, const ::jxx::Ptr<::jxx::lang::Integer>& v) {
     return ::jxx::lang::Integer::valueOf(((v)->intValue() * 2));
 }));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Integer::valueOf(14), m->get(::jxx::NEW<::jxx::lang::String>("c"))));
+        EXPECT_EQ(::jxx::lang::Integer::valueOf(14), m->get(::jxx::NEW<::jxx::lang::String>("c")));
         const auto sum = ::jxx::NEW<::jxx::lang::IntArrayType>(1U);
         (*sum)[0U] = 0;
         m->forEach(jxxMakeBiConsumer<::jxx::lang::String, ::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::String>& k, const ::jxx::Ptr<::jxx::lang::Integer>& v) {

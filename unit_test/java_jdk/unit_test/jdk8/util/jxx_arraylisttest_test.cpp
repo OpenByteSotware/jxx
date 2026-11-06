@@ -52,11 +52,11 @@ namespace jxx::jdk8::util {
         EXPECT_TRUE(x->isEmpty());
         EXPECT_TRUE(x->add(::jxx::NEW<::jxx::lang::String>("a")));
         x->add(0, ::jxx::NEW<::jxx::lang::String>("z"));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("z"), ::jxx::NEW<::jxx::lang::String>("a")), x));
+        EXPECT_EQ(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("z"), ::jxx::NEW<::jxx::lang::String>("a")), x);
         EXPECT_EQ(2, x->size());
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("a"), x->get(1)));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("a"), x->set(1, ::jxx::NEW<::jxx::lang::String>("b"))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("b"), x->get(1)));
+        EXPECT_EQ("a", x->get(1));
+        EXPECT_EQ("a", x->set(1, ::jxx::NEW<::jxx::lang::String>("b")));
+        EXPECT_EQ("b", x->get(1));
     }
 
     TEST(ArrayListTest, CollectionOperations) {
@@ -65,11 +65,11 @@ namespace jxx::jdk8::util {
         EXPECT_EQ(1, x->indexOf(::jxx::NEW<::jxx::lang::String>("b")));
         EXPECT_EQ(3, x->lastIndexOf(::jxx::NEW<::jxx::lang::String>("b")));
         EXPECT_TRUE(x->remove(::jxx::NEW<::jxx::lang::String>("b")));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("c"), x->remove(1)));
+        EXPECT_EQ("c", x->remove(1));
         EXPECT_TRUE(x->containsAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("b")))))));
         x->addAll(::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::String>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::String, ::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("d"), ::jxx::NEW<::jxx::lang::String>("e"))))));
         x->addAll(1, ::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::String>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::String, ::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("x"), ::jxx::NEW<::jxx::lang::String>("y"))))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("x"), ::jxx::NEW<::jxx::lang::String>("y"), ::jxx::NEW<::jxx::lang::String>("b"), ::jxx::NEW<::jxx::lang::String>("d"), ::jxx::NEW<::jxx::lang::String>("e")), x));
+        EXPECT_EQ(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("x"), ::jxx::NEW<::jxx::lang::String>("y"), ::jxx::NEW<::jxx::lang::String>("b"), ::jxx::NEW<::jxx::lang::String>("d"), ::jxx::NEW<::jxx::lang::String>("e")), x);
     }
 
     TEST(ArrayListTest, BulkAndArrayOperations) {
@@ -94,7 +94,7 @@ namespace jxx::jdk8::util {
         EXPECT_EQ(6, sum);
         ::jxx::Ptr<::jxx::util::ListIterator<::jxx::lang::Integer>> it = x->listIterator(1);
         EXPECT_TRUE(it->hasNext());
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Integer::valueOf(2), ::jxx::lang::String::valueOf(it->next())));
+        EXPECT_EQ(::jxx::lang::Integer::valueOf(2), it->next());
         EXPECT_EQ(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(2), ::jxx::lang::Integer::valueOf(3)), x->subList(1, 3));
         ::jxx::Ptr<::jxx::util::ArrayList<::jxx::lang::Integer>> copy = ::jxx::CAST<::jxx::util::ArrayList<::jxx::lang::Integer>>(x->clone());
         EXPECT_TRUE(::jxx::util::Objects::equals(x, copy));
@@ -110,7 +110,7 @@ namespace jxx::jdk8::util {
     return ::jxx::lang::Integer::valueOf(((n)->intValue() * 2));
 }));
         x->sort(nullptr);
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(4), ::jxx::lang::Integer::valueOf(6)), x));
+        EXPECT_EQ(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(4), ::jxx::lang::Integer::valueOf(6)), x);
         const auto sum = ::jxx::NEW<::jxx::lang::IntArrayType>(1U);
         (*sum)[0U] = 0;
         x->forEach(jxxMakeConsumer<::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::Integer>& n) {
