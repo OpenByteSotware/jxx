@@ -69,8 +69,8 @@ namespace jxx::jdk8::util {
     TEST(HashSetTest, CloneArrayIterationAndClear) {
         ::jxx::Ptr<::jxx::util::HashSet<::jxx::lang::Integer>> s = ::jxx::NEW<::jxx::util::HashSet<::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::Integer>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::Integer, ::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2), ::jxx::lang::Integer::valueOf(3))))));
         ::jxx::lang::jint sum = 0;
-        for (::jxx::lang::jint jxxIndex_n = 0; jxxIndex_n < s->size(); ++jxxIndex_n) {
-            ::jxx::Ptr<::jxx::lang::Integer> n = s->get(jxxIndex_n);
+        for (auto jxxIterator_n = s->iterator(); jxxIterator_n->hasNext();) {
+            ::jxx::Ptr<::jxx::lang::Integer> n = jxxIterator_n->next();
             sum += (n)->intValue();
         }
         EXPECT_EQ(6, sum);

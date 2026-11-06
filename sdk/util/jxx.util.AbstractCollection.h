@@ -19,6 +19,8 @@ namespace jxx::util
         jxx::lang::Object,
         Collection<E>> {
     public:
+        using Collection<E>::toArray;
+
         virtual ~AbstractCollection() = default;
 
         jxx::lang::jbool isEmpty() override

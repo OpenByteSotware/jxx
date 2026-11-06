@@ -19,6 +19,7 @@ namespace jxx::util {
         , public virtual Set<E> {
     public:
         using Super = AbstractCollection<E>;
+        using AbstractCollection<E>::toArray;
         using JxxClassInfoMarker =
             ::jxx::lang::ClassInfo<AbstractSet<E>, AbstractCollection<E>, Set<E>>;
 

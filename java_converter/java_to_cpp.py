@@ -880,6 +880,16 @@ class Translator:
         # Fallback for iterable types with indexed source semantics.
         return f'{name}->get({index})'
 
+    def enhanced_for_requires_iterator(self, iterable):
+        kind=type(iterable).__name__
+        if kind=='MemberReference':
+            declared=self.local_variable_types.get(iterable.member)
+            return self.simple(self.name_of(declared)) in {
+                'Collection','Set','HashSet','LinkedHashSet','SortedSet',
+                'TreeSet','Queue','Deque','ArrayDeque'}
+        return (kind=='MethodInvocation' and
+                iterable.member in {'entrySet','keySet','values'})
+
     def indexed_iterable_size_expression(self,name:str)->str:
         if name in self.local_array_variables:
             return self.array_size_expression(name)
@@ -2820,28 +2830,41 @@ class Translator:
                 variable=control.var
                 declarator=variable.declarators[0]
                 iterable=self.expr(control.iterable)
-                index_name=f'jxxIndex_{declarator.name}'
                 self.local_variable_types[declarator.name]=variable.type
                 iterable_name=(getattr(control.iterable,'member',None)
                                if type(control.iterable).__name__=='MemberReference'
                                else None)
-                size_expression=(self.indexed_iterable_size_expression(
-                                    iterable_name)
-                                 if iterable_name else f'{iterable}->size()')
-                element_expression=(self.indexed_iterable_element_expression(
-                                        iterable_name,index_name)
-                                    if iterable_name else
-                                    f'{iterable}->get({index_name})')
-                o.w(f'for (::jxx::lang::jint {index_name} = 0; '
-                    f'{index_name} < {size_expression}; ++{index_name}) {{')
-                o.enter()
                 element_type=self.resolve(variable.type).value()
-                element_expression=self.enhanced_for_element_expression(
-                    variable.type,iterable_name,element_expression)
-                o.w(f'{element_type} {declarator.name} = '
-                    f'{element_expression};')
-                self.stmt(s.body,o)
-                o.exit();o.w('}')
+                if self.enhanced_for_requires_iterator(control.iterable):
+                    iterator_name=f'jxxIterator_{declarator.name}'
+                    o.w(f'for (auto {iterator_name} = {iterable}->iterator(); '
+                        f'{iterator_name}->hasNext();) {{')
+                    o.enter()
+                    element_expression=f'{iterator_name}->next()'
+                    element_expression=self.enhanced_for_element_expression(
+                        variable.type,iterable_name,element_expression)
+                    o.w(f'{element_type} {declarator.name} = '
+                        f'{element_expression};')
+                    self.stmt(s.body,o)
+                    o.exit();o.w('}')
+                else:
+                    index_name=f'jxxIndex_{declarator.name}'
+                    size_expression=(self.indexed_iterable_size_expression(
+                                        iterable_name)
+                                     if iterable_name else f'{iterable}->size()')
+                    element_expression=(self.indexed_iterable_element_expression(
+                                            iterable_name,index_name)
+                                        if iterable_name else
+                                        f'{iterable}->get({index_name})')
+                    o.w(f'for (::jxx::lang::jint {index_name} = 0; '
+                        f'{index_name} < {size_expression}; ++{index_name}) {{')
+                    o.enter()
+                    element_expression=self.enhanced_for_element_expression(
+                        variable.type,iterable_name,element_expression)
+                    o.w(f'{element_type} {declarator.name} = '
+                        f'{element_expression};')
+                    self.stmt(s.body,o)
+                    o.exit();o.w('}')
             else:
                 self.traditional_for_statement(s,o)
         elif n=='SwitchStatement':
