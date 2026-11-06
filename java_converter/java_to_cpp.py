@@ -2383,7 +2383,28 @@ class Translator:
         dimensions=[self.expr(value)
                     for value in getattr(creator,'dimensions',None) or []
                     if value is not None]
-        return f'::jxx::NEW<{concrete}>({", ".join(dimensions)})'
+        initializer=getattr(creator,'initializer',None)
+        values=list(getattr(initializer,'initializers',None) or [])
+        if initializer is None:
+            return f'::jxx::NEW<{concrete}>({", ".join(dimensions)})'
+        # Expression-level array initializers require allocation plus element
+        # assignments. Use an immediately invoked lambda so the result remains
+        # a single expression suitable for assertions and method arguments.
+        element_name=self.simple(self.name_of(creator.type))
+        assignments=[]
+        for index,value in enumerate(values):
+            rendered=self.expr(value)
+            if (element_name=='String' and
+                    self.is_string_literal_expression(value)):
+                rendered=(f'::jxx::NEW<::jxx::lang::String>('
+                          f'{rendered})')
+            elif element_name in PRIMITIVE_TO_WRAPPER:
+                rendered=self.expr(value)
+            assignments.append(
+                f'(*jxxArray)[{index}U] = {rendered};')
+        statements=' '.join(assignments)
+        return (f'([&]() {{ auto jxxArray = ::jxx::NEW<{concrete}>('
+                f'{len(values)}U); {statements} return jxxArray; }})()')
 
     def expr(self,e):
         if e is None:return ''
