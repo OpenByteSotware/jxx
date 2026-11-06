@@ -50,9 +50,9 @@ namespace jxx::jdk8::util {
         EXPECT_FALSE(e->isPresent());
         ::jxx::Ptr<::jxx::util::Optional<::jxx::lang::String>> p = ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x"));
         EXPECT_TRUE(p->isPresent());
-        EXPECT_EQ("x", p->get());
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("x"), p->get()));
         EXPECT_FALSE(::jxx::util::Optional<::jxx::lang::Object>::ofNullable(::jxx::Ptr<::jxx::lang::Object>{})->isPresent());
-        EXPECT_EQ(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x")), ::jxx::util::Optional<::jxx::lang::String>::ofNullable(::jxx::NEW<::jxx::lang::String>("x")));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x")), ::jxx::util::Optional<::jxx::lang::String>::ofNullable(::jxx::NEW<::jxx::lang::String>("x"))));
     }
 
     TEST(OptionalTest, OfRejectsNull) {
@@ -92,11 +92,11 @@ namespace jxx::jdk8::util {
 
     TEST(OptionalTest, FallbackOperationsWork) {
         ::jxx::Ptr<::jxx::util::Optional<::jxx::lang::String>> e = ::jxx::util::Optional<::jxx::lang::String>::empty();
-        EXPECT_EQ("d", e->orElse(::jxx::NEW<::jxx::lang::String>("d")));
-        EXPECT_EQ("s", e->orElseGet(jxxMakeSupplier<::jxx::lang::String>([&]() {
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("d"), e->orElse(::jxx::NEW<::jxx::lang::String>("d"))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("s"), e->orElseGet(jxxMakeSupplier<::jxx::lang::String>([&]() {
     return ::jxx::NEW<::jxx::lang::String>("s");
-})));
-        EXPECT_EQ("x", ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x"))->orElse(::jxx::NEW<::jxx::lang::String>("d")));
+}))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("x"), ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x"))->orElse(::jxx::NEW<::jxx::lang::String>("d"))));
     }
 
     TEST(OptionalTest, OrElseThrowUsesSupplier) {
@@ -110,10 +110,10 @@ namespace jxx::jdk8::util {
     }
 
     TEST(OptionalTest, EqualityHashAndStringWork) {
-        EXPECT_EQ(::jxx::util::Optional<::jxx::lang::Object>::empty(), ::jxx::util::Optional<::jxx::lang::Object>::empty());
-        EXPECT_EQ(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x")), ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x")));
-        EXPECT_NE(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x")), ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("y")));
-        EXPECT_EQ("x", ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x"))->hashCode());
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::util::Optional<::jxx::lang::Object>::empty(), ::jxx::util::Optional<::jxx::lang::Object>::empty()));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x")), ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x"))));
+        EXPECT_FALSE(::jxx::util::Objects::equals(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x")), ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("y"))));
+        EXPECT_EQ(::jxx::NEW<::jxx::lang::String>("x")->hashCode(), ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x"))->hashCode());
         EXPECT_EQ(0, ::jxx::util::Optional<::jxx::lang::Object>::empty()->hashCode());
         EXPECT_TRUE(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x"))->toString()->contains(::jxx::NEW<::jxx::lang::String>("x")));
     }

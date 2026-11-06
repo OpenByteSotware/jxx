@@ -1074,8 +1074,13 @@ class Translator:
         terminal=selectors[-1]
         if type(terminal).__name__!='MethodInvocation':
             return None
-        if terminal.member in set(PRIMITIVE_UNBOX_METHODS.values()):
+        if terminal.member in set(PRIMITIVE_UNBOX_METHODS.values()) or \
+                terminal.member in {'hashCode','length','size','compareTo',
+                                    'compareToIgnoreCase','indexOf','lastIndexOf'}:
             return 'primitive'
+        if terminal.member in {'toString','substring','concat','get','orElse',
+                               'orElseGet'}:
+            return 'reference'
         metadata=self.sdk_method_metadata(terminal)
         if metadata is not None:
             return metadata.return_kind
@@ -2070,8 +2075,11 @@ class Translator:
         if kind in {'ClassReference','ArrayCreator'}:
             return True
         if kind=='Literal':
-            return getattr(expression,'value',None) in (None,'null') or \
-                   self.is_string_literal_expression(expression)
+            if self.is_string_literal_expression(expression):
+                terminal_kind=self.terminal_selector_return_kind(expression)
+                return (terminal_kind=='reference'
+                        if terminal_kind is not None else True)
+            return getattr(expression,'value',None) in (None,'null')
         if kind=='Cast':
             return not self.resolve(expression.type).primitive
         if kind=='MemberReference':
@@ -2100,6 +2108,16 @@ class Translator:
                 expression.member)
             if declared is not None:
                 return not self.resolve(declared).primitive
+            # Generic Optional factories and accessors retain reference
+            # semantics even when template-dependent SDK metadata is unresolved.
+            qualifier=getattr(expression,'qualifier',None)
+            if (self.simple(qualifier)=='Optional' and
+                    expression.member in {'empty','of','ofNullable'}):
+                return True
+            owner_type=self.local_variable_types.get(qualifier)
+            if (self.simple(self.name_of(owner_type))=='Optional' and
+                    expression.member in {'get','orElse','orElseGet'}):
+                return True
             # Common source/JXX factories and object methods.
             return expression.member in {
                 'valueOf','toString','getClass','clone','getProperty'}
@@ -2277,6 +2295,12 @@ class Translator:
                 rendered='nullptr'
             elif self.is_string_literal_expression(e):
                 rendered=self.cpp_string_literal_expression(e.value)
+                literal_selectors=list(getattr(e,'selectors',None) or [])
+                if literal_selectors:
+                    rendered=(f'::jxx::NEW<::jxx::lang::String>('
+                              f'{rendered})')
+                    rendered=self.apply_expression_selectors(
+                        rendered,literal_selectors,expression=e)
             else:
                 rendered=self.java_numeric_literal_expression(e.value)
             return (''.join(getattr(e,'prefix_operators',None) or [])+
