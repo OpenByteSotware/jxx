@@ -12,7 +12,9 @@
 #include "util/function/jxx.util.function.BiFunction.h"
 #include "util/function/jxx.util.function.Consumer.h"
 #include "util/function/jxx.util.function.Function.h"
+#include "util/function/jxx.util.function.IntBinaryOperator.h"
 #include "util/function/jxx.util.function.IntConsumer.h"
+#include "util/function/jxx.util.function.IntUnaryOperator.h"
 #include "util/function/jxx.util.function.Predicate.h"
 #include "util/function/jxx.util.function.Supplier.h"
 #include "util/function/jxx.util.function.UnaryOperator.h"
@@ -34,6 +36,10 @@ template<typename T, typename U, typename R, typename F> class JxxLambdaBiFuncti
 template<typename T, typename U, typename R, typename F> auto jxxMakeBiFunction(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::BiFunction<T,U,R>>(::jxx::NEW<JxxLambdaBiFunction<T,U,R,D>>(std::forward<F>(f))); }
 template<typename T, typename U, typename F> class JxxLambdaBiConsumer final : public ::jxx::lang::ClassBase<JxxLambdaBiConsumer<T,U,F>, ::jxx::lang::Object, ::jxx::util::function::BiConsumer<T,U>> { public: explicit JxxLambdaBiConsumer(F f):f_(std::move(f)){} void accept(const ::jxx::Ptr<T>& a,const ::jxx::Ptr<U>& b) override { f_(a,b); } private: F f_; };
 template<typename T, typename U, typename F> auto jxxMakeBiConsumer(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::BiConsumer<T,U>>(::jxx::NEW<JxxLambdaBiConsumer<T,U,D>>(std::forward<F>(f))); }
+template<typename F> class JxxLambdaIntUnaryOperator final : public ::jxx::lang::ClassBase<JxxLambdaIntUnaryOperator<F>, ::jxx::lang::Object, ::jxx::util::function::IntUnaryOperator> { public: explicit JxxLambdaIntUnaryOperator(F f):f_(std::move(f)){} ::jxx::lang::jint applyAsInt(::jxx::lang::jint v) override { return f_(v); } private: F f_; };
+template<typename F> auto jxxMakeIntUnaryOperator(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::IntUnaryOperator>(::jxx::NEW<JxxLambdaIntUnaryOperator<D>>(std::forward<F>(f))); }
+template<typename F> class JxxLambdaIntBinaryOperator final : public ::jxx::lang::ClassBase<JxxLambdaIntBinaryOperator<F>, ::jxx::lang::Object, ::jxx::util::function::IntBinaryOperator> { public: explicit JxxLambdaIntBinaryOperator(F f):f_(std::move(f)){} ::jxx::lang::jint applyAsInt(::jxx::lang::jint a, ::jxx::lang::jint b) override { return f_(a,b); } private: F f_; };
+template<typename F> auto jxxMakeIntBinaryOperator(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::IntBinaryOperator>(::jxx::NEW<JxxLambdaIntBinaryOperator<D>>(std::forward<F>(f))); }
 template<typename T, typename F> class JxxLambdaSupplier final : public ::jxx::lang::ClassBase<JxxLambdaSupplier<T,F>, ::jxx::lang::Object, ::jxx::util::function::Supplier<T>> { public: explicit JxxLambdaSupplier(F f):f_(std::move(f)){} ::jxx::Ptr<T> get() override { return f_(); } private: F f_; };
 template<typename T, typename F> auto jxxMakeSupplier(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::Supplier<T>>(::jxx::NEW<JxxLambdaSupplier<T,D>>(std::forward<F>(f))); }
 } // namespace
@@ -51,17 +57,17 @@ namespace jxx::jdk8::util {
     }
 
     TEST(HashSetTest, CollectionConstructorAndBulkOperations) {
-        ::jxx::Ptr<::jxx::util::HashSet<::jxx::lang::Integer>> s = ::jxx::NEW<::jxx::util::HashSet<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(1, 2, 2, 3));
+        ::jxx::Ptr<::jxx::util::HashSet<::jxx::lang::Integer>> s = ::jxx::NEW<::jxx::util::HashSet<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2), ::jxx::lang::Integer::valueOf(2), ::jxx::lang::Integer::valueOf(3)));
         EXPECT_EQ(3, s->size());
-        EXPECT_TRUE(s->containsAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(1, 2))))));
-        EXPECT_TRUE(s->addAll(::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::Integer>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::Integer, ::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(3, 4))))));
-        EXPECT_TRUE(s->removeAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(1, 9))))));
-        EXPECT_TRUE(s->retainAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(2, 4))))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::util::HashSet<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(2, 4)), s));
+        EXPECT_TRUE(s->containsAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2)))))));
+        EXPECT_TRUE(s->addAll(::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::Integer>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::Integer, ::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(3), ::jxx::lang::Integer::valueOf(4)))))));
+        EXPECT_TRUE(s->removeAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(9)))))));
+        EXPECT_TRUE(s->retainAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(2), ::jxx::lang::Integer::valueOf(4)))))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::util::HashSet<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(2), ::jxx::lang::Integer::valueOf(4))), s));
     }
 
     TEST(HashSetTest, CloneArrayIterationAndClear) {
-        ::jxx::Ptr<::jxx::util::HashSet<::jxx::lang::Integer>> s = ::jxx::NEW<::jxx::util::HashSet<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(1, 2, 3));
+        ::jxx::Ptr<::jxx::util::HashSet<::jxx::lang::Integer>> s = ::jxx::NEW<::jxx::util::HashSet<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2), ::jxx::lang::Integer::valueOf(3)));
         ::jxx::lang::jint sum = 0;
         for (::jxx::lang::jint jxxIndex_n = 0; jxxIndex_n < s->size(); ++jxxIndex_n) {
             ::jxx::Ptr<::jxx::lang::Integer> n = s->get(jxxIndex_n);
@@ -80,7 +86,7 @@ namespace jxx::jdk8::util {
     }
 
     TEST(HashSetTest, RemoveIfAndForEachWork) {
-        ::jxx::Ptr<::jxx::util::HashSet<::jxx::lang::Integer>> s = ::jxx::NEW<::jxx::util::HashSet<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(1, 2, 3, 4));
+        ::jxx::Ptr<::jxx::util::HashSet<::jxx::lang::Integer>> s = ::jxx::NEW<::jxx::util::HashSet<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2), ::jxx::lang::Integer::valueOf(3), ::jxx::lang::Integer::valueOf(4)));
         EXPECT_TRUE(s->removeIf(jxxMakePredicate<::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::Integer>& n) {
     return (((n)->intValue() % 2) == 0);
 })));

@@ -12,7 +12,9 @@
 #include "util/function/jxx.util.function.BiFunction.h"
 #include "util/function/jxx.util.function.Consumer.h"
 #include "util/function/jxx.util.function.Function.h"
+#include "util/function/jxx.util.function.IntBinaryOperator.h"
 #include "util/function/jxx.util.function.IntConsumer.h"
+#include "util/function/jxx.util.function.IntUnaryOperator.h"
 #include "util/function/jxx.util.function.Predicate.h"
 #include "util/function/jxx.util.function.Supplier.h"
 #include "util/function/jxx.util.function.UnaryOperator.h"
@@ -36,6 +38,10 @@ template<typename T, typename U, typename R, typename F> class JxxLambdaBiFuncti
 template<typename T, typename U, typename R, typename F> auto jxxMakeBiFunction(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::BiFunction<T,U,R>>(::jxx::NEW<JxxLambdaBiFunction<T,U,R,D>>(std::forward<F>(f))); }
 template<typename T, typename U, typename F> class JxxLambdaBiConsumer final : public ::jxx::lang::ClassBase<JxxLambdaBiConsumer<T,U,F>, ::jxx::lang::Object, ::jxx::util::function::BiConsumer<T,U>> { public: explicit JxxLambdaBiConsumer(F f):f_(std::move(f)){} void accept(const ::jxx::Ptr<T>& a,const ::jxx::Ptr<U>& b) override { f_(a,b); } private: F f_; };
 template<typename T, typename U, typename F> auto jxxMakeBiConsumer(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::BiConsumer<T,U>>(::jxx::NEW<JxxLambdaBiConsumer<T,U,D>>(std::forward<F>(f))); }
+template<typename F> class JxxLambdaIntUnaryOperator final : public ::jxx::lang::ClassBase<JxxLambdaIntUnaryOperator<F>, ::jxx::lang::Object, ::jxx::util::function::IntUnaryOperator> { public: explicit JxxLambdaIntUnaryOperator(F f):f_(std::move(f)){} ::jxx::lang::jint applyAsInt(::jxx::lang::jint v) override { return f_(v); } private: F f_; };
+template<typename F> auto jxxMakeIntUnaryOperator(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::IntUnaryOperator>(::jxx::NEW<JxxLambdaIntUnaryOperator<D>>(std::forward<F>(f))); }
+template<typename F> class JxxLambdaIntBinaryOperator final : public ::jxx::lang::ClassBase<JxxLambdaIntBinaryOperator<F>, ::jxx::lang::Object, ::jxx::util::function::IntBinaryOperator> { public: explicit JxxLambdaIntBinaryOperator(F f):f_(std::move(f)){} ::jxx::lang::jint applyAsInt(::jxx::lang::jint a, ::jxx::lang::jint b) override { return f_(a,b); } private: F f_; };
+template<typename F> auto jxxMakeIntBinaryOperator(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::IntBinaryOperator>(::jxx::NEW<JxxLambdaIntBinaryOperator<D>>(std::forward<F>(f))); }
 template<typename T, typename F> class JxxLambdaSupplier final : public ::jxx::lang::ClassBase<JxxLambdaSupplier<T,F>, ::jxx::lang::Object, ::jxx::util::function::Supplier<T>> { public: explicit JxxLambdaSupplier(F f):f_(std::move(f)){} ::jxx::Ptr<T> get() override { return f_(); } private: F f_; };
 template<typename T, typename F> auto jxxMakeSupplier(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::Supplier<T>>(::jxx::NEW<JxxLambdaSupplier<T,D>>(std::forward<F>(f))); }
 } // namespace
@@ -60,8 +66,8 @@ namespace jxx::jdk8::util {
         ::jxx::Ptr<::jxx::util::HashMap<::jxx::lang::String, ::jxx::lang::Integer>> m = ::jxx::NEW<::jxx::util::HashMap<::jxx::lang::String, ::jxx::lang::Integer>>();
         m->put(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::lang::Integer::valueOf(1));
         m->put(::jxx::NEW<::jxx::lang::String>("b"), ::jxx::lang::Integer::valueOf(2));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::util::HashSet<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("b"))), m->keySet()));
-        EXPECT_TRUE(m->values()->containsAll(::jxx::util::Arrays::asList(1, 2)));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::util::HashSet<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf("a"), ::jxx::lang::Integer::valueOf("b"))), m->keySet()));
+        EXPECT_TRUE(m->values()->containsAll(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2))));
         for (::jxx::lang::jint jxxIndex_e = 0; jxxIndex_e < m->entrySet()->size(); ++jxxIndex_e) {
             ::jxx::Ptr<::jxx::util::MapEntry<::jxx::lang::String, ::jxx::lang::Integer>> e = m->entrySet()->get(jxxIndex_e);
             if (e->getKey()->equals(::jxx::NEW<::jxx::lang::String>("a"))) {

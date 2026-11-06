@@ -4,6 +4,7 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.JxxArray.h"
 #include "lang/jxx.lang.NullPointerException.h"
+#include "util/function/jxx.util.function.Predicate.h"
 #include "lang/jxx.lang.Iterable.h"
 #include "util/jxx.util.wildcard.CollectionAny.h"
 #include "util/jxx.util.wildcard.CollectionExtends.h"
@@ -17,6 +18,22 @@ public:
     virtual jxx::lang::jbool contains(const jxx::Ptr<jxx::lang::Object>& object) = 0;
     virtual jxx::Ptr<Iterator<E>> iterator() = 0;
     virtual jxx::lang::ObjectArray toArray() = 0;
+
+    virtual ::jxx::lang::jbool removeIf(
+        const ::jxx::Ptr<::jxx::util::function::Predicate<E>>& filter) {
+        if (filter == nullptr) {
+            throw ::jxx::lang::NullPointerException();
+        }
+        auto values = iterator();
+        auto removed = false;
+        while (values->hasNext()) {
+            if (filter->test(values->next())) {
+                values->remove();
+                removed = true;
+            }
+        }
+        return removed;
+    }
 
     template <typename T>
     ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<T>, 1U>> toArray(

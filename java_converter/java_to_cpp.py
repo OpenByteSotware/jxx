@@ -1676,6 +1676,39 @@ class Translator:
         return (f'::jxx::CAST<::jxx::util::wildcard::CollectionExtends<'
                 f'{owner_element}>>({adapter})')
 
+    def array_local_element_raw(self, expression):
+        if type(expression).__name__!='MemberReference': return None
+        declared=self.local_variable_types.get(expression.member)
+        if declared is None: return None
+        name=self.name_of(declared)
+        if name in PRIMITIVES: return PRIMITIVES[name]
+        return self.ref_raw(declared)
+
+    def specialized_reverse_order_argument(self, invocation, argument, index):
+        if (self.simple(getattr(invocation,'qualifier',None))!='Arrays' or
+                invocation.member not in {'sort','parallelSort'} or index!=1):
+            return None
+        if (type(argument).__name__!='MethodInvocation' or
+                self.simple(getattr(argument,'qualifier',None))!='Collections' or
+                argument.member!='reverseOrder'):
+            return None
+        args=list(getattr(invocation,'arguments',None) or [])
+        element=self.array_local_element_raw(args[0]) if args else None
+        return (f'::jxx::util::Collections::reverseOrder<{element}>()'
+                if element else None)
+
+    def map_entry_boxed_argument(self, invocation, argument, index):
+        if invocation.member!='setValue' or index!=0: return None
+        qualifier=getattr(invocation,'qualifier',None)
+        declared=self.local_variable_types.get(qualifier)
+        if self.simple(self.name_of(declared)) not in {'Map.Entry','MapEntry'}:
+            return None
+        args=list(getattr(declared,'arguments',None) or [])
+        if len(args)<2:return None
+        value_type=getattr(args[1],'type',None)
+        raw=self.template_argument_type(value_type)
+        return self.boxed_expression_for_raw(argument,raw)
+
     def method_invocation_arguments(self,invocation):
         sdk_varargs=self.sdk_object_varargs_arguments(invocation)
         if sdk_varargs is not None:
@@ -1689,6 +1722,8 @@ class Translator:
         if not is_varargs or not parameters:
             rendered=[]
             for index,argument in enumerate(arguments):
+                reverse_order=self.specialized_reverse_order_argument(invocation,argument,index)
+                map_entry_boxed=self.map_entry_boxed_argument(invocation,argument,index)
                 primitive_array_functional=self.primitive_array_functional_argument(invocation,argument,index)
                 arrays_as_list=self.arrays_as_list_argument(invocation,argument)
                 map_functional=self.map_functional_argument(
@@ -1700,7 +1735,11 @@ class Translator:
                     invocation,argument)
                 optional_functional=self.optional_functional_argument(
                     invocation,argument)
-                if primitive_array_functional is not None:
+                if reverse_order is not None:
+                    rendered.append(reverse_order)
+                elif map_entry_boxed is not None:
+                    rendered.append(map_entry_boxed)
+                elif primitive_array_functional is not None:
                     rendered.append(primitive_array_functional)
                 elif arrays_as_list is not None:
                     rendered.append(arrays_as_list)
