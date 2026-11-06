@@ -52,7 +52,7 @@ namespace jxx::jdk8::util {
         EXPECT_TRUE(x->isEmpty());
         EXPECT_TRUE(x->add(::jxx::NEW<::jxx::lang::String>("a")));
         x->add(0, ::jxx::NEW<::jxx::lang::String>("z"));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf("z"), ::jxx::lang::Integer::valueOf("a")), x));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("z"), ::jxx::NEW<::jxx::lang::String>("a")), x));
         EXPECT_EQ(2, x->size());
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("a"), x->get(1)));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("a"), x->set(1, ::jxx::NEW<::jxx::lang::String>("b"))));
@@ -60,22 +60,22 @@ namespace jxx::jdk8::util {
     }
 
     TEST(ArrayListTest, CollectionOperations) {
-        ::jxx::Ptr<::jxx::util::ArrayList<::jxx::lang::String>> x = ::jxx::NEW<::jxx::util::ArrayList<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf("a"), ::jxx::lang::Integer::valueOf("b"), ::jxx::lang::Integer::valueOf("c"), ::jxx::lang::Integer::valueOf("b")));
+        ::jxx::Ptr<::jxx::util::ArrayList<::jxx::lang::String>> x = ::jxx::NEW<::jxx::util::ArrayList<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("b"), ::jxx::NEW<::jxx::lang::String>("c"), ::jxx::NEW<::jxx::lang::String>("b")));
         EXPECT_TRUE(x->contains(::jxx::NEW<::jxx::lang::String>("b")));
         EXPECT_EQ(1, x->indexOf(::jxx::NEW<::jxx::lang::String>("b")));
         EXPECT_EQ(3, x->lastIndexOf(::jxx::NEW<::jxx::lang::String>("b")));
         EXPECT_TRUE(x->remove(::jxx::NEW<::jxx::lang::String>("b")));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("c"), x->remove(1)));
-        EXPECT_TRUE(x->containsAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf("a"), ::jxx::lang::Integer::valueOf("b")))))));
-        x->addAll(::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::String>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::String, ::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf("d"), ::jxx::lang::Double::valueOf("e"))))));
-        x->addAll(1, ::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::String>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::String, ::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf("x"), ::jxx::lang::Integer::valueOf("y"))))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf("a"), ::jxx::lang::Integer::valueOf("x"), ::jxx::lang::Integer::valueOf("y"), ::jxx::lang::Integer::valueOf("b"), ::jxx::lang::Integer::valueOf("d"), ::jxx::lang::Double::valueOf("e")), x));
+        EXPECT_TRUE(x->containsAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("b")))))));
+        x->addAll(::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::String>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::String, ::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("d"), ::jxx::NEW<::jxx::lang::String>("e"))))));
+        x->addAll(1, ::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::String>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::String, ::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("x"), ::jxx::NEW<::jxx::lang::String>("y"))))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("x"), ::jxx::NEW<::jxx::lang::String>("y"), ::jxx::NEW<::jxx::lang::String>("b"), ::jxx::NEW<::jxx::lang::String>("d"), ::jxx::NEW<::jxx::lang::String>("e")), x));
     }
 
     TEST(ArrayListTest, BulkAndArrayOperations) {
-        ::jxx::Ptr<::jxx::util::ArrayList<::jxx::lang::String>> x = ::jxx::NEW<::jxx::util::ArrayList<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf("a"), ::jxx::lang::Integer::valueOf("b"), ::jxx::lang::Integer::valueOf("c")));
-        EXPECT_TRUE(x->removeAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf("b"), ::jxx::lang::Integer::valueOf("z")))))));
-        EXPECT_TRUE(x->retainAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf("a"), ::jxx::lang::Integer::valueOf("z")))))));
+        ::jxx::Ptr<::jxx::util::ArrayList<::jxx::lang::String>> x = ::jxx::NEW<::jxx::util::ArrayList<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("b"), ::jxx::NEW<::jxx::lang::String>("c")));
+        EXPECT_TRUE(x->removeAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("b"), ::jxx::NEW<::jxx::lang::String>("z")))))));
+        EXPECT_TRUE(x->retainAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("z")))))));
         ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Object>, 1U>> a = x->toArray();
         EXPECT_TRUE(::jxx::util::Arrays::equals(::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Object>, 1U>>(), a));
         ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>> s = x->toArray(::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>>(0));

@@ -66,7 +66,7 @@ namespace jxx::jdk8::util {
         ::jxx::Ptr<::jxx::util::HashMap<::jxx::lang::String, ::jxx::lang::Integer>> m = ::jxx::NEW<::jxx::util::HashMap<::jxx::lang::String, ::jxx::lang::Integer>>();
         m->put(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::lang::Integer::valueOf(1));
         m->put(::jxx::NEW<::jxx::lang::String>("b"), ::jxx::lang::Integer::valueOf(2));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::util::HashSet<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf("a"), ::jxx::lang::Integer::valueOf("b"))), m->keySet()));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::util::HashSet<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("b"))), m->keySet()));
         EXPECT_TRUE(m->values()->containsAll(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2))));
         for (::jxx::lang::jint jxxIndex_e = 0; jxxIndex_e < m->entrySet()->size(); ++jxxIndex_e) {
             ::jxx::Ptr<::jxx::util::MapEntry<::jxx::lang::String, ::jxx::lang::Integer>> e = m->entrySet()->get(jxxIndex_e);

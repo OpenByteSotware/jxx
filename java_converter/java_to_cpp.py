@@ -1131,9 +1131,21 @@ class Translator:
         return None
 
     def arrays_as_list_argument(self, invocation, argument):
-        if self.simple(getattr(invocation,'qualifier',None))!='Arrays' or invocation.member!='asList': return None
-        primitive=self.expression_type_name(argument); wrapper=PRIMITIVE_TO_WRAPPER.get(primitive)
-        return f'::jxx::lang::{wrapper}::valueOf({self.expr(argument)})' if wrapper else None
+        owner=self.simple(str(
+            getattr(invocation,'qualifier',None) or '').split('.')[-1])
+        if owner!='Arrays' or invocation.member!='asList':
+            return None
+        # Source String literals are references. Test this before generic
+        # expression inference because untyped literals can otherwise fall
+        # through the numeric default and be incorrectly boxed as Integer.
+        if self.is_string_literal_expression(argument):
+            return (f'::jxx::NEW<::jxx::lang::String>('
+                    f'{self.expr(argument)})')
+        primitive=self.expression_type_name(argument)
+        wrapper=PRIMITIVE_TO_WRAPPER.get(primitive)
+        if wrapper:
+            return f'::jxx::lang::{wrapper}::valueOf({self.expr(argument)})'
+        return None
 
     def map_generic_raw_types(self, qualifier):
         declared=self.local_variable_types.get(qualifier)
