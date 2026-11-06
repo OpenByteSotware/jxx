@@ -895,6 +895,38 @@ class Translator:
             return self.array_size_expression(name)
         return f'{name}->size()'
 
+    def map_view_selector_argument(self, owner, selector, argument, index):
+        if (type(owner).__name__!='MethodInvocation' or
+                owner.member not in {'keySet','values','entrySet'}):
+            return None
+        map_types=self.map_generic_raw_types(getattr(owner,'qualifier',None))
+        if map_types is None:
+            return None
+        key_raw,value_raw=map_types
+        view_raw=(key_raw if owner.member=='keySet' else
+                  value_raw if owner.member=='values' else
+                  f'::jxx::util::MapEntry<{key_raw}, {value_raw}>')
+        if selector.member in {'containsAll','removeAll','retainAll'} and index==0:
+            source_raw=self.collection_expression_element_raw(argument)
+            if source_raw is None:
+                return None
+            rendered=self.expr(argument)
+            self.includes.add('util/jxx.util.Collection.h')
+            self.includes.add('util/jxx.util.wildcard.CollectionAdapters.h')
+            collection=(f'::jxx::CAST<::jxx::util::Collection<'
+                        f'{source_raw}>>({rendered})')
+            view=(f'::jxx::NEW<::jxx::util::wildcard::'
+                  f'CollectionAnyView<{source_raw}>>({collection})')
+            return (f'::jxx::CAST<::jxx::util::wildcard::CollectionAny>('
+                    f'{view})')
+        if (selector.member in {'remove','contains'} and index==0 and
+                view_raw=='::jxx::lang::String' and
+                self.is_string_literal_expression(argument)):
+            value=(f'::jxx::NEW<::jxx::lang::String>('
+                   f'{self.expr(argument)})')
+            return f'::jxx::CAST<::jxx::lang::Object>({value})'
+        return None
+
     def selector_string_argument(self, selector, argument, index):
         if index != 0 or not self.is_string_literal_expression(argument):
             return None
@@ -921,11 +953,14 @@ class Translator:
                         owner,selector,argument)
                     optional_value=self.optional_selector_value_argument(
                         owner,selector,argument,index)
+                    map_view_argument=self.map_view_selector_argument(
+                        owner,selector,argument,index)
                     string_argument=self.selector_string_argument(
                         selector,argument,index)
                     selector_arguments.append(
                         optional_argument if optional_argument is not None
                         else optional_value if optional_value is not None
+                        else map_view_argument if map_view_argument is not None
                         else string_argument if string_argument is not None
                         else self.expr(argument))
                 arguments=', '.join(selector_arguments)
@@ -2360,7 +2395,7 @@ class Translator:
                                            f'reverseOrder<{element}>()')
             invocation=f'{head}({", ".join(rendered_arguments)})'
             return self.apply_expression_selectors(
-                invocation,getattr(e,'selectors',None))
+                invocation,getattr(e,'selectors',None),expression=e)
         if n=='ClassCreator':
             created=self.class_creator_expression(e)
             selectors=getattr(e,'selectors',None)

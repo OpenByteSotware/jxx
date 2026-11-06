@@ -67,15 +67,15 @@ namespace jxx::jdk8::util {
         m->put(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::lang::Integer::valueOf(1));
         m->put(::jxx::NEW<::jxx::lang::String>("b"), ::jxx::lang::Integer::valueOf(2));
         EXPECT_EQ(::jxx::NEW<::jxx::util::HashSet<::jxx::lang::String>>(::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::String>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::String, ::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("b")))))), m->keySet());
-        EXPECT_TRUE(m->values()->containsAll(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2))));
+        EXPECT_TRUE(m->values()->containsAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2)))))));
         for (auto jxxIterator_e = m->entrySet()->iterator(); jxxIterator_e->hasNext();) {
             ::jxx::Ptr<::jxx::util::MapEntry<::jxx::lang::String, ::jxx::lang::Integer>> e = jxxIterator_e->next();
-            if (e->getKey()->equals("a")) {
+            if (e->getKey()->equals(::jxx::NEW<::jxx::lang::String>("a"))) {
                 e->setValue(::jxx::lang::Integer::valueOf(9));
             }
         }
         EXPECT_EQ(::jxx::lang::Integer::valueOf(9), m->get(::jxx::NEW<::jxx::lang::String>("a")));
-        m->keySet()->remove("b");
+        m->keySet()->remove(::jxx::CAST<::jxx::lang::Object>(::jxx::NEW<::jxx::lang::String>("b")));
         EXPECT_FALSE(m->containsKey(::jxx::NEW<::jxx::lang::String>("b")));
     }
 
