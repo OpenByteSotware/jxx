@@ -894,12 +894,18 @@ class Translator:
             kind=type(selector).__name__
             if kind=='MethodInvocation':
                 selector_arguments=[]
-                for argument in getattr(selector,'arguments',None) or []:
+                for index,argument in enumerate(
+                        getattr(selector,'arguments',None) or []):
+                    owner=(expression
+                           if type(expression).__name__=='MethodInvocation'
+                           else None)
                     optional_argument=self.optional_selector_functional_argument(
-                        expression if type(expression).__name__=='MethodInvocation'
-                        else None,selector,argument)
+                        owner,selector,argument)
+                    optional_value=self.optional_selector_value_argument(
+                        owner,selector,argument,index)
                     selector_arguments.append(
                         optional_argument if optional_argument is not None
+                        else optional_value if optional_value is not None
                         else self.expr(argument))
                 arguments=', '.join(selector_arguments)
                 result+=f'->{selector.member}({arguments})'
@@ -1114,7 +1120,9 @@ class Translator:
             elif return_raw is not None:
                 simple=return_raw.split('::')[-1].split('<')[0]
                 primitive=WRAPPER_TO_PRIMITIVE.get(simple)
-                if primitive and self.expression_type_name(body) in PRIMITIVES:
+                if simple=='String' and self.is_string_literal_expression(body):
+                    value=f'::jxx::NEW<::jxx::lang::String>({value})'
+                elif primitive and self.expression_type_name(body) in PRIMITIVES:
                     value=f'::jxx::lang::{simple}::valueOf({value})'
                 output.w(f'return {value};')
             else:
@@ -1326,6 +1334,35 @@ class Translator:
         body=self.functional_lambda_body(
             argument,'',source_raw,return_raw=result_raw)
         return f'jxxMakeSupplier<{result_raw}>([&]() {body})'
+
+    def optional_value_argument(self, invocation, argument, index):
+        if invocation.member!='orElse' or index!=0:
+            return None
+        qualifier=getattr(invocation,'qualifier',None)
+        if qualifier not in self.local_variable_types:
+            return None
+        declared=self.local_variable_types[qualifier]
+        if self.simple(self.name_of(declared))!='Optional':
+            return None
+        target_raw=self.local_generic_argument_raw(qualifier)
+        if (target_raw=='::jxx::lang::String' and
+                self.is_string_literal_expression(argument)):
+            return f'::jxx::NEW<::jxx::lang::String>({self.expr(argument)})'
+        return self.boxed_expression_for_raw(argument,target_raw)
+
+    def optional_selector_value_argument(self, owner_invocation,
+                                         selector, argument, index):
+        if (type(selector).__name__!='MethodInvocation' or
+                selector.member!='orElse' or index!=0):
+            return None
+        if (self.simple(getattr(owner_invocation,'qualifier',None))!='Optional' or
+                owner_invocation.member not in {'empty','of','ofNullable'}):
+            return None
+        target_raw=self.inferred_optional_type_argument(owner_invocation)
+        if (target_raw=='::jxx::lang::String' and
+                self.is_string_literal_expression(argument)):
+            return f'::jxx::NEW<::jxx::lang::String>({self.expr(argument)})'
+        return self.boxed_expression_for_raw(argument,target_raw)
 
     def optional_functional_argument(self, invocation, argument):
         qualifier=getattr(invocation,'qualifier',None)
@@ -1836,6 +1873,8 @@ class Translator:
                     invocation,argument)
                 optional_functional=self.optional_functional_argument(
                     invocation,argument)
+                optional_value=self.optional_value_argument(
+                    invocation,argument,index)
                 if reverse_order is not None:
                     rendered.append(reverse_order)
                 elif map_entry_boxed is not None:
@@ -1854,6 +1893,8 @@ class Translator:
                     rendered.append(collection_functional)
                 elif optional_functional is not None:
                     rendered.append(optional_functional)
+                elif optional_value is not None:
+                    rendered.append(optional_value)
                 elif (self.is_this_expression(argument) and
                         index < len(parameters)):
                     rendered.append(self.this_ptr_expression(
