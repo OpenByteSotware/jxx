@@ -73,16 +73,16 @@ namespace jxx::jdk8::util {
 
     TEST(OptionalTest, ConditionalAndTransformingOperationsWork) {
         ::jxx::Ptr<::jxx::util::Optional<::jxx::lang::String>> p = ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("abc"));
-        EXPECT_EQ(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("abc")), p->filter(jxxMakePredicate<::jxx::lang::String>([&](const ::jxx::Ptr<::jxx::lang::String>& v) {
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("abc")), p->filter(jxxMakePredicate<::jxx::lang::String>([&](const ::jxx::Ptr<::jxx::lang::String>& v) {
     return (v->length() == 3);
-})));
-        EXPECT_EQ(::jxx::util::Optional<::jxx::lang::Object>::empty(), p->filter(jxxMakePredicate<::jxx::lang::String>([&](const ::jxx::Ptr<::jxx::lang::String>& v) {
+}))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::util::Optional<::jxx::lang::String>::empty(), p->filter(jxxMakePredicate<::jxx::lang::String>([&](const ::jxx::Ptr<::jxx::lang::String>& v) {
     return false;
-})));
-        EXPECT_EQ(::jxx::util::Optional<::jxx::lang::Integer>::of(::jxx::lang::Integer::valueOf(3)), p->map(jxxMakeFunction<::jxx::lang::String, ::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::String>& value) { return ::jxx::lang::Integer::valueOf(value->length()); })));
-        EXPECT_EQ(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("ABC")), p->flatMap(jxxMakeFunction<::jxx::lang::String, ::jxx::util::Optional<::jxx::lang::String>>([&](const ::jxx::Ptr<::jxx::lang::String>& v) {
+}))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::util::Optional<::jxx::lang::Integer>::of(::jxx::lang::Integer::valueOf(3)), p->map(jxxMakeFunction<::jxx::lang::String, ::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::String>& value) { return ::jxx::lang::Integer::valueOf(value->length()); }))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("ABC")), p->flatMap(jxxMakeFunction<::jxx::lang::String, ::jxx::util::Optional<::jxx::lang::String>>([&](const ::jxx::Ptr<::jxx::lang::String>& v) {
     return ::jxx::util::Optional<::jxx::lang::String>::of(v->toUpperCase());
-})));
+}))));
         ::jxx::Ptr<::jxx::util::concurrent::atomic::AtomicBoolean> called = ::jxx::NEW<::jxx::util::concurrent::atomic::AtomicBoolean>(false);
         p->ifPresent(jxxMakeConsumer<::jxx::lang::String>([&](const ::jxx::Ptr<::jxx::lang::String>& v) {
     called->set(true);

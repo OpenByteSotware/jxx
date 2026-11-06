@@ -2140,6 +2140,12 @@ class Translator:
             terminal_kind=self.terminal_selector_return_kind(expression)
             if terminal_kind is not None:
                 return terminal_kind=='reference'
+            qualifier=getattr(expression,'qualifier',None)
+            owner_type=self.local_variable_types.get(qualifier)
+            if (self.simple(self.name_of(owner_type))=='Optional' and
+                    expression.member in {'get','filter','map','flatMap',
+                                          'orElse','orElseGet'}):
+                return True
             metadata=self.sdk_method_metadata(expression)
             if metadata is not None:
                 return metadata.return_kind=='reference'
@@ -2188,6 +2194,31 @@ class Translator:
         self.includes.add('util/jxx.util.Arrays.h')
         return rendered
 
+    def optional_assertion_expected_raw(self, expression):
+        if type(expression).__name__!='MethodInvocation':
+            return None
+        qualifier=getattr(expression,'qualifier',None)
+        owner_type=self.local_variable_types.get(qualifier)
+        if self.simple(self.name_of(owner_type))=='Optional':
+            source_raw=self.local_generic_argument_raw(qualifier)
+            if expression.member in {'filter','flatMap'}:
+                return f'::jxx::util::Optional<{source_raw}>'
+        return None
+
+    def assertion_reference_expression(self, expression, peer=None):
+        if (type(expression).__name__=='MethodInvocation' and
+                self.simple(getattr(expression,'qualifier',None))=='Optional' and
+                expression.member in {'empty','of','ofNullable'}):
+            peer_raw=self.optional_assertion_expected_raw(peer)
+            if peer_raw is not None:
+                converted=self.optional_static_invocation_expression_for_raw(
+                    expression,peer_raw)
+                if converted is not None:
+                    return converted
+        return (self.string_value_expression(expression)
+                if self.is_string_expression(expression)
+                else self.expr(expression))
+
     def test_assertion_expression(self, invocation):
         if self.test_framework=='none' or type(invocation).__name__!='MethodInvocation':
             return None
@@ -2231,12 +2262,10 @@ class Translator:
                     arguments[1])
                 if expected_reference and actual_reference:
                     self.includes.add('util/jxx.util.Objects.h')
-                    expected=(self.string_value_expression(arguments[0])
-                              if self.is_string_expression(arguments[0])
-                              else self.expr(arguments[0]))
-                    actual=(self.string_value_expression(arguments[1])
-                            if self.is_string_expression(arguments[1])
-                            else self.expr(arguments[1]))
+                    expected=self.assertion_reference_expression(
+                        arguments[0],arguments[1])
+                    actual=self.assertion_reference_expression(
+                        arguments[1],arguments[0])
                     comparison=(f'::jxx::util::Objects::equals('
                                 f'{expected}, {actual})')
                     macro=('EXPECT_TRUE' if member=='assertEquals'
