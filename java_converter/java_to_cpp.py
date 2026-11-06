@@ -1710,14 +1710,25 @@ class Translator:
                 if element else None)
 
     def map_entry_boxed_argument(self, invocation, argument, index):
-        if invocation.member!='setValue' or index!=0: return None
+        if invocation.member!='setValue' or index!=0:
+            return None
         qualifier=getattr(invocation,'qualifier',None)
         declared=self.local_variable_types.get(qualifier)
-        if self.simple(self.name_of(declared)) not in {'Map.Entry','MapEntry'}:
+        declared_name=self.name_of(declared)
+        if self.simple(declared_name) not in {'Entry','MapEntry'} and                 declared_name not in {'Map.Entry','java.util.Map.Entry'}:
             return None
-        args=list(getattr(declared,'arguments',None) or [])
-        if len(args)<2:return None
-        value_type=getattr(args[1],'type',None)
+        # javalang represents Map.Entry<K,V> as a ReferenceType Map whose
+        # sub_type is Entry<K,V>. The generic arguments therefore belong to
+        # the terminal subtype, not necessarily to the outer ReferenceType.
+        argument_owner=declared
+        while getattr(argument_owner,'sub_type',None) is not None:
+            argument_owner=argument_owner.sub_type
+        arguments=list(getattr(argument_owner,'arguments',None) or [])
+        if len(arguments)<2:
+            return None
+        value_type=getattr(arguments[1],'type',None)
+        if value_type is None:
+            return None
         raw=self.template_argument_type(value_type)
         return self.boxed_expression_for_raw(argument,raw)
 

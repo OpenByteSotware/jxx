@@ -71,7 +71,7 @@ namespace jxx::jdk8::util {
         for (::jxx::lang::jint jxxIndex_e = 0; jxxIndex_e < m->entrySet()->size(); ++jxxIndex_e) {
             ::jxx::Ptr<::jxx::util::MapEntry<::jxx::lang::String, ::jxx::lang::Integer>> e = m->entrySet()->get(jxxIndex_e);
             if (e->getKey()->equals(::jxx::NEW<::jxx::lang::String>("a"))) {
-                e->setValue(9);
+                e->setValue(::jxx::lang::Integer::valueOf(9));
             }
         }
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::lang::Integer::valueOf(9), m->get(::jxx::NEW<::jxx::lang::String>("a"))));
