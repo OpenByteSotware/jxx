@@ -10,8 +10,10 @@ public class HashMapTest {
 	 assertEquals(Integer.valueOf(3),m.get(null)); assertTrue(m.containsKey("nullValue")); assertTrue(m.containsValue(null)); 
 	 assertEquals(Integer.valueOf(2),m.remove("a")); assertFalse(m.containsKey("a"));}
  
- @Test public void viewsAreBackedByMap(){HashMap<String,Integer>m=new HashMap<String,Integer>();
- m.put("a",1);m.put("b",2); assertEquals(new HashSet<String>(Arrays.asList("a","b")),m.keySet()); 
+ @Test public void viewsAreBackedByMap(){
+	 HashMap<String,Integer>m=new HashMap<String,Integer>();
+ m.put("a",1);m.put("b",2); 
+ assertEquals(new HashSet<String>(Arrays.asList("a","b")),m.keySet()); 
  assertTrue(m.values().containsAll(Arrays.asList(1,2))); 
  for(Map.Entry<String,Integer>e:m.entrySet())if(e.getKey().equals("a"))e.setValue(9);
  assertEquals(Integer.valueOf(9),m.get("a")); m.keySet().remove("b");

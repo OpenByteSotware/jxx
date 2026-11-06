@@ -2418,6 +2418,11 @@ class Translator:
         return value
 
     def emit_local_array_initializer(self, declaration, declarator, o, dims):
+        self.local_variable_types[declarator.name]=declaration.type
+        self.local_array_variables.add(declarator.name)
+        if (dims == 1 and
+                self.name_of(declaration.type) in PRIMITIVE_ARRAY_ALIASES):
+            self.local_primitive_rank1_arrays.add(declarator.name)
         concrete=self.array_concrete_type(declaration.type,dims)
         values=list(getattr(declarator.initializer,'initializers',None) or [])
         const='const ' if 'final' in (getattr(declaration,'modifiers',None) or set()) else ''

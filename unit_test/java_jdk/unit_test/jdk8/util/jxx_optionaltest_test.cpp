@@ -115,7 +115,7 @@ namespace jxx::jdk8::util {
         EXPECT_NE(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x")), ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("y")));
         EXPECT_EQ("x", ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x"))->hashCode());
         EXPECT_EQ(0, ::jxx::util::Optional<::jxx::lang::Object>::empty()->hashCode());
-        EXPECT_TRUE(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x"))->toString()->contains("x"));
+        EXPECT_TRUE(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x"))->toString()->contains(::jxx::NEW<::jxx::lang::String>("x")));
     }
 
 } // namespace jxx::jdk8::util

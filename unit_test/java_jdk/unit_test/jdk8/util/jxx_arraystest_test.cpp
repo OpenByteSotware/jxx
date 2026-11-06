@@ -62,7 +62,7 @@ namespace jxx::jdk8::util {
         (*s)[0U] = ::jxx::NEW<::jxx::lang::String>("b");
         (*s)[1U] = ::jxx::NEW<::jxx::lang::String>("a");
         (*s)[2U] = ::jxx::NEW<::jxx::lang::String>("c");
-        ::jxx::util::Arrays::sort(s, ::jxx::util::Collections::reverseOrder());
+        ::jxx::util::Arrays::sort(s, ::jxx::util::Collections::reverseOrder<::jxx::lang::String>());
         EXPECT_TRUE(::jxx::util::Arrays::equals(::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>>(), s));
     }
 
