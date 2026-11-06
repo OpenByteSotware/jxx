@@ -70,12 +70,12 @@ namespace jxx::jdk8::util {
         EXPECT_TRUE(m->values()->containsAll(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2))));
         for (::jxx::lang::jint jxxIndex_e = 0; jxxIndex_e < m->entrySet()->size(); ++jxxIndex_e) {
             ::jxx::Ptr<::jxx::util::MapEntry<::jxx::lang::String, ::jxx::lang::Integer>> e = m->entrySet()->get(jxxIndex_e);
-            if (e->getKey()->equals(::jxx::NEW<::jxx::lang::String>("a"))) {
+            if (e->getKey()->equals("a")) {
                 e->setValue(::jxx::lang::Integer::valueOf(9));
             }
         }
         EXPECT_EQ(::jxx::lang::Integer::valueOf(9), m->get(::jxx::NEW<::jxx::lang::String>("a")));
-        m->keySet()->remove(::jxx::NEW<::jxx::lang::String>("b"));
+        m->keySet()->remove("b");
         EXPECT_FALSE(m->containsKey(::jxx::NEW<::jxx::lang::String>("b")));
     }
 

@@ -96,15 +96,15 @@ namespace jxx::jdk8::util {
         EXPECT_EQ("s", e->orElseGet(jxxMakeSupplier<::jxx::lang::String>([&]() {
     return "s";
 })));
-        EXPECT_EQ("x", ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x"))->orElse(::jxx::NEW<::jxx::lang::String>("d")));
+        EXPECT_EQ("x", ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x"))->orElse("d"));
     }
 
     TEST(OptionalTest, OrElseThrowUsesSupplier) {
         EXPECT_THROW(
             {
-                ::jxx::util::Optional<::jxx::lang::Object>::empty()->orElseThrow([&]() {
-    ::jxx::NEW<::jxx::lang::IllegalStateException>(::jxx::NEW<::jxx::lang::String>("missing"));
-});
+                ::jxx::util::Optional<::jxx::lang::Object>::empty()->orElseThrow(jxxMakeSupplier<::jxx::lang::IllegalStateException>([&]() {
+    return ::jxx::NEW<::jxx::lang::IllegalStateException>(::jxx::NEW<::jxx::lang::String>("missing"));
+}));
             },
             ::jxx::lang::IllegalStateException);
     }
@@ -115,7 +115,7 @@ namespace jxx::jdk8::util {
         EXPECT_NE(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x")), ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("y")));
         EXPECT_EQ("x", ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x"))->hashCode());
         EXPECT_EQ(0, ::jxx::util::Optional<::jxx::lang::Object>::empty()->hashCode());
-        EXPECT_TRUE(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x"))->toString()->contains(::jxx::NEW<::jxx::lang::String>("x")));
+        EXPECT_TRUE(::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x"))->toString()->contains("x"));
     }
 
 } // namespace jxx::jdk8::util

@@ -886,14 +886,22 @@ class Translator:
         return f'{name}->size()'
 
     def apply_expression_selectors(
-            self,base,selectors,primitive_rank1_array:bool=False):
+            self,base,selectors,primitive_rank1_array:bool=False,
+            expression=None):
         result=base
         array_depth=0
         for selector in selectors or []:
             kind=type(selector).__name__
             if kind=='MethodInvocation':
-                arguments=', '.join(
-                    self.method_invocation_arguments(selector))
+                selector_arguments=[]
+                for argument in getattr(selector,'arguments',None) or []:
+                    optional_argument=self.optional_selector_functional_argument(
+                        expression if type(expression).__name__=='MethodInvocation'
+                        else None,selector,argument)
+                    selector_arguments.append(
+                        optional_argument if optional_argument is not None
+                        else self.expr(argument))
+                arguments=', '.join(selector_arguments)
                 result+=f'->{selector.member}({arguments})'
             elif kind=='MemberReference':
                 result+=f'->{selector.member}'
@@ -1273,6 +1281,52 @@ class Translator:
         return (f'jxxMakeUnaryOperator<{element_raw}>('
                 f'[&]({parameter}) {body})')
 
+    def optional_owner_raw_from_invocation(self, invocation):
+        qualifier=getattr(invocation,'qualifier',None)
+        if qualifier in self.local_variable_types:
+            declared=self.local_variable_types[qualifier]
+            if self.simple(self.name_of(declared))=='Optional':
+                return self.local_generic_argument_raw(qualifier)
+        # A selector such as Optional.empty().orElseThrow(...) is represented
+        # by javalang as the static Optional invocation followed by a selector.
+        # The selected invocation itself has no named local qualifier.
+        return None
+
+    def lambda_created_reference_raw(self, argument):
+        if type(argument).__name__!='LambdaExpression':
+            return None
+        body=getattr(argument,'body',None)
+        if type(body).__name__=='ClassCreator':
+            return self.ref_raw(body.type)
+        if (isinstance(body,list) and len(body)==1 and
+                type(body[0]).__name__=='ReturnStatement' and
+                type(getattr(body[0],'expression',None)).__name__=='ClassCreator'):
+            return self.ref_raw(body[0].expression.type)
+        return None
+
+    def optional_selector_functional_argument(self, owner_invocation,
+                                              selector, argument):
+        if type(selector).__name__!='MethodInvocation':
+            return None
+        if selector.member not in {'orElseGet','orElseThrow'}:
+            return None
+        if type(argument).__name__ not in {'LambdaExpression','MethodReference'}:
+            return None
+        if (self.simple(getattr(owner_invocation,'qualifier',None))!='Optional' or
+                owner_invocation.member not in {'empty','of','ofNullable'}):
+            return None
+        self.uses_functional_adapters=True
+        source_raw=self.inferred_optional_type_argument(owner_invocation)
+        if selector.member=='orElseThrow':
+            result_raw=self.lambda_created_reference_raw(argument)
+            if result_raw is None:
+                return None
+        else:
+            result_raw=source_raw
+        body=self.functional_lambda_body(
+            argument,'',source_raw,return_raw=result_raw)
+        return f'jxxMakeSupplier<{result_raw}>([&]() {body})'
+
     def optional_functional_argument(self, invocation, argument):
         qualifier=getattr(invocation,'qualifier',None)
         if qualifier not in self.local_variable_types:
@@ -1294,9 +1348,12 @@ class Translator:
             maker='jxxMakeConsumer' if member=='ifPresent' else 'jxxMakePredicate'
             return f'{maker}<{source_raw}>([&](const ::jxx::Ptr<{source_raw}>& {name}) {body})'
         if member in {'orElseGet','orElseThrow'}:
-            result_raw=(source_raw if member=='orElseGet'
-                        else '::jxx::lang::IllegalStateException')
-            body=self.functional_lambda_body(argument,'',source_raw,result_raw)
+            result_raw=source_raw
+            if member=='orElseThrow':
+                result_raw=(self.lambda_created_reference_raw(argument) or
+                            '::jxx::lang::IllegalStateException')
+            body=self.functional_lambda_body(
+                argument,'',source_raw,return_raw=result_raw)
             return f'jxxMakeSupplier<{result_raw}>([&]() {body})'
         # map/flatMap
         parameter=(getattr(argument,'parameters',None) or [None])[0]
@@ -2182,7 +2239,8 @@ class Translator:
             optional_static=self.optional_static_invocation_expression(e)
             if optional_static is not None:
                 return self.apply_expression_selectors(
-                    optional_static,getattr(e,'selectors',None))
+                    optional_static,getattr(e,'selectors',None),
+                    expression=e)
             rendered_q=(f'{q}_' if q in self.active_anonymous_captures else q)
             if q in self.local_variable_types:
                 head=f'{rendered_q}->{e.member}'
