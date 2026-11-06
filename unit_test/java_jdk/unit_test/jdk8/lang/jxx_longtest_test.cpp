@@ -53,16 +53,16 @@ namespace jxx::jdk8::lang {
     TEST(LongTest, UnsignedParsingAndFormattingWork) {
         EXPECT_EQ(-static_cast<::jxx::lang::jlong>(1), ::jxx::lang::Long::parseUnsignedLong(::jxx::NEW<::jxx::lang::String>("18446744073709551615")));
         EXPECT_EQ(-static_cast<::jxx::lang::jlong>(1), ::jxx::lang::Long::parseUnsignedLong(::jxx::NEW<::jxx::lang::String>("ffffffffffffffff"), 16));
-        EXPECT_EQ("18446744073709551615", ::jxx::lang::Long::toUnsignedString(-static_cast<::jxx::lang::jlong>(1)));
-        EXPECT_EQ("ffffffffffffffff", ::jxx::lang::Long::toUnsignedString(-static_cast<::jxx::lang::jlong>(1), 16));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("18446744073709551615"), ::jxx::lang::Long::toUnsignedString(-static_cast<::jxx::lang::jlong>(1))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("ffffffffffffffff"), ::jxx::lang::Long::toUnsignedString(-static_cast<::jxx::lang::jlong>(1), 16)));
     }
 
     TEST(LongTest, FormattingSupportsCommonRadices) {
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("123"), ::jxx::lang::String::valueOf(::jxx::lang::Long::toString(static_cast<::jxx::lang::jlong>(123)))));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("ff"), ::jxx::lang::String::valueOf(::jxx::lang::Long::toString(static_cast<::jxx::lang::jlong>(255), 16))));
-        EXPECT_EQ("ff", ::jxx::lang::Long::toHexString(static_cast<::jxx::lang::jlong>(255)));
-        EXPECT_EQ("377", ::jxx::lang::Long::toOctalString(static_cast<::jxx::lang::jlong>(255)));
-        EXPECT_EQ("11111111", ::jxx::lang::Long::toBinaryString(static_cast<::jxx::lang::jlong>(255)));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("ff"), ::jxx::lang::Long::toHexString(static_cast<::jxx::lang::jlong>(255))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("377"), ::jxx::lang::Long::toOctalString(static_cast<::jxx::lang::jlong>(255))));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("11111111"), ::jxx::lang::Long::toBinaryString(static_cast<::jxx::lang::jlong>(255))));
     }
 
     TEST(LongTest, EqualityHashAndComparisonWork) {

@@ -112,9 +112,9 @@ namespace jxx::jdk8::util {
         (*a)[1U] = ::jxx::NEW<::jxx::lang::String>("b");
         ::jxx::Ptr<::jxx::util::List<::jxx::lang::String>> list = ::jxx::util::Arrays::asList(a);
         list->set(0, ::jxx::NEW<::jxx::lang::String>("x"));
-        EXPECT_EQ("x", (*a)[0]);
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("x"), ::jxx::lang::String::valueOf((*a)[0])));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("[1, 2]"), ::jxx::lang::String::valueOf(::jxx::util::Arrays::toString(::jxx::NEW<::jxx::lang::IntArrayType>()))));
-        EXPECT_EQ("[[1, 2]]", ::jxx::util::Arrays::deepToString(::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Object>, 1U>>()));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("[[1, 2]]"), ::jxx::util::Arrays::deepToString(::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Object>, 1U>>())));
     }
 
     TEST(ArraysTest, SetAllParallelSetAllAndPrefixWork) {

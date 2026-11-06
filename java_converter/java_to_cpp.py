@@ -2219,6 +2219,30 @@ class Translator:
                 if self.is_string_expression(expression)
                 else self.expr(expression))
 
+    def string_equality_assertion(self, member, arguments):
+        if (member not in {'assertEquals','assertNotEquals'} or
+                len(arguments)!=2):
+            return None
+        expected_string=self.is_string_expression(arguments[0])
+        actual_string=self.is_string_expression(arguments[1])
+        if not (expected_string or actual_string):
+            return None
+        # Do not steal primitive terminal selectors such as "x".hashCode().
+        if ((expected_string and
+             self.terminal_selector_return_kind(arguments[0])=='primitive') or
+            (actual_string and
+             self.terminal_selector_return_kind(arguments[1])=='primitive')):
+            return None
+        self.includes.add('util/jxx.util.Objects.h')
+        expected=(self.string_value_expression(arguments[0])
+                  if expected_string else self.expr(arguments[0]))
+        actual=(self.string_value_expression(arguments[1])
+                if actual_string else self.expr(arguments[1]))
+        comparison=(f'::jxx::util::Objects::equals('
+                    f'{expected}, {actual})')
+        macro=('EXPECT_TRUE' if member=='assertEquals' else 'EXPECT_FALSE')
+        return f'{macro}({comparison})'
+
     def test_assertion_expression(self, invocation):
         if self.test_framework=='none' or type(invocation).__name__!='MethodInvocation':
             return None
@@ -2256,30 +2280,35 @@ class Translator:
                 rendered=(f'EXPECT_NEAR({self.expr(arguments[0])}, '
                           f'{self.expr(arguments[1])}, {self.expr(arguments[2])})')
             else:
-                expected_reference=self.is_reference_assertion_expression(
-                    arguments[0])
-                actual_reference=self.is_reference_assertion_expression(
-                    arguments[1])
-                if expected_reference and actual_reference:
-                    self.includes.add('util/jxx.util.Objects.h')
-                    expected=self.assertion_reference_expression(
-                        arguments[0],arguments[1])
-                    actual=self.assertion_reference_expression(
-                        arguments[1],arguments[0])
-                    comparison=(f'::jxx::util::Objects::equals('
-                                f'{expected}, {actual})')
-                    macro=('EXPECT_TRUE' if member=='assertEquals'
-                           else 'EXPECT_FALSE')
-                    rendered=f'{macro}({comparison})'
+                string_equality=self.string_equality_assertion(
+                    member,arguments)
+                if string_equality is not None:
+                    rendered=string_equality
                 else:
-                    # GoogleTest can diagnose a source-level mixed reference /
-                    # primitive comparison directly. Never route one primitive
-                    # operand through Objects::equals, whose API requires two
-                    # JXX references.
-                    macro=('EXPECT_EQ' if member=='assertEquals'
-                           else 'EXPECT_NE')
-                    rendered=(f'{macro}({self.expr(arguments[0])}, '
-                              f'{self.expr(arguments[1])})')
+                    expected_reference=self.is_reference_assertion_expression(
+                        arguments[0])
+                    actual_reference=self.is_reference_assertion_expression(
+                        arguments[1])
+                    if expected_reference and actual_reference:
+                        self.includes.add('util/jxx.util.Objects.h')
+                        expected=self.assertion_reference_expression(
+                            arguments[0],arguments[1])
+                        actual=self.assertion_reference_expression(
+                            arguments[1],arguments[0])
+                        comparison=(f'::jxx::util::Objects::equals('
+                                    f'{expected}, {actual})')
+                        macro=('EXPECT_TRUE' if member=='assertEquals'
+                               else 'EXPECT_FALSE')
+                        rendered=f'{macro}({comparison})'
+                    else:
+                        # GoogleTest can diagnose a source-level mixed reference /
+                        # primitive comparison directly. Never route one primitive
+                        # operand through Objects::equals, whose API requires two
+                        # JXX references.
+                        macro=('EXPECT_EQ' if member=='assertEquals'
+                               else 'EXPECT_NE')
+                        rendered=(f'{macro}({self.expr(arguments[0])}, '
+                                  f'{self.expr(arguments[1])})')
         elif member=='fail' and len(arguments)<=1:
             rendered='FAIL()'
             if arguments:

@@ -54,16 +54,16 @@ namespace jxx::jdk8::lang {
     TEST(IntegerTest, UnsignedParsingAndFormattingWork) {
         EXPECT_EQ(-1, ::jxx::lang::Integer::parseUnsignedInt(::jxx::NEW<::jxx::lang::String>("4294967295")));
         EXPECT_EQ(-1, ::jxx::lang::Integer::parseUnsignedInt(::jxx::NEW<::jxx::lang::String>("ffffffff"), 16));
-        EXPECT_EQ("4294967295", ::jxx::lang::Integer::toUnsignedString(-1));
-        EXPECT_EQ("ffffffff", ::jxx::lang::Integer::toUnsignedString(-1, 16));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("4294967295"), ::jxx::lang::Integer::toUnsignedString(-1)));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("ffffffff"), ::jxx::lang::Integer::toUnsignedString(-1, 16)));
     }
 
     TEST(IntegerTest, FormattingSupportsCommonRadices) {
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("123"), ::jxx::lang::String::valueOf(::jxx::lang::Integer::toString(123))));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("ff"), ::jxx::lang::String::valueOf(::jxx::lang::Integer::toString(255, 16))));
-        EXPECT_EQ("ff", ::jxx::lang::Integer::toHexString(255));
-        EXPECT_EQ("377", ::jxx::lang::Integer::toOctalString(255));
-        EXPECT_EQ("11111111", ::jxx::lang::Integer::toBinaryString(255));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("ff"), ::jxx::lang::Integer::toHexString(255)));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("377"), ::jxx::lang::Integer::toOctalString(255)));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("11111111"), ::jxx::lang::Integer::toBinaryString(255)));
     }
 
     TEST(IntegerTest, EqualityHashAndComparisonWork) {
