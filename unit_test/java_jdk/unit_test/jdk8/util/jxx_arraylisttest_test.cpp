@@ -19,6 +19,7 @@
 #include "util/jxx.util.Arrays.h"
 #include "util/jxx.util.ListIterator.h"
 #include "util/jxx.util.Objects.h"
+#include "util/jxx.util.wildcard.CollectionAdapters.h"
 
 namespace {
 template<typename T, typename F> class JxxLambdaConsumer final : public ::jxx::lang::ClassBase<JxxLambdaConsumer<T,F>, ::jxx::lang::Object, ::jxx::util::function::Consumer<T>> { public: explicit JxxLambdaConsumer(F f):f_(std::move(f)){} void accept(const ::jxx::Ptr<T>& v) override { f_(v); } private: F f_; };
@@ -53,16 +54,16 @@ namespace jxx::jdk8::util {
         EXPECT_EQ(3, x->lastIndexOf(::jxx::NEW<::jxx::lang::String>("b")));
         EXPECT_TRUE(x->remove(::jxx::NEW<::jxx::lang::String>("b")));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::lang::String>("c"), x->remove(1)));
-        EXPECT_TRUE(x->containsAll(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("b"))));
-        x->addAll(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("d"), ::jxx::NEW<::jxx::lang::String>("e")));
-        x->addAll(1, ::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("x"), ::jxx::NEW<::jxx::lang::String>("y")));
+        EXPECT_TRUE(x->containsAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("b")))))));
+        x->addAll(::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::String>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::String, ::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("d"), ::jxx::NEW<::jxx::lang::String>("e"))))));
+        x->addAll(1, ::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::String>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::String, ::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("x"), ::jxx::NEW<::jxx::lang::String>("y"))))));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("x"), ::jxx::NEW<::jxx::lang::String>("y"), ::jxx::NEW<::jxx::lang::String>("b"), ::jxx::NEW<::jxx::lang::String>("d"), ::jxx::NEW<::jxx::lang::String>("e")), x));
     }
 
     TEST(ArrayListTest, BulkAndArrayOperations) {
         ::jxx::Ptr<::jxx::util::ArrayList<::jxx::lang::String>> x = ::jxx::NEW<::jxx::util::ArrayList<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("b"), ::jxx::NEW<::jxx::lang::String>("c")));
-        EXPECT_TRUE(x->removeAll(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("b"), ::jxx::NEW<::jxx::lang::String>("z"))));
-        EXPECT_TRUE(x->retainAll(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("z"))));
+        EXPECT_TRUE(x->removeAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("b"), ::jxx::NEW<::jxx::lang::String>("z")))))));
+        EXPECT_TRUE(x->retainAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("z")))))));
         ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Object>, 1U>> a = x->toArray();
         EXPECT_TRUE(::jxx::util::Arrays::equals(::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Object>, 1U>>(), a));
         ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>> s = x->toArray(::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>>(0));

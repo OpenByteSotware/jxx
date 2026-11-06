@@ -19,6 +19,7 @@
 #include "util/jxx.util.HashSet.h"
 #include "util/jxx.util.MapEntry.h"
 #include "util/jxx.util.Objects.h"
+#include "util/jxx.util.wildcard.CollectionAdapters.h"
 
 namespace {
 template<typename T, typename F> class JxxLambdaConsumer final : public ::jxx::lang::ClassBase<JxxLambdaConsumer<T,F>, ::jxx::lang::Object, ::jxx::util::function::Consumer<T>> { public: explicit JxxLambdaConsumer(F f):f_(std::move(f)){} void accept(const ::jxx::Ptr<T>& v) override { f_(v); } private: F f_; };

@@ -17,6 +17,7 @@
 #include "util/jxx.util.Arrays.h"
 #include "util/jxx.util.HashSet.h"
 #include "util/jxx.util.Objects.h"
+#include "util/jxx.util.wildcard.CollectionAdapters.h"
 
 namespace {
 template<typename T, typename F> class JxxLambdaConsumer final : public ::jxx::lang::ClassBase<JxxLambdaConsumer<T,F>, ::jxx::lang::Object, ::jxx::util::function::Consumer<T>> { public: explicit JxxLambdaConsumer(F f):f_(std::move(f)){} void accept(const ::jxx::Ptr<T>& v) override { f_(v); } private: F f_; };
@@ -46,10 +47,10 @@ namespace jxx::jdk8::util {
     TEST(HashSetTest, CollectionConstructorAndBulkOperations) {
         ::jxx::Ptr<::jxx::util::HashSet<::jxx::lang::Integer>> s = ::jxx::NEW<::jxx::util::HashSet<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(1, 2, 2, 3));
         EXPECT_EQ(3, s->size());
-        EXPECT_TRUE(s->containsAll(::jxx::util::Arrays::asList(1, 2)));
-        EXPECT_TRUE(s->addAll(::jxx::util::Arrays::asList(3, 4)));
-        EXPECT_TRUE(s->removeAll(::jxx::util::Arrays::asList(1, 9)));
-        EXPECT_TRUE(s->retainAll(::jxx::util::Arrays::asList(2, 4)));
+        EXPECT_TRUE(s->containsAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(1, 2))))));
+        EXPECT_TRUE(s->addAll(::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::Integer>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::Integer, ::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(3, 4))))));
+        EXPECT_TRUE(s->removeAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(1, 9))))));
+        EXPECT_TRUE(s->retainAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(2, 4))))));
         EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::util::HashSet<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(2, 4)), s));
     }
 

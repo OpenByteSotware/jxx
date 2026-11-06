@@ -724,6 +724,10 @@ class Translator:
             if invocation_type is not None:
                 for _,node in filter_method(invocation_type):
                     self.record_method_dependencies(node)
+                    if getattr(node,'member',None) in {
+                            'containsAll','removeAll','retainAll','addAll'}:
+                        self.includes.add(
+                            'util/jxx.util.wildcard.CollectionAdapters.h')
                     if self.test_framework!='none':
                         assertion=getattr(node,'member',None)
                         if assertion in {'assertEquals','assertNotEquals'}:
@@ -1507,6 +1511,67 @@ class Translator:
         rendered.append(array)
         return rendered
 
+    def collection_expression_element_raw(self, expression):
+        if type(expression).__name__=='MemberReference':
+            qualifier=getattr(expression,'qualifier',None)
+            name=(expression.member if not qualifier else qualifier)
+            declared=self.local_variable_types.get(name)
+            arguments=list(getattr(declared,'arguments',None) or [])
+            if arguments:
+                argument_type=getattr(arguments[0],'type',None)
+                if argument_type is not None:
+                    return self.template_argument_type(argument_type)
+        if type(expression).__name__=='MethodInvocation':
+            qualifier=getattr(expression,'qualifier',None)
+            if self.simple(qualifier)=='Arrays' and expression.member=='asList':
+                arguments=list(getattr(expression,'arguments',None) or [])
+                if arguments:
+                    first=arguments[0]
+                    if self.is_string_literal_expression(first):
+                        return '::jxx::lang::String'
+                    source=self.expression_type_name(first)
+                    if source in PRIMITIVE_TO_WRAPPER:
+                        return f'::jxx::lang::{PRIMITIVE_TO_WRAPPER[source]}'
+                    if source and source not in PRIMITIVES:
+                        return self.qmap(source)[0]
+        return None
+
+    def collection_wildcard_argument(self, invocation, argument, index):
+        qualifier=getattr(invocation,'qualifier',None)
+        owner_type=self.local_variable_types.get(qualifier)
+        owner_element=self.local_generic_argument_raw(qualifier)
+        if owner_type is None or owner_element=='::jxx::lang::Object':
+            return None
+        member=invocation.member
+        any_methods={'containsAll','removeAll','retainAll'}
+        extends_index=(0 if member=='addAll' and len(invocation.arguments)==1
+                       else 1 if member=='addAll' and len(invocation.arguments)==2
+                       else -1)
+        if member not in any_methods and extends_index<0:
+            return None
+        if member in any_methods and index!=0:
+            return None
+        if extends_index>=0 and index!=extends_index:
+            return None
+        source_element=self.collection_expression_element_raw(argument)
+        if source_element is None:
+            return None
+        rendered=self.expr(argument)
+        collection=(f'::jxx::CAST<::jxx::util::Collection<'
+                    f'{source_element}>>({rendered})')
+        self.includes.add('util/jxx.util.Collection.h')
+        self.includes.add(
+            'util/jxx.util.wildcard.CollectionAdapters.h')
+        if member in any_methods:
+            adapter=(f'::jxx::NEW<::jxx::util::wildcard::'
+                     f'CollectionAnyView<{source_element}>>({collection})')
+            return (f'::jxx::CAST<::jxx::util::wildcard::CollectionAny>('
+                    f'{adapter})')
+        adapter=(f'::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<'
+                 f'{owner_element}, {source_element}>>({collection})')
+        return (f'::jxx::CAST<::jxx::util::wildcard::CollectionExtends<'
+                f'{owner_element}>>({adapter})')
+
     def method_invocation_arguments(self,invocation):
         sdk_varargs=self.sdk_object_varargs_arguments(invocation)
         if sdk_varargs is not None:
@@ -1520,11 +1585,15 @@ class Translator:
         if not is_varargs or not parameters:
             rendered=[]
             for index,argument in enumerate(arguments):
+                wildcard_collection=self.collection_wildcard_argument(
+                    invocation,argument,index)
                 collection_functional=self.collection_functional_argument(
                     invocation,argument)
                 optional_functional=self.optional_functional_argument(
                     invocation,argument)
-                if collection_functional is not None:
+                if wildcard_collection is not None:
+                    rendered.append(wildcard_collection)
+                elif collection_functional is not None:
                     rendered.append(collection_functional)
                 elif optional_functional is not None:
                     rendered.append(optional_functional)
