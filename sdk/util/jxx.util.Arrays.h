@@ -3,6 +3,8 @@
 #include "lang/jxx.lang.ClassInfo.h"
 
 #include <algorithm>
+#include <functional>
+#include <type_traits>
 #include <cstdint>
 #include <sstream>
 #include <string>
@@ -22,6 +24,11 @@
 #include "util/jxx.util.ArrayList.h"
 #include "util/jxx.util.Comparator.h"
 #include "util/jxx.util.List.h"
+#include "util/jxx.util.Spliterators.h"
+#include "util/function/jxx.util.function.IntBinaryOperator.h"
+#include "util/function/jxx.util.function.IntFunction.h"
+#include "util/function/jxx.util.function.IntUnaryOperator.h"
+#include "util/stream/jxx.util.stream.IntStream.h"
 
 namespace jxx::util {
 namespace arrays_detail {
@@ -279,6 +286,142 @@ public:
             else return middle;
         }
         return -low - 1;
+    }
+
+    template <typename T>
+    static void parallelSort(const Array<T>& array) {
+        sort(array);
+    }
+
+    template <typename T>
+    static void parallelSort(const Array<T>& array,
+                             ::jxx::lang::jint from,
+                             ::jxx::lang::jint to) {
+        sort(array, from, to);
+    }
+
+    template <typename T>
+    static void parallelSort(
+        const Array<::jxx::Ptr<T>>& array,
+        const ::jxx::Ptr<Comparator<T>>& comparator) {
+        sort(array, comparator);
+    }
+
+    template <typename T>
+    static ::jxx::lang::jint binarySearch(
+        const Array<T>& array,
+        ::jxx::lang::jint from,
+        ::jxx::lang::jint to,
+        const T& key) {
+        arrays_detail::checkRange(array, from, to);
+        ::jxx::lang::jint low = from;
+        ::jxx::lang::jint high = to - 1;
+        while (low <= high) {
+            const auto middle = low + ((high - low) >> 1);
+            const auto& value = (*array)[middle];
+            if (arrays_detail::lessValue(value, key)) low = middle + 1;
+            else if (arrays_detail::lessValue(key, value)) high = middle - 1;
+            else return middle;
+        }
+        return -low - 1;
+    }
+
+    template <typename Callable,
+              typename = std::enable_if_t<std::is_invocable_r_v<
+                  ::jxx::lang::jint, Callable, ::jxx::lang::jint>>>
+    static void setAll(const ::jxx::lang::IntArray& array,
+                       Callable&& generator) {
+        arrays_detail::checkArray(array);
+        for (::jxx::lang::jint i = 0; i < array->length; ++i) {
+            (*array)[i] = std::invoke(generator, i);
+        }
+    }
+
+    static void setAll(
+        const ::jxx::lang::IntArray& array,
+        const ::jxx::Ptr<::jxx::util::function::IntUnaryOperator>& generator) {
+        if (generator == nullptr) throw ::jxx::lang::NullPointerException();
+        setAll(array, [&](::jxx::lang::jint i) {
+            return generator->applyAsInt(i);
+        });
+    }
+
+    template <typename Callable>
+    static void parallelSetAll(const ::jxx::lang::IntArray& array,
+                               Callable&& generator) {
+        setAll(array, std::forward<Callable>(generator));
+    }
+
+    static void parallelSetAll(
+        const ::jxx::lang::IntArray& array,
+        const ::jxx::Ptr<::jxx::util::function::IntUnaryOperator>& generator) {
+        setAll(array, generator);
+    }
+
+    template <typename Callable,
+              typename = std::enable_if_t<std::is_invocable_r_v<
+                  ::jxx::lang::jint, Callable,
+                  ::jxx::lang::jint, ::jxx::lang::jint>>>
+    static void parallelPrefix(const ::jxx::lang::IntArray& array,
+                               Callable&& operation) {
+        arrays_detail::checkArray(array);
+        for (::jxx::lang::jint i = 1; i < array->length; ++i) {
+            (*array)[i] = std::invoke(operation, (*array)[i - 1], (*array)[i]);
+        }
+    }
+
+    static void parallelPrefix(
+        const ::jxx::lang::IntArray& array,
+        const ::jxx::Ptr<::jxx::util::function::IntBinaryOperator>& operation) {
+        if (operation == nullptr) throw ::jxx::lang::NullPointerException();
+        parallelPrefix(array, [&](::jxx::lang::jint left,
+                                  ::jxx::lang::jint right) {
+            return operation->applyAsInt(left, right);
+        });
+    }
+
+    static ::jxx::Ptr<::jxx::util::stream::IntStream> stream(
+        const ::jxx::lang::IntArray& array) {
+        arrays_detail::checkArray(array);
+        return ::jxx::util::stream::IntStream::of(array);
+    }
+
+    static ::jxx::Ptr<::jxx::util::stream::IntStream> stream(
+        const ::jxx::lang::IntArray& array,
+        ::jxx::lang::jint from,
+        ::jxx::lang::jint to) {
+        arrays_detail::checkRange(array, from, to);
+        auto values = ::jxx::NEW<::jxx::lang::IntArrayType>(to - from);
+        for (::jxx::lang::jint i = from; i < to; ++i) {
+            (*values)[i - from] = (*array)[i];
+        }
+        return ::jxx::util::stream::IntStream::of(values);
+    }
+
+    template <typename T>
+    static ::jxx::Ptr<::jxx::util::Spliterator<T>> spliterator(
+        const Array<::jxx::Ptr<T>>& array) {
+        return ::jxx::util::Spliterators::forArray<T>(
+            array,
+            ::jxx::util::Spliterator<T>::ORDERED |
+                ::jxx::util::Spliterator<T>::SIZED |
+                ::jxx::util::Spliterator<T>::SUBSIZED);
+    }
+
+    static ::jxx::lang::jbool deepEquals(
+        const ::jxx::lang::ObjectArray& left,
+        const ::jxx::lang::ObjectArray& right) {
+        return equals(left, right);
+    }
+
+    static ::jxx::lang::jint deepHashCode(
+        const ::jxx::lang::ObjectArray& array) {
+        return hashCode(array);
+    }
+
+    static ::jxx::Ptr<::jxx::lang::String> deepToString(
+        const ::jxx::lang::ObjectArray& array) {
+        return toString(array);
     }
 
     template <typename T>

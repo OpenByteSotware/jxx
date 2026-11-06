@@ -1119,6 +1119,94 @@ class Translator:
         rendered='\n'.join('    '+line for line in lines)
         return '{\n'+rendered+'\n}'
 
+    def map_generic_raw_types(self, qualifier):
+        declared=self.local_variable_types.get(qualifier)
+        arguments=list(getattr(declared,'arguments',None) or [])
+        if len(arguments)<2:
+            return None
+        key=getattr(arguments[0],'type',None)
+        value=getattr(arguments[1],'type',None)
+        if key is None or value is None:
+            return None
+        return (self.template_argument_type(key),
+                self.template_argument_type(value))
+
+    def boxed_expression_for_raw(self, expression, raw_type):
+        primitive=self.expression_type_name(expression)
+        wrapper=PRIMITIVE_TO_WRAPPER.get(primitive)
+        if wrapper and raw_type.endswith('::'+wrapper):
+            return f'{raw_type}::valueOf({self.expr(expression)})'
+        return self.expr(expression)
+
+    def map_lambda_body(self, expression, parameter_specs, result_raw=None,
+                        returns_void=False):
+        previous={}
+        for name,raw in parameter_specs:
+            previous[name]=self.local_variable_types.get(name)
+            self.local_variable_types[name]=type(
+                'JxxSyntheticType',(),{
+                    'name':raw.split('::')[-1],
+                    'arguments':[], 'dimensions':[]})()
+        body=getattr(expression,'body',None)
+        output=Emit()
+        if isinstance(body,list):
+            for statement in body: self.stmt(statement,output)
+        elif body is not None:
+            value=self.expr(body)
+            if returns_void:
+                output.w(value+';')
+            else:
+                simple=(result_raw or '').split('::')[-1]
+                primitive=WRAPPER_TO_PRIMITIVE.get(simple)
+                if primitive and self.expression_type_name(body) in PRIMITIVES:
+                    value=f'{result_raw}::valueOf({value})'
+                output.w(f'return {value};')
+        for name,_ in parameter_specs:
+            if previous[name] is None: self.local_variable_types.pop(name,None)
+            else: self.local_variable_types[name]=previous[name]
+        rendered='\n'.join('    '+line for line in output.text().rstrip().splitlines())
+        return '{\n'+rendered+'\n}'
+
+    def map_functional_argument(self, invocation, argument, index):
+        qualifier=getattr(invocation,'qualifier',None)
+        types=self.map_generic_raw_types(qualifier)
+        if types is None or type(argument).__name__!='LambdaExpression':
+            return None
+        key_raw,value_raw=types
+        member=invocation.member
+        parameters=list(getattr(argument,'parameters',None) or [])
+        if member=='computeIfAbsent' and index==1 and len(parameters)==1:
+            name=self.lambda_parameter_name(parameters[0])
+            body=self.map_lambda_body(argument,[(name,key_raw)],value_raw)
+            return f'jxxMakeFunction<{key_raw}, {value_raw}>([&](const ::jxx::Ptr<{key_raw}>& {name}) {body})'
+        if member in {'computeIfPresent','compute','replaceAll'} and len(parameters)==2:
+            names=[self.lambda_parameter_name(x) for x in parameters]
+            body=self.map_lambda_body(argument,[(names[0],key_raw),(names[1],value_raw)],value_raw)
+            return f'jxxMakeBiFunction<{key_raw}, {value_raw}, {value_raw}>([&](const ::jxx::Ptr<{key_raw}>& {names[0]}, const ::jxx::Ptr<{value_raw}>& {names[1]}) {body})'
+        if member=='merge' and index==2 and len(parameters)==2:
+            names=[self.lambda_parameter_name(x) for x in parameters]
+            body=self.map_lambda_body(argument,[(names[0],value_raw),(names[1],value_raw)],value_raw)
+            return f'jxxMakeBiFunction<{value_raw}, {value_raw}, {value_raw}>([&](const ::jxx::Ptr<{value_raw}>& {names[0]}, const ::jxx::Ptr<{value_raw}>& {names[1]}) {body})'
+        if member=='forEach' and index==0 and len(parameters)==2:
+            names=[self.lambda_parameter_name(x) for x in parameters]
+            body=self.map_lambda_body(argument,[(names[0],key_raw),(names[1],value_raw)],returns_void=True)
+            return f'jxxMakeBiConsumer<{key_raw}, {value_raw}>([&](const ::jxx::Ptr<{key_raw}>& {names[0]}, const ::jxx::Ptr<{value_raw}>& {names[1]}) {body})'
+        return None
+
+    def map_boxed_argument(self, invocation, argument, index):
+        types=self.map_generic_raw_types(getattr(invocation,'qualifier',None))
+        if types is None: return None
+        key_raw,value_raw=types
+        member=invocation.member
+        value_indices={
+            'put':{1},'putIfAbsent':{1},'getOrDefault':{1},
+            'merge':{1},'replace':({1,2} if len(invocation.arguments)==3 else {1}),
+            'remove':({1} if len(invocation.arguments)==2 else set()),
+        }
+        if index in value_indices.get(member,set()):
+            return self.boxed_expression_for_raw(argument,value_raw)
+        return None
+
     def collection_functional_argument(self, invocation, argument):
         qualifier=getattr(invocation,'qualifier',None)
         if qualifier not in self.local_variable_types:
@@ -1585,13 +1673,20 @@ class Translator:
         if not is_varargs or not parameters:
             rendered=[]
             for index,argument in enumerate(arguments):
+                map_functional=self.map_functional_argument(
+                    invocation,argument,index)
+                map_boxed=self.map_boxed_argument(invocation,argument,index)
                 wildcard_collection=self.collection_wildcard_argument(
                     invocation,argument,index)
                 collection_functional=self.collection_functional_argument(
                     invocation,argument)
                 optional_functional=self.optional_functional_argument(
                     invocation,argument)
-                if wildcard_collection is not None:
+                if map_functional is not None:
+                    rendered.append(map_functional)
+                elif map_boxed is not None:
+                    rendered.append(map_boxed)
+                elif wildcard_collection is not None:
                     rendered.append(wildcard_collection)
                 elif collection_functional is not None:
                     rendered.append(collection_functional)
@@ -3345,6 +3440,8 @@ def generate_google_test(path:Path, out_root:str, source_root:Path,
             'util/function/jxx.util.function.Function.h',
             'util/function/jxx.util.function.Supplier.h',
             'util/function/jxx.util.function.UnaryOperator.h',
+            'util/function/jxx.util.function.BiFunction.h',
+            'util/function/jxx.util.function.BiConsumer.h',
         })
         translator.uses_functional_adapters=True
     expected_exceptions={}
@@ -3384,6 +3481,10 @@ def generate_google_test(path:Path, out_root:str, source_root:Path,
         o.w('template<typename T, typename R, typename F> auto jxxMakeFunction(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::Function<T,R>>(::jxx::NEW<JxxLambdaFunction<T,R,D>>(std::forward<F>(f))); }')
         o.w('template<typename T, typename F> class JxxLambdaUnaryOperator final : public ::jxx::lang::ClassBase<JxxLambdaUnaryOperator<T,F>, ::jxx::lang::Object, ::jxx::util::function::UnaryOperator<T>> { public: explicit JxxLambdaUnaryOperator(F f):f_(std::move(f)){} ::jxx::Ptr<T> apply(const ::jxx::Ptr<T>& v) override { return f_(v); } private: F f_; };')
         o.w('template<typename T, typename F> auto jxxMakeUnaryOperator(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::UnaryOperator<T>>(::jxx::NEW<JxxLambdaUnaryOperator<T,D>>(std::forward<F>(f))); }')
+        o.w('template<typename T, typename U, typename R, typename F> class JxxLambdaBiFunction final : public ::jxx::lang::ClassBase<JxxLambdaBiFunction<T,U,R,F>, ::jxx::lang::Object, ::jxx::util::function::BiFunction<T,U,R>> { public: explicit JxxLambdaBiFunction(F f):f_(std::move(f)){} ::jxx::Ptr<R> apply(const ::jxx::Ptr<T>& a,const ::jxx::Ptr<U>& b) override { return f_(a,b); } private: F f_; };')
+        o.w('template<typename T, typename U, typename R, typename F> auto jxxMakeBiFunction(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::BiFunction<T,U,R>>(::jxx::NEW<JxxLambdaBiFunction<T,U,R,D>>(std::forward<F>(f))); }')
+        o.w('template<typename T, typename U, typename F> class JxxLambdaBiConsumer final : public ::jxx::lang::ClassBase<JxxLambdaBiConsumer<T,U,F>, ::jxx::lang::Object, ::jxx::util::function::BiConsumer<T,U>> { public: explicit JxxLambdaBiConsumer(F f):f_(std::move(f)){} void accept(const ::jxx::Ptr<T>& a,const ::jxx::Ptr<U>& b) override { f_(a,b); } private: F f_; };')
+        o.w('template<typename T, typename U, typename F> auto jxxMakeBiConsumer(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::BiConsumer<T,U>>(::jxx::NEW<JxxLambdaBiConsumer<T,U,D>>(std::forward<F>(f))); }')
         o.w('template<typename T, typename F> class JxxLambdaSupplier final : public ::jxx::lang::ClassBase<JxxLambdaSupplier<T,F>, ::jxx::lang::Object, ::jxx::util::function::Supplier<T>> { public: explicit JxxLambdaSupplier(F f):f_(std::move(f)){} ::jxx::Ptr<T> get() override { return f_(); } private: F f_; };')
         o.w('template<typename T, typename F> auto jxxMakeSupplier(F&& f) { using D=std::decay_t<F>; return ::jxx::CAST<::jxx::util::function::Supplier<T>>(::jxx::NEW<JxxLambdaSupplier<T,D>>(std::forward<F>(f))); }')
         o.w('} // namespace')
