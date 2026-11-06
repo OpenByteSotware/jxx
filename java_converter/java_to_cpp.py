@@ -2139,7 +2139,20 @@ class Translator:
                 head=f'{owner}{access}{e.member}'
             else:
                 head=f'{q}->{e.member}' if q else e.member
-            invocation=f'{head}({", ".join(self.method_invocation_arguments(e))})'
+            rendered_arguments=self.method_invocation_arguments(e)
+            if (self.simple(str(q or '').split('.')[-1])=='Arrays' and
+                    e.member in {'sort','parallelSort'} and
+                    len(rendered_arguments)>=2 and
+                    rendered_arguments[1] in {
+                        '::jxx::util::Collections::reverseOrder()',
+                        'Collections::reverseOrder()'}):
+                source_arguments=list(getattr(e,'arguments',None) or [])
+                element=(self.array_local_element_raw(source_arguments[0])
+                         if source_arguments else None)
+                if element is not None:
+                    rendered_arguments[1]=(f'::jxx::util::Collections::'
+                                           f'reverseOrder<{element}>()')
+            invocation=f'{head}({", ".join(rendered_arguments)})'
             return self.apply_expression_selectors(
                 invocation,getattr(e,'selectors',None))
         if n=='ClassCreator':
