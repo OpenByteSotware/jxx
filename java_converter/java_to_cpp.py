@@ -1652,11 +1652,32 @@ class Translator:
                         return self.qmap(source)[0]
         return None
 
+    def chained_collection_owner_element_raw(self, qualifier):
+        # Handles collection views returned by a preceding invocation, such as
+        # m.values().containsAll(...) and m.keySet().removeAll(...).
+        if type(qualifier).__name__!='MethodInvocation':
+            return None
+        member=getattr(qualifier,'member',None)
+        map_qualifier=getattr(qualifier,'qualifier',None)
+        map_types=self.map_generic_raw_types(map_qualifier)
+        if map_types is None:
+            return None
+        key_raw,value_raw=map_types
+        if member in {'keySet','entrySet'}:
+            if member=='keySet':
+                return key_raw
+            return f'::jxx::util::MapEntry<{key_raw}, {value_raw}>'
+        if member=='values':
+            return value_raw
+        return None
+
     def collection_wildcard_argument(self, invocation, argument, index):
         qualifier=getattr(invocation,'qualifier',None)
         owner_type=self.local_variable_types.get(qualifier)
-        owner_element=self.local_generic_argument_raw(qualifier)
-        if owner_type is None or owner_element=='::jxx::lang::Object':
+        owner_element=(self.local_generic_argument_raw(qualifier)
+                       if owner_type is not None
+                       else self.chained_collection_owner_element_raw(qualifier))
+        if owner_element is None or owner_element=='::jxx::lang::Object':
             return None
         member=invocation.member
         any_methods={'containsAll','removeAll','retainAll'}
