@@ -60,7 +60,7 @@ namespace jxx::jdk8::util {
     }
 
     TEST(ArrayListTest, CollectionOperations) {
-        ::jxx::Ptr<::jxx::util::ArrayList<::jxx::lang::String>> x = ::jxx::NEW<::jxx::util::ArrayList<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("b"), ::jxx::NEW<::jxx::lang::String>("c"), ::jxx::NEW<::jxx::lang::String>("b")));
+        ::jxx::Ptr<::jxx::util::ArrayList<::jxx::lang::String>> x = ::jxx::NEW<::jxx::util::ArrayList<::jxx::lang::String>>(::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::String>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::String, ::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("b"), ::jxx::NEW<::jxx::lang::String>("c"), ::jxx::NEW<::jxx::lang::String>("b"))))));
         EXPECT_TRUE(x->contains(::jxx::NEW<::jxx::lang::String>("b")));
         EXPECT_EQ(1, x->indexOf(::jxx::NEW<::jxx::lang::String>("b")));
         EXPECT_EQ(3, x->lastIndexOf(::jxx::NEW<::jxx::lang::String>("b")));
@@ -73,7 +73,7 @@ namespace jxx::jdk8::util {
     }
 
     TEST(ArrayListTest, BulkAndArrayOperations) {
-        ::jxx::Ptr<::jxx::util::ArrayList<::jxx::lang::String>> x = ::jxx::NEW<::jxx::util::ArrayList<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("b"), ::jxx::NEW<::jxx::lang::String>("c")));
+        ::jxx::Ptr<::jxx::util::ArrayList<::jxx::lang::String>> x = ::jxx::NEW<::jxx::util::ArrayList<::jxx::lang::String>>(::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::String>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::String, ::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("b"), ::jxx::NEW<::jxx::lang::String>("c"))))));
         EXPECT_TRUE(x->removeAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("b"), ::jxx::NEW<::jxx::lang::String>("z")))))));
         EXPECT_TRUE(x->retainAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::String>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::String>>(::jxx::util::Arrays::asList(::jxx::NEW<::jxx::lang::String>("a"), ::jxx::NEW<::jxx::lang::String>("z")))))));
         ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::Object>, 1U>> a = x->toArray();
@@ -85,7 +85,7 @@ namespace jxx::jdk8::util {
     }
 
     TEST(ArrayListTest, IterationSublistAndClone) {
-        ::jxx::Ptr<::jxx::util::ArrayList<::jxx::lang::Integer>> x = ::jxx::NEW<::jxx::util::ArrayList<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2), ::jxx::lang::Integer::valueOf(3)));
+        ::jxx::Ptr<::jxx::util::ArrayList<::jxx::lang::Integer>> x = ::jxx::NEW<::jxx::util::ArrayList<::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::Integer>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::Integer, ::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2), ::jxx::lang::Integer::valueOf(3))))));
         ::jxx::lang::jint sum = 0;
         for (::jxx::lang::jint jxxIndex_n = 0; jxxIndex_n < x->size(); ++jxxIndex_n) {
             ::jxx::Ptr<::jxx::lang::Integer> n = x->get(jxxIndex_n);
@@ -102,7 +102,7 @@ namespace jxx::jdk8::util {
     }
 
     TEST(ArrayListTest, Java8Operations) {
-        ::jxx::Ptr<::jxx::util::ArrayList<::jxx::lang::Integer>> x = ::jxx::NEW<::jxx::util::ArrayList<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(3), ::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2)));
+        ::jxx::Ptr<::jxx::util::ArrayList<::jxx::lang::Integer>> x = ::jxx::NEW<::jxx::util::ArrayList<::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::Integer>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::Integer, ::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(3), ::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2))))));
         x->removeIf(jxxMakePredicate<::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::Integer>& n) {
     return ((n)->intValue() == 1);
 }));

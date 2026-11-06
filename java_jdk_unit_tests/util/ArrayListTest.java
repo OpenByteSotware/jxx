@@ -19,10 +19,13 @@ public class ArrayListTest {
 	 ArrayList<String>x=new ArrayList<String>(Arrays.asList("a","b","c","b"));
 	 assertTrue(x.contains("b")); 
  assertEquals(1,x.indexOf("b"));
- assertEquals(3,x.lastIndexOf("b")); assertTrue(x.remove("b")); assertEquals("c",x.remove(1));
+ assertEquals(3,x.lastIndexOf("b"));
+ assertTrue(x.remove("b"));
+ assertEquals("c",x.remove(1));
  assertTrue(x.containsAll(Arrays.asList("a","b")));
  x.addAll(Arrays.asList("d","e")); x.addAll(1,Arrays.asList("x","y")); 
- assertEquals(Arrays.asList("a","x","y","b","d","e"),x);}
+ assertEquals(Arrays.asList("a","x","y","b","d","e"),x);
+ }
  
  @Test public void bulkAndArrayOperations(){
 	 ArrayList<String>x=new ArrayList<String>(Arrays.asList("a","b","c"));
@@ -51,7 +54,8 @@ public class ArrayListTest {
  @Test public void java8Operations(){
 	 ArrayList<Integer>x=new ArrayList<Integer>(Arrays.asList(3,1,2));
 	 x.removeIf(n->n==1); 
- x.replaceAll(n->n*2); x.sort(null); assertEquals(Arrays.asList(4,6),x);
+ x.replaceAll(n->n*2); x.sort(null); 
+ assertEquals(Arrays.asList(4,6),x);
  final int[] sum={0}; x.forEach(n->sum[0]+=n); 
  assertEquals(10,sum[0]);
  assertNotNull(x.spliterator());

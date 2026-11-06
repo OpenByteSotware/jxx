@@ -2270,6 +2270,30 @@ class Translator:
             converted=self.array_initializer_value(declaration.type,value)
             o.w(f'(*{declarator.name})[{index}U] = {converted};')
 
+    def collection_copy_constructor_argument(self, creator, argument, index,
+                                             resolved_type_arguments):
+        if index != 0:
+            return None
+        owner=self.simple(self.name_of(getattr(creator,'type',None)))
+        if owner not in {'ArrayList','LinkedList','Vector','HashSet',
+                         'LinkedHashSet','TreeSet'}:
+            return None
+        if not resolved_type_arguments:
+            return None
+        source_raw=self.collection_expression_element_raw(argument)
+        if source_raw is None:
+            return None
+        target_raw=resolved_type_arguments[0]
+        rendered=self.expr(argument)
+        self.includes.add('util/jxx.util.Collection.h')
+        self.includes.add('util/jxx.util.wildcard.CollectionAdapters.h')
+        collection=(f'::jxx::CAST<::jxx::util::Collection<' 
+                    f'{source_raw}>>({rendered})')
+        adapter=(f'::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<'
+                 f'{target_raw}, {source_raw}>>({collection})')
+        return (f'::jxx::CAST<::jxx::util::wildcard::CollectionExtends<'
+                f'{target_raw}>>({adapter})')
+
     def class_creator_expression(self, creator, expected_type=None):
         anonymous=self.anonymous_classes.get(id(creator))
         if anonymous is not None:
@@ -2314,7 +2338,13 @@ class Translator:
             class_name,[])
         converted_arguments=[]
         for index,argument in enumerate(creator.arguments or []):
-            value=self.expr(argument)
+            collection_argument=self.collection_copy_constructor_argument(
+                creator,argument,index,resolved_type_arguments)
+            value=(collection_argument if collection_argument is not None
+                   else self.expr(argument))
+            if collection_argument is not None:
+                converted_arguments.append(value)
+                continue
             parameter_name=constructor_positions.get(index)
             if parameter_name in class_parameters:
                 target_index=class_parameters.index(parameter_name)

@@ -57,17 +57,17 @@ namespace jxx::jdk8::util {
     }
 
     TEST(HashSetTest, CollectionConstructorAndBulkOperations) {
-        ::jxx::Ptr<::jxx::util::HashSet<::jxx::lang::Integer>> s = ::jxx::NEW<::jxx::util::HashSet<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2), ::jxx::lang::Integer::valueOf(2), ::jxx::lang::Integer::valueOf(3)));
+        ::jxx::Ptr<::jxx::util::HashSet<::jxx::lang::Integer>> s = ::jxx::NEW<::jxx::util::HashSet<::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::Integer>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::Integer, ::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2), ::jxx::lang::Integer::valueOf(2), ::jxx::lang::Integer::valueOf(3))))));
         EXPECT_EQ(3, s->size());
         EXPECT_TRUE(s->containsAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2)))))));
         EXPECT_TRUE(s->addAll(::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::Integer>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::Integer, ::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(3), ::jxx::lang::Integer::valueOf(4)))))));
         EXPECT_TRUE(s->removeAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(9)))))));
         EXPECT_TRUE(s->retainAll(::jxx::CAST<::jxx::util::wildcard::CollectionAny>(::jxx::NEW<::jxx::util::wildcard::CollectionAnyView<::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(2), ::jxx::lang::Integer::valueOf(4)))))));
-        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::util::HashSet<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(2), ::jxx::lang::Integer::valueOf(4))), s));
+        EXPECT_TRUE(::jxx::util::Objects::equals(::jxx::NEW<::jxx::util::HashSet<::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::Integer>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::Integer, ::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(2), ::jxx::lang::Integer::valueOf(4)))))), s));
     }
 
     TEST(HashSetTest, CloneArrayIterationAndClear) {
-        ::jxx::Ptr<::jxx::util::HashSet<::jxx::lang::Integer>> s = ::jxx::NEW<::jxx::util::HashSet<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2), ::jxx::lang::Integer::valueOf(3)));
+        ::jxx::Ptr<::jxx::util::HashSet<::jxx::lang::Integer>> s = ::jxx::NEW<::jxx::util::HashSet<::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::Integer>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::Integer, ::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2), ::jxx::lang::Integer::valueOf(3))))));
         ::jxx::lang::jint sum = 0;
         for (::jxx::lang::jint jxxIndex_n = 0; jxxIndex_n < s->size(); ++jxxIndex_n) {
             ::jxx::Ptr<::jxx::lang::Integer> n = s->get(jxxIndex_n);
@@ -86,7 +86,7 @@ namespace jxx::jdk8::util {
     }
 
     TEST(HashSetTest, RemoveIfAndForEachWork) {
-        ::jxx::Ptr<::jxx::util::HashSet<::jxx::lang::Integer>> s = ::jxx::NEW<::jxx::util::HashSet<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2), ::jxx::lang::Integer::valueOf(3), ::jxx::lang::Integer::valueOf(4)));
+        ::jxx::Ptr<::jxx::util::HashSet<::jxx::lang::Integer>> s = ::jxx::NEW<::jxx::util::HashSet<::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::wildcard::CollectionExtends<::jxx::lang::Integer>>(::jxx::NEW<::jxx::util::wildcard::CollectionExtendsView<::jxx::lang::Integer, ::jxx::lang::Integer>>(::jxx::CAST<::jxx::util::Collection<::jxx::lang::Integer>>(::jxx::util::Arrays::asList(::jxx::lang::Integer::valueOf(1), ::jxx::lang::Integer::valueOf(2), ::jxx::lang::Integer::valueOf(3), ::jxx::lang::Integer::valueOf(4))))));
         EXPECT_TRUE(s->removeIf(jxxMakePredicate<::jxx::lang::Integer>([&](const ::jxx::Ptr<::jxx::lang::Integer>& n) {
     return (((n)->intValue() % 2) == 0);
 })));
