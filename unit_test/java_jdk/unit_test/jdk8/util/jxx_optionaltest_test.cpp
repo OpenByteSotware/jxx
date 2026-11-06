@@ -94,9 +94,9 @@ namespace jxx::jdk8::util {
         ::jxx::Ptr<::jxx::util::Optional<::jxx::lang::String>> e = ::jxx::util::Optional<::jxx::lang::String>::empty();
         EXPECT_EQ("d", e->orElse(::jxx::NEW<::jxx::lang::String>("d")));
         EXPECT_EQ("s", e->orElseGet(jxxMakeSupplier<::jxx::lang::String>([&]() {
-    return "s";
+    return ::jxx::NEW<::jxx::lang::String>("s");
 })));
-        EXPECT_EQ("x", ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x"))->orElse("d"));
+        EXPECT_EQ("x", ::jxx::util::Optional<::jxx::lang::String>::of(::jxx::NEW<::jxx::lang::String>("x"))->orElse(::jxx::NEW<::jxx::lang::String>("d")));
     }
 
     TEST(OptionalTest, OrElseThrowUsesSupplier) {

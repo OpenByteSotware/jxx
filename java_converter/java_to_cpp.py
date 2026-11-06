@@ -885,6 +885,14 @@ class Translator:
             return self.array_size_expression(name)
         return f'{name}->size()'
 
+    def selector_string_argument(self, selector, argument, index):
+        if index != 0 or not self.is_string_literal_expression(argument):
+            return None
+        methods={'contains','contentEquals','startsWith','endsWith','concat','equalsIgnoreCase','compareTo','compareToIgnoreCase','indexOf','lastIndexOf','replace','replaceFirst','replaceAll','matches','split'}
+        if selector.member not in methods:
+            return None
+        return f'::jxx::NEW<::jxx::lang::String>({self.expr(argument)})'
+
     def apply_expression_selectors(
             self,base,selectors,primitive_rank1_array:bool=False,
             expression=None):
@@ -903,12 +911,18 @@ class Translator:
                         owner,selector,argument)
                     optional_value=self.optional_selector_value_argument(
                         owner,selector,argument,index)
+                    string_argument=self.selector_string_argument(
+                        selector,argument,index)
                     selector_arguments.append(
                         optional_argument if optional_argument is not None
                         else optional_value if optional_value is not None
+                        else string_argument if string_argument is not None
                         else self.expr(argument))
                 arguments=', '.join(selector_arguments)
                 result+=f'->{selector.member}({arguments})'
+                if getattr(selector,'selectors',None):
+                    result=self.apply_expression_selectors(
+                        result,selector.selectors,expression=selector)
             elif kind=='MemberReference':
                 result+=f'->{selector.member}'
             elif kind=='ArraySelector':
