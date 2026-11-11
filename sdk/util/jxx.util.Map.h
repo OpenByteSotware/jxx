@@ -16,6 +16,10 @@ template <typename K, typename V>
 class Map : public ::jxx::lang::InterfaceBase<Map<K, V>>
 {
 public:
+    // Source-compatible public nested interface name: Map.Entry<K, V>.
+    // MapEntry remains the implementation-level JXX type used by existing code.
+    using Entry = MapEntry<K, V>;
+
     virtual ~Map() = default;
 
     virtual ::jxx::lang::jint size() = 0;
@@ -29,7 +33,7 @@ public:
     virtual void clear() = 0;
     virtual ::jxx::Ptr<Set<K>> keySet() = 0;
     virtual ::jxx::Ptr<Collection<V>> values() = 0;
-    virtual ::jxx::Ptr<Set<MapEntry<K, V>>> entrySet() = 0;
+    virtual ::jxx::Ptr<Set<Entry>> entrySet() = 0;
     virtual ::jxx::lang::jbool equals(const ::jxx::Ptr<::jxx::lang::Object>& o) const = 0;
     virtual ::jxx::lang::jint hashCode() const = 0;
 
