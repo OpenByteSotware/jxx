@@ -17,6 +17,8 @@ class String;
 
 namespace jxx::util {
 
+class LocaleBuilder;
+
 class Locale final
     : public ::jxx::lang::ClassBase<
           Locale,
@@ -35,6 +37,9 @@ private:
     static ::jxx::Ptr<::jxx::lang::String> normalizeVariant(const ::jxx::Ptr<::jxx::lang::String>& value);
 
 public:
+    // Source-compatible nested public type: Locale.Builder.
+    using Builder = LocaleBuilder;
+
     using JxxSuper = ::jxx::lang::Object;
     using Super = ::jxx::lang::ClassBase<
         Locale, JxxSuper, ::jxx::lang::Cloneable, ::jxx::io::SerializableI>;
