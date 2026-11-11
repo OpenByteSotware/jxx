@@ -182,7 +182,7 @@ cmake --build build-vs2026-x64-static --config Release --target INSTALL
 
 
 build JXX:
-cmake -S . -B build-headless -G "Visual Studio 18 2026" -A x64 -Dgtest_force_shared_crt=ON -DJXX_HEADLESS=ON -DCMAKE_PREFIX_PATH=C:/deps/libjpeg-turbo-3.2.0
+cmake -S . -B build-headless -G "Visual Studio 18 2026" -Dgtest_force_shared_crt=ON -DJXX_HEADLESS=ON -DCMAKE_PREFIX_PATH=C:/deps/libjpeg-turbo-3.2.0
 ______________________________________________________________________________________________
 #release
 cmake -S . -B build-vs2026-x64-static ^

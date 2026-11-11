@@ -11,6 +11,7 @@
 #include "lang/jxx.lang.InterruptedException.h"
 #include "lang/jxx_types.h"
 #include "util/concurrent/jxx.util.concurrent.Callable.h"
+#include "util/concurrent/jxx.util.concurrent.CancellableTask.h"
 #include "util/concurrent/jxx.util.concurrent.CancellationException.h"
 #include "util/concurrent/jxx.util.concurrent.ExecutionException.h"
 #include "util/concurrent/jxx.util.concurrent.RunnableFuture.h"
@@ -20,10 +21,18 @@ namespace jxx::util::concurrent {
 
 template <typename V>
 class FutureTask
-    : public ::jxx::lang::ClassBase<FutureTask<V>, ::jxx::lang::Object, RunnableFuture<V>> {
+    : public ::jxx::lang::ClassBase<
+          FutureTask<V>,
+          ::jxx::lang::Object,
+          RunnableFuture<V>,
+          internal::CancellableTask> {
 public:
     using JxxSuper = ::jxx::lang::Object;
-    using Super = ::jxx::lang::ClassBase<FutureTask<V>, JxxSuper, RunnableFuture<V>>;
+    using Super = ::jxx::lang::ClassBase<
+        FutureTask<V>,
+        JxxSuper,
+        RunnableFuture<V>,
+        internal::CancellableTask>;
     using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
     static ::jxx::Ptr<::jxx::lang::ClassAny> Class() { return JxxClassInfoMarker::Class(); }
 
