@@ -46,6 +46,7 @@ void initializeUtilities() {
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<EventObject, 1U, 2U>();
         registerType<Formattable>();
         registerType<Formatter>();
+        registerType<Formatter::BigDecimalLayoutForm>();
         using ErasedLinkedList = LinkedList<::jxx::lang::Object>;
         registerType<ErasedLinkedList>();
         ::jxx::io::serialization::registerSerializableClass<ErasedLinkedList>(

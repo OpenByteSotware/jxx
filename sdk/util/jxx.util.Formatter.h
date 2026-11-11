@@ -7,6 +7,8 @@
 #include "io/jxx.io.Flushable.h"
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.Enum.h"
+#include "lang/jxx.lang.String.h"
 #include "lang/jxx.lang.JxxArray.h"
 #include "util/jxx.util.Locale.h"
 
@@ -33,6 +35,28 @@ namespace jxx::util
               ::jxx::io::Flushable>
     {
     public:
+        class BigDecimalLayoutForm final
+            : public ::jxx::lang::ClassBase<
+                  BigDecimalLayoutForm,
+                  ::jxx::lang::Enum<BigDecimalLayoutForm>> {
+        public:
+            using JxxSuper = ::jxx::lang::Enum<BigDecimalLayoutForm>;
+            using Super = ::jxx::lang::ClassBase<BigDecimalLayoutForm, JxxSuper>;
+            using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
+
+            static const ::jxx::Ptr<BigDecimalLayoutForm> SCIENTIFIC;
+            static const ::jxx::Ptr<BigDecimalLayoutForm> DECIMAL_FLOAT;
+
+            static ::jxx::Ptr<::jxx::lang::JxxArray<
+                ::jxx::Ptr<BigDecimalLayoutForm>, 1U>> values();
+            static ::jxx::Ptr<BigDecimalLayoutForm> valueOf(
+                const ::jxx::Ptr<::jxx::lang::String>& name);
+
+            BigDecimalLayoutForm(
+                const ::jxx::Ptr<::jxx::lang::String>& name,
+                ::jxx::lang::jint ordinal);
+        };
+
         using JxxSuper = ::jxx::lang::Object;
         using Super = ::jxx::lang::ClassBase<
             Formatter, JxxSuper, ::jxx::io::Closeable, ::jxx::io::Flushable>;

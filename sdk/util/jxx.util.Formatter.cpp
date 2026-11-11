@@ -1174,6 +1174,39 @@ namespace jxx::util
 
 namespace jxx::util
 {
+    const ::jxx::Ptr<Formatter::BigDecimalLayoutForm>
+        Formatter::BigDecimalLayoutForm::SCIENTIFIC =
+            ::jxx::NEW<Formatter::BigDecimalLayoutForm>(
+                ::jxx::NEW<::jxx::lang::String>("SCIENTIFIC"), 0);
+
+    const ::jxx::Ptr<Formatter::BigDecimalLayoutForm>
+        Formatter::BigDecimalLayoutForm::DECIMAL_FLOAT =
+            ::jxx::NEW<Formatter::BigDecimalLayoutForm>(
+                ::jxx::NEW<::jxx::lang::String>("DECIMAL_FLOAT"), 1);
+
+    Formatter::BigDecimalLayoutForm::BigDecimalLayoutForm(
+        const ::jxx::Ptr<::jxx::lang::String>& name,
+        ::jxx::lang::jint ordinal)
+        : Super(name, ordinal) {}
+
+    ::jxx::Ptr<::jxx::lang::JxxArray<
+        ::jxx::Ptr<Formatter::BigDecimalLayoutForm>, 1U>>
+    Formatter::BigDecimalLayoutForm::values()
+    {
+        auto result = ::jxx::NEW<::jxx::lang::JxxArray<
+            ::jxx::Ptr<BigDecimalLayoutForm>, 1U>>(2U);
+        (*result)[0] = SCIENTIFIC;
+        (*result)[1] = DECIMAL_FLOAT;
+        return result;
+    }
+
+    ::jxx::Ptr<Formatter::BigDecimalLayoutForm>
+    Formatter::BigDecimalLayoutForm::valueOf(
+        const ::jxx::Ptr<::jxx::lang::String>& name)
+    {
+        return ::jxx::lang::Enum<BigDecimalLayoutForm>::valueOf(Class(), name);
+    }
+
     Formatter::Formatter()
         : locale_(nullptr)
     {}
