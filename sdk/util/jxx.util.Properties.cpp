@@ -7,6 +7,9 @@
 #include <utility>
 #include <vector>
 #include "util/jxx.util.NoSuchElementException.h"
+#include "lang/jxx.lang.ClassCastException.h"
+#include "lang/jxx.lang.NullPointerException.h"
+#include "util/jxx.util.spliterators.IteratorSpliterator.h"
 #include "io/jxx.io.InputStream.h"
 #include "io/jxx.io.OutputStream.h"
 #include "io/jxx.io.PrintStream.h"
@@ -107,13 +110,66 @@ public:
         return array;
 	}
     
-    virtual jxx::lang::jbool containsAll(const jxx::Ptr<wildcard::CollectionAny>& c) override { throw jxx::lang::UnsupportedOperationException(); }
-	virtual jxx::lang::jbool addAll(const jxx::Ptr<wildcard::CollectionExtends<jxx::lang::String>>& c) override { throw jxx::lang::UnsupportedOperationException(); }
-	virtual jxx::lang::jbool retainAll(const jxx::Ptr<wildcard::CollectionAny>& c) override { throw jxx::lang::UnsupportedOperationException(); }
-	virtual jxx::lang::jbool removeAll(const jxx::Ptr<wildcard::CollectionAny>& c) override { throw jxx::lang::UnsupportedOperationException(); }
-    virtual jxx::lang::jbool equals(const jxx::Ptr<jxx::lang::Object>& o) const override { throw jxx::lang::UnsupportedOperationException(); }
-    virtual jxx::lang::jint hashCode() const override { throw jxx::lang::UnsupportedOperationException(); }
-	virtual jxx::Ptr<Spliterator<jxx::lang::String>> spliterator() override { throw jxx::lang::UnsupportedOperationException(); }
+    virtual jxx::lang::jbool containsAll(
+        const jxx::Ptr<wildcard::CollectionAny>& collection) override {
+        if (collection == nullptr) {
+            throw jxx::lang::NullPointerException();
+        }
+        const auto iteratorValue = collection->iteratorObject();
+        while (iteratorValue->hasNext()) {
+            if (!contains(iteratorValue->next())) {
+                return false;
+            }
+        }
+        return true;
+    }
+    virtual jxx::lang::jbool addAll(
+        const jxx::Ptr<wildcard::CollectionExtends<jxx::lang::String>>& /*collection*/) override {
+        throw jxx::lang::UnsupportedOperationException();
+    }
+    virtual jxx::lang::jbool retainAll(
+        const jxx::Ptr<wildcard::CollectionAny>& /*collection*/) override {
+        throw jxx::lang::UnsupportedOperationException();
+    }
+    virtual jxx::lang::jbool removeAll(
+        const jxx::Ptr<wildcard::CollectionAny>& /*collection*/) override {
+        throw jxx::lang::UnsupportedOperationException();
+    }
+    virtual jxx::lang::jbool equals(
+        const jxx::Ptr<jxx::lang::Object>& object) const override {
+        if (object == nullptr) {
+            return false;
+        }
+        const auto other = jxx::CAST<wildcard::CollectionAny>(object);
+        if (other == nullptr || other->size() != static_cast<jxx::lang::jint>(values_.size())) {
+            return false;
+        }
+        try {
+            return const_cast<StringSetImpl*>(this)->containsAll(other);
+        }
+        catch (const jxx::lang::ClassCastException&) {
+            return false;
+        }
+        catch (const jxx::lang::NullPointerException&) {
+            return false;
+        }
+    }
+    virtual jxx::lang::jint hashCode() const override {
+        jxx::lang::jint hash = 0;
+        for (const auto& value : values_) {
+            if (value != nullptr) {
+                hash += value->hashCode();
+            }
+        }
+        return hash;
+    }
+    virtual jxx::Ptr<Spliterator<jxx::lang::String>> spliterator() override {
+        return jxx::NEW<jxx::util::spliterators::IteratorSpliterator<jxx::lang::String>>(
+            iterator(),
+            size(),
+            Spliterator<jxx::lang::String>::DISTINCT |
+                Spliterator<jxx::lang::String>::SIZED);
+    }
 };
 
 static inline jxx::lang::jbool containsObjectVector(const std::vector<jxx::Ptr<jxx::lang::Object>>& values, const jxx::Ptr<jxx::lang::Object>& value) {
@@ -610,7 +666,7 @@ jxx::Ptr<jxx::lang::Object> Properties::setProperty(const jxx::Ptr<jxx::lang::St
     return this->put(jxx::CAST<jxx::lang::Object>(key), tmp);
 }
 
-jxx::Ptr<jxx::lang::String> Properties::getProperty(const const jxx::Ptr<jxx::lang::String>& key) {
+jxx::Ptr<jxx::lang::String> Properties::getProperty(const jxx::Ptr<jxx::lang::String>& key) {
     if (key == nullptr) {
         throw jxx::lang::NullPointerException();
     }
@@ -622,7 +678,7 @@ jxx::Ptr<jxx::lang::String> Properties::getProperty(const const jxx::Ptr<jxx::la
     return defaults == nullptr ? nullptr : defaults->getProperty(key);
 }
 
-jxx::Ptr<jxx::lang::String> Properties::getProperty(const const jxx::Ptr<jxx::lang::String>& key, const jxx::Ptr<jxx::lang::String>& defaultValue) {
+jxx::Ptr<jxx::lang::String> Properties::getProperty(const jxx::Ptr<jxx::lang::String>& key, const jxx::Ptr<jxx::lang::String>& defaultValue) {
     auto value = getProperty(key);
     return value == nullptr ? defaultValue : value;
 }

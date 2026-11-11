@@ -10,7 +10,6 @@
 #include "io/jxx.io.SerializableI.h"
 #include "lang/jxx.lang.ClassCastException.h"
 #include "lang/jxx.lang.ClassInfo.h"
-#include "lang/jxx.lang.Cloneable.h"
 #include "lang/jxx.lang.Comparable.h"
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.Object.h"
