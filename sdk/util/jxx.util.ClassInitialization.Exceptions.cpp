@@ -28,6 +28,7 @@
 #include "util/jxx.util.IllformedLocaleException.h"
 #include "util/jxx.util.MissingResourceException.h"
 #include "util/jxx.util.NoSuchElementException.h"
+#include "util/jxx.util.ServiceConfigurationError.h"
 #include "util/jxx.util.TooManyListenersException.h"
 #include "util/jxx.util.UnknownFormatConversionException.h"
 #include "util/jxx.util.UnknownFormatFlagsException.h"
@@ -57,6 +58,7 @@ void initializeExceptions() {
         registerType<IllformedLocaleException>();
         registerType<MissingResourceException>();
         registerType<NoSuchElementException>();
+        registerType<ServiceConfigurationError>();
         registerType<TooManyListenersException>();
         registerType<UnknownFormatConversionException>();
         registerType<UnknownFormatFlagsException>();
