@@ -3,6 +3,7 @@
 #include <mutex>
 
 #include "ext/xml/transform/stream/jxx.ext.xml.transform.stream.StreamResult.h"
+#include "ext/xml/transform/stream/jxx.ext.xml.transform.stream.StreamSource.h"
 
 namespace jxx::ext::xml::transform::stream {
 
@@ -10,6 +11,7 @@ void initializeClasses()
 {
     static std::once_flag flag;
     std::call_once(flag, [] {
+        ::jxx::lang::class_info_detail::registerClassInfo<StreamSource>();
             ::jxx::lang::class_info_detail::registerClassInfo<StreamResult>();
         (void)::jxx::lang::ClassBase<
             StreamResult,

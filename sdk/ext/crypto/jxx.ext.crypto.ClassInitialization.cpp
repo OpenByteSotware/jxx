@@ -1,11 +1,13 @@
 #include "ext/crypto/jxx.ext.crypto.ClassInitialization.h"
 #include <mutex>
 #include "ext/crypto/jxx.ext.crypto.SecretKey.h"
+#include "ext/crypto/jxx.ext.crypto.Cipher.h"
 namespace jxx::ext::crypto {
 void initializeClasses()
 {
     static std::once_flag flag;
     std::call_once(flag, [] {
+        ::jxx::lang::class_info_detail::registerClassInfo<Cipher>();
             ::jxx::lang::class_info_detail::registerClassInfo<SecretKey>();
         (void)::jxx::lang::InterfaceBase<
             SecretKey,

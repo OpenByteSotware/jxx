@@ -1,12 +1,16 @@
 #include "ext/security/auth/jxx.ext.security.auth.ClassInitialization.h"
 #include <mutex>
 #include "ext/security/auth/jxx.ext.security.auth.Destroyable.h"
+#include "ext/security/auth/jxx.ext.security.auth.Subject.h"
+#include "io/jxx.io.SerializationClassRegistry.h"
 #include "ext/security/auth/x500/jxx.ext.security.auth.x500.ClassInitialization.h"
 namespace jxx::ext::security::auth {
 void initializeClasses()
 {
     static std::once_flag flag;
     std::call_once(flag, [] {
+        ::jxx::lang::class_info_detail::registerClassInfo<Subject>();
+        ::jxx::io::serialization::registerSerializableClass<Subject>(1, [] { return ::jxx::NEW<Subject>(); });
             ::jxx::lang::class_info_detail::registerClassInfo<Destroyable>();
         (void)::jxx::lang::InterfaceBase<Destroyable>::Class();
     });
