@@ -9,6 +9,8 @@
 
 #include "lang/jxx.lang.NullPointerException.h"
 #include "lang/jxx.lang.String.h"
+#include "lang/jxx.lang.ClassLoader.h"
+#include "lang/jxx.lang.ClassCastException.h"
 #include "util/jxx.util.MissingResourceException.h"
 #include "util/jxx.util.HashSet.h"
 #include "util/jxx.util.NoSuchElementException.h"
@@ -157,9 +159,23 @@ std::vector<std::string> candidateNames(
         ::jxx::NEW<::jxx::lang::String>(""));
 }
 
+::jxx::Ptr<ResourceBundle> ResourceBundle::getBundle(
+    const ::jxx::Ptr<::jxx::lang::String>& baseName,
+    const ::jxx::Ptr<Locale>& locale,
+    const ::jxx::Ptr<::jxx::lang::ClassLoader>& loader) {
+    if (loader == nullptr) throw ::jxx::lang::NullPointerException();
+    return getBundle(baseName, locale);
+}
+
 void ResourceBundle::clearCache() {
     std::lock_guard<std::mutex> lock(registryMutex());
     cache().clear();
+}
+
+void ResourceBundle::clearCache(
+    const ::jxx::Ptr<::jxx::lang::ClassLoader>& loader) {
+    if (loader == nullptr) throw ::jxx::lang::NullPointerException();
+    clearCache();
 }
 
 void ResourceBundle::registerBundle(
@@ -196,6 +212,16 @@ void ResourceBundle::registerBundle(
 ::jxx::Ptr<::jxx::lang::String> ResourceBundle::getString(
     const ::jxx::Ptr<::jxx::lang::String>& key) {
     return ::jxx::CAST<::jxx::lang::String>(getObject(key));
+}
+
+::jxx::Ptr<::jxx::lang::JxxArray<
+    ::jxx::Ptr<::jxx::lang::String>, 1U>> ResourceBundle::getStringArray(
+        const ::jxx::Ptr<::jxx::lang::String>& key) {
+    const auto object = getObject(key);
+    const auto result = ::jxx::CAST<::jxx::lang::JxxArray<
+        ::jxx::Ptr<::jxx::lang::String>, 1U>>(object);
+    if (result == nullptr) throw ::jxx::lang::ClassCastException();
+    return result;
 }
 
 ::jxx::Ptr<Enumeration<::jxx::lang::String>> ResourceBundle::getKeys() {

@@ -52,6 +52,20 @@ public:
     static ::jxx::Ptr<Locale> GERMANY;
     static ::jxx::Ptr<Locale> JAPAN;
     static ::jxx::Ptr<Locale> KOREA;
+    static ::jxx::Ptr<Locale> CANADA_FRENCH;
+    static ::jxx::Ptr<Locale> CHINA;
+    static ::jxx::Ptr<Locale> CHINESE;
+    static ::jxx::Ptr<Locale> ENGLISH;
+    static ::jxx::Ptr<Locale> FRENCH;
+    static ::jxx::Ptr<Locale> GERMAN;
+    static ::jxx::Ptr<Locale> ITALIAN;
+    static ::jxx::Ptr<Locale> ITALY;
+    static ::jxx::Ptr<Locale> JAPANESE;
+    static ::jxx::Ptr<Locale> KOREAN;
+    static ::jxx::Ptr<Locale> PRC;
+    static ::jxx::Ptr<Locale> SIMPLIFIED_CHINESE;
+    static ::jxx::Ptr<Locale> TAIWAN;
+    static ::jxx::Ptr<Locale> TRADITIONAL_CHINESE;
 
     Locale(const ::jxx::Ptr<::jxx::lang::String>& language);
     Locale(const ::jxx::Ptr<::jxx::lang::String>& language, const ::jxx::Ptr<::jxx::lang::String>& country);
@@ -72,6 +86,13 @@ public:
                                    const ::jxx::Ptr<::jxx::lang::String>& variant);
 
     static ::jxx::Ptr<Locale> getDefault();
+    static void setDefault(const ::jxx::Ptr<Locale>& locale);
+    static ::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<Locale>, 1U>>
+        getAvailableLocales();
+    static ::jxx::Ptr<::jxx::lang::JxxArray<
+        ::jxx::Ptr<::jxx::lang::String>, 1U>> getISOCountries();
+    static ::jxx::Ptr<::jxx::lang::JxxArray<
+        ::jxx::Ptr<::jxx::lang::String>, 1U>> getISOLanguages();
     static ::jxx::Ptr<Locale> forLanguageTag(const ::jxx::Ptr<::jxx::lang::String>& languageTag);
 
     ::jxx::Ptr<::jxx::lang::String> getLanguage() const;
@@ -82,8 +103,20 @@ public:
     ::jxx::Ptr<::jxx::lang::String> getISO3Language() const;
     ::jxx::Ptr<::jxx::lang::String> getISO3Country() const;
     ::jxx::Ptr<::jxx::lang::String> getDisplayLanguage() const;
+    ::jxx::Ptr<::jxx::lang::String> getDisplayLanguage(
+        const ::jxx::Ptr<Locale>& displayLocale) const;
+    ::jxx::Ptr<::jxx::lang::String> getDisplayScript() const;
+    ::jxx::Ptr<::jxx::lang::String> getDisplayScript(
+        const ::jxx::Ptr<Locale>& displayLocale) const;
     ::jxx::Ptr<::jxx::lang::String> getDisplayCountry() const;
+    ::jxx::Ptr<::jxx::lang::String> getDisplayCountry(
+        const ::jxx::Ptr<Locale>& displayLocale) const;
+    ::jxx::Ptr<::jxx::lang::String> getDisplayVariant() const;
+    ::jxx::Ptr<::jxx::lang::String> getDisplayVariant(
+        const ::jxx::Ptr<Locale>& displayLocale) const;
     ::jxx::Ptr<::jxx::lang::String> getDisplayName() const;
+    ::jxx::Ptr<::jxx::lang::String> getDisplayName(
+        const ::jxx::Ptr<Locale>& displayLocale) const;
 
     ::jxx::Ptr<::jxx::lang::String> toLanguageTag() const;
     ::jxx::Ptr<::jxx::lang::String> toString() const override;

@@ -2,6 +2,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <mutex>
 #include "lang/jxx.lang.String.h"
 #include "util/jxx.util.LocaleCache.h"
 #include "util/jxx.util.LocaleData.h"
@@ -55,6 +56,25 @@ namespace {
 ::jxx::Ptr<Locale> Locale::GERMANY = Locale::intern(StringPool::intern("de"), emptyString(), StringPool::intern("DE"), emptyString());
 ::jxx::Ptr<Locale> Locale::JAPAN   = Locale::intern(StringPool::intern("ja"), emptyString(), StringPool::intern("JP"), emptyString());
 ::jxx::Ptr<Locale> Locale::KOREA   = Locale::intern(StringPool::intern("ko"), emptyString(), StringPool::intern("KR"), emptyString());
+::jxx::Ptr<Locale> Locale::CANADA_FRENCH = Locale::intern(StringPool::intern("fr"), emptyString(), StringPool::intern("CA"), emptyString());
+::jxx::Ptr<Locale> Locale::CHINA = Locale::intern(StringPool::intern("zh"), emptyString(), StringPool::intern("CN"), emptyString());
+::jxx::Ptr<Locale> Locale::CHINESE = Locale::intern(StringPool::intern("zh"), emptyString(), emptyString(), emptyString());
+::jxx::Ptr<Locale> Locale::ENGLISH = Locale::intern(StringPool::intern("en"), emptyString(), emptyString(), emptyString());
+::jxx::Ptr<Locale> Locale::FRENCH = Locale::intern(StringPool::intern("fr"), emptyString(), emptyString(), emptyString());
+::jxx::Ptr<Locale> Locale::GERMAN = Locale::intern(StringPool::intern("de"), emptyString(), emptyString(), emptyString());
+::jxx::Ptr<Locale> Locale::ITALIAN = Locale::intern(StringPool::intern("it"), emptyString(), emptyString(), emptyString());
+::jxx::Ptr<Locale> Locale::ITALY = Locale::intern(StringPool::intern("it"), emptyString(), StringPool::intern("IT"), emptyString());
+::jxx::Ptr<Locale> Locale::JAPANESE = Locale::intern(StringPool::intern("ja"), emptyString(), emptyString(), emptyString());
+::jxx::Ptr<Locale> Locale::KOREAN = Locale::intern(StringPool::intern("ko"), emptyString(), emptyString(), emptyString());
+::jxx::Ptr<Locale> Locale::PRC = Locale::CHINA;
+::jxx::Ptr<Locale> Locale::SIMPLIFIED_CHINESE = Locale::CHINESE;
+::jxx::Ptr<Locale> Locale::TAIWAN = Locale::intern(StringPool::intern("zh"), emptyString(), StringPool::intern("TW"), emptyString());
+::jxx::Ptr<Locale> Locale::TRADITIONAL_CHINESE = Locale::intern(StringPool::intern("zh"), emptyString(), emptyString(), emptyString());
+
+namespace {
+std::mutex defaultLocaleMutex;
+::jxx::Ptr<Locale> defaultLocale = Locale::US;
+}
 
 ::jxx::Ptr<::jxx::lang::String> Locale::normalizeLanguage(const ::jxx::Ptr<::jxx::lang::String>& value) {
     return value ? value->toLowerCase() : emptyString();
@@ -108,7 +128,41 @@ Locale::Locale(const ::jxx::Ptr<::jxx::lang::String>& language,
     return LocaleCache::get(language, script, country, variant);
 }
 
-::jxx::Ptr<Locale> Locale::getDefault() { return US; }
+::jxx::Ptr<Locale> Locale::getDefault() {
+    std::lock_guard<std::mutex> lock(defaultLocaleMutex);
+    return defaultLocale;
+}
+
+void Locale::setDefault(const ::jxx::Ptr<Locale>& locale) {
+    if (locale == nullptr) throw ::jxx::lang::NullPointerException();
+    std::lock_guard<std::mutex> lock(defaultLocaleMutex);
+    defaultLocale = locale;
+}
+
+::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<Locale>, 1U>>
+Locale::getAvailableLocales() {
+    auto result = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<Locale>, 1U>>(8U);
+    (*result)[0] = US; (*result)[1] = UK; (*result)[2] = CANADA;
+    (*result)[3] = FRANCE; (*result)[4] = GERMANY; (*result)[5] = JAPAN;
+    (*result)[6] = KOREA; (*result)[7] = ROOT;
+    return result;
+}
+
+::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>>
+Locale::getISOCountries() {
+    const char* values[] = {"CA", "CN", "DE", "FR", "GB", "IT", "JP", "KR", "TW", "US"};
+    auto result = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>>(10U);
+    for (::jxx::lang::jint i = 0; i < 10; ++i) (*result)[i] = StringPool::intern(values[i]);
+    return result;
+}
+
+::jxx::Ptr<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>>
+Locale::getISOLanguages() {
+    const char* values[] = {"de", "en", "fr", "it", "ja", "ko", "zh"};
+    auto result = ::jxx::NEW<::jxx::lang::JxxArray<::jxx::Ptr<::jxx::lang::String>, 1U>>(7U);
+    for (::jxx::lang::jint i = 0; i < 7; ++i) (*result)[i] = StringPool::intern(values[i]);
+    return result;
+}
 
 ::jxx::Ptr<Locale> Locale::forLanguageTag(const ::jxx::Ptr<::jxx::lang::String>& languageTag) {
     if (!languageTag || languageTag->isEmpty()) return ROOT;
@@ -206,6 +260,45 @@ Locale::Locale(const ::jxx::Ptr<::jxx::lang::String>& language,
     result = 31 * result + (country_ ? country_->hashCode() : 0);
     result = 31 * result + (variant_ ? variant_->hashCode() : 0);
     return result;
+}
+
+
+::jxx::Ptr<::jxx::lang::String> Locale::getDisplayLanguage(
+    const ::jxx::Ptr<Locale>& displayLocale) const {
+    if (displayLocale == nullptr) throw ::jxx::lang::NullPointerException();
+    return getDisplayLanguage();
+}
+
+::jxx::Ptr<::jxx::lang::String> Locale::getDisplayScript() const {
+    return getDisplayScript(getDefault());
+}
+
+::jxx::Ptr<::jxx::lang::String> Locale::getDisplayScript(
+    const ::jxx::Ptr<Locale>& displayLocale) const {
+    if (displayLocale == nullptr) throw ::jxx::lang::NullPointerException();
+    return script_;
+}
+
+::jxx::Ptr<::jxx::lang::String> Locale::getDisplayCountry(
+    const ::jxx::Ptr<Locale>& displayLocale) const {
+    if (displayLocale == nullptr) throw ::jxx::lang::NullPointerException();
+    return getDisplayCountry();
+}
+
+::jxx::Ptr<::jxx::lang::String> Locale::getDisplayVariant() const {
+    return getDisplayVariant(getDefault());
+}
+
+::jxx::Ptr<::jxx::lang::String> Locale::getDisplayVariant(
+    const ::jxx::Ptr<Locale>& displayLocale) const {
+    if (displayLocale == nullptr) throw ::jxx::lang::NullPointerException();
+    return variant_;
+}
+
+::jxx::Ptr<::jxx::lang::String> Locale::getDisplayName(
+    const ::jxx::Ptr<Locale>& displayLocale) const {
+    if (displayLocale == nullptr) throw ::jxx::lang::NullPointerException();
+    return getDisplayName();
 }
 
 } // namespace jxx::util

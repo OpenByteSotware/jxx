@@ -4,6 +4,7 @@
 
 #include "lang/jxx.lang.ClassInfo.h"
 #include "lang/jxx.lang.Object.h"
+#include "lang/jxx.lang.JxxArray.h"
 #include "lang/jxx_types.h"
 #include "util/jxx.util.Enumeration.h"
 #include "util/jxx.util.Locale.h"
@@ -11,6 +12,7 @@
 
 namespace jxx::lang {
 class String;
+class ClassLoader;
 }
 
 namespace jxx::util {
@@ -35,8 +37,14 @@ public:
     static ::jxx::Ptr<ResourceBundle> getBundle(
         const ::jxx::Ptr<::jxx::lang::String>& baseName,
         const ::jxx::Ptr<Locale>& locale);
+    static ::jxx::Ptr<ResourceBundle> getBundle(
+        const ::jxx::Ptr<::jxx::lang::String>& baseName,
+        const ::jxx::Ptr<Locale>& locale,
+        const ::jxx::Ptr<::jxx::lang::ClassLoader>& loader);
 
     static void clearCache();
+    static void clearCache(
+        const ::jxx::Ptr<::jxx::lang::ClassLoader>& loader);
 
     static void registerBundle(
         const ::jxx::Ptr<::jxx::lang::String>& bundleName,
@@ -47,6 +55,9 @@ public:
 
     ::jxx::Ptr<::jxx::lang::String> getString(
         const ::jxx::Ptr<::jxx::lang::String>& key);
+    ::jxx::Ptr<::jxx::lang::JxxArray<
+        ::jxx::Ptr<::jxx::lang::String>, 1U>> getStringArray(
+            const ::jxx::Ptr<::jxx::lang::String>& key);
 
     ::jxx::Ptr<Enumeration<::jxx::lang::String>> getKeys();
 
