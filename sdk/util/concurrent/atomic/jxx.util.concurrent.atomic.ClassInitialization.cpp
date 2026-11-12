@@ -25,6 +25,15 @@ void initializeClasses()
 {
     static std::once_flag flag;
     std::call_once(flag, [] {
+            ::jxx::lang::class_info_detail::registerClassInfo<AtomicBoolean>();
+            ::jxx::lang::class_info_detail::registerClassInfo<AtomicInteger>();
+            ::jxx::lang::class_info_detail::registerClassInfo<AtomicIntegerArray>();
+            ::jxx::lang::class_info_detail::registerClassInfo<AtomicLong>();
+            ::jxx::lang::class_info_detail::registerClassInfo<AtomicLongArray>();
+            ::jxx::lang::class_info_detail::registerClassInfo<DoubleAccumulator>();
+            ::jxx::lang::class_info_detail::registerClassInfo<DoubleAdder>();
+            ::jxx::lang::class_info_detail::registerClassInfo<LongAccumulator>();
+            ::jxx::lang::class_info_detail::registerClassInfo<LongAdder>();
         (void)::jxx::lang::ClassBase<
             AtomicBoolean, ::jxx::lang::Object, ::jxx::io::SerializableI>::Class();
         ::jxx::io::serialization::registerSerializableClass<AtomicBoolean>(
@@ -52,14 +61,14 @@ void initializeClasses()
             static_cast<::jxx::lang::jlong>(-2308431214976778248LL),
             [] { return ::jxx::NEW<AtomicLongArray>(0); });
         using ErasedAtomicReference = AtomicReference<::jxx::lang::Object>;
-        (void)ErasedAtomicReference::Class();
+        ::jxx::lang::class_info_detail::registerClassInfo<ErasedAtomicReference>();
         ::jxx::io::serialization::registerSerializableClass<ErasedAtomicReference>(
             static_cast<::jxx::lang::jlong>(-1848883965231344442LL));
         (void)AtomicMarkableReference<::jxx::lang::Object>::Class();
         (void)AtomicStampedReference<::jxx::lang::Object>::Class();
 
         using ErasedAtomicReferenceArray = AtomicReferenceArray<::jxx::lang::Object>;
-        (void)ErasedAtomicReferenceArray::Class();
+        ::jxx::lang::class_info_detail::registerClassInfo<ErasedAtomicReferenceArray>();
         ::jxx::io::serialization::registerSerializableClass<ErasedAtomicReferenceArray>(
             static_cast<::jxx::lang::jlong>(-6209656149925076980LL),
             [] { return ::jxx::NEW<ErasedAtomicReferenceArray>(0); });

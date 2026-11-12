@@ -15,8 +15,12 @@ namespace jxx::ext::xml::parsers {
 void initializeClasses() {
     static std::once_flag flag;
     std::call_once(flag, [] {
-        (void)FactoryConfigurationError::Class();
-        (void)ParserConfigurationException::Class();
+            ::jxx::lang::class_info_detail::registerClassInfo<DocumentBuilder>();
+            ::jxx::lang::class_info_detail::registerClassInfo<DocumentBuilderFactory>();
+            ::jxx::lang::class_info_detail::registerClassInfo<SAXParser>();
+            ::jxx::lang::class_info_detail::registerClassInfo<SAXParserFactory>();
+        ::jxx::lang::class_info_detail::registerClassInfo<FactoryConfigurationError>();
+        ::jxx::lang::class_info_detail::registerClassInfo<ParserConfigurationException>();
         (void)DocumentBuilder::JxxClassInfoMarker::Class();
         (void)DocumentBuilderFactory::JxxClassInfoMarker::Class();
         (void)SAXParser::JxxClassInfoMarker::Class();

@@ -26,6 +26,23 @@ void initializeClasses()
 {
     static std::once_flag flag;
     std::call_once(flag, [] {
+            ::jxx::lang::class_info_detail::registerClassInfo<Adler32>();
+            ::jxx::lang::class_info_detail::registerClassInfo<CRC32>();
+            ::jxx::lang::class_info_detail::registerClassInfo<CheckedInputStream>();
+            ::jxx::lang::class_info_detail::registerClassInfo<CheckedOutputStream>();
+            ::jxx::lang::class_info_detail::registerClassInfo<Checksum>();
+            ::jxx::lang::class_info_detail::registerClassInfo<DataFormatException>();
+            ::jxx::lang::class_info_detail::registerClassInfo<Deflater>();
+            ::jxx::lang::class_info_detail::registerClassInfo<DeflaterOutputStream>();
+            ::jxx::lang::class_info_detail::registerClassInfo<GZIPInputStream>();
+            ::jxx::lang::class_info_detail::registerClassInfo<GZIPOutputStream>();
+            ::jxx::lang::class_info_detail::registerClassInfo<Inflater>();
+            ::jxx::lang::class_info_detail::registerClassInfo<InflaterInputStream>();
+            ::jxx::lang::class_info_detail::registerClassInfo<ZipEntry>();
+            ::jxx::lang::class_info_detail::registerClassInfo<ZipException>();
+            ::jxx::lang::class_info_detail::registerClassInfo<ZipFile>();
+            ::jxx::lang::class_info_detail::registerClassInfo<ZipInputStream>();
+            ::jxx::lang::class_info_detail::registerClassInfo<ZipOutputStream>();
         (void)Adler32::JxxClassInfoMarker::Class();
         (void)CRC32::JxxClassInfoMarker::Class();
         (void)CheckedInputStream::JxxClassInfoMarker::Class();

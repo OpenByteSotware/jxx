@@ -21,6 +21,12 @@ void initializeClasses()
 {
     static std::once_flag flag;
     std::call_once(flag, [] {
+            ::jxx::lang::class_info_detail::registerClassInfo<DatatypeConverter>();
+            ::jxx::lang::class_info_detail::registerClassInfo<JAXBContext>();
+            ::jxx::lang::class_info_detail::registerClassInfo<JAXBException>();
+            ::jxx::lang::class_info_detail::registerClassInfo<Marshaller>();
+            ::jxx::lang::class_info_detail::registerClassInfo<UnmarshalException>();
+            ::jxx::lang::class_info_detail::registerClassInfo<Unmarshaller>();
         (void)DatatypeConverter::JxxClassInfoMarker::Class();
         (void)JAXBException::JxxClassInfoMarker::Class();
         (void)UnmarshalException::JxxClassInfoMarker::Class();

@@ -16,13 +16,17 @@ void initializeClasses()
 {
     static std::once_flag flag;
     std::call_once(flag, [] {
+            ::jxx::lang::class_info_detail::registerClassInfo<XPath>();
+            ::jxx::lang::class_info_detail::registerClassInfo<XPathConstants>();
+            ::jxx::lang::class_info_detail::registerClassInfo<XPathExpression>();
+            ::jxx::lang::class_info_detail::registerClassInfo<XPathFactory>();
         (void)::jxx::lang::InterfaceBase<XPath>::Class();
         (void)::jxx::lang::ClassBase<
             XPathConstants,
             ::jxx::lang::Object>::Class();
         (void)::jxx::lang::InterfaceBase<XPathExpression>::Class();
-        (void)XPathException::Class();
-        (void)XPathExpressionException::Class();
+        ::jxx::lang::class_info_detail::registerClassInfo<XPathException>();
+        ::jxx::lang::class_info_detail::registerClassInfo<XPathExpressionException>();
         (void)::jxx::lang::ClassBase<
             XPathFactory,
             ::jxx::lang::Object>::Class();

@@ -19,6 +19,13 @@ void initializeClasses()
 {
     static std::once_flag flag;
     std::call_once(flag, [] {
+            ::jxx::lang::class_info_detail::registerClassInfo<OutputKeys>();
+            ::jxx::lang::class_info_detail::registerClassInfo<Result>();
+            ::jxx::lang::class_info_detail::registerClassInfo<Source>();
+            ::jxx::lang::class_info_detail::registerClassInfo<Transformer>();
+            ::jxx::lang::class_info_detail::registerClassInfo<TransformerConfigurationException>();
+            ::jxx::lang::class_info_detail::registerClassInfo<TransformerException>();
+            ::jxx::lang::class_info_detail::registerClassInfo<TransformerFactory>();
         (void)::jxx::lang::ClassBase<
             OutputKeys,
             ::jxx::lang::Object>::Class();

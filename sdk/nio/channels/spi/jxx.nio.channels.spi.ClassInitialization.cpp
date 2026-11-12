@@ -11,6 +11,11 @@ void initializeClasses()
 {
     static std::once_flag flag;
     std::call_once(flag, [] {
+            ::jxx::lang::class_info_detail::registerClassInfo<AbstractInterruptibleChannel>();
+            ::jxx::lang::class_info_detail::registerClassInfo<AbstractSelectableChannel>();
+            ::jxx::lang::class_info_detail::registerClassInfo<AbstractSelectionKey>();
+            ::jxx::lang::class_info_detail::registerClassInfo<AbstractSelector>();
+            ::jxx::lang::class_info_detail::registerClassInfo<SelectorProvider>();
         (void)::jxx::lang::ClassBase<AbstractInterruptibleChannel, ::jxx::lang::Object, ::jxx::nio::channels::InterruptibleChannel>::Class();
         (void)::jxx::lang::ClassBase<AbstractSelectableChannel, ::jxx::nio::channels::SelectableChannel>::Class();
         (void)::jxx::lang::ClassBase<AbstractSelectionKey, ::jxx::nio::channels::SelectionKey>::Class();

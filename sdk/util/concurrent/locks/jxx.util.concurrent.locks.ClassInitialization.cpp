@@ -22,6 +22,16 @@ void initializeClasses()
 {
     static std::once_flag flag;
     std::call_once(flag, [] {
+            ::jxx::lang::class_info_detail::registerClassInfo<AbstractOwnableSynchronizer>();
+            ::jxx::lang::class_info_detail::registerClassInfo<AbstractQueuedLongSynchronizer>();
+            ::jxx::lang::class_info_detail::registerClassInfo<AbstractQueuedSynchronizer>();
+            ::jxx::lang::class_info_detail::registerClassInfo<Condition>();
+            ::jxx::lang::class_info_detail::registerClassInfo<Lock>();
+            ::jxx::lang::class_info_detail::registerClassInfo<LockSupport>();
+            ::jxx::lang::class_info_detail::registerClassInfo<ReadWriteLock>();
+            ::jxx::lang::class_info_detail::registerClassInfo<ReentrantLock>();
+            ::jxx::lang::class_info_detail::registerClassInfo<ReentrantReadWriteLock>();
+            ::jxx::lang::class_info_detail::registerClassInfo<StampedLock>();
         (void)AbstractOwnableSynchronizer::JxxClassInfoMarker::Class();
         (void)AbstractQueuedLongSynchronizer::JxxClassInfoMarker::Class();
         (void)AbstractQueuedSynchronizer::JxxClassInfoMarker::Class();

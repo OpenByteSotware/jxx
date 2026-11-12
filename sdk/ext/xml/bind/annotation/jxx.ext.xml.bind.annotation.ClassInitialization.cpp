@@ -26,6 +26,22 @@ void initializeClasses()
 {
     static std::once_flag flag;
     std::call_once(flag, [] {
+            ::jxx::lang::class_info_detail::registerClassInfo<XmlAccessorType>();
+            ::jxx::lang::class_info_detail::registerClassInfo<XmlAttribute>();
+            ::jxx::lang::class_info_detail::registerClassInfo<XmlElement>();
+            ::jxx::lang::class_info_detail::registerClassInfo<XmlElementDecl>();
+            ::jxx::lang::class_info_detail::registerClassInfo<XmlElementRef>();
+            ::jxx::lang::class_info_detail::registerClassInfo<XmlElementRefs>();
+            ::jxx::lang::class_info_detail::registerClassInfo<XmlElementWrapper>();
+            ::jxx::lang::class_info_detail::registerClassInfo<XmlElements>();
+            ::jxx::lang::class_info_detail::registerClassInfo<XmlEnum>();
+            ::jxx::lang::class_info_detail::registerClassInfo<XmlEnumValue>();
+            ::jxx::lang::class_info_detail::registerClassInfo<XmlList>();
+            ::jxx::lang::class_info_detail::registerClassInfo<XmlRegistry>();
+            ::jxx::lang::class_info_detail::registerClassInfo<XmlRootElement>();
+            ::jxx::lang::class_info_detail::registerClassInfo<XmlTransient>();
+            ::jxx::lang::class_info_detail::registerClassInfo<XmlType>();
+            ::jxx::lang::class_info_detail::registerClassInfo<XmlValue>();
         (void)XmlAccessorType::JxxClassInfoMarker::Class();
         (void)XmlAttribute::JxxClassInfoMarker::Class();
         (void)XmlElement::JxxClassInfoMarker::Class();

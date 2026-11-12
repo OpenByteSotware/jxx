@@ -12,7 +12,9 @@ namespace jxx::ext::net {
 void initializeClasses()
 {
     static std::once_flag flag;
-    std::call_once(flag, [] {        
+    std::call_once(flag, [] {
+            ::jxx::lang::class_info_detail::registerClassInfo<ServerSocketFactory>();
+            ::jxx::lang::class_info_detail::registerClassInfo<SocketFactory>();        
         (void)ServerSocketFactory::JxxClassInfoMarker::Class();
         (void)SocketFactory::JxxClassInfoMarker::Class();
     });

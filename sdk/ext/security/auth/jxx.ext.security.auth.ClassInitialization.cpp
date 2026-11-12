@@ -7,6 +7,7 @@ void initializeClasses()
 {
     static std::once_flag flag;
     std::call_once(flag, [] {
+            ::jxx::lang::class_info_detail::registerClassInfo<Destroyable>();
         (void)::jxx::lang::InterfaceBase<Destroyable>::Class();
     });
 }
