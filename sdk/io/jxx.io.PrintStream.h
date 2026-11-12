@@ -1,6 +1,7 @@
 #pragma once
 
 #include "io/jxx.io.FilterOutputStream.h"
+#include "io/jxx.io.Closeable.h"
 #include "lang/jxx.lang.Appendable.h"
 #include "lang/jxx_types.h"
 #include "lang/jxx.lang.JxxArray.h"
@@ -18,7 +19,8 @@ class PrintStream final
     : public ::jxx::lang::ClassBase<
           PrintStream,
           FilterOutputStream,
-          ::jxx::lang::Appendable> {
+          ::jxx::lang::Appendable,
+          Closeable> {
 public:
     using JxxSuper = FilterOutputStream;
 
@@ -26,7 +28,8 @@ public:
         ::jxx::lang::ClassBase<
             PrintStream,
             JxxSuper,
-            ::jxx::lang::Appendable>;
+            ::jxx::lang::Appendable,
+            Closeable>;
 
     explicit PrintStream(
         const ::jxx::Ptr<OutputStream>& output);

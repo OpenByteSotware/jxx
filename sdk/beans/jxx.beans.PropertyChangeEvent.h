@@ -3,18 +3,16 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "util/jxx.util.EventObject.h"
 #include "lang/jxx.lang.String.h"
-#include "io/jxx.io.SerializableI.h"
 
 namespace jxx::beans {
 
 class PropertyChangeEvent
     : public ::jxx::lang::ClassBase<
           PropertyChangeEvent,
-          ::jxx::util::EventObject,
-          ::jxx::io::SerializableI> {
+          ::jxx::util::EventObject> {
 public:
     using JxxSuper = ::jxx::util::EventObject;
-    using Super = ::jxx::lang::ClassBase<PropertyChangeEvent, JxxSuper, ::jxx::io::SerializableI>;
+    using Super = ::jxx::lang::ClassBase<PropertyChangeEvent, JxxSuper>;
 
     PropertyChangeEvent(
         const ::jxx::Ptr<::jxx::lang::Object>& source,

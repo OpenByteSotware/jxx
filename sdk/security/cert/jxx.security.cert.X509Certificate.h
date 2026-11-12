@@ -2,6 +2,7 @@
 #include "lang/jxx.lang.ClassInfo.h"
 #include "ext/security/auth/x500/jxx.ext.security.auth.x500.X500Principal.h"
 #include "security/cert/jxx.security.cert.Certificate.h"
+#include "security/cert/jxx.security.cert.X509Extension.h"
 #include "security/jxx.security.Principal.h"
 #include "math/jxx.math.BigInteger.h"
 #include "security/jxx.security.PublicKey.h"
@@ -14,13 +15,15 @@ namespace jxx::security::cert {
 class X509Certificate
     : public ::jxx::lang::ClassBase<
           X509Certificate,
-          Certificate> {
+          Certificate,
+          X509Extension> {
 public:
     using JxxSuper = Certificate;
     using Super =
         ::jxx::lang::ClassBase<
             X509Certificate,
-            JxxSuper>;
+            JxxSuper,
+            X509Extension>;
 
     explicit X509Certificate(
         const ::jxx::Ptr<::jxx::lang::String>& type)
