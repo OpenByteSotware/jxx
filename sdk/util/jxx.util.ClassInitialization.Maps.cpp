@@ -7,6 +7,9 @@
 #include "io/jxx.io.ArrayCodecRegistry.h"
 #include "io/jxx.io.SerializationClassRegistry.h"
 #include "util/jxx.util.HashMap.h"
+#include "util/jxx.util.HashSet.h"
+#include "util/jxx.util.LinkedHashSet.h"
+#include "util/jxx.util.TreeMap.h"
 #include "util/jxx.util.IdentityHashMap.h"
 #include "util/jxx.util.LinkedHashMap.h"
 #include "util/jxx.util.Properties.h"
@@ -22,6 +25,12 @@ void initializeMaps() {
     static std::once_flag flag;
     std::call_once(flag, [] {
         registerType<Properties>();
+        using ErasedHashSet = HashSet<::jxx::lang::Object>;
+        registerType<ErasedHashSet>();
+        ::jxx::io::serialization::registerSerializableClass<ErasedHashSet>(
+            static_cast<::jxx::lang::jlong>(-5024744406713321676LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedHashSet, 1U, 2U>();
+
         using ErasedHashMap = HashMap<::jxx::lang::Object, ::jxx::lang::Object>;
         registerType<ErasedHashMap>();
         ::jxx::io::serialization::registerSerializableClass<ErasedHashMap>(
@@ -31,12 +40,24 @@ void initializeMaps() {
         registerType<ErasedIdentityHashMap>();
         ::jxx::io::serialization::registerSerializableClass<ErasedIdentityHashMap>(static_cast<::jxx::lang::jlong>(8188218128353913216LL));
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedIdentityHashMap, 1U, 2U>();
+        using ErasedLinkedHashSet = LinkedHashSet<::jxx::lang::Object>;
+        registerType<ErasedLinkedHashSet>();
+        ::jxx::io::serialization::registerSerializableClass<ErasedLinkedHashSet>(
+            static_cast<::jxx::lang::jlong>(-2851667679971038690LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedLinkedHashSet, 1U, 2U>();
+
         using ErasedLinkedHashMap = LinkedHashMap<::jxx::lang::Object, ::jxx::lang::Object>;
         registerType<ErasedLinkedHashMap>();
         ::jxx::io::serialization::registerSerializableClass<ErasedLinkedHashMap>(static_cast<::jxx::lang::jlong>(3801124242820219131LL));
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedLinkedHashMap, 1U, 2U>();
         using ErasedWeakHashMap = WeakHashMap<::jxx::lang::Object, ::jxx::lang::Object>;
         registerType<ErasedWeakHashMap>();
+        using ErasedTreeMap = TreeMap<::jxx::lang::Object, ::jxx::lang::Object>;
+        registerType<ErasedTreeMap>();
+        ::jxx::io::serialization::registerSerializableClass<ErasedTreeMap>(
+            static_cast<::jxx::lang::jlong>(919286545866124006LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedTreeMap, 1U, 2U>();
+
         using ErasedTreeSet = TreeSet<::jxx::lang::Object>;
         registerType<ErasedTreeSet>();
         ::jxx::io::serialization::registerSerializableClass<ErasedTreeSet>(static_cast<::jxx::lang::jlong>(-2479143000061671589LL), [] { return ::jxx::NEW<ErasedTreeSet>(); });

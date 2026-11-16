@@ -23,6 +23,9 @@
 #include "util/jxx.util.SortedMap.h"
 #include "util/jxx.util.SortedSet.h"
 #include "util/jxx.util.ArrayList.h"
+#include "util/jxx.util.PriorityQueue.h"
+#include "util/jxx.util.Vector.h"
+#include "util/jxx.util.Stack.h"
 #include "util/jxx.util.Arrays.h"
 #include "util/jxx.util.BitSet.h"
 #include "util/jxx.util.Collections.h"
@@ -65,9 +68,22 @@ void initializeCollections() {
                     ArrayDeque<::jxx::lang::Object>, 1U, 2U>();
         registerType<ArrayList<::jxx::lang::Object>>();
         ::jxx::io::serialization::registerSerializableClass<
-                    ArrayList<::jxx::lang::Object>>(1);
+                    ArrayList<::jxx::lang::Object>>(
+                        static_cast<::jxx::lang::jlong>(8683452581122892189LL));
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<
                     ArrayList<::jxx::lang::Object>, 1U, 2U>();
+        using ErasedPriorityQueue = PriorityQueue<::jxx::lang::Object>;
+        registerType<ErasedPriorityQueue>();
+        ::jxx::io::serialization::registerSerializableClass<ErasedPriorityQueue>(
+            static_cast<::jxx::lang::jlong>(-7720805057305804111LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedPriorityQueue, 1U, 2U>();
+
+        using ErasedVector = Vector<::jxx::lang::Object>;
+        registerType<ErasedVector>();
+        ::jxx::io::serialization::registerSerializableClass<ErasedVector>(
+            static_cast<::jxx::lang::jlong>(-2767605614048989439LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedVector, 1U, 2U>();
+
         registerType<BitSet>();
         ::jxx::io::serialization::registerSerializableClass<BitSet>(static_cast<::jxx::lang::jlong>(7997698588986878753LL));
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<BitSet, 1U, 2U>();

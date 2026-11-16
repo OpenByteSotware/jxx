@@ -3,6 +3,7 @@
 #include "lang/jxx.lang.ClassInfo.h"
 
 #include "lang/jxx.lang.IllegalArgumentException.h"
+#include "lang/jxx.lang.NullPointerException.h"
 #include "util/jxx.util.TimeZone.h"
 
 namespace jxx::util {
@@ -67,8 +68,65 @@ public:
         const ::jxx::Ptr<::jxx::lang::Object>& other) const override;
     ::jxx::lang::jint hashCode() const override;
 
+    void writeObject(
+        const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {
+        if (out == nullptr) {
+            throw ::jxx::lang::NullPointerException();
+        }
+        out->writeObject(id_);
+        out->writeInt(rawOffset_);
+        out->writeInt(dstSavings_);
+        out->writeInt(startYear_);
+        out->writeBoolean(usesDaylight_);
+        writeRule_(out, start_);
+        writeRule_(out, end_);
+    }
+
+    void readObject(
+        const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {
+        if (in == nullptr) {
+            throw ::jxx::lang::NullPointerException();
+        }
+        id_ = ::jxx::CAST<::jxx::lang::String>(in->readObject());
+        rawOffset_ = in->readInt();
+        dstSavings_ = in->readInt();
+        startYear_ = in->readInt();
+        usesDaylight_ = in->readBoolean();
+        start_ = readRule_(in);
+        end_ = readRule_(in);
+    }
+
+    void readObjectNoData() override {
+        id_ = ::jxx::NEW<::jxx::lang::String>("GMT");
+        rawOffset_ = 0;
+        dstSavings_ = 3600000;
+        startYear_ = 0;
+        usesDaylight_ = false;
+        start_ = Rule{};
+        end_ = Rule{};
+    }
+
 private:
     struct Rule { ::jxx::lang::jint month=0, day=0, dayOfWeek=0, time=0, mode=WALL_TIME; };
+    static void writeRule_(
+        const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out,
+        const Rule& rule) {
+        out->writeInt(rule.month);
+        out->writeInt(rule.day);
+        out->writeInt(rule.dayOfWeek);
+        out->writeInt(rule.time);
+        out->writeInt(rule.mode);
+    }
+    static Rule readRule_(
+        const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) {
+        Rule rule;
+        rule.month = in->readInt();
+        rule.day = in->readInt();
+        rule.dayOfWeek = in->readInt();
+        rule.time = in->readInt();
+        rule.mode = in->readInt();
+        return rule;
+    }
     static void validateRule_(const Rule& rule);
     static ::jxx::lang::jlong transition_(::jxx::lang::jint year,
         const Rule& rule, ::jxx::lang::jint rawOffset,

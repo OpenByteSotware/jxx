@@ -31,7 +31,18 @@ void initializeDateTime() {
         ::jxx::io::serialization::registerSerializableClass<GregorianCalendar>(static_cast<::jxx::lang::jlong>(-8125100834729963327LL));
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<GregorianCalendar, 1U, 2U>();
         registerType<SimpleTimeZone>();
+        ::jxx::io::serialization::registerSerializableClass<SimpleTimeZone>(
+            static_cast<::jxx::lang::jlong>(-403250971215465050LL),
+            [] {
+                return ::jxx::NEW<SimpleTimeZone>(
+                    0,
+                    ::jxx::NEW<::jxx::lang::String>("GMT"));
+            });
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            SimpleTimeZone, 1U, 2U>();
         registerType<TimeZone>();
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            TimeZone, 1U, 2U>();
         registerType<ZonedDateTime>();
     });
 }
