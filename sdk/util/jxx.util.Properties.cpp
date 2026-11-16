@@ -66,7 +66,36 @@ public:
     }
 };
 
-class StringSetImpl : public virtual Set<jxx::lang::String> {
+class ObjectIteratorImpl : public virtual Iterator<jxx::lang::Object> {
+private:
+    std::vector<jxx::Ptr<jxx::lang::Object>> snapshot_;
+    std::size_t index_;
+public:
+    explicit ObjectIteratorImpl(
+        std::vector<jxx::Ptr<jxx::lang::Object>> snapshot)
+        : snapshot_(std::move(snapshot)), index_(0) {
+    }
+    virtual ~ObjectIteratorImpl() = default;
+    virtual jxx::lang::jbool hasNext() override {
+        return static_cast<jxx::lang::jbool>(index_ < snapshot_.size());
+    }
+    virtual jxx::Ptr<jxx::lang::Object> next() override {
+        if (index_ >= snapshot_.size()) {
+            throw jxx::util::NoSuchElementException();
+        }
+        return snapshot_[index_++];
+    }
+    virtual void remove() override {
+        throw jxx::lang::UnsupportedOperationException();
+    }
+};
+
+class StringSetImpl
+    : public jxx::lang::ClassBase<
+        StringSetImpl,
+        jxx::lang::Object,
+        Set<jxx::lang::String>,
+        wildcard::CollectionAny> {
 private:
     std::vector<jxx::Ptr<jxx::lang::String>> values_;
 public:
@@ -90,7 +119,21 @@ public:
         return static_cast<jxx::lang::jbool>(false);
     }
     virtual jxx::Ptr<Iterator<jxx::lang::String>> iterator() override {
-        return ::jxx::CAST<Iterator<jxx::lang::String>>(::jxx::NEW<StringIteratorImpl>(values_));
+        return ::jxx::CAST<Iterator<jxx::lang::String>>(
+            ::jxx::NEW<StringIteratorImpl>(values_));
+    }
+    virtual jxx::lang::jbool containsObject(
+        const jxx::Ptr<jxx::lang::Object>& object) override {
+        return contains(object);
+    }
+    virtual jxx::Ptr<Iterator<jxx::lang::Object>> iteratorObject() override {
+        std::vector<jxx::Ptr<jxx::lang::Object>> snapshot;
+        snapshot.reserve(values_.size());
+        for (const auto& value : values_) {
+            snapshot.push_back(jxx::CAST<jxx::lang::Object>(value));
+        }
+        return ::jxx::CAST<Iterator<jxx::lang::Object>>(
+            ::jxx::NEW<ObjectIteratorImpl>(std::move(snapshot)));
     }
     virtual jxx::lang::jbool add(const jxx::Ptr<jxx::lang::String>& /*e*/) override {
         throw jxx::lang::UnsupportedOperationException();
