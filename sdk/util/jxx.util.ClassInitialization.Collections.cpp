@@ -6,6 +6,22 @@
 #include "io/jxx.io.ArrayCodecRegistry.h"
 #include "io/jxx.io.SerializationClassRegistry.h"
 #include "util/jxx.util.ArrayDeque.h"
+#include "util/jxx.util.AbstractCollection.h"
+#include "util/jxx.util.AbstractList.h"
+#include "util/jxx.util.AbstractMap.h"
+#include "util/jxx.util.AbstractQueue.h"
+#include "util/jxx.util.AbstractSequentialList.h"
+#include "util/jxx.util.AbstractSet.h"
+#include "util/jxx.util.Collection.h"
+#include "util/jxx.util.Deque.h"
+#include "util/jxx.util.List.h"
+#include "util/jxx.util.Map.h"
+#include "util/jxx.util.NavigableMap.h"
+#include "util/jxx.util.NavigableSet.h"
+#include "util/jxx.util.Queue.h"
+#include "util/jxx.util.Set.h"
+#include "util/jxx.util.SortedMap.h"
+#include "util/jxx.util.SortedSet.h"
 #include "util/jxx.util.ArrayList.h"
 #include "util/jxx.util.Arrays.h"
 #include "util/jxx.util.BitSet.h"
@@ -22,6 +38,24 @@ void registerType() { ::jxx::lang::class_info_detail::registerClassInfo<T>(); }
 void initializeCollections() {
     static std::once_flag flag;
     std::call_once(flag, [] {
+        // Register the erased Object specializations used to represent the
+        // public generic collection API in the runtime class metadata system.
+        registerType<AbstractCollection<::jxx::lang::Object>>();
+        registerType<AbstractList<::jxx::lang::Object>>();
+        registerType<AbstractMap<::jxx::lang::Object, ::jxx::lang::Object>>();
+        registerType<AbstractQueue<::jxx::lang::Object>>();
+        registerType<AbstractSequentialList<::jxx::lang::Object>>();
+        registerType<AbstractSet<::jxx::lang::Object>>();
+        registerType<Collection<::jxx::lang::Object>>();
+        registerType<Deque<::jxx::lang::Object>>();
+        registerType<List<::jxx::lang::Object>>();
+        registerType<Map<::jxx::lang::Object, ::jxx::lang::Object>>();
+        registerType<NavigableMap<::jxx::lang::Object, ::jxx::lang::Object>>();
+        registerType<NavigableSet<::jxx::lang::Object>>();
+        registerType<Queue<::jxx::lang::Object>>();
+        registerType<Set<::jxx::lang::Object>>();
+        registerType<SortedMap<::jxx::lang::Object, ::jxx::lang::Object>>();
+        registerType<SortedSet<::jxx::lang::Object>>();
         registerType<Arrays>();
         registerType<ArrayDeque<::jxx::lang::Object>>();
         ::jxx::io::serialization::registerSerializableClass<
