@@ -12,12 +12,21 @@
 namespace jxx::util {
 
 class StringTokenizer final
-    : public ::jxx::lang::ClassBase<StringTokenizer, ::jxx::lang::Object>,
-      public virtual Enumeration<::jxx::lang::Object> {
+    : public ::jxx::lang::ClassBase<
+          StringTokenizer,
+          ::jxx::lang::Object,
+          Enumeration<::jxx::lang::Object>> {
 public:
     using JxxSuper = ::jxx::lang::Object;
-    using Super = ::jxx::lang::ClassBase<StringTokenizer, JxxSuper>;
+    using Super = ::jxx::lang::ClassBase<
+        StringTokenizer,
+        JxxSuper,
+        Enumeration<::jxx::lang::Object>>;
     using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
+
+    static ::jxx::Ptr<::jxx::lang::ClassAny> Class() {
+        return JxxClassInfoMarker::Class();
+    }
 
     StringTokenizer(
         const ::jxx::Ptr<::jxx::lang::String>& str,
