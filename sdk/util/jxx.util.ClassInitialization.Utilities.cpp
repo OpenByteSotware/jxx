@@ -18,6 +18,7 @@
 #include "util/jxx.util.Objects.h"
 #include "util/jxx.util.Observable.h"
 #include "util/jxx.util.Observer.h"
+#include "util/jxx.util.Optional.h"
 #include "util/jxx.util.OptionalDouble.h"
 #include "util/jxx.util.OptionalInt.h"
 #include "util/jxx.util.OptionalLong.h"
@@ -39,6 +40,14 @@ void initializeUtilities() {
     static std::once_flag flag;
     std::call_once(flag, [] {
         registerType<Base64>();
+        registerType<Base64::Encoder>();
+        registerType<Base64::Decoder>();
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            Base64, 1U, 2U>();
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            Base64::Encoder, 1U, 2U>();
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            Base64::Decoder, 1U, 2U>();
         registerType<DoubleSummaryStatistics>();
         registerType<EventListener>();
         registerType<EventObject>();
@@ -62,9 +71,19 @@ void initializeUtilities() {
         registerType<Objects>();
         registerType<Observable>();
         registerType<Observer>();
+        using ErasedOptional = Optional<::jxx::lang::Object>;
+        registerType<ErasedOptional>();
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            ErasedOptional, 1U, 2U>();
         registerType<OptionalDouble>();
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            OptionalDouble, 1U, 2U>();
         registerType<OptionalInt>();
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            OptionalInt, 1U, 2U>();
         registerType<OptionalLong>();
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            OptionalLong, 1U, 2U>();
         registerType<Random>();
         ::jxx::io::serialization::registerSerializableClass<Random>(static_cast<::jxx::lang::jlong>(3905348978240129619LL));
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<Random, 1U, 2U>();
