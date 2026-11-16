@@ -40,12 +40,13 @@ void initializeClasses()
         (void)LockSupport::JxxClassInfoMarker::Class();
         (void)ReadWriteLock::JxxClassInfoMarker::Class();
         (void)ReentrantLock::JxxClassInfoMarker::Class();
-        ::jxx::io::serialization::registerSerializableClass<ReentrantLock>(1);
+        ::jxx::io::serialization::registerSerializableClass<ReentrantLock>(static_cast<::jxx::lang::jlong>(7373984872572414699LL));
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<
             ReentrantLock, 1U, 2U>();
         (void)ReentrantReadWriteLock::JxxClassInfoMarker::Class();
         ::jxx::io::serialization::registerSerializableClass<
-            ReentrantReadWriteLock>(1);
+            ReentrantReadWriteLock>(
+                static_cast<::jxx::lang::jlong>(-6992448646407690164LL));
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<
             ReentrantReadWriteLock, 1U, 2U>();
         (void)StampedLock::JxxClassInfoMarker::Class();

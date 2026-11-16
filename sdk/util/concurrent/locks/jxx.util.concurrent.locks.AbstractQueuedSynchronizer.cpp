@@ -1,4 +1,5 @@
 #include "util/concurrent/locks/jxx.util.concurrent.locks.AbstractQueuedSynchronizer.h"
+#include "lang/jxx.lang.NullPointerException.h"
 
 #include <algorithm>
 #include <chrono>
@@ -191,3 +192,9 @@ void AbstractQueuedSynchronizer::removeCancelled_() {
 }
 
 } // namespace jxx::util::concurrent::locks
+
+namespace jxx::util::concurrent::locks {
+void AbstractQueuedSynchronizer::writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output){if(!output)throw ::jxx::lang::NullPointerException();output->writeInt(getState());}
+void AbstractQueuedSynchronizer::readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input){if(!input)throw ::jxx::lang::NullPointerException();setState(input->readInt());}
+void AbstractQueuedSynchronizer::readObjectNoData(){setState(0);}
+}

@@ -9,17 +9,19 @@
 #include <thread>
 
 #include "util/concurrent/locks/jxx.util.concurrent.locks.AbstractOwnableSynchronizer.h"
+#include "io/jxx.io.SerializableI.h"
 
 namespace jxx::util::concurrent::locks {
 
 class AbstractQueuedLongSynchronizer
     : public ::jxx::lang::ClassBase<
           AbstractQueuedLongSynchronizer,
-          AbstractOwnableSynchronizer> {
+          AbstractOwnableSynchronizer,
+          ::jxx::io::SerializableI> {
 public:
     using JxxSuper = AbstractOwnableSynchronizer;
-    using Super = ::jxx::lang::ClassBase<AbstractQueuedLongSynchronizer, JxxSuper>;
-    using JxxClassInfoMarker = ::jxx::lang::ClassInfo<AbstractQueuedLongSynchronizer, JxxSuper>;
+    using Super = ::jxx::lang::ClassBase<AbstractQueuedLongSynchronizer, JxxSuper, ::jxx::io::SerializableI>;
+    using JxxClassInfoMarker = ::jxx::lang::ClassInfo<AbstractQueuedLongSynchronizer, JxxSuper, ::jxx::io::SerializableI>;
 
     static ::jxx::Ptr<::jxx::lang::ClassAny> Class();
     ~AbstractQueuedLongSynchronizer() override = default;

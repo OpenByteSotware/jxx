@@ -9,17 +9,21 @@
 #include <thread>
 
 #include "util/concurrent/locks/jxx.util.concurrent.locks.AbstractOwnableSynchronizer.h"
+#include "io/jxx.io.SerializableI.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 
 namespace jxx::util::concurrent::locks {
 
 class AbstractQueuedSynchronizer
     : public ::jxx::lang::ClassBase<
           AbstractQueuedSynchronizer,
-          AbstractOwnableSynchronizer> {
+          AbstractOwnableSynchronizer,
+          ::jxx::io::SerializableI> {
 public:
     using JxxSuper = AbstractOwnableSynchronizer;
-    using Super = ::jxx::lang::ClassBase<AbstractQueuedSynchronizer, JxxSuper>;
-    using JxxClassInfoMarker = ::jxx::lang::ClassInfo<AbstractQueuedSynchronizer, JxxSuper>;
+    using Super = ::jxx::lang::ClassBase<AbstractQueuedSynchronizer, JxxSuper, ::jxx::io::SerializableI>;
+    using JxxClassInfoMarker = ::jxx::lang::ClassInfo<AbstractQueuedSynchronizer, JxxSuper, ::jxx::io::SerializableI>;
 
     static ::jxx::Ptr<::jxx::lang::ClassAny> Class();
     ~AbstractQueuedSynchronizer() override = default;
@@ -35,6 +39,10 @@ public:
 
     ::jxx::lang::jbool hasQueuedThreads() const;
     ::jxx::lang::jint getQueueLength() const;
+
+    void writeObject(const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& output) override;
+    void readObject(const ::jxx::Ptr<::jxx::io::ObjectInputStream>& input) override;
+    void readObjectNoData() override;
 
 protected:
     AbstractQueuedSynchronizer();
