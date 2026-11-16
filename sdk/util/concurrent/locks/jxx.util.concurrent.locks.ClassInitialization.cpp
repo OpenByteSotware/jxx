@@ -50,7 +50,7 @@ void initializeClasses()
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<
             ReentrantReadWriteLock, 1U, 2U>();
         (void)StampedLock::JxxClassInfoMarker::Class();
-        ::jxx::io::serialization::registerSerializableClass<StampedLock>(1);
+        ::jxx::io::serialization::registerSerializableClass<StampedLock>(static_cast<::jxx::lang::jlong>(-6001602636862214147LL));
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<
             StampedLock, 1U, 2U>();
     });

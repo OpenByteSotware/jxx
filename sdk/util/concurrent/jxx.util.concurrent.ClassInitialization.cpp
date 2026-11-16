@@ -8,6 +8,11 @@
 #include "io/jxx.io.ArrayCodecRegistry.h"
 #include "io/jxx.io.SerializationClassRegistry.h"
 #include "util/concurrent/jxx.util.concurrent.ConcurrentLinkedQueue.h"
+#include "util/concurrent/jxx.util.concurrent.ArrayBlockingQueue.h"
+#include "util/concurrent/jxx.util.concurrent.LinkedBlockingQueue.h"
+#include "util/concurrent/jxx.util.concurrent.LinkedBlockingDeque.h"
+#include "util/concurrent/jxx.util.concurrent.ConcurrentHashMap.h"
+#include "util/concurrent/jxx.util.concurrent.ForkJoinTask.h"
 #include "util/concurrent/jxx.util.concurrent.CopyOnWriteArrayList.h"
 #include "util/concurrent/jxx.util.concurrent.CopyOnWriteArraySet.h"
 #include "util/concurrent/jxx.util.concurrent.ConcurrentLinkedDeque.h"
@@ -76,17 +81,68 @@ void initializeClasses()
                 static_cast<::jxx::lang::jlong>(5457747651344034263LL));
         ::jxx::io::serialization::registerClassReferenceArrayCodecs<
             ErasedCopyOnWriteArraySet, 1U, 2U>();
-#define JXX_REGISTER_ERASED_QUEUE(Type) \
-        registerType<Type<ObjectType>>(); \
-        ::jxx::io::serialization::registerSerializableClass<Type<ObjectType>>(1); \
-        ::jxx::io::serialization::registerClassReferenceArrayCodecs<Type<ObjectType>, 1U, 2U>();
-        JXX_REGISTER_ERASED_QUEUE(ConcurrentLinkedQueue)
-        JXX_REGISTER_ERASED_QUEUE(ConcurrentLinkedDeque)
-        JXX_REGISTER_ERASED_QUEUE(PriorityBlockingQueue)
-        JXX_REGISTER_ERASED_QUEUE(DelayQueue)
-        JXX_REGISTER_ERASED_QUEUE(LinkedTransferQueue)
-        JXX_REGISTER_ERASED_QUEUE(SynchronousQueue)
-#undef JXX_REGISTER_ERASED_QUEUE
+        using ErasedConcurrentLinkedQueue = ConcurrentLinkedQueue<ObjectType>;
+        registerType<ErasedConcurrentLinkedQueue>();
+        ::jxx::io::serialization::registerSerializableClass<ErasedConcurrentLinkedQueue>(
+            static_cast<::jxx::lang::jlong>(196745693267521676LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedConcurrentLinkedQueue, 1U, 2U>();
+
+        using ErasedConcurrentLinkedDeque = ConcurrentLinkedDeque<ObjectType>;
+        registerType<ErasedConcurrentLinkedDeque>();
+        ::jxx::io::serialization::registerSerializableClass<ErasedConcurrentLinkedDeque>(
+            static_cast<::jxx::lang::jlong>(876323262645176354LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedConcurrentLinkedDeque, 1U, 2U>();
+
+        using ErasedPriorityBlockingQueue = PriorityBlockingQueue<ObjectType>;
+        registerType<ErasedPriorityBlockingQueue>();
+        ::jxx::io::serialization::registerSerializableClass<ErasedPriorityBlockingQueue>(
+            static_cast<::jxx::lang::jlong>(5595510919245408276LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedPriorityBlockingQueue, 1U, 2U>();
+
+        using ErasedDelayQueue = DelayQueue<ObjectType>;
+        registerType<ErasedDelayQueue>();
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedDelayQueue, 1U, 2U>();
+
+        using ErasedLinkedTransferQueue = LinkedTransferQueue<ObjectType>;
+        registerType<ErasedLinkedTransferQueue>();
+        ::jxx::io::serialization::registerSerializableClass<ErasedLinkedTransferQueue>(
+            static_cast<::jxx::lang::jlong>(-3223113410248163686LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedLinkedTransferQueue, 1U, 2U>();
+
+        using ErasedSynchronousQueue = SynchronousQueue<ObjectType>;
+        registerType<ErasedSynchronousQueue>();
+        ::jxx::io::serialization::registerSerializableClass<ErasedSynchronousQueue>(
+            static_cast<::jxx::lang::jlong>(-3223113410248163686LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedSynchronousQueue, 1U, 2U>();
+        using ErasedConcurrentHashMap = ConcurrentHashMap<ObjectType, ObjectType>;
+        registerType<ErasedConcurrentHashMap>();
+        ::jxx::io::serialization::registerSerializableClass<ErasedConcurrentHashMap>(
+            static_cast<::jxx::lang::jlong>(7249069246763182397LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedConcurrentHashMap, 1U, 2U>();
+
+        using ErasedArrayBlockingQueue = ArrayBlockingQueue<ObjectType>;
+        registerType<ErasedArrayBlockingQueue>();
+        ::jxx::io::serialization::registerSerializableClass<ErasedArrayBlockingQueue>(
+            static_cast<::jxx::lang::jlong>(-817911632652898426LL),
+            [] { return ::jxx::NEW<ErasedArrayBlockingQueue>(1); });
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedArrayBlockingQueue, 1U, 2U>();
+
+        using ErasedLinkedBlockingQueue = LinkedBlockingQueue<ObjectType>;
+        registerType<ErasedLinkedBlockingQueue>();
+        ::jxx::io::serialization::registerSerializableClass<ErasedLinkedBlockingQueue>(
+            static_cast<::jxx::lang::jlong>(-6903933977591709194LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedLinkedBlockingQueue, 1U, 2U>();
+
+        using ErasedLinkedBlockingDeque = LinkedBlockingDeque<ObjectType>;
+        registerType<ErasedLinkedBlockingDeque>();
+        ::jxx::io::serialization::registerSerializableClass<ErasedLinkedBlockingDeque>(
+            static_cast<::jxx::lang::jlong>(-387911632671998426LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedLinkedBlockingDeque, 1U, 2U>();
+
+        using ErasedForkJoinTask = ForkJoinTask<ObjectType>;
+        registerType<ErasedForkJoinTask>();
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<ErasedForkJoinTask, 1U, 2U>();
+
         registerType<CountDownLatch>();
         registerType<CyclicBarrier>();
         registerType<executors_detail::DefaultThreadFactory>();

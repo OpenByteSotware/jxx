@@ -31,7 +31,7 @@ TEST(UtilAtomicLockSerializationParity, MatchesSerializableHierarchy) {
         ::jxx::util::concurrent::locks::AbstractQueuedSynchronizer>));
     EXPECT_TRUE((std::is_base_of_v<::jxx::io::SerializableI,
         ::jxx::util::concurrent::locks::AbstractQueuedLongSynchronizer>));
-    EXPECT_FALSE((std::is_base_of_v<::jxx::io::SerializableI,
+    EXPECT_TRUE((std::is_base_of_v<::jxx::io::SerializableI,
         ::jxx::util::concurrent::locks::StampedLock>));
 }
 

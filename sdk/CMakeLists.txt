@@ -220,6 +220,7 @@ if(MSVC)
             /permissive-
             /W4
             /MP
+            /bigobj
     )
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
     target_compile_options(jxxsdk
