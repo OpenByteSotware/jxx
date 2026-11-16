@@ -1,93 +1,29 @@
 cmake_minimum_required(VERSION 3.16)
-project(jxx_benchmarks LANGUAGES CXX)
 
-# Require C++17 or later
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-enable_testing()
+option(JXX_BENCH_FETCH_GOOGLE_BENCHMARK
+    "Fetch Google Benchmark when an installed package is unavailable" ON)
 
-include(FetchContent)
-FetchContent_Declare(
-  benchmark
-  URL https://github.com/google/benchmark/archive/192ef10025eb2c4cdd392bc502f0c852196baa48.zip
-)
-FetchContent_MakeAvailable(benchmark)
+find_package(benchmark CONFIG QUIET)
 
-# Detect if building on Windows with Visual Studio
-if (WIN32 AND MSVC)
-    message(STATUS "Building on Windows with Visual Studio")
-    add_definitions(-DNOMINMAX)   # Avoid min/max macro conflicts
-    add_compile_options(/MP)      # Enable multi-core compilation
-endif()
-
-# Fetch Google Benchmark
-#include(FetchContent)
-#FetchContent_Declare(
-#    benchmark
-#    GIT_REPOSITORY https://github.com/google/benchmark.git
-#    GIT_TAG v1.8.3
-#)
-#FetchContent_MakeAvailable(benchmark)
-
-# Find all benchmark source files
-file(GLOB_RECURSE BENCH_SOURCES CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/jxx_test_bench_*.cpp"
-)
-
-if (BENCH_SOURCES STREQUAL "")
-    message(WARNING "No benchmark source files found (jxx_test_bench_*.cpp)")
-else()
-    message(STATUS "Found benchmark files: ${BENCH_SOURCES}")
-endif()
-
- add_compile_definitions(_HAS_STD_BYTE=0)
- 
-if(WIN32)
-    # Add the definition for all targets
-        add_compile_definitions(WIN32_LEAN_AND_MEAN)
-
-endif()
-
-
-# Create one executable per benchmark file
-foreach(bench_file ${BENCH_SOURCES})
-    get_filename_component(bench_name ${bench_file} NAME_WE) # name without extension
-    set(target_name "${bench_name}_bench")
-
-    add_executable(${target_name} ${bench_file})
-
-    target_link_libraries(${target_name}
-        PRIVATE
-            benchmark::benchmark
-            benchmark::benchmark_main
-    )
-
-    if(UNIX AND NOT APPLE)
-    target_link_libraries(${target_name} PRIVATE dl)
+if(NOT benchmark_FOUND)
+    if(NOT JXX_BENCH_FETCH_GOOGLE_BENCHMARK)
+        message(FATAL_ERROR
+            "Google Benchmark was not found. Install benchmark with a CMake "
+            "package configuration, provide benchmark_DIR/CMAKE_PREFIX_PATH, "
+            "or configure with -DJXX_BENCH_FETCH_GOOGLE_BENCHMARK=ON.")
     endif()
 
-    # Always link pthread on Linux
-    if (UNIX)
-        find_package(Threads REQUIRED)
-        target_link_libraries(${target_name} PRIVATE Threads::Threads)
-    endif()
-
-    # Optional: set output directory
-    set_target_properties(${target_name} PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    include(FetchContent)
+    set(BENCHMARK_ENABLE_TESTING ON CACHE BOOL "" FORCE)
+    set(BENCHMARK_ENABLE_GTEST_TESTS ON CACHE BOOL "" FORCE)
+    set(BENCHMARK_ENABLE_INSTALL ON CACHE BOOL "" FORCE)
+    FetchContent_Declare(
+        googlebenchmark
+        GIT_REPOSITORY https://github.com/google/benchmark.git
+        GIT_TAG v1.9.4
+        GIT_SHALLOW TRUE
     )
+    FetchContent_MakeAvailable(googlebenchmark)
+endif()
 
-target_include_directories(${target_name}
-    PRIVATE
-		${CMAKE_SOURCE_DIR}/sdk
-		${CMAKE_SOURCE_DIR}/sdk/defines
-		${CMAKE_SOURCE_DIR}/sdk/lang
-		${CMAKE_SOURCE_DIR}/sdk/util
-		${CMAKE_SOURCE_DIR}/sdk/io
-		${CMAKE_SOURCE_DIR}/sdk/net		
-		${CMAKE_SOURCE_DIR}/sdk/security	
-
-)
-
-endforeach()
+add_subdirectory(lang)

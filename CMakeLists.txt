@@ -39,7 +39,7 @@ if(JXX_BUILD_TESTS)
     endif()
 endif()
 
-if(JXX_BUILD_BENCHMARKS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/bench/CMakeLists.txt")
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/bench/CMakeLists.txt")
     add_subdirectory(bench)
 endif()
 
