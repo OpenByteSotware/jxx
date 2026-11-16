@@ -8,6 +8,8 @@
 #include "io/jxx.io.ArrayCodecRegistry.h"
 #include "io/jxx.io.SerializationClassRegistry.h"
 #include "util/concurrent/jxx.util.concurrent.ConcurrentLinkedQueue.h"
+#include "util/concurrent/jxx.util.concurrent.CopyOnWriteArrayList.h"
+#include "util/concurrent/jxx.util.concurrent.CopyOnWriteArraySet.h"
 #include "util/concurrent/jxx.util.concurrent.ConcurrentLinkedDeque.h"
 #include "util/concurrent/jxx.util.concurrent.PriorityBlockingQueue.h"
 #include "util/concurrent/jxx.util.concurrent.DelayQueue.h"
@@ -59,6 +61,21 @@ void initializeClasses()
     static std::once_flag flag;
     std::call_once(flag, [] {
         using ObjectType = ::jxx::lang::Object;
+        using ErasedCopyOnWriteArrayList = CopyOnWriteArrayList<ObjectType>;
+        registerType<ErasedCopyOnWriteArrayList>();
+        ::jxx::io::serialization::registerSerializableClass<
+            ErasedCopyOnWriteArrayList>(
+                static_cast<::jxx::lang::jlong>(8673264195747942595LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            ErasedCopyOnWriteArrayList, 1U, 2U>();
+
+        using ErasedCopyOnWriteArraySet = CopyOnWriteArraySet<ObjectType>;
+        registerType<ErasedCopyOnWriteArraySet>();
+        ::jxx::io::serialization::registerSerializableClass<
+            ErasedCopyOnWriteArraySet>(
+                static_cast<::jxx::lang::jlong>(5457747651344034263LL));
+        ::jxx::io::serialization::registerClassReferenceArrayCodecs<
+            ErasedCopyOnWriteArraySet, 1U, 2U>();
 #define JXX_REGISTER_ERASED_QUEUE(Type) \
         registerType<Type<ObjectType>>(); \
         ::jxx::io::serialization::registerSerializableClass<Type<ObjectType>>(1); \

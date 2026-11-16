@@ -4,6 +4,9 @@
 #include <vector>
 
 #include "lang/jxx.lang.ClassInfo.h"
+#include "io/jxx.io.SerializableI.h"
+#include "io/jxx.io.ObjectInputStream.h"
+#include "io/jxx.io.ObjectOutputStream.h"
 #include "lang/jxx.lang.Exceptions.h"
 #include "util/jxx.util.ArrayList.h"
 
@@ -13,7 +16,8 @@ template<typename E>
 class CopyOnWriteArrayList final
     : public ::jxx::lang::ClassBase<
           CopyOnWriteArrayList<E>,
-          ::jxx::util::ArrayList<E>> {
+          ::jxx::util::ArrayList<E>,
+          ::jxx::io::SerializableI> {
 private:
     class SnapshotIterator final
         : public ::jxx::lang::ClassBase<
@@ -49,7 +53,8 @@ private:
 
 public:
     using JxxSuper = ::jxx::util::ArrayList<E>;
-    using Super = ::jxx::lang::ClassBase<CopyOnWriteArrayList<E>, JxxSuper>;
+    using Super = ::jxx::lang::ClassBase<
+        CopyOnWriteArrayList<E>, JxxSuper, ::jxx::io::SerializableI>;
     using JxxClassInfoMarker = typename Super::JxxClassInfoMarker;
 
     static ::jxx::Ptr<::jxx::lang::ClassAny> Class() {
@@ -119,6 +124,23 @@ public:
         }
         return ::jxx::CAST<::jxx::util::Iterator<E>>(
             ::jxx::NEW<SnapshotIterator>(std::move(snapshot)));
+    }
+
+    void writeObject(
+        const ::jxx::Ptr<::jxx::io::ObjectOutputStream>& out) override {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        JxxSuper::writeObject(out);
+    }
+
+    void readObject(
+        const ::jxx::Ptr<::jxx::io::ObjectInputStream>& in) override {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        JxxSuper::readObject(in);
+    }
+
+    void readObjectNoData() override {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        JxxSuper::readObjectNoData();
     }
 
 private:
